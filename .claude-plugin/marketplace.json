@@ -1,0 +1,25 @@
+{
+  "name": "claude-plugin-marketplace",
+  "owner": {
+    "name": "studykit"
+  },
+  "metadata": {
+    "description": "A collection of Claude Code plugins for language, development, and investment",
+    "version": "1.0.0"
+  },
+  "plugins": [
+    {
+      "name": "english-plugin",
+      "source": "./english-plugin",
+      "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
+      "version": "1.0.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/claude-plugin-marketplace",
+      "license": "MIT",
+      "category": "language",
+      "keywords": ["translation", "english", "korean", "vocabulary", "learning"]
+    }
+  ]
+}

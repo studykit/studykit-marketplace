@@ -1,0 +1,11 @@
+{
+  "name": "english-plugin",
+  "version": "1.0.0",
+  "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/claude-plugin-marketplace",
+  "license": "MIT",
+  "keywords": ["translation", "english", "korean", "vocabulary", "learning", "language"]
+}
