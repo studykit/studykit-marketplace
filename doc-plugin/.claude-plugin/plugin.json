@@ -1,0 +1,13 @@
+{
+  "name": "doc-plugin",
+  "version": "1.0.0",
+  "description": "A plugin for reading and searching various document formats including CHM files",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/claude-plugin-marketplace",
+  "license": "MIT",
+  "keywords": ["documentation", "chm", "help-files", "search", "reading"],
+  "agents": "./agents/*.md",
+  "skills": "./skills/**/*.md"
+}

@@ -20,6 +20,19 @@
       "license": "MIT",
       "category": "language",
       "keywords": ["translation", "english", "korean", "vocabulary", "learning"]
+    },
+    {
+      "name": "doc-plugin",
+      "source": "./doc-plugin",
+      "description": "A plugin for reading and searching various document formats including CHM files",
+      "version": "1.0.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/claude-plugin-marketplace",
+      "license": "MIT",
+      "category": "documentation",
+      "keywords": ["documentation", "chm", "help-files", "search", "reading"]
     }
   ]
 }
