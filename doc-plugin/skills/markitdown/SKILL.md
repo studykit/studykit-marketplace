@@ -1,6 +1,6 @@
 ---
 name: markitdown
-description: Convert documents (PDF, PPTX, DOCX, XLSX, XLS, HTML, images, audio) to Markdown using `uvx markitdown`.
+description: Convert documents (HTML, PDF, PPTX, DOCX, XLSX, XLS, images, audio) to Markdown using `uvx markitdown`.
 ---
 
 # MarkItDown Skill
@@ -34,76 +34,79 @@ brew install uv
 ## Usage
 
 **IMPORTANT**:
-- Before converting, always check if the converted file already exists in `.converted/`. Skip conversion if it exists.
+- **Always use `--from 'markitdown[all]'` option.** Without this option, dependencies for PDF, images, audio, and other formats will not be installed, causing conversion to fail.
+- Before converting, always check if the `.md` file already exists. Skip conversion if it exists.
 - Preserve the original filename and only change the extension to `.md`.
+- For local files: create `.md` in the same directory as the original file.
+- For HTTP URLs: create `.md` in the `webmd/` folder.
 
 ```bash
-# Always create .converted/ directory first
-mkdir -p ".converted/"
+# Convert local document: create .md in the same location as original
+# Example: "/path/to/Computer Networks, 5th Edition.pdf" -> "/path/to/Computer Networks, 5th Edition.md"
+uvx --from 'markitdown[all]' markitdown "/path/to/<original_filename>.pdf" -o "/path/to/<original_filename>.md"
 
-# Convert document: preserve original filename, change extension to .md
-# Example: "Computer Networks, 5th Edition.pdf" -> ".converted/Computer Networks, 5th Edition.md"
-uvx --from 'markitdown[all]' markitdown "/path/to/<original_filename>.pdf" -o ".converted/<original_filename>.md"
-
-# Convert from URL (domain--path format)
-uvx --from 'markitdown[all]' markitdown "https://example.com/docs/page.html" -o ".converted/example.com--docs--page.md"
+# Convert from URL: save to webmd/ folder (domain--path format)
+mkdir -p "webmd/"
+uvx --from 'markitdown[all]' markitdown "https://example.com/docs/page.html" -o "webmd/example.com--docs--page.md"
 ```
 
 ## Examples
 
 ```bash
-mkdir -p ".converted/"
-
-# PDF (filename with spaces)
-uvx --from 'markitdown[all]' markitdown "Computer Networks, 5th Edition.pdf" -o ".converted/Computer Networks, 5th Edition.md"
+# PDF (filename with spaces) - output in same directory
+uvx --from 'markitdown[all]' markitdown "Computer Networks, 5th Edition.pdf" -o "Computer Networks, 5th Edition.md"
 
 # PowerPoint
-uvx --from 'markitdown[all]' markitdown "Q4 Sales Report.pptx" -o ".converted/Q4 Sales Report.md"
+uvx --from 'markitdown[all]' markitdown "Q4 Sales Report.pptx" -o "Q4 Sales Report.md"
 
 # Word
-uvx --from 'markitdown[all]' markitdown "Project Proposal.docx" -o ".converted/Project Proposal.md"
+uvx --from 'markitdown[all]' markitdown "Project Proposal.docx" -o "Project Proposal.md"
 
 # Excel
-uvx --from 'markitdown[all]' markitdown "Budget 2024.xlsx" -o ".converted/Budget 2024.md"
+uvx --from 'markitdown[all]' markitdown "Budget 2024.xlsx" -o "Budget 2024.md"
 
 # HTML
-uvx --from 'markitdown[all]' markitdown "API Documentation.html" -o ".converted/API Documentation.md"
+uvx --from 'markitdown[all]' markitdown "API Documentation.html" -o "API Documentation.md"
 
-# URL
-uvx --from 'markitdown[all]' markitdown "https://example.com/blog/article" -o ".converted/example.com--blog--article.md"
+# URL - output to webmd/ folder
+mkdir -p "webmd/"
+uvx --from 'markitdown[all]' markitdown "https://example.com/blog/article" -o "webmd/example.com--blog--article.md"
 ```
 
 ## Search Markdown Content
 
 ```bash
-# Search for keyword in all markdown files
-grep -r "keyword" ".converted/"
+# Search for keyword in markdown files (current directory)
+grep "keyword" *.md
+
+# Search for keyword in web-converted files
+grep "keyword" webmd/*.md
 
 # Search with context (show surrounding lines)
-grep -r -C 3 "keyword" ".converted/"
+grep -C 3 "keyword" *.md
 
 # Case-insensitive search
-grep -ri "keyword" ".converted/"
+grep -i "keyword" *.md
 
 # Search recursively in all subdirectories
-grep -r --include="*.md" "keyword" ".converted/"
+grep -r --include="*.md" "keyword" .
 ```
 
 ## Read Markdown Files
 
 ```bash
 # Read entire file
-cat ".converted/document.md"
+cat "document.md"
 
 # Read first 50 lines
-head -n 50 ".converted/document.md"
+head -n 50 "document.md"
 
 # Read last 50 lines
-tail -n 50 ".converted/document.md"
+tail -n 50 "document.md"
 
 # Read specific line range (lines 100-150)
-sed -n '100,150p' ".converted/document.md"
+sed -n '100,150p' "document.md"
 
-# List all converted markdown files
-ls ".converted/"*.md
+# List converted markdown files from URLs
+ls webmd/*.md
 ```

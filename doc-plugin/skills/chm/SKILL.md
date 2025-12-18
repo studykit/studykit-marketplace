@@ -21,7 +21,7 @@ sudo dnf install p7zip
 ## Workflow
 
 **IMPORTANT**:
-- Before extracting, check if `.extracted/<filename>/` already exists. Skip extraction if it exists.
+- Before extracting, check if `<filename>/` folder already exists. Skip extraction if it exists.
 - Before converting, check if the `.md` file already exists. Skip conversion if it exists.
 - Preserve original HTML filename and only change the extension to `.md`.
 
@@ -29,27 +29,25 @@ sudo dnf install p7zip
 
 ```bash
 cd "/path/to/chm/directory"
-7zz x -y -o".extracted/<filename>" "<filename>.chm"
+7zz x -y -o"<filename>" "<filename>.chm"
 ```
 
 Example:
 ```
-/docs/API Reference.chm -> /docs/.extracted/API Reference/
+/docs/API Reference.chm -> /docs/API Reference/
 ```
 
 ### 2. Convert HTML to Markdown
 
-Output directory: `.extracted/<filename>/.converted/`
-
 ```bash
-mkdir -p "/path/to/.extracted/<filename>/.converted"
-uvx --from 'markitdown[all]' markitdown "/path/to/.extracted/<filename>/topic.html" > "/path/to/.extracted/<filename>/.converted/topic.md"
+# Create .md in the same location as the original HTML
+uvx --from 'markitdown[all]' markitdown "/path/to/<filename>/topic.html" -o "/path/to/<filename>/topic.md"
 ```
 
 ### 3. Search Markdown files
 
 ```bash
-grep -ri "search term" "/path/to/.extracted/<filename>/.converted/"
+grep -ri "search term" "/path/to/<filename>/"
 ```
 
 ## Directory Structure
@@ -57,12 +55,10 @@ grep -ri "search term" "/path/to/.extracted/<filename>/.converted/"
 ```
 /path/to/
 ├── User Manual.chm               # Original CHM file (may contain spaces)
-└── .extracted/
-    └── User Manual/              # Extracted CHM contents
-        ├── *.html                # Original HTML files
-        ├── *.hhc                 # Table of contents
-        └── .converted/                   # Converted Markdown files
-            └── *.md              # Markdown versions (same structure)
+└── User Manual/                  # Extracted CHM contents (same name as CHM)
+    ├── *.html                    # Original HTML files
+    ├── *.md                      # Converted Markdown files (same location)
+    └── *.hhc                     # Table of contents
 ```
 
 ## Error Handling
