@@ -7,7 +7,6 @@
   },
   "repository": "https://github.com/studykit/claude-plugin-marketplace",
   "license": "MIT",
-  "keywords": ["documentation", "chm", "help-files", "search", "reading"],
-  "agents": "./agents/*.md",
-  "skills": "./skills/**/*.md"
+  "keywords": ["documentation", "chm", "help-files", "search", "reading"]
+
 }

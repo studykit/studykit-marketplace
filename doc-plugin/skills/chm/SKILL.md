@@ -1,68 +1,129 @@
 ---
 name: chm
-description: Extract and read CHM (Compiled HTML Help) files with 7zz.
+description: This skill handles CHM (Compiled HTML Help) files, the Windows help file format with .chm extension. Use for extracting CHM contents, converting CHM to Markdown, reading compiled help documentation, parsing .hhc table of contents files, searching within help files, or working with Microsoft HTML Help. Applies when users say "extract CHM", "convert CHM to markdown", "read help file", "open .chm", "parse CHM documentation", "search CHM content", or reference Windows help documentation.
 ---
 
-# CHM File Reading Skill
+# CHM File Extraction and Conversion
 
-## Prerequisites
+Extract CHM contents and convert them to searchable Markdown format.
+
+## Key Files After Extraction
+
+- `*.hhc` (HTML Help Contents): Table of contents file defining hierarchical navigation structure
+- `*.html`, `*.htm`: HTML document files containing the actual content
+
+
+## Directory Structure After Convert HTML to Markdown
+
+```
+APIGuide.chm                 # Original CHM file
+APIGuide/                    # Extracted directory
+├── APIGuide.hhc             # Table of contents source
+├── TOC.md                   # Generated table of contents
+├── TODO.md                  # Completed task list
+└── HTML/
+    ├── A.htm
+    ├── A.md    # Converted Markdown
+    ├── BD.htm
+    ├── BD.md      # Converted Markdown
+    └── ...
+```
+
+
+## Workflow Decision Tree
+
+### Analyze TOC Structure
+
+Only available when CHM file has been extracted. For extraction, see "Step 1: Extract CHM File" section below.
+
+1. Check if `TOC.md` exists in the extracted directory
+2. If exists, use `TOC.md` directly
+3. If not, analyze `*.hhc` file with `scripts/show_hhc.py` (see [references/hhc-format.md](references/hhc-format.md))
+
+### Content Searching
+
+**Note**: Content searching is only available when Markdown files exist. If no Markdown files are present, use the "Convert HTML to Markdown" section first.
+
+Use grep or Claude's Grep tool to search across all converted Markdown files:
 
 ```bash
-# macOS
-brew install sevenzip
-
-# Ubuntu/Debian
-sudo apt install 7zip
-
-# Fedora/RHEL
-sudo dnf install p7zip
+grep -r "search term" "<converted-folder>/" --include="*.md"
 ```
 
-## Workflow
 
-**IMPORTANT**:
-- Before extracting, check if `<filename>/` folder already exists. Skip extraction if it exists.
-- Before converting, check if the `.md` file already exists. Skip conversion if it exists.
-- Preserve original HTML filename and only change the extension to `.md`.
+### Convert HTML to Markdown
 
-### 1. Extract CHM file
+#### Prerequisites Check
+
+- If `<filename>/TOC.md` exists, the workflow is complete. Skip all steps.
+- If `<filename>/` directory exists, skip extraction step.
+- If `TODO.md` exists, skip TODO generation step.
+
+#### Step 1: Extract CHM File
 
 ```bash
-cd "/path/to/chm/directory"
-7zz x -y -o"<filename>" "<filename>.chm"
+extract_chmLib "<filename>.chm" "<filename>/"
 ```
 
-Example:
-```
-/docs/API Reference.chm -> /docs/API Reference/
-```
+**Common Errors**:
+- `extract_chmLib: command not found` - Install chmlib (see Dependencies section)
+- `Cannot open file` - Check file path and permissions
 
-### 2. Convert HTML to Markdown
+#### Step 2: Generate TODO List
 
 ```bash
-# Create .md in the same location as the original HTML
-uvx --from 'markitdown[all]' markitdown "/path/to/<filename>/topic.html" -o "/path/to/<filename>/topic.md"
+python3 scripts/show_hhc.py --has-link --todo "<path/to/file.hhc>" -o "<path/to>/TODO.md"
 ```
 
-### 3. Search Markdown files
+Output example:
+
+```markdown
+# HTML to Markdown conversion task list
+
+- [ ] HTML/UserManualIndex_UM.htm -> HTML/UserManualIndex_UM.md
+- [ ] HTML/AddInAutomation.htm -> HTML/AddInAutomation.md
+```
+
+#### Step 3: Convert HTML Files to Markdown
+
+Convert each HTML file from the TODO list using `uvx markitdown`:
 
 ```bash
-grep -ri "search term" "/path/to/<filename>/"
+uvx markitdown "<path/to/file.htm>" -o "<path/to/file.md>"
 ```
 
-## Directory Structure
+Update the TODO list after each conversion by marking items as complete `[x]`.
 
+**IMPORTANT**: Skip files that already exist as Markdown.
+
+#### Step 4: Create Table of Contents
+
+After completing all tasks in TODO.md, generate the final TOC:
+
+```bash
+python3 scripts/show_hhc.py "<path/to/file.hhc>" -o "<path/to>/TOC.md"
 ```
-/path/to/
-├── User Manual.chm               # Original CHM file (may contain spaces)
-└── User Manual/                  # Extracted CHM contents (same name as CHM)
-    ├── *.html                    # Original HTML files
-    ├── *.md                      # Converted Markdown files (same location)
-    └── *.hhc                     # Table of contents
+
+## Dependencies
+
+### macOS
+
+```bash
+brew install chmlib
 ```
 
-## Error Handling
+### Linux (Debian/Ubuntu)
 
-- If CHM file not found: Ask user to verify the file path
-- If no search results: Suggest alternative search terms
-- If 7zz not installed: Guide user through installation (`brew install sevenzip`)
+```bash
+sudo apt-get install libchm-bin
+```
+
+### Linux (Fedora/RHEL)
+
+```bash
+sudo dnf install chmlib
+```
+
+## References
+
+- [references/hhc-format.md](references/hhc-format.md) - `show_hhc.py` script options and usage
