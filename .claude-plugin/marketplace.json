@@ -33,6 +33,19 @@
       "license": "MIT",
       "category": "documentation",
       "keywords": ["documentation", "chm", "help-files", "search", "reading"]
+    },
+    {
+      "name": "autodesk-plugin",
+      "source": "./autodesk-plugin",
+      "description": "Autodesk Inventor API documentation and development support for product and architectural design automation",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/claude-plugin-marketplace",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["autodesk", "inventor", "cad", "api", "automation", "3d-modeling"]
     }
   ]
 }
