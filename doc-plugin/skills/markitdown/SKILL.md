@@ -1,6 +1,6 @@
 ---
 name: markitdown
-description: Convert documents (HTML, PDF, PPTX, DOCX, XLSX, XLS, images, audio) to Markdown using `uvx markitdown`.
+description: Convert documents (HTML, PPTX, DOCX, XLSX, XLS, images, audio) to Markdown using `uvx markitdown`.
 ---
 
 # MarkItDown Skill
@@ -23,7 +23,6 @@ brew install uv
 
 | Format | Extensions | Description |
 |--------|------------|-------------|
-| PDF | `.pdf` | PDF documents |
 | PowerPoint | `.pptx` | Microsoft PowerPoint presentations |
 | Word | `.docx` | Microsoft Word documents |
 | Excel | `.xlsx`, `.xls` | Microsoft Excel spreadsheets |
@@ -34,7 +33,7 @@ brew install uv
 ## Usage
 
 **IMPORTANT**:
-- **Always use `--from 'markitdown[all]'` option.** Without this option, dependencies for PDF, images, audio, and other formats will not be installed, causing conversion to fail.
+- **Always use `--from 'markitdown[all]'` option.** Without this option, dependencies for images, audio, and other formats will not be installed, causing conversion to fail.
 - Before converting, always check if the `.md` file already exists. Skip conversion if it exists.
 - Preserve the original filename and only change the extension to `.md`.
 - For local files: create `.md` in the same directory as the original file.
@@ -42,8 +41,8 @@ brew install uv
 
 ```bash
 # Convert local document: create .md in the same location as original
-# Example: "/path/to/Computer Networks, 5th Edition.pdf" -> "/path/to/Computer Networks, 5th Edition.md"
-uvx --from 'markitdown[all]' markitdown "/path/to/<original_filename>.pdf" -o "/path/to/<original_filename>.md"
+# Example: "/path/to/Q4 Sales Report.pptx" -> "/path/to/Q4 Sales Report.md"
+uvx --from 'markitdown[all]' markitdown "/path/to/<original_filename>.pptx" -o "/path/to/<original_filename>.md"
 
 # Convert from URL: save to webmd/ folder (domain--path format)
 mkdir -p "webmd/"
@@ -53,9 +52,6 @@ uvx --from 'markitdown[all]' markitdown "https://example.com/docs/page.html" -o 
 ## Examples
 
 ```bash
-# PDF (filename with spaces) - output in same directory
-uvx --from 'markitdown[all]' markitdown "Computer Networks, 5th Edition.pdf" -o "Computer Networks, 5th Edition.md"
-
 # PowerPoint
 uvx --from 'markitdown[all]' markitdown "Q4 Sales Report.pptx" -o "Q4 Sales Report.md"
 

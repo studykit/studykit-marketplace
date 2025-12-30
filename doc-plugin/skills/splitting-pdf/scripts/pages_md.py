@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pypdf", "markitdown"]
+# dependencies = ["pypdf", "markitdown[pdf]"]
 # ///
 """
 Convert specific PDF pages to markdown for TOC analysis.

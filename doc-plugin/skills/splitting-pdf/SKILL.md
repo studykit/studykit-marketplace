@@ -1,35 +1,27 @@
 ---
-name: pdf-split
+name: splitting-pdf
 version: 1.0.0
-description: This skill should be used when users want to split PDF files by bookmarks or page ranges, convert PDF pages to markdown, or search PDF content. Common triggers include "split this PDF", "extract pages from PDF", "break PDF into sections", "convert PDF to markdown", "search the PDF for", "find in PDF", "look for X in the PDF", "extract chapter from PDF", and "get PDF bookmarks".
+description: This skill should be used when users want to split PDF files by bookmarks or page ranges. Common triggers include "split this PDF", "extract pages from PDF", "break PDF into sections", "extract chapter from PDF", and "get PDF bookmarks".
 ---
 
 # PDF Split
 
 Split PDF files into separate files based on bookmarks or page ranges.
 
-## Directory Structure After Split and Markdown Conversion
+## Directory Structure After Split
 
 ```
 /path/to/docs/
 ├── Computer Networks, 5th Edition.pdf    # Original PDF
 └── Computer Networks, 5th Edition/       # Split output directory
-    ├── .CONVERTED                             # Indicates converting is done
     ├── .SPLITTED                             # Indicates splitting is done
     ├── 001_Cover_p1.pdf
-    ├── 001_Cover_p1.md                       # Converted Markdown
     ├── 002_CONTENTS_p3-14.pdf
-    ├── 002_CONTENTS_p3-14.md                 # Converted Markdown
     ├── 003_1_INTRODUCTION_p1-2.pdf           # Level 1
-    ├── 003_1_INTRODUCTION_p1-2.md            # Converted Markdown
     ├── 004_1.1_Uses_of_Computer_Networks_p2-11.pdf  # Level 2
-    ├── 004_1.1_Uses_of_Computer_Networks_p2-11.md   # Converted Markdown
     ├── 005_1.2_Network_Hardware_p11-40.pdf   # Level 2
-    ├── 005_1.2_Network_Hardware_p11-40.md    # Converted Markdown
     ├── 006_2_THE_PHYSICAL_LAYER_p41-42.pdf   # Level 1
-    ├── 006_2_THE_PHYSICAL_LAYER_p41-42.md    # Converted Markdown
     ├── 007_2.1_Guided_Transmission_p42-60.pdf  # Level 2
-    ├── 007_2.1_Guided_Transmission_p42-60.md # Converted Markdown
     └── ...
 ```
 
@@ -38,36 +30,7 @@ Filename format: `[number]_[title]_p[start]-[end].pdf`
 - **Page numbers in filename = TOC/book page numbers**
 - **Page range in script argument = actual PDF page numbers**
 
-## Workflow Decision
-
-### Content Searching
-
-**Note**: Content searching is only available when Markdown files exist. If no Markdown files are present, use the "Split PDF" or "Convert to Markdown" sections first.
-
-Use grep or Claude's Grep tool to search across all converted Markdown files:
-
-```bash
-grep -r "search term" "<filename>/" --include="*.md"
-```
-
-### Convert to Markdown
-
-**Note**: Conversion to Markdown is only available when PDF files are split. If no split PDF files are present, use the "Split PDF" section first.
-
-Use the following command to convert each split PDF file to Markdown:
-
-```bash
-uv run scripts/page_md.py "<filename>/<splitted_file>.pdf" -o "<filename>/<splitted_file>.md"
-```
-
-After converting all split PDF files to Markdown, create a `.CONVERTED` file to mark the conversion as complete:
-
-```bash
-touch "<filename>/.CONVERTED"
-```
-
-
-### Split PDF
+## Workflow
 
 - `scripts/total_page.py` - Get total page count of a PDF
 - `scripts/get_bookmarks.py` - Extract bookmark (TOC) info with PDF page numbers
@@ -76,7 +39,7 @@ touch "<filename>/.CONVERTED"
 
 **NOTE**: If `<filename>/.SPLITTED` file exists, the workflow is complete. Skip all steps.
 
-#### Step 1: Get Total Page Count
+### Step 1: Get Total Page Count
 
 ```bash
 uv run scripts/total_page.py "<input.pdf>"
@@ -237,10 +200,10 @@ touch "<filename>/.SPLITTED"
 
 ### Fallback: No Bookmarks or TOC
 
-If neither bookmarks nor TOC exist, split into 20-page chunks:
+If neither bookmarks nor TOC exist, ask the user how many pages per chunk they want, then split accordingly:
 
 ```bash
-# For a 100-page document
+# Example: For a 100-page document with 20 pages per chunk
 uv run scripts/split_by_page.py "doc.pdf" "<filename>/001_Part_1_p1-20.pdf" "1-20"
 uv run scripts/split_by_page.py "doc.pdf" "<filename>/002_Part_2_p21-40.pdf" "21-40"
 ```
