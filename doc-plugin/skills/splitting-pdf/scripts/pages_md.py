@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # /// script
 # requires-python = ">=3.10"
-# dependencies = ["pypdf", "markitdown[pdf]"]
+# dependencies = ["pymupdf", "markitdown[pdf]"]
 # ///
 """
 Convert specific PDF pages to markdown for TOC analysis.
@@ -17,7 +17,7 @@ import sys
 import tempfile
 from pathlib import Path
 
-from pypdf import PdfReader, PdfWriter
+import fitz  # pymupdf
 from markitdown import MarkItDown
 
 
@@ -48,16 +48,17 @@ def parse_page_range(page_range: str, max_pages: int) -> list[int]:
 
 
 def extract_pages_to_temp(input_path: str, pages: list[int]) -> str:
-    """Extract specified pages to a temporary PDF file."""
-    reader = PdfReader(input_path)
-    writer = PdfWriter()
+    """Extract specified pages to a temporary PDF file using pymupdf."""
+    doc = fitz.open(input_path)
+    new_doc = fitz.open()
 
     for page_num in pages:
-        writer.add_page(reader.pages[page_num])
+        new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
 
     temp_file = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
-    with open(temp_file.name, "wb") as f:
-        writer.write(f)
+    new_doc.save(temp_file.name)
+    new_doc.close()
+    doc.close()
 
     return temp_file.name
 
@@ -92,8 +93,9 @@ def main():
         sys.exit(1)
 
     try:
-        reader = PdfReader(args.input)
-        max_pages = len(reader.pages)
+        doc = fitz.open(args.input)
+        max_pages = len(doc)
+        doc.close()
         print(f"Total pages: {max_pages}", file=sys.stderr)
 
         if args.pages:

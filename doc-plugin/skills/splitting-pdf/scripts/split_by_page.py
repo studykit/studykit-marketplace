@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # /// script
-# dependencies = ["pypdf"]
+# dependencies = ["pymupdf"]
 # ///
 """
 Extract specific page ranges from a PDF file.
@@ -14,7 +14,7 @@ import argparse
 import sys
 from pathlib import Path
 
-from pypdf import PdfReader, PdfWriter
+import fitz  # pymupdf
 
 
 def parse_page_range(page_range: str, max_pages: int) -> list[int]:
@@ -26,7 +26,7 @@ def parse_page_range(page_range: str, max_pages: int) -> list[int]:
         "1,3,5" -> [0, 2, 4]
         "1-5,10,15-20" -> [0, 1, 2, 3, 4, 9, 14, 15, 16, 17, 18, 19]
 
-    Note: Input is 1-indexed, output is 0-indexed (for pypdf).
+    Note: Input is 1-indexed, output is 0-indexed (for pymupdf).
     """
     pages = set()
 
@@ -54,8 +54,8 @@ def parse_page_range(page_range: str, max_pages: int) -> list[int]:
 
 def extract_pages(input_path: str, output_path: str, page_range: str) -> None:
     """Extract specified page range and create a new PDF."""
-    reader = PdfReader(input_path)
-    max_pages = len(reader.pages)
+    doc = fitz.open(input_path)
+    max_pages = len(doc)
 
     print(f"Input file: {input_path}")
     print(f"Total pages: {max_pages}")
@@ -63,15 +63,23 @@ def extract_pages(input_path: str, output_path: str, page_range: str) -> None:
     pages = parse_page_range(page_range, max_pages)
     print(f"Pages to extract: {[p + 1 for p in pages]}")
 
-    writer = PdfWriter()
-    for page_num in pages:
-        writer.add_page(reader.pages[page_num])
+    # Create new PDF with selected pages
+    new_doc = fitz.open()
+    new_doc.insert_pdf(doc, from_page=min(pages), to_page=max(pages))
+
+    # If pages are not contiguous, we need to select specific pages
+    if pages != list(range(min(pages), max(pages) + 1)):
+        new_doc.close()
+        new_doc = fitz.open()
+        for page_num in pages:
+            new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
 
     output = Path(output_path)
     output.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output, "wb") as f:
-        writer.write(f)
+    new_doc.save(str(output))
+    new_doc.close()
+    doc.close()
 
     print(f"Output file: {output_path}")
     print(f"Extracted pages: {len(pages)}")

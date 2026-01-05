@@ -13,7 +13,6 @@ Split PDF files into separate files based on bookmarks or page ranges.
 /path/to/docs/
 ├── Computer Networks, 5th Edition.pdf    # Original PDF
 └── Computer Networks, 5th Edition/       # Split output directory
-    ├── .SPLITTED                             # Indicates splitting is done
     ├── 001_Cover_p1.pdf
     ├── 002_CONTENTS_p3-14.pdf
     ├── 003_1_INTRODUCTION_p1-2.pdf           # Level 1
@@ -36,7 +35,15 @@ Filename format: `[number]_[title]_p[start]-[end].pdf`
 - `scripts/pages_md.py` - Convert specific pages to markdown for TOC analysis
 - `scripts/split_by_page.py` - Split by page ranges
 
-**NOTE**: If `<filename>/.SPLITTED` file exists, the workflow is complete. Skip all steps.
+### ⚠️ Pre-Check: Already Split?
+
+**BEFORE starting any work**, verify if the PDF has already been split:
+
+1. Check if output directory `<filename>/` exists
+2. If exists, extract bookmarks or TOC from the original PDF
+3. Compare with existing split files in the directory
+
+If all chapters from bookmarks/TOC already have corresponding split PDF files → **Skip all steps. The workflow is already complete.**
 
 ### Step 1: Get Total Page Count
 
@@ -67,6 +74,8 @@ CONTENTS (p.3)
 ```
 
 ### Step 3: Map PDF Pages ↔ TOC Page Numbers
+
+**🔴 CRITICAL**: This mapping step is essential. Do NOT skip or rush this step. Incorrect mapping will result in wrong page splits.
 
 **Mapping Depth**: Up to 2 levels only
 - Level 1: Main chapters (e.g., "1 INTRODUCTION")
@@ -166,8 +175,6 @@ Build the mapping table (Level 1 & 2):
 
 ### Step 4: Split by Chapters
 
-**IMPORTANT**: Before splitting, check if `<filename>/DONE` file already exists. Skip if it exists.
-
 **Split Depth**: Up to 2 levels only
 - Level 1: Main chapters (e.g., "1 INTRODUCTION", "2 THE PHYSICAL LAYER")
 - Level 2: Sub-sections (e.g., "1.1 Uses of Computer Networks", "1.2 Network Hardware")
@@ -189,12 +196,6 @@ uv run scripts/split_by_page.py "doc.pdf" "<filename>/003_1_INTRODUCTION_p1-2.pd
 uv run scripts/split_by_page.py "doc.pdf" "<filename>/004_1.1_Uses_of_Computer_Networks_p2-11.pdf" "16-25"
 ```
 
-### Step 5: Mark as Done
-Create a `.SPLITTED` file in the output directory to indicate splitting is complete:
-
-```bash
-touch "<filename>/.SPLITTED"
-```
 
 
 ### Fallback: No Bookmarks or TOC
