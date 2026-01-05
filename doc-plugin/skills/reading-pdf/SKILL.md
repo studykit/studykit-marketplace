@@ -1,6 +1,5 @@
 ---
 name: reading-pdf
-version: 1.0.0
 description: This skill should be used when users want to extract text or tables from PDF files, read PDF content, parse PDF documents, or work with scanned PDFs using OCR. Common triggers include "extract text from PDF", "read this PDF", "get tables from PDF", "parse PDF content", "OCR this scanned PDF", and "convert PDF to text".
 ---
 

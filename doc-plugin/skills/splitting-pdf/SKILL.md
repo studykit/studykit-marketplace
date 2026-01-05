@@ -1,6 +1,5 @@
 ---
 name: splitting-pdf
-version: 1.0.0
 description: This skill should be used when users want to split PDF files by bookmarks or page ranges. Common triggers include "split this PDF", "extract pages from PDF", "break PDF into sections", "extract chapter from PDF", and "get PDF bookmarks".
 ---
 
