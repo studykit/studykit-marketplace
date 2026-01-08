@@ -12,7 +12,7 @@
       "name": "english-plugin",
       "source": "./english-plugin",
       "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
-      "version": "1.0.0",
+      "version": "0.0.1",
       "author": {
         "name": "studykit"
       },
@@ -25,7 +25,7 @@
       "name": "doc-plugin",
       "source": "./doc-plugin",
       "description": "A plugin for reading and searching various document formats including CHM files",
-      "version": "1.0.0",
+      "version": "0.0.1",
       "author": {
         "name": "studykit"
       },
@@ -38,7 +38,7 @@
       "name": "autodesk-plugin",
       "source": "./autodesk-plugin",
       "description": "Autodesk Inventor API documentation and development support for product and architectural design automation",
-      "version": "0.1.0",
+      "version": "0.0.1",
       "author": {
         "name": "studykit"
       },
