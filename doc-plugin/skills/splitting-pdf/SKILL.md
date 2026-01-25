@@ -14,19 +14,24 @@ Split PDF files into separate files based on bookmarks or page ranges.
 ├── Computer Networks, 5th Edition.pdf    # Original PDF
 └── Computer Networks, 5th Edition/       # Split output directory
     ├── 001_Cover_p1.pdf
-    ├── 002_CONTENTS_p3-14.pdf
-    ├── 003_1_INTRODUCTION_p1-2.pdf           # Level 1
-    ├── 004_1.1_Uses_of_Computer_Networks_p2-11.pdf  # Level 2
-    ├── 005_1.2_Network_Hardware_p11-40.pdf   # Level 2
-    ├── 006_2_THE_PHYSICAL_LAYER_p41-42.pdf   # Level 1
-    ├── 007_2.1_Guided_Transmission_p42-60.pdf  # Level 2
+    ├── 002_Preface_pi-vi.pdf                 # Roman numerals for front matter
+    ├── 003_CONTENTS_pvii-xiv.pdf             # Roman numerals continue
+    ├── 004_1_INTRODUCTION_p1-2.pdf           # Level 1 (Arabic numerals start)
+    ├── 005_1.1_Uses_of_Computer_Networks_p2-11.pdf  # Level 2
+    ├── 006_1.2_Network_Hardware_p11-40.pdf   # Level 2
+    ├── 007_2_THE_PHYSICAL_LAYER_p41-42.pdf   # Level 1
+    ├── 008_2.1_Guided_Transmission_p42-60.pdf  # Level 2
     └── ...
 ```
 
 Filename format: `[number]_[title]_p[start]-[end].pdf`
 - Title is sanitized and limited to 30 characters
-- **Page numbers in filename = TOC/book page numbers**
-- **Page range in script argument = actual PDF page numbers**
+- **Page numbers in filename = Book page numbers (exactly as printed)**
+
+**Important**: Filename page numbers must match the book's original numbering system exactly:
+- Roman numerals → Roman numerals: `002_Preface_pi-viii.pdf`
+- Arabic numerals → Arabic numerals: `004_1_INTRODUCTION_p1-15.pdf`
+- Chinese numerals → Chinese numerals: `003_序言_p一-五.pdf`
 
 ## Workflow
 
@@ -77,6 +82,12 @@ CONTENTS (p.3)
 
 **🔴 CRITICAL**: This mapping step is essential. Do NOT skip or rush this step. Incorrect mapping will result in wrong page splits.
 
+**Roman Numeral Pagination**: Many books use two separate numbering systems:
+- Front matter (preface, TOC, acknowledgments): Roman numerals (i, ii, iii, iv, v...)
+- Main content: Arabic numerals (1, 2, 3...) starting fresh from page 1
+
+This means the PDF may have: Cover (PDF p.1) → Preface p.i (PDF p.2) → ... → TOC p.vii (PDF p.8) → Chapter 1 p.1 (PDF p.15). Track both offsets separately if needed.
+
 **Mapping Depth**: Up to 2 levels only
 - Level 1: Main chapters (e.g., "1 INTRODUCTION")
 - Level 2: Sub-sections (e.g., "1.1 Uses of Computer Networks")
@@ -103,20 +114,28 @@ uv run scripts/pages_md.py "<input.pdf>" 3-14 -o toc.md
 
 Compare bookmark PDF pages with TOC page numbers in the markdown:
 
-| Level | Chapter | TOC Page (in book) | Bookmark (PDF Page) | Offset |
-|-------|---------|-------------------|---------------------|--------|
-| 1 | 1 INTRODUCTION | p.1 | p.15 | +14 |
-| 2 | 1.1 Uses of Computer Networks | p.2 | p.16 | +14 |
-| 2 | 1.2 Network Hardware | p.11 | p.25 | +14 |
-| 1 | 2 THE PHYSICAL LAYER | p.41 | p.55 | +14 |
-| 2 | 2.1 Guided Transmission | p.42 | p.56 | +14 |
+| Level | Section | TOC Page (in book) | Bookmark (PDF Page) | Notes |
+|-------|---------|-------------------|---------------------|-------|
+| - | Cover | - | p.1 | Unnumbered |
+| - | Preface | p.i | p.2 | Roman numerals start |
+| - | CONTENTS | p.vii | p.8 | Roman numerals continue |
+| 1 | 1 INTRODUCTION | p.1 | p.15 | Arabic numerals start (offset +14) |
+| 2 | 1.1 Uses of Computer Networks | p.2 | p.16 | offset +14 |
+| 2 | 1.2 Network Hardware | p.11 | p.25 | offset +14 |
+| 1 | 2 THE PHYSICAL LAYER | p.41 | p.55 | offset +14 |
+| 2 | 2.1 Guided Transmission | p.42 | p.56 | offset +14 |
 
-Calculate: `Offset = PDF page - TOC page`
+**Two offset calculations** (when Roman numerals exist):
+- Front matter offset: `PDF page - Roman numeral value` (e.g., p.8 - vii(7) = +1)
+- Main content offset: `PDF page - Arabic page` (e.g., p.15 - 1 = +14)
 
 Verify a few chapters by converting their first page to markdown:
 ```bash
 # Verify "1 INTRODUCTION" at PDF page 15 shows "page 1" in book
 uv run scripts/pages_md.py "<input.pdf>" 15 | head -50
+
+# Verify "CONTENTS" at PDF page 8 shows "page vii" in book
+uv run scripts/pages_md.py "<input.pdf>" 8 | head -50
 ```
 
 #### Case B: No Bookmarks
@@ -152,6 +171,9 @@ For each chapter in TOC, convert candidate PDF pages to markdown to find the act
 ```bash
 # If TOC says "Chapter 1" starts at page 1, try PDF pages around 10-20
 uv run scripts/pages_md.py "<input.pdf>" 10-20 | grep -i "chapter 1"
+
+# For front matter, check early PDF pages for Roman numeral markers
+uv run scripts/pages_md.py "<input.pdf>" 2-10 | head -100
 ```
 
 Once found, calculate offset and verify:
@@ -159,19 +181,29 @@ Once found, calculate offset and verify:
 # If "Chapter 1" (TOC p.1) is at PDF page 15, offset = +14
 # Verify "Chapter 2" (TOC p.25) is at PDF page 39 (25+14)
 uv run scripts/pages_md.py "<input.pdf>" 39 | head -50
+
+# Verify "Preface" (TOC p.i) is at PDF page 2
+uv run scripts/pages_md.py "<input.pdf>" 2 | head -50
 ```
 
 Build the mapping table (Level 1 & 2):
 
-| Level | Chapter | TOC Page | PDF Page | Offset |
-|-------|---------|----------|----------|--------|
-| 1 | Chapter 1: Introduction | p.1 | p.15 | +14 |
-| 2 | 1.1 Overview | p.2 | p.16 | +14 |
-| 2 | 1.2 Background | p.10 | p.24 | +14 |
-| 1 | Chapter 2: Methods | p.25 | p.39 | +14 |
-| 2 | 2.1 Data Collection | p.26 | p.40 | +14 |
-| 2 | 2.2 Analysis | p.35 | p.49 | +14 |
-| 1 | Chapter 3: Results | p.51 | p.65 | +14 |
+| Level | Section | TOC Page | PDF Page | Notes |
+|-------|---------|----------|----------|-------|
+| - | Cover | - | p.1 | Unnumbered |
+| - | Preface | p.i | p.2 | Roman numerals start |
+| - | Contents | p.v | p.6 | Roman numerals continue |
+| 1 | Chapter 1: Introduction | p.1 | p.15 | Arabic numerals start (offset +14) |
+| 2 | 1.1 Overview | p.2 | p.16 | offset +14 |
+| 2 | 1.2 Background | p.10 | p.24 | offset +14 |
+| 1 | Chapter 2: Methods | p.25 | p.39 | offset +14 |
+| 2 | 2.1 Data Collection | p.26 | p.40 | offset +14 |
+| 2 | 2.2 Analysis | p.35 | p.49 | offset +14 |
+| 1 | Chapter 3: Results | p.51 | p.65 | offset +14 |
+
+**Two offset calculations** (when Roman numerals exist):
+- Front matter offset: `PDF page - Roman numeral value` (e.g., p.6 - v(5) = +1)
+- Main content offset: `PDF page - Arabic page` (e.g., p.15 - 1 = +14)
 
 ### Step 4: Split by Chapters
 
@@ -189,24 +221,20 @@ Use `scripts/split_by_page.py` with:
 mkdir -p "<filename>/"
 
 # Split each chapter (Level 1 and Level 2)
-# Filename uses TOC pages, argument uses PDF pages
+# Filename uses TOC pages (Roman or Arabic), argument uses PDF pages
+
+# Front matter (Roman numerals in filename)
 uv run scripts/split_by_page.py "doc.pdf" "<filename>/001_Cover_p1.pdf" "1"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/002_CONTENTS_p3-14.pdf" "3-14"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/003_1_INTRODUCTION_p1-2.pdf" "15-16"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/004_1.1_Uses_of_Computer_Networks_p2-11.pdf" "16-25"
+uv run scripts/split_by_page.py "doc.pdf" "<filename>/002_Preface_pi-vi.pdf" "2-7"
+uv run scripts/split_by_page.py "doc.pdf" "<filename>/003_CONTENTS_pvii-xiv.pdf" "8-15"
+
+# Main content (Arabic numerals in filename)
+uv run scripts/split_by_page.py "doc.pdf" "<filename>/004_1_INTRODUCTION_p1-2.pdf" "16-17"
+uv run scripts/split_by_page.py "doc.pdf" "<filename>/005_1.1_Uses_of_Computer_Networks_p2-11.pdf" "17-26"
+uv run scripts/split_by_page.py "doc.pdf" "<filename>/006_1.2_Network_Hardware_p11-40.pdf" "26-55"
+uv run scripts/split_by_page.py "doc.pdf" "<filename>/007_2_THE_PHYSICAL_LAYER_p41-42.pdf" "56-57"
 ```
 
-
-
-### Fallback: No Bookmarks or TOC
-
-If neither bookmarks nor TOC exist, ask the user how many pages per chunk they want, then split accordingly:
-
-```bash
-# Example: For a 100-page document with 20 pages per chunk
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/001_Part_1_p1-20.pdf" "1-20"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/002_Part_2_p21-40.pdf" "21-40"
-```
 
 ### Page Range Formats
 
