@@ -236,6 +236,68 @@ uv run scripts/split_by_page.py "doc.pdf" "<filename>/007_2_THE_PHYSICAL_LAYER_p
 ```
 
 
+### Step 5: Verify Split Results
+
+**🔴 CRITICAL**: Always verify that split files have correct page boundaries. Incorrect splits waste time and require re-splitting.
+
+#### 5-1. Verify Chapter Boundaries
+
+For each split file, check that:
+1. **First page** contains the chapter title (e.g., "CHAPTER ONE", "Chapter 1")
+2. **Last page** shows the correct book page number in header/footer
+
+```bash
+# Check first page of a split file
+uv run scripts/pages_md.py "<split_file>.pdf" 1 | head -10
+
+# Check last page of a split file (get total pages first)
+uv run scripts/total_page.py "<split_file>.pdf"
+# → Total pages: 33
+uv run scripts/pages_md.py "<split_file>.pdf" 33 | head -5
+```
+
+**Example verification**:
+```bash
+# Verify Ch2 file (003_Ch02_BSpline_Basis_p47-79.pdf)
+uv run scripts/pages_md.py 003_Ch02_BSpline_Basis_p47-79.pdf 1 | head -5
+# Expected: "CHAPTER TWO" or "CHAPTER 2"
+
+uv run scripts/pages_md.py 003_Ch02_BSpline_Basis_p47-79.pdf 33 | head -3
+# Expected: Page number "79" visible in content (e.g., "Exercises 79")
+```
+
+#### 5-2. Common Issues to Check
+
+| Issue | Symptom | Cause |
+|-------|---------|-------|
+| Chapter overlap | Ch2 file ends with "CHAPTER THREE" | End page too late (includes next chapter start) |
+| Missing pages | Ch3 starts at page 82, not 81 | Start page too late (skipped chapter title page) |
+| Offset drift | Pages off by 1-2 after certain chapter | Missing/blank pages in PDF not accounted for |
+
+#### 5-3. Detecting Offset Changes
+
+Some books have **inconsistent offsets** due to missing or blank pages. Always verify offset at multiple points:
+
+```bash
+# Check offset at beginning (Ch1)
+uv run scripts/pages_md.py "<input.pdf>" 14 | head -2
+# → "2 Curve and Surface Basics" (book page 2, PDF 14 → offset 12)
+
+# Check offset at middle (Ch5)
+uv run scripts/pages_md.py "<input.pdf>" 238 | head -2
+# → "228 Fundamental Geometric Algorithms" (book page 228, PDF 238 → offset 10)
+
+# If offsets differ, find where the change occurs and adjust accordingly
+```
+
+#### 5-4. Quick Verification Checklist
+
+- [ ] First split file starts with Front Matter/Cover
+- [ ] Each chapter file starts with "CHAPTER" keyword
+- [ ] Last page of each chapter shows expected book page number
+- [ ] No chapter title appears at the end of another chapter's file
+- [ ] Total pages of all split files equals original PDF total pages
+
 ### Page Range Formats
 
 ```bash
