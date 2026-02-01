@@ -1,5 +1,6 @@
 ---
 name: markitdown
+disable-model-invocation: true
 description: Convert documents (HTML, PPTX, DOCX, XLSX, XLS, images, audio) to Markdown using `uvx markitdown`.
 ---
 

@@ -1,5 +1,6 @@
 ---
 name: epub-extract
+disable-model-invocation: true
 description: This skill should be used when the user asks to "extract EPUB to markdown", "convert EPUB to md", "extract chapters from EPUB", "EPUB 마크다운 변환", "EPUB 챕터 추출", or wants to convert an EPUB file into chapter-by-chapter markdown files while preserving the book's logical reading order.
 ---
 

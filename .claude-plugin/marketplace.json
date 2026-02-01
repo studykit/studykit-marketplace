@@ -9,8 +9,8 @@
   },
   "plugins": [
     {
-      "name": "english-plugin",
-      "source": "./english-plugin",
+      "name": "english",
+      "source": "./english",
       "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
       "version": "0.0.1",
       "author": {
@@ -22,8 +22,8 @@
       "keywords": ["translation", "english", "korean", "vocabulary", "learning"]
     },
     {
-      "name": "doc-plugin",
-      "source": "./doc-plugin",
+      "name": "doc",
+      "source": "./doc",
       "description": "A plugin for reading and searching various document formats including CHM files",
       "version": "0.0.1",
       "author": {
@@ -35,8 +35,8 @@
       "keywords": ["documentation", "chm", "help-files", "search", "reading"]
     },
     {
-      "name": "autodesk-plugin",
-      "source": "./autodesk-plugin",
+      "name": "autodesk",
+      "source": "./autodesk",
       "description": "Autodesk Inventor API documentation and development support for product and architectural design automation",
       "version": "0.0.1",
       "author": {

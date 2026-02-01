@@ -1,5 +1,6 @@
 ---
 name: reading-pdf
+disable-model-invocation: true
 description: This skill should be used when users want to extract text or tables from PDF files, read PDF content, parse PDF documents, or work with scanned PDFs using OCR. Common triggers include "extract text from PDF", "read this PDF", "get tables from PDF", "parse PDF content", "OCR this scanned PDF", and "convert PDF to text".
 ---
 
