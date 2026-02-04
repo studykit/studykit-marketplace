@@ -46,6 +46,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["autodesk", "inventor", "cad", "api", "automation", "3d-modeling"]
+    },
+    {
+      "name": "jdk-source",
+      "source": "./jdk-source",
+      "description": "View JDK internal source code for Java development and debugging",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["java", "jdk", "openjdk", "source", "debugging"]
     }
   ]
 }
