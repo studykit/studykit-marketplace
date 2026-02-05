@@ -7,8 +7,7 @@ A Claude Code plugin for viewing, searching, and understanding JDK internal sour
 - **JDK source exploration**: View Java standard library source code (e.g., `java.util.HashMap`, `java.lang.String`)
 - **Code search**: Search within JDK sources for patterns, methods, or keywords
 - **Implementation explanations**: Get detailed explanations of how JDK classes work internally
-- **Automatic caching**: Extracted sources saved for reuse across sessions
-- **LSP integration**: Enhanced navigation with jdtls when available
+- **Automatic caching**: Extracted sources saved for reuse across sessions at `~/.cache/jdk-sources/`
 - **GitHub fallback**: Access OpenJDK source when local installation unavailable
 
 ## Installation
@@ -17,95 +16,47 @@ Add this plugin to your Claude Code configuration.
 
 ## Usage
 
-### Agent (Auto-triggered)
+### Skill: `/lookup` (Auto or Manual)
 
-The **jdk-explorer** agent automatically activates when you ask about JDK internals:
+The **lookup** skill searches JDK source and recommends which code to read. It runs in an isolated context using the **jdk-explorer** agent as execution environment (`context: fork` + `agent` pattern).
 
+**Invoke manually:**
 ```
-"How does HashMap work internally?"
-"Show me the String source code from JDK"
-"Find where synchronized is used in ConcurrentHashMap"
-"What's the difference between HashMap and LinkedHashMap internally?"
+/lookup How does HashMap work internally?
+/lookup Show me the String source code from JDK
+/lookup Why does ConcurrentHashMap not allow null keys?
+```
+
+**Or let Claude trigger it automatically** when you ask about JDK internals:
+```
 "I'm getting a ConcurrentModificationException from ArrayList, what's happening?"
+"What's the difference between HashMap and LinkedHashMap internally?"
 ```
 
-The agent will:
-1. Locate or cache the JDK source
-2. Read the relevant source files
-3. Search for specific patterns if requested
-4. Explain the implementation details
+The skill will:
+1. Determine the JDK version from your project
+2. Ensure source is cached at `~/.cache/jdk-sources/` (extract src.zip or clone from GitHub)
+3. Build ctags index for fast symbol lookup
+4. Search and analyze the relevant source code
+5. Recommend which files/methods to read and why
 
-### Skill (Reference)
-
-The plugin also provides the **lookup** skill with reference information about source locations and caching strategies.
-
-## Configuration
-
-Create `~/.claude/jdk-source.local.md` to customize settings:
-
-```yaml
----
-jdk_source_path: /path/to/jdk/lib/src.zip
-jdk_cache_path: ~/my-jdk-sources   # Custom cache location (default: ~/.cache/jdk-sources)
-use_github_fallback: true
-use_jdtls: true
----
-```
-
-### Settings
-
-| Field | Description | Default |
-|-------|-------------|---------|
-| `jdk_source_path` | Path to JDK src.zip file | Auto-detect from JAVA_HOME |
-| `jdk_cache_path` | Directory to cache extracted sources | `~/.cache/jdk-sources` |
-| `use_github_fallback` | Use GitHub OpenJDK when local unavailable | `true` |
-| `use_jdtls` | Enable LSP features when jdtls is available | `true` |
-
-### Cache Structure
-
-Extracted sources are cached for reuse. Location is configured by `jdk_cache_path` (default: `~/.cache/jdk-sources`):
+## Cache Structure
 
 ```
-$jdk_cache_path/
+~/.cache/jdk-sources/
 ├── zip/                          # From local src.zip
 │   └── jdk-21/
-│       ├── java.base/
-│       │   └── java/util/HashMap.java
-│       ├── java.sql/
-│       └── java.desktop/
+│       ├── tags                  # ctags index
+│       └── java.base/java/util/HashMap.java
 └── git/                          # From GitHub OpenJDK
     ├── jdk.git/                  # Bare repository
-    └── jdk-21/                   # Worktree
-        └── src/
-            ├── java.base/share/classes/
-            └── hotspot/          # VM source (C/C++)
+    └── jdk-21/
+        ├── tags                  # ctags index
+        └── src/java.base/share/classes/java/util/HashMap.java
 ```
 
 ## Requirements
 
 - JDK installation with `src.zip` (recommended)
 - Or internet access for GitHub OpenJDK fallback
-
-## LSP Integration (Optional)
-
-When Eclipse JDT Language Server (jdtls) is installed, the agent can leverage enhanced Java navigation:
-
-- **Go to definition**: Navigate directly to JDK source code
-- **Find references**: Find all usages of a method or class
-- **Hover information**: View method signatures and Javadoc
-
-### Installing jdtls
-
-```bash
-# macOS (Homebrew)
-brew install jdtls
-
-# Linux (Arch-based)
-yay -S jdtls
-```
-
-### Prerequisites for LSP
-
-- **Java 17+** (JDK, not just JRE)
-- **jdtls** binary in PATH
-- **JDK with src.zip** for source attachment
+- `universal-ctags` for symbol indexing (`brew install universal-ctags`)
