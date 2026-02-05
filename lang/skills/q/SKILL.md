@@ -1,5 +1,6 @@
 ---
 description: Translate Korean question to English and answer in English
+disable-model-invocation: true
 ---
 
 # Translate and Answer

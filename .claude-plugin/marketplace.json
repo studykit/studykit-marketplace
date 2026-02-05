@@ -9,8 +9,8 @@
   },
   "plugins": [
     {
-      "name": "english",
-      "source": "./english",
+      "name": "lang",
+      "source": "./lang",
       "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
       "version": "0.0.1",
       "author": {

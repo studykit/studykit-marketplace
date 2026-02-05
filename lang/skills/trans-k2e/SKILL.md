@@ -1,5 +1,6 @@
 ---
 description: Translate text into English with multiple style variations
+disable-model-invocation: true
 allowed-tools:
   - AskUserQuestion
 ---
@@ -34,4 +35,3 @@ After receiving the user's selection, translate the text ONLY in the selected st
 
 # Text to Translate
 $ARGUMENTS
-

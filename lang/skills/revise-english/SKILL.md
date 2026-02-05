@@ -1,5 +1,6 @@
 ---
 description: Revise and enhance English text
+disable-model-invocation: true
 allowed-tools:
   - AskUserQuestion
 ---
