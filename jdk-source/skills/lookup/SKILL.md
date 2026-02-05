@@ -1,6 +1,7 @@
 ---
-name: jdk-source-lookup
+name: lookup
 description: This skill should be used when the user asks to "view JDK source", "show JDK internal code", "see OpenJDK implementation", "look at Java standard library source", "how does HashMap work internally", "show me String source code", "what's inside ArrayList", "show JDK internals", or needs to examine Java standard library internals for debugging or learning.
+disable-model-invocation: true
 version: 0.1.0
 ---
 

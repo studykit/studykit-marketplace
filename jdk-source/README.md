@@ -37,7 +37,7 @@ The agent will:
 
 ### Skill (Reference)
 
-The plugin also provides the **jdk-source-lookup** skill with reference information about source locations and caching strategies.
+The plugin also provides the **lookup** skill with reference information about source locations and caching strategies.
 
 ## Configuration
 
