@@ -1,13 +1,14 @@
 ---
-description: Revise and enhance English text
+description: Revise English text with user-selected style
 disable-model-invocation: true
+context: fork
 allowed-tools:
   - AskUserQuestion
 ---
 
-# English Text Revision and Enhancement
+# Revise English Text with Style Selection
 
-First, use AskUserQuestion to ask the user which refinement style(s) they want. Present the following options with multiSelect enabled:
+First, use AskUserQuestion to ask which refinement style(s) to apply. Present the following options with multiSelect enabled:
 
 ```
 Question: "Which refinement style(s) would you like?"
@@ -25,10 +26,11 @@ Options:
 10. "Professional (Spoken)" - Business meeting appropriate
 ```
 
-After receiving the user's selection, revise the text ONLY in the selected style(s).
+After receiving the selection, revise the text ONLY in the selected style(s).
 
 For each refinement:
 - Review for grammatical accuracy, natural flow, and clarity
+- Keep the original meaning intact
 - Provide the refined version with the style name as heading
 
 ## Important Notes
@@ -36,6 +38,5 @@ For each refinement:
 
 ---
 
-# Text to Refine
-
+# English Text
 $ARGUMENTS
