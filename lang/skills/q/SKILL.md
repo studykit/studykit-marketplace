@@ -1,4 +1,5 @@
 ---
+name: q
 description: Translate Korean question to English and answer in English
 disable-model-invocation: true
 context: fork

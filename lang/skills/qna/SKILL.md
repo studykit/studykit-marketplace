@@ -1,4 +1,5 @@
 ---
+name: qna
 description: Translate Korean question to English, wait user confirmation and answer in English
 disable-model-invocation: true
 context: fork

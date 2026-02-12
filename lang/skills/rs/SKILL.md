@@ -1,4 +1,5 @@
 ---
+name: rs
 description: Revise English text with user-selected style
 disable-model-invocation: true
 context: fork

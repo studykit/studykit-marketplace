@@ -1,4 +1,5 @@
 ---
+name: rna
 description: Revise English text in technical style, wait for user confirmation, then answer questions about the revision
 disable-model-invocation: true
 context: fork

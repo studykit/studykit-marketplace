@@ -1,4 +1,5 @@
 ---
+name: rsna
 description: Revise English text with user-selected style, then optionally explain the changes
 disable-model-invocation: true
 context: fork

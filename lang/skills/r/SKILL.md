@@ -1,4 +1,5 @@
 ---
+name: r
 description: Revise English text in technical style
 disable-model-invocation: true
 context: fork
