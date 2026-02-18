@@ -1,0 +1,9 @@
+{
+  "name": "data-go-kr",
+  "version": "0.1.0",
+  "description": "Extract and organize Open API specifications from data.go.kr (Korea Public Data Portal)",
+  "author": {
+    "name": "studykit"
+  },
+  "keywords": ["data-go-kr", "open-api", "korea", "public-data", "api-spec"]
+}
