@@ -1,6 +1,5 @@
 {
   "name": "jdk-source",
-  "version": "0.1.0",
   "description": "View JDK internal source code for Java development and debugging",
   "author": {
     "name": "studykit"
