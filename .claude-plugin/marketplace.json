@@ -61,8 +61,8 @@
       "keywords": ["java", "jdk", "openjdk", "source", "debugging"]
     },
     {
-      "name": "data-go-kr",
-      "source": "./data-go-kr",
+      "name": "korea-gov-data",
+      "source": "./korea-gov-data",
       "description": "Extract and organize Open API specifications from data.go.kr (Korea Public Data Portal)",
       "version": "0.1.0",
       "author": {
@@ -71,7 +71,7 @@
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
       "category": "development",
-      "keywords": ["data-go-kr", "open-api", "korea", "public-data", "api-spec"]
+      "keywords": ["korea-gov-data", "open-api", "korea", "public-data", "api-spec"]
     }
   ]
 }
