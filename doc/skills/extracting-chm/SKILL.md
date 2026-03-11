@@ -1,12 +1,14 @@
 ---
-name: chm
+name: extracting-chm
 disable-model-invocation: true
 description: This skill handles CHM (Compiled HTML Help) files, the Windows help file format with .chm extension. Use for extracting CHM contents, converting CHM to Markdown, reading compiled help documentation, parsing .hhc table of contents files, searching within help files, or working with Microsoft HTML Help. Applies when users say "extract CHM", "convert CHM to markdown", "read help file", "open .chm", "parse CHM documentation", "search CHM content", or reference Windows help documentation.
+argument-hint: <path/to/file.chm>
+context: fork
 ---
 
 # CHM File Extraction and Conversion
 
-Extract CHM contents and convert them to searchable Markdown format.
+Extract and convert `$ARGUMENTS` to searchable Markdown format.
 
 ## Key Files After Extraction
 
@@ -73,7 +75,7 @@ extract_chmLib "<filename>.chm" "<filename>/"
 #### Step 2: Generate TODO List
 
 ```bash
-python3 scripts/show_hhc.py --has-link --todo "<path/to/file.hhc>" -o "<path/to>/TODO.md"
+uv run scripts/show_hhc.py --has-link --todo "<path/to/file.hhc>" -o "<path/to>/TODO.md"
 ```
 
 Output example:
@@ -102,8 +104,21 @@ Update the TODO list after each conversion by marking items as complete `[x]`.
 After completing all tasks in TODO.md, generate the final TOC:
 
 ```bash
-python3 scripts/show_hhc.py "<path/to/file.hhc>" -o "<path/to>/TOC.md"
+uv run scripts/show_hhc.py "<path/to/file.hhc>" -o "<path/to>/TOC.md"
 ```
+
+## Result Reporting
+
+As the final output of this task, print a structured summary containing the following items. This summary is how the main agent receives the results of this work.
+
+- **Input file**: the original CHM absolute path
+- **Output directory**: absolute path of the extracted directory
+- **TOC file**: absolute path of the generated `TOC.md`
+- **TODO file**: absolute path of `TODO.md` (if incomplete conversions remain)
+- **Converted count**: number of HTML files converted to Markdown
+- **Skipped count**: number of files skipped (already converted)
+
+Do not include additional commentary, follow-up questions, or next-step suggestions beyond this summary.
 
 ## Dependencies
 

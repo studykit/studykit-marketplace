@@ -1,12 +1,14 @@
 ---
-name: epub-extract
+name: extracting-epub
 disable-model-invocation: true
 description: This skill should be used when the user asks to "extract EPUB to markdown", "convert EPUB to md", "extract chapters from EPUB", "EPUB 마크다운 변환", "EPUB 챕터 추출", or wants to convert an EPUB file into chapter-by-chapter markdown files while preserving the book's logical reading order.
+argument-hint: <path/to/file.epub>
+context: fork
 ---
 
 # EPUB to Markdown Extraction
 
-Extract chapter-by-chapter markdown files from EPUB files using metadata-based extraction. This approach parses the EPUB's `content.opf` to maintain the book's logical reading order (spine) rather than relying on filename sorting.
+Extract chapter-by-chapter markdown files from `$ARGUMENTS` using metadata-based extraction. This approach parses the EPUB's `content.opf` to maintain the book's logical reading order (spine) rather than relying on filename sorting.
 
 ## Output Structure
 
@@ -42,7 +44,7 @@ source: OEBPS/Text/chapter01.xhtml
 Run the extraction script:
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/skills/epub-extract/scripts/extract_epub.py "<input.epub>" -o "<output_dir>"
+uv run scripts/extract_epub.py "$ARGUMENTS" -o "<output_dir>"
 ```
 
 Options:
@@ -80,6 +82,18 @@ Common post-processing tasks:
 - **Fix formatting**: Adjust headers, lists, or code blocks
 - **Update links**: Modify internal links between chapters
 - **Add metadata**: Enhance YAML frontmatter with additional fields
+
+## Result Reporting
+
+As the final output of this task, print a structured summary containing the following items. This summary is how the main agent receives the results of this work.
+
+- **Input file**: the original EPUB absolute path
+- **Output directory**: absolute path of the output directory
+- **Chapter count**: number of markdown files generated
+- **Image count**: number of images extracted (if any)
+- **Files needing rename**: list any files with generic names (e.g., `untitled`, `split_000`) that need manual review
+
+Do not include additional commentary, follow-up questions, or next-step suggestions beyond this summary.
 
 ## Technical Details
 

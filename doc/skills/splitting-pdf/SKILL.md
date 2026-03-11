@@ -1,12 +1,14 @@
 ---
 name: splitting-pdf
 disable-model-invocation: true
-description: This skill should be used when users want to split PDF files by bookmarks or page ranges. Common triggers include "split this PDF", "extract pages from PDF", "break PDF into sections", "extract chapter from PDF", and "get PDF bookmarks".
+description: This skill should be used when users want to split PDF files by bookmarks or page ranges. Common triggers include "split this PDF", "split /path/to/file.pdf by chapters", "extract pages from PDF", "break PDF into sections", "extract chapter from PDF", "split PDF by table of contents", and "get PDF bookmarks".
+argument-hint: <path/to/file.pdf>
+context: fork
 ---
 
 # PDF Split
 
-Split PDF files into separate files based on bookmarks or page ranges.
+Split `$ARGUMENTS` into separate files based on bookmarks or page ranges.
 
 ## Directory Structure After Split
 
@@ -54,7 +56,7 @@ If all chapters from bookmarks/TOC already have corresponding split PDF files �
 ### Step 1: Get Total Page Count
 
 ```bash
-uv run scripts/total_page.py "<input.pdf>"
+uv run scripts/total_page.py "$ARGUMENTS"
 ```
 
 Output: `Total pages: 500`
@@ -62,7 +64,7 @@ Output: `Total pages: 500`
 ### Step 2: Extract Bookmark Info
 
 ```bash
-uv run scripts/get_bookmarks.py "<input.pdf>"
+uv run scripts/get_bookmarks.py "$ARGUMENTS"
 ```
 
 Output shows bookmark hierarchy with **PDF page numbers**:
@@ -108,7 +110,7 @@ Convert the TOC pages (from bookmark info) to markdown:
 
 ```bash
 # If CONTENTS is at p.3 and first chapter at p.15, convert p.3-14
-uv run scripts/pages_md.py "<input.pdf>" 3-14 -o toc.md
+uv run scripts/pages_md.py "$ARGUMENTS" 3-14 -o toc.md
 ```
 
 ##### 3a-3. Map Bookmark Pages to TOC Pages (Level 1 & 2)
@@ -133,10 +135,10 @@ Compare bookmark PDF pages with TOC page numbers in the markdown:
 Verify a few chapters by converting their first page to markdown:
 ```bash
 # Verify "1 INTRODUCTION" at PDF page 15 shows "page 1" in book
-uv run scripts/pages_md.py "<input.pdf>" 15 | head -50
+uv run scripts/pages_md.py "$ARGUMENTS" 15 | head -50
 
 # Verify "CONTENTS" at PDF page 8 shows "page vii" in book
-uv run scripts/pages_md.py "<input.pdf>" 8 | head -50
+uv run scripts/pages_md.py "$ARGUMENTS" 8 | head -50
 ```
 
 #### Case B: No Bookmarks
@@ -146,7 +148,7 @@ uv run scripts/pages_md.py "<input.pdf>" 8 | head -50
 Convert the first ~30 pages to find the table of contents:
 
 ```bash
-uv run scripts/pages_md.py "<input.pdf>" 1-30 -o front.md
+uv run scripts/pages_md.py "$ARGUMENTS" 1-30 -o front.md
 ```
 
 ##### 3b-2. Find TOC in Markdown (Level 1 & 2)
@@ -171,20 +173,20 @@ For each chapter in TOC, convert candidate PDF pages to markdown to find the act
 
 ```bash
 # If TOC says "Chapter 1" starts at page 1, try PDF pages around 10-20
-uv run scripts/pages_md.py "<input.pdf>" 10-20 | grep -i "chapter 1"
+uv run scripts/pages_md.py "$ARGUMENTS" 10-20 | grep -i "chapter 1"
 
 # For front matter, check early PDF pages for Roman numeral markers
-uv run scripts/pages_md.py "<input.pdf>" 2-10 | head -100
+uv run scripts/pages_md.py "$ARGUMENTS" 2-10 | head -100
 ```
 
 Once found, calculate offset and verify:
 ```bash
 # If "Chapter 1" (TOC p.1) is at PDF page 15, offset = +14
 # Verify "Chapter 2" (TOC p.25) is at PDF page 39 (25+14)
-uv run scripts/pages_md.py "<input.pdf>" 39 | head -50
+uv run scripts/pages_md.py "$ARGUMENTS" 39 | head -50
 
 # Verify "Preface" (TOC p.i) is at PDF page 2
-uv run scripts/pages_md.py "<input.pdf>" 2 | head -50
+uv run scripts/pages_md.py "$ARGUMENTS" 2 | head -50
 ```
 
 Build the mapping table (Level 1 & 2):
@@ -225,15 +227,15 @@ mkdir -p "<filename>/"
 # Filename uses TOC pages (Roman or Arabic), argument uses PDF pages
 
 # Front matter (Roman numerals in filename)
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/001_Cover_p1.pdf" "1"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/002_Preface_pi-vi.pdf" "2-7"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/003_CONTENTS_pvii-xiv.pdf" "8-15"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/001_Cover_p1.pdf" "1"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/002_Preface_pi-vi.pdf" "2-7"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/003_CONTENTS_pvii-xiv.pdf" "8-15"
 
 # Main content (Arabic numerals in filename)
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/004_1_INTRODUCTION_p1-2.pdf" "16-17"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/005_1.1_Uses_of_Computer_Networks_p2-11.pdf" "17-26"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/006_1.2_Network_Hardware_p11-40.pdf" "26-55"
-uv run scripts/split_by_page.py "doc.pdf" "<filename>/007_2_THE_PHYSICAL_LAYER_p41-42.pdf" "56-57"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/004_1_INTRODUCTION_p1-2.pdf" "16-17"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/005_1.1_Uses_of_Computer_Networks_p2-11.pdf" "17-26"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/006_1.2_Network_Hardware_p11-40.pdf" "26-55"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<filename>/007_2_THE_PHYSICAL_LAYER_p41-42.pdf" "56-57"
 ```
 
 
@@ -281,11 +283,11 @@ Some books have **inconsistent offsets** due to missing or blank pages. Always v
 
 ```bash
 # Check offset at beginning (Ch1)
-uv run scripts/pages_md.py "<input.pdf>" 14 | head -2
+uv run scripts/pages_md.py "$ARGUMENTS" 14 | head -2
 # → "2 Curve and Surface Basics" (book page 2, PDF 14 → offset 12)
 
 # Check offset at middle (Ch5)
-uv run scripts/pages_md.py "<input.pdf>" 238 | head -2
+uv run scripts/pages_md.py "$ARGUMENTS" 238 | head -2
 # → "228 Fundamental Geometric Algorithms" (book page 228, PDF 238 → offset 10)
 
 # If offsets differ, find where the change occurs and adjust accordingly
@@ -302,13 +304,24 @@ uv run scripts/pages_md.py "<input.pdf>" 238 | head -2
 ### Page Range Formats
 
 ```bash
-uv run scripts/split_by_page.py "<input.pdf>" "<output.pdf>" "<pages>"
+uv run scripts/split_by_page.py "$ARGUMENTS" "<output.pdf>" "<pages>"
 ```
 
 - `1-10` - Range of pages
 - `1,3,5` - Specific pages
 - `1-5,10,15-20` - Mixed ranges and pages
 
+
+## Result Reporting
+
+As the final output of this task, print a structured summary containing the following items. This summary is how the main agent receives the results of this work.
+
+- **Input file**: the original PDF absolute path
+- **Output directory**: absolute path of the split output directory
+- **File count**: number of split PDF files generated
+- **File list**: list each generated filename on its own line with page range
+
+Do not include additional commentary, follow-up questions, or next-step suggestions beyond this summary.
 
 ## Dependencies
 

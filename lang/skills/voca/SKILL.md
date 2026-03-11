@@ -1,6 +1,7 @@
 ---
 name: voca
 description: Explain vocabulary and idioms
+argument-hint: <word or idiom>
 disable-model-invocation: true
 ---
 

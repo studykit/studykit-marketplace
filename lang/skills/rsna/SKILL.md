@@ -1,6 +1,7 @@
 ---
 name: rsna
 description: Revise English text with user-selected style, then optionally explain the changes
+argument-hint: <English text to revise>
 disable-model-invocation: true
 context: fork
 allowed-tools:

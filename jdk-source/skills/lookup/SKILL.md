@@ -1,5 +1,6 @@
 ---
 description: Search JDK source code and recommend which code to read
+argument-hint: <class or method to explore, e.g. HashMap, String.format>
 context: fork
 agent: jdk-explorer
 allowed-tools: Bash(readtags *), Bash(ctags *), Read, Grep

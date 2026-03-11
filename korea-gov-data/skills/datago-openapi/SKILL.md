@@ -1,13 +1,14 @@
 ---
 name: datago-openapi
 description: Extract and organize Open API specifications from Korea's Public Data Portal (data.go.kr) into structured documentation. Fetches a data.go.kr openapi.do page, parses the Swagger UI and parameter tables, and outputs a complete API spec with endpoints, request parameters, response schema, rate limits, and example requests.
+argument-hint: <data.go.kr URL, e.g. https://www.data.go.kr/data/15094093/openapi.do>
 context: fork
 disable-model-invocation: true
 ---
 
 # data.go.kr API Specification Extractor
 
-Extract, organize, and document Open API specifications from Korea's Public Data Portal (data.go.kr).
+Extract, organize, and document the Open API specification from: **$ARGUMENTS**
 
 ## When to Use
 
@@ -19,7 +20,7 @@ Extract, organize, and document Open API specifications from Korea's Public Data
 
 ### 1. Fetch the Page
 
-Use `WebFetch` with the provided URL. Apply this extraction prompt:
+Use `WebFetch` with `$ARGUMENTS`. Apply this extraction prompt:
 
 > "Extract all API specification details from this page. Include: API name, base URL, all endpoints, request parameters (name, type, required/optional, size, description, example), response fields (name, type, size, description), authentication method, data format (JSON/XML), rate limits, data period, and any example request URLs. Pay special attention to the Swagger UI section and parameter/response tables."
 

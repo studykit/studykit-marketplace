@@ -1,13 +1,14 @@
 ---
 name: kosis-openapi
-description: Extract and organize KOSIS (kosis.kr) OpenAPI specifications for querying Korean national statistics (CPI, GDP, employment, trade, etc.) with 260,000+ statistical tables from 100+ government agencies.
+description: This skill should be used when users want to look up or extract KOSIS (kosis.kr) OpenAPI specifications for Korean national statistics indicators. Common triggers include "find KOSIS API for CPI", "get KOSIS table for GDP", "Korean employment statistics API", "KOSIS consumer price index", "query Korean trade data". Covers 260,000+ statistical tables from 100+ government agencies.
+argument-hint: <statistical indicator or topic, e.g. CPI, GDP, employment>
 context: fork
 disable-model-invocation: true
 ---
 
 # KOSIS OpenAPI Specification Extractor
 
-Extract and organize OpenAPI specifications from KOSIS (Korean Statistical Information Service, kosis.kr) to help query Korean national statistics data.
+Extract and organize the KOSIS OpenAPI specification for: **$ARGUMENTS**
 
 ## Overview
 
@@ -33,15 +34,15 @@ KOSIS OpenAPI provides RESTful access to 260,000+ statistical tables from 100+ K
 
 ### Step 1: Find the Table ID (tblId)
 
-When the target `tblId` is unknown, search using one of these approaches:
+When the target `tblId` is unknown, search for `$ARGUMENTS` using one of these approaches:
 
 **Option A — Search the indicator catalog:**
-Read `references/indicator-catalog.md` to find tblId from curated economic indicator tables. Use grep patterns like `CPI`, `GDP`, `employment`, or Korean terms.
+Read `references/indicator-catalog.md` and grep for `$ARGUMENTS` or related Korean terms to find tblId from curated economic indicator tables.
 
 **Option B — Keyword search via API:**
 ```
 GET https://kosis.kr/openapi/statisticsSearch.do?method=getList
-    &apiKey={KEY}&format=json&searchNm={keyword}&resultCount=10
+    &apiKey={KEY}&format=json&searchNm=$ARGUMENTS&resultCount=10
 ```
 
 Response includes `TBL_ID`, `ORG_ID`, `TBL_NM` for each match.
@@ -108,10 +109,10 @@ For agency codes (orgId), error codes, and additional endpoint details, consult 
 
 ## Output Template
 
-When extracting a KOSIS API spec for a specific indicator, present using this format:
+When extracting a KOSIS API spec for `$ARGUMENTS`, present using this format:
 
 ```markdown
-## [Indicator Name]
+## $ARGUMENTS
 
 ### Basic Information
 

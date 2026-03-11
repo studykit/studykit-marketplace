@@ -1,12 +1,14 @@
 ---
-name: reading-pdf
+name: extracting-pdf
 disable-model-invocation: true
-description: This skill should be used when users want to extract text or tables from PDF files, read PDF content, parse PDF documents, or work with scanned PDFs using OCR. Common triggers include "extract text from PDF", "read this PDF", "get tables from PDF", "parse PDF content", "OCR this scanned PDF", and "convert PDF to text".
+description: This skill should be used when users want to extract text or tables from PDF files, read PDF content, parse PDF documents, or work with scanned PDFs using OCR. Common triggers include "extract text from PDF", "read this PDF", "read /path/to/file.pdf", "get tables from PDF", "parse PDF content", "OCR this scanned PDF", and "convert PDF to text".
+argument-hint: <path/to/file.pdf>
+context: fork
 ---
 
-# Reading PDF
+# PDF Extract
 
-Extract text and tables from PDF files using pdfplumber (primary) or OCR for scanned documents.
+Extract text and tables from `$ARGUMENTS` using pdfplumber (primary) or OCR for scanned documents.
 
 ## Library Selection
 
@@ -45,7 +47,7 @@ Extract text from PDF pages using pdfplumber.
 ### Extract All Text
 
 ```bash
-uv run scripts/extract_text.py "<input.pdf>"
+uv run scripts/extract_text.py "$ARGUMENTS"
 ```
 
 Output: Plain text content from all pages.
@@ -54,19 +56,19 @@ Output: Plain text content from all pages.
 
 ```bash
 # Single page
-uv run scripts/extract_text.py "<input.pdf>" --pages 5
+uv run scripts/extract_text.py "$ARGUMENTS" --pages 5
 
 # Page range
-uv run scripts/extract_text.py "<input.pdf>" --pages 1-10
+uv run scripts/extract_text.py "$ARGUMENTS" --pages 1-10
 
 # Multiple ranges
-uv run scripts/extract_text.py "<input.pdf>" --pages 1-5,10,15-20
+uv run scripts/extract_text.py "$ARGUMENTS" --pages 1-5,10,15-20
 ```
 
 ### Save to File
 
 ```bash
-uv run scripts/extract_text.py "<input.pdf>" -o output.txt
+uv run scripts/extract_text.py "$ARGUMENTS" -o output.txt
 ```
 
 ## Table Extraction
@@ -76,7 +78,7 @@ Extract tables from PDF and output as CSV or markdown.
 ### Extract All Tables
 
 ```bash
-uv run scripts/extract_tables.py "<input.pdf>"
+uv run scripts/extract_tables.py "$ARGUMENTS"
 ```
 
 Output: All tables found, formatted as markdown.
@@ -84,17 +86,17 @@ Output: All tables found, formatted as markdown.
 ### Extract from Specific Pages
 
 ```bash
-uv run scripts/extract_tables.py "<input.pdf>" --pages 5-10
+uv run scripts/extract_tables.py "$ARGUMENTS" --pages 5-10
 ```
 
 ### Output Formats
 
 ```bash
 # Markdown (default)
-uv run scripts/extract_tables.py "<input.pdf>" --format markdown
+uv run scripts/extract_tables.py "$ARGUMENTS" --format markdown
 
 # CSV (separate files per table)
-uv run scripts/extract_tables.py "<input.pdf>" --format csv -o tables/
+uv run scripts/extract_tables.py "$ARGUMENTS" --format csv -o tables/
 ```
 
 ### Table Settings
@@ -103,7 +105,7 @@ For better table detection:
 
 ```bash
 # Adjust table detection sensitivity
-uv run scripts/extract_tables.py "<input.pdf>" --settings explicit
+uv run scripts/extract_tables.py "$ARGUMENTS" --settings explicit
 
 # Settings options:
 #   default  - Standard detection (works for most PDFs)
@@ -118,32 +120,32 @@ Extract text from scanned PDFs or image-based PDFs using OCR.
 ### Basic OCR
 
 ```bash
-uv run scripts/ocr_pdf.py "<scanned.pdf>"
+uv run scripts/ocr_pdf.py "$ARGUMENTS"
 ```
 
 ### OCR Specific Pages
 
 ```bash
-uv run scripts/ocr_pdf.py "<scanned.pdf>" --pages 1-5
+uv run scripts/ocr_pdf.py "$ARGUMENTS" --pages 1-5
 ```
 
 ### Language Support
 
 ```bash
 # English (default)
-uv run scripts/ocr_pdf.py "<scanned.pdf>" --lang eng
+uv run scripts/ocr_pdf.py "$ARGUMENTS" --lang eng
 
 # Korean
-uv run scripts/ocr_pdf.py "<scanned.pdf>" --lang kor
+uv run scripts/ocr_pdf.py "$ARGUMENTS" --lang kor
 
 # Multiple languages
-uv run scripts/ocr_pdf.py "<scanned.pdf>" --lang eng+kor
+uv run scripts/ocr_pdf.py "$ARGUMENTS" --lang eng+kor
 ```
 
 ### Save OCR Output
 
 ```bash
-uv run scripts/ocr_pdf.py "<scanned.pdf>" -o output.txt
+uv run scripts/ocr_pdf.py "$ARGUMENTS" -o output.txt
 ```
 
 ## Detecting PDF Type
@@ -151,7 +153,7 @@ uv run scripts/ocr_pdf.py "<scanned.pdf>" -o output.txt
 To determine if a PDF is text-based or scanned:
 
 ```bash
-uv run scripts/extract_text.py "<input.pdf>" --pages 1
+uv run scripts/extract_text.py "$ARGUMENTS" --pages 1
 ```
 
 - If output contains readable text → Use `extract_text.py` or `extract_tables.py`
@@ -163,20 +165,20 @@ uv run scripts/extract_text.py "<input.pdf>" --pages 1
 
 ```bash
 # 1. Check if text-based or scanned
-uv run scripts/extract_text.py "report.pdf" --pages 1
+uv run scripts/extract_text.py "$ARGUMENTS" --pages 1
 
 # 2a. If text-based, extract all text
-uv run scripts/extract_text.py "report.pdf" -o report.txt
+uv run scripts/extract_text.py "$ARGUMENTS" -o output.txt
 
 # 2b. If scanned, use OCR
-uv run scripts/ocr_pdf.py "report.pdf" -o report.txt
+uv run scripts/ocr_pdf.py "$ARGUMENTS" -o output.txt
 ```
 
 ### Extract Financial Tables
 
 ```bash
 # Extract tables from specific pages
-uv run scripts/extract_tables.py "financials.pdf" --pages 10-20 --format csv -o tables/
+uv run scripts/extract_tables.py "$ARGUMENTS" --pages 10-20 --format csv -o tables/
 
 # List extracted tables
 ls tables/
@@ -186,8 +188,19 @@ ls tables/
 
 ```bash
 # OCR with multiple language support
-uv run scripts/ocr_pdf.py "multilingual.pdf" --lang eng+kor+jpn -o output.txt
+uv run scripts/ocr_pdf.py "$ARGUMENTS" --lang eng+kor+jpn -o output.txt
 ```
+
+## Result Reporting
+
+As the final output of this task, print a structured summary containing the following items. This summary is how the main agent receives the results of this work.
+
+- **Input file**: the original PDF absolute path
+- **Output file(s)**: absolute path(s) of all generated files (text, CSV, tables directory, etc.)
+- **Method used**: which script was used (`extract_text.py`, `extract_tables.py`, or `ocr_pdf.py`)
+- **Page range**: which pages were extracted (all or specific range)
+
+Do not include additional commentary, follow-up questions, or next-step suggestions beyond this summary.
 
 ## Script Reference
 
