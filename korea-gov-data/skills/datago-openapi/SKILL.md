@@ -3,6 +3,7 @@ name: datago-openapi
 description: Extract and organize Open API specifications from Korea's Public Data Portal (data.go.kr) into structured documentation. Fetches a data.go.kr openapi.do page, parses the Swagger UI and parameter tables, and outputs a complete API spec with endpoints, request parameters, response schema, rate limits, and example requests.
 argument-hint: <data.go.kr URL, e.g. https://www.data.go.kr/data/15094093/openapi.do>
 context: fork
+allowed-tools: WebFetch
 disable-model-invocation: true
 ---
 

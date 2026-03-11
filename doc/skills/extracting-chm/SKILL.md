@@ -4,6 +4,7 @@ disable-model-invocation: true
 description: This skill handles CHM (Compiled HTML Help) files, the Windows help file format with .chm extension. Use for extracting CHM contents, converting CHM to Markdown, reading compiled help documentation, parsing .hhc table of contents files, searching within help files, or working with Microsoft HTML Help. Applies when users say "extract CHM", "convert CHM to markdown", "read help file", "open .chm", "parse CHM documentation", "search CHM content", or reference Windows help documentation.
 argument-hint: <path/to/file.chm>
 context: fork
+allowed-tools: Bash(uv run *), Bash(uvx *), Bash(extract_chmLib *), Bash(grep *)
 ---
 
 # CHM File Extraction and Conversion

@@ -4,6 +4,7 @@ disable-model-invocation: true
 description: This skill should be used when users want to split PDF files by bookmarks or page ranges. Common triggers include "split this PDF", "split /path/to/file.pdf by chapters", "extract pages from PDF", "break PDF into sections", "extract chapter from PDF", "split PDF by table of contents", and "get PDF bookmarks".
 argument-hint: <path/to/file.pdf>
 context: fork
+allowed-tools: Bash(uv run *), Bash(mkdir *)
 ---
 
 # PDF Split
