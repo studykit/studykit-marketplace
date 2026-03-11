@@ -1,6 +1,6 @@
 ---
 name: kosis-openapi
-description: This skill should be used when users want to look up or extract KOSIS (kosis.kr) OpenAPI specifications for Korean national statistics indicators. Common triggers include "find KOSIS API for CPI", "get KOSIS table for GDP", "Korean employment statistics API", "KOSIS consumer price index", "query Korean trade data". Covers 260,000+ statistical tables from 100+ government agencies.
+description: This skill should be used when users want to extract KOSIS (kosis.kr) OpenAPI specifications for coding, get API request parameters, or generate code to query Korean national statistics. Common triggers include "find KOSIS API for CPI", "get KOSIS table for GDP", "Korean employment statistics API spec", "KOSIS consumer price index API", "write code to query Korean trade data", "extract KOSIS API parameters". Covers 260,000+ statistical tables from 100+ government agencies.
 argument-hint: <statistical indicator or topic, e.g. CPI, GDP, employment>
 context: fork
 disable-model-invocation: true

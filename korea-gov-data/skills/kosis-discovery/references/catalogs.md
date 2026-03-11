@@ -1,0 +1,1 @@
+../../kosis-openapi/references/catalogs.md

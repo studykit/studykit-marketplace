@@ -1,0 +1,1 @@
+../../kosis-openapi/references/indicator-catalog.md
