@@ -1,0 +1,4 @@
+interface:
+  display_name: "rna"
+  short_description: "Revise English text in technical style, wait for user confirmation, then answer questions about the revision"
+  default_prompt: "Use the rna skill only when explicitly requested."

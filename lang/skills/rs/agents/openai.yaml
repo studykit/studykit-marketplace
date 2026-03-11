@@ -1,0 +1,4 @@
+interface:
+  display_name: "rs"
+  short_description: "Revise English text with user-selected style"
+  default_prompt: "Use the rs skill only when explicitly requested."

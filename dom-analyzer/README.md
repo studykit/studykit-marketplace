@@ -1,41 +1,93 @@
 # dom-analyzer
 
-HTML/XML DOM structure analysis toolkit with hierarchy visualization.
-
-## Features
-
-- **DOM hierarchy visualization** - Tree-based view of HTML/XML document structure
-- **CSS selector discovery** - Find reliable selectors for content extraction
-- **Selector debugging** - Troubleshoot selectors that don't match
-- **Cross-page comparison** - Validate selectors across page variants
+HTML DOM structure analysis plugin for hierarchy exploration, selector discovery, and selector debugging.
 
 ## Components
 
 | Type | Name | Purpose |
 |------|------|---------|
-| Agent | `dom-analyzer` | Autonomous DOM analysis agent |
-| Skill | `html-dom-analysis` | Internal knowledge base for the agent |
-| Script | `html-tree.ts` | CLI tool for DOM tree visualization |
+| Agent | `html-analyzer` | Analyze DOM structure level by level and recommend selectors |
+| Skill | `html-tree` | Internal workflow and usage guidance for DOM analysis |
+| Script | `scripts/html-tree.ts` | CLI for DOM hierarchy visualization |
+
+## What The CLI Supports
+
+- Full document tree visualization
+- Depth-limited exploration with `--max-depth`
+- Selector-focused subtree analysis with `--selector`
+- Ancestor context with `--show-parents`
+- Single-match inspection with `--match-index`
+- Optional text node output with `--show-text`
+- Compact or full attribute display with `--compact`, `--full`, `--no-attributes`
+- File output with `--output`
 
 ## Prerequisites
 
 - Node.js
-- `jsdom` package: `npm install jsdom` (in plugin scripts directory)
-- `ts-node` or `tsx` for TypeScript execution
+- Dependencies installed in [`dom-analyzer/scripts/package.json`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/scripts/package.json)
 
-## Usage
-
-The agent triggers automatically when you ask about HTML/XML structure analysis:
-
-```
-"Analyze the DOM structure of this HTML file"
-"Find the CSS selector for the article content"
-"What's the hierarchy of elements in page.html?"
-"Why isn't my selector matching anything?"
-```
-
-## Installation
+Install once:
 
 ```bash
-claude --plugin-dir /path/to/dom-analyzer
+cd dom-analyzer/scripts
+npm install
 ```
+
+## CLI Usage
+
+From [`dom-analyzer/scripts`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/scripts):
+
+```bash
+npx ts-node --esm html-tree.ts <html-file> [options]
+```
+
+Common examples:
+
+```bash
+npx ts-node --esm html-tree.ts page.html --max-depth 3
+npx ts-node --esm html-tree.ts page.html --selector "article"
+npx ts-node --esm html-tree.ts page.html --selector ".story" --show-parents 2 --highlight-path
+npx ts-node --esm html-tree.ts page.html --selector "article" --match-index 1 --show-text
+npx ts-node --esm html-tree.ts page.html --full --output analysis.txt
+```
+
+## Options
+
+| Option | Description |
+|--------|-------------|
+| `--show-text` | Include text nodes in output |
+| `--no-attributes` | Hide all attributes |
+| `--full` | Show all attributes except suppressed SVG/path attributes |
+| `--compact` | Compact attribute mode; default behavior |
+| `--max-depth <n>` | Limit traversal depth |
+| `--output <file>` | Write output to file |
+| `--selector <css>` | Visualize only nodes matching a CSS selector |
+| `--show-parents <n>` | Show ancestor context above matched nodes |
+| `--highlight-path` | Mark the selected node section in selector mode |
+| `--match-index <n>` | Show only the nth selector match, 1-based |
+| `--help` | Print help text |
+
+## Agent Usage
+
+Use the plugin when the task is about:
+
+- Analyzing an HTML file's structure
+- Exploring a page level by level instead of dumping the full DOM
+- Finding stable CSS selectors for scraping or extraction
+- Debugging why a selector does not match
+
+Example prompts:
+
+```text
+Analyze the DOM structure of this HTML file
+Find the CSS selector for the article content
+Why isn't this selector matching anything?
+Show me the hierarchy around the main content area
+```
+
+## Related Files
+
+- [`dom-analyzer/agents/html-analyzer.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/agents/html-analyzer.md)
+- [`dom-analyzer/skills/html-tree/SKILL.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/skills/html-tree/SKILL.md)
+- [`dom-analyzer/skills/html-tree/references/cli-options.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/skills/html-tree/references/cli-options.md)
+- [`dom-analyzer/skills/html-tree/references/workflows.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/skills/html-tree/references/workflows.md)

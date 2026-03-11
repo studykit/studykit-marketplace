@@ -1,0 +1,4 @@
+interface:
+  display_name: "q"
+  short_description: "Translate Korean question to English and answer in English"
+  default_prompt: "Use the q skill only when explicitly requested."
