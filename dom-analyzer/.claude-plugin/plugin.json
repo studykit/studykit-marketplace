@@ -1,0 +1,7 @@
+{
+  "name": "dom-analyzer",
+  "description": "HTML/XML DOM structure analysis toolkit with hierarchy visualization",
+  "author": {
+    "name": "myungo"
+  }
+}

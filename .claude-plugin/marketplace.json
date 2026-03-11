@@ -72,6 +72,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["korea-gov-data", "open-api", "korea", "public-data", "api-spec"]
+    },
+    {
+      "name": "dom-analyzer",
+      "source": "./dom-analyzer",
+      "description": "HTML/XML DOM structure analysis toolkit with hierarchy visualization and CSS selector discovery",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["html", "xml", "dom", "css-selector", "web-scraping", "structure-analysis"]
     }
   ]
 }

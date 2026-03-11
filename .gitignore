@@ -209,3 +209,4 @@ __marimo__/
 *.pdf
 **/*.local.*
 .DS_Store
+**/node_modules/
