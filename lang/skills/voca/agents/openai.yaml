@@ -2,3 +2,6 @@ interface:
   display_name: "voca"
   short_description: "Explain vocabulary and idioms"
   default_prompt: "Use the voca skill only when explicitly requested."
+
+policy:
+  allow_implicit_invocation: false
