@@ -1,12 +1,15 @@
 ---
 name: markitdown
 disable-model-invocation: true
-description: Convert documents (HTML, PPTX, DOCX, XLSX, XLS, images, audio) to Markdown using `uvx markitdown`.
+description: This skill should be used when users want to convert documents to Markdown using markitdown. Common triggers include "convert this PPTX to markdown", "convert DOCX to md", "turn this spreadsheet into markdown", "markitdown this file", "convert HTML page to markdown", "convert this URL to markdown", and "read this PowerPoint as markdown". Supported formats: PPTX, DOCX, XLSX, XLS, HTML, images (JPG/PNG), and audio (MP3/WAV).
+argument-hint: <path/to/file-or-url>
+context: fork
+allowed-tools: Bash(uvx *)
 ---
 
 # MarkItDown Skill
 
-Convert various document formats to Markdown for easy reading and analysis using `uvx markitdown`.
+Convert `$ARGUMENTS` to Markdown for easy reading and analysis using `uvx markitdown`.
 
 ## Prerequisites
 
@@ -40,70 +43,29 @@ brew install uv
 - For local files: create `.md` in the same directory as the original file.
 - For HTTP URLs: create `.md` in the `webmd/` folder.
 
+### Local File
+
 ```bash
 # Convert local document: create .md in the same location as original
 # Example: "/path/to/Q4 Sales Report.pptx" -> "/path/to/Q4 Sales Report.md"
-uvx --from 'markitdown[all]' markitdown "/path/to/<original_filename>.pptx" -o "/path/to/<original_filename>.md"
+uvx --from 'markitdown[all]' markitdown "$ARGUMENTS" -o "/path/to/<original_filename>.md"
+```
 
+### URL
+
+```bash
 # Convert from URL: save to webmd/ folder (domain--path format)
+# Example: "https://example.com/docs/page.html" -> "webmd/example.com--docs--page.md"
 mkdir -p "webmd/"
-uvx --from 'markitdown[all]' markitdown "https://example.com/docs/page.html" -o "webmd/example.com--docs--page.md"
+uvx --from 'markitdown[all]' markitdown "$ARGUMENTS" -o "webmd/<domain--path>.md"
 ```
 
-## Examples
+## Result Reporting
 
-```bash
-# PowerPoint
-uvx --from 'markitdown[all]' markitdown "Q4 Sales Report.pptx" -o "Q4 Sales Report.md"
+As the final output of this task, print a structured summary containing the following items. This summary is how the main agent receives the results of this work.
 
-# Word
-uvx --from 'markitdown[all]' markitdown "Project Proposal.docx" -o "Project Proposal.md"
+- **Input**: the original file path or URL
+- **Output file**: absolute path of the generated `.md` file
+- **Format converted**: which document format was converted (e.g., PPTX, DOCX, HTML, URL)
 
-# Excel
-uvx --from 'markitdown[all]' markitdown "Budget 2024.xlsx" -o "Budget 2024.md"
-
-# HTML
-uvx --from 'markitdown[all]' markitdown "API Documentation.html" -o "API Documentation.md"
-
-# URL - output to webmd/ folder
-mkdir -p "webmd/"
-uvx --from 'markitdown[all]' markitdown "https://example.com/blog/article" -o "webmd/example.com--blog--article.md"
-```
-
-## Search Markdown Content
-
-```bash
-# Search for keyword in markdown files (current directory)
-grep "keyword" *.md
-
-# Search for keyword in web-converted files
-grep "keyword" webmd/*.md
-
-# Search with context (show surrounding lines)
-grep -C 3 "keyword" *.md
-
-# Case-insensitive search
-grep -i "keyword" *.md
-
-# Search recursively in all subdirectories
-grep -r --include="*.md" "keyword" .
-```
-
-## Read Markdown Files
-
-```bash
-# Read entire file
-cat "document.md"
-
-# Read first 50 lines
-head -n 50 "document.md"
-
-# Read last 50 lines
-tail -n 50 "document.md"
-
-# Read specific line range (lines 100-150)
-sed -n '100,150p' "document.md"
-
-# List converted markdown files from URLs
-ls webmd/*.md
-```
+Do not include additional commentary, follow-up questions, or next-step suggestions beyond this summary.
