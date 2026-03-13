@@ -1,5 +1,8 @@
 # Additional Analysis Workflows
 
+> **Note:** All examples below use shorthand `... html-tree.ts`. The full command is:
+> `deno run --allow-read ${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts <html-file> [options]`
+
 ## Selector Debugging
 
 Use when a CSS selector is not matching expected elements.
@@ -34,7 +37,7 @@ Use when verifying selectors work across different page variants.
 ```bash
 for f in data/*.html; do
   echo "=== $f ==="
-  deno run --allow-read html-tree.ts "$f" --selector "article" 2>/dev/null | head -5
+  ... html-tree.ts "$f" --selector "article" 2>/dev/null | head -5
 done
 ```
 

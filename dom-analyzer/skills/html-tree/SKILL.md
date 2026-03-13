@@ -13,13 +13,13 @@ user-invocable: false
 
 ## Tool Setup
 
-The plugin bundles a self-contained TypeScript CLI tool at `${CLAUDE_PLUGIN_ROOT}/scripts/html-tree.ts`. Dependencies are declared inline via Deno's `npm:` specifiers — no install step required.
+The plugin bundles a self-contained TypeScript CLI tool at `${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts`. Dependencies are declared inline via Deno's `npm:` specifiers — no install step required.
 
 **Prerequisites:** Deno runtime.
 
 **Base command** (all examples below use this prefix):
 ```bash
-deno run --allow-read ${CLAUDE_PLUGIN_ROOT}/scripts/html-tree.ts <html-file> [options]
+deno run --allow-read ${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts <html-file> [options]
 ```
 
 ## CLI Options Quick Reference

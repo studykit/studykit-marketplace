@@ -1,8 +1,8 @@
 #!/usr/bin/env -S deno run --allow-read
 
 import { JSDOM, VirtualConsole } from 'npm:jsdom@28.1.0';
-import fs from 'node:fs';
-import path from 'node:path';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 
 interface VisualizerOptions {
   showTextNodes?: boolean;
@@ -277,13 +277,13 @@ function parseArgs(args: string[]): { filePath?: string; options: VisualizerOpti
 }
 
 function main() {
-  const args = process.argv.slice(2);
+  const args = Deno.args;
 
   if (args.length === 0 || args.includes('--help')) {
     console.log(`
 DOM Hierarchy Visualizer
 
-Usage: npx ts-node html-tree.ts <html-file> [options]
+Usage: deno run --allow-read html-tree.ts <html-file> [options]
 
 Options:
   --show-text         Show text nodes (hidden by default)
@@ -299,28 +299,28 @@ Options:
   --help              Show this help message
 
 Examples:
-  npx ts-node html-tree.ts page.html --full
-  npx ts-node html-tree.ts page.html --max-depth 3
-  npx ts-node html-tree.ts page.html --show-text --output analysis.md
-  npx ts-node html-tree.ts page.html --selector "article"
-  npx ts-node html-tree.ts page.html --selector "article" --match-index 1
-  npx ts-node html-tree.ts page.html --selector ".story" --show-parents 2 --highlight-path
+  deno run --allow-read html-tree.ts page.html --full
+  deno run --allow-read html-tree.ts page.html --max-depth 3
+  deno run --allow-read html-tree.ts page.html --show-text --output analysis.md
+  deno run --allow-read html-tree.ts page.html --selector "article"
+  deno run --allow-read html-tree.ts page.html --selector "article" --match-index 1
+  deno run --allow-read html-tree.ts page.html --selector ".story" --show-parents 2 --highlight-path
     `);
-    process.exit(0);
+    Deno.exit(0);
   }
 
   const { filePath, options } = parseArgs(args);
 
   if (!filePath) {
     console.error('Error: Please provide an HTML file path');
-    process.exit(1);
+    Deno.exit(1);
   }
 
   const absolutePath = path.resolve(filePath);
 
   if (!fs.existsSync(absolutePath)) {
     console.error(`Error: File not found: ${absolutePath}`);
-    process.exit(1);
+    Deno.exit(1);
   }
 
   try {
@@ -336,7 +336,7 @@ Examples:
     }
   } catch (error) {
     console.error('Error processing file:', error);
-    process.exit(1);
+    Deno.exit(1);
   }
 }
 

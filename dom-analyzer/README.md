@@ -8,7 +8,7 @@ HTML DOM structure analysis plugin for hierarchy exploration, selector discovery
 |------|------|---------|
 | Agent | `html-analyzer` | Analyze DOM structure level by level and recommend selectors |
 | Skill | `html-tree` | Internal workflow and usage guidance for DOM analysis |
-| Script | `scripts/html-tree.ts` | CLI for DOM hierarchy visualization |
+| Script | `skills/html-tree/scripts/html-tree.ts` | CLI for DOM hierarchy visualization |
 
 ## What The CLI Supports
 
@@ -30,7 +30,7 @@ No install step required — dependencies are declared inline via Deno's `npm:` 
 ## CLI Usage
 
 ```bash
-deno run --allow-read dom-analyzer/scripts/html-tree.ts <html-file> [options]
+deno run --allow-read dom-analyzer/skills/html-tree/scripts/html-tree.ts <html-file> [options]
 ```
 
 Common examples:
