@@ -1,12 +1,12 @@
 ---
 name: html-tree
+allowed-tools: ["Bash(deno run*)"]
 description: >
   This skill should be used when analyzing HTML DOM structure, visualizing element hierarchies,
-  exploring page layout level by level, discovering CSS selectors for scraping, or debugging
-  why a selector does not match. Provides the html-tree CLI tool for tree visualization with
-  depth control, selector filtering, and parent context display.
-disable-model-invocation: true
-user-invocable: false
+  exploring page layout level by level, discovering CSS selectors for scraping, debugging
+  why a selector does not match, showing the HTML tree of a file, parsing HTML to inspect
+  elements, or examining page structure. Provides the html-tree CLI tool for tree visualization
+  with depth control, selector filtering, and parent context display.
 ---
 
 # HTML DOM Structure Analysis
@@ -17,7 +17,7 @@ The plugin bundles a self-contained TypeScript CLI tool at `${CLAUDE_PLUGIN_ROOT
 
 **Prerequisites:** Deno runtime.
 
-**Base command** (all examples below use this prefix):
+**Base command** (all examples below abbreviate this as `...`):
 ```bash
 deno run --allow-read ${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts <html-file> [options]
 ```
