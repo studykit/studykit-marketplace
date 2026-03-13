@@ -1,16 +1,16 @@
 ---
 name: issue-commit
-description: "This skill should be used when the user invokes /issue-commit. Create a GitHub issue from staged changes (or link to an existing issue), commit with issue reference, push, and add an issue comment with changes and commit SHA. Accepts an optional issue number argument (e.g., /issue-commit #42)."
+description: "Create a GitHub issue from staged changes (or link to an existing one) and commit with an issue reference. Accepts an optional issue number (e.g., /issue-commit #42) to skip issue creation."
+argument-hint: "[#issue-number]"
 disable-model-invocation: true
-allowed-tools: Bash(git *), Bash(gh *)
+agent: Explore
+context: fork
+allowed-tools: Bash(git *), Bash(gh *), Agent, mcp__github__issue_write
 ---
 
 # Issue + Commit Workflow
 
-Create a GitHub issue (or use an existing one), commit with issue reference, push, then add a comment to the issue with changes and commit SHA. Every commit must have an associated issue — issue-less commits are not supported.
-
-When an issue number is provided as an argument (e.g., `/issue-commit #42` or `/issue-commit 42`), skip issue creation and use the given issue number for the commit and comment steps.
-
+Create a GitHub issue (or use an existing one) and commit with issue reference. Every commit must have an associated issue — issue-less commits are not supported.
 
 ## Step 1: Analyze staged changes
 - !`git remote get-url origin` — repository remote URL
@@ -22,9 +22,17 @@ Use the context diff provided above together with the stat output to understand 
 
 - !`git diff --cached --no-color`
 
-**If an issue number was provided as an argument**, skip issue creation and proceed to Step 3 with that issue number.
+**Arguments received:** `$ARGUMENTS`
 
-**If no issue number was provided**, create a new issue. Prefer GitHub MCP `issue_write`; if MCP is unavailable, fall back to `gh issue create`. Write in English.
+**If an issue number is present above** (e.g., `#42`), skip issue creation and proceed to Step 3 with that issue number.
+
+**If no issue number is present** (arguments are empty), first check recent commits for a related issue:
+
+- !`git log --oneline -3`
+
+Scan commit messages for issue references (`#123`, `GH-123`, `owner/repo#123`, or full GitHub issue URLs). If a recent commit references an issue that covers the same topic as the current staged changes, suggest reusing that issue number and confirm with the user before proceeding.
+
+If no related issue is found, create a new issue. Prefer GitHub MCP `mcp__github__issue_write`; if MCP is unavailable, fall back to `gh issue create`. Write in English.
 
 **Title**: Short, action-oriented (under 70 chars).
 
@@ -44,6 +52,8 @@ Add OpenAI Codex CLI as a third LLM provider option, enabling codex exec subproc
 ```
 
 ## Step 3: Commit with issue reference
+
+If the intent behind the staged changes is unclear from the diff alone, ask the user: **"What is the intent of these changes?"** and use their answer to write a more accurate commit message.
 
 Commit the already-staged files as-is. Do NOT stage additional files or run `git add`. Use a HEREDOC to pass the multi-line commit message.
 
@@ -68,42 +78,9 @@ The body lines describe concrete code changes with enough technical detail that 
 - Install Node.js 22 and @openai/codex in Dockerfile, mount ~/.codex/auth.json
 ```
 
-## Step 4: Push and capture commit SHA
-
-```bash
-git push
-git rev-parse HEAD
-```
-
-Capture the full commit SHA from `git rev-parse HEAD` for use in the issue comment.
-
-## Step 5: Add issue comment
-
-After push, add a comment to the issue with the Changes details and commit SHA. Prefer GitHub MCP `add_issue_comment`; if MCP is unavailable, fall back to `gh issue comment`.
-
-```
-## Changes
-- <Module/area>: <code-level change description>
-- <Module/area>: <code-level change description>
-
-Commit: <full-commit-sha>
-```
-
-**Example**:
-```
-## Changes
-- Server: Add CodexProvider class with codex exec subprocess for structured and streaming queries
-- Server config: Register codex in LLMProviderType, add codex_default_model and codex_timeout
-- Chrome Extension: Add CODEX_MODEL_PRESETS and codex option to AI settings UI
-- Docker: Install Node.js 22 and @openai/codex, mount auth.json
-
-Commit: 165afe3abc123def456...
-```
-
 ## Key principles
 
 - **Issue** = high-level purpose (Summary only)
 - **Commit message** = code-level implementation details
-- **Issue comment** = changes by module + commit SHA link
 - No duplication between issue body and commit message
 - Never commit files that might contain secrets
