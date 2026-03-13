@@ -1,8 +1,8 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S deno run --allow-read
 
-import { JSDOM, VirtualConsole } from 'jsdom';
-import fs from 'fs';
-import path from 'path';
+import { JSDOM, VirtualConsole } from 'npm:jsdom@28.1.0';
+import fs from 'node:fs';
+import path from 'node:path';
 
 interface VisualizerOptions {
   showTextNodes?: boolean;
@@ -341,7 +341,7 @@ Examples:
 }
 
 // Check if running as main module
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (import.meta.main) {
   main();
 }
 

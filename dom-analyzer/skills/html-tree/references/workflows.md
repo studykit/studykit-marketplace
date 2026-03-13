@@ -34,7 +34,7 @@ Use when verifying selectors work across different page variants.
 ```bash
 for f in data/*.html; do
   echo "=== $f ==="
-  npx ts-node --esm html-tree.ts "$f" --selector "article" 2>/dev/null | head -5
+  deno run --allow-read html-tree.ts "$f" --selector "article" 2>/dev/null | head -5
 done
 ```
 

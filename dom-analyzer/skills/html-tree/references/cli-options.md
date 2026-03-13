@@ -8,7 +8,7 @@ Limits how deep the tree traversal goes. Useful for getting a high-level overvie
 
 **Example:**
 ```bash
-npx ts-node html-tree.ts page.html --max-depth 3
+deno run --allow-read html-tree.ts page.html --max-depth 3
 ```
 
 **Output sample:**
@@ -34,17 +34,17 @@ Filters visualization to only elements matching the given CSS selector. Supports
 
 **Simple tag selector:**
 ```bash
-npx ts-node html-tree.ts page.html --selector "article"
+deno run --allow-read html-tree.ts page.html --selector "article"
 ```
 
 **Class selector:**
 ```bash
-npx ts-node html-tree.ts page.html --selector ".story-content"
+deno run --allow-read html-tree.ts page.html --selector ".story-content"
 ```
 
 **Complex selector:**
 ```bash
-npx ts-node html-tree.ts page.html --selector "main > article.post"
+deno run --allow-read html-tree.ts page.html --selector "main > article.post"
 ```
 
 **Output sample:**
@@ -70,7 +70,7 @@ Shows n levels of ancestor context above each matched node. Essential for unders
 
 **Example:**
 ```bash
-npx ts-node html-tree.ts page.html --selector ".story-content" --show-parents 3
+deno run --allow-read html-tree.ts page.html --selector ".story-content" --show-parents 3
 ```
 
 **Output sample:**
@@ -97,7 +97,7 @@ When a selector matches multiple elements, show only the nth match (1-based inde
 
 **Example:**
 ```bash
-npx ts-node html-tree.ts page.html --selector "article" --match-index 2
+deno run --allow-read html-tree.ts page.html --selector "article" --match-index 2
 ```
 
 Shows only the second article on the page.
@@ -146,7 +146,7 @@ Writes the visualization output to a file instead of console. Useful for saving 
 
 **Example:**
 ```bash
-npx ts-node html-tree.ts page.html --selector "article" --output article-structure.md
+deno run --allow-read html-tree.ts page.html --selector "article" --output article-structure.md
 ```
 
 ## Attribute Display Behavior
@@ -157,20 +157,20 @@ SVG and path elements always have their attributes suppressed regardless of disp
 
 ### Initial exploration
 ```bash
-npx ts-node html-tree.ts page.html --max-depth 4
+deno run --allow-read html-tree.ts page.html --max-depth 4
 ```
 
 ### Finding article content
 ```bash
-npx ts-node html-tree.ts page.html --selector "article, .article, .story, .post, main" --show-text
+deno run --allow-read html-tree.ts page.html --selector "article, .article, .story, .post, main" --show-text
 ```
 
 ### Building stable selectors
 ```bash
-npx ts-node html-tree.ts page.html --selector ".target" --show-parents 3 --highlight-path --full
+deno run --allow-read html-tree.ts page.html --selector ".target" --show-parents 3 --highlight-path --full
 ```
 
 ### Comparing across pages
 ```bash
-for f in data/*.html; do echo "=== $f ===" && npx ts-node html-tree.ts "$f" --selector "article" 2>/dev/null | head -5; done
+for f in data/*.html; do echo "=== $f ===" && deno run --allow-read html-tree.ts "$f" --selector "article" 2>/dev/null | head -5; done
 ```

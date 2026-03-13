@@ -23,32 +23,24 @@ HTML DOM structure analysis plugin for hierarchy exploration, selector discovery
 
 ## Prerequisites
 
-- Node.js
-- Dependencies installed in [`dom-analyzer/scripts/package.json`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/scripts/package.json)
+- [Deno](https://deno.com/) runtime
 
-Install once:
-
-```bash
-cd dom-analyzer/scripts
-npm install
-```
+No install step required — dependencies are declared inline via Deno's `npm:` specifiers.
 
 ## CLI Usage
 
-From [`dom-analyzer/scripts`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/scripts):
-
 ```bash
-npx ts-node --esm html-tree.ts <html-file> [options]
+deno run --allow-read dom-analyzer/scripts/html-tree.ts <html-file> [options]
 ```
 
 Common examples:
 
 ```bash
-npx ts-node --esm html-tree.ts page.html --max-depth 3
-npx ts-node --esm html-tree.ts page.html --selector "article"
-npx ts-node --esm html-tree.ts page.html --selector ".story" --show-parents 2 --highlight-path
-npx ts-node --esm html-tree.ts page.html --selector "article" --match-index 1 --show-text
-npx ts-node --esm html-tree.ts page.html --full --output analysis.txt
+deno run --allow-read html-tree.ts page.html --max-depth 3
+deno run --allow-read html-tree.ts page.html --selector "article"
+deno run --allow-read html-tree.ts page.html --selector ".story" --show-parents 2 --highlight-path
+deno run --allow-read html-tree.ts page.html --selector "article" --match-index 1 --show-text
+deno run --allow-read html-tree.ts page.html --full --output analysis.txt
 ```
 
 ## Options
