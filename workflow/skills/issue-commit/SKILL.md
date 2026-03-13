@@ -1,7 +1,7 @@
 ---
 name: issue-commit
-description: "Create a GitHub issue from staged changes (or link to an existing one) and commit with an issue reference. Accepts an optional issue number (e.g., /issue-commit #42) to skip issue creation."
-argument-hint: "[#issue-number]"
+description: "Create a GitHub issue from staged changes (or link to an existing one) and commit with an issue reference. Accepts: an issue reference (#number, owner/repo#number, or GitHub issue URL) to use a specific issue, 'new' to force-create a new issue, 'reuse' to reuse the latest issue from git log, or no argument to auto-detect and confirm."
+argument-hint: "[#number | owner/repo#number | issue-url | new | reuse]"
 disable-model-invocation: true
 agent: Explore
 context: fork
@@ -24,15 +24,25 @@ Use the context diff provided above together with the stat output to understand 
 
 **Arguments received:** `$ARGUMENTS`
 
-**If an issue number is present above** (e.g., `#42`), skip issue creation and proceed to Step 3 with that issue number.
+### Case A: Issue reference provided (e.g., `#42`, `owner/repo#42`, or `https://github.com/owner/repo/issues/42`)
+Extract the issue number from the reference. Skip issue creation and proceed to Step 3 with that issue number.
 
-**If no issue number is present** (arguments are empty), first check recent commits for a related issue:
+### Case B: `new`
+Create a new issue immediately (skip log scanning). Proceed to **Issue creation** below.
 
+### Case C: `reuse`
 - !`git log --oneline -3`
 
-Scan commit messages for issue references (`#123`, `GH-123`, `owner/repo#123`, or full GitHub issue URLs). If a recent commit references an issue that covers the same topic as the current staged changes, suggest reusing that issue number and confirm with the user before proceeding.
+Scan commit messages for issue references (`#123`, `GH-123`, `owner/repo#123`, or full GitHub issue URLs). Use the most recent matching issue number and proceed to Step 3. If no issue reference is found in recent commits, stop and tell the user no reusable issue was found — suggest using `new` or providing an issue number directly.
 
-If no related issue is found, create a new issue. Prefer GitHub MCP `mcp__github__issue_write`; if MCP is unavailable, fall back to `gh issue create`. Write in English.
+### Case D: No argument (empty)
+- !`git log --oneline -3`
+
+Scan commit messages for issue references (`#123`, `GH-123`, `owner/repo#123`, or full GitHub issue URLs). If a recent commit references an issue that covers the same topic as the current staged changes, suggest reusing that issue number and **ask the user to confirm** before proceeding. If the user declines or no related issue is found, proceed to **Issue creation** below.
+
+### Issue creation
+
+Create a new issue. Use GitHub MCP `mcp__github__issue_write`. If the tool is not listed in the available tools or returns an error, fall back to `gh issue create`. Write in English.
 
 **Title**: Short, action-oriented (under 70 chars).
 
