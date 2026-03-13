@@ -85,6 +85,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["html", "xml", "dom", "css-selector", "web-scraping", "structure-analysis"]
+    },
+    {
+      "name": "workflow",
+      "source": "./workflow",
+      "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["workflow", "github", "issue", "commit", "automation"]
     }
   ]
 }
