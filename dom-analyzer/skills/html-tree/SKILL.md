@@ -1,6 +1,6 @@
 ---
 name: html-tree
-allowed-tools: ["Bash(deno run*)"]
+allowed-tools: ["Bash(uv run*)"]
 description: >
   This skill should be used when analyzing HTML DOM structure, visualizing element hierarchies,
   exploring page layout level by level, discovering CSS selectors for scraping, debugging
@@ -13,13 +13,13 @@ description: >
 
 ## Tool Setup
 
-The plugin bundles a self-contained TypeScript CLI tool at `${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts`. Dependencies are declared inline via Deno's `npm:` specifiers — no install step required.
+The plugin bundles a Python CLI tool at `${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.py`. Dependencies (beautifulsoup4, lxml) are resolved automatically via PEP 723 inline metadata.
 
-**Prerequisites:** Deno runtime.
+**Prerequisites:** uv
 
 **Base command** (all examples below abbreviate this as `...`):
 ```bash
-deno run --allow-read ${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts <html-file> [options]
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.py <html-file> [options]
 ```
 
 ## CLI Options Quick Reference
@@ -47,7 +47,7 @@ Analyze HTML structure by progressively increasing depth. Start shallow, identif
 Get the broadest view of the page structure.
 
 ```bash
-... html-tree.ts page.html --max-depth 2
+... html-tree.py page.html --max-depth 2
 ```
 
 At this level you see major containers: `<html>`, `<head>`, `<body>`, and their direct children. Identify which top-level elements exist (header, nav, main, aside, footer, etc.).
@@ -57,7 +57,7 @@ At this level you see major containers: `<html>`, `<head>`, `<body>`, and their 
 Increase depth to reveal the layout within each major section.
 
 ```bash
-... html-tree.ts page.html --max-depth 4
+... html-tree.py page.html --max-depth 4
 ```
 
 Look for:
@@ -70,13 +70,13 @@ Look for:
 Use `--selector` to focus on a section of interest discovered in previous steps.
 
 ```bash
-... html-tree.ts page.html --selector "main"
+... html-tree.py page.html --selector "main"
 ```
 
 This shows the full subtree under the matched element. Combine with `--max-depth` to control how deep you go within that subtree:
 
 ```bash
-... html-tree.ts page.html --selector "main" --max-depth 3
+... html-tree.py page.html --selector "main" --max-depth 3
 ```
 
 ### Step 4: Examine Context Around Elements
@@ -84,7 +84,7 @@ This shows the full subtree under the matched element. Combine with `--max-depth
 When you find a target element, use `--show-parents` to understand its position in the hierarchy.
 
 ```bash
-... html-tree.ts page.html --selector ".story-content" --show-parents 3
+... html-tree.py page.html --selector ".story-content" --show-parents 3
 ```
 
 This reveals the ancestor chain, helping you build reliable CSS selectors that include structural context.
@@ -94,13 +94,13 @@ This reveals the ancestor chain, helping you build reliable CSS selectors that i
 Use `--show-text` to verify that matched elements contain the expected content.
 
 ```bash
-... html-tree.ts page.html --selector "article" --show-text --max-depth 3
+... html-tree.py page.html --selector "article" --show-text --max-depth 3
 ```
 
 For multiple matches, examine individual ones with `--match-index`:
 
 ```bash
-... html-tree.ts page.html --selector "article" --match-index 1 --show-text
+... html-tree.py page.html --selector "article" --match-index 1 --show-text
 ```
 
 ### Step 6: Refine Selectors
@@ -108,7 +108,7 @@ For multiple matches, examine individual ones with `--match-index`:
 Use `--full` to reveal all attributes (href, src, role, aria-*, data-*) when building precise selectors.
 
 ```bash
-... html-tree.ts page.html --selector "article" --full --highlight-path
+... html-tree.py page.html --selector "article" --full --highlight-path
 ```
 
 ## Additional Workflows
