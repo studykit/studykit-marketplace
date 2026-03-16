@@ -5,7 +5,7 @@ argument-hint: "[#number | owner/repo#number | issue-url | new | reuse]"
 disable-model-invocation: true
 agent: Explore
 context: fork
-allowed-tools: Bash(git *), Bash(gh *), Agent, mcp__github__issue_write
+allowed-tools: Bash(git *), Bash(gh *), Agent, mcp__plugin_workflow_github__issue_write
 ---
 
 # Issue + Commit Workflow
@@ -42,7 +42,7 @@ Scan commit messages for issue references (`#123`, `GH-123`, `owner/repo#123`, o
 
 ### Issue creation
 
-Create a new issue. Use GitHub MCP `mcp__github__issue_write`. If the tool is not listed in the available tools or returns an error, fall back to `gh issue create`. Write in English.
+Create a new issue. Use GitHub MCP `mcp__plugin_workflow_github__issue_write`. If the tool is not listed in the available tools or returns an error, fall back to `gh issue create`. Write in English.
 
 **Title**: Short, action-oriented (under 70 chars).
 
