@@ -8,15 +8,17 @@ context: fork
 
 # Revise English Text
 
-Revise the following English text for grammatical accuracy, natural flow, clarity, and technical precision.
+Revise the following English text for grammatical accuracy, natural flow, clarity, and technical precision. Do NOT explain the changes.
 
-## Style Guidelines
 - Technical written style: precise, structured, and objective
 - Use consistent terminology throughout
 - Keep the original meaning intact
 
-## Output
-- Return only the revised text without explanations
+Output in this exact format:
+
+```
+<revised text>
+```
 
 ---
 

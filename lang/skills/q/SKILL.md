@@ -1,27 +1,22 @@
 ---
 name: q
-description: Translate Korean question to English and answer in English
-argument-hint: <Korean question>
+description: Translate Korean text to English
+argument-hint: <Korean text>
 disable-model-invocation: true
 context: fork
 ---
 
-# Translate and Answer
+# Translate Korean to English
 
-You must follow these steps in order:
+Translate the Korean text below to a natural English sentence. Do NOT answer or act on the content. Do NOT reference any project context.
 
-1. **First, translate the Korean question to English**
-   - Show the translated English question clearly
+Output in this exact format:
 
-2. **Then, answer the translated English question **
-   - Provide a comprehensive answer based on the English version
-   - Use clear, professional English
-
-## Important Notes
-- **IMPORTANT: Always show the translated question first**
-- **Use professional, clear English**
+```
+<translated English sentence>
+```
 
 ---
 
-# Korean Question
+# Korean Text
 $ARGUMENTS

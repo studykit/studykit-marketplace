@@ -1,7 +1,0 @@
-interface:
-  display_name: "rsna"
-  short_description: "Revise English text with user-selected style, then optionally explain the changes"
-  default_prompt: "Use the rsna skill only when explicitly requested."
-
-policy:
-  allow_implicit_invocation: false

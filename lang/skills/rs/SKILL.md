@@ -4,8 +4,6 @@ description: Revise English text with user-selected style
 argument-hint: <English text to revise>
 disable-model-invocation: true
 context: fork
-allowed-tools:
-  - AskUserQuestion
 ---
 
 # Revise English Text with Style Selection
@@ -28,15 +26,16 @@ Options:
 10. "Professional (Spoken)" - Business meeting appropriate
 ```
 
-After receiving the selection, revise the text ONLY in the selected style(s).
+After receiving the selection, revise the text ONLY in the selected style(s). Do NOT explain the changes.
 
-For each refinement:
 - Review for grammatical accuracy, natural flow, and clarity
 - Keep the original meaning intact
-- Provide the refined version with the style name as heading
 
-## Important Notes
-- **IMPORTANT: Return ONLY the refinements for selected styles without any explanations, commentary, or additional text.**
+Output in this exact format:
+
+```
+<revised text>
+```
 
 ---
 
