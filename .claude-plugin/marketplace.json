@@ -10,7 +10,7 @@
   "plugins": [
     {
       "name": "lang",
-      "source": "./lang",
+      "source": "./plugins/lang",
       "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
       "version": "0.0.1",
       "author": {
@@ -23,7 +23,7 @@
     },
     {
       "name": "doc",
-      "source": "./doc",
+      "source": "./plugins/doc",
       "description": "A plugin for reading and searching various document formats including CHM files",
       "version": "0.0.1",
       "author": {
@@ -36,7 +36,7 @@
     },
     {
       "name": "autodesk",
-      "source": "./autodesk",
+      "source": "./plugins/autodesk",
       "description": "Autodesk Inventor API documentation and development support for product and architectural design automation",
       "version": "0.0.2",
       "author": {
@@ -49,7 +49,7 @@
     },
     {
       "name": "jdk-source",
-      "source": "./jdk-source",
+      "source": "./plugins/jdk-source",
       "description": "View JDK internal source code for Java development and debugging",
       "version": "0.1.0",
       "author": {
@@ -62,7 +62,7 @@
     },
     {
       "name": "korea-gov-data",
-      "source": "./korea-gov-data",
+      "source": "./plugins/korea-gov-data",
       "description": "Extract and organize Open API specifications from data.go.kr (Korea Public Data Portal)",
       "version": "0.1.0",
       "author": {
@@ -75,7 +75,7 @@
     },
     {
       "name": "dom-analyzer",
-      "source": "./dom-analyzer",
+      "source": "./plugins/dom-analyzer",
       "description": "HTML/XML DOM structure analysis toolkit with hierarchy visualization and CSS selector discovery",
       "version": "0.1.1",
       "author": {
@@ -88,7 +88,7 @@
     },
     {
       "name": "workflow",
-      "source": "./workflow",
+      "source": "./plugins/workflow",
       "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
       "version": "0.1.0",
       "author": {
