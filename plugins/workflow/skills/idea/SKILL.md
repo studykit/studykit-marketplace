@@ -1,5 +1,5 @@
 ---
-name: brainstorming
+name: idea
 description: "Facilitate a brainstorming session — generate ideas, explore possibilities, think through options, weigh pros and cons, or prioritize ideas. Assesses the situation and selects the appropriate technique — SCAMPER, Mind Mapping, Reverse Brainstorming, Six Thinking Hats, SWOT Analysis, Impact-Effort Matrix, and more."
 argument-hint: <topic or problem to brainstorm>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
@@ -96,7 +96,7 @@ When the session reaches a natural conclusion or the user indicates they're done
 1. **Ask to summarize** — Ask: "Would you like me to summarize what we've covered?" and wait for the user's response.
 2. **If the user declines** — End the session immediately.
 3. **If the user agrees** — Draft the summary following the file format below. Ensure these are fully preserved: (1) anything the user emphasized as important during the conversation, (2) any research findings from subagent investigations, and (3) any TODOs or action items that came up during the conversation. Present the draft to the user and incorporate any feedback.
-4. **Ask save location** — Ask where to save. Default path: `workflow/brainstorming/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to the working directory. Create the directory if it does not exist.
+4. **Ask save location** — Ask where to save. Default path: `workflow/idea/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to the working directory. Create the directory if it does not exist.
 5. **Write the file** — Save using the Write tool.
 6. **Report the path** — After writing, report the full file path so the main session can reference it.
 
