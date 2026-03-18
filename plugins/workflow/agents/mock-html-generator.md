@@ -6,7 +6,8 @@ description: >
   design, and visual polish.
 model: sonnet
 color: magenta
-tools: ["Write", "Read", "Edit"]
+memory: project
+tools: "Write", "Read", "Edit", "Bash", "Agent"
 ---
 
 You are a web design specialist who generates high-quality HTML/CSS mockup files.
