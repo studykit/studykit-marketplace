@@ -2,7 +2,6 @@
 name: brainstorming
 description: "Facilitate a brainstorming session — generate ideas, explore possibilities, think through options, weigh pros and cons, or prioritize ideas. Assesses the situation and selects the appropriate technique — SCAMPER, Mind Mapping, Reverse Brainstorming, Six Thinking Hats, SWOT Analysis, Impact-Effort Matrix, and more."
 argument-hint: <topic or problem to brainstorm>
-context: fork
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
 ---
 
