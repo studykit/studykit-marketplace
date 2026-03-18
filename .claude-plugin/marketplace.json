@@ -90,7 +90,7 @@
       "name": "workflow",
       "source": "./plugins/workflow",
       "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
-      "version": "0.1.0",
+      "version": "0.2.1",
       "author": {
         "name": "studykit"
       },
