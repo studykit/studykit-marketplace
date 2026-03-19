@@ -90,14 +90,14 @@
       "name": "workflow",
       "source": "./plugins/workflow",
       "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
-      "version": "0.2.3",
+      "version": "0.3.0",
       "author": {
         "name": "studykit"
       },
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
       "category": "development",
-      "keywords": ["workflow", "github", "issue", "commit", "automation"]
+      "keywords": ["workflow", "github", "issue", "commit", "automation", "code-study", "architecture"]
     }
   ]
 }
