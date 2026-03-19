@@ -3,6 +3,7 @@ name: commit-walker
 description: "Walk through git commits sequentially with architectural insights and pattern analysis. Provides structured explanations of each commit's purpose, design decisions, and relationship to the codebase evolution. Accepts an optional starting ref — omit to start from the first commit."
 argument-hint: "[start-ref]"
 context: fork
+disable-model-invocation: true
 allowed-tools: Bash(git *), Read
 ---
 
