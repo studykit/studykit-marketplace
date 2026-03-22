@@ -3,7 +3,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pypdf"]
 # ///
-"""PDF 파일의 전체 페이지 수를 계산하는 스크립트."""
+"""Script to calculate the total number of pages in a PDF file."""
 
 import sys
 from pathlib import Path
@@ -12,7 +12,7 @@ from pypdf import PdfReader
 
 
 def get_total_pages(pdf_path: str) -> int:
-    """PDF 파일의 전체 페이지 수를 반환합니다."""
+    """Return the total number of pages in a PDF file."""
     reader = PdfReader(pdf_path)
     return len(reader.pages)
 

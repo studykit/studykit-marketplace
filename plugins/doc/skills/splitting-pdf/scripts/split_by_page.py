@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 # /// script
+# requires-python = ">=3.10"
 # dependencies = ["pymupdf"]
 # ///
 """
@@ -65,12 +66,11 @@ def extract_pages(input_path: str, output_path: str, page_range: str) -> None:
 
     # Create new PDF with selected pages
     new_doc = fitz.open()
-    new_doc.insert_pdf(doc, from_page=min(pages), to_page=max(pages))
-
-    # If pages are not contiguous, we need to select specific pages
-    if pages != list(range(min(pages), max(pages) + 1)):
-        new_doc.close()
-        new_doc = fitz.open()
+    if pages == list(range(min(pages), max(pages) + 1)):
+        # Contiguous range: insert all at once for efficiency
+        new_doc.insert_pdf(doc, from_page=min(pages), to_page=max(pages))
+    else:
+        # Non-contiguous: insert page by page
         for page_num in pages:
             new_doc.insert_pdf(doc, from_page=page_num, to_page=page_num)
 
