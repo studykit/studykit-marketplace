@@ -162,11 +162,22 @@ The specification ends only when the user says so. Never conclude on your own �
 
 When the user indicates they're done:
 
-1. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
-2. **Present the final spec** to the user for last confirmation.
-3. **Write the file** using the Write tool.
-4. **Stage the file** — run `git add <file_path>` to include it in version control.
-5. **Report the path** so the user can reference it.
+1. **Run the spec-reviewer agent** — invoke the `spec-reviewer` agent with the current output file path. The agent evaluates every requirement for behavior completeness, input/output clarity, edge cases, testability, ambiguity, dependencies, and overlap.
+2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
+   - `INCOMPLETE` — ask what's missing and fill it in
+   - `UNDERSPECIFIED` — propose concrete I/O details and ask for confirmation
+   - `MISSING EDGES` — present the edge cases and ask how each should be handled
+   - `UNTESTABLE` — suggest measurable criteria to replace subjective language
+   - `AMBIGUOUS` — present the precise alternative and ask if it captures the intent
+   - `UNCLEAR DEPS` — ask the user to clarify the relationship
+   - `OVERLAPS` — ask whether to merge, differentiate, or remove the overlapping requirements
+   - The user can accept, modify, or dismiss each suggestion. Respect their decision.
+3. **Update the output file** with any revisions from the review.
+4. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
+5. **Present the final spec** to the user for last confirmation.
+6. **Write the file** using the Write tool.
+7. **Stage the file** — run `git add <file_path>` to include it in version control.
+8. **Report the path** so the user can reference it.
 
 ### Output Format
 
