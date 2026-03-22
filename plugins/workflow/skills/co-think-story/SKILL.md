@@ -1,6 +1,6 @@
 ---
 name: co-think-story
-description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'turn this into job stories', 'gather requirements', or when a rough idea needs to be shaped into concrete Job Stories through a Socratic interview."
+description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'turn this into job stories', 'gather requirements', 'split this story', 'break this down', or when a rough idea needs to be shaped into concrete Job Stories through a Socratic interview. Automatically detects and splits oversized stories into smaller, independently valuable pieces."
 argument-hint: <idea or vague concept to turn into requirements>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
 ---
@@ -32,11 +32,68 @@ Ask exactly ONE question per turn. Wait for the answer. Then ask the next. This 
 
 Why: Multiple questions produce shallow answers. A single focused question forces both sides to think deeply about one thing before moving on.
 
+## Progressive File Writing
+
+The working file is a living document that grows throughout the interview. The user can open it at any time to see the current state.
+
+### File Lifecycle
+
+| Phase | Trigger | What happens to the file |
+|-------|---------|--------------------------|
+| Create | Idea received (step 1) | Create the file with frontmatter, original idea, and empty sections |
+| Update | Each story confirmed or split (steps 3-4) | Append the new story to the Job Stories section |
+| Update | Progress snapshot (every 4-5 exchanges) | Update the Context section with latest understanding |
+| Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, remove draft marker |
+
+### Working File Path
+
+At the start of the interview, determine the file path:
+- Default: `A4/story/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Ask the user only if they want a different location
+- Create the directory if needed
+
+### Initial File Content
+
+Write this immediately after restating the idea:
+
+```markdown
+---
+topic: "<topic>"
+date: <YYYY-MM-DD>
+source: "<original idea, verbatim>"
+status: draft
+---
+# Job Stories: <topic>
+
+## Original Idea
+<The original input, as-is.>
+
+## Context
+*Discovered during interview — updated as we go.*
+
+## Job Stories
+*Stories will appear here as they are confirmed.*
+
+## Open Questions
+*Will be filled if unresolved topics remain.*
+```
+
+Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
+
+### How to Update
+
+- **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
+- **Preserve all previously confirmed stories** — never remove or reorder them during updates.
+- **Update the Context section** with the latest understanding each time you write.
+- **Keep the `status: draft` marker** in frontmatter until wrap-up.
+
 ## Interview Flow
 
 ### 1. Receive the Idea
 
 Take the user's input — it may be a raw idea, a brainstorming output, or a vague description. Restate the idea back in one sentence to confirm understanding.
+
+**Then immediately create the working file** as described in Progressive File Writing above.
 
 ### 2. Discovery Loop
 
@@ -76,11 +133,46 @@ As the conversation reveals enough context, draft a Job Story and present it to 
 >
 > Does this capture it? Anything to adjust?
 
-After the user confirms or revises, continue the interview to discover the next Job Story.
+After the user confirms or revises:
+1. **Update the working file** — append the confirmed story to the Job Stories section and update Context.
+2. **Keep a running count.** Note the total: "That's 4 stories so far. File updated. Let's keep going."
 
-**Keep a running count.** After each confirmed story, briefly note the total: "That's 4 stories so far. Let's keep going."
+### 4. Story Splitting
 
-### 4. Challenge Mode Shifts
+After a Job Story is confirmed, evaluate whether it is too large. A story is too large when it contains **multiple distinct actions**, **serves more than one outcome**, or **spans unrelated situations**.
+
+**Signs a story needs splitting:**
+- The "I want to" clause has "and" connecting separate actions
+- The "so I can" clause describes two or more unrelated outcomes
+- The "When" clause covers multiple distinct scenarios that don't always occur together
+- Implementing the story would require touching many independent parts of the system
+
+**How to split:**
+
+When you detect a large story, flag it:
+
+> This story feels like it's doing two things at once. Let me try splitting it:
+>
+> **Original:**
+> **When** I receive a customer complaint, **I want to** categorize the issue and assign it to the right team and draft a response, **so I can** resolve it quickly and track patterns.
+>
+> **Split into:**
+>
+> **4a.** **When** I receive a customer complaint, **I want to** categorize the issue and assign it to the right team, **so I can** ensure the right people start working on it immediately.
+>
+> **4b.** **When** a complaint has been categorized, **I want to** draft a response based on the category, **so I can** acknowledge the customer within minutes instead of hours.
+>
+> **4c.** **When** complaints are resolved over time, **I want to** see patterns by category, **so I can** fix recurring root causes.
+>
+> Does this split make sense? Want to adjust any of these?
+
+**Splitting rules:**
+- Each child story must be independently valuable — it should make sense on its own even if the others aren't built
+- Preserve the parent story's numbering with suffixes (3a, 3b, 3c) to maintain traceability
+- Ask the user to confirm the split before counting them as separate stories
+- If the user prefers to keep a story combined, respect that — note it as a "composite story" and move on
+
+### 5. Challenge Mode Shifts
 
 After sustained questioning in one direction, shift perspective to break habitual thinking. Trigger shifts when the conversation circles or the user gives repetitive answers.
 
@@ -105,13 +197,54 @@ Look at it from a different angle.
 
 Use when: The conversation has gone deep in one direction without exploring alternatives.
 
+### 6. Story Relationship Analysis
+
+After 5 or more stories have been confirmed, analyze and present the relationships between stories. Update the working file with a **Story Relationships** section after the Job Stories section. Re-analyze whenever new stories are added.
+
+**What to identify:**
+
+#### Dependency relationships
+One story requires another to be completed first. Look for:
+- Stories that need data produced by another story
+- Stories that build on a screen or feature introduced by another story
+- Stories whose "When" clause assumes a capability from another story
+
+Format: `A → B` means A must exist before B can work.
+
+#### Reinforcement relationships
+One story enhances or strengthens another but isn't strictly required. Look for:
+- Stories that improve reliability of another (e.g., monitoring reinforces data pipelines)
+- Stories that personalize or extend a base feature
+- Stories that fill gaps in another story's coverage
+
+#### Story groups
+Cluster stories by the area they serve. A story can appear in multiple groups if it spans areas.
+
+**How to present:**
+
+> Here are the relationships between the stories so far:
+>
+> **Dependencies:** 10 → 1 (need holdings data for dashboard), 1 → 2 (dashboard needed before embedding calendar)
+>
+> **Reinforcements:** 6 → 4, 5, 10 (monitoring reinforces all pipelines)
+>
+> **Groups:**
+> | Group | Stories | Description |
+> |-------|---------|-------------|
+> | Dashboard | 1, 2, 9 | Main view |
+> | News | 4, 5 | Timeline |
+>
+> Does this look right?
+
+After the user confirms or revises, update the working file.
+
 ## Facilitation Guidelines
 
 - **Build on answers, don't interrogate.** Curious colleague, not cross-examination.
 - **Use the user's own words.** Don't introduce jargon they didn't use.
 - **Offer options when stuck.** "Would it be more like A, B, or something else?"
 - **Stay at the right altitude.** If the user drifts into implementation ("we could use Redis"), redirect: "Good thought for later — what's the underlying need?"
-- **Every 4-5 exchanges:** Brief progress snapshot — confirmed stories so far, what's still unclear, where the next question will go.
+- **Every 4-5 exchanges:** Brief progress snapshot — confirmed stories so far, what's still unclear, where the next question will go. Update the working file with the latest Context.
 
 ## Wrapping Up
 
@@ -119,11 +252,22 @@ The interview ends only when the user says so. Never conclude on your own — ev
 
 When the user indicates they're done:
 
-1. **Present all confirmed Job Stories** in the format below. Incorporate any final feedback.
-2. **Ask save location.** Default: `A4/story/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory. Create the directory if needed.
-3. **Write the file** using the Write tool.
-4. **Stage the file** — run `git add <file_path>` to include it in version control.
-5. **Report the path** so the user can reference it.
+1. **Run the story-reviewer agent** — invoke the `story-reviewer` agent with the current working file path. The agent evaluates every story for size, specificity, action clarity, outcome measurability, and overlap.
+2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
+   - `SPLIT` — propose the split and ask for confirmation
+   - `VAGUE` / `UNCLEAR` / `WEAK` — present the suggestion and ask if the user wants to revise
+   - `OVERLAPS` — ask if the user wants to merge or differentiate the overlapping stories
+   - The user can accept, modify, or dismiss each suggestion. Respect their decision.
+3. **Update the working file** with any revisions from the review.
+4. **Finalize the working file** — write the final version with all sections completed:
+   - Change `status: draft` to `status: final` in frontmatter
+   - Finalize the Context section with the complete understanding from the interview
+   - Ensure all confirmed Job Stories are present and in order
+   - Add the Open Questions section if unresolved topics remain
+   - Append the full Interview Transcript
+   - Remove any placeholder text (e.g., "*Stories will appear here...*")
+5. **Stage the file** — run `git add <file_path>` to include it in version control.
+6. **Report the path** so the user can reference it.
 
 ### Output Format
 
@@ -132,6 +276,7 @@ When the user indicates they're done:
 topic: "<topic>"
 date: <YYYY-MM-DD>
 source: "<original idea, verbatim>"
+status: final
 ---
 # Job Stories: <topic>
 
@@ -153,7 +298,31 @@ source: "<original idea, verbatim>"
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
+### 3. <short title> *(split from original #3)*
+#### 3a. <short title>
+**When** <situation/context>,
+**I want to** <action/goal>,
+**so I can** <expected outcome>.
+
+#### 3b. <short title>
+**When** <situation/context>,
+**I want to** <action/goal>,
+**so I can** <expected outcome>.
+
 ...
+
+## Story Relationships
+
+### Dependencies
+- **A → B**: <reason>
+
+### Reinforcements
+- **A → B, C**: <reason>
+
+### Story Groups
+| Group | Stories | Description |
+|-------|---------|-------------|
+| <name> | <numbers> | <description> |
 
 ## Open Questions
 <Questions that came up but weren't resolved. Topics to revisit.>
@@ -171,6 +340,6 @@ source: "<original idea, verbatim>"
 </details>
 ```
 
-**Required sections**: Original Idea, Context, Job Stories, Interview Transcript.
+**Required sections**: Original Idea, Context, Job Stories, Story Relationships, Interview Transcript.
 **Conditionally required:**
 - **Open Questions** — if unresolved topics remain
