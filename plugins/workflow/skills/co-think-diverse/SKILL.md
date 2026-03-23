@@ -13,7 +13,7 @@ Start a brainstorming session on: **$ARGUMENTS**
 
 ## Situation Assessment
 
-Before selecting a technique, assess the situation through brief conversation. Determine three dimensions:
+Before selecting a technique, assess the situation through brief conversation. Determine two dimensions:
 
 ### 1. Target Existence
 - **Existing target**: The user wants to improve, extend, or reimagine something that already exists (a product, process, codebase, workflow).

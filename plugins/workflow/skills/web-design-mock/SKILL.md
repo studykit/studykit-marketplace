@@ -1,6 +1,6 @@
 ---
 name: web-design-mock
-description: "This skill should be used when the user wants to create a web page mockup, prototype a UI, design a landing page, build a dashboard layout, or do HTML/CSS design work. Also applies when the user mentions wireframes, page layouts, responsive design prototypes, or wants to visualize what a web page would look like."
+description: "This skill should be used when the user wants to create a web page mockup, prototype a UI, design a landing page, build a dashboard layout, or do HTML/CSS design work. Triggers: 'UI mock', 'HTML prototype', 'design preview', 'mockup', 'wireframe', 'page layout', 'responsive design prototype', 'visualize the page', 'web design', 'landing page design', 'dashboard layout'."
 argument-hint: <design request or description>
 allowed-tools: Read, Agent
 ---

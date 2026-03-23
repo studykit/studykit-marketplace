@@ -1,6 +1,6 @@
 ---
 name: co-think-concept
-description: "This skill should be used when the user has functional specifications (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', or when FRs from co-think-spec need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
+description: "This skill should be used when the user has functional specifications (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', 'ubiquitous language', 'entity extraction', 'domain glossary', 'what are the entities', 'map relationships', or when FRs from co-think-spec need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
 argument-hint: <path to spec file(s)>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
 ---
@@ -77,14 +77,11 @@ After completing work on any topic (or when the conversation reaches a natural p
 
 ### Navigation Rules
 
-- **User controls all transitions.** Never move to the next topic automatically. When the current topic feels sufficiently covered, suggest moving on: "We've defined 6 concepts and covered all the FRs. Would you like to move to Relationship Mapping, or is there more to explore here?" The user decides.
-- **Revisiting is welcome.** The user may return to any topic at any time — e.g., discovering a new concept while mapping relationships.
-- **Pausing is fine.** The user may want to hold the current topic and focus on something else. Acknowledge and resume when they're ready.
-- **Topics can interleave.** Real thinking doesn't follow strict sequences. If a relationship discussion reveals a missing concept, note it and ask the user if they want to define it now or later.
+**CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions, revisiting and interleaving are welcome. Example: "We've defined 6 concepts and covered all the FRs. Would you like to move to Relationship Mapping, or is there more to explore here?"
 
-## Core Rule: One Question at a Time
+## Shared Facilitation Patterns
 
-Ask exactly ONE question per turn. Wait for the answer. Then ask the next.
+**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
 
 ## Abstraction Level Guard
 

@@ -1,6 +1,6 @@
 ---
 name: co-think-spec
-description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write specs', 'make this buildable', 'turn stories into requirements', 'spec this out', or when Job Stories from co-think-story need to be shaped into functional specifications detailed enough for AI to develop."
+description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write specs', 'make this buildable', 'turn stories into requirements', 'spec this out', 'functional requirements', 'FR', 'acceptance criteria', 'define behavior', 'what should it do', or when Job Stories from co-think-story need to be shaped into functional specifications detailed enough for AI to develop."
 argument-hint: <path to Job Story file>
 allowed-tools: Read, Write, Bash, Agent, WebSearch, WebFetch
 ---
@@ -31,12 +31,7 @@ This grounds the specification in reality. Reference what you find during the in
 
 ## Navigation Rules
 
-Steps follow a natural order (Determine Software Type → Story-by-Story Specification), but the user controls all transitions:
-
-- **User controls all transitions.** Never move to the next step automatically. When the current step feels sufficiently covered, suggest moving on — but let the user decide.
-- **Revisiting is welcome.** The user may return to a previous step at any time — e.g., revisiting software type after specifying a few stories reveals a mixed UI/non-UI need.
-- **Pausing is fine.** The user may want to hold the current step and come back later. Acknowledge and resume when they're ready.
-- **Steps can interleave.** If specifying a story reveals that the software type assumption was wrong, note it and ask the user if they want to revisit now or later.
+Steps follow a natural order (Determine Software Type → Story-by-Story Specification). **CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions, revisiting and interleaving are welcome.
 
 ## Step 1: Determine Software Type
 
@@ -120,9 +115,20 @@ When a mock is NOT needed (simple interactions, clear behavior), skip it and pro
 - Ask about **boundaries**: "Is there a limit? What's the maximum/minimum?"
 - When the user is unsure, offer 2-3 concrete options to choose from.
 
-## Core Rule: One Question at a Time
+## Shared Facilitation Patterns
 
-Ask exactly ONE question per turn. Wait for the answer. Then ask the next.
+**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
+
+## Progressive File Writing
+
+### Working File Path
+
+At the start of the session, determine the file path:
+- Default: `A4/spec/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Ask the user only if they want a different location
+- Create the directory if needed
+
+Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
 
 ## Progressive Specification
 
@@ -192,68 +198,4 @@ When the user indicates they're done:
 
 ### Output Format
 
-```markdown
----
-topic: "<topic>"
-date: <YYYY-MM-DD>
-source:
-  - "[[<story-file-name>]]"
-type: <ui | non-ui | mixed>
----
-# Functional Specification: <topic>
-
-## Overview
-<Brief summary of what this software does and who it's for. Derived from the Job Stories.>
-
-## Job Stories Reference
-<List all Job Stories from the source file for traceability. If any were decomposed, show the sub-stories with a note referencing the original.>
-
-## Functional Requirements
-
-### FR-1: <short title>
-[status:: draft]
-[story:: [[<story-file-name>]]#<story heading>]
-
-<!-- For UI -->
-**Screen/View:** <where this happens>
-**User action:** <what the user does>
-**System behavior:**
-1. <step 1>
-2. <step 2>
-...
-**Validation:** <input rules, constraints>
-**Error handling:** <what happens when things go wrong>
-**Mock:** <path to mock HTML file, if created>
-
-<!-- For Non-UI -->
-**Trigger:** <what initiates this>
-**Input:** <format, parameters, validation>
-**Processing:** <business logic, rules, steps>
-**Output:** <format, structure, response>
-**Error handling:** <failure modes, error responses>
-
-**Dependencies:** <other FRs this depends on, if any>
-
-### FR-2: <short title>
-[status:: draft]
-[story:: [[<story-file-name>]]#<story heading>]
-[story:: [[<another-story-file>]]#<story heading>]
-...
-
-## Open Questions
-<Unresolved decisions or ambiguities to revisit.>
-- ...
-```
-
-**`source` field rules:**
-- Use wikilinks (filename only, no path) to the Job Story file(s) this spec is based on.
-- If multiple story files feed into one spec, list all of them.
-
-**`story` inline field rules:**
-- Each FR links to the specific story item(s) it implements, using `[[filename]]#heading` format.
-- If one FR comes from multiple stories (across one or more files), add multiple `[story::]` lines — Dataview treats repeated keys as arrays.
-- The heading must match the exact heading text in the story file (e.g., `#1. 로그인 인증`).
-
-**Required sections**: Overview, Job Stories Reference, Functional Requirements.
-**Conditionally required:**
-- **Open Questions** — if unresolved topics remain
+Follow the Functional Specification template in `references/output-template.md` for the final file structure, field rules, and required sections.

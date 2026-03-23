@@ -26,11 +26,9 @@ A good Job Story has:
 - A **concrete action** the user wants to take
 - A **measurable or observable outcome**
 
-## Core Rule: One Question at a Time
+## Shared Facilitation Patterns
 
-Ask exactly ONE question per turn. Wait for the answer. Then ask the next. This is non-negotiable.
-
-Why: Multiple questions produce shallow answers. A single focused question forces both sides to think deeply about one thing before moving on.
+**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
 
 ## Progressive File Writing
 
@@ -207,79 +205,4 @@ When the user indicates they're done:
 
 ### Output Format
 
-```markdown
----
-topic: "<topic>"
-date: <YYYY-MM-DD>
-source:
-  - "[[<diverse-file-name>]]"
----
-# Job Stories: <topic>
-
-## Original Idea
-<The original input, as-is.>
-
-## Context
-<Brief summary of the problem space, who's involved, and why this matters. Derived from the interview.>
-
-## Job Stories
-
-### 1. <short title>
-[status:: final]
-**When** <situation/context>,
-**I want to** <action/goal>,
-**so I can** <expected outcome>.
-
-### 2. <short title>
-[status:: final]
-**When** <situation/context>,
-**I want to** <action/goal>,
-**so I can** <expected outcome>.
-
-### 3. <short title> *(split from original #3)*
-#### 3a. <short title>
-[status:: final]
-**When** <situation/context>,
-**I want to** <action/goal>,
-**so I can** <expected outcome>.
-
-#### 3b. <short title>
-[status:: final]
-**When** <situation/context>,
-**I want to** <action/goal>,
-**so I can** <expected outcome>.
-
-...
-
-## Story Relationships
-
-### Dependencies
-- **A → B**: <reason>
-
-### Reinforcements
-- **A → B, C**: <reason>
-
-### Story Groups
-| Group | Stories | Description |
-|-------|---------|-------------|
-| <name> | <numbers> | <description> |
-
-## Open Questions
-<Questions that came up but weren't resolved. Topics to revisit.>
-- ...
-
-## Interview Transcript
-<details>
-<summary>Full Q&A</summary>
-
-### Round 1
-**Q:** <question>
-**A:** <answer>
-
-...
-</details>
-```
-
-**Required sections**: Original Idea, Context, Job Stories, Story Relationships, Interview Transcript.
-**Conditionally required:**
-- **Open Questions** — if unresolved topics remain
+Follow the Job Stories template in `references/output-template.md` for the final file structure and required sections.

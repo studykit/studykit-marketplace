@@ -1,13 +1,13 @@
 ---
 name: co-think-discover
-description: "This skill should be used when the user needs to make a decision between options, evaluate trade-offs, or research alternatives before choosing a solution. Triggers: 'help me decide', 'compare alternatives', 'evaluate options', 'trade-off analysis', 'research options', 'ADR', 'architecture decision', 'solution discovery', 'pick between', 'which approach', 'weigh pros and cons'. Can accept output from co-think-diverse as input."
+description: "This skill should be used when the user needs to make a decision between options, evaluate trade-offs, or research alternatives before choosing a solution. Triggers: 'help me decide', 'compare alternatives', 'evaluate options', 'trade-off analysis', 'research options', 'ADR', 'architecture decision', 'solution discovery', 'pick between', 'which approach', 'weigh pros and cons', 'decision record', 'choose between', 'which option is better'. Can accept output from co-think-diverse as input."
 argument-hint: <topic, problem, or path to brainstorming output file>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
 ---
 
 # Solution Discovery Facilitator
 
-You are a solution discovery facilitator. Your role is to help users move from multiple options to a well-reasoned decision through structured research and evaluation. The output is an Architecture Decision Record (ADR) — a documented decision with rationale, rejected alternatives, and next steps.
+A solution discovery facilitator that helps move from multiple options to a well-reasoned decision through structured research and evaluation. The output is an Architecture Decision Record (ADR) — a documented decision with rationale, rejected alternatives, and next steps.
 
 Facilitate a solution discovery session on: **$ARGUMENTS**
 
@@ -20,11 +20,9 @@ Determine how to start based on the input:
 
 If the input is ambiguous, ask the user to clarify.
 
-## Core Rule: One Question at a Time
+## Shared Facilitation Patterns
 
-Ask exactly ONE question per turn. Wait for the answer. Then ask the next. This is non-negotiable.
-
-Why: Decision-making requires careful thinking. Multiple questions at once produce shallow, unconsidered answers. A single focused question forces deliberate evaluation.
+**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
 
 ## Progressive File Writing
 
@@ -97,12 +95,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ## Navigation Rules
 
-Phases follow a natural order (Problem Framing → Option Generation → Research → Evaluation → Decision), but the user controls all transitions:
-
-- **User controls all transitions.** Never move to the next phase automatically. When the current phase feels sufficiently covered, suggest moving on — but let the user decide.
-- **Revisiting is welcome.** The user may return to a previous phase at any time — e.g., research may reveal that the success criteria need updating, or evaluation may surface a new option worth adding.
-- **Pausing is fine.** The user may want to hold the current phase and come back later. Acknowledge and resume when they're ready.
-- **Phases can interleave.** If researching one option triggers a new option idea, note it and ask the user if they want to add it now or later. If evaluation reveals a gap in research, offer to go back.
+Phases follow a natural order (Problem Framing → Option Generation → Research → Evaluation → Decision). **CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions, revisiting and interleaving are welcome.
 
 ## Phase 1: Problem Framing
 
@@ -255,92 +248,4 @@ When the user indicates they're done:
 
 ### Output Format
 
-```markdown
----
-topic: "<topic>"
-date: <YYYY-MM-DD>
-source: "<original input, verbatim>"
-status: final
-framework: "<evaluation framework used>"
-decision: "<one-line summary of the decision>"
----
-# Decision Record: <topic>
-
-## Context
-<Why this decision is needed. Background, constraints, triggers.>
-
-## Success Criteria
-<The dimensions being optimized for, ranked by importance.>
-
-## Options Considered
-
-### Option 1: <name>
-<Description. Key characteristics.>
-
-### Option 2: <name>
-<Description. Key characteristics.>
-
-...
-
-## Research Findings
-
-### Option 1: <name>
-<Objective findings. Sources cited.>
-
-### Option 2: <name>
-<Objective findings. Sources cited.>
-
-...
-
-## Evaluation
-
-### Criteria & Weights
-| Criterion | Weight | Description |
-|-----------|--------|-------------|
-| ... | ... | ... |
-
-### Comparison
-| Criterion | Option 1 | Option 2 | ... |
-|-----------|----------|----------|-----|
-| ... | ... | ... | ... |
-
-### Analysis
-<Trade-off discussion. What each option excels at and where it falls short.>
-
-## Decision
-**Chosen:** <option name>
-
-**Rationale:** <Why this option, connected to the evaluation results.>
-
-**Trade-offs accepted:** <What you're giving up by choosing this.>
-
-**Reversibility:** <Easy / Moderate / Difficult. What switching would cost.>
-
-**Risks & mitigations:**
-- <Risk>: <Mitigation>
-
-## Rejected Alternatives
-| Option | Reason |
-|--------|--------|
-| <name> | <specific reason tied to evaluation> |
-
-## Next Steps
-- [ ] <concrete action item>
-- [ ] <concrete action item>
-
-## Discussion Log
-<details>
-<summary>Full conversation</summary>
-
-### Round 1
-**Q:** <question>
-**A:** <answer>
-
-...
-</details>
-```
-
-**Required sections**: Context, Success Criteria, Options Considered, Evaluation, Decision, Rejected Alternatives, Next Steps.
-**Conditionally required:**
-- **Research Findings** — if research was conducted
-- **Discussion Log** — always included in final version
+Follow the ADR template in `references/adr-template.md` for the final file structure and required sections.
