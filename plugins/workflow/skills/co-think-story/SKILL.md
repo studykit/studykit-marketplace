@@ -139,38 +139,7 @@ After the user confirms or revises:
 
 ### 4. Story Splitting
 
-After a Job Story is confirmed, evaluate whether it is too large. A story is too large when it contains **multiple distinct actions**, **serves more than one outcome**, or **spans unrelated situations**.
-
-**Signs a story needs splitting:**
-- The "I want to" clause has "and" connecting separate actions
-- The "so I can" clause describes two or more unrelated outcomes
-- The "When" clause covers multiple distinct scenarios that don't always occur together
-- Implementing the story would require touching many independent parts of the system
-
-**How to split:**
-
-When you detect a large story, flag it:
-
-> This story feels like it's doing two things at once. Let me try splitting it:
->
-> **Original:**
-> **When** I receive a customer complaint, **I want to** categorize the issue and assign it to the right team and draft a response, **so I can** resolve it quickly and track patterns.
->
-> **Split into:**
->
-> **4a.** **When** I receive a customer complaint, **I want to** categorize the issue and assign it to the right team, **so I can** ensure the right people start working on it immediately.
->
-> **4b.** **When** a complaint has been categorized, **I want to** draft a response based on the category, **so I can** acknowledge the customer within minutes instead of hours.
->
-> **4c.** **When** complaints are resolved over time, **I want to** see patterns by category, **so I can** fix recurring root causes.
->
-> Does this split make sense? Want to adjust any of these?
-
-**Splitting rules:**
-- Each child story must be independently valuable — it should make sense on its own even if the others aren't built
-- Preserve the parent story's numbering with suffixes (3a, 3b, 3c) to maintain traceability
-- Ask the user to confirm the split before counting them as separate stories
-- If the user prefers to keep a story combined, respect that — note it as a "composite story" and move on
+After a Job Story is confirmed, evaluate whether it is too large. Read `references/story-splitting.md` for the full splitting guide with signs, examples, and rules.
 
 ### 5. Challenge Mode Shifts
 
@@ -199,44 +168,7 @@ Use when: The conversation has gone deep in one direction without exploring alte
 
 ### 6. Story Relationship Analysis
 
-After 5 or more stories have been confirmed, analyze and present the relationships between stories. Update the working file with a **Story Relationships** section after the Job Stories section. Re-analyze whenever new stories are added.
-
-**What to identify:**
-
-#### Dependency relationships
-One story requires another to be completed first. Look for:
-- Stories that need data produced by another story
-- Stories that build on a screen or feature introduced by another story
-- Stories whose "When" clause assumes a capability from another story
-
-Format: `A → B` means A must exist before B can work.
-
-#### Reinforcement relationships
-One story enhances or strengthens another but isn't strictly required. Look for:
-- Stories that improve reliability of another (e.g., monitoring reinforces data pipelines)
-- Stories that personalize or extend a base feature
-- Stories that fill gaps in another story's coverage
-
-#### Story groups
-Cluster stories by the area they serve. A story can appear in multiple groups if it spans areas.
-
-**How to present:**
-
-> Here are the relationships between the stories so far:
->
-> **Dependencies:** 10 → 1 (need holdings data for dashboard), 1 → 2 (dashboard needed before embedding calendar)
->
-> **Reinforcements:** 6 → 4, 5, 10 (monitoring reinforces all pipelines)
->
-> **Groups:**
-> | Group | Stories | Description |
-> |-------|---------|-------------|
-> | Dashboard | 1, 2, 9 | Main view |
-> | News | 4, 5 | Timeline |
->
-> Does this look right?
-
-After the user confirms or revises, update the working file.
+After 5 or more stories have been confirmed, analyze and present the relationships between stories. Read `references/story-relationships.md` for the full analysis guide covering dependency relationships, reinforcement relationships, story groups, and presentation format.
 
 ## Facilitation Guidelines
 
