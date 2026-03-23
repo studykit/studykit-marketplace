@@ -15,6 +15,8 @@ Read the Job Story file provided: **$ARGUMENTS**
 
 If no file is provided, ask the user for the path or paste content.
 
+The `source` frontmatter field in the output file should contain wikilinks to the story file(s) used as input (filename only, no path).
+
 After reading, list all Job Stories found and confirm with the user before proceeding.
 
 ## Step 0: Explore the Codebase
@@ -26,6 +28,15 @@ Before starting the specification, explore the current codebase to understand:
 - **Constraints** — frameworks, conventions, dependencies that the spec should respect
 
 This grounds the specification in reality. Reference what you find during the interview — e.g., "I see the project already has a notification system. Should this feature use it?"
+
+## Navigation Rules
+
+Steps follow a natural order (Determine Software Type → Story-by-Story Specification), but the user controls all transitions:
+
+- **User controls all transitions.** Never move to the next step automatically. When the current step feels sufficiently covered, suggest moving on — but let the user decide.
+- **Revisiting is welcome.** The user may return to a previous step at any time — e.g., revisiting software type after specifying a few stories reveals a mixed UI/non-UI need.
+- **Pausing is fine.** The user may want to hold the current step and come back later. Acknowledge and resume when they're ready.
+- **Steps can interleave.** If specifying a story reveals that the software type assumption was wrong, note it and ask the user if they want to revisit now or later.
 
 ## Step 1: Determine Software Type
 
@@ -137,7 +148,7 @@ As each story gets clarified, draft its spec and present it for confirmation —
 
 After confirmation:
 
-1. **Write to file immediately** — append the confirmed spec to the output file so the user can review it in their editor at any time. Create the file on the first confirmed spec using the output format. Update the file after each subsequent confirmation.
+1. **Write to file immediately** — append the confirmed spec to the output file with `[status:: draft]` and `[story::]` inline fields so the user can review it in their editor at any time. Create the file on the first confirmed spec using the output format. Update the file after each subsequent confirmation.
 2. **Show progress table** — present a summary of all stories and their status:
 
 > | # | Story | Key behavior | Status |
@@ -146,7 +157,7 @@ After confirmation:
 > | 2 | Share summary with team | — | In progress |
 > | 3 | Filter by date range | — | Pending |
 
-3. Move to the next story.
+3. Ask the user if they want to move to the next story, revisit a previous one, or take a different direction.
 
 ## Facilitation Guidelines
 
@@ -173,7 +184,7 @@ When the user indicates they're done:
    - `OVERLAPS` — ask whether to merge, differentiate, or remove the overlapping requirements
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the output file** with any revisions from the review.
-4. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
+4. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR inline fields from `[status:: draft]` to `[status:: final]`. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
 5. **Present the final spec** to the user for last confirmation.
 6. **Write the file** using the Write tool.
 7. **Stage the file** — run `git add <file_path>` to include it in version control.
@@ -185,7 +196,8 @@ When the user indicates they're done:
 ---
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source: "<path to Job Story file>"
+source:
+  - "[[<story-file-name>]]"
 type: <ui | non-ui | mixed>
 ---
 # Functional Specification: <topic>
@@ -199,7 +211,8 @@ type: <ui | non-ui | mixed>
 ## Functional Requirements
 
 ### FR-1: <short title>
-**Story:** When [situation], I want to [action], so I can [outcome].
+[status:: draft]
+[story:: [[<story-file-name>]]#<story heading>]
 
 <!-- For UI -->
 **Screen/View:** <where this happens>
@@ -222,12 +235,24 @@ type: <ui | non-ui | mixed>
 **Dependencies:** <other FRs this depends on, if any>
 
 ### FR-2: <short title>
+[status:: draft]
+[story:: [[<story-file-name>]]#<story heading>]
+[story:: [[<another-story-file>]]#<story heading>]
 ...
 
 ## Open Questions
 <Unresolved decisions or ambiguities to revisit.>
 - ...
 ```
+
+**`source` field rules:**
+- Use wikilinks (filename only, no path) to the Job Story file(s) this spec is based on.
+- If multiple story files feed into one spec, list all of them.
+
+**`story` inline field rules:**
+- Each FR links to the specific story item(s) it implements, using `[[filename]]#heading` format.
+- If one FR comes from multiple stories (across one or more files), add multiple `[story::]` lines — Dataview treats repeated keys as arrays.
+- The heading must match the exact heading text in the story file (e.g., `#1. 로그인 인증`).
 
 **Required sections**: Overview, Job Stories Reference, Functional Requirements.
 **Conditionally required:**

@@ -60,8 +60,8 @@ Write this immediately after restating the idea:
 ---
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source: "<original idea, verbatim>"
-status: draft
+source:
+  - "[[<diverse-file-name>]]"
 ---
 # Job Stories: <topic>
 
@@ -78,6 +78,11 @@ status: draft
 *Will be filled if unresolved topics remain.*
 ```
 
+**`source` field rules:**
+- If the idea came from a co-think-diverse output file, add wikilinks to those files (filename only, no path).
+- If the idea came from multiple diverse sessions, list all of them.
+- If the user provided a raw idea with no prior diverse file, omit the `source` field entirely.
+
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
 
 ### How to Update
@@ -85,7 +90,6 @@ Tell the user the file path so they can follow along: "I've started a working fi
 - **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
 - **Preserve all previously confirmed stories** — never remove or reorder them during updates.
 - **Update the Context section** with the latest understanding each time you write.
-- **Keep the `status: draft` marker** in frontmatter until wrap-up.
 
 ## Interview Flow
 
@@ -134,7 +138,7 @@ As the conversation reveals enough context, draft a Job Story and present it to 
 > Does this capture it? Anything to adjust?
 
 After the user confirms or revises:
-1. **Update the working file** — append the confirmed story to the Job Stories section and update Context.
+1. **Update the working file** — append the confirmed story to the Job Stories section with `[status:: draft]` inline field, and update Context.
 2. **Keep a running count.** Note the total: "That's 4 stories so far. File updated. Let's keep going."
 
 ### 4. Story Splitting
@@ -192,7 +196,7 @@ When the user indicates they're done:
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the working file** with any revisions from the review.
 4. **Finalize the working file** — write the final version with all sections completed:
-   - Change `status: draft` to `status: final` in frontmatter
+   - Change all individual story inline fields from `[status:: draft]` to `[status:: final]`
    - Finalize the Context section with the complete understanding from the interview
    - Ensure all confirmed Job Stories are present and in order
    - Add the Open Questions section if unresolved topics remain
@@ -207,8 +211,8 @@ When the user indicates they're done:
 ---
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source: "<original idea, verbatim>"
-status: final
+source:
+  - "[[<diverse-file-name>]]"
 ---
 # Job Stories: <topic>
 
@@ -221,22 +225,26 @@ status: final
 ## Job Stories
 
 ### 1. <short title>
+[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
 ### 2. <short title>
+[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
 ### 3. <short title> *(split from original #3)*
 #### 3a. <short title>
+[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
 #### 3b. <short title>
+[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.

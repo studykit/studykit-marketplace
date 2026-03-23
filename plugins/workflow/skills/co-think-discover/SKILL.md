@@ -95,6 +95,15 @@ Tell the user the file path so they can follow along: "I've started a working fi
 - **Update the Context and Success Criteria** if new information emerges during the session.
 - **Keep the `status: draft` marker** in frontmatter until wrap-up.
 
+## Navigation Rules
+
+Phases follow a natural order (Problem Framing → Option Generation → Research → Evaluation → Decision), but the user controls all transitions:
+
+- **User controls all transitions.** Never move to the next phase automatically. When the current phase feels sufficiently covered, suggest moving on — but let the user decide.
+- **Revisiting is welcome.** The user may return to a previous phase at any time — e.g., research may reveal that the success criteria need updating, or evaluation may surface a new option worth adding.
+- **Pausing is fine.** The user may want to hold the current phase and come back later. Acknowledge and resume when they're ready.
+- **Phases can interleave.** If researching one option triggers a new option idea, note it and ask the user if they want to add it now or later. If evaluation reveals a gap in research, offer to go back.
+
 ## Phase 1: Problem Framing
 
 The goal is to understand what the user is deciding, why, and what "good" looks like.

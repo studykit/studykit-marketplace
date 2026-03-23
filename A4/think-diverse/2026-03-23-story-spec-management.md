@@ -93,11 +93,11 @@ co-think-story와 co-think-spec 스킬이 생성하는 마크다운 산출물(Jo
 - 설치 순서: Dataview → Excalidraw → ExcaliBrain → (선택) Hover Editor
 
 ## TODOs
-- [ ] co-think-story/spec의 frontmatter에 `spec`, `stories`, `topic` 필드 추가 반영
+- [x] co-think-story/spec의 frontmatter 스키마 반영 (`source` wikilink 배열, 개별 항목 `[status::]` inline field, spec FR에 `[story::]` inline field)
 - [ ] Obsidian vault로 프로젝트 열기 + Dataview, Projects, Tasks 플러그인 설치
 - [ ] Excalidraw, ExcaliBrain, Hover Editor 플러그인 설치
 - [ ] ExcaliBrain Ontology 설정: `spec` → Children, `stories` → Parents, Primary Tag Field → `status`
 - [ ] 대시보드 노트 작성 (DataviewJS 쿼리 + Excalidraw 다이어그램 임베딩)
 - [ ] Obsidian Claude Code MCP 설정
-- [ ] co-think-story/spec 스킬에서 파일 생성 시 새 frontmatter 스키마 적용
+- [x] co-think-story/spec 스킬에서 파일 생성 시 새 frontmatter 스키마 적용
 - [ ] ExcalidrawAutomate 스크립트: Story/Spec frontmatter에서 관계도 자동 생성
