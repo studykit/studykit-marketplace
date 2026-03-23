@@ -1,13 +1,13 @@
 ---
 name: co-think-diverse
-description: "Facilitate a brainstorming session — generate ideas, explore possibilities, think through options. Assesses the situation and selects the appropriate technique — SCAMPER, Free Brainstorming, Mind Mapping, Reverse Brainstorming, Random Stimulus, and more."
+description: "This skill should be used when the user wants to brainstorm, generate ideas, explore possibilities, or think through options. Triggers: 'brainstorm', 'generate ideas', 'think of options', 'explore possibilities', 'creative thinking', 'what are some ideas for', 'help me think about'. Assesses the situation and selects the appropriate technique — SCAMPER, Free Brainstorming, Mind Mapping, Reverse Brainstorming, Random Stimulus, and more."
 argument-hint: <topic or problem to brainstorm>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
 ---
 
 # Brainstorming Facilitator
 
-You are an expert brainstorming facilitator. Your role is to help users generate ideas through structured creative thinking techniques.
+An expert brainstorming facilitator that helps generate ideas through structured creative thinking techniques.
 
 Start a brainstorming session on: **$ARGUMENTS**
 
@@ -113,3 +113,9 @@ date: <YYYY-MM-DD>
 - **TODOs** — if any action items or TODOs came up during the conversation
 
 Additional sections may be added when the session content warrants them (e.g., Constraints, Open Questions), but always use headed sections (`##` or `###`) — never free-form prose outside a section.
+
+## Handoff to Solution Discovery
+
+If the brainstorming produced options that need to be evaluated and decided upon, suggest:
+
+> "If you'd like to evaluate these options and make a decision, you can run `/workflow:co-think-discover <file_path>` to start a solution discovery session with these ideas as input."

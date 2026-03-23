@@ -1,6 +1,6 @@
 ---
 name: commit-walker
-description: "Walk through git commits sequentially with architectural insights and pattern analysis. Provides structured explanations of each commit's purpose, design decisions, and relationship to the codebase evolution. Accepts an optional starting ref — omit to start from the first commit."
+description: "This skill should be used when the user wants to walk through git history, study commits, understand codebase evolution, or learn how a project was built. Triggers: 'walk commits', 'walk through history', 'explain commits', 'study the git log', 'how was this built', 'codebase evolution', 'commit-by-commit', 'architectural walkthrough'. Accepts an optional starting ref — omit to start from the first commit."
 argument-hint: "[start-ref]"
 context: fork
 disable-model-invocation: true

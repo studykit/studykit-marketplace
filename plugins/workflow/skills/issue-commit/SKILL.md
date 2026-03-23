@@ -1,6 +1,6 @@
 ---
 name: issue-commit
-description: "Create a GitHub issue from staged changes (or link to an existing one) and commit with an issue reference. Accepts: an issue reference (#number, owner/repo#number, or GitHub issue URL) to use a specific issue, 'new' to force-create a new issue, 'reuse' to reuse the latest issue from git log, or no argument to auto-detect and confirm."
+description: "This skill should be used when the user wants to commit staged changes with a linked GitHub issue, when the user says 'commit', 'issue commit', 'commit with issue', 'link issue to commit', or when staged git changes need an associated GitHub issue before committing. Accepts: an issue reference (#number, owner/repo#number, or GitHub issue URL), 'new' to force-create a new issue, 'reuse' to reuse the latest issue from git log, or no argument to auto-detect and confirm."
 argument-hint: "[#number | owner/repo#number | issue-url | new | reuse]"
 disable-model-invocation: true
 agent: Explore
