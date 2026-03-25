@@ -1,0 +1,126 @@
+#!/usr/bin/env bash
+#
+# pre-commit hook: detect secrets in .obsidian/ files before commit
+#
+
+set -euo pipefail
+
+ALLOWLIST_FILE="$(git rev-parse --show-toplevel)/.githooks/.secretallowlist"
+
+# Collect staged .obsidian/ files (added or modified, skip deletions)
+OBSIDIAN_FILES=$(git diff --cached --name-only --diff-filter=ACM -- '.obsidian/' 2>/dev/null || true)
+
+if [ -z "$OBSIDIAN_FILES" ]; then
+    exit 0
+fi
+
+# --- Secret patterns ---
+
+# Keyword + non-empty value patterns (JSON-style: "key": "value")
+KEYWORD_PATTERNS=(
+    '"(password|passwd|pwd)"[[:space:]]*:[[:space:]]*"[^"]+'
+    '"(secret|secret_key|secretKey)"[[:space:]]*:[[:space:]]*"[^"]+'
+    '"(token|access_token|accessToken|auth_token|authToken)"[[:space:]]*:[[:space:]]*"[^"]+'
+    '"(api_key|apiKey|api_secret|apiSecret)"[[:space:]]*:[[:space:]]*"[^"]+'
+    '"(authorization|bearer)"[[:space:]]*:[[:space:]]*"[^"]+'
+    '"(private_key|privateKey)"[[:space:]]*:[[:space:]]*"[^"]+'
+    '"(credential|credentials)"[[:space:]]*:[[:space:]]*"[^"]+'
+)
+
+# Known token formats (standalone)
+TOKEN_PATTERNS=(
+    'ghp_[A-Za-z0-9]{36}'          # GitHub personal access token
+    'gho_[A-Za-z0-9]{36}'          # GitHub OAuth token
+    'ghs_[A-Za-z0-9]{36}'          # GitHub server token
+    'github_pat_[A-Za-z0-9_]{82}'  # GitHub fine-grained PAT
+    'AKIA[0-9A-Z]{16}'             # AWS access key
+    'sk-[A-Za-z0-9]{48}'           # OpenAI API key
+    'xox[bpors]-[A-Za-z0-9\-]+'   # Slack token
+)
+
+FOUND=0
+
+load_allowlist() {
+    if [ -f "$ALLOWLIST_FILE" ]; then
+        grep -v '^#' "$ALLOWLIST_FILE" | grep -v '^[[:space:]]*$' || true
+    fi
+}
+
+is_allowed() {
+    local line="$1"
+    local allowlist
+    allowlist=$(load_allowlist)
+    if [ -z "$allowlist" ]; then
+        return 1
+    fi
+    while IFS= read -r pattern; do
+        if echo "$line" | grep -qF "$pattern"; then
+            return 0
+        fi
+    done <<< "$allowlist"
+    return 1
+}
+
+check_file() {
+    local file="$1"
+    local content
+    content=$(git show ":$file" 2>/dev/null || true)
+
+    if [ -z "$content" ]; then
+        return
+    fi
+
+    # Skip binary files
+    if echo "$content" | LC_ALL=C tr -d '[:print:][:space:]' | grep -q .; then
+        return
+    fi
+
+    # Check keyword patterns
+    for pattern in "${KEYWORD_PATTERNS[@]}"; do
+        local matches
+        matches=$(echo "$content" | grep -nEi "$pattern" 2>/dev/null || true)
+        if [ -n "$matches" ]; then
+            while IFS= read -r match; do
+                # Skip if value is empty string: "key": ""
+                if echo "$match" | grep -qE '"[^"]*"[[:space:]]*:[[:space:]]*""'; then
+                    continue
+                fi
+                if ! is_allowed "$match"; then
+                    echo "  [SECRET] $file:$match"
+                    FOUND=1
+                fi
+            done <<< "$matches"
+        fi
+    done
+
+    # Check known token formats
+    for pattern in "${TOKEN_PATTERNS[@]}"; do
+        local matches
+        matches=$(echo "$content" | grep -nE "$pattern" 2>/dev/null || true)
+        if [ -n "$matches" ]; then
+            while IFS= read -r match; do
+                if ! is_allowed "$match"; then
+                    echo "  [SECRET] $file:$match"
+                    FOUND=1
+                fi
+            done <<< "$matches"
+        fi
+    done
+}
+
+echo "Scanning .obsidian/ files for secrets..."
+
+for file in $OBSIDIAN_FILES; do
+    check_file "$file"
+done
+
+if [ "$FOUND" -eq 1 ]; then
+    echo ""
+    echo "ERROR: Potential secrets detected in .obsidian/ files."
+    echo "If these are false positives, add the matching text to:"
+    echo "  $ALLOWLIST_FILE"
+    echo ""
+    exit 1
+fi
+
+exit 0
