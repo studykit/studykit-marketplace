@@ -1,5 +1,5 @@
 ---
-name: domain-model-reviewer
+name: domain-reviewer
 description: >
   Review conceptual models for completeness: whether all domain concepts from the FRs are captured,
   relationships are complete, state transitions cover all stateful entities, and spec feedback items

@@ -2,6 +2,7 @@
 
 ```markdown
 ---
+type: discover
 topic: "<topic>"
 date: <YYYY-MM-DD>
 source: "<original input, verbatim>"
