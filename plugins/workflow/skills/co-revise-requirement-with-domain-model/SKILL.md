@@ -1,6 +1,6 @@
 ---
 name: co-revise-requirement-with-domain-model
-description: "This skill should be used when the user has a domain model with feedback TODOs and needs to revise existing functional requirements, when the user says 'fix requirement from domain model', 'address domain model feedback', 'requirement revision', 'resolve domain model TODOs', 'update requirement from domain model', 'revise requirement', 'domain model feedback', or when a co-think-domain-model session produced TODO items that need to be resolved in the original requirement files."
+description: "This skill should be used when the user has a domain model with feedback TODOs and needs to revise existing functional requirements, when the user says 'fix requirement from domain model', 'address domain model feedback', 'requirement revision', 'resolve domain model TODOs', 'update requirement from domain model', 'revise requirement', 'domain model feedback', or when a co-think-domain session produced TODO items that need to be resolved in the original requirement files."
 argument-hint: <path to domain model document>
 allowed-tools: Read, Write, Edit, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---

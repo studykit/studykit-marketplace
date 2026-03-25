@@ -2,11 +2,13 @@
 
 ```markdown
 ---
+type: requirement
 topic: "<topic>"
 date: <YYYY-MM-DD>
 source:
   - "[[<story-file-name>]]"
-type: <ui | non-ui | mixed>
+covers:
+  - <ui | non-ui>
 ---
 # Functional Specification: <topic>
 

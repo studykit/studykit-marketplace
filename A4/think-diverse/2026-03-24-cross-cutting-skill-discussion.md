@@ -70,7 +70,7 @@ PlantUML 선택 이유:
 - activity diagram은 이 단계에서 불필요 (구현 단계에서 더 유용)
 
 ### 8. Requirement 피드백 루프
-1. co-think-domain-model → TODO 목록 생성, requirement 리뷰 제안
+1. co-think-domain → TODO 목록 생성, requirement 리뷰 제안
 2. 사용자가 co-revise-requirement-with-domain-model 실행 (domain model 문서를 입력으로)
 3. TODO 항목별 interview → requirement FR 보완
 4. 처리한 TODO에 체크 + 설명 기록 (co-revise 스킬이 domain model 문서에 marking)
@@ -93,7 +93,7 @@ co-think-requirement과 co-revise-requirement-with-domain-model은 목적과 대
 ## Decisions
 
 ### 스킬 이름과 파이프라인
-- `co-think-domain-model` — FR에서 도메인 개념 추출 (conceptual modeling)
+- `co-think-domain` — FR에서 도메인 개념 추출 (conceptual modeling)
 - `co-revise-requirement-with-domain-model` — domain model 피드백 기반으로 requirement 보완
 - 파이프라인: story → requirement ↔ domain-model → architecture → implementation
 

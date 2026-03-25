@@ -87,6 +87,7 @@ When the brainstorming reaches a natural conclusion or the user indicates they'r
 
 ```markdown
 ---
+type: diverse
 topic: "<session topic>"
 date: <YYYY-MM-DD>
 ---

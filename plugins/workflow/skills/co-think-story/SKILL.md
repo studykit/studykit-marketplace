@@ -52,6 +52,7 @@ Write this immediately after restating the idea:
 
 ```markdown
 ---
+type: story
 topic: "<topic>"
 date: <YYYY-MM-DD>
 source:

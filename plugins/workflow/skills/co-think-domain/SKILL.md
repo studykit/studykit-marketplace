@@ -1,5 +1,5 @@
 ---
-name: co-think-domain-model
+name: co-think-domain
 description: "This skill should be used when the user has functional requirements (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', 'domain model', 'ubiquitous language', 'entity extraction', 'domain glossary', 'what are the entities', 'map relationships', or when FRs from co-think-requirement need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
 argument-hint: <path to requirement file(s)>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
@@ -112,7 +112,7 @@ The conceptual model ends only when the user says so. Never conclude on your own
 
 When the user indicates they're done:
 
-1. **Run the domain-model-reviewer agent** — invoke the `domain-model-reviewer` agent with the current output file path. The agent evaluates every concept for completeness, definition clarity, relationship coverage, state transitions, diagram correctness, and spec feedback quality.
+1. **Run the domain-reviewer agent** — invoke the `domain-reviewer` agent with the current output file path. The agent evaluates every concept for completeness, definition clarity, relationship coverage, state transitions, diagram correctness, and spec feedback quality.
 2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
    - `MISSING CONCEPT` — ask what the concept is and add it
    - `MISSING RELATIONSHIP` — propose the relationship and confirm
@@ -130,6 +130,7 @@ When the user indicates they're done:
 
 ```markdown
 ---
+type: domain-model
 topic: "<topic>"
 date: <YYYY-MM-DD>
 source:

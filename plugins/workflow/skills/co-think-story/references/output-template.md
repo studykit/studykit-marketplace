@@ -2,6 +2,7 @@
 
 ```markdown
 ---
+type: story
 topic: "<topic>"
 date: <YYYY-MM-DD>
 source:
