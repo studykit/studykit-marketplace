@@ -1,7 +1,7 @@
 ---
-name: spec-reviewer
+name: requirement-reviewer
 description: >
-  Review functional specifications for implementability: whether requirements are concrete enough
+  Review functional requirements for implementability: whether requirements are concrete enough
   for AI to develop, missing edge cases, vague behavior descriptions, incomplete input/output
   contracts, untestable acceptance criteria, and overlapping requirements. Returns a structured review report.
 model: opus

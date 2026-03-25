@@ -1,6 +1,6 @@
 ---
-name: co-think-spec
-description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write specs', 'make this buildable', 'turn stories into requirements', 'spec this out', 'functional requirements', 'FR', 'acceptance criteria', 'define behavior', 'what should it do', or when Job Stories from co-think-story need to be shaped into functional specifications detailed enough for AI to develop."
+name: co-think-requirement
+description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write requirements', 'make this buildable', 'turn stories into requirements', 'functional requirements', 'FR', 'acceptance criteria', 'define behavior', 'what should it do', or when Job Stories from co-think-story need to be shaped into functional requirements detailed enough for AI to develop."
 argument-hint: <path to Job Story file>
 allowed-tools: Read, Write, Bash, Agent, WebSearch, WebFetch
 ---
@@ -83,7 +83,7 @@ For UI software, judge whether creating a mock UI would help clarify the spec fo
 
 When a mock is helpful:
 
-1. Use the **mock-html-generator** agent to create an HTML mock. Save mock files to `A4/spec/mock/<topic-slug>/` relative to working directory.
+1. Use the **mock-html-generator** agent to create an HTML mock. Save mock files to `A4/requirement/mock/<topic-slug>/` relative to working directory.
 2. Present the mock to the user and gather feedback.
 3. Iterate on the mock if needed.
 4. Use the feedback to refine the spec. Record the mock file path in the spec.
@@ -124,7 +124,7 @@ When a mock is NOT needed (simple interactions, clear behavior), skip it and pro
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/spec/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Default: `A4/requirement/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
 - Ask the user only if they want a different location
 - Create the directory if needed
 
@@ -179,7 +179,7 @@ The specification ends only when the user says so. Never conclude on your own �
 
 When the user indicates they're done:
 
-1. **Run the spec-reviewer agent** — invoke the `spec-reviewer` agent with the current output file path. The agent evaluates every requirement for behavior completeness, input/output clarity, edge cases, testability, ambiguity, dependencies, and overlap.
+1. **Run the requirement-reviewer agent** — invoke the `requirement-reviewer` agent with the current output file path. The agent evaluates every requirement for behavior completeness, input/output clarity, edge cases, testability, ambiguity, dependencies, and overlap.
 2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
    - `INCOMPLETE` — ask what's missing and fill it in
    - `UNDERSPECIFIED` — propose concrete I/O details and ask for confirmation

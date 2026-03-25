@@ -2,7 +2,7 @@
 topic: "co-think 산출물 관리 체계"
 date: 2026-03-23
 source:
-  - "[[2026-03-23-story-spec-management]]"
+  - "[[2026-03-23-story-requirement-management]]"
 ---
 # co-think 산출물 관리 체계
 
@@ -36,7 +36,7 @@ source:
 - source: diverse 파일 wikilink 배열 (없으면 생략)
 - 개별 story에 `[status:: draft|final]` inline field
 
-**spec** (Functional Specification)
+**requirement** (Functional Requirement)
 ```yaml
 ---
 topic: "<topic>"
@@ -69,7 +69,7 @@ type: <ui | non-ui | mixed>
 - [x] 관리 방법 결정 (2026-03-23)
 - [x] Frontmatter 스키마 확정 (2026-03-24)
 - [x] co-think-story SKILL.md 반영 (2026-03-24)
-- [x] co-think-spec SKILL.md 반영 (2026-03-24)
+- [x] co-think-requirement SKILL.md 반영 (2026-03-24)
 - [ ] Obsidian vault 열기 + 플러그인 설치 (Dataview, Projects, Tasks)
 - [ ] Excalidraw, ExcaliBrain, Hover Editor 설치
 - [ ] ExcaliBrain Ontology 설정
@@ -80,7 +80,7 @@ type: <ui | non-ui | mixed>
 ## Re-discussion Needed
 
 ### ExcaliBrain Ontology 매핑
-기존 논의에서는 `spec` → Children, `stories` → Parents로 매핑했으나, 스키마가 변경되어 재설계 필요:
-- `source` frontmatter field → Parent 관계 (diverse→story, story→spec)
+기존 논의에서는 `requirement` → Children, `stories` → Parents로 매핑했으나, 스키마가 변경되어 재설계 필요:
+- `source` frontmatter field → Parent 관계 (diverse→story, story→requirement)
 - `story` inline field → FR이 참조하는 story 항목 링크
 - ExcaliBrain이 inline field(`[story::]`)를 관계로 인식할 수 있는지 확인 필요

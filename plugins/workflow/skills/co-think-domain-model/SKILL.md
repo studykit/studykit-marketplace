@@ -1,7 +1,7 @@
 ---
-name: co-think-concept
-description: "This skill should be used when the user has functional specifications (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', 'ubiquitous language', 'entity extraction', 'domain glossary', 'what are the entities', 'map relationships', or when FRs from co-think-spec need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
-argument-hint: <path to spec file(s)>
+name: co-think-domain-model
+description: "This skill should be used when the user has functional requirements (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', 'domain model', 'ubiquitous language', 'entity extraction', 'domain glossary', 'what are the entities', 'map relationships', or when FRs from co-think-requirement need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
+argument-hint: <path to requirement file(s)>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch
 ---
 
@@ -116,7 +116,7 @@ The conceptual model ends only when the user says so. Never conclude on your own
 
 When the user indicates they're done:
 
-1. **Run the concept-reviewer agent** — invoke the `concept-reviewer` agent with the current output file path. The agent evaluates every concept for completeness, definition clarity, relationship coverage, state transitions, diagram correctness, and spec feedback quality.
+1. **Run the domain-model-reviewer agent** — invoke the `domain-model-reviewer` agent with the current output file path. The agent evaluates every concept for completeness, definition clarity, relationship coverage, state transitions, diagram correctness, and spec feedback quality.
 2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
    - `MISSING CONCEPT` — ask what the concept is and add it
    - `MISSING RELATIONSHIP` — propose the relationship and confirm
@@ -126,7 +126,7 @@ When the user indicates they're done:
 3. **Update the output file** with any revisions from the review.
 4. **Finalize the file** — change all glossary items to final, ensure all sections are complete.
 5. **Show the Spec Feedback TODO list prominently.**
-6. **Ask:** "These items need spec revision. Would you like to run co-think-concept-spec to address them?"
+6. **Ask:** "These items need requirement revision. Would you like to run co-revise-requirement-with-domain-model to address them?"
 7. **Write the file** using the Write tool.
 8. **Stage the file** — run `git add <file_path>` to include it in version control.
 9. **Report the path** so the user can reference it.
