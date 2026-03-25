@@ -201,4 +201,4 @@ State2 --> [*]
 
 **Required sections**: Overview, Domain Glossary, Concept Relationships, State Transitions, Spec Feedback, Interview Transcript.
 
-**File path**: `A4/concept/<YYYY-MM-DD-HHmm>-<topic-slug>.md`
+**File path**: `A4/domain/<YYYY-MM-DD-HHmm>-<topic-slug>.md`

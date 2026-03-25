@@ -15,7 +15,7 @@ Facilitate a solution discovery session on: **$ARGUMENTS**
 
 Determine how to start based on the input:
 
-1. **File path provided** (e.g., `A4/think-diverse/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
+1. **File path provided** (e.g., `A4/diverse/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
 2. **Topic/problem provided**: Start from Phase 1 (Problem Framing).
 
 If the input is ambiguous, ask the user to clarify.
@@ -36,7 +36,7 @@ The working file is a living document that grows throughout the session. The use
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/think-discover/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Default: `A4/discover/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
 - Ask the user only if they want a different location
 - Create the directory if needed
 
