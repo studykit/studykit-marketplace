@@ -2,7 +2,7 @@
 name: co-think-discover
 description: "This skill should be used when the user needs to make a decision between options, evaluate trade-offs, or research alternatives before choosing a solution. Triggers: 'help me decide', 'compare alternatives', 'evaluate options', 'trade-off analysis', 'research options', 'ADR', 'architecture decision', 'solution discovery', 'pick between', 'which approach', 'weigh pros and cons', 'decision record', 'choose between', 'which option is better'. Can accept output from co-think-diverse as input."
 argument-hint: <topic, problem, or path to brainstorming output file>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Solution Discovery Facilitator
@@ -19,10 +19,6 @@ Determine how to start based on the input:
 2. **Topic/problem provided**: Start from Phase 1 (Problem Framing).
 
 If the input is ambiguous, ask the user to clarify.
-
-## Shared Facilitation Patterns
-
-**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
 
 ## Progressive File Writing
 
@@ -95,7 +91,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ## Navigation Rules
 
-Phases follow a natural order (Problem Framing → Option Generation → Research → Evaluation → Decision). **CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions, revisiting and interleaving are welcome.
+Phases follow a natural order (Problem Framing → Option Generation → Research → Evaluation → Decision). The user controls all transitions, revisiting and interleaving are welcome.
 
 ## Phase 1: Problem Framing
 
@@ -242,8 +238,7 @@ When the user indicates they're done:
    - Ensure all sections are complete
    - Append the Discussion Log
    - Remove any placeholder text
-5. **Stage the file** — run `git add <file_path>` to include it in version control.
-6. **Report the path** so the user can reference it.
+5. **Report the path** so the user can reference it.
 7. **Suggest next steps** — If the decision leads to building something: "You can now use `/workflow:co-think-story <file_path>` to turn this decision into Job Stories."
 
 ### Output Format

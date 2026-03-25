@@ -2,7 +2,7 @@
 name: co-think-domain-model
 description: "This skill should be used when the user has functional requirements (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', 'domain model', 'ubiquitous language', 'entity extraction', 'domain glossary', 'what are the entities', 'map relationships', or when FRs from co-think-requirement need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
 argument-hint: <path to requirement file(s)>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Conceptual Model Builder
@@ -77,11 +77,7 @@ After completing work on any topic (or when the conversation reaches a natural p
 
 ### Navigation Rules
 
-**CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions, revisiting and interleaving are welcome. Example: "We've defined 6 concepts and covered all the FRs. Would you like to move to Relationship Mapping, or is there more to explore here?"
-
-## Shared Facilitation Patterns
-
-**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
+The user controls all transitions, revisiting and interleaving are welcome. Example: "We've defined 6 concepts and covered all the FRs. Would you like to move to Relationship Mapping, or is there more to explore here?"
 
 ## Abstraction Level Guard
 
@@ -128,8 +124,7 @@ When the user indicates they're done:
 5. **Show the Spec Feedback TODO list prominently.**
 6. **Ask:** "These items need requirement revision. Would you like to run co-revise-requirement-with-domain-model to address them?"
 7. **Write the file** using the Write tool.
-8. **Stage the file** — run `git add <file_path>` to include it in version control.
-9. **Report the path** so the user can reference it.
+8. **Report the path** so the user can reference it.
 
 ### Output Format
 

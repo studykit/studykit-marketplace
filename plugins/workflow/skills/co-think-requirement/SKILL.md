@@ -2,7 +2,7 @@
 name: co-think-requirement
 description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write requirements', 'make this buildable', 'turn stories into requirements', 'functional requirements', 'FR', 'acceptance criteria', 'define behavior', 'what should it do', or when Job Stories from co-think-story need to be shaped into functional requirements detailed enough for AI to develop."
 argument-hint: <path to Job Story file>
-allowed-tools: Read, Write, Bash, Agent, WebSearch, WebFetch
+allowed-tools: Read, Write, Bash, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Functional Specification Builder
@@ -31,7 +31,7 @@ This grounds the specification in reality. Reference what you find during the in
 
 ## Navigation Rules
 
-Steps follow a natural order (Determine Software Type → Story-by-Story Specification). **CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions, revisiting and interleaving are welcome.
+Steps follow a natural order (Determine Software Type → Story-by-Story Specification). The user controls all transitions, revisiting and interleaving are welcome.
 
 ## Step 1: Determine Software Type
 
@@ -115,10 +115,6 @@ When a mock is NOT needed (simple interactions, clear behavior), skip it and pro
 - Ask about **boundaries**: "Is there a limit? What's the maximum/minimum?"
 - When the user is unsure, offer 2-3 concrete options to choose from.
 
-## Shared Facilitation Patterns
-
-**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
-
 ## Progressive File Writing
 
 ### Working File Path
@@ -193,8 +189,7 @@ When the user indicates they're done:
 4. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR inline fields from `[status:: draft]` to `[status:: final]`. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
 5. **Present the final spec** to the user for last confirmation.
 6. **Write the file** using the Write tool.
-7. **Stage the file** — run `git add <file_path>` to include it in version control.
-8. **Report the path** so the user can reference it.
+7. **Report the path** so the user can reference it.
 
 ### Output Format
 
