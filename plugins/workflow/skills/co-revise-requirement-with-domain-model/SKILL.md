@@ -2,7 +2,7 @@
 name: co-revise-requirement-with-domain-model
 description: "This skill should be used when the user has a domain model with feedback TODOs and needs to revise existing functional requirements, when the user says 'fix requirement from domain model', 'address domain model feedback', 'requirement revision', 'resolve domain model TODOs', 'update requirement from domain model', 'revise requirement', 'domain model feedback', or when a co-think-domain-model session produced TODO items that need to be resolved in the original requirement files."
 argument-hint: <path to domain model document>
-allowed-tools: Read, Write, Edit, Agent, WebSearch, WebFetch
+allowed-tools: Read, Write, Edit, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Requirement Revision from Domain Model Feedback
@@ -93,16 +93,12 @@ Work through TODOs one at a time. The user chooses which TODO to address and in 
 
 ### Navigation Rules
 
-**CRITICAL — Apply the navigation principles from `../_shared/facilitation-patterns.md` strictly** — the user controls all transitions. The user may:
+The user controls all transitions. The user may:
 
 - Pick TODOs in any order
 - Skip TODOs they want to defer
 - Revisit already-resolved TODOs to adjust the fix
 - Stop at any point (leaving remaining TODOs open for a future session)
-
-## Shared Facilitation Patterns
-
-**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
 
 ## Revision Guidelines
 
@@ -131,8 +127,7 @@ When the user indicates they're done:
 3. **Update the requirement file(s)** with any revisions from the review.
 4. **Finalize** — ensure all modified FRs reflect the conversation outcomes.
 5. **Write all modified files** — requirement file(s) and domain model document.
-6. **Stage all modified files** — run `git add` for each modified file.
-7. **Report summary:**
+6. **Report summary:**
 
    > **Session summary:**
    > - TODOs resolved: 3 of 5

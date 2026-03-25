@@ -2,7 +2,7 @@
 name: co-think-story
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'turn this into job stories', 'gather requirements', 'split this story', 'break this down', or when a rough idea needs to be shaped into concrete Job Stories through a Socratic interview. Automatically detects and splits oversized stories into smaller, independently valuable pieces."
 argument-hint: <idea or vague concept to turn into requirements>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Requirements Discovery Facilitator
@@ -25,10 +25,6 @@ A good Job Story has:
 - A **specific situation**, not a generic role ("When I finish a 30-minute meeting" not "As a manager")
 - A **concrete action** the user wants to take
 - A **measurable or observable outcome**
-
-## Shared Facilitation Patterns
-
-**CRITICAL — Read `../_shared/facilitation-patterns.md` before starting the session and follow it strictly throughout.** This file defines the foundational facilitation rules for all co-think skills: one-question-at-a-time rule, navigation principles, progress checkpoints, and reviewer agent flow. Violations of these patterns (e.g., asking multiple questions, auto-advancing phases) degrade session quality.
 
 ## Progressive File Writing
 
@@ -200,8 +196,7 @@ When the user indicates they're done:
    - Add the Open Questions section if unresolved topics remain
    - Append the full Interview Transcript
    - Remove any placeholder text (e.g., "*Stories will appear here...*")
-5. **Stage the file** — run `git add <file_path>` to include it in version control.
-6. **Report the path** so the user can reference it.
+5. **Report the path** so the user can reference it.
 
 ### Output Format
 
