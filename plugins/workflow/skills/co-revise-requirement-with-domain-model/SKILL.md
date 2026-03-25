@@ -132,7 +132,7 @@ When the user indicates they're done:
    > **Session summary:**
    > - TODOs resolved: 3 of 5
    > - Requirement files modified: `A4/requirement/2026-03-20-1430-auth-flow.md`
-   > - Domain model document updated: `A4/concept/2026-03-22-1100-auth-domain.md`
+   > - Domain model document updated: `A4/domain/2026-03-22-1100-auth-domain.md`
    > - Remaining open TODOs: 2
    >
    > Files staged for commit.
