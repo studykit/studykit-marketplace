@@ -1,0 +1,10 @@
+{
+  "attachmentFolderPath": "./attachments",
+  "newFileLocation": "current",
+  "spellcheck": false,
+  "showInlineTitle": false,
+  "readableLineLength": false,
+  "propertiesInDocument": "hidden",
+  "promptDelete": false,
+  "alwaysUpdateLinks": true
+}

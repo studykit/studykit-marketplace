@@ -1,0 +1,11 @@
+{
+  "server_url": "https://www.plantuml.com/plantuml",
+  "header": "",
+  "debounce": 3,
+  "localJar": "/opt/homebrew/Cellar/plantuml/1.2026.2/libexec/plantuml.jar",
+  "javaPath": "java",
+  "dotPath": "dot",
+  "defaultProcessor": "svg",
+  "cache": 60,
+  "exportPath": ""
+}

@@ -1,0 +1,34 @@
+{
+  "showGettingStartedBanner": false,
+  "hasMigratedDailyNoteSettings": true,
+  "hasMigratedWeeklyNoteSettings": false,
+  "daily": {
+    "format": "gggg/MM월 DD일 - W[W] - ddd",
+    "folder": "Journal",
+    "enabled": true
+  },
+  "weekly": {
+    "format": "gggg/[Review]/MM월 - W[W]",
+    "template": "0.Resources/Template/journal-weekly.md",
+    "folder": "Journal",
+    "enabled": true
+  },
+  "monthly": {
+    "format": "gggg/[Review]/MM월",
+    "template": "",
+    "folder": "Journal",
+    "enabled": true
+  },
+  "quarterly": {
+    "format": "gggg/[Review]/Q[Q]",
+    "template": "",
+    "folder": "Journal",
+    "enabled": true
+  },
+  "yearly": {
+    "format": "gggg/[Review]/한해 정리",
+    "template": "",
+    "folder": "Journal",
+    "enabled": true
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "checkbox@@check-color": false,
+  "checkbox@@check-bg": false,
+  "checkbox@@check-text": false,
+  "checkbox@@checkbox-strike-quot": false,
+  "checkbox@@checkbox-strike-brn": false,
+  "Components@@Ribbon-autohide": true,
+  "Components@@tab-title-bar-autohide": true,
+  "Components@@vault-profile-autohide": true,
+  "Components@@nav-header-autohide": false,
+  "Components@@colorful-folder": true,
+  "Appearance-dark@@card-layout-open-dark": true,
+  "Appearance-light@@card-layout-open-light": true
+}
