@@ -210,3 +210,6 @@ __marimo__/
 **/*.local.*
 .DS_Store
 **/node_modules/
+.obsidian/workspace.json
+.obsidian/workspace-mobile.json
+.obsidian/plugins/obsidian-jira-issue/data.json

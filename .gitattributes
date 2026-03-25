@@ -1,0 +1,2 @@
+.obsidian/plugins/*/main.js filter=lfs diff=lfs merge=lfs -text
+.obsidian/plugins/*/styles.css filter=lfs diff=lfs merge=lfs -text

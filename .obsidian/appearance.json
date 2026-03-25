@@ -1,0 +1,8 @@
+{
+  "cssTheme": "Border",
+  "translucency": true,
+  "monospaceFontFamily": "JetBrainsMono Nerd Font,Noto Sans Mono CJK KR",
+  "enabledCssSnippets": [
+    "hide-task-dates"
+  ]
+}
