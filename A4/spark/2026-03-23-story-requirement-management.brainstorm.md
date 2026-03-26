@@ -1,6 +1,9 @@
 ---
+type: brainstorm
+pipeline: spark
 topic: "co-think-story/requirement 산출물 관리 방법"
 date: 2026-03-23
+status: final
 ---
 # Brainstorming: co-think-story/requirement 산출물 관리 방법
 
