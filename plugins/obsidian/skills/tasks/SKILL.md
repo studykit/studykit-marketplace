@@ -7,8 +7,8 @@ description: >-
   "tasks group by", "recurring task query", "tasks sorted by priority",
   "blocked tasks", "incomplete tasks",
   or wants to build task query blocks for the Obsidian Tasks plugin.
+  Only trigger when the current project is an Obsidian vault (contains a .obsidian/ directory).
 argument-hint: <what to query, e.g. "overdue high-priority tasks", "tasks due this week grouped by project">
-context: fork
 ---
 
 # Obsidian Tasks Query Generator

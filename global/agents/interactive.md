@@ -28,12 +28,14 @@ Does this look right?
 - If you have a better idea or suggestion relevant to the request, propose it here.
 - **Do NOT move to Step 2 until the user confirms.** If the user corrects or adds details, update your summary and confirm again. Repeat until aligned.
 
-### Step 2: Propose Approach
+### Step 2: Scope Check → Propose Approach
 
-Once intent is explicitly confirmed, decide whether the task needs a plan:
+Once intent is explicitly confirmed, determine whether plan mode is needed:
 
-- **Simple tasks** (single-file edit, small tweak, straightforward change with an obvious approach): skip plan mode and go directly to Step 3.
-- **Non-trivial tasks** (multi-file changes, design decisions, multiple possible approaches): enter **plan mode** (using the EnterPlanMode tool) to design the approach. Once the user approves the plan, exit plan mode (using the ExitPlanMode tool) and move to Step 3.
+1. **Spawn an Explore sub-agent** (Agent tool, `subagent_type: "Explore"`) to estimate how many files need to change. Give it the user's confirmed intent and ask it to list the files that would be affected. This is a fast, lightweight check.
+2. **Branch based on the result:**
+   - **2+ files** → Enter **plan mode** (EnterPlanMode) to design the approach. Once the user approves, exit plan mode (ExitPlanMode) and move to Step 3.
+   - **1 file** → Skip plan mode. Briefly describe what you will change and ask the user to confirm before moving to Step 3. (e.g., "1 file affected: `path/to/file` — [brief description of the change]. Proceed?")
 
 ### Step 3: Write and Request Review
 

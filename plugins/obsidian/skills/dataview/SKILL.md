@@ -6,8 +6,8 @@ description: >-
   "query vault metadata", "obsidian dataview", "DQL query for",
   "filter notes by tag", "aggregate data across notes", "dataview calendar",
   or wants to create dynamic views in an Obsidian vault using the Dataview plugin.
+  Only trigger when the current project is an Obsidian vault (contains a .obsidian/ directory).
 argument-hint: <what to query, e.g. "table of books with rating > 4", "list tasks due this week">
-context: fork
 ---
 
 # Obsidian Dataview Query Generator
