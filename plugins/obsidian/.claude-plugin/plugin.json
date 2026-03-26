@@ -1,0 +1,8 @@
+{
+  "name": "obsidian",
+  "description": "Generate query blocks for Obsidian knowledge management plugins (Dataview, Tasks)",
+  "author": {
+    "name": "studykit"
+  },
+  "keywords": ["obsidian", "dataview", "tasks", "dql", "query", "knowledge-management"]
+}

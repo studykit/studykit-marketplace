@@ -98,6 +98,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["workflow", "github", "issue", "commit", "automation", "code-study", "architecture"]
+    },
+    {
+      "name": "obsidian",
+      "source": "./plugins/obsidian",
+      "description": "Generate query blocks for Obsidian knowledge management plugins (Dataview, Tasks)",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["obsidian", "dataview", "tasks", "dql", "query", "knowledge-management"]
     }
   ]
 }
