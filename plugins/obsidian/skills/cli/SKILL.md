@@ -1,5 +1,5 @@
 ---
-name: obsidian-cli
+name: cli
 description: >-
   This skill should be used when the user asks to "run an obsidian command",
   "use obsidian cli", "automate obsidian from terminal", "obsidian command line",
