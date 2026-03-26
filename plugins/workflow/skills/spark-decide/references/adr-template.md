@@ -2,13 +2,16 @@
 
 ```markdown
 ---
-type: discover
+type: decide
+pipeline: spark
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source: "<original input, verbatim>"
 status: final
+source:                          # omit if no upstream file
+  - "[[<source-file-name>]]"
 framework: "<evaluation framework used>"
 decision: "<one-line summary of the decision>"
+tags: []
 ---
 # Decision Record: <topic>
 
