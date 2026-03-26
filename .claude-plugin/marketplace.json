@@ -102,15 +102,15 @@
     {
       "name": "obsidian",
       "source": "./plugins/obsidian",
-      "description": "Generate query blocks for Obsidian knowledge management plugins (Dataview, Tasks)",
-      "version": "0.1.0",
+      "description": "Generate query blocks, CLI commands, and guide plugin usage for Obsidian knowledge management (Dataview, Tasks, Jira Issue, CLI)",
+      "version": "0.3.0",
       "author": {
         "name": "studykit"
       },
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
       "category": "development",
-      "keywords": ["obsidian", "dataview", "tasks", "dql", "query", "knowledge-management"]
+      "keywords": ["obsidian", "dataview", "tasks", "dql", "query", "knowledge-management", "cli", "terminal", "automation"]
     }
   ]
 }
