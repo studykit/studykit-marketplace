@@ -122,7 +122,7 @@ When the user indicates they're done:
 3. **Update the output file** with any revisions from the review.
 4. **Finalize the file** — change all glossary items to final, ensure all sections are complete.
 5. **Show the Spec Feedback TODO list prominently.**
-6. **Ask:** "These items need requirement revision. Would you like to run co-revise-requirement-with-domain-model to address them?"
+6. **Ask:** "These items need requirement revision. Would you like to run co-revise-requirement-with-domain to address them?"
 7. **Write the file** using the Write tool.
 8. **Report the path** so the user can reference it.
 
@@ -130,12 +130,15 @@ When the user indicates they're done:
 
 ```markdown
 ---
-type: domain-model
+type: domain
+pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
+status: final
 source:
   - "[[<spec-file-name>]]"
   - "[[<another-spec-file>]]"
+tags: []
 ---
 # Conceptual Model: <topic>
 
@@ -201,4 +204,4 @@ State2 --> [*]
 
 **Required sections**: Overview, Domain Glossary, Concept Relationships, State Transitions, Spec Feedback, Interview Transcript.
 
-**File path**: `A4/domain/<YYYY-MM-DD-HHmm>-<topic-slug>.md`
+**File path**: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.domain.md`

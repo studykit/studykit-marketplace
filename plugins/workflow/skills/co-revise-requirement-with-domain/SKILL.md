@@ -1,5 +1,5 @@
 ---
-name: co-revise-requirement-with-domain-model
+name: co-revise-requirement-with-domain
 description: "This skill should be used when the user has a domain model with feedback TODOs and needs to revise existing functional requirements, when the user says 'fix requirement from domain model', 'address domain model feedback', 'requirement revision', 'resolve domain model TODOs', 'update requirement from domain model', 'revise requirement', 'domain model feedback', or when a co-think-domain session produced TODO items that need to be resolved in the original requirement files."
 argument-hint: <path to domain model document>
 allowed-tools: Read, Write, Edit, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
@@ -20,7 +20,7 @@ After reading, extract:
 1. **Spec Feedback TODOs** — the `## Spec Feedback` section containing `- [ ]` items
 2. **Source requirement file(s)** — from the `source` frontmatter field (wikilinks to requirement files)
 
-Resolve the requirement file paths by searching the `A4/requirement/` directory for files matching the wikilink filenames.
+Resolve the requirement file paths by searching the `A4/co-think/` directory for files matching the wikilink filenames.
 
 Read all referenced requirement files.
 
@@ -131,8 +131,8 @@ When the user indicates they're done:
 
    > **Session summary:**
    > - TODOs resolved: 3 of 5
-   > - Requirement files modified: `A4/requirement/2026-03-20-1430-auth-flow.md`
-   > - Domain model document updated: `A4/domain/2026-03-22-1100-auth-domain.md`
+   > - Requirement files modified: `A4/co-think/2026-03-20-1430-auth-flow.requirement.md`
+   > - Domain model document updated: `A4/co-think/2026-03-22-1100-auth-domain.domain.md`
    > - Remaining open TODOs: 2
    >
    > Files staged for commit.

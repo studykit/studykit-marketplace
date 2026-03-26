@@ -3,12 +3,15 @@
 ```markdown
 ---
 type: requirement
+pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
+status: final
 source:
   - "[[<story-file-name>]]"
 covers:
   - <ui | non-ui>
+tags: []
 ---
 # Functional Specification: <topic>
 
