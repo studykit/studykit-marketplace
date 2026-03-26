@@ -1,6 +1,6 @@
 ---
-name: co-think-discover
-description: "This skill should be used when the user needs to make a decision between options, evaluate trade-offs, or research alternatives before choosing a solution. Triggers: 'help me decide', 'compare alternatives', 'evaluate options', 'trade-off analysis', 'research options', 'ADR', 'architecture decision', 'solution discovery', 'pick between', 'which approach', 'weigh pros and cons', 'decision record', 'choose between', 'which option is better'. Can accept output from co-think-diverse as input."
+name: spark-decide
+description: "This skill should be used when the user needs to make a decision between options, evaluate trade-offs, or research alternatives before choosing a solution. Triggers: 'help me decide', 'compare alternatives', 'evaluate options', 'trade-off analysis', 'research options', 'ADR', 'architecture decision', 'solution discovery', 'pick between', 'which approach', 'weigh pros and cons', 'decision record', 'choose between', 'which option is better'. Can accept output from spark-brainstorm as input."
 argument-hint: <topic, problem, or path to brainstorming output file>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
@@ -15,7 +15,7 @@ Facilitate a solution discovery session on: **$ARGUMENTS**
 
 Determine how to start based on the input:
 
-1. **File path provided** (e.g., `A4/diverse/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
+1. **File path provided** (e.g., `A4/spark/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
 2. **Topic/problem provided**: Start from Phase 1 (Problem Framing).
 
 If the input is ambiguous, ask the user to clarify.
@@ -36,7 +36,7 @@ The working file is a living document that grows throughout the session. The use
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/discover/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Default: `A4/spark/<YYYY-MM-DD-HHmm>-<topic-slug>.decide.md` relative to working directory
 - Ask the user only if they want a different location
 - Create the directory if needed
 
@@ -46,13 +46,16 @@ Write this after Problem Framing is complete:
 
 ```markdown
 ---
-type: discover
+type: decide
+pipeline: spark
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source: "<original input, verbatim>"
 status: draft
+source:                          # omit if no upstream file
+  - "[[<source-file-name>]]"
 framework: ""
 decision: ""
+tags: []
 ---
 # Decision Record: <topic>
 
@@ -136,7 +139,7 @@ Update the `framework` field in the working file frontmatter.
 
 ## Phase 2: Option Generation
 
-### If input is from co-think-diverse
+### If input is from spark-brainstorm
 Present the extracted ideas and ask: "Which of these do you want to evaluate? Any to add or remove?"
 
 ### If starting fresh
