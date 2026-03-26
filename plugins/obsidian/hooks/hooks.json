@@ -1,0 +1,17 @@
+{
+  "description": "Prevent obsidian plugin skills from triggering outside an Obsidian vault",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Skill",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash ${CLAUDE_PLUGIN_ROOT}/hooks/check-obsidian-vault.sh",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}

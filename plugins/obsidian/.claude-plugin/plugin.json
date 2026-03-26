@@ -1,8 +1,8 @@
 {
   "name": "obsidian",
-  "description": "Generate query blocks for Obsidian knowledge management plugins (Dataview, Tasks)",
+  "description": "Generate query blocks and references for Obsidian knowledge management plugins (Dataview, Tasks, Jira Issue)",
   "author": {
     "name": "studykit"
   },
-  "keywords": ["obsidian", "dataview", "tasks", "dql", "query", "knowledge-management"]
+  "keywords": ["obsidian", "dataview", "tasks", "jira-issue", "jira", "dql", "jql", "query", "knowledge-management"]
 }
