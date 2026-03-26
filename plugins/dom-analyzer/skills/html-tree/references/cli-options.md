@@ -1,7 +1,6 @@
 # DOM Hierarchy Visualizer - CLI Options Reference
 
-> **Note:** All examples below use shorthand `html-tree.ts`. The full command is:
-> `deno run --allow-read ${CLAUDE_PLUGIN_ROOT}/skills/html-tree/scripts/html-tree.ts <html-file> [options]`
+> **Note:** All examples below use shorthand `html-tree.py`. See SKILL.md for the full invocation command.
 
 ## Option Details
 
@@ -11,7 +10,7 @@ Limits how deep the tree traversal goes. Useful for getting a high-level overvie
 
 **Example:**
 ```bash
-... html-tree.ts page.html --max-depth 3
+... html-tree.py page.html --max-depth 3
 ```
 
 **Output sample:**
@@ -37,17 +36,17 @@ Filters visualization to only elements matching the given CSS selector. Supports
 
 **Simple tag selector:**
 ```bash
-... html-tree.ts page.html --selector "article"
+... html-tree.py page.html --selector "article"
 ```
 
 **Class selector:**
 ```bash
-... html-tree.ts page.html --selector ".story-content"
+... html-tree.py page.html --selector ".story-content"
 ```
 
 **Complex selector:**
 ```bash
-... html-tree.ts page.html --selector "main > article.post"
+... html-tree.py page.html --selector "main > article.post"
 ```
 
 **Output sample:**
@@ -73,7 +72,7 @@ Shows n levels of ancestor context above each matched node. Essential for unders
 
 **Example:**
 ```bash
-... html-tree.ts page.html --selector ".story-content" --show-parents 3
+... html-tree.py page.html --selector ".story-content" --show-parents 3
 ```
 
 **Output sample:**
@@ -100,7 +99,7 @@ When a selector matches multiple elements, show only the nth match (1-based inde
 
 **Example:**
 ```bash
-... html-tree.ts page.html --selector "article" --match-index 2
+... html-tree.py page.html --selector "article" --match-index 2
 ```
 
 Shows only the second article on the page.
@@ -114,12 +113,17 @@ Includes text node content in the visualization. By default, text nodes are hidd
 <h1 class="title">
 ```
 
-**With --show-text:**
+**With --show-text (leaf element):**
 ```
 <h1 class="title"> [TEXT: Breaking News: Major Event Unfolds]
 ```
 
-Text content is truncated to 50 characters for inline display, 100 characters for standalone text nodes.
+**With --show-text (standalone text node):**
+```
+[TEXT] Breaking News: Major Event Unfolds
+```
+
+Text content is truncated to 50 characters for inline display on leaf elements, 100 characters for standalone text nodes.
 
 ### --no-attributes
 
@@ -139,20 +143,33 @@ Shows all HTML attributes, not just the default set (id, class, data-*). Reveals
 <a class="nav-link" href="/about" role="menuitem" aria-label="About us">
 ```
 
-### --compact
-
-Compact mode (default). Shows only id, class, and data-* attributes. Provides clean output focused on structural identification.
-
 ### --output `<file>`
 
 Writes the visualization output to a file instead of console. Useful for saving analysis results.
 
 **Example:**
 ```bash
-... html-tree.ts page.html --selector "article" --output article-structure.md
+... html-tree.py page.html --selector "article" --output article-structure.md
 ```
 
-## Attribute Display Behavior
+## Special Display Behaviors
+
+### Summarized elements
+
+`<style>`, `<script>`, and `<noscript>` elements are always summarized as a single line showing their content size instead of traversing children:
+```
+<style> [1234 chars]
+<script src="app.js"> [5678 chars]
+```
+
+### Inline style attributes
+
+In compact mode, elements with a `style` attribute show a preview suffix (truncated to 60 characters):
+```
+<div class="hero"> [style: background: url(...); padding: 2rem; display: fl...]
+```
+
+### SVG attribute suppression
 
 SVG and path elements always have their attributes suppressed regardless of display mode, as SVG attributes tend to be very long and not useful for structural analysis.
 
@@ -160,20 +177,20 @@ SVG and path elements always have their attributes suppressed regardless of disp
 
 ### Initial exploration
 ```bash
-... html-tree.ts page.html --max-depth 4
+... html-tree.py page.html --max-depth 4
 ```
 
 ### Finding article content
 ```bash
-... html-tree.ts page.html --selector "article, .article, .story, .post, main" --show-text
+... html-tree.py page.html --selector "article, .article, .story, .post, main" --show-text
 ```
 
 ### Building stable selectors
 ```bash
-... html-tree.ts page.html --selector ".target" --show-parents 3 --highlight-path --full
+... html-tree.py page.html --selector ".target" --show-parents 3 --highlight-path --full
 ```
 
 ### Comparing across pages
 ```bash
-for f in data/*.html; do echo "=== $f ===" && ... html-tree.ts "$f" --selector "article" 2>/dev/null | head -5; done
+for f in data/*.html; do echo "=== $f ===" && ... html-tree.py "$f" --selector "article" 2>/dev/null | head -5; done
 ```
