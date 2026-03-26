@@ -1,8 +1,11 @@
 ---
+type: decide
+pipeline: spark
 topic: "co-think 산출물 관리 체계"
 date: 2026-03-23
+status: final
 source:
-  - "[[2026-03-23-story-requirement-management]]"
+  - "[[2026-03-23-story-requirement-management.brainstorm]]"
 ---
 # co-think 산출물 관리 체계
 

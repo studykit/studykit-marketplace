@@ -1,6 +1,9 @@
 ---
+type: brainstorm
+pipeline: spark
 topic: "co-think-requirement 이후 cross-cutting 스킬 설계 논의"
 date: 2026-03-24
+status: final
 ---
 # Discussion: co-think-requirement 산출물의 다음 단계
 
@@ -112,7 +115,7 @@ co-think-requirement과 co-revise-requirement-with-domain-model은 목적과 대
 - FR에서 도출 가능한 시스템 간 관계는 domain model에서 다룸
 
 ## TODOs
-- [ ] co-revise-requirement-with-domain-model 스킬 설계 및 생성
+- [x] co-revise-requirement-with-domain-model 스킬 설계 및 생성 ✅ 2026-03-26
 - [ ] 비기능/시스템 경계 interview를 어디서 다룰지 결정 (co-think-story? 별도 스킬?)
 - [ ] architecture 스킬 정의
 - [ ] 문제 영역 → 솔루션 영역 전환점의 전체 파이프라인 설계
