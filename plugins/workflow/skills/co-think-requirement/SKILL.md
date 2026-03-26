@@ -83,7 +83,7 @@ For UI software, judge whether creating a mock UI would help clarify the spec fo
 
 When a mock is helpful:
 
-1. Use the **mock-html-generator** agent to create an HTML mock. Save mock files to `A4/requirement/mock/<topic-slug>/` relative to working directory.
+1. Use the **mock-html-generator** agent to create an HTML mock. Save mock files to `A4/co-think/mock/<topic-slug>/` relative to working directory.
 2. Present the mock to the user and gather feedback.
 3. Iterate on the mock if needed.
 4. Use the feedback to refine the spec. Record the mock file path in the spec.
@@ -120,7 +120,7 @@ When a mock is NOT needed (simple interactions, clear behavior), skip it and pro
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/requirement/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Default: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.requirement.md` relative to working directory
 - Ask the user only if they want a different location
 - Create the directory if needed
 

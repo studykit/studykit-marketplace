@@ -3,10 +3,13 @@
 ```markdown
 ---
 type: story
+pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source:
-  - "[[<diverse-file-name>]]"
+status: final
+source:                          # omit if no upstream file
+  - "[[<brainstorm-file-name>]]"
+tags: []
 ---
 # Job Stories: <topic>
 
@@ -75,7 +78,7 @@ source:
 ```
 
 **`source` field rules:**
-- If the idea came from a co-think-diverse output file, add wikilinks to those files (filename only, no path).
+- If the idea came from a spark-brainstorm output file, add wikilinks to those files (filename only, no path).
 - If the idea came from multiple diverse sessions, list all of them.
 - If the user provided a raw idea with no prior diverse file, omit the `source` field entirely.
 

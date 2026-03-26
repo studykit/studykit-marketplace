@@ -42,7 +42,7 @@ The working file is a living document that grows throughout the interview. The u
 ### Working File Path
 
 At the start of the interview, determine the file path:
-- Default: `A4/story/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to working directory
+- Default: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.story.md` relative to working directory
 - Ask the user only if they want a different location
 - Create the directory if needed
 
@@ -53,10 +53,13 @@ Write this immediately after restating the idea:
 ```markdown
 ---
 type: story
+pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
-source:
-  - "[[<diverse-file-name>]]"
+status: draft
+source:                          # omit if no upstream file
+  - "[[<brainstorm-file-name>]]"
+tags: []
 ---
 # Job Stories: <topic>
 
@@ -74,7 +77,7 @@ source:
 ```
 
 **`source` field rules:**
-- If the idea came from a co-think-diverse output file, add wikilinks to those files (filename only, no path).
+- If the idea came from a spark-brainstorm output file, add wikilinks to those files (filename only, no path).
 - If the idea came from multiple diverse sessions, list all of them.
 - If the user provided a raw idea with no prior diverse file, omit the `source` field entirely.
 
