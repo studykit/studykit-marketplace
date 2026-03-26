@@ -1,5 +1,5 @@
 ---
-name: co-think-diverse
+name: spark-brainstorm
 description: "This skill should be used when the user wants to brainstorm, generate ideas, explore possibilities, or think through options. Triggers: 'brainstorm', 'generate ideas', 'think of options', 'explore possibilities', 'creative thinking', 'what are some ideas for', 'help me think about'. Assesses the situation and selects the appropriate technique — SCAMPER, Free Brainstorming, Mind Mapping, Reverse Brainstorming, Random Stimulus, and more."
 argument-hint: <topic or problem to brainstorm>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
@@ -79,7 +79,7 @@ When the brainstorming reaches a natural conclusion or the user indicates they'r
 1. **Ask to summarize** — Ask: "Would you like me to summarize what we've covered?" and wait for the user's response.
 2. **If the user declines** — End the session immediately.
 3. **If the user agrees** — Draft the summary following the file format below. Ensure these are fully preserved: (1) anything the user emphasized as important during the conversation, (2) key turning points and rejected directions with reasons (→ Discussion Journey section), (3) any research findings from subagent investigations, and (4) any TODOs or action items that came up during the conversation. Each idea must have a short title and a 1-2 sentence description, grouped under theme headings. Present the draft to the user and incorporate any feedback.
-4. **Ask save location** — Ask where to save. Default path: `A4/diverse/<YYYY-MM-DD-HHmm>-<topic-slug>.md` relative to the working directory. Create the directory if it does not exist.
+4. **Ask save location** — Ask where to save. Default path: `A4/spark/<YYYY-MM-DD-HHmm>-<topic-slug>.brainstorm.md` relative to the working directory. Create the directory if it does not exist.
 5. **Write the file** — Save using the Write tool.
 6. **Report the path** — After writing, report the full file path so the main session can reference it.
 
@@ -87,9 +87,12 @@ When the brainstorming reaches a natural conclusion or the user indicates they'r
 
 ```markdown
 ---
-type: diverse
+type: brainstorm
+pipeline: spark
 topic: "<session topic>"
 date: <YYYY-MM-DD>
+status: draft
+tags: []
 ---
 # Brainstorming: <session topic>
 
@@ -119,4 +122,4 @@ Additional sections may be added when the session content warrants them (e.g., C
 
 If the brainstorming produced options that need to be evaluated and decided upon, suggest:
 
-> "If you'd like to evaluate these options and make a decision, you can run `/workflow:co-think-discover <file_path>` to start a solution discovery session with these ideas as input."
+> "If you'd like to evaluate these options and make a decision, you can run `/workflow:spark-decide <file_path>` to start a solution discovery session with these ideas as input."
