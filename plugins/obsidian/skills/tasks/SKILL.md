@@ -1,13 +1,6 @@
 ---
 name: tasks
-description: >-
-  This skill should be used when the user asks to "create a tasks query",
-  "show overdue tasks", "filter tasks by due date", "tasks due this week",
-  "high priority tasks", "obsidian tasks filter", "task dashboard query",
-  "tasks group by", "recurring task query", "tasks sorted by priority",
-  "blocked tasks", "incomplete tasks",
-  or wants to build task query blocks for the Obsidian Tasks plugin.
-  Only trigger when the current project is an Obsidian vault (contains a .obsidian/ directory).
+description: Create Obsidian Tasks plugin queries for filtering, sorting, and grouping tasks.
 argument-hint: <what to query, e.g. "overdue high-priority tasks", "tasks due this week grouped by project">
 ---
 

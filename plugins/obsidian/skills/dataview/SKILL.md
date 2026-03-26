@@ -1,12 +1,6 @@
 ---
 name: dataview
-description: >-
-  This skill should be used when the user asks to "create a dataview query",
-  "generate DQL", "dataview table of", "list notes by", "dataviewjs to show",
-  "query vault metadata", "obsidian dataview", "DQL query for",
-  "filter notes by tag", "aggregate data across notes", "dataview calendar",
-  or wants to create dynamic views in an Obsidian vault using the Dataview plugin.
-  Only trigger when the current project is an Obsidian vault (contains a .obsidian/ directory).
+description: Create Dataview plugin queries (DQL and DataviewJS) for dynamic views in an Obsidian vault.
 argument-hint: <what to query, e.g. "table of books with rating > 4", "list tasks due this week">
 ---
 

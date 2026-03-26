@@ -1,14 +1,6 @@
 ---
 name: jira-issue
-description: >-
-  This skill should be used when the user asks to "create a jira-issue block",
-  "embed jira issues in obsidian", "jira search query in obsidian",
-  "jira-search table", "jira-count", "inline jira issue", "jira issue API",
-  "$ji API", "obsidian jira issue plugin", "jira dataviewjs integration",
-  "jira worklog chart", "jira sprint data in obsidian",
-  "jira JQL in obsidian", "jira worklog", "jira velocity",
-  or wants to use the obsidian-jira-issue plugin components or API.
-  Only trigger when the current project is an Obsidian vault (contains a .obsidian/ directory).
+description: Use obsidian-jira-issue plugin fence components and $ji JavaScript API.
 argument-hint: <what to create, e.g. "jira-search table for my open issues", "inline issue reference", "dataviewjs sprint chart">
 ---
 
