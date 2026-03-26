@@ -13,8 +13,8 @@ if [[ "$TOOL_NAME" == "Agent" ]]; then
 elif [[ "$TOOL_NAME" == "Skill" ]]; then
   SKILL_NAME=$(echo "$INPUT" | jq -r '.tool_input.skill // empty')
   case "$SKILL_NAME" in
-    dataview|tasks|jira-issue|obsidian-cli) ;;
-    obsidian:dataview|obsidian:tasks|obsidian:jira-issue|obsidian:obsidian-cli) ;;
+    dataview|tasks|jira-issue|cli) ;;
+    obsidian:dataview|obsidian:tasks|obsidian:jira-issue|obsidian:cli) ;;
     *) exit 0 ;;
   esac
 
