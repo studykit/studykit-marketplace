@@ -1,7 +1,7 @@
 ---
 name: commit
 description: "This skill should be used when the user explicitly invokes /commit. Commits staged git changes with options for single or split commits, issue prefixing, and language selection."
-argument-hint: "[--split] [--issue [ID]] [--lang <en|ko>]"
+argument-hint: "[description] [--split] [--issue [ID]] [--lang <en|ko>]"
 version: 0.1.0
 disable-model-invocation: true
 context: fork
@@ -15,6 +15,18 @@ Commit only the currently staged files. Never run `git add` to stage additional 
 ## Argument Parsing
 
 Parse `$ARGUMENTS` for the following options:
+
+### Positional `description`
+
+Any text in `$ARGUMENTS` that is not part of a flag or its value is treated as the user's description of the changes. This description provides intent context for composing the commit message.
+
+- **Present**: Use it as the primary source for the commit message subject and body. The diff is still analyzed, but the user's description takes priority for explaining **why** the changes were made.
+- **Absent**: Infer the commit message entirely from the diff (current behavior).
+
+Examples:
+- `/commit fix login redirect bug` → description is `fix login redirect bug`
+- `/commit --issue PROJ-123 add retry logic for flaky API` → description is `add retry logic for flaky API`
+- `/commit --split refactor auth module` → description is `refactor auth module`
 
 ### `--split`
 
@@ -76,8 +88,8 @@ Write one commit message for all staged changes. Format:
 <body>
 ```
 
-- Subject line: concise, imperative mood.
-- Body: use `- ` bullet points focusing on **why** the changes were made. If the intent is unclear from the diff, ask the user before composing the message.
+- Subject line: concise, imperative mood. If the user provided a description, use it to shape the subject line.
+- Body: use `- ` bullet points focusing on **why** the changes were made. If the user provided a description, use it as the primary explanation of intent. If no description was given and the intent is unclear from the diff, ask the user before composing the message.
 - If `--issue` resolved a prefix, prepend it to the subject line (e.g., `PROJ-123 feat: add login`).
 
 #### Split mode (`--split`)
