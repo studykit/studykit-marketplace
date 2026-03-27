@@ -1,7 +1,7 @@
 ---
 name: chat
 description: This skill should be used when the user asks to "chat", "let's talk", "have a conversation", "discuss", "brainstorm together", wants to explore a topic interactively, or needs collaborative problem-solving in a split pane. Conversation summary is returned to the main session on exit.
-argument-hint: [agent] [topic]
+argument-hint: [--agent [name]] [--skill <names>] [topic]
 version: 0.1.0
 ---
 
@@ -9,17 +9,26 @@ Start an interactive sub-agent conversation session.
 
 ## Argument Parsing
 
-Parse `$ARGUMENTS` with these rules:
+Parse `$ARGUMENTS` by extracting flags and treating the remainder as the conversation topic.
 
-1. Extract the first word.
-2. Check if a matching agent exists with that name.
-3. **If a match is found**: Use that agent as `subagent_type`, treat the rest as the conversation topic.
-4. **If no match is found**: Analyze the topic context and, if a suitable agent exists, recommend it to the user via AskUserQuestion. The user can accept the recommendation or choose to proceed without a specific agent. If no suitable agent is identified, skip the recommendation and omit `subagent_type`. Treat the entire `$ARGUMENTS` as the conversation topic.
+### Flags
 
-Examples:
-- `/chat debugger login bug` → agent: `debugger` (explicit), topic: `login bug`
-- `/chat review the auth module` → recommend `code-reviewer` via AskUserQuestion → user accepts or declines
-- `/chat what should we do today` → no suitable agent → agent: (none), topic: `what should we do today`
+| Flag | Behavior |
+|---|---|
+| `--agent <name>` | Use the named agent as `subagent_type`. |
+| `--agent` (no value) | Analyze the topic context and, if a suitable agent exists, recommend it to the user via AskUserQuestion. The user can accept or decline. If no suitable agent is identified, omit `subagent_type`. |
+| *(no `--agent` flag)* | No agent — omit `subagent_type`. |
+| `--skill <names>` | Preload the listed skills (comma-separated) into the chat agent's prompt so they are available during the conversation. |
+
+Everything that is not a flag or flag value is the **topic**.
+
+### Examples
+
+- `/chat --agent debugger login bug` → agent: `debugger`, topic: `login bug`
+- `/chat --agent review the auth module` → recommend a suitable agent (e.g., `code-reviewer`) via AskUserQuestion → user accepts or declines, topic: `review the auth module`
+- `/chat what should we do today` → agent: (none), topic: `what should we do today`
+- `/chat --skill commit,simplify refactor the utils` → agent: (none), skills: `commit`, `simplify` preloaded, topic: `refactor the utils`
+- `/chat --agent executor --skill commit build the feature` → agent: `executor`, skills: `commit` preloaded, topic: `build the feature`
 - `/chat` → agent: (none), topic: none
 
 ## Summary Format
