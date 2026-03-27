@@ -1,12 +1,16 @@
 ---
 name: templater
-description: Read, understand, and modify Obsidian Templater templates — command syntax, tp.* API, and practical patterns.
-argument-hint: <what to modify, e.g. "add a date picker to my daily note template", "fix the frontmatter update logic">
+description: >-
+  This skill should be used when the user asks to "create a Templater template",
+  "modify a Templater template", "fix my Templater template", "add a prompt to my template",
+  "debug Templater syntax", "write a daily note template", "make a meeting note template",
+  or mentions Obsidian Templater command syntax, tp.* API, or template patterns.
+argument-hint: <what to create or modify, e.g. "create a daily note template with mood tracking", "add a date picker to my daily note template", "fix the frontmatter update logic">
 ---
 
 # Templater Skill
 
-Help users understand and modify existing Templater templates in their Obsidian vault. Templater uses a command syntax (`<% %>`) with a `tp.*` API to dynamically generate note content.
+Create, understand, and modify Templater templates in Obsidian vaults. Templater uses a command syntax (`<% %>`) with a `tp.*` API to dynamically generate note content.
 
 ## Command Syntax Quick Reference
 
@@ -29,9 +33,77 @@ Help users understand and modify existing Templater templates in their Obsidian 
 
 - **`tR`** — The accumulated template result string. Use `tR += "text"` in execution commands to append output. `tR = ""` resets all prior output.
 
+## Template Creation Workflow
+
+Follow these steps when creating a new template from scratch.
+
+### Step 1: Gather Requirements
+
+Clarify the template's purpose and needs:
+
+| Question | Purpose |
+|----------|---------|
+| What type of note is this for? | Determines structure (daily, meeting, project, etc.) |
+| What information should be captured? | Defines frontmatter fields and sections |
+| Should anything be prompted at creation time? | Decides `tp.system.prompt()` / `tp.system.suggester()` usage |
+| Where should the template file live? | Vault path for writing the file |
+| Any naming convention for generated notes? | Determines if `tp.file.rename()` or `tp.file.move()` is needed |
+
+Skip questions already clear from the request.
+
+### Step 2: Select Patterns
+
+Select building blocks from `references/patterns.md` based on requirements:
+
+| Need | Pattern |
+|------|---------|
+| Select from options | `tp.system.suggester()` |
+| Free text input | `tp.system.prompt()` |
+| Date-based navigation | Date offset links `[[<% tp.date.now("YYYY-MM-DD", ±N) %>]]` |
+| Auto-set frontmatter | `tp.hooks.on_all_templates_executed()` + `processFrontMatter()` |
+| Create related files | `tp.file.create_new()` loop |
+| Conditional sections | `<%* if -%>` execution blocks |
+| Dynamic lists | `tR +=` in loops |
+
+### Step 3: Build and Write
+
+1. Compose the template combining selected patterns
+2. Validate against `references/modules.md` for correct API signatures
+3. Write the template file directly to the vault using the Write tool
+
+### Step 4: Test the Template
+
+Test using the Obsidian CLI:
+
+```bash
+# 1. Create a test note using the template
+obsidian create name="test-templater-output" template="TemplateName"
+
+# 2. Read the result to verify output
+obsidian read file="test-templater-output"
+
+# 3. Clean up the test note
+obsidian delete file="test-templater-output"
+```
+
+**CLI testing limitations:**
+- `tp.system.prompt()` and `tp.system.suggester()` require the Obsidian UI — they do not work via CLI. For templates with interactive prompts, instruct the user to test manually: create a new note in Obsidian and run **Templater: Insert Template** from the command palette.
+- `tp.file.cursor()` positions are only meaningful in the editor — skip cursor verification in CLI tests.
+
+**Testing checklist:**
+- [ ] Frontmatter fields correctly populated
+- [ ] Date values render with expected format
+- [ ] Conditional sections appear/hide as intended
+- [ ] File naming/moving works correctly
+- [ ] No syntax errors or blank lines from untrimmed whitespace
+
+If CLI test reveals issues, fix the template and re-test. For interactive templates, present the expected output as a code block so the user knows what to verify in Obsidian.
+
+---
+
 ## Template Modification Workflow
 
-When the user asks to modify an existing template, follow these steps:
+Follow these steps when modifying an existing template.
 
 ### Step 1: Analyze the Existing Template
 
@@ -42,9 +114,7 @@ Read the template file and identify:
 - Frontmatter manipulation hooks
 - Cursor placement positions
 
-### Step 2: Understand the Modification Intent
-
-Classify the request:
+### Step 2: Classify the Modification Intent
 
 | Intent | Approach |
 |--------|----------|
@@ -73,108 +143,17 @@ Before presenting the modified template:
 - Ensure whitespace trimming produces clean output
 - Confirm variable scoping (variables declared in `<%* %>` are available in subsequent commands)
 
-## Common Patterns
+## Output Format
 
-### Prompted Metadata
-
-```markdown
-<%*
-let title = await tp.system.prompt("Title");
-let type = await tp.system.suggester(
-  ["Note", "Meeting", "Project"],
-  ["note", "meeting", "project"]
-);
-let tags = await tp.system.multi_suggester(
-  ["work", "personal", "urgent", "reference"],
-  ["work", "personal", "urgent", "reference"],
-  false, "Select tags"
-);
--%>
----
-title: <% title %>
-type: <% type %>
-tags: [<% tags.join(", ") %>]
-created: <% tp.date.now() %>
----
-```
-
-### Conditional Sections
-
-```markdown
-<%* let includeLog = await tp.system.suggester(["Yes", "No"], [true, false]); -%>
-<%* if (includeLog) { -%>
-## Activity Log
-
-| Time | Activity |
-|------|----------|
-| <% tp.date.now("HH:mm") %> | <% tp.file.cursor(1) %> |
-<%* } -%>
-```
-
-### Frontmatter Update via Hook
-
-```markdown
-<%*
-tp.hooks.on_all_templates_executed(async () => {
-  const file = tp.file.find_tfile(tp.file.path(true));
-  await tp.app.fileManager.processFrontMatter(file, (fm) => {
-    fm["modified"] = tp.date.now();
-    if (!fm["created"]) fm["created"] = tp.date.now();
-  });
-});
--%>
-```
-
-### Daily Note with Navigation
-
-```markdown
----
-created: <% tp.date.now() %>
----
-
-# <% tp.file.title %>
-
-<< [[<% tp.date.now("YYYY-MM-DD", -1) %>]] | [[<% tp.date.now("YYYY-MM-DD", 1) %>]] >>
-
-## Tasks
-- [ ] <% tp.file.cursor(1) %>
-
-## Notes
-<% tp.file.cursor(2) %>
-```
-
-### File Creation from Template
-
-```markdown
-<%*
-let name = await tp.system.prompt("Project name");
-let folder = await tp.system.suggester(
-  (f) => f.path,
-  tp.app.vault.getAllLoadedFiles().filter(f => f.children),
-  false, "Select folder"
-);
-await tp.file.create_new(
-  tp.file.find_tfile("Templates/Project"),
-  name,
-  true,
-  folder
-);
--%>
-```
-
-## Output Template
-
-When presenting a modified template, use this format:
+When presenting a created or modified template:
 
 ````markdown
-Here is the updated template:
-
 ```markdown
-(full template content with modifications)
+(full template content)
 ```
 
 **Changes made:**
-- (bullet list of what was changed and why)
+- (bullet list of what was created/changed and why)
 
 **Notes:**
 - (any caveats, e.g. required settings, plugin dependencies)
