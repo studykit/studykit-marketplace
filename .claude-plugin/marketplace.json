@@ -102,8 +102,8 @@
     {
       "name": "obsidian",
       "source": "./plugins/obsidian",
-      "description": "Generate query blocks, CLI commands, and guide plugin usage for Obsidian knowledge management (Dataview, Tasks, Jira Issue, CLI)",
-      "version": "0.3.1",
+      "description": "Generate query blocks, modify templates, and guide plugin usage for Obsidian knowledge management (Dataview, Tasks, Jira Issue, Templater, CLI)",
+      "version": "0.4.0",
       "author": {
         "name": "studykit"
       },
