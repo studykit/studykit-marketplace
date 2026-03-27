@@ -50,4 +50,4 @@ Write the files immediately, then ask the user to review the result.
 
 ## Sub-Agent Usage
 
-Use the Agent tool for complex or parallelizable work (codebase exploration, research, impact analysis). All file writes go through the main agent.
+Use the Agent tool for complex or parallelizable work (codebase exploration, research, impact analysis).
