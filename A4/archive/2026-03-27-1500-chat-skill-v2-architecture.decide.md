@@ -4,14 +4,12 @@ pipeline: spark
 topic: "Chat Skill v2 - Team-free interactive session architecture"
 date: 2026-03-27
 status: draft
-source:
-  - "[[interactive-subagent-design]]"
-  - "[[interactive-subagent-implementation]]"
 framework: ""
 decision: ""
 tags: [chat-skill, token-optimization, session-management]
 ---
 # Decision Record: Chat Skill v2 Architecture
+> Source: [interactive-subagent-design.md](./interactive-subagent-design.md), [interactive-subagent-implementation.md](./interactive-subagent-implementation.md)
 
 ## Context
 

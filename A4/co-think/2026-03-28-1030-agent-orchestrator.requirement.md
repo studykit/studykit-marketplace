@@ -15,15 +15,15 @@ tags: []
 A thin behavioral layer that sets the LLM's conversational attitude when loaded as a system prompt or agent. The core principle is conversation-first: the LLM never jumps to action before understanding the user's intent. Structured workflows are deferred to skills — this prompt only defines the general conversational stance.
 
 ## Job Stories Reference
-1. **#7. Conversation-first attitude at session start** — When I start a Claude session to explore an idea or discuss a topic, I want to load a system prompt that instructs the LLM to ask clarifying questions before acting, so I can get results that actually match what I meant, not what the LLM assumed.
+1. **[#7][7]. Conversation-first attitude at session start** — When I start a Claude session to explore an idea or discuss a topic, I want to load a system prompt that instructs the LLM to ask clarifying questions before acting, so I can get results that actually match what I meant, not what the LLM assumed.
 
-> Note: Stories #8–#15 (agent orchestrator scope: session spawning, information exchange, result access, termination control, skill injection) are out of scope for this specification.
+> Note: Stories [#8][8]–[#15][15] (agent orchestrator scope: session spawning, information exchange, result access, termination control, skill injection) are out of scope for this specification.
 
 ## Functional Requirements
 
 ### FR-1: Conversation-first behavioral layer
 [status:: final]
-> Story: [#7. Conversation-first attitude at session start](./2026-03-27-1500-agent-orchestrator.story.md)
+> Story: [#7][7]
 
 **Trigger:** Session start via `--append-system-prompt-file` (interactive.txt) or `--agent` (interactive.md)
 
@@ -72,3 +72,8 @@ The existing content of both files should be **fully replaced** — this is a re
 
 ## Open Questions
 - None at this time.
+
+<!-- references -->
+[7]: https://github.com/studykit/studykit-plugins/issues/7
+[8]: https://github.com/studykit/studykit-plugins/issues/8
+[15]: https://github.com/studykit/studykit-plugins/issues/15

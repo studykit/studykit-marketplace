@@ -90,6 +90,15 @@ tags: []
 - At finalization, sequential numbers are replaced with GitHub issue numbers (#N) after issues are created.
 - `#N` is the GitHub-assigned issue number, which becomes the story's canonical ID.
 
+**Issue reference links:**
+- Use markdown reference links so issue numbers are clickable in GitHub file preview.
+- In the body, write `[#N][N]`. At the end of the file, add a references section:
+  ```
+  <!-- references -->
+  [7]: https://github.com/{owner}/{repo}/issues/7
+  ```
+- This keeps the body clean while making all issue references clickable.
+
 **Required sections**: Original Idea, Context, Job Stories, Story Relationships, Interview Transcript.
 **Conditionally required:**
 - **Open Questions** — if unresolved topics remain
