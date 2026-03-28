@@ -31,7 +31,7 @@ Examples:
 ### `--split`
 
 - **Present**: Split staged changes into multiple commits grouped by semantic meaning.
-- **Absent** (default): Create a single commit for all staged changes.
+- **Absent** (default): Create a single commit for all staged changes. **Never split into multiple commits unless this flag is explicitly provided, even if the staged changes span unrelated topics.**
 
 ### `--issue [ID]`
 
