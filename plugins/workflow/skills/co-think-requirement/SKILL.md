@@ -132,7 +132,7 @@ As each story gets clarified, draft its spec and present it for confirmation —
 
 **How to present:**
 
-> Here's the spec for Story #1:
+> Here's the spec for STORY-1:
 >
 > **Story:** When [situation], I want to [action], so I can [outcome].
 >
@@ -174,11 +174,11 @@ After confirmation:
 During the specification process, problems in upstream artifacts (Job Stories) may surface. When this happens:
 
 1. **Note the problem** — describe what's wrong with the upstream story (vague situation, missing context, contradictory outcome, etc.).
-2. **Ask the user** — "I noticed Story #3 has a vague situation that makes it hard to specify concrete behavior. Should I create a GitHub Issue to track this?"
+2. **Ask the user** — "I noticed STORY-3 has a vague situation that makes it hard to specify concrete behavior. Should I create a GitHub Issue to track this?"
 3. **If approved, create a GitHub Issue:**
    - **Labels:** `story` + `feedback`
    - **Title:** Brief description of the problem
-   - **Body:** Include the story reference (issue number, e.g., #42), what's unclear, and how it affects the current specification work. Include a clickable markdown link to the story file (e.g., `[path/to/file.story.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.story.md)`).
+   - **Body:** Include the story reference (e.g., STORY-3), what's unclear, and how it affects the current specification work. Include a clickable markdown link to the story file (e.g., `[path/to/file.story.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.story.md)`).
 4. **Record the issue link** inline in the requirement file next to the affected FR, so the dependency is visible.
 5. **Continue specifying** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
 
@@ -202,17 +202,17 @@ When the user indicates they're done:
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the output file** with any revisions from the review.
 4. **Create GitHub Issues for each FR** — for each finalized functional requirement:
-   1. Create a GitHub Issue with label `requirement`. Title: the FR's short title. Body: the full FR text + a clickable markdown link to the output file (e.g., `[A4/co-think/file.requirement.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.requirement.md)`) + references to related story issues (e.g., #42).
-   2. Replace the FR's temporary sequential ID in the heading with the GitHub issue number as a reference link (e.g., `### FR-1: 회의 요약 생성` → `### [#45][45]. 회의 요약 생성`).
-   3. Update story references to use story issue numbers (e.g., `> Story: #42`).
+   1. Create a GitHub Issue with label `requirement`. Title: prefixed with the FR ID (e.g., `FR-1: 회의 요약 생성`). Body: the full FR text + a clickable markdown link to the output file (e.g., `[A4/co-think/file.requirement.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.requirement.md)`) + references to related story issues.
+   2. Keep the FR-N ID in the heading as-is (e.g., `### FR-1. 회의 요약 생성` stays unchanged).
+   3. Add a `<!-- references -->` section at the end of the file mapping each FR and STORY ID to its GitHub issue URL.
    4. Present the issue mapping to the user:
 
-      > | Temp ID | Issue | Title | Stories |
-      > |---------|-------|-------|---------|
-      > | FR-1 | #45 | 회의 요약 생성 | #42 |
-      > | FR-2 | #46 | 요약 공유 | #42, #43 |
+      > | ID | Issue | Title | Stories |
+      > |----|-------|-------|---------|
+      > | FR-1 | #45 | 회의 요약 생성 | STORY-1 |
+      > | FR-2 | #46 | 요약 공유 | STORY-1, STORY-2 |
 
-5. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR status fields from `[status:: draft]` to `[status:: final]`. Ensure all headings use GitHub issue numbers (not FR-N sequential IDs). Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
+5. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR status fields from `[status:: draft]` to `[status:: final]`. Ensure all headings use FR-N IDs. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
 6. **Present the final spec** to the user for last confirmation.
 7. **Write the file** using the Write tool.
 8. **Report the path and issues** so the user can reference them.

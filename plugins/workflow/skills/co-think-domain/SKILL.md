@@ -126,7 +126,7 @@ During the conceptual modeling process, problems in upstream artifacts (Job Stor
 3. **If approved, create a GitHub Issue:**
    - **Labels:** `story` or `requirement` (matching the upstream artifact type) + `feedback`
    - **Title:** Brief description of the problem
-   - **Body:** Include the artifact reference (issue number, e.g., #42), what's unclear, and how it affects the current domain modeling work. Include a clickable markdown link to the artifact file (e.g., `[path/to/file.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.md)`).
+   - **Body:** Include the artifact reference (e.g., FR-5), what's unclear, and how it affects the current domain modeling work. Include a clickable markdown link to the artifact file (e.g., `[path/to/file.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.md)`).
 4. **Continue modeling** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
 
 This replaces the previous approach of embedding feedback only in the Spec Feedback section. The Spec Feedback section now captures issues that have already been filed as GitHub Issues, with links to those issues.

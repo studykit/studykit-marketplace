@@ -146,7 +146,7 @@ During the architecture design, problems in upstream artifacts (Job Stories, Fun
 3. **If approved, create a GitHub Issue:**
    - **Labels:** `story`, `requirement`, or `domain` (matching the upstream artifact type) + `feedback`
    - **Title:** Brief description of the problem
-   - **Body:** Include the artifact reference (issue number, e.g., #42), what's unclear, and how it affects the current architecture design. Include a clickable markdown link to the artifact file (e.g., `[path/to/file.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.md)`).
+   - **Body:** Include the artifact reference (e.g., FR-5, STORY-3), what's unclear, and how it affects the current architecture design. Include a clickable markdown link to the artifact file (e.g., `[path/to/file.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.md)`).
 4. **Continue designing** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
 
 Do NOT create issues proactively by scanning all upstream artifacts at once. Only create them as problems surface naturally during the architecture interview.

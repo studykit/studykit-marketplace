@@ -66,8 +66,8 @@ State2 --> [*]
 <Text explanation of states, transitions, and conditions>
 
 ## Spec Feedback
-- FR-3, FR-5: <reason and explanation> → [#N][N]
-- FR-1, FR-3: <reason and explanation> → [#N][N]
+- FR-3, FR-5: <reason and explanation> → #<issue-number>
+- FR-1, FR-3: <reason and explanation> → #<issue-number>
 
 ## Interview Transcript
 <details>
@@ -82,12 +82,14 @@ State2 --> [*]
 ```
 
 **Issue reference links:**
-- Use markdown reference links so issue numbers are clickable in GitHub file preview.
-- In the body, write `[#N][N]`. At the end of the file, add a references section:
+- FR and STORY references use their canonical IDs (FR-1, STORY-1) throughout the document.
+- After GitHub Issues are created, add a references section at the end of the file mapping each ID to its GitHub issue URL:
   ```
   <!-- references -->
-  [7]: https://github.com/{owner}/{repo}/issues/7
+  [FR-1]: https://github.com/{owner}/{repo}/issues/45
+  [STORY-1]: https://github.com/{owner}/{repo}/issues/7
   ```
+- To make an ID clickable in GitHub file preview, write it as a markdown reference link `[FR-1]` or `[STORY-1]` in the body.
 
 ## Required Sections
 

@@ -16,19 +16,19 @@ tags: []
 Two layers for Claude Code's interactive agent system. First, a thin behavioral layer (conversation-first attitude) that sets the LLM's conversational stance when loaded as a system prompt. Second, an agent orchestrator that enables the main session to spawn, manage, and collect results from child sessions — each a dedicated interactive conversation running in a separate iTerm2 tab. Child sessions are user-facing interactive sessions, not background automation.
 
 ## Job Stories Reference
-1. **[#7][7]. Conversation-first attitude at session start** — When I start a Claude session to explore an idea or discuss a topic, I want to load a system prompt that instructs the LLM to ask clarifying questions before acting, so I can get results that actually match what I meant, not what the LLM assumed.
-2. **[#9][9]. Spawn a dedicated child session** — When the main session encounters a sub-problem, I want to spawn a child session with the interactive prompt loaded, so I can have specialized conversations in a dedicated session.
-3. **[#10][10]. Automated information exchange between sessions** — When a child session is running, I want hooks to automatically exchange information between sessions, so I can keep the main session aware of child session progress.
-4. **[#12][12]. Child session result file accessible to main session** — When I finish a child session, I want the result file path automatically registered with the main session, so I can reference the output directly.
-5. **[#13][13]. Child session conversation history investigation** — When I want to review a past child session, I want the main session to read that session's history via a sub-agent, so I can understand the reasoning behind the output.
-6. **[#14][14]. User controls session termination** — When I'm in a child session, I want the LLM to suggest wrapping up when appropriate while leaving the final decision to me, so I can keep exploring as long as I need. *(Already covered by [#16][16] — conversation-first behavioral layer includes session termination rules.)*
-7. **[#15][15]. Skill injection at child session startup** — When I create a child session with a specific skill, I want that skill injected at startup, so I can start in the right structured dialogue mode.
+1. **STORY-7. Conversation-first attitude at session start** — When I start a Claude session to explore an idea or discuss a topic, I want to load a system prompt that instructs the LLM to ask clarifying questions before acting, so I can get results that actually match what I meant, not what the LLM assumed.
+2. **STORY-9. Spawn a dedicated child session** — When the main session encounters a sub-problem, I want to spawn a child session with the interactive prompt loaded, so I can have specialized conversations in a dedicated session.
+3. **STORY-10. Automated information exchange between sessions** — When a child session is running, I want hooks to automatically exchange information between sessions, so I can keep the main session aware of child session progress.
+4. **STORY-12. Child session result file accessible to main session** — When I finish a child session, I want the result file path automatically registered with the main session, so I can reference the output directly.
+5. **STORY-13. Child session conversation history investigation** — When I want to review a past child session, I want the main session to read that session's history via a sub-agent, so I can understand the reasoning behind the output.
+6. **STORY-14. User controls session termination** — When I'm in a child session, I want the LLM to suggest wrapping up when appropriate while leaving the final decision to me, so I can keep exploring as long as I need. *(Already covered by FR-16 — conversation-first behavioral layer includes session termination rules.)*
+7. **STORY-15. Skill injection at child session startup** — When I create a child session with a specific skill, I want that skill injected at startup, so I can start in the right structured dialogue mode.
 
 ## Functional Requirements
 
-### [#16][16]. Conversation-first behavioral layer
+### FR-16. Conversation-first behavioral layer
 [status:: final]
-> Story: [#7][7]
+> Story: STORY-7
 
 **Trigger:** Session start via `--append-system-prompt-file` (interactive.txt) or `--agent` (interactive.md)
 
@@ -75,9 +75,9 @@ The existing content of both files should be **fully replaced** — this is a re
 
 **Error handling:** N/A (behavioral prompt, no failure modes)
 
-### [#17][17]. Child session spawn
+### FR-17. Child session spawn
 [status:: final]
-> Story: [#9][9], [#15][15]
+> Story: STORY-9, STORY-15
 
 **Trigger:**
 1. User requests via natural language
@@ -133,9 +133,9 @@ The existing content of both files should be **fully replaced** — this is a re
 
 **Dependencies:** None (foundational FR)
 
-### [#18][18]. Child session result delivery on termination
+### FR-18. Child session result delivery on termination
 [status:: final]
-> Story: [#10][10], [#12][12]
+> Story: STORY-10, STORY-12
 
 **Trigger:** Child session terminates
 
@@ -158,11 +158,11 @@ The existing content of both files should be **fully replaced** — this is a re
 - Child session terminates without result file: status updated to `terminated`, result file path left empty
 - `FileChanged` hook fails to trigger: main session can still read `session.json` manually on demand
 
-**Dependencies:** [#17][17]
+**Dependencies:** FR-17
 
-### [#19][19]. Child session conversation history investigation
+### FR-19. Child session conversation history investigation
 [status:: final]
-> Story: [#13][13]
+> Story: STORY-13
 
 **Trigger:** User asks about a past child session's conversation in the main session
 
@@ -178,22 +178,21 @@ The existing content of both files should be **fully replaced** — this is a re
 **Error handling:**
 - Transcript file not found or deleted: inform user that history is unavailable
 
-**Dependencies:** [#17][17] (session.json with transcript_path)
+**Dependencies:** FR-17 (session.json with transcript_path)
 
 ## Open Questions
 - iTerm2 scripting API details for session creation
 - Concurrent `session.json` writes from multiple child sessions (race condition) — resolve at implementation with file locking or atomic writes
 
 <!-- references -->
-[7]: https://github.com/studykit/studykit-plugins/issues/7
-[8]: https://github.com/studykit/studykit-plugins/issues/8
-[9]: https://github.com/studykit/studykit-plugins/issues/9
-[10]: https://github.com/studykit/studykit-plugins/issues/10
-[12]: https://github.com/studykit/studykit-plugins/issues/12
-[13]: https://github.com/studykit/studykit-plugins/issues/13
-[14]: https://github.com/studykit/studykit-plugins/issues/14
-[15]: https://github.com/studykit/studykit-plugins/issues/15
-[16]: https://github.com/studykit/studykit-plugins/issues/16
-[17]: https://github.com/studykit/studykit-plugins/issues/17
-[18]: https://github.com/studykit/studykit-plugins/issues/18
-[19]: https://github.com/studykit/studykit-plugins/issues/19
+[STORY-7]: https://github.com/studykit/studykit-plugins/issues/7
+[STORY-9]: https://github.com/studykit/studykit-plugins/issues/9
+[STORY-10]: https://github.com/studykit/studykit-plugins/issues/10
+[STORY-12]: https://github.com/studykit/studykit-plugins/issues/12
+[STORY-13]: https://github.com/studykit/studykit-plugins/issues/13
+[STORY-14]: https://github.com/studykit/studykit-plugins/issues/14
+[STORY-15]: https://github.com/studykit/studykit-plugins/issues/15
+[FR-16]: https://github.com/studykit/studykit-plugins/issues/16
+[FR-17]: https://github.com/studykit/studykit-plugins/issues/17
+[FR-18]: https://github.com/studykit/studykit-plugins/issues/18
+[FR-19]: https://github.com/studykit/studykit-plugins/issues/19

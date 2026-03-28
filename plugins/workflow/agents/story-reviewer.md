@@ -69,7 +69,7 @@ Verdict: `OK` | `WEAK` (quote the weak part, suggest improvement)
 
 Flag stories that cover the same situation-action-outcome as another story, even if worded differently.
 
-Verdict: `OK` | `OVERLAPS #N` (explain the overlap)
+Verdict: `OK` | `OVERLAPS STORY-N` (explain the overlap)
 
 ## Output Format
 
