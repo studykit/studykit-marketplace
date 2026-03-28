@@ -9,13 +9,12 @@ date: <YYYY-MM-DD>
 status: final
 revision: 0
 last_revised:                    # omit until first revision
-source:
-  - "[<story-file-name>](./<story-file-name>)"
 covers:
   - <ui | non-ui>
 tags: []
 ---
 # Functional Specification: <topic>
+> Source: [<story-file-name>](./<story-file-name>)
 
 ## Overview
 <Brief summary of what this software does and who it's for. Derived from the Job Stories.>
@@ -59,10 +58,10 @@ tags: []
 - ...
 ```
 
-**`source` field rules:**
-- Use relative path links for references within the same repo (e.g., `[file.story.md](./file.story.md)`). Use full GitHub URLs only in issue bodies.
-- Link to the Job Story file(s) this spec is based on.
-- If multiple story files feed into one spec, list all of them.
+**Source rules:**
+- Place source references as a blockquote directly under the title heading.
+- Use relative path links for references within the same repo. Use full GitHub URLs only in issue bodies.
+- If multiple story files feed into one spec, list them comma-separated on one line.
 
 **Heading number convention:**
 - During the session, FRs use temporary sequential IDs (FR-1, FR-2...).

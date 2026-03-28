@@ -15,23 +15,15 @@ date: <YYYY-MM-DD>
 status: final
 revision: 0
 last_revised:                    # omit until first revision
-source:
-  - "[<story-file-name>](./<story-file-name>)"
-  - "[<requirement-file-name>](./<requirement-file-name>)"
-  - "[<domain-model-file-name>](./<domain-model-file-name>)"
 tags: []
 ---
 ```
-
-**`source` field rules:**
-- Use relative path links for references within the same repo (e.g., `[file.md](./file.md)`). Use full GitHub URLs only in issue bodies.
-- Link to all input files.
-- List story, requirement, and domain model files.
 
 ## Template
 
 ```markdown
 # Architecture: <topic>
+> Source: [<story-file-name>](./<story-file-name>), [<requirement-file-name>](./<requirement-file-name>), [<domain-model-file-name>](./<domain-model-file-name>)
 
 ## Overview
 <High-level architecture summary — what components exist, how they relate, key design decisions made during the session.>

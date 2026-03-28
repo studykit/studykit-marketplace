@@ -15,22 +15,15 @@ date: <YYYY-MM-DD>
 status: final
 revision: 0
 last_revised:                    # omit until first revision
-source:
-  - "[<spec-file-name>](./<spec-file-name>)"
-  - "[<another-spec-file>](./<another-spec-file>)"
 tags: []
 ---
 ```
-
-**`source` field rules:**
-- Use relative path links for references within the same repo (e.g., `[file.requirement.md](./file.requirement.md)`). Use full GitHub URLs only in issue bodies.
-- Link to the spec file(s) this model is based on.
-- If multiple spec files, list all.
 
 ## Template
 
 ```markdown
 # Conceptual Model: <topic>
+> Source: [<spec-file-name>](./<spec-file-name>), [<another-spec-file>](./<another-spec-file>)
 
 ## Overview
 <Domain summary — what concepts exist and how they connect at a high level. Derived from cross-cutting analysis of the FRs.>

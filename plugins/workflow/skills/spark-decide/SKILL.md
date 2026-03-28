@@ -51,13 +51,12 @@ pipeline: spark
 topic: "<topic>"
 date: <YYYY-MM-DD>
 status: draft
-source:                          # omit if no upstream file
-  - "[[<source-file-name>]]"
 framework: ""
 decision: ""
 tags: []
 ---
 # Decision Record: <topic>
+> Source: [<source-file-name>](./<source-file-name>)
 
 ## Context
 <Why this decision is needed. Background, constraints, triggers. Derived from Problem Framing.>

@@ -58,11 +58,10 @@ topic: "<topic>"
 date: <YYYY-MM-DD>
 status: draft
 revision: 0
-source:                          # omit if no upstream file
-  - "[<brainstorm-file-name>](./<brainstorm-file-name>)"
 tags: []
 ---
 # Job Stories: <topic>
+> Source: [<brainstorm-file-name>](./<brainstorm-file-name>)
 
 ## Original Idea
 <The original input, as-is.>
@@ -77,11 +76,12 @@ tags: []
 *Will be filled if unresolved topics remain.*
 ```
 
-**`source` field rules:**
-- Use relative path links for references within the same repo (e.g., `[file.md](./file.md)`). Use full GitHub URLs only in issue bodies.
+**Source rules:**
+- Place source references as a blockquote directly under the title heading.
+- Use relative path links for references within the same repo. Use full GitHub URLs only in issue bodies.
 - If the idea came from a spark-brainstorm output file, add relative path links.
-- If the idea came from multiple diverse sessions, list all of them.
-- If the user provided a raw idea with no prior diverse file, omit the `source` field entirely.
+- If the idea came from multiple sources, list them comma-separated on one line.
+- If the user provided a raw idea with no prior file, omit the source line entirely.
 
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
 
