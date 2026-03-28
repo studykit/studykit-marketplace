@@ -163,19 +163,19 @@ When the user indicates they're done:
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the working file** with any revisions from the review.
 4. **Create GitHub Issues for each story** — for each finalized story:
-   1. Create a GitHub Issue with label `story`. Title: the story's short title. Body: the full story text + a clickable markdown link to the working file (e.g., `[A4/co-think/file.story.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.story.md)`).
-   2. Replace the story's temporary sequential number in the heading with the GitHub issue number as a reference link (e.g., `### 1. 회의 요약 생성` → `### [#42][42]. 회의 요약 생성`).
-   3. Update Story Relationships to use issue reference links (e.g., `1 → 2` → `[#42][42] → [#43][43]`).
+   1. Create a GitHub Issue with label `story`. Title: prefixed with the STORY ID (e.g., `STORY-1: 회의 요약 생성`). Body: the full story text + a clickable markdown link to the working file (e.g., `[A4/co-think/file.story.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.story.md)`).
+   2. Keep the STORY-N ID in the heading as-is (e.g., `### STORY-1. 회의 요약 생성` stays unchanged).
+   3. Add a `<!-- references -->` section at the end of the file mapping each STORY ID to its GitHub issue URL.
    4. Present the issue mapping to the user:
 
-      > | Temp # | Issue | Title |
-      > |--------|-------|-------|
-      > | 1 | #42 | 회의 요약 생성 |
-      > | 2 | #43 | 요약 공유 |
+      > | ID | Issue | Title |
+      > |----|-------|-------|
+      > | STORY-1 | #42 | 회의 요약 생성 |
+      > | STORY-2 | #43 | 요약 공유 |
 
 5. **Finalize the working file** — write the final version with all sections completed:
    - Change all individual story inline fields from `[status:: draft]` to `[status:: final]`
-   - Ensure all headings use GitHub issue numbers (not sequential numbers)
+   - Ensure all headings use STORY-N IDs
    - Finalize the Context section with the complete understanding from the interview
    - Ensure all confirmed Job Stories are present and in order
    - Add the Open Questions section if unresolved topics remain

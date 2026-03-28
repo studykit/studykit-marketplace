@@ -35,7 +35,7 @@ Read the GitHub Issue(s) specified: **$ARGUMENTS**
 For each issue, extract:
 
 1. **Labels** — the artifact label determines which artifact type to revise; the `feedback` label confirms it's actionable
-2. **Issue body** — describes the problem, related item references (issue numbers, e.g., #42), and the originating context
+2. **Issue body** — describes the problem, related item references (e.g., FR-3, STORY-2), and the originating context
 3. **Target artifact file** — identified from the issue body or by searching `A4/co-think/` for the relevant artifact file
 
 Read the target artifact file(s).
@@ -47,7 +47,7 @@ Then present:
 > | # | Issue | Label | Target file | Summary |
 > |---|-------|-------|-------------|---------|
 > | 1 | #42 | requirement | `<path>` | FR-3, FR-5: missing error handling |
-> | 2 | #43 | story | `<path>` | Story #2: vague situation |
+> | 2 | #43 | story | `<path>` | STORY-2: vague situation |
 > | 3 | #44 | domain | `<path>` | Missing state for Concept X |
 >
 > Which issue would you like to start with?

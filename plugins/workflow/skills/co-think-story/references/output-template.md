@@ -22,26 +22,26 @@ tags: []
 
 ## Job Stories
 
-### [#N][N]. <short title>
+### STORY-1. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### [#N][N]. <short title>
+### STORY-2. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### [#N][N]. <short title> *(split from original)*
-#### [#N][N]-a. <short title>
+### STORY-3. <short title> *(split from original)*
+#### STORY-3a. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-#### [#N][N]-b. <short title>
+#### STORY-3b. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
@@ -52,15 +52,15 @@ tags: []
 ## Story Relationships
 
 ### Dependencies
-- **[#N][N] → [#M][M]**: <reason>
+- **STORY-1 → STORY-2**: <reason>
 
 ### Reinforcements
-- **[#N][N] → [#M][M], [#O][O]**: <reason>
+- **STORY-1 → STORY-2, STORY-3**: <reason>
 
 ### Story Groups
 | Group | Stories | Description |
 |-------|---------|-------------|
-| <name> | [#N][N], [#M][M], ... | <description> |
+| <name> | STORY-1, STORY-2, ... | <description> |
 
 ## Open Questions
 <Questions that came up but weren't resolved. Topics to revisit.>
@@ -85,19 +85,18 @@ tags: []
 - If the idea came from multiple sources, list them comma-separated on one line.
 - If the user provided a raw idea with no prior file, omit the source line entirely.
 
-**Heading number convention:**
-- During the interview, stories use temporary sequential numbers (1, 2, 3...).
-- At finalization, sequential numbers are replaced with GitHub issue numbers (#N) after issues are created.
-- `[#N][N]` is the GitHub-assigned issue number (as a reference link), which becomes the story's canonical ID.
+**Heading ID convention:**
+- Stories use `STORY-N` IDs (STORY-1, STORY-2...) as canonical identifiers throughout the document.
+- These IDs are assigned during the interview and remain unchanged at finalization.
 
 **Issue reference links:**
-- Use markdown reference links so issue numbers are clickable in GitHub file preview.
-- In the body, write `[#N][N]`. At the end of the file, add a references section:
+- After GitHub Issues are created, add a references section at the end of the file mapping each STORY ID to its GitHub issue URL:
   ```
   <!-- references -->
-  [7]: https://github.com/{owner}/{repo}/issues/7
+  [STORY-1]: https://github.com/{owner}/{repo}/issues/7
+  [STORY-2]: https://github.com/{owner}/{repo}/issues/8
   ```
-- This keeps the body clean while making all issue references clickable.
+- To make a STORY ID clickable in GitHub file preview, write it as a markdown reference link `[STORY-1]` in the body.
 
 **Required sections**: Original Idea, Context, Job Stories, Story Relationships, Interview Transcript.
 **Conditionally required:**

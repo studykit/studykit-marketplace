@@ -24,9 +24,9 @@ tags: []
 
 ## Functional Requirements
 
-### [#N][N]. <short title>
+### FR-1. <short title>
 [status:: draft]
-> Story: [#N][N]
+> Story: STORY-1
 
 <!-- For UI -->
 **Screen/View:** <where this happens>
@@ -48,9 +48,9 @@ tags: []
 
 **Dependencies:** <other FRs this depends on, if any>
 
-### [#N][N]. <short title>
+### FR-2. <short title>
 [status:: draft]
-> Story: [#N][N], #M
+> Story: STORY-1, STORY-2
 ...
 
 ## Open Questions
@@ -63,23 +63,22 @@ tags: []
 - Use relative path links for references within the same repo. Use full GitHub URLs only in issue bodies.
 - If multiple story files feed into one spec, list them comma-separated on one line.
 
-**Heading number convention:**
-- During the session, FRs use temporary sequential IDs (FR-1, FR-2...).
-- At finalization, sequential IDs are replaced with GitHub issue numbers (#N) after issues are created.
-- `[#N][N]` is the GitHub-assigned issue number (as a reference link), which becomes the FR's canonical ID.
+**Heading ID convention:**
+- FRs use `FR-N` IDs (FR-1, FR-2...) as canonical identifiers throughout the document.
+- These IDs are assigned during the session and remain unchanged at finalization.
 
 **Story reference rules:**
-- Each FR links to the story issue(s) it implements using a blockquote with reference links: `> Story: [#N][N]`.
-- If one FR comes from multiple stories, list them comma-separated: `> Story: [#N][N], [#M][M]`.
+- Each FR links to the story(ies) it implements using a blockquote: `> Story: STORY-1`.
+- If one FR comes from multiple stories, list them comma-separated: `> Story: STORY-1, STORY-2`.
 
 **Issue reference links:**
-- Use markdown reference links so issue numbers are clickable in GitHub file preview.
-- In the body, write `[#N][N]`. At the end of the file, add a references section:
+- After GitHub Issues are created, add a references section at the end of the file mapping each FR and STORY ID to its GitHub issue URL:
   ```
   <!-- references -->
-  [7]: https://github.com/{owner}/{repo}/issues/7
+  [FR-1]: https://github.com/{owner}/{repo}/issues/45
+  [STORY-1]: https://github.com/{owner}/{repo}/issues/7
   ```
-- This keeps the body clean while making all issue references clickable.
+- To make an ID clickable in GitHub file preview, write it as a markdown reference link `[FR-1]` or `[STORY-1]` in the body.
 
 **Required sections**: Overview, Job Stories Reference, Functional Requirements.
 **Conditionally required:**
