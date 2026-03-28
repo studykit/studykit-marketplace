@@ -29,6 +29,10 @@ Before starting the conceptual model, explore the current codebase to understand
 
 This grounds the conceptual model in reality. Reference what you find during the interview — e.g., "I see the codebase already uses the term 'Workspace' for grouping items. Should we align with that?"
 
+## Navigation Rules
+
+Topics follow a natural order (Concept Extraction → Relationship Mapping → State Transition Analysis → Spec Feedback). The user controls all transitions, revisiting and interleaving are welcome.
+
 ## Conversation Topics
 
 The conceptual model covers four topics. The user controls which topic to work on, when to switch, and when to revisit. Do NOT auto-advance to the next topic — always ask the user where they want to go next.
@@ -75,10 +79,6 @@ After completing work on any topic (or when the conversation reaches a natural p
 - Each item must have: related FR numbers, clear reason why spec needs revision
 - Format: `- [ ] FR-X, FR-Y: <reason and explanation>`
 
-### Navigation Rules
-
-The user controls all transitions, revisiting and interleaving are welcome. Example: "We've defined 6 concepts and covered all the FRs. Would you like to move to Relationship Mapping, or is there more to explore here?"
-
 ## Abstraction Level Guard
 
 THIS IS CRITICAL — the key differentiator of this skill:
@@ -89,13 +89,24 @@ THIS IS CRITICAL — the key differentiator of this skill:
 - Do NOT specify API endpoints or serialization formats in interfaces
 - DO include: concept names, key attributes (without types), relationships, multiplicities, constraints, state transitions, conditions
 
-## Progressive Conceptual Modeling
+## Progressive File Writing
 
-As concepts get clarified, update the working file progressively:
+### Working File Path
 
-- After each concept is confirmed, update the glossary table and the file
-- After relationships are mapped, add the class diagram
-- After states are analyzed, add state diagrams
+At the start of the session, determine the file path:
+- Default: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.domain.md` relative to working directory
+- Ask the user only if they want a different location
+- Create the directory if needed
+
+Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
+
+### How to Update
+
+- **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
+- **Preserve all previously confirmed content** — never remove or reorder confirmed concepts, relationships, or diagrams.
+- After each concept is confirmed, update the glossary table and the file.
+- After relationships are mapped, add the class diagram.
+- After states are analyzed, add state diagrams.
 - Show progress: "That's 5 concepts defined, 3 relationships mapped. Let's continue."
 
 ## Facilitation Guidelines
@@ -128,80 +139,4 @@ When the user indicates they're done:
 
 ### Output Format
 
-```markdown
----
-type: domain
-pipeline: co-think
-topic: "<topic>"
-date: <YYYY-MM-DD>
-status: final
-source:
-  - "[[<spec-file-name>]]"
-  - "[[<another-spec-file>]]"
-tags: []
----
-# Conceptual Model: <topic>
-
-## Overview
-<Domain summary — what concepts exist and how they connect at a high level. Derived from cross-cutting analysis of the FRs.>
-
-## Domain Glossary
-
-| Concept | Definition | Key Attributes | Related FRs |
-|---------|-----------|----------------|-------------|
-| <name>  | <definition> | <1-2 key attributes> | FR-1, FR-3 |
-
-## Concept Relationships
-
-```plantuml
-@startuml
-class Concept1 {
-  attribute1
-  attribute2
-}
-class Concept2 {
-  attribute1
-}
-Concept1 "1" -- "*" Concept2 : contains
-@enduml
-```
-
-<Text explanation of each relationship>
-
-## State Transitions
-
-### <Entity Name>
-
-```plantuml
-@startuml
-[*] --> State1
-State1 --> State2 : condition
-State2 --> [*]
-@enduml
-```
-
-<Text explanation of states, transitions, and conditions>
-
-## Spec Feedback
-- [ ] FR-3, FR-5: <reason and explanation>
-- [ ] FR-1, FR-3: <reason and explanation>
-
-## Interview Transcript
-<details>
-<summary>Full Q&A</summary>
-
-### Round 1
-**Q:** <question>
-**A:** <answer>
-
-...
-</details>
-```
-
-**`source` field rules:**
-- Use wikilinks (filename only, no path) to the spec file(s) this model is based on.
-- If multiple spec files, list all.
-
-**Required sections**: Overview, Domain Glossary, Concept Relationships, State Transitions, Spec Feedback, Interview Transcript.
-
-**File path**: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.domain.md`
+Follow the Conceptual Model template in `references/output-template.md` for the final file structure, field rules, and required sections.
