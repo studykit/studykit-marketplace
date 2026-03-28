@@ -24,10 +24,16 @@ Two layers for Claude Code's interactive agent system. First, a thin behavioral 
 6. **[STORY-14]. User controls session termination** — When I'm in a child session, I want the LLM to suggest wrapping up when appropriate while leaving the final decision to me, so I can keep exploring as long as I need. *(Already covered by [FR-16] — conversation-first behavioral layer includes session termination rules.)*
 7. **[STORY-15]. Skill injection at child session startup** — When I create a child session with a specific skill, I want that skill injected at startup, so I can start in the right structured dialogue mode.
 
+## Implementation
+- [ ] [FR-16]. Conversation-first behavioral layer
+- [ ] [FR-17]. Child session spawn
+- [ ] [FR-18]. Child session result delivery on termination
+- [ ] [FR-19]. Child session conversation history investigation
+
 ## Functional Requirements
 
 ### [FR-16]. Conversation-first behavioral layer
-[status:: final]
+
 > Story: [STORY-7]
 
 **Trigger:** Session start via `--append-system-prompt-file` (interactive.txt) or `--agent` (interactive.md)
@@ -76,7 +82,7 @@ The existing content of both files should be **fully replaced** — this is a re
 **Error handling:** N/A (behavioral prompt, no failure modes)
 
 ### [FR-17]. Child session spawn
-[status:: final]
+
 > Story: [STORY-9], [STORY-15]
 
 **Trigger:**
@@ -90,17 +96,17 @@ The existing content of both files should be **fully replaced** — this is a re
 - Reference file paths and context summary — main session LLM compiles from current conversation
 
 **Processing:**
-1. Main session generates a child session ID, compiles a context file (session ID, topic, reference file paths, context summary), and records initial session info to `.claude/sessions/<main-conversation-id>/session.json`
+1. Main session generates a child session ID and records initial session info (session ID, topic, reference file paths, context summary, skill) to `.claude/sessions/<main-conversation-id>/session-tree.json`
 2. Launch a new Claude Code interactive session in a new iTerm2 tab via: `claude --append-system-prompt-file <path-to-interactive.txt>`
 3. Child session's `SessionStart` hook fires on startup:
-   - Reads the context file, identifies its session ID, and outputs the context to stdout (including skill invocation if specified) → automatically injected into the conversation context
-   - Updates `session.json` with the child session's conversation ID (`session_id`) and transcript path (`transcript_path`)
+   - Reads the child session's entry from `session-tree.json`, identifies its session ID, and outputs the context to stdout (including skill invocation if specified) → automatically injected into the conversation context
+   - Updates `session-tree.json` with the child session's conversation ID (`session_id`) and transcript path (`transcript_path`)
 5. User interacts with the child session directly — an independent conversation separate from the main session
 
 **Session directory:**
 - Location: project root `.claude/sessions/<main-conversation-id>/`
 
-**Proposed `session.json` schema:**
+**Proposed `session-tree.json` schema:**
 ```json
 {
   "mainSession": {
@@ -118,7 +124,10 @@ The existing content of both files should be **fully replaced** — this is a re
       "skill": "<injected skill name or null>",
       "transcriptPath": "<recorded by SessionStart hook>",
       "resultFiles": ["<result file paths, recorded before termination>"],
-      "contextFile": "<path to context file>"
+      "injectedContext": {
+        "referenceFiles": ["<file paths>"],
+        "summary": "<context summary from main session>"
+      }
     }
   ]
 }
@@ -134,7 +143,7 @@ The existing content of both files should be **fully replaced** — this is a re
 **Dependencies:** None (foundational FR)
 
 ### [FR-18]. Child session result delivery on termination
-[status:: final]
+
 > Story: [STORY-10], [STORY-12]
 
 **Trigger:** Child session terminates
@@ -142,26 +151,26 @@ The existing content of both files should be **fully replaced** — this is a re
 **Input:** Child session's result file path(s), termination status
 
 **Processing:**
-1. Child session records result file path(s) to `session.json` (`children[].resultFiles`) via two mechanisms:
-   - **PostToolUse hook**: On Write/Edit tool use, hook checks if the file path matches a pre-assigned result path (from context file) or a known pattern. If matched, automatically registers the path to `session.json`
-   - **LLM judgment**: System prompt instructs the child session LLM to register result files to `session.json` when it determines a file is a deliverable
+1. Child session records result file path(s) to `session-tree.json` (`children[].resultFiles`) via two mechanisms:
+   - **PostToolUse hook**: On Write/Edit tool use, hook checks if the file path matches a pre-assigned result path (from context file) or a known pattern. If matched, automatically registers the path to `session-tree.json`
+   - **LLM judgment**: System prompt instructs the child session LLM to register result files to `session-tree.json` when it determines a file is a deliverable
    - Result file paths may also be pre-assigned by the main session at spawn (included in context file)
 2. Child session's `SessionEnd` hook fires on termination (including Ctrl+D):
-   - Updates `children[].status` to `terminated` in `session.json`
+   - Updates `children[].status` to `terminated` in `session-tree.json`
    - Triggered for all exit reasons: `prompt_input_exit`, `resume`, `clear`, `logout`, `other`
-3. Main session's `FileChanged` hook detects `session.json` modification (matcher: `session.json`, async)
-4. Hook reads updated `session.json`, identifies the terminated child session, and returns JSON with `additionalContext` to inject termination info (child session topic, result file paths) into the main session's conversation context
+3. Main session's `FileChanged` hook detects `session-tree.json` modification (matcher: `session-tree.json`, async)
+4. Hook reads updated `session-tree.json`, identifies the terminated child session, and returns JSON with `additionalContext` to inject termination info (child session topic, result file paths) into the main session's conversation context
 
-**Output:** Main session automatically becomes aware of child session termination and can access result file path(s) from `session.json`
+**Output:** Main session automatically becomes aware of child session termination and can access result file path(s) from `session-tree.json`
 
 **Error handling:**
 - Child session terminates without result file: status updated to `terminated`, result file path left empty
-- `FileChanged` hook fails to trigger: main session can still read `session.json` manually on demand
+- `FileChanged` hook fails to trigger: main session can still read `session-tree.json` manually on demand
 
 **Dependencies:** [FR-17]
 
 ### [FR-19]. Child session conversation history investigation
-[status:: final]
+
 > Story: [STORY-13]
 
 **Trigger:** User asks about a past child session's conversation in the main session
@@ -169,7 +178,7 @@ The existing content of both files should be **fully replaced** — this is a re
 **Input:** Child session identifier (topic from `children[].topic` or child session ID from `children[].id`)
 
 **Processing:**
-1. Main session locates the child session's transcript path and result file paths from `session.json`
+1. Main session locates the child session's transcript path and result file paths from `session-tree.json`
 2. Main session LLM checks the transcript size. If the transcript is long, suggest using a sub-agent to read and summarize instead of reading directly — user decides
 3. Based on user's choice: read directly or spawn a sub-agent (via Claude Code Agent tool or prompt instruction) to read and summarize the transcript and result files within the main session
 
@@ -178,11 +187,11 @@ The existing content of both files should be **fully replaced** — this is a re
 **Error handling:**
 - Transcript file not found or deleted: inform user that history is unavailable
 
-**Dependencies:** [FR-17] (session.json with transcript_path)
+**Dependencies:** [FR-17] (session-tree.json with transcript_path)
 
 ## Open Questions
 - iTerm2 scripting API details for session creation
-- Concurrent `session.json` writes from multiple child sessions (race condition) — resolve at implementation with file locking or atomic writes
+- Concurrent `session-tree.json` writes from multiple child sessions (race condition) — resolve at implementation with file locking or atomic writes
 
 <!-- references -->
 [STORY-7]: https://github.com/studykit/studykit-plugins/issues/7
