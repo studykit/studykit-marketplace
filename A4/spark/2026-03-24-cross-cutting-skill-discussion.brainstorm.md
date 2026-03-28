@@ -74,17 +74,17 @@ PlantUML 선택 이유:
 
 ### 8. Requirement 피드백 루프
 1. co-think-domain → TODO 목록 생성, requirement 리뷰 제안
-2. 사용자가 co-revise-requirement-with-domain-model 실행 (domain model 문서를 입력으로)
+2. 사용자가 co-revise-requirement-with-domain 실행 (domain model 문서를 입력으로)
 3. TODO 항목별 interview → requirement FR 보완
 4. 처리한 TODO에 체크 + 설명 기록 (co-revise 스킬이 domain model 문서에 marking)
 5. TODO 체크 확인은 사용자 판단
 
-### 9. co-revise-requirement-with-domain-model 스킬 분리
-co-think-requirement과 co-revise-requirement-with-domain-model은 목적과 대화 흐름이 다름:
+### 9. co-revise-requirement-with-domain 스킬 분리
+co-think-requirement과 co-revise-requirement-with-domain은 목적과 대화 흐름이 다름:
 - co-think-requirement: story → 새로 requirement 작성. story별 순차 진행
-- co-revise-requirement-with-domain-model: domain model feedback → 기존 requirement 보완. TODO 항목별 진행
+- co-revise-requirement-with-domain: domain model feedback → 기존 requirement 보완. TODO 항목별 진행
 
-이름: `co-revise-requirement-with-domain-model` — concept에서 출발해서 requirement으로 가는 흐름이 이름에 드러남.
+이름: `co-revise-requirement-with-domain` — concept에서 출발해서 requirement으로 가는 흐름이 이름에 드러남.
 
 ### 10. 시스템 경계의 위치 재조정
 처음에는 시스템 경계를 별도 interview로 분리했으나, 논의 중 FR에서 시스템 간 관계가 자연스럽게 드러남을 확인:
@@ -97,7 +97,7 @@ co-think-requirement과 co-revise-requirement-with-domain-model은 목적과 대
 
 ### 스킬 이름과 파이프라인
 - `co-think-domain` — FR에서 도메인 개념 추출 (conceptual modeling)
-- `co-revise-requirement-with-domain-model` — domain model 피드백 기반으로 requirement 보완
+- `co-revise-requirement-with-domain` — domain model 피드백 기반으로 requirement 보완
 - 파이프라인: story → requirement ↔ domain-model → architecture → implementation
 
 ### Cross-cutting 스킬 경계
@@ -115,7 +115,7 @@ co-think-requirement과 co-revise-requirement-with-domain-model은 목적과 대
 - FR에서 도출 가능한 시스템 간 관계는 domain model에서 다룸
 
 ## TODOs
-- [x] co-revise-requirement-with-domain-model 스킬 설계 및 생성 ✅ 2026-03-26
+- [x] co-revise-requirement-with-domain 스킬 설계 및 생성 ✅ 2026-03-26
 - [ ] 비기능/시스템 경계 interview를 어디서 다룰지 결정 (co-think-story? 별도 스킬?)
-- [ ] architecture 스킬 정의
+- [x] architecture 스킬 정의 ✅ 2026-03-28
 - [ ] 문제 영역 → 솔루션 영역 전환점의 전체 파이프라인 설계
