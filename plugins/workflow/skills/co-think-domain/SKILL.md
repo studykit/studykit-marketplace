@@ -1,23 +1,44 @@
 ---
 name: co-think-domain
 description: "This skill should be used when the user has functional requirements (FR) and needs to extract domain concepts, when the user says 'domain modeling', 'concept modeling', 'extract concepts', 'define terms', 'conceptual model', 'domain model', 'ubiquitous language', 'entity extraction', 'domain glossary', 'what are the entities', 'map relationships', or when FRs from co-think-requirement need cross-cutting analysis to identify domain entities, relationships, state transitions, and gaps."
-argument-hint: <path to requirement file(s)>
+argument-hint: <path to requirement and/or story file(s)>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Conceptual Model Builder
 
-Takes functional specifications and extracts domain concepts through cross-cutting analysis. Through one-question-at-a-time dialogue, identify domain entities, their relationships, state transitions, and gaps in the specifications.
+Takes functional specifications and job stories to extract domain concepts through cross-cutting analysis. Through one-question-at-a-time dialogue, identify domain entities, their relationships, state transitions, and gaps in the specifications.
 
 ## Input
 
-Read the spec file(s) provided: **$ARGUMENTS**
+Resolve the input from **$ARGUMENTS** using the file resolution rules below, then read the file(s).
 
-If no file is provided, ask the user for the path.
+If no argument is provided, ask the user for a slug, filename, or path.
 
-The source reference in the output file should be placed as a blockquote under the title heading, linking to the spec file(s) used as input (see output template for format).
+### File Resolution
 
-After reading, list all FRs found across all files and confirm with the user before proceeding.
+Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/co-think/`:
+
+1. **Full path** — use directly
+2. **Partial match** — glob for `A4/co-think/*<argument>*.requirement.md` and `A4/co-think/*<argument>*.story.md` (e.g., `agent-orchestrator` → finds both the requirement and story files)
+3. **Multiple matches per type** — present the candidates and ask the user to pick
+4. **No match** — inform the user and ask for a different term
+
+After resolution, present the resolved file(s) and ask the user to confirm before reading:
+
+> **Resolved input files:**
+> - `A4/co-think/2026-03-28-1030-agent-orchestrator.requirement.md`
+> - `A4/co-think/2026-03-27-1500-agent-orchestrator.story.md`
+>
+> Proceed with these files?
+
+Required input files:
+1. **Functional Requirements** (`.requirement.md`) — primary input for concept extraction
+2. **Job Stories** (`.story.md`) — provides user context and motivation behind the requirements
+
+The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
+
+After reading, list all FRs and Job Stories found across all files and confirm with the user before proceeding.
 
 ## Step 0: Explore the Codebase
 
@@ -111,6 +132,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ## Facilitation Guidelines
 
+- **Show the next question, but give space for the previous one.** After processing the user's answer, present the next question — then use AskUserQuestion to let the user either answer the new question or continue discussing the previous topic. This handles both paths in one turn.
 - **Stay concrete.** Anchor to specific FRs, not abstract domain theory.
 - **Use the user's language.** Don't introduce DDD jargon unless the user does.
 - **Don't design the solution.** Capture what exists in the domain, not how to implement it.
@@ -139,7 +161,7 @@ The conceptual model ends only when the user says so. Never conclude on your own
 
 When the user indicates they're done:
 
-1. **Run the domain-reviewer agent** — invoke the `domain-reviewer` agent with the current output file path. The agent evaluates every concept for completeness, definition clarity, relationship coverage, state transitions, diagram correctness, and spec feedback quality.
+1. **Run the domain-reviewer agent** — invoke the `domain-reviewer` agent with the current output file path and all input file paths (requirements, stories). The agent evaluates every concept for completeness, definition clarity, relationship coverage, state transitions, diagram correctness, and spec feedback quality.
 2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
    - `MISSING CONCEPT` — ask what the concept is and add it
    - `MISSING RELATIONSHIP` — propose the relationship and confirm

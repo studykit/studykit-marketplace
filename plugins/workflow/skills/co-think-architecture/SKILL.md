@@ -11,12 +11,32 @@ Takes job stories, functional requirements, and domain model to design system ar
 
 ## Input
 
-Read the file(s) provided: **$ARGUMENTS**
+Resolve the input from **$ARGUMENTS** using the file resolution rules below, then read the file(s).
 
-If no files are provided, ask the user for the paths to:
-1. **Job Stories** (from co-think-story)
-2. **Functional Requirements** (from co-think-requirement)
-3. **Domain Model** (from co-think-domain) — reference material, not a strict mapping source
+If no argument is provided, ask the user for a slug, filename, or path.
+
+### File Resolution
+
+Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/co-think/`:
+
+1. **Full path** — use directly
+2. **Partial match** — glob for `A4/co-think/*<argument>*.story.md`, `A4/co-think/*<argument>*.requirement.md`, and `A4/co-think/*<argument>*.domain.md` (e.g., `agent-orchestrator` → finds story, requirement, and domain files)
+3. **Multiple matches per type** — present the candidates and ask the user to pick
+4. **No match** — inform the user and ask for a different term
+
+After resolution, present the resolved file(s) and ask the user to confirm before reading:
+
+> **Resolved input files:**
+> - `A4/co-think/2026-03-27-1500-agent-orchestrator.story.md`
+> - `A4/co-think/2026-03-28-1030-agent-orchestrator.requirement.md`
+> - `A4/co-think/2026-03-29-1500-agent-orchestrator.domain.md`
+>
+> Proceed with these files?
+
+Required input files:
+1. **Job Stories** (`.story.md`) — from co-think-story
+2. **Functional Requirements** (`.requirement.md`) — from co-think-requirement
+3. **Domain Model** (`.domain.md`) — from co-think-domain, reference material, not a strict mapping source
 
 The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
 
@@ -167,9 +187,11 @@ When the user indicates they're done:
    - `TOO CONCRETE` — suggest how to abstract it
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the output file** with any revisions from the review.
-4. **Finalize the file** — change `status: draft` to `status: final` in frontmatter, ensure all sections are complete, remove any placeholder text.
-5. **Write the file** using the Write tool.
-6. **Report the path** so the user can reference it.
+4. **Show the Spec Feedback section prominently** — list all filed upstream feedback GitHub Issues (those with `feedback` label created during the session) with their status.
+5. **Ask:** "These items have been filed as GitHub Issues. Would you like to run co-revise to address them?"
+6. **Finalize the file** — change `status: draft` to `status: final` in frontmatter, ensure all sections are complete, remove any placeholder text.
+7. **Write the file** using the Write tool.
+8. **Report the path** so the user can reference it.
 
 ### Output Format
 
