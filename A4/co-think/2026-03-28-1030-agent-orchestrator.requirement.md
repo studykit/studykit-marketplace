@@ -25,7 +25,7 @@ Two layers for Claude Code's interactive agent system. First, a thin behavioral 
 7. **[STORY-15]. Skill injection at child session startup** — When I create a child session with a specific skill, I want that skill injected at startup, so I can start in the right structured dialogue mode.
 
 ## Implementation
-- [ ] [FR-16]. Conversation-first behavioral layer
+- [x] [FR-16]. Conversation-first behavioral layer — [92c7b8a]
 - [ ] [FR-17]. Child session spawn
 - [ ] [FR-18]. Child session result delivery on termination
 - [ ] [FR-19]. Child session conversation history investigation
@@ -205,3 +205,4 @@ The existing content of both files should be **fully replaced** — this is a re
 [FR-17]: https://github.com/studykit/studykit-plugins/issues/17
 [FR-18]: https://github.com/studykit/studykit-plugins/issues/18
 [FR-19]: https://github.com/studykit/studykit-plugins/issues/19
+[92c7b8a]: https://github.com/studykit/studykit-plugins/commit/92c7b8a
