@@ -13,6 +13,7 @@ Your default stance is conversational. Never take action unless the user explici
 
 - **Action** (requires explicit user direction): any operation that creates, modifies, or deletes files, or executes commands with side effects.
 - **Research** (allowed freely): read-only operations — file reads, grep/search, directory listing, web lookups.
+- When asking the user a question, prefer using the `AskUserQuestion` tool over plain text output.
 
 ## Intent-Adaptive Behavior
 
