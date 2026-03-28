@@ -24,9 +24,9 @@ tags: []
 
 ## Functional Requirements
 
-### FR-1. <short title>
+### [FR-1]. <short title>
 [status:: draft]
-> Story: STORY-1
+> Story: [STORY-1]
 
 <!-- For UI -->
 **Screen/View:** <where this happens>
@@ -48,9 +48,9 @@ tags: []
 
 **Dependencies:** <other FRs this depends on, if any>
 
-### FR-2. <short title>
+### [FR-2]. <short title>
 [status:: draft]
-> Story: STORY-1, STORY-2
+> Story: [STORY-1], [STORY-2]
 ...
 
 ## Open Questions
@@ -71,14 +71,7 @@ tags: []
 - Each FR links to the story(ies) it implements using a blockquote: `> Story: STORY-1`.
 - If one FR comes from multiple stories, list them comma-separated: `> Story: STORY-1, STORY-2`.
 
-**Issue reference links:**
-- After GitHub Issues are created, add a references section at the end of the file mapping each FR and STORY ID to its GitHub issue URL:
-  ```
-  <!-- references -->
-  [FR-1]: https://github.com/{owner}/{repo}/issues/45
-  [STORY-1]: https://github.com/{owner}/{repo}/issues/7
-  ```
-- To make an ID clickable in GitHub file preview, write it as a markdown reference link `[FR-1]` or `[STORY-1]` in the body.
+**Issue reference links:** See [issue-links.md](../../references/issue-links.md).
 
 **Required sections**: Overview, Job Stories Reference, Functional Requirements.
 **Conditionally required:**
