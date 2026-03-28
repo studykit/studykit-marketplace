@@ -48,40 +48,7 @@ At the start of the interview, determine the file path:
 
 ### Initial File Content
 
-Write this immediately after restating the idea:
-
-```markdown
----
-type: story
-pipeline: co-think
-topic: "<topic>"
-date: <YYYY-MM-DD>
-status: draft
-revision: 0
-tags: []
----
-# Job Stories: <topic>
-> Source: [<brainstorm-file-name>](./<brainstorm-file-name>)
-
-## Original Idea
-<The original input, as-is.>
-
-## Context
-*Discovered during interview — updated as we go.*
-
-## Job Stories
-*Stories will appear here as they are confirmed.*
-
-## Open Questions
-*Will be filled if unresolved topics remain.*
-```
-
-**Source rules:**
-- Place source references as a blockquote directly under the title heading.
-- Use relative path links for references within the same repo. Use full GitHub URLs only in issue bodies.
-- If the idea came from a spark-brainstorm output file, add relative path links.
-- If the idea came from multiple sources, list them comma-separated on one line.
-- If the user provided a raw idea with no prior file, omit the source line entirely.
+Write this immediately after restating the idea. Follow the template in `references/output-template.md` — create the file with frontmatter (`status: draft`), the Original Idea section filled in, and placeholder text for Context, Job Stories, and Open Questions.
 
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
 

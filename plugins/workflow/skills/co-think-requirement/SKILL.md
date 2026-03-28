@@ -2,7 +2,7 @@
 name: co-think-requirement
 description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write requirements', 'make this buildable', 'turn stories into requirements', 'functional requirements', 'FR', 'acceptance criteria', 'define behavior', 'what should it do', or when Job Stories from co-think-story need to be shaped into functional requirements detailed enough for AI to develop."
 argument-hint: <path to Job Story file>
-allowed-tools: Read, Write, Bash, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Functional Specification Builder
