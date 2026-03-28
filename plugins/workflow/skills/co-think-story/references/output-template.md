@@ -22,26 +22,26 @@ tags: []
 
 ## Job Stories
 
-### #N. <short title>
+### [#N][N]. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### #N. <short title>
+### [#N][N]. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### #N. <short title> *(split from original)*
-#### #N-a. <short title>
+### [#N][N]. <short title> *(split from original)*
+#### [#N][N]-a. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-#### #N-b. <short title>
+#### [#N][N]-b. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
@@ -52,15 +52,15 @@ tags: []
 ## Story Relationships
 
 ### Dependencies
-- **#N → #M**: <reason>
+- **[#N][N] → [#M][M]**: <reason>
 
 ### Reinforcements
-- **#N → #M, #O**: <reason>
+- **[#N][N] → [#M][M], [#O][O]**: <reason>
 
 ### Story Groups
 | Group | Stories | Description |
 |-------|---------|-------------|
-| <name> | #N, #M, ... | <description> |
+| <name> | [#N][N], [#M][M], ... | <description> |
 
 ## Open Questions
 <Questions that came up but weren't resolved. Topics to revisit.>
@@ -88,7 +88,7 @@ tags: []
 **Heading number convention:**
 - During the interview, stories use temporary sequential numbers (1, 2, 3...).
 - At finalization, sequential numbers are replaced with GitHub issue numbers (#N) after issues are created.
-- `#N` is the GitHub-assigned issue number, which becomes the story's canonical ID.
+- `[#N][N]` is the GitHub-assigned issue number (as a reference link), which becomes the story's canonical ID.
 
 **Issue reference links:**
 - Use markdown reference links so issue numbers are clickable in GitHub file preview.

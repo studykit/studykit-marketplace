@@ -24,9 +24,9 @@ tags: []
 
 ## Functional Requirements
 
-### #N. <short title>
+### [#N][N]. <short title>
 [status:: draft]
-> Story: #N
+> Story: [#N][N]
 
 <!-- For UI -->
 **Screen/View:** <where this happens>
@@ -48,9 +48,9 @@ tags: []
 
 **Dependencies:** <other FRs this depends on, if any>
 
-### #N. <short title>
+### [#N][N]. <short title>
 [status:: draft]
-> Story: #N, #M
+> Story: [#N][N], #M
 ...
 
 ## Open Questions
@@ -66,10 +66,10 @@ tags: []
 **Heading number convention:**
 - During the session, FRs use temporary sequential IDs (FR-1, FR-2...).
 - At finalization, sequential IDs are replaced with GitHub issue numbers (#N) after issues are created.
-- `#N` is the GitHub-assigned issue number, which becomes the FR's canonical ID.
+- `[#N][N]` is the GitHub-assigned issue number (as a reference link), which becomes the FR's canonical ID.
 
 **Story reference rules:**
-- Each FR links to the story issue(s) it implements using a blockquote: `> Story: [#N][N]`.
+- Each FR links to the story issue(s) it implements using a blockquote with reference links: `> Story: [#N][N]`.
 - If one FR comes from multiple stories, list them comma-separated: `> Story: [#N][N], [#M][M]`.
 
 **Issue reference links:**

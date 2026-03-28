@@ -21,7 +21,7 @@ A thin behavioral layer that sets the LLM's conversational attitude when loaded 
 
 ## Functional Requirements
 
-### FR-1: Conversation-first behavioral layer
+### [#16][16]. Conversation-first behavioral layer
 [status:: final]
 > Story: [#7][7]
 
@@ -77,3 +77,4 @@ The existing content of both files should be **fully replaced** — this is a re
 [7]: https://github.com/studykit/studykit-plugins/issues/7
 [8]: https://github.com/studykit/studykit-plugins/issues/8
 [15]: https://github.com/studykit/studykit-plugins/issues/15
+[16]: https://github.com/studykit/studykit-plugins/issues/16
