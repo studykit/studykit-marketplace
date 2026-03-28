@@ -2,7 +2,7 @@
 name: co-think-story
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'turn this into job stories', 'gather requirements', 'split this story', 'break this down', or when a rough idea needs to be shaped into concrete Job Stories through a Socratic interview. Automatically detects and splits oversized stories into smaller, independently valuable pieces."
 argument-hint: <idea or vague concept to turn into requirements>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Requirements Discovery Facilitator
@@ -105,8 +105,8 @@ As the conversation reveals enough context, draft a Job Story and present it to 
 > Does this capture it? Anything to adjust?
 
 After the user confirms or revises:
-1. **Update the working file** — append the confirmed story to the Job Stories section with `[status:: draft]` inline field, and update Context.
-2. **Keep a running count.** Note the total: "That's 4 stories so far. File updated. Let's keep going."
+1. **Update the working file** — append the confirmed story to the Job Stories section and update Context.
+2. **Track progress with tasks** — create a task for the confirmed story (e.g., `STORY-1: <title>`) and mark it as completed. This gives the user a running overview of all confirmed stories via TaskList.
 
 ### 4. Story Splitting
 
@@ -174,7 +174,6 @@ When the user indicates they're done:
       > | STORY-2 | #43 | 요약 공유 |
 
 5. **Finalize the working file** — write the final version with all sections completed:
-   - Change all individual story inline fields from `[status:: draft]` to `[status:: final]`
    - Ensure all headings use STORY-N IDs
    - Finalize the Context section with the complete understanding from the interview
    - Ensure all confirmed Job Stories are present and in order

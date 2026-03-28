@@ -23,26 +23,22 @@ tags: []
 ## Job Stories
 
 ### [STORY-1]. <short title>
-[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
 ### [STORY-2]. <short title>
-[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
 ### [STORY-3]. <short title> *(split from original)*
 #### [STORY-3a]. <short title>
-[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
 #### [STORY-3b]. <short title>
-[status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.

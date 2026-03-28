@@ -25,7 +25,6 @@ tags: []
 ## Functional Requirements
 
 ### [FR-1]. <short title>
-[status:: draft]
 > Story: [STORY-1]
 
 <!-- For UI -->
@@ -49,7 +48,6 @@ tags: []
 **Dependencies:** <other FRs this depends on, if any>
 
 ### [FR-2]. <short title>
-[status:: draft]
 > Story: [STORY-1], [STORY-2]
 ...
 
