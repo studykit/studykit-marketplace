@@ -169,6 +169,21 @@ After confirmation:
 - **Flag dependencies.** If one story's spec depends on another, note it explicitly.
 - **Every 3-4 stories:** Brief progress snapshot — what's done, what's next.
 
+## Upstream Feedback Issues
+
+During the specification process, problems in upstream artifacts (Job Stories) may surface. When this happens:
+
+1. **Note the problem** — describe what's wrong with the upstream story (vague situation, missing context, contradictory outcome, etc.).
+2. **Ask the user** — "I noticed Story #3 has a vague situation that makes it hard to specify concrete behavior. Should I create a GitHub Issue to track this?"
+3. **If approved, create a GitHub Issue:**
+   - **Label:** `story`
+   - **Title:** Brief description of the problem
+   - **Body:** Include the story reference, what's unclear, and how it affects the current specification work. Reference the story file path.
+4. **Record the issue link** inline in the requirement file next to the affected FR, so the dependency is visible.
+5. **Continue specifying** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
+
+Do NOT create issues proactively by scanning all stories at once. Only create them as problems surface naturally during the specification interview.
+
 ## Wrapping Up
 
 The specification ends only when the user says so. Never conclude on your own — even if all stories seem covered, the user may want to revisit or go deeper. Keep working until the user explicitly ends the session.

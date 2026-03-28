@@ -13,6 +13,8 @@ pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
 status: final
+revision: 0
+last_revised:                    # omit until first revision
 source:
   - "[[<story-file-name>]]"
   - "[[<requirement-file-name>]]"

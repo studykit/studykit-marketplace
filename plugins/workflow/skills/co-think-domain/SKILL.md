@@ -75,9 +75,9 @@ After completing work on any topic (or when the conversation reaches a natural p
 ### Topic 4: Spec Feedback (Dependencies/Conflicts/Gaps)
 
 - Identify missing scenarios, contradictions, undefined edge cases across FRs
-- Record as TODO checklist with checkboxes
-- Each item must have: related FR numbers, clear reason why spec needs revision
-- Format: `- [ ] FR-X, FR-Y: <reason and explanation>`
+- For each issue found, create a GitHub Issue (with user approval) using the Upstream Feedback Issues process
+- Record the filed issues in the Spec Feedback section with links
+- Format: `- FR-X, FR-Y: <reason and explanation> → #<issue-number>`
 
 ## Abstraction Level Guard
 
@@ -117,6 +117,22 @@ Tell the user the file path so they can follow along: "I've started a working fi
 - **Flag cross-spec dependencies.** If concepts span multiple spec files, note explicitly.
 - **Every 3-4 concepts:** Brief progress snapshot.
 
+## Upstream Feedback Issues
+
+During the conceptual modeling process, problems in upstream artifacts (Job Stories or Functional Requirements) may surface. When this happens:
+
+1. **Note the problem** — describe what's wrong with the upstream artifact (e.g., missing behavior in a requirement, vague story that led to an ambiguous concept).
+2. **Ask the user** — "I noticed FR-5 doesn't define what happens when X. This makes the domain model incomplete. Should I create a GitHub Issue to track this?"
+3. **If approved, create a GitHub Issue:**
+   - **Label:** `story` or `requirement` (matching the upstream artifact type)
+   - **Title:** Brief description of the problem
+   - **Body:** Include the artifact reference (FR number or story number), what's unclear, and how it affects the current domain modeling work. Reference the artifact file path.
+4. **Continue modeling** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
+
+This replaces the previous approach of embedding feedback only in the Spec Feedback section. The Spec Feedback section now captures issues that have already been filed as GitHub Issues, with links to those issues.
+
+Do NOT create issues proactively by scanning all FRs at once. Only create them as problems surface naturally during the modeling interview.
+
 ## Wrapping Up
 
 The conceptual model ends only when the user says so. Never conclude on your own — even if all concepts seem covered, the user may want to revisit or go deeper. Keep working until the user explicitly ends the session.
@@ -128,12 +144,12 @@ When the user indicates they're done:
    - `MISSING CONCEPT` — ask what the concept is and add it
    - `MISSING RELATIONSHIP` — propose the relationship and confirm
    - `MISSING STATE` — present the state transitions and confirm
-   - `VAGUE TODO` — make the TODO more specific
+   - `VAGUE FEEDBACK` — make the feedback item more specific
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the output file** with any revisions from the review.
 4. **Finalize the file** — change all glossary items to final, ensure all sections are complete.
-5. **Show the Spec Feedback TODO list prominently.**
-6. **Ask:** "These items need requirement revision. Would you like to run co-revise-requirement-with-domain to address them?"
+5. **Show the Spec Feedback section prominently** — list all filed GitHub Issues with their status.
+6. **Ask:** "These items have been filed as GitHub Issues. Would you like to run co-revise to address them?"
 7. **Write the file** using the Write tool.
 8. **Report the path** so the user can reference it.
 

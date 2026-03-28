@@ -137,6 +137,20 @@ Tell the user the file path so they can follow along: "I've started a working fi
 - **Every 3-4 exchanges:** Brief progress snapshot.
 - **Domain model is a reference, not a spec.** Use it to check for gaps, not as a checklist to mechanically convert.
 
+## Upstream Feedback Issues
+
+During the architecture design, problems in upstream artifacts (Job Stories, Functional Requirements, or Domain Model) may surface. When this happens:
+
+1. **Note the problem** — describe what's wrong with the upstream artifact (e.g., missing requirement for a component interaction, domain concept without clear state transitions, story with undefined integration scenario).
+2. **Ask the user** — "I noticed the domain model doesn't define state transitions for Concept X, which I need to design the component interaction. Should I create a GitHub Issue to track this?"
+3. **If approved, create a GitHub Issue:**
+   - **Label:** `story`, `requirement`, or `domain` (matching the upstream artifact type)
+   - **Title:** Brief description of the problem
+   - **Body:** Include the artifact reference (FR number, story number, or concept name), what's unclear, and how it affects the current architecture design. Reference the artifact file path.
+4. **Continue designing** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
+
+Do NOT create issues proactively by scanning all upstream artifacts at once. Only create them as problems surface naturally during the architecture interview.
+
 ## Wrapping Up
 
 The architecture design ends only when the user says so. Never conclude on your own — even if all components seem covered, the user may want to revisit or go deeper. Keep working until the user explicitly ends the session.
