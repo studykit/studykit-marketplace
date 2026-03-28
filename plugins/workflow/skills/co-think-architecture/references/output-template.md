@@ -99,15 +99,7 @@ B --> A : confirmation
 </details>
 ```
 
-**Issue reference links:**
-- FR and STORY references use their canonical IDs (FR-1, STORY-1) throughout the document.
-- After GitHub Issues are created, add a references section at the end of the file mapping each ID to its GitHub issue URL:
-  ```
-  <!-- references -->
-  [FR-1]: https://github.com/{owner}/{repo}/issues/45
-  [STORY-1]: https://github.com/{owner}/{repo}/issues/7
-  ```
-- To make an ID clickable in GitHub file preview, write it as a markdown reference link `[FR-1]` or `[STORY-1]` in the body.
+**Issue reference links:** See [issue-links.md](../../references/issue-links.md). FR and STORY references use their canonical IDs (FR-1, STORY-1) throughout the document.
 
 ## Required Sections
 

@@ -22,26 +22,26 @@ tags: []
 
 ## Job Stories
 
-### STORY-1. <short title>
+### [STORY-1]. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### STORY-2. <short title>
+### [STORY-2]. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### STORY-3. <short title> *(split from original)*
-#### STORY-3a. <short title>
+### [STORY-3]. <short title> *(split from original)*
+#### [STORY-3a]. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-#### STORY-3b. <short title>
+#### [STORY-3b]. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
@@ -52,15 +52,15 @@ tags: []
 ## Story Relationships
 
 ### Dependencies
-- **STORY-1 → STORY-2**: <reason>
+- **[STORY-1] → [STORY-2]**: <reason>
 
 ### Reinforcements
-- **STORY-1 → STORY-2, STORY-3**: <reason>
+- **[STORY-1] → [STORY-2], [STORY-3]**: <reason>
 
 ### Story Groups
 | Group | Stories | Description |
 |-------|---------|-------------|
-| <name> | STORY-1, STORY-2, ... | <description> |
+| <name> | [STORY-1], [STORY-2], ... | <description> |
 
 ## Open Questions
 <Questions that came up but weren't resolved. Topics to revisit.>
@@ -89,14 +89,7 @@ tags: []
 - Stories use `STORY-N` IDs (STORY-1, STORY-2...) as canonical identifiers throughout the document.
 - These IDs are assigned during the interview and remain unchanged at finalization.
 
-**Issue reference links:**
-- After GitHub Issues are created, add a references section at the end of the file mapping each STORY ID to its GitHub issue URL:
-  ```
-  <!-- references -->
-  [STORY-1]: https://github.com/{owner}/{repo}/issues/7
-  [STORY-2]: https://github.com/{owner}/{repo}/issues/8
-  ```
-- To make a STORY ID clickable in GitHub file preview, write it as a markdown reference link `[STORY-1]` in the body.
+**Issue reference links:** See [issue-links.md](../../references/issue-links.md).
 
 **Required sections**: Original Idea, Context, Job Stories, Story Relationships, Interview Transcript.
 **Conditionally required:**
