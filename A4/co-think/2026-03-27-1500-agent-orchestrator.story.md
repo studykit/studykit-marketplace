@@ -24,51 +24,60 @@ When should the interactive agent and prompt be used? Discover the core value an
 - Skill injection happens at child session startup via system prompt; otherwise users invoke skills directly within the session
 - **Scope split**: Story [STORY-7] defines the interactive prompt's conversational attitude (standalone behavioral layer). Stories [STORY-8]–[STORY-15] define the **agent orchestrator** — the main session's ability to spawn, manage, and collect results from child sessions.
 
+## Implementation
+- [ ] [STORY-7]. Conversation-first attitude at session start
+- [ ] [STORY-9]. Spawn a dedicated child session
+- [ ] [STORY-10]. Automated information exchange between sessions
+- [ ] [STORY-12]. Child session result file accessible to main session
+- [ ] [STORY-13]. Child session conversation history investigation
+- [ ] [STORY-14]. User controls session termination
+- [ ] [STORY-15]. Skill injection at child session startup
+
 ## Job Stories
 
 ### [STORY-7]. Conversation-first attitude at session start
 **When** I start a Claude session (via `--append-system-prompt-file` or `--agent`) to explore an idea or discuss a topic,
 **I want to** load a system prompt that instructs the LLM to ask clarifying questions before acting,
 **so I can** get results that actually match what I meant, not what the LLM assumed.
-[status:: final]
+
 
 ### [STORY-8]. Spawn & manage child sessions *(parent)*
 #### [STORY-9]. Spawn a dedicated child session
 **When** the main session encounters a sub-problem (e.g., a design question or an ambiguous requirement) that warrants a dedicated conversation,
 **I want to** spawn a child session (via tmux/iTerm2) with the interactive prompt loaded,
 **so I can** have specialized conversations happen in a dedicated session without cluttering the main session.
-[status:: final]
+
 
 #### [STORY-10]. Automated information exchange between sessions
 **When** a child session is running alongside the main session,
 **I want to** have hooks automatically exchange information (status, file paths) between the two sessions,
 **so I can** keep the main session aware of child session progress without manual copy-pasting.
-[status:: final]
+
 
 ### [STORY-11]. Child session results *(parent)*
 #### [STORY-12]. Child session result file accessible to main session
 **When** I finish a child session,
 **I want to** have the session's result file path automatically registered with the main session,
 **so I can** reference the output file directly from the main session without searching for it.
-[status:: final]
+
 
 #### [STORY-13]. Child session conversation history investigation
 **When** I want to review what happened in a past child session,
 **I want to** have the main session read that child session's conversation history via a sub-agent,
 **so I can** understand the reasoning behind a child session's output without re-reading the full transcript myself.
-[status:: final]
+
 
 ### [STORY-14]. User controls session termination
 **When** I'm in a child session conversation,
 **I want to** have the LLM suggest wrapping up when appropriate, while leaving the final decision to end the session entirely to me,
 **so I can** keep exploring as long as I need while still getting a nudge when things seem complete.
-[status:: final]
+
 
 ### [STORY-15]. Skill injection at child session startup
 **When** I create a child session with a specific skill, or the main session selects one based on context,
 **I want to** have that skill's content injected into the child session's system prompt at startup,
 **so I can** start the child session already in the right structured dialogue mode.
-[status:: final]
+
 
 ## Story Relationships
 
