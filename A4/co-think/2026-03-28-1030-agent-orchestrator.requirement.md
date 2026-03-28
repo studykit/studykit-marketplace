@@ -5,7 +5,7 @@ topic: "interactive agent/prompt use cases"
 date: 2026-03-28
 status: final
 source:
-  - "[[2026-03-27-1500-interactive-agent-usecase.story.md]]"
+  - "[2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md)"
 covers:
   - non-ui
 tags: []
@@ -16,15 +16,15 @@ tags: []
 A thin behavioral layer that sets the LLM's conversational attitude when loaded as a system prompt or agent. The core principle is conversation-first: the LLM never jumps to action before understanding the user's intent. Structured workflows are deferred to skills — this prompt only defines the general conversational stance.
 
 ## Job Stories Reference
-1. **Conversation-first attitude at session start** — When I start a Claude session to explore an idea or discuss a topic, I want to load a system prompt that instructs the LLM to ask clarifying questions before acting, so I can get results that actually match what I meant, not what the LLM assumed.
+1. **#7. Conversation-first attitude at session start** — When I start a Claude session to explore an idea or discuss a topic, I want to load a system prompt that instructs the LLM to ask clarifying questions before acting, so I can get results that actually match what I meant, not what the LLM assumed.
 
-> Note: Stories 2a, 2b, 3a, 3b, 4, 5 from the source file are out of scope for this specification.
+> Note: Stories #8–#15 (agent orchestrator scope: session spawning, information exchange, result access, termination control, skill injection) are out of scope for this specification.
 
 ## Functional Requirements
 
 ### FR-1: Conversation-first behavioral layer
 [status:: final]
-[story:: [[2026-03-27-1500-interactive-agent-usecase.story.md]]#1. Conversation-first attitude at session start]
+> Story: [#7. Conversation-first attitude at session start](./2026-03-27-1500-agent-orchestrator.story.md)
 
 **Trigger:** Session start via `--append-system-prompt-file` (interactive.txt) or `--agent` (interactive.md)
 

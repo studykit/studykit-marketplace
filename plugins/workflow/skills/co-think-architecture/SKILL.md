@@ -18,7 +18,7 @@ If no files are provided, ask the user for the paths to:
 2. **Functional Requirements** (from co-think-requirement)
 3. **Domain Model** (from co-think-domain) — reference material, not a strict mapping source
 
-The `source` frontmatter field in the output file should contain wikilinks to all input files (filename only, no path).
+The `source` frontmatter field in the output file should contain relative path links to all input files (e.g., `[file.md](./file.md)`).
 
 After reading, summarize the key stories, FRs, and domain concepts found, then confirm with the user before proceeding.
 
@@ -144,9 +144,9 @@ During the architecture design, problems in upstream artifacts (Job Stories, Fun
 1. **Note the problem** — describe what's wrong with the upstream artifact (e.g., missing requirement for a component interaction, domain concept without clear state transitions, story with undefined integration scenario).
 2. **Ask the user** — "I noticed the domain model doesn't define state transitions for Concept X, which I need to design the component interaction. Should I create a GitHub Issue to track this?"
 3. **If approved, create a GitHub Issue:**
-   - **Label:** `story`, `requirement`, or `domain` (matching the upstream artifact type)
+   - **Labels:** `story`, `requirement`, or `domain` (matching the upstream artifact type) + `feedback`
    - **Title:** Brief description of the problem
-   - **Body:** Include the artifact reference (FR number, story number, or concept name), what's unclear, and how it affects the current architecture design. Reference the artifact file path.
+   - **Body:** Include the artifact reference (issue number, e.g., #42), what's unclear, and how it affects the current architecture design. Include a clickable markdown link to the artifact file (e.g., `[path/to/file.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.md)`).
 4. **Continue designing** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
 
 Do NOT create issues proactively by scanning all upstream artifacts at once. Only create them as problems surface naturally during the architecture interview.

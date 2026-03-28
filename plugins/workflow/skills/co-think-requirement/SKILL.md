@@ -15,7 +15,7 @@ Read the Job Story file provided: **$ARGUMENTS**
 
 If no file is provided, ask the user for the path or paste content.
 
-The `source` frontmatter field in the output file should contain wikilinks to the story file(s) used as input (filename only, no path).
+The `source` frontmatter field in the output file should contain relative path links to the story file(s) used as input (e.g., `[file.story.md](./file.story.md)`).
 
 After reading, list all Job Stories found and confirm with the user before proceeding.
 
@@ -150,7 +150,7 @@ As each story gets clarified, draft its spec and present it for confirmation —
 
 After confirmation:
 
-1. **Write to file immediately** — append the confirmed spec to the output file with `[status:: draft]` and `[story::]` inline fields so the user can review it in their editor at any time. Create the file on the first confirmed spec using the output format. Update the file after each subsequent confirmation.
+1. **Write to file immediately** — append the confirmed spec to the output file with a status field and a story reference blockquote (as shown in the output template) so the user can review it in their editor at any time. Create the file on the first confirmed spec using the output format. Update the file after each subsequent confirmation.
 2. **Show progress table** — present a summary of all stories and their status:
 
 > | # | Story | Key behavior | Status |
@@ -176,9 +176,9 @@ During the specification process, problems in upstream artifacts (Job Stories) m
 1. **Note the problem** — describe what's wrong with the upstream story (vague situation, missing context, contradictory outcome, etc.).
 2. **Ask the user** — "I noticed Story #3 has a vague situation that makes it hard to specify concrete behavior. Should I create a GitHub Issue to track this?"
 3. **If approved, create a GitHub Issue:**
-   - **Label:** `story`
+   - **Labels:** `story` + `feedback`
    - **Title:** Brief description of the problem
-   - **Body:** Include the story reference, what's unclear, and how it affects the current specification work. Reference the story file path.
+   - **Body:** Include the story reference (issue number, e.g., #42), what's unclear, and how it affects the current specification work. Include a clickable markdown link to the story file (e.g., `[path/to/file.story.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.story.md)`).
 4. **Record the issue link** inline in the requirement file next to the affected FR, so the dependency is visible.
 5. **Continue specifying** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
 
@@ -201,10 +201,21 @@ When the user indicates they're done:
    - `OVERLAPS` — ask whether to merge, differentiate, or remove the overlapping requirements
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the output file** with any revisions from the review.
-4. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR inline fields from `[status:: draft]` to `[status:: final]`. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
-5. **Present the final spec** to the user for last confirmation.
-6. **Write the file** using the Write tool.
-7. **Report the path** so the user can reference it.
+4. **Create GitHub Issues for each FR** — for each finalized functional requirement:
+   1. Create a GitHub Issue with label `requirement`. Title: the FR's short title. Body: the full FR text + a clickable markdown link to the output file (e.g., `[A4/co-think/file.requirement.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.requirement.md)`) + references to related story issues (e.g., #42).
+   2. Replace the FR's temporary sequential ID in the heading with the GitHub issue number (e.g., `### FR-1: 회의 요약 생성` → `### #45. 회의 요약 생성`).
+   3. Update story references to use story issue numbers (e.g., `> Story: #42`).
+   4. Present the issue mapping to the user:
+
+      > | Temp ID | Issue | Title | Stories |
+      > |---------|-------|-------|---------|
+      > | FR-1 | #45 | 회의 요약 생성 | #42 |
+      > | FR-2 | #46 | 요약 공유 | #42, #43 |
+
+5. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR status fields from `[status:: draft]` to `[status:: final]`. Ensure all headings use GitHub issue numbers (not FR-N sequential IDs). Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
+6. **Present the final spec** to the user for last confirmation.
+7. **Write the file** using the Write tool.
+8. **Report the path and issues** so the user can reference them.
 
 ### Output Format
 

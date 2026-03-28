@@ -15,7 +15,7 @@ Read the spec file(s) provided: **$ARGUMENTS**
 
 If no file is provided, ask the user for the path.
 
-The `source` frontmatter field in the output file should contain wikilinks to the spec file(s) used as input (filename only, no path).
+The `source` frontmatter field in the output file should contain relative path links to the spec file(s) used as input (e.g., `[file.requirement.md](./file.requirement.md)`).
 
 After reading, list all FRs found across all files and confirm with the user before proceeding.
 
@@ -124,9 +124,9 @@ During the conceptual modeling process, problems in upstream artifacts (Job Stor
 1. **Note the problem** — describe what's wrong with the upstream artifact (e.g., missing behavior in a requirement, vague story that led to an ambiguous concept).
 2. **Ask the user** — "I noticed FR-5 doesn't define what happens when X. This makes the domain model incomplete. Should I create a GitHub Issue to track this?"
 3. **If approved, create a GitHub Issue:**
-   - **Label:** `story` or `requirement` (matching the upstream artifact type)
+   - **Labels:** `story` or `requirement` (matching the upstream artifact type) + `feedback`
    - **Title:** Brief description of the problem
-   - **Body:** Include the artifact reference (FR number or story number), what's unclear, and how it affects the current domain modeling work. Reference the artifact file path.
+   - **Body:** Include the artifact reference (issue number, e.g., #42), what's unclear, and how it affects the current domain modeling work. Include a clickable markdown link to the artifact file (e.g., `[path/to/file.md](https://github.com/{owner}/{repo}/blob/main/path/to/file.md)`).
 4. **Continue modeling** — don't block on the upstream issue. Make reasonable assumptions and note them. The issue will be addressed via co-revise later.
 
 This replaces the previous approach of embedding feedback only in the Spec Feedback section. The Spec Feedback section now captures issues that have already been filed as GitHub Issues, with links to those issues.

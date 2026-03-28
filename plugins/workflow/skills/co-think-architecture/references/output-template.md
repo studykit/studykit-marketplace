@@ -16,15 +16,16 @@ status: final
 revision: 0
 last_revised:                    # omit until first revision
 source:
-  - "[[<story-file-name>]]"
-  - "[[<requirement-file-name>]]"
-  - "[[<domain-model-file-name>]]"
+  - "[<story-file-name>](./<story-file-name>)"
+  - "[<requirement-file-name>](./<requirement-file-name>)"
+  - "[<domain-model-file-name>](./<domain-model-file-name>)"
 tags: []
 ---
 ```
 
 **`source` field rules:**
-- Use wikilinks (filename only, no path) to all input files.
+- Use relative path links for references within the same repo (e.g., `[file.md](./file.md)`). Use full GitHub URLs only in issue bodies.
+- Link to all input files.
 - List story, requirement, and domain model files.
 
 ## Template

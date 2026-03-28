@@ -59,7 +59,7 @@ date: <YYYY-MM-DD>
 status: draft
 revision: 0
 source:                          # omit if no upstream file
-  - "[[<brainstorm-file-name>]]"
+  - "[<brainstorm-file-name>](./<brainstorm-file-name>)"
 tags: []
 ---
 # Job Stories: <topic>
@@ -78,7 +78,8 @@ tags: []
 ```
 
 **`source` field rules:**
-- If the idea came from a spark-brainstorm output file, add wikilinks to those files (filename only, no path).
+- Use relative path links for references within the same repo (e.g., `[file.md](./file.md)`). Use full GitHub URLs only in issue bodies.
+- If the idea came from a spark-brainstorm output file, add relative path links.
 - If the idea came from multiple diverse sessions, list all of them.
 - If the user provided a raw idea with no prior diverse file, omit the `source` field entirely.
 
@@ -194,14 +195,26 @@ When the user indicates they're done:
    - `OVERLAPS` — ask if the user wants to merge or differentiate the overlapping stories
    - The user can accept, modify, or dismiss each suggestion. Respect their decision.
 3. **Update the working file** with any revisions from the review.
-4. **Finalize the working file** — write the final version with all sections completed:
+4. **Create GitHub Issues for each story** — for each finalized story:
+   1. Create a GitHub Issue with label `story`. Title: the story's short title. Body: the full story text + a clickable markdown link to the working file (e.g., `[A4/co-think/file.story.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.story.md)`).
+   2. Replace the story's temporary sequential number in the heading with the GitHub issue number (e.g., `### 1. 회의 요약 생성` → `### #42. 회의 요약 생성`).
+   3. Update Story Relationships to use issue numbers (e.g., `1 → 2` → `#42 → #43`).
+   4. Present the issue mapping to the user:
+
+      > | Temp # | Issue | Title |
+      > |--------|-------|-------|
+      > | 1 | #42 | 회의 요약 생성 |
+      > | 2 | #43 | 요약 공유 |
+
+5. **Finalize the working file** — write the final version with all sections completed:
    - Change all individual story inline fields from `[status:: draft]` to `[status:: final]`
+   - Ensure all headings use GitHub issue numbers (not sequential numbers)
    - Finalize the Context section with the complete understanding from the interview
    - Ensure all confirmed Job Stories are present and in order
    - Add the Open Questions section if unresolved topics remain
    - Append the full Interview Transcript
    - Remove any placeholder text (e.g., "*Stories will appear here...*")
-5. **Report the path** so the user can reference it.
+6. **Report the path and issues** so the user can reference them.
 
 ### Output Format
 

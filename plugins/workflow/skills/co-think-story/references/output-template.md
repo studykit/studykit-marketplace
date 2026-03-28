@@ -10,7 +10,7 @@ status: final
 revision: 0
 last_revised:                    # omit until first revision
 source:                          # omit if no upstream file
-  - "[[<brainstorm-file-name>]]"
+  - "[<brainstorm-file-name>](./<brainstorm-file-name>)"
 tags: []
 ---
 # Job Stories: <topic>
@@ -23,26 +23,26 @@ tags: []
 
 ## Job Stories
 
-### 1. <short title>
+### #N. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### 2. <short title>
+### #N. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-### 3. <short title> *(split from original #3)*
-#### 3a. <short title>
+### #N. <short title> *(split from original)*
+#### #N-a. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
 **so I can** <expected outcome>.
 
-#### 3b. <short title>
+#### #N-b. <short title>
 [status:: final]
 **When** <situation/context>,
 **I want to** <action/goal>,
@@ -53,15 +53,15 @@ tags: []
 ## Story Relationships
 
 ### Dependencies
-- **A → B**: <reason>
+- **#N → #M**: <reason>
 
 ### Reinforcements
-- **A → B, C**: <reason>
+- **#N → #M, #O**: <reason>
 
 ### Story Groups
 | Group | Stories | Description |
 |-------|---------|-------------|
-| <name> | <numbers> | <description> |
+| <name> | #N, #M, ... | <description> |
 
 ## Open Questions
 <Questions that came up but weren't resolved. Topics to revisit.>
@@ -80,9 +80,15 @@ tags: []
 ```
 
 **`source` field rules:**
-- If the idea came from a spark-brainstorm output file, add wikilinks to those files (filename only, no path).
+- Use relative path links for references within the same repo (e.g., `[file.md](./file.md)`). Use full GitHub URLs only in issue bodies.
+- If the idea came from a spark-brainstorm output file, add relative path links.
 - If the idea came from multiple diverse sessions, list all of them.
 - If the user provided a raw idea with no prior diverse file, omit the `source` field entirely.
+
+**Heading number convention:**
+- During the interview, stories use temporary sequential numbers (1, 2, 3...).
+- At finalization, sequential numbers are replaced with GitHub issue numbers (#N) after issues are created.
+- `#N` is the GitHub-assigned issue number, which becomes the story's canonical ID.
 
 **Required sections**: Original Idea, Context, Job Stories, Story Relationships, Interview Transcript.
 **Conditionally required:**

@@ -10,7 +10,7 @@ status: final
 revision: 0
 last_revised:                    # omit until first revision
 source:
-  - "[[<story-file-name>]]"
+  - "[<story-file-name>](./<story-file-name>)"
 covers:
   - <ui | non-ui>
 tags: []
@@ -25,9 +25,9 @@ tags: []
 
 ## Functional Requirements
 
-### FR-1: <short title>
+### #N. <short title>
 [status:: draft]
-[story:: [[<story-file-name>]]#<story heading>]
+> Story: #N
 
 <!-- For UI -->
 **Screen/View:** <where this happens>
@@ -49,10 +49,9 @@ tags: []
 
 **Dependencies:** <other FRs this depends on, if any>
 
-### FR-2: <short title>
+### #N. <short title>
 [status:: draft]
-[story:: [[<story-file-name>]]#<story heading>]
-[story:: [[<another-story-file>]]#<story heading>]
+> Story: #N, #M
 ...
 
 ## Open Questions
@@ -61,13 +60,18 @@ tags: []
 ```
 
 **`source` field rules:**
-- Use wikilinks (filename only, no path) to the Job Story file(s) this spec is based on.
+- Use relative path links for references within the same repo (e.g., `[file.story.md](./file.story.md)`). Use full GitHub URLs only in issue bodies.
+- Link to the Job Story file(s) this spec is based on.
 - If multiple story files feed into one spec, list all of them.
 
-**`story` inline field rules:**
-- Each FR links to the specific story item(s) it implements, using `[[filename]]#heading` format.
-- If one FR comes from multiple stories (across one or more files), add multiple `[story::]` lines — Dataview treats repeated keys as arrays.
-- The heading must match the exact heading text in the story file (e.g., `#1. 로그인 인증`).
+**Heading number convention:**
+- During the session, FRs use temporary sequential IDs (FR-1, FR-2...).
+- At finalization, sequential IDs are replaced with GitHub issue numbers (#N) after issues are created.
+- `#N` is the GitHub-assigned issue number, which becomes the FR's canonical ID.
+
+**Story reference rules:**
+- Each FR links to the story issue(s) it implements using a blockquote: `> Story: #N` (GitHub issue number).
+- If one FR comes from multiple stories, list them comma-separated: `> Story: #N, #M`.
 
 **Required sections**: Overview, Job Stories Reference, Functional Requirements.
 **Conditionally required:**

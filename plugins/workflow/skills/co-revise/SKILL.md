@@ -20,18 +20,22 @@ The co-think pipeline produces four artifact types. Each has a corresponding Git
 | Conceptual Model | `domain` | `.domain.md` |
 | Architecture | `architecture` | `.architecture.md` |
 
+### Issue Types
+
+Issues without a `feedback` label are artifact records (canonical records of stories, requirements, etc.) and are not actionable by co-revise. **co-revise only processes issues that have the `feedback` label.**
+
 ## Input
 
 Read the GitHub Issue(s) specified: **$ARGUMENTS**
 
-- If issue number(s) are provided, fetch each issue via the GitHub MCP tools.
-- If `open` is provided, list all open issues with labels `story`, `requirement`, `domain`, or `architecture`.
+- If issue number(s) are provided, fetch each issue via the GitHub MCP tools. Verify the issue has the `feedback` label — if it doesn't, inform the user that issues without `feedback` are records and not revision targets.
+- If `open` is provided, list all open issues that have the `feedback` label.
 - If no argument is provided, ask the user for the issue number(s) or whether to list open feedback issues.
 
 For each issue, extract:
 
-1. **Label** — determines which artifact type to revise
-2. **Issue body** — describes the problem, related item references (e.g., FR numbers, story numbers, concept names), and the originating context
+1. **Labels** — the artifact label determines which artifact type to revise; the `feedback` label confirms it's actionable
+2. **Issue body** — describes the problem, related item references (issue numbers, e.g., #42), and the originating context
 3. **Target artifact file** — identified from the issue body or by searching `A4/co-think/` for the relevant artifact file
 
 Read the target artifact file(s).
@@ -163,7 +167,7 @@ For each resolved issue:
    > Should I create downstream issues for these?
 
 4. If the user approves, create GitHub Issues for each affected downstream artifact:
-   - Apply the appropriate label (`domain`, `architecture`, etc.)
+   - Apply the appropriate artifact label (`domain`, `architecture`, etc.) + `feedback`
    - Reference the upstream issue in the body
    - Describe the specific impact and what needs to change
 5. Link the upstream issue to the downstream issues via a comment.
