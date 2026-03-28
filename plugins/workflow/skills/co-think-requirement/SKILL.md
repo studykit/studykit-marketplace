@@ -203,7 +203,7 @@ When the user indicates they're done:
 3. **Update the output file** with any revisions from the review.
 4. **Create GitHub Issues for each FR** — for each finalized functional requirement:
    1. Create a GitHub Issue with label `requirement`. Title: the FR's short title. Body: the full FR text + a clickable markdown link to the output file (e.g., `[A4/co-think/file.requirement.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.requirement.md)`) + references to related story issues (e.g., #42).
-   2. Replace the FR's temporary sequential ID in the heading with the GitHub issue number (e.g., `### FR-1: 회의 요약 생성` → `### #45. 회의 요약 생성`).
+   2. Replace the FR's temporary sequential ID in the heading with the GitHub issue number as a reference link (e.g., `### FR-1: 회의 요약 생성` → `### [#45][45]. 회의 요약 생성`).
    3. Update story references to use story issue numbers (e.g., `> Story: #42`).
    4. Present the issue mapping to the user:
 

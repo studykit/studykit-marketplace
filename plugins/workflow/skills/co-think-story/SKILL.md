@@ -164,8 +164,8 @@ When the user indicates they're done:
 3. **Update the working file** with any revisions from the review.
 4. **Create GitHub Issues for each story** — for each finalized story:
    1. Create a GitHub Issue with label `story`. Title: the story's short title. Body: the full story text + a clickable markdown link to the working file (e.g., `[A4/co-think/file.story.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.story.md)`).
-   2. Replace the story's temporary sequential number in the heading with the GitHub issue number (e.g., `### 1. 회의 요약 생성` → `### #42. 회의 요약 생성`).
-   3. Update Story Relationships to use issue numbers (e.g., `1 → 2` → `#42 → #43`).
+   2. Replace the story's temporary sequential number in the heading with the GitHub issue number as a reference link (e.g., `### 1. 회의 요약 생성` → `### [#42][42]. 회의 요약 생성`).
+   3. Update Story Relationships to use issue reference links (e.g., `1 → 2` → `[#42][42] → [#43][43]`).
    4. Present the issue mapping to the user:
 
       > | Temp # | Issue | Title |

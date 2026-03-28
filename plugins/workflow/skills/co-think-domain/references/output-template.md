@@ -66,8 +66,8 @@ State2 --> [*]
 <Text explanation of states, transitions, and conditions>
 
 ## Spec Feedback
-- FR-3, FR-5: <reason and explanation> → #<issue-number>
-- FR-1, FR-3: <reason and explanation> → #<issue-number>
+- FR-3, FR-5: <reason and explanation> → [#N][N]
+- FR-1, FR-3: <reason and explanation> → [#N][N]
 
 ## Interview Transcript
 <details>
