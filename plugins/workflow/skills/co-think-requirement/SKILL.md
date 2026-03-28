@@ -2,7 +2,7 @@
 name: co-think-requirement
 description: "This skill should be used when the user has Job Stories or user stories and needs to turn them into detailed functional requirements, when the user says 'detail this', 'write requirements', 'make this buildable', 'turn stories into requirements', 'functional requirements', 'FR', 'acceptance criteria', 'define behavior', 'what should it do', or when Job Stories from co-think-story need to be shaped into functional requirements detailed enough for AI to develop."
 argument-hint: <path to Job Story file>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Functional Specification Builder
@@ -17,7 +17,7 @@ If no file is provided, ask the user for the path or paste content.
 
 The source reference in the output file should be placed as a blockquote under the title heading, linking to the story file(s) used as input (see output template for format).
 
-After reading, list all Job Stories found and confirm with the user before proceeding.
+After reading, list all Job Stories found and confirm with the user before proceeding. Then **create a task for each story** (e.g., `STORY-1: <title>`) so progress is trackable throughout the session.
 
 ## Step 0: Explore the Codebase
 
@@ -150,15 +150,8 @@ As each story gets clarified, draft its spec and present it for confirmation —
 
 After confirmation:
 
-1. **Write to file immediately** — append the confirmed spec to the output file with a status field and a story reference blockquote (as shown in the output template) so the user can review it in their editor at any time. Create the file on the first confirmed spec using the output format. Update the file after each subsequent confirmation.
-2. **Show progress table** — present a summary of all stories and their status:
-
-> | # | Story | Key behavior | Status |
-> |---|-------|-------------|--------|
-> | 1 | Generate meeting summary | Clicks button → extracts decisions → shows editable summary | Done |
-> | 2 | Share summary with team | — | In progress |
-> | 3 | Filter by date range | — | Pending |
-
+1. **Write to file immediately** — append the confirmed spec to the output file with a story reference blockquote (as shown in the output template) so the user can review it in their editor at any time. Create the file on the first confirmed spec using the output format. Update the file after each subsequent confirmation.
+2. **Update the task** — mark the corresponding story task as completed via TaskUpdate. The user can check overall progress via TaskList at any time.
 3. Ask the user if they want to move to the next story, revisit a previous one, or take a different direction.
 
 ## Facilitation Guidelines
@@ -212,7 +205,7 @@ When the user indicates they're done:
       > | FR-1 | #45 | 회의 요약 생성 | STORY-1 |
       > | FR-2 | #46 | 요약 공유 | STORY-1, STORY-2 |
 
-5. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Change all individual FR status fields from `[status:: draft]` to `[status:: final]`. Ensure all headings use FR-N IDs. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
+5. **Finalize the file** — review the entire output file and ensure all conversation outcomes are reflected. Ensure all headings use FR-N IDs. Apply any changes or feedback given during the session that may not have been captured in incremental updates. The final file must be the single source of truth.
 6. **Present the final spec** to the user for last confirmation.
 7. **Write the file** using the Write tool.
 8. **Report the path and issues** so the user can reference them.
