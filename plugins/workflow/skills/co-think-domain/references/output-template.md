@@ -13,6 +13,8 @@ pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
 status: final
+revision: 0
+last_revised:                    # omit until first revision
 source:
   - "[[<spec-file-name>]]"
   - "[[<another-spec-file>]]"
@@ -70,8 +72,8 @@ State2 --> [*]
 <Text explanation of states, transitions, and conditions>
 
 ## Spec Feedback
-- [ ] FR-3, FR-5: <reason and explanation>
-- [ ] FR-1, FR-3: <reason and explanation>
+- FR-3, FR-5: <reason and explanation> → #<issue-number>
+- FR-1, FR-3: <reason and explanation> → #<issue-number>
 
 ## Interview Transcript
 <details>

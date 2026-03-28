@@ -57,6 +57,7 @@ pipeline: co-think
 topic: "<topic>"
 date: <YYYY-MM-DD>
 status: draft
+revision: 0
 source:                          # omit if no upstream file
   - "[[<brainstorm-file-name>]]"
 tags: []
