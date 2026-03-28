@@ -25,7 +25,7 @@ When should the interactive agent and prompt be used? Discover the core value an
 - **Scope split**: Story [STORY-7] defines the interactive prompt's conversational attitude (standalone behavioral layer). Stories [STORY-8]–[STORY-15] define the **agent orchestrator** — the main session's ability to spawn, manage, and collect results from child sessions.
 
 ## Implementation
-- [ ] [STORY-7]. Conversation-first attitude at session start
+- [x] [STORY-7]. Conversation-first attitude at session start — [92c7b8a]
 - [ ] [STORY-9]. Spawn a dedicated child session
 - [ ] [STORY-10]. Automated information exchange between sessions
 - [ ] [STORY-12]. Child session result file accessible to main session
@@ -115,3 +115,4 @@ When should the interactive agent and prompt be used? Discover the core value an
 [STORY-13]: https://github.com/studykit/studykit-plugins/issues/13
 [STORY-14]: https://github.com/studykit/studykit-plugins/issues/14
 [STORY-15]: https://github.com/studykit/studykit-plugins/issues/15
+[92c7b8a]: https://github.com/studykit/studykit-plugins/commit/92c7b8a
