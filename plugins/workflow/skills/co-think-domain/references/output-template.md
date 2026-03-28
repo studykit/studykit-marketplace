@@ -16,14 +16,15 @@ status: final
 revision: 0
 last_revised:                    # omit until first revision
 source:
-  - "[[<spec-file-name>]]"
-  - "[[<another-spec-file>]]"
+  - "[<spec-file-name>](./<spec-file-name>)"
+  - "[<another-spec-file>](./<another-spec-file>)"
 tags: []
 ---
 ```
 
 **`source` field rules:**
-- Use wikilinks (filename only, no path) to the spec file(s) this model is based on.
+- Use relative path links for references within the same repo (e.g., `[file.requirement.md](./file.requirement.md)`). Use full GitHub URLs only in issue bodies.
+- Link to the spec file(s) this model is based on.
 - If multiple spec files, list all.
 
 ## Template
