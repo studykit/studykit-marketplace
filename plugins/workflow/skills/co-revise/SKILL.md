@@ -153,7 +153,7 @@ Each artifact type can affect all downstream types.
 
 For each resolved issue:
 
-1. Identify which downstream artifacts exist (check `A4/co-think/` for files whose `source` frontmatter traces back to the revised file).
+1. Identify which downstream artifacts exist (check `A4/co-think/` for files whose source blockquote links back to the revised file).
 2. Analyze whether the revision changes behavior, contracts, or concepts that downstream artifacts depend on.
 3. Present findings:
 

@@ -15,7 +15,7 @@ Read the Job Story file provided: **$ARGUMENTS**
 
 If no file is provided, ask the user for the path or paste content.
 
-The `source` frontmatter field in the output file should contain relative path links to the story file(s) used as input (e.g., `[file.story.md](./file.story.md)`).
+The source reference in the output file should be placed as a blockquote under the title heading, linking to the story file(s) used as input (see output template for format).
 
 After reading, list all Job Stories found and confirm with the user before proceeding.
 

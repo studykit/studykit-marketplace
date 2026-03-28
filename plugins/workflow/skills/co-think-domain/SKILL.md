@@ -15,7 +15,7 @@ Read the spec file(s) provided: **$ARGUMENTS**
 
 If no file is provided, ask the user for the path.
 
-The `source` frontmatter field in the output file should contain relative path links to the spec file(s) used as input (e.g., `[file.requirement.md](./file.requirement.md)`).
+The source reference in the output file should be placed as a blockquote under the title heading, linking to the spec file(s) used as input (see output template for format).
 
 After reading, list all FRs found across all files and confirm with the user before proceeding.
 

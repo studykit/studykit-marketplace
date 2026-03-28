@@ -18,7 +18,7 @@ If no files are provided, ask the user for the paths to:
 2. **Functional Requirements** (from co-think-requirement)
 3. **Domain Model** (from co-think-domain) — reference material, not a strict mapping source
 
-The `source` frontmatter field in the output file should contain relative path links to all input files (e.g., `[file.md](./file.md)`).
+The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
 
 After reading, summarize the key stories, FRs, and domain concepts found, then confirm with the user before proceeding.
 

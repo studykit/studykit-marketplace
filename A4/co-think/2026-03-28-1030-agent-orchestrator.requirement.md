@@ -4,13 +4,12 @@ pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-28
 status: final
-source:
-  - "[2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md)"
 covers:
   - non-ui
 tags: []
 ---
 # Functional Specification: interactive agent/prompt use cases
+> Source: [2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md)
 
 ## Overview
 A thin behavioral layer that sets the LLM's conversational attitude when loaded as a system prompt or agent. The core principle is conversation-first: the LLM never jumps to action before understanding the user's intent. Structured workflows are deferred to skills — this prompt only defines the general conversational stance.
