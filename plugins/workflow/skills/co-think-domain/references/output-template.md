@@ -81,6 +81,14 @@ State2 --> [*]
 </details>
 ```
 
+**Issue reference links:**
+- Use markdown reference links so issue numbers are clickable in GitHub file preview.
+- In the body, write `[#N][N]`. At the end of the file, add a references section:
+  ```
+  <!-- references -->
+  [7]: https://github.com/{owner}/{repo}/issues/7
+  ```
+
 ## Required Sections
 
 - Overview

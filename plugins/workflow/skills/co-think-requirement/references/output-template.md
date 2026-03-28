@@ -69,8 +69,17 @@ tags: []
 - `#N` is the GitHub-assigned issue number, which becomes the FR's canonical ID.
 
 **Story reference rules:**
-- Each FR links to the story issue(s) it implements using a blockquote: `> Story: #N` (GitHub issue number).
-- If one FR comes from multiple stories, list them comma-separated: `> Story: #N, #M`.
+- Each FR links to the story issue(s) it implements using a blockquote: `> Story: [#N][N]`.
+- If one FR comes from multiple stories, list them comma-separated: `> Story: [#N][N], [#M][M]`.
+
+**Issue reference links:**
+- Use markdown reference links so issue numbers are clickable in GitHub file preview.
+- In the body, write `[#N][N]`. At the end of the file, add a references section:
+  ```
+  <!-- references -->
+  [7]: https://github.com/{owner}/{repo}/issues/7
+  ```
+- This keeps the body clean while making all issue references clickable.
 
 **Required sections**: Overview, Job Stories Reference, Functional Requirements.
 **Conditionally required:**
