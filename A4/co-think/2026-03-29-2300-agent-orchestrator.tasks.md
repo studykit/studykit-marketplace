@@ -20,7 +20,7 @@ tags: []
 
 ## Completed (prior work)
 
-- [x] **FR-16** — Conversation-first behavioral layer (`global/agents/interactive.md`, `global/prompts/interactive.txt`) [92c7b8a]
+- [x] **FR-16** — Conversation-first behavioral layer (`plugins/workflow/prompts/interactive.txt`, `plugins/workflow/prompts/interactive-child.txt`) [92c7b8a]
 
 ---
 
@@ -31,9 +31,9 @@ tags: []
 `[x]` **FR-17 기반** — 모든 컴포넌트가 공유하는 session-tree.json 읽기/쓰기 유틸리티
 
 **산출물:**
-- `global/hooks/lib/session_tree.py` — fcntl.flock 기반 atomic read-modify-write 함수들
-  - `st_read` — lock + read
-  - `st_write` — lock + write (callable transform)
+- `plugins/workflow/hooks/lib/session_tree.py` — fcntl.flock 기반 atomic read-modify-write 함수들
+  - `st_read` — shared lock + read
+  - `st_write` — exclusive lock + read-modify-write (callable transform)
   - `st_find_child` — session_id로 child entry 조회
 
 **의존성:** 없음 (기반 모듈)
@@ -45,8 +45,8 @@ tags: []
 `[x]` **FR-17 기반** — iTerm2 탭 생성 및 환경변수 전달
 
 **산출물:**
-- `global/hooks/lib/iterm2_launcher.py` — `it2` CLI (iTerm2 shell integration) 사용
-  - 새 pane 생성 + 환경변수(`SESSION_TREE`) 설정
+- `plugins/workflow/hooks/lib/iterm2_launcher.py` — iTerm2 Python API (`iterm2` package) 사용
+  - iTerm2 vertical split pane 생성 + 환경변수(`SESSION_TREE`) 설정
   - `claude --session-id <uuid> --append-system-prompt-file interactive-child.txt` 실행
 
 **의존성:** 없음
@@ -58,8 +58,8 @@ tags: []
 `[x]` **FR-17** — child session spawn 로직
 
 **산출물:**
-- `global/agents/interactive.md` 업데이트 — session manager 지시문 추가 (spawn 가능 안내, 워크플로우)
-- `global/skills/chat/SKILL.md` — spawn 전용 skill (`/chat` slash command 역할)
+- `plugins/workflow/prompts/interactive.txt` 업데이트 — session manager 지시문 추가 (spawn 가능 안내, 워크플로우)
+- `plugins/workflow/skills/chat/SKILL.md` — spawn 전용 skill (`/chat` slash command 역할)
 
 **처리 내용:**
 1. `.claude/sessions/<main-conversation-id>/` 디렉토리 lazy 생성
@@ -79,8 +79,8 @@ tags: []
 `[x]` **FR-17, STORY-15** — child session 초기화
 
 **산출물:**
-- `global/hooks/session_start_bootstrap.py` — SessionStart 훅 스크립트
-- `.claude/settings.json` 훅 등록
+- `plugins/workflow/hooks/session_start_bootstrap.py` — SessionStart 훅 스크립트
+- `plugins/workflow/.claude-plugin/hooks.json` 훅 등록
 
 **처리 내용:**
 1. `$SESSION_TREE` 환경변수로 session-tree.json 위치 확인
@@ -88,7 +88,7 @@ tags: []
 3. session-tree.json에서 자기 entry 조회 (T1 유틸리티)
 4. context (referenceFiles, summary) + resultPatterns를 stdout으로 주입
 5. skill이 지정되어 있으면 skill 호출 지시 주입
-6. id (Claude session ID), transcriptPath, pid(`$$`) 기록
+6. id (Claude session ID), transcriptPath, pid(`os.getppid()`) 기록
 
 **의존성:** T1
 
@@ -99,8 +99,8 @@ tags: []
 `[x]` **FR-18, STORY-10** — 파일 쓰기 시 result file 자동 등록
 
 **산출물:**
-- `global/hooks/post_tool_result_collector.py` — PostToolUse 훅 스크립트
-- `.claude/settings.json` 훅 등록
+- `plugins/workflow/hooks/post_tool_result_collector.py` — PostToolUse 훅 스크립트
+- `plugins/workflow/.claude-plugin/hooks.json` 훅 등록
 
 **처리 내용:**
 1. stdin JSON에서 `tool_name`, `tool_input.file_path` 읽기
@@ -117,8 +117,8 @@ tags: []
 `[x]` **FR-18, STORY-12** — 세션 종료 시 상태 업데이트
 
 **산출물:**
-- `global/hooks/session_end_collector.py` — SessionEnd 훅 스크립트
-- `.claude/settings.json` 훅 등록
+- `plugins/workflow/hooks/session_end_collector.py` — SessionEnd 훅 스크립트
+- `plugins/workflow/.claude-plugin/hooks.json` 훅 등록
 
 **처리 내용:**
 1. `$SESSION_TREE` 확인 (없으면 일반 세션이므로 무시)
@@ -133,8 +133,8 @@ tags: []
 `[x]` **FR-18, STORY-10, STORY-12** — 메인 세션에서 session-tree.json 변경 감지
 
 **산출물:**
-- `global/hooks/session_monitor.py` — FileChanged 훅 스크립트 (matcher: `session-tree.json`)
-- `.claude/settings.json` 훅 등록
+- `plugins/workflow/hooks/session_monitor.py` — FileChanged 훅 스크립트 (matcher: `session-tree.json`)
+- `plugins/workflow/.claude-plugin/hooks.json` 훅 등록
 
 **처리 내용:**
 1. session-tree.json 변경 감지
@@ -152,7 +152,7 @@ tags: []
 `[x]` **FR-19, STORY-13** — 과거 child session 대화 기록 조사
 
 **산출물:**
-- `global/agents/history-investigator.md` — 서브 에이전트 정의
+- `plugins/workflow/agents/history-investigator.md` — 서브 에이전트 정의
 
 **처리 내용:**
 1. session-tree.json에서 transcriptPath, resultFiles 읽기
@@ -165,12 +165,12 @@ tags: []
 
 ### T9. 통합 및 settings.json 훅 등록
 
-`[x]` — 모든 훅을 프로젝트 수준 `.claude/settings.json`에 등록하고 조건부 실행 보장
+`[x]` — 모든 훅을 플러그인 수준 `hooks.json`에 등록하고 조건부 실행 보장
 
 **산출물:**
-- `.claude/settings.json` (프로젝트 수준) 최종 훅 설정
+- `plugins/workflow/.claude-plugin/hooks.json` (플러그인 수준) 최종 훅 설정
 - `SESSION_TREE` 환경변수가 있는 세션에서만 child session 훅 동작하도록 가드
-- 추후 검증 완료 시 `~/.claude/settings.json` (global)로 이전 예정
+- 플러그인 구조로 이전 완료 — global settings.json 대신 plugin hooks.json 사용
 
 **의존성:** T4, T5, T6, T7
 
@@ -226,9 +226,9 @@ T1 (session-tree 유틸리티)    T2 (iTerm2 모듈)
 
 ## Decisions
 
-- **T2 — iTerm2 스크립팅**: Python + inline dependency (`iterm2`), `uv run`으로 실행
-- **T3 — Spawn 트리거**: 두 가지 병행 — interactive.md 지시문 + chat skill. 테스트 용이성 확보
-- **T9 — 훅 등록 범위**: 프로젝트 수준 `.claude/settings.json`에 먼저 등록, 검증 후 global로 이전
+- **T2 — iTerm2 스크립팅**: Python + `osascript` (AppleScript), uv 런타임으로 실행
+- **T3 — Spawn 트리거**: 두 가지 병행 — interactive.txt 지시문 + chat skill. 테스트 용이성 확보
+- **T9 — 훅 등록 범위**: 플러그인 수준 `plugins/workflow/.claude-plugin/hooks.json`에 등록 (plugin 구조로 최종 결정)
 
 <!-- references -->
 [STORY-7]: https://github.com/studykit/studykit-plugins/issues/7

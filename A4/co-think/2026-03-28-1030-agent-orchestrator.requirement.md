@@ -4,7 +4,7 @@ pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-28
 status: final
-revision: 1
+revision: 3
 last_revised: 2026-03-29
 covers:
   - non-ui
@@ -27,9 +27,9 @@ Two layers for Claude Code's interactive agent system. First, a thin behavioral 
 
 ## Implementation
 - [x] [FR-16]. Conversation-first behavioral layer — [92c7b8a]
-- [ ] [FR-17]. Child session spawn
-- [ ] [FR-18]. Child session result delivery on termination
-- [ ] [FR-19]. Child session conversation history investigation
+- [x] [FR-17]. Child session spawn
+- [x] [FR-18]. Child session result delivery on termination
+- [x] [FR-19]. Child session conversation history investigation
 
 ## Functional Requirements
 
@@ -69,16 +69,12 @@ Recognize user intent and adapt:
 
 **Output — delivery files:**
 
-Two files with identical core content (the behavioral rules above):
+Two prompt files with shared core content (the behavioral rules above), split for main vs. child sessions:
 
-1. `global/prompts/interactive.txt` — plain text, for `--append-system-prompt-file` / `--system-prompt-file`
-2. `global/agents/interactive.md` — same body content + agent frontmatter:
-   - `name: interactive`
-   - `description:` (user-facing description of the agent)
-   - `model: inherit`
-   - `color:` (sidebar color)
+1. `plugins/workflow/prompts/interactive.txt` — main session prompt (includes Session Manager instructions)
+2. `plugins/workflow/prompts/interactive-child.txt` — child session prompt (same core content, without Session Manager section)
 
-The existing content of both files should be **fully replaced** — this is a rewrite, not an incremental edit.
+Both files are plain text, loaded via `--append-system-prompt-file`. Delivered as part of the `workflow` plugin.
 
 **Error handling:** N/A (behavioral prompt, no failure modes)
 
@@ -118,15 +114,15 @@ The existing content of both files should be **fully replaced** — this is a re
     {
       "id": "<child session's Claude session ID, generated at spawn and used as --session-id>",
       "topic": "<topic/purpose>",
-      "status": "pending | active | terminated",
+      "status": "pending | active | terminated | crashed | failed_to_start",
       "createdAt": "<ISO 8601 timestamp>",
       "pid": "<Claude Code process ID, recorded by SessionStart hook>",
       "skill": "<injected skill name or null>",
       "transcriptPath": "<recorded by SessionStart hook>",
-      "resultPatterns": ["<glob patterns for expected result files>"],
-      "resultFiles": ["<result file paths, recorded before termination>"],
+      "modifiedFiles": ["<all file paths modified by Write/Edit, recorded by PostToolUse hook>"],
+      "resultFiles": ["<key deliverable paths, registered by LLM nudge + user approval or user directive>"],
       "referenceFiles": ["<file paths>"],
-      "contextSummary": "<context summary from main session>"
+      "additionalContext": "<context summary from main session>"
     }
   ]
 }
@@ -150,10 +146,9 @@ The existing content of both files should be **fully replaced** — this is a re
 **Input:** Child session's result file path(s), termination status
 
 **Processing:**
-1. Child session records result file path(s) to `session-tree.json` (`children[].resultFiles`) via two mechanisms:
-   - **PostToolUse hook**: On Write/Edit tool use, hook checks if the file path matches a pre-assigned result path (from context file) or a known pattern. If matched, automatically registers the path to `session-tree.json`
-   - **LLM judgment**: System prompt instructs the child session LLM to register result files to `session-tree.json` when it determines a file is a deliverable
-   - Result file paths may also be pre-assigned by the main session at spawn (included in context file)
+1. Child session tracks and registers file changes to `session-tree.json` via two mechanisms:
+   - **PostToolUse hook (tracking)**: On Write/Edit tool use, hook appends the file path to `children[].modifiedFiles`. No filtering — all file modifications are recorded.
+   - **LLM nudge or user directive (deliverables)**: The child session LLM may suggest registering a file as a deliverable when it judges the file to be a key output of the session — not incidental edits. Upon user approval, or when the user directly instructs, the LLM writes the file path to `children[].resultFiles`.
 2. Child session's `SessionEnd` hook fires on termination (including Ctrl+D):
    - Updates `children[].status` to `terminated` in `session-tree.json`
    - Triggered for all exit reasons: `prompt_input_exit`, `resume`, `clear`, `logout`, `other`
@@ -189,8 +184,8 @@ The existing content of both files should be **fully replaced** — this is a re
 **Dependencies:** [FR-17] (session-tree.json with transcript_path)
 
 ## Open Questions
-- iTerm2 scripting API details for session creation
-- Concurrent `session-tree.json` writes from multiple child sessions (race condition) — resolve at implementation with file locking or atomic writes
+- ~~iTerm2 scripting API details for session creation~~ — Resolved: iTerm2 Python API (`iterm2` package) via `iterm2_launcher.py`
+- ~~Concurrent `session-tree.json` writes from multiple child sessions (race condition)~~ — Resolved: Python `fcntl.flock()` based shared/exclusive file locking in `session_tree.py`
 
 <!-- references -->
 [STORY-7]: https://github.com/studykit/studykit-plugins/issues/7

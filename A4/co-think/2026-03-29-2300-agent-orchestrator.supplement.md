@@ -61,11 +61,11 @@ This supplement addresses identified gaps in session lifecycle management, user 
 ### [FR-24]. Handshake timeout detection
 **Trigger:** `Session Monitor` (FileChanged hook) periodic check or main session heartbeat.
 
-**Context:** An entry in `session-tree.json` is `active` but its `pid` and `id` fields are null.
+**Context:** An entry in `session-tree.json` is `pending` — the bootstrap hook has not yet completed.
 
 **Processing:**
 1. Check the `createdAt` timestamp of the child entry.
-2. If `status == "active"` AND `pid == null` AND `current_time - createdAt > 30 seconds`:
+2. If `status == "pending"` AND `current_time - createdAt > 30 seconds`:
    - Update status to `failed_to_start`.
    - Inject a notification into the main session: "Child session [Topic] failed to initialize within 30s. Please check terminal logs."
 
@@ -81,7 +81,7 @@ To ensure portability beyond iTerm2, the `Session Manager` should delegate termi
 - `isSupported(): boolean`
 
 **Initial Implementation (iTerm2):**
-- Uses AppleScript via `osascript` to create a new tab and execute `command`.
+- Uses iTerm2 Python API (`iterm2` package) to create a vertical split pane and execute `command`.
 
 **Future Implementations:**
 - `TmuxAdapter`: Creates a new tmux window or pane.

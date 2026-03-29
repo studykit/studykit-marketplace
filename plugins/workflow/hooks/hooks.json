@@ -1,0 +1,54 @@
+{
+  "description": "Session orchestrator hooks — manage child session lifecycle via session-tree.json",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/hooks/session_start_bootstrap.py\"",
+            "timeout": 10,
+            "description": "Initialize child sessions with context from session-tree.json"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/hooks/post_tool_result_collector.py\"",
+            "timeout": 5,
+            "description": "Register result files that match resultPatterns for child sessions"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/hooks/session_end_collector.py\"",
+            "timeout": 5,
+            "description": "Mark child sessions as terminated when session ends"
+          }
+        ]
+      }
+    ],
+    "FileChanged": [
+      {
+        "matcher": "session-tree.json",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/hooks/session_monitor.py\"",
+            "timeout": 10,
+            "description": "Monitor child session status changes when session-tree.json is modified"
+          }
+        ]
+      }
+    ]
+  }
+}

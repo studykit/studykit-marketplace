@@ -15,7 +15,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
-from session_tree import read_stdin_json, st_find_child, st_write
+from session_tree import SessionTree, read_stdin_json, st_find_child, st_write
 
 
 def main() -> None:
@@ -24,7 +24,6 @@ def main() -> None:
 
     data = read_stdin_json()
 
-    # Filter: only act on Write or Edit tools.
     tool_name = data.get("tool_name", "")
     if tool_name not in ("Write", "Edit"):
         return
@@ -41,29 +40,20 @@ def main() -> None:
     if child is None:
         return
 
-    # Check against resultPatterns.
-    patterns: list[str] = child.get("resultPatterns") or []
-    if not patterns:
+    if not child.result_patterns:
         return
 
-    matched = any(fnmatch.fnmatch(file_path, pat) for pat in patterns)
+    matched = any(fnmatch.fnmatch(file_path, pat) for pat in child.result_patterns)
     if not matched:
         return
 
-    # Check if already registered.
-    existing: list[str] = child.get("resultFiles") or []
-    if file_path in existing:
+    if file_path in child.result_files:
         return
 
-    # Append to resultFiles.
-    def update(tree: dict) -> None:
-        for c in tree.get("children", []):
-            if c.get("id") == session_id:
-                if c.get("resultFiles") is None:
-                    c["resultFiles"] = []
-                if file_path not in c["resultFiles"]:
-                    c["resultFiles"].append(file_path)
-                break
+    def update(tree: SessionTree) -> None:
+        c = tree.find_child(session_id)
+        if c and file_path not in c.result_files:
+            c.result_files.append(file_path)
 
     st_write(update)
 

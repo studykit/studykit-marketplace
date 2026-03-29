@@ -26,12 +26,12 @@ When should the interactive agent and prompt be used? Discover the core value an
 
 ## Implementation
 - [x] [STORY-7]. Conversation-first attitude at session start — [92c7b8a]
-- [ ] [STORY-9]. Spawn a dedicated child session
-- [ ] [STORY-10]. Automated information exchange between sessions
-- [ ] [STORY-12]. Child session result file accessible to main session
-- [ ] [STORY-13]. Child session conversation history investigation
-- [ ] [STORY-14]. User controls session termination
-- [ ] [STORY-15]. Skill injection at child session startup
+- [x] [STORY-9]. Spawn a dedicated child session
+- [x] [STORY-10]. Automated information exchange between sessions
+- [x] [STORY-12]. Child session result file accessible to main session
+- [x] [STORY-13]. Child session conversation history investigation
+- [x] [STORY-14]. User controls session termination
+- [x] [STORY-15]. Skill injection at child session startup
 
 ## Job Stories
 

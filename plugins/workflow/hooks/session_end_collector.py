@@ -13,7 +13,7 @@ import sys
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
-from session_tree import read_stdin_json, st_find_child, st_write
+from session_tree import SessionTree, read_stdin_json, st_find_child, st_write
 
 
 def main() -> None:
@@ -25,15 +25,13 @@ def main() -> None:
     if not session_id:
         return
 
-    # Find self — exit if not a managed child.
-    if st_find_child(session_id) is None:
+    if not st_find_child(session_id):
         return
 
-    def update(tree: dict) -> None:
-        for c in tree.get("children", []):
-            if c.get("id") == session_id:
-                c["status"] = "terminated"
-                break
+    def update(tree: SessionTree) -> None:
+        c = tree.find_child(session_id)
+        if c:
+            c.status = "terminated"
 
     st_write(update)
 

@@ -3,8 +3,8 @@ type: architecture
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-29
-status: draft
-revision: 2
+status: final
+revision: 4
 last_revised: 2026-03-29
 tags: []
 ---
@@ -54,7 +54,7 @@ HI --> ST : reads transcriptPath
 
 **Child Session Bootstrap** — SessionStart hook on the child session. Locates session-tree.json via the `$SESSION_TREE` environment variable, reads its own entry by matching `session_id` from stdin JSON against `id`, injects context (reference files, summary) and skill into the conversation via stdout, then writes back its transcriptPath and pid.
 
-**Result Collector** — PostToolUse and SessionEnd hooks on the child session. PostToolUse hook receives `tool_input.file_path` via stdin JSON to identify file writes and register result files. SessionEnd hook marks the session as terminated. Both locate session-tree.json via the `$SESSION_TREE` environment variable.
+**Result Collector** — PostToolUse and SessionEnd hooks on the child session. PostToolUse hook receives `tool_input.file_path` via stdin JSON and appends all Write/Edit file paths to `modifiedFiles` without filtering. SessionEnd hook marks the session as terminated. Both locate session-tree.json via the `$SESSION_TREE` environment variable.
 
 **Session Monitor** — FileChanged hook on the main session (matcher: `session-tree.json`). Detects session-tree.json modifications and injects child session status changes (termination, new result files) into the main session's conversation context via stdout.
 
@@ -87,10 +87,10 @@ entity "ChildSessionRecord" as child {
   pid : number
   skill : text
   transcriptPath : text
-  resultPatterns : text[]
+  modifiedFiles : text[]
   resultFiles : text[]
   referenceFiles : text[]
-  contextSummary : text
+  additionalContext : text
 }
 
 main ||--o{ child : contains
@@ -100,7 +100,7 @@ main ||--o{ child : contains
 The session-tree.json file contains one MainSessionRecord and zero or more ChildSessionRecords. This is a single JSON file, not a relational database — the ERD captures the logical structure.
 
 - **MainSessionRecord**: identifies the main session. `name` is user-assigned for search/identification.
-- **ChildSessionRecord**: one per spawned child session. `id` is the PK — the Claude session ID, generated at spawn time and used as the `--session-id` for the child Claude Code process. `status` is `pending` (spawned, bootstrap not yet complete), `active` (bootstrap complete, session running), `terminated`, `crashed`, or `failed_to_start`. `pid` is the child Claude Code process ID, recorded by the Child Session Bootstrap for crash detection. `transcriptPath` is initially null, filled by the Child Session Bootstrap hook. `resultPatterns` is an array of glob patterns (e.g., `["A4/co-think/*.requirement.md"]`). The main session seeds initial patterns at spawn time. The child session can append additional patterns to its own entry — the Child Session Bootstrap may add skill-specific patterns during initialization, and the child LLM can register new patterns by writing to session-tree.json during the session. The Result Collector's PostToolUse hook validates file writes against all patterns in the array. The Child Session Bootstrap also injects `resultPatterns` as a prompt instruction directing the LLM to save results to matching paths. `resultFiles` accumulates matched paths during the session lifetime. `referenceFiles` and `contextSummary` capture the injected context from the main session at spawn time.
+- **ChildSessionRecord**: one per spawned child session. `id` is the PK — the Claude session ID, generated at spawn time and used as the `--session-id` for the child Claude Code process. `status` is `pending` (spawned, bootstrap not yet complete), `active` (bootstrap complete, session running), `terminated`, `crashed`, or `failed_to_start`. `pid` is the child Claude Code process ID, recorded by the Child Session Bootstrap for crash detection. `transcriptPath` is initially null, filled by the Child Session Bootstrap hook. `modifiedFiles` accumulates all file paths written or edited during the session — the Result Collector's PostToolUse hook appends every Write/Edit target without filtering. `resultFiles` accumulates key deliverable paths registered explicitly by LLM nudge (with user approval) or direct user instruction. `referenceFiles` and `additionalContext` capture the injected context from the main session at spawn time.
 
 #### Information Flow
 
@@ -123,20 +123,19 @@ else Skill trigger
   SK -> SM : invoke with topic, skill
 end
 
-SM -> ST : write new child entry\n(id, topic, skill, resultPatterns,\ncontext, status=active)
+SM -> ST : write new child entry\n(id, topic, skill,\ncontext, status=active)
 SM -> IT : it2 CLI:\nSESSION_TREE=<path> claude --session-id <uuid>\n--append-system-prompt-file interactive-child.txt
 IT -> CS : new Claude Code session starts
 CS -> CB : SessionStart hook fires\n(stdin: {session_id, transcript_path, ...})
 CB -> CB : read $SESSION_TREE env var
 CB -> ST : read own child entry\n(match by session_id from stdin)
-CB -> ST : append skill-specific resultPatterns\n(if skill defines additional patterns)
-CB -> CS : inject context + resultPatterns instruction\n+ invoke skill (via stdout / additionalContext)
+CB -> CS : inject context\n+ invoke skill (via stdout / additionalContext)
 CB -> ST : write transcriptPath, pid
 U -> CS : interact directly
 @enduml
 ```
 
-The spawn flow has two entry points: (1) natural language — the LLM suggests spawning and the user approves, (2) the `chat` skill — the user invokes `/chat` directly. Both paths converge at the Session Manager, which generates a child session ID (UUID), writes the entry to session-tree.json with `id` set to the generated UUID (Claude session ID), and launches an iTerm2 tab via `it2` CLI with `SESSION_TREE=<path> claude --session-id <uuid> --append-system-prompt-file interactive-child.txt`. The child session's SessionStart hook receives `session_id` and `transcript_path` via stdin JSON, reads the `$SESSION_TREE` environment variable to locate session-tree.json, finds its own entry by matching `session_id` against `id`, injects the context and skill via stdout, and writes back its transcriptPath and pid to the manifest.
+The spawn flow has two entry points: (1) natural language — the LLM suggests spawning and the user approves, (2) the `chat` skill — the user invokes `/chat` directly. Both paths converge at the Session Manager, which generates a child session ID (UUID), writes the entry to session-tree.json with `id` set to the generated UUID (Claude session ID), and launches an iTerm2 tab via `it2` CLI with `SESSION_TREE=<path> claude --session-id <uuid> --append-system-prompt-file interactive-child.txt`. The child session's SessionStart hook receives `session_id` and `transcript_path` via stdin JSON, reads the `$SESSION_TREE` environment variable to locate session-tree.json, finds its own entry by matching `session_id` against `id`, injects the context (and skill if specified) via stdout, and writes back its transcriptPath and pid to the manifest.
 
 ##### Story: STORY-15 — Skill injection at child session startup
 
@@ -176,19 +175,16 @@ participant "Main Session" as MS
 
 CS -> CS : Write tool creates a file
 CS -> RC : PostToolUse hook fires
-RC -> RC : check if file matches\nany pattern in resultPatterns
-RC -> ST : register result file path\nin children[].resultFiles
+RC -> ST : append file path\nto children[].modifiedFiles
 ST -> MO : FileChanged detected
 MO -> ST : read updated entry
-MO -> MS : inject status update\n(new result file registered)
+MO -> MS : inject status update\n(new modified file tracked)
 @enduml
 ```
 
-The PostToolUse hook on the child session receives `tool_name` and `tool_input` via stdin JSON. When the tool is `Write` or `Edit`, it reads `$SESSION_TREE` to locate session-tree.json, looks up its own child entry by `session_id`, and checks `tool_input.file_path` against all glob patterns in the entry's `resultPatterns` array. When any pattern matches, it appends the path to `resultFiles`. The main session's FileChanged hook picks up the change.
+The PostToolUse hook on the child session receives `tool_name` and `tool_input` via stdin JSON. When the tool is `Write` or `Edit`, it reads `$SESSION_TREE` to locate session-tree.json, looks up its own child entry by `session_id`, and appends `tool_input.file_path` to `modifiedFiles`. No filtering — all file modifications are tracked. The main session's FileChanged hook picks up the change.
 
-The result path pattern works as a two-layer mechanism: (1) the Child Session Bootstrap injects `resultPatterns` as a prompt instruction telling the LLM to save results to matching paths, and (2) the Result Collector's PostToolUse hook validates actual file writes against the same patterns. The LLM guidance ensures intentional placement; the hook validation ensures only matching files are registered.
-
-Pattern registration has three sources: the main session seeds patterns at spawn time, the Child Session Bootstrap may append skill-specific patterns during initialization, and the child LLM can register additional patterns by updating its own entry in session-tree.json during the session.
+Deliverable registration is separate from file tracking. The child session LLM may suggest registering a file as a key deliverable (nudge) when it judges the file to be a primary output of the session — not incidental edits. Upon user approval, or when the user directly instructs, the LLM writes the file path to `resultFiles` in session-tree.json.
 
 ##### Story: STORY-12 — Child session result file accessible to main session
 
@@ -205,12 +201,12 @@ U -> CS : ends session (Ctrl+D or exit)
 CS -> RC : SessionEnd hook fires
 RC -> ST : update status to terminated
 ST -> MO : FileChanged detected
-MO -> ST : read terminated entry\n(topic, resultFiles)
-MO -> MS : inject termination info\n+ result file paths
+MO -> ST : read terminated entry\n(topic, modifiedFiles, resultFiles)
+MO -> MS : inject termination info\n+ modified/result file paths
 @enduml
 ```
 
-On child session termination, the SessionEnd hook updates the child's status to `terminated`. The main session's FileChanged hook detects this and injects the termination notification with result file paths into the main session's conversation context.
+On child session termination, the SessionEnd hook updates the child's status to `terminated`. The main session's FileChanged hook detects this and injects the termination notification with modified file paths and result file paths into the main session's conversation context.
 
 ### Session Monitor
 
@@ -266,24 +262,33 @@ The user asks about a past child session. The Session Manager finds the child en
 
 ### File locking
 
-All reads and writes to session-tree.json must be wrapped in an exclusive file lock (`flock`) to prevent update-lost anomalies. The lock scope covers the entire read-modify-write cycle:
+All reads and writes to session-tree.json must be wrapped in an exclusive file lock to prevent update-lost anomalies. The lock scope covers the entire read-modify-write cycle. The implementation uses Python's `fcntl.flock()` with `LOCK_SH` (shared) and `LOCK_EX` (exclusive) on a `.lock` file adjacent to session-tree.json:
 
-```bash
-(
-  flock -x 200
-  content=$(cat session-tree.json)
-  updated=$(echo "$content" | jq '...')
-  echo "$updated" > session-tree.json
-) 200>session-tree.json.lock
+```python
+import fcntl
+
+# shared lock for reads
+with open(lock_path) as lf:
+    fcntl.flock(lf, fcntl.LOCK_SH)
+    data = json.loads(path.read_text())
+    fcntl.flock(lf, fcntl.LOCK_UN)
+
+# exclusive lock for read-modify-write
+with open(lock_path) as lf:
+    fcntl.flock(lf, fcntl.LOCK_EX)
+    data = json.loads(path.read_text())
+    transform(data)
+    path.write_text(json.dumps(data, indent=2) + "\n")
+    fcntl.flock(lf, fcntl.LOCK_UN)
 ```
 
-This applies to all components that write to session-tree.json: Session Manager, Child Session Bootstrap, and Result Collector. Lock contention is expected to be negligible since each write is a short jq transformation.
+This applies to all components that write to session-tree.json: Session Manager, Child Session Bootstrap, and Result Collector. The shared library (`hooks/lib/session_tree.py`) exposes `st_read()` for shared-lock reads and `st_write(transform)` for exclusive-lock read-modify-write operations.
 
 ### Crash detection
 
 If a child session crashes (process killed, terminal closed abnormally), the SessionEnd hook never fires and the entry remains `active`. The Session Monitor detects this by checking `kill -0 <pid>` against the child's recorded PID. When the process is no longer alive and status is still `active`, the Session Monitor updates it to `crashed` and injects a notification into the main session.
 
-The Child Session Bootstrap records `$PPID` (the parent PID, i.e., the Claude Code process) into the child entry during initialization. Since the hook runs as a child process of the Claude Code process, `$PPID` points to the Claude Code process — if this process dies, `kill -0` will fail.
+The Child Session Bootstrap records `os.getppid()` (the parent PID, i.e., the Claude Code process) into the child entry during initialization. Since the hook runs as a child process of the Claude Code process, `os.getppid()` points to the Claude Code process — if this process dies, the Session Monitor's `kill -0` check (via `os.kill(pid, 0)`) will fail.
 
 ### Bootstrap handshake timeout
 
@@ -344,8 +349,9 @@ Post-review fixes applied:
 3. **Component diagram read path**: Session Manager arrow updated to "reads/writes child entries" to reflect that it both writes (spawn) and reads (investigation) from session-tree.json.
 4. **InjectedSkill override relationship**: Noted as a behavioral rule within the Interactive Prompt content, not an architectural information flow.
 5. **Crash detection**: Added `pid` field to ChildSessionRecord and `crashed` status. Session Monitor checks process liveness via `kill -0`.
-6. **Concurrent writes**: All session-tree.json writes wrapped in `flock` exclusive lock covering the full read-modify-write cycle to prevent update-lost.
+6. **Concurrent writes**: All session-tree.json writes wrapped in Python `fcntl.flock(LOCK_EX)` exclusive lock covering the full read-modify-write cycle to prevent update-lost.
 7. **Bootstrap handshake timeout**: Added `failed_to_start` status for entries where bootstrap never completes (pid remains null after 30s).
+8. **Result tracking redesign**: Removed `resultPatterns`. PostToolUse hook now tracks all Write/Edit file paths in `modifiedFiles` without filtering. `resultFiles` is reserved for key deliverables registered explicitly via LLM nudge (with user approval) or direct user instruction.
 
 ## Interview Transcript
 <details>

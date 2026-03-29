@@ -4,7 +4,7 @@ pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-29
 status: final
-revision: 1
+revision: 2
 last_revised: 2026-03-29
 tags: []
 ---
@@ -77,14 +77,20 @@ InjectedSkill -- InteractivePrompt : overrides on conflict
 @startuml
 [*] --> pending : main session spawns
 pending --> active : SessionStart bootstrap hook
+pending --> failed_to_start : handshake timeout (30s)
 active --> terminated : SessionEnd hook
+active --> crashed : process died (kill -0 fails)
 terminated --> [*]
+crashed --> [*]
+failed_to_start --> [*]
 @enduml
 ```
 
 - **pending**: Child session entry created in session-tree.json, iTerm2 pane launched, but bootstrap hook has not yet completed.
 - **active**: SessionStart bootstrap hook has completed — transcriptPath and pid recorded, user is interacting with the session.
 - **terminated**: SessionEnd hook has fired (including Ctrl+D). Status updated in `session-tree.json`. Result file paths, if any, have been recorded before termination.
+- **crashed**: Session Monitor detected that the child process is no longer alive (`kill -0 <pid>` fails) while status was still `active`. SessionEnd hook never fired.
+- **failed_to_start**: Session Monitor detected that status remained `pending` for longer than 30 seconds — the bootstrap hook never completed.
 
 Main Session and Session Tree do not have domain-level state transitions.
 
