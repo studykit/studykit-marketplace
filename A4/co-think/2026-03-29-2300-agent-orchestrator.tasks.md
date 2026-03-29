@@ -3,7 +3,7 @@ type: tasks
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-29
-status: draft
+status: done
 revision: 0
 tags: []
 ---
@@ -28,7 +28,7 @@ tags: []
 
 ### T1. session-tree.json 유틸리티 (공통 인프라)
 
-`[ ]` **FR-17 기반** — 모든 컴포넌트가 공유하는 session-tree.json 읽기/쓰기 유틸리티
+`[x]` **FR-17 기반** — 모든 컴포넌트가 공유하는 session-tree.json 읽기/쓰기 유틸리티
 
 **산출물:**
 - `global/hooks/lib/session-tree.sh` — flock 기반 atomic read-modify-write 함수들
@@ -42,12 +42,12 @@ tags: []
 
 ### T2. iTerm2 스크립팅 모듈
 
-`[ ]` **FR-17 기반** — iTerm2 탭 생성 및 환경변수 전달
+`[x]` **FR-17 기반** — iTerm2 탭 생성 및 환경변수 전달
 
 **산출물:**
-- `global/hooks/lib/iterm2.py` — Python + inline dependency (`iterm2` 패키지), `uv run`으로 실행
-  - 새 탭 생성 + 환경변수(`SESSION_TREE`) 설정
-  - `claude --session-id <uuid> --append-system-prompt-file interactive.txt` 실행
+- `global/hooks/lib/iterm2.sh` — `it2` CLI (iTerm2 shell integration) 사용
+  - 새 pane 생성 + 환경변수(`SESSION_TREE`) 설정
+  - `claude --session-id <uuid> --append-system-prompt-file interactive-child.txt` 실행
 
 **의존성:** 없음
 
@@ -55,7 +55,7 @@ tags: []
 
 ### T3. Session Manager (메인 세션 오케스트레이션)
 
-`[ ]` **FR-17** — child session spawn 로직
+`[x]` **FR-17** — child session spawn 로직
 
 **산출물:**
 - `global/agents/interactive.md` 업데이트 — session manager 지시문 추가 (spawn 가능 안내, 워크플로우)
@@ -76,7 +76,7 @@ tags: []
 
 ### T4. Child Session Bootstrap (SessionStart 훅)
 
-`[ ]` **FR-17, STORY-15** — child session 초기화
+`[x]` **FR-17, STORY-15** — child session 초기화
 
 **산출물:**
 - `global/hooks/session-start-bootstrap.sh` — SessionStart 훅 스크립트
@@ -96,7 +96,7 @@ tags: []
 
 ### T5. Result Collector — PostToolUse 훅
 
-`[ ]` **FR-18, STORY-10** — 파일 쓰기 시 result file 자동 등록
+`[x]` **FR-18, STORY-10** — 파일 쓰기 시 result file 자동 등록
 
 **산출물:**
 - `global/hooks/post-tool-result-collector.sh` — PostToolUse 훅 스크립트
@@ -114,7 +114,7 @@ tags: []
 
 ### T6. Result Collector — SessionEnd 훅
 
-`[ ]` **FR-18, STORY-12** — 세션 종료 시 상태 업데이트
+`[x]` **FR-18, STORY-12** — 세션 종료 시 상태 업데이트
 
 **산출물:**
 - `global/hooks/session-end-collector.sh` — SessionEnd 훅 스크립트
@@ -130,7 +130,7 @@ tags: []
 
 ### T7. Session Monitor (FileChanged 훅)
 
-`[ ]` **FR-18, STORY-10, STORY-12** — 메인 세션에서 session-tree.json 변경 감지
+`[x]` **FR-18, STORY-10, STORY-12** — 메인 세션에서 session-tree.json 변경 감지
 
 **산출물:**
 - `global/hooks/session-monitor.sh` — FileChanged 훅 스크립트 (matcher: `session-tree.json`)
@@ -149,7 +149,7 @@ tags: []
 
 ### T8. History Investigator (서브 에이전트)
 
-`[ ]` **FR-19, STORY-13** — 과거 child session 대화 기록 조사
+`[x]` **FR-19, STORY-13** — 과거 child session 대화 기록 조사
 
 **산출물:**
 - `global/agents/history-investigator.md` — 서브 에이전트 정의
@@ -165,7 +165,7 @@ tags: []
 
 ### T9. 통합 및 settings.json 훅 등록
 
-`[ ]` — 모든 훅을 프로젝트 수준 `.claude/settings.json`에 등록하고 조건부 실행 보장
+`[x]` — 모든 훅을 프로젝트 수준 `.claude/settings.json`에 등록하고 조건부 실행 보장
 
 **산출물:**
 - `.claude/settings.json` (프로젝트 수준) 최종 훅 설정

@@ -4,7 +4,8 @@ pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-28
 status: final
-revision: 0
+revision: 1
+last_revised: 2026-03-29
 covers:
   - non-ui
 tags: []
@@ -97,10 +98,10 @@ The existing content of both files should be **fully replaced** — this is a re
 
 **Processing:**
 1. Main session generates a child session ID and records initial session info (session ID, topic, reference file paths, context summary, skill) to `.claude/sessions/<main-conversation-id>/session-tree.json`
-2. Launch a new Claude Code interactive session in a new iTerm2 tab via: `claude --append-system-prompt-file <path-to-interactive.txt>`
+2. Launch a new Claude Code interactive session in a new iTerm2 tab via: `claude --session-id <uuid> --append-system-prompt-file <path-to-interactive-child.txt>`
 3. Child session's `SessionStart` hook fires on startup:
    - Reads the child session's entry from `session-tree.json`, identifies its session ID, and outputs the context to stdout (including skill invocation if specified) → automatically injected into the conversation context
-   - Updates `session-tree.json` with the child session's conversation ID (`session_id`) and transcript path (`transcript_path`)
+   - Updates `session-tree.json` with the child session's transcript path (`transcript_path`) and process ID (`pid`)
 5. User interacts with the child session directly — an independent conversation separate from the main session
 
 **Session directory:**
@@ -115,19 +116,17 @@ The existing content of both files should be **fully replaced** — this is a re
   },
   "children": [
     {
-      "id": "<main session generated child session ID>",
-      "conversationId": "<child conversation ID, recorded by SessionStart hook>",
-      "itermSessionId": "<iTerm2 session ID>",
+      "conversationId": "<child session ID, generated at spawn and used as --session-id>",
       "topic": "<topic/purpose>",
-      "status": "active | terminated",
+      "status": "pending | active | terminated",
       "createdAt": "<ISO 8601 timestamp>",
+      "pid": "<Claude Code process ID, recorded by SessionStart hook>",
       "skill": "<injected skill name or null>",
       "transcriptPath": "<recorded by SessionStart hook>",
+      "resultPatterns": ["<glob patterns for expected result files>"],
       "resultFiles": ["<result file paths, recorded before termination>"],
-      "injectedContext": {
-        "referenceFiles": ["<file paths>"],
-        "summary": "<context summary from main session>"
-      }
+      "referenceFiles": ["<file paths>"],
+      "contextSummary": "<context summary from main session>"
     }
   ]
 }
@@ -175,7 +174,7 @@ The existing content of both files should be **fully replaced** — this is a re
 
 **Trigger:** User asks about a past child session's conversation in the main session
 
-**Input:** Child session identifier (topic from `children[].topic` or child session ID from `children[].id`)
+**Input:** Child session identifier (topic from `children[].topic` or child session ID from `children[].conversationId`)
 
 **Processing:**
 1. Main session locates the child session's transcript path and result file paths from `session-tree.json`

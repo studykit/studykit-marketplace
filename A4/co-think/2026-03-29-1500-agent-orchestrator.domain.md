@@ -4,7 +4,8 @@ pipeline: co-think
 topic: "interactive agent/prompt use cases"
 date: 2026-03-29
 status: final
-revision: 0
+revision: 1
+last_revised: 2026-03-29
 tags: []
 ---
 # Conceptual Model: interactive agent/prompt use cases
@@ -20,7 +21,7 @@ The agent orchestrator domain centers on a two-level session hierarchy. A **Main
 | Main Session | A session started by the user from CLI (`claude`); root of a session tree | conversationId, name, status | [FR-17], [FR-19] |
 | Child Session | A session spawned from a main session; always belongs to exactly one main session | conversationId, topic, injectedSkill, resultFiles, transcriptPath, injectedContext, status | [FR-17], [FR-18], [FR-19] |
 | Session Tree | A persistent manifest that records one main session and all its child sessions, serving as the single source of truth for session discovery, status tracking, and result file lookup. Stored at `.claude/sessions/<main-conversation-id>/session-tree.json` | filePath | [FR-17], [FR-18], [FR-19] |
-| Interactive Prompt | A system prompt that establishes the LLM's conversational stance (conversation first, action later). Delivered as `interactive.txt` / `interactive.md`. Loaded by child sessions at startup | filePath | [FR-17] |
+| Interactive Prompt | A system prompt that establishes the LLM's conversational stance (conversation first, action later). Delivered as `interactive-child.txt` (for child sessions) and `interactive.txt` / `interactive.md` (for main session). Child sessions load `interactive-child.txt` at startup | filePath | [FR-17] |
 | Injected Skill | A Claude Code skill injected into a child session's system prompt at startup, determining the session's dialogue mode (e.g., co-think-*, spark-*). When loaded alongside the Interactive Prompt, the Injected Skill's instructions take precedence on conflict | name | [FR-17] |
 
 ## Concept Relationships
@@ -74,13 +75,15 @@ InjectedSkill -- InteractivePrompt : overrides on conflict
 
 ```plantuml
 @startuml
-[*] --> active : main session spawns
+[*] --> pending : main session spawns
+pending --> active : SessionStart bootstrap hook
 active --> terminated : SessionEnd hook
 terminated --> [*]
 @enduml
 ```
 
-- **active**: Child session has been created and is running — user is interacting with it in an iTerm2 tab.
+- **pending**: Child session entry created in session-tree.json, iTerm2 pane launched, but bootstrap hook has not yet completed.
+- **active**: SessionStart bootstrap hook has completed — transcriptPath and pid recorded, user is interacting with the session.
 - **terminated**: SessionEnd hook has fired (including Ctrl+D). Status updated in `session-tree.json`. Result file paths, if any, have been recorded before termination.
 
 Main Session and Session Tree do not have domain-level state transitions.
