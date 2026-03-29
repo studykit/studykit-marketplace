@@ -22,7 +22,7 @@ When should the interactive agent and prompt be used? Discover the core value an
 - Child sessions freely create files, generate code, run mock-html — but session termination is always user-decided
 - Main session can view child session list, access result files, and investigate child conversation history via sub-agents
 - Skill injection happens at child session startup via system prompt; otherwise users invoke skills directly within the session
-- **Scope split**: Story [STORY-7] defines the interactive prompt's conversational attitude (standalone behavioral layer). Stories [STORY-8]–[STORY-15] define the **agent orchestrator** — the main session's ability to spawn, manage, and collect results from child sessions.
+- **Scope split**: Story [STORY-7] defines the interactive prompt's conversational attitude (standalone behavioral layer). Stories [STORY-8]–[STORY-15] define the **agent orchestrator** — the main session's ability to spawn, manage, and collect results from child sessions. Stories [STORY-16]–[STORY-18] redesign the **result file delivery** mechanism — replacing resultPatterns-based matching with per-session file tracking and LLM+user-driven registration.
 
 ## Implementation
 - [x] [STORY-7]. Conversation-first attitude at session start — [92c7b8a]
@@ -32,6 +32,9 @@ When should the interactive agent and prompt be used? Discover the core value an
 - [x] [STORY-13]. Child session conversation history investigation
 - [x] [STORY-14]. User controls session termination
 - [x] [STORY-15]. Skill injection at child session startup
+- [ ] [STORY-16]. Session file change tracking
+- [ ] [STORY-17]. LLM-based result file identification
+- [ ] [STORY-18]. Result file delivery to main session
 
 ## Job Stories
 
@@ -79,6 +82,24 @@ When should the interactive agent and prompt be used? Discover the core value an
 **so I can** start the child session already in the right structured dialogue mode.
 
 
+### [STORY-16]. Session file change tracking *(redesigns part of [STORY-10]/[STORY-12])*
+**When** files are created or modified during a session,
+**I want to** have all file changes automatically recorded,
+**so I can** have a complete record of what the session produced.
+
+
+### [STORY-17]. LLM-based result file identification
+**When** a child session has been working and producing files,
+**I want to** have the LLM evaluate which files are key deliverables and suggest them to me,
+**so I can** register important outputs without manually tracking every file change.
+
+
+### [STORY-18]. Result file delivery to main session *(redesigns part of [STORY-12])*
+**When** a file is approved as a key deliverable in a child session,
+**I want to** have the main session automatically notified,
+**so I can** access child session results from the main session without searching for them.
+
+
 ## Story Relationships
 
 ### Dependencies
@@ -86,6 +107,8 @@ When should the interactive agent and prompt be used? Discover the core value an
 - **[STORY-9] → [STORY-12]**: Spawning ([STORY-9]) is a prerequisite for result file registration ([STORY-12])
 - **[STORY-9] → [STORY-13]**: Spawning ([STORY-9]) is a prerequisite for history investigation ([STORY-13])
 - **[STORY-9] → [STORY-15]**: Spawning ([STORY-9]) is a prerequisite for skill injection ([STORY-15])
+- **[STORY-16] → [STORY-17]**: File change tracking ([STORY-16]) must exist before LLM can evaluate modified files ([STORY-17])
+- **[STORY-17] → [STORY-18]**: LLM identification ([STORY-17]) feeds into result file delivery ([STORY-18])
 
 ### Reinforcement
 - **[STORY-7] + [STORY-14]**: Conversation-first attitude ([STORY-7]) and user-controlled termination ([STORY-14]) together ensure the LLM never rushes — neither at the start nor at the end
@@ -96,11 +119,7 @@ When should the interactive agent and prompt be used? Discover the core value an
 - **Conversational attitude**: [STORY-7], [STORY-14] — define how the LLM behaves within a session (interactive prompt scope)
 - **Agent orchestrator – session lifecycle**: [STORY-9], [STORY-10], [STORY-15] — define how sessions are created and configured
 - **Agent orchestrator – session results**: [STORY-12], [STORY-13] — define how outputs flow back to the main session
-
-## Topics for Next Phase (beyond Job Story scope)
-- Session metadata file structure — what fields, format, and location for tracking child sessions
-- Hook event design — which events trigger information exchange between sessions
-- Child session list storage — how the main session discovers and enumerates past/active child sessions
+- **Agent orchestrator – result file delivery**: [STORY-16], [STORY-17], [STORY-18] — define how result files are tracked, identified, and delivered to the main session
 
 ## Open Questions
 *No unresolved questions at this time.*
@@ -115,4 +134,7 @@ When should the interactive agent and prompt be used? Discover the core value an
 [STORY-13]: https://github.com/studykit/studykit-plugins/issues/13
 [STORY-14]: https://github.com/studykit/studykit-plugins/issues/14
 [STORY-15]: https://github.com/studykit/studykit-plugins/issues/15
+[STORY-16]: https://github.com/studykit/studykit-plugins/issues/20
+[STORY-17]: https://github.com/studykit/studykit-plugins/issues/21
+[STORY-18]: https://github.com/studykit/studykit-plugins/issues/22
 [92c7b8a]: https://github.com/studykit/studykit-plugins/commit/92c7b8a
