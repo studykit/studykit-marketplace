@@ -111,12 +111,12 @@ The existing content of both files should be **fully replaced** — this is a re
 ```json
 {
   "mainSession": {
-    "conversationId": "<main session conversation ID>",
+    "id": "<main session's Claude session ID>",
     "name": "<user-assigned name for search/identification>"
   },
   "children": [
     {
-      "conversationId": "<child session ID, generated at spawn and used as --session-id>",
+      "id": "<child session's Claude session ID, generated at spawn and used as --session-id>",
       "topic": "<topic/purpose>",
       "status": "pending | active | terminated",
       "createdAt": "<ISO 8601 timestamp>",
@@ -174,7 +174,7 @@ The existing content of both files should be **fully replaced** — this is a re
 
 **Trigger:** User asks about a past child session's conversation in the main session
 
-**Input:** Child session identifier (topic from `children[].topic` or child session ID from `children[].conversationId`)
+**Input:** Child session identifier (topic from `children[].topic` or child session ID from `children[].id`)
 
 **Processing:**
 1. Main session locates the child session's transcript path and result file paths from `session-tree.json`

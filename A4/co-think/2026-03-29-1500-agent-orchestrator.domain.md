@@ -18,8 +18,8 @@ The agent orchestrator domain centers on a two-level session hierarchy. A **Main
 
 | Concept | Definition | Key Attributes | Related FRs |
 |---------|-----------|----------------|-------------|
-| Main Session | A session started by the user from CLI (`claude`); root of a session tree | conversationId, name, status | [FR-17], [FR-19] |
-| Child Session | A session spawned from a main session; always belongs to exactly one main session | conversationId, topic, injectedSkill, resultFiles, transcriptPath, injectedContext, status | [FR-17], [FR-18], [FR-19] |
+| Main Session | A session started by the user from CLI (`claude`); root of a session tree | id (Claude session ID), name, status | [FR-17], [FR-19] |
+| Child Session | A session spawned from a main session; always belongs to exactly one main session | id (Claude session ID), topic, injectedSkill, resultFiles, transcriptPath, injectedContext, status | [FR-17], [FR-18], [FR-19] |
 | Session Tree | A persistent manifest that records one main session and all its child sessions, serving as the single source of truth for session discovery, status tracking, and result file lookup. Stored at `.claude/sessions/<main-conversation-id>/session-tree.json` | filePath | [FR-17], [FR-18], [FR-19] |
 | Interactive Prompt | A system prompt that establishes the LLM's conversational stance (conversation first, action later). Delivered as `interactive-child.txt` (for child sessions) and `interactive.txt` / `interactive.md` (for main session). Child sessions load `interactive-child.txt` at startup | filePath | [FR-17] |
 | Injected Skill | A Claude Code skill injected into a child session's system prompt at startup, determining the session's dialogue mode (e.g., co-think-*, spark-*). When loaded alongside the Interactive Prompt, the Injected Skill's instructions take precedence on conflict | name | [FR-17] |
@@ -29,13 +29,13 @@ The agent orchestrator domain centers on a two-level session hierarchy. A **Main
 ```plantuml
 @startuml
 class MainSession {
-  conversationId
+  id
   name
   status
 }
 
 class ChildSession {
-  conversationId
+  id
   topic
   resultFiles
   transcriptPath
@@ -130,7 +130,7 @@ Main Session and Session Tree do not have domain-level state transitions.
 
 ### Round 9
 **Q:** Should Session remain in the glossary as a shared concept for Main Session and Child Session?
-**A:** No — it's self-evident that both have conversationId and status. Just keep Main Session and Child Session.
+**A:** No — it's self-evident that both have id and status. Just keep Main Session and Child Session.
 
 ### Round 10
 **Q:** Relationships — should Session Tree separately "contain" children, or is that redundant with Main Session "spawns" children?

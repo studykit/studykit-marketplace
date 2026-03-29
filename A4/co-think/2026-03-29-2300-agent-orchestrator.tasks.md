@@ -31,9 +31,9 @@ tags: []
 `[x]` **FR-17 기반** — 모든 컴포넌트가 공유하는 session-tree.json 읽기/쓰기 유틸리티
 
 **산출물:**
-- `global/hooks/lib/session-tree.sh` — flock 기반 atomic read-modify-write 함수들
+- `global/hooks/lib/session_tree.py` — fcntl.flock 기반 atomic read-modify-write 함수들
   - `st_read` — lock + read
-  - `st_write` — lock + write (jq 변환)
+  - `st_write` — lock + write (callable transform)
   - `st_find_child` — session_id로 child entry 조회
 
 **의존성:** 없음 (기반 모듈)
@@ -45,7 +45,7 @@ tags: []
 `[x]` **FR-17 기반** — iTerm2 탭 생성 및 환경변수 전달
 
 **산출물:**
-- `global/hooks/lib/iterm2.sh` — `it2` CLI (iTerm2 shell integration) 사용
+- `global/hooks/lib/iterm2_launcher.py` — `it2` CLI (iTerm2 shell integration) 사용
   - 새 pane 생성 + 환경변수(`SESSION_TREE`) 설정
   - `claude --session-id <uuid> --append-system-prompt-file interactive-child.txt` 실행
 
@@ -59,7 +59,7 @@ tags: []
 
 **산출물:**
 - `global/agents/interactive.md` 업데이트 — session manager 지시문 추가 (spawn 가능 안내, 워크플로우)
-- `global/skills/spawn-session.md` — spawn 전용 skill (slash command 역할)
+- `global/skills/chat/SKILL.md` — spawn 전용 skill (`/chat` slash command 역할)
 
 **처리 내용:**
 1. `.claude/sessions/<main-conversation-id>/` 디렉토리 lazy 생성
@@ -68,7 +68,7 @@ tags: []
 
 **트리거 방식 (두 가지 병행):**
 - interactive.md 지시문 — LLM이 대화 중 판단/제안, 사용자 승인 후 Bash로 spawn 스크립트 실행
-- spawn-session skill — 사용자가 명시적으로 `/spawn-session` 호출
+- chat skill — 사용자가 명시적으로 `/chat` 호출
 
 **의존성:** T1, T2
 
@@ -79,7 +79,7 @@ tags: []
 `[x]` **FR-17, STORY-15** — child session 초기화
 
 **산출물:**
-- `global/hooks/session-start-bootstrap.sh` — SessionStart 훅 스크립트
+- `global/hooks/session_start_bootstrap.py` — SessionStart 훅 스크립트
 - `.claude/settings.json` 훅 등록
 
 **처리 내용:**
@@ -88,7 +88,7 @@ tags: []
 3. session-tree.json에서 자기 entry 조회 (T1 유틸리티)
 4. context (referenceFiles, summary) + resultPatterns를 stdout으로 주입
 5. skill이 지정되어 있으면 skill 호출 지시 주입
-6. conversationId, transcriptPath, pid(`$$`) 기록
+6. id (Claude session ID), transcriptPath, pid(`$$`) 기록
 
 **의존성:** T1
 
@@ -99,7 +99,7 @@ tags: []
 `[x]` **FR-18, STORY-10** — 파일 쓰기 시 result file 자동 등록
 
 **산출물:**
-- `global/hooks/post-tool-result-collector.sh` — PostToolUse 훅 스크립트
+- `global/hooks/post_tool_result_collector.py` — PostToolUse 훅 스크립트
 - `.claude/settings.json` 훅 등록
 
 **처리 내용:**
@@ -117,7 +117,7 @@ tags: []
 `[x]` **FR-18, STORY-12** — 세션 종료 시 상태 업데이트
 
 **산출물:**
-- `global/hooks/session-end-collector.sh` — SessionEnd 훅 스크립트
+- `global/hooks/session_end_collector.py` — SessionEnd 훅 스크립트
 - `.claude/settings.json` 훅 등록
 
 **처리 내용:**
@@ -133,7 +133,7 @@ tags: []
 `[x]` **FR-18, STORY-10, STORY-12** — 메인 세션에서 session-tree.json 변경 감지
 
 **산출물:**
-- `global/hooks/session-monitor.sh` — FileChanged 훅 스크립트 (matcher: `session-tree.json`)
+- `global/hooks/session_monitor.py` — FileChanged 훅 스크립트 (matcher: `session-tree.json`)
 - `.claude/settings.json` 훅 등록
 
 **처리 내용:**
@@ -227,7 +227,7 @@ T1 (session-tree 유틸리티)    T2 (iTerm2 모듈)
 ## Decisions
 
 - **T2 — iTerm2 스크립팅**: Python + inline dependency (`iterm2`), `uv run`으로 실행
-- **T3 — Spawn 트리거**: 두 가지 병행 — interactive.md 지시문 + spawn-session skill. 테스트 용이성 확보
+- **T3 — Spawn 트리거**: 두 가지 병행 — interactive.md 지시문 + chat skill. 테스트 용이성 확보
 - **T9 — 훅 등록 범위**: 프로젝트 수준 `.claude/settings.json`에 먼저 등록, 검증 후 global로 이전
 
 <!-- references -->

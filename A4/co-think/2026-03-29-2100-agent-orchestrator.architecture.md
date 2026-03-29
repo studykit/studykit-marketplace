@@ -50,9 +50,9 @@ HI --> ST : reads transcriptPath
 @enduml
 ```
 
-**Session Manager** — orchestration logic in the main session. Creates child entries in session-tree.json, launches iTerm2 tabs, and coordinates investigation requests. iTerm2 tab creation uses `it2` CLI (iTerm2 shell integration). Spawn is triggered via the `spawn-session` skill, which receives the main session's `session_id` through the `${CLAUDE_SESSION_ID}` skill template variable.
+**Session Manager** — orchestration logic in the main session. Creates child entries in session-tree.json, launches iTerm2 tabs, and coordinates investigation requests. iTerm2 tab creation uses `it2` CLI (iTerm2 shell integration). Spawn is triggered via the `chat` skill, which receives the main session's `session_id` through the `${CLAUDE_SESSION_ID}` skill template variable.
 
-**Child Session Bootstrap** — SessionStart hook on the child session. Locates session-tree.json via the `$SESSION_TREE` environment variable, reads its own entry by matching `session_id` from stdin JSON against `conversationId`, injects context (reference files, summary) and skill into the conversation via stdout, then writes back its transcriptPath and pid.
+**Child Session Bootstrap** — SessionStart hook on the child session. Locates session-tree.json via the `$SESSION_TREE` environment variable, reads its own entry by matching `session_id` from stdin JSON against `id`, injects context (reference files, summary) and skill into the conversation via stdout, then writes back its transcriptPath and pid.
 
 **Result Collector** — PostToolUse and SessionEnd hooks on the child session. PostToolUse hook receives `tool_input.file_path` via stdin JSON to identify file writes and register result files. SessionEnd hook marks the session as terminated. Both locate session-tree.json via the `$SESSION_TREE` environment variable.
 
@@ -73,13 +73,13 @@ HI --> ST : reads transcriptPath
 ```plantuml
 @startuml
 entity "MainSessionRecord" as main {
-  *conversationId : text <<PK>>
+  *id : text <<PK>> -- Claude session ID
   --
   *name : text
 }
 
 entity "ChildSessionRecord" as child {
-  *conversationId : text <<PK>>
+  *id : text <<PK>> -- Claude session ID
   --
   *topic : text
   *status : text
@@ -100,7 +100,7 @@ main ||--o{ child : contains
 The session-tree.json file contains one MainSessionRecord and zero or more ChildSessionRecords. This is a single JSON file, not a relational database — the ERD captures the logical structure.
 
 - **MainSessionRecord**: identifies the main session. `name` is user-assigned for search/identification.
-- **ChildSessionRecord**: one per spawned child session. `conversationId` is the PK, generated at spawn time and used as the `--session-id` for the child Claude Code process. `status` is `pending` (spawned, bootstrap not yet complete), `active` (bootstrap complete, session running), `terminated`, `crashed`, or `failed_to_start`. `pid` is the child Claude Code process ID, recorded by the Child Session Bootstrap for crash detection. `transcriptPath` is initially null, filled by the Child Session Bootstrap hook. `resultPatterns` is an array of glob patterns (e.g., `["A4/co-think/*.requirement.md"]`). The main session seeds initial patterns at spawn time. The child session can append additional patterns to its own entry — the Child Session Bootstrap may add skill-specific patterns during initialization, and the child LLM can register new patterns by writing to session-tree.json during the session. The Result Collector's PostToolUse hook validates file writes against all patterns in the array. The Child Session Bootstrap also injects `resultPatterns` as a prompt instruction directing the LLM to save results to matching paths. `resultFiles` accumulates matched paths during the session lifetime. `referenceFiles` and `contextSummary` capture the injected context from the main session at spawn time.
+- **ChildSessionRecord**: one per spawned child session. `id` is the PK — the Claude session ID, generated at spawn time and used as the `--session-id` for the child Claude Code process. `status` is `pending` (spawned, bootstrap not yet complete), `active` (bootstrap complete, session running), `terminated`, `crashed`, or `failed_to_start`. `pid` is the child Claude Code process ID, recorded by the Child Session Bootstrap for crash detection. `transcriptPath` is initially null, filled by the Child Session Bootstrap hook. `resultPatterns` is an array of glob patterns (e.g., `["A4/co-think/*.requirement.md"]`). The main session seeds initial patterns at spawn time. The child session can append additional patterns to its own entry — the Child Session Bootstrap may add skill-specific patterns during initialization, and the child LLM can register new patterns by writing to session-tree.json during the session. The Result Collector's PostToolUse hook validates file writes against all patterns in the array. The Child Session Bootstrap also injects `resultPatterns` as a prompt instruction directing the LLM to save results to matching paths. `resultFiles` accumulates matched paths during the session lifetime. `referenceFiles` and `contextSummary` capture the injected context from the main session at spawn time.
 
 #### Information Flow
 
@@ -109,7 +109,7 @@ The session-tree.json file contains one MainSessionRecord and zero or more Child
 ```plantuml
 @startuml
 participant "User" as U
-participant "spawn-session skill" as SK
+participant "chat skill" as SK
 participant "Session Manager" as SM
 participant "session-tree.json" as ST
 participant "iTerm2\n(it2 CLI)" as IT
@@ -119,7 +119,7 @@ participant "Child Session" as CS
 alt Natural language trigger
   U -> SM : request spawn (topic, skill?)
 else Skill trigger
-  U -> SK : /spawn-session
+  U -> SK : /chat
   SK -> SM : invoke with topic, skill
 end
 
@@ -136,7 +136,7 @@ U -> CS : interact directly
 @enduml
 ```
 
-The spawn flow has two entry points: (1) natural language — the LLM suggests spawning and the user approves, (2) the `spawn-session` skill — the user invokes `/spawn-session` directly. Both paths converge at the Session Manager, which generates a child session ID (UUID), writes the entry to session-tree.json with `conversationId` set to the generated UUID, and launches an iTerm2 tab via `it2` CLI with `SESSION_TREE=<path> claude --session-id <uuid> --append-system-prompt-file interactive-child.txt`. The child session's SessionStart hook receives `session_id` and `transcript_path` via stdin JSON, reads the `$SESSION_TREE` environment variable to locate session-tree.json, finds its own entry by matching `session_id` against `conversationId`, injects the context and skill via stdout, and writes back its transcriptPath and pid to the manifest.
+The spawn flow has two entry points: (1) natural language — the LLM suggests spawning and the user approves, (2) the `chat` skill — the user invokes `/chat` directly. Both paths converge at the Session Manager, which generates a child session ID (UUID), writes the entry to session-tree.json with `id` set to the generated UUID (Claude session ID), and launches an iTerm2 tab via `it2` CLI with `SESSION_TREE=<path> claude --session-id <uuid> --append-system-prompt-file interactive-child.txt`. The child session's SessionStart hook receives `session_id` and `transcript_path` via stdin JSON, reads the `$SESSION_TREE` environment variable to locate session-tree.json, finds its own entry by matching `session_id` against `id`, injects the context and skill via stdout, and writes back its transcriptPath and pid to the manifest.
 
 ##### Story: STORY-15 — Skill injection at child session startup
 
@@ -148,7 +148,7 @@ Skill injection is part of the STORY-9 spawn flow. The Session Manager includes 
 
 **Data store:** No
 
-**Identification mechanism:** The child session is launched with `SESSION_TREE=<path>` environment variable and `--session-id <uuid>` CLI flag. The SessionStart hook receives `session_id` via stdin JSON, reads `$SESSION_TREE` to locate the manifest, and matches its entry by `session_id` against `conversationId`. This avoids any indirect identification (marker files, iTerm2 session IDs) — the child knows exactly who it is and where to look.
+**Identification mechanism:** The child session is launched with `SESSION_TREE=<path>` environment variable and `--session-id <uuid>` CLI flag. The SessionStart hook receives `session_id` via stdin JSON, reads `$SESSION_TREE` to locate the manifest, and matches its entry by `session_id` against `id`. This avoids any indirect identification (marker files, iTerm2 session IDs) — the child knows exactly who it is and where to look.
 
 #### Information Flow
 

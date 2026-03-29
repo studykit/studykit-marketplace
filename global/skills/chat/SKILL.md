@@ -1,75 +1,75 @@
 ---
 name: chat
-description: This skill should be used when the user asks to "chat", "let's talk", "have a conversation", "discuss", "brainstorm together", wants to explore a topic interactively, or needs collaborative problem-solving in a split pane. Conversation summary is returned to the main session on exit.
-argument-hint: [--agent [name]] [--skill <names>] [topic]
-version: 0.1.0
+description: This skill should be used when the user says "/chat", "spawn a session", "open a new session", "split this off", "delegate this to another session", or wants to spin off a sub-task into a dedicated child Claude Code session in a new iTerm2 tab.
 ---
 
-Start an interactive sub-agent conversation session.
+# Spawn Child Session
 
-## Argument Parsing
+Spawn a child Claude Code session in a new iTerm2 tab. Walk through each step conversationally — ask one question at a time, then execute via the bundled script.
 
-Parse `$ARGUMENTS` by extracting flags and treating the remainder as the conversation topic.
+## Gather Information
 
-### Flags
+### Step 1 — Topic
 
-| Flag | Behavior |
-|---|---|
-| `--agent <name>` | Use the named agent as `subagent_type`. |
-| `--agent` (no value) | Analyze the topic context and, if a suitable agent exists, recommend it to the user via AskUserQuestion. The user can accept or decline. If no suitable agent is identified, omit `subagent_type`. |
-| *(no `--agent` flag)* | No agent — omit `subagent_type`. |
-| `--skill <names>` | Preload the listed skills (comma-separated) into the chat agent's prompt so they are available during the conversation. |
+Ask: **What is the topic or purpose for this child session?**
 
-Everything that is not a flag or flag value is the **topic**.
+This becomes the tab title and the `topic` field. Keep it short (a few words).
 
-### Examples
+If `$ARGUMENTS` is provided, use the first argument as the topic and skip asking.
 
-- `/chat --agent debugger login bug` → agent: `debugger`, topic: `login bug`
-- `/chat --agent review the auth module` → recommend a suitable agent (e.g., `code-reviewer`) via AskUserQuestion → user accepts or declines, topic: `review the auth module`
-- `/chat what should we do today` → agent: (none), topic: `what should we do today`
-- `/chat --skill commit,simplify refactor the utils` → agent: (none), skills: `commit`, `simplify` preloaded, topic: `refactor the utils`
-- `/chat --agent executor --skill commit build the feature` → agent: `executor`, skills: `commit` preloaded, topic: `build the feature`
-- `/chat` → agent: (none), topic: none
+### Step 2 — Skill (optional)
 
-## Summary Format
+Ask: **Should a skill be injected into the child session?** (e.g., `co-think-architecture`, `co-think-domain`)
 
-Determine the summary format based on why the conversation was started.
+Omit the `--skill` flag if the user declines or is unsure.
 
-- For a specific purpose (e.g., debugging, code review, planning), define a `summary_format` tailored to that purpose and pass it into the prompt template.
-- For free conversation with no specific purpose, omit `summary_format` and the default format from the prompt template applies.
+### Step 3 — Reference Files
 
-Always include an **Artifacts** section in the summary listing any files created or modified during the conversation, with paths and a brief description. If no files were changed, write "None".
+Ask: **Are there any files the child session should be aware of?**
 
-## Execution Steps
+Suggest files from the current conversation context that seem relevant. The user can confirm, add, or skip.
 
-1. Create a team with TeamCreate.
-   - team_name: "interactive-chat"
+### Step 4 — Context Summary
 
-2. Determine the `summary_format` based on the conversation intent. Leave it empty if there is no specific purpose.
+Generate a concise context summary from the conversation so far — what the child session needs to know to pick up the sub-task. Present it to the user for approval or edits.
 
-3. Spawn a teammate with the Agent tool.
-   - subagent_type: (parsed agent name, or omit if no agent was matched)
-   - name: "chat-agent"
-   - team_name: "interactive-chat"
-   - prompt: Use the prompt template from **`references/prompt-template.md`**, injecting `summary_format` if provided.
+### Step 5 — Result Patterns (optional)
 
-4. Wait while the teammate converses directly with the user in a split pane.
+Ask: **What files do you expect the child session to produce?** (glob patterns, e.g., `docs/*.md`, `src/feature/**/*.ts`)
 
-5. On receiving a message containing the `[SHUTDOWN_REQUEST]` tag from the teammate:
-   a. Record the conversation summary.
-   b. Send a shutdown_request to the teammate.
-   c. Once the teammate has shut down, clean up the team with TeamDelete.
-   d. Display the conversation summary to the user.
+Omit the `--result-patterns` flag if the user declines or is unsure.
 
-## Important Notes
+## Execute
 
-- Do NOT run TeamDelete before the teammate has shut down.
-- If the user force-quits the teammate with Ctrl+D, no summary will be delivered. Still clean up the team in this case.
-- Ignore idle_notification from the teammate — this is normal behavior. Keep waiting.
-- `[SHUTDOWN_REQUEST]` is a custom tag, not an official protocol. It works around the limitation that teammates cannot self-terminate in Agent Teams. Replace with an official API if one becomes available.
+Confirm the spawn details with the user, then execute via Bash:
 
-## Additional Resources
+```bash
+uv run "${CLAUDE_SKILL_DIR}/scripts/spawn_session.py" \
+  --session-id "${CLAUDE_SESSION_ID}" \
+  --topic "<TOPIC>" \
+  --skill "<SKILL>" \
+  --reference-files "<file1.md,file2.md>" \
+  --context-summary "<SUMMARY>" \
+  --result-patterns "<pattern1,pattern2>"
+```
 
-### Reference Files
+Omit optional flags (`--skill`, `--reference-files`, `--result-patterns`) if not provided. `--session-id` and `--topic` are required. Quote all string values for shell safety.
 
-- **`references/prompt-template.md`** — Full interactive prompt template with conversation rules, termination format, and shutdown protocol.
+**Important:** Do not create separate prompt files or run `claude` directly — the script handles session-tree.json registration and context injection via the bootstrap hook.
+
+After execution, report the child session ID and confirm the tab was opened.
+
+## Check Status
+
+To check on existing child sessions:
+
+```bash
+export SESSION_TREE=".claude/sessions/${CLAUDE_SESSION_ID}/session-tree.json"
+uv run -c "
+import sys; sys.path.insert(0, 'global/hooks/lib')
+from session_tree import st_read
+import json
+for c in st_read().get('children', []):
+    print(json.dumps({k: c.get(k) for k in ('id','topic','status','resultFiles')}, indent=2))
+"
+```

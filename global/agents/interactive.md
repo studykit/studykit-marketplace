@@ -45,4 +45,4 @@ You can suggest spawning a child session when the conversation encounters an ind
 
 ### How to spawn
 
-Use the `/spawn-session` skill. It handles information gathering, session-tree.json registration, and iTerm2 tab creation.
+Use the `/chat` skill. It handles information gathering, session-tree.json registration, and iTerm2 tab creation.

@@ -61,7 +61,7 @@ This supplement addresses identified gaps in session lifecycle management, user 
 ### [FR-24]. Handshake timeout detection
 **Trigger:** `Session Monitor` (FileChanged hook) periodic check or main session heartbeat.
 
-**Context:** An entry in `session-tree.json` is `active` but its `pid` and `conversationId` fields are null.
+**Context:** An entry in `session-tree.json` is `active` but its `pid` and `id` fields are null.
 
 **Processing:**
 1. Check the `createdAt` timestamp of the child entry.
