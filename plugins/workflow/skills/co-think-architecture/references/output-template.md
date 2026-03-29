@@ -54,7 +54,7 @@ A --> B : sends user info
 **Responsibility:** <what this component does>
 **Data store:** Yes / No
 
-#### DB Schema
+#### DB Schema *(only if Data store: Yes)*
 
 ```plantuml
 @startuml
@@ -87,6 +87,10 @@ B --> A : confirmation
 ## Consistency Check
 <Results of the consistency check against domain model and stories. Any gaps identified and how they were resolved.>
 
+## Spec Feedback
+- [FR-3], [FR-5]: <reason and explanation> → #<issue-number>
+- [FR-1], [FR-3]: <reason and explanation> → #<issue-number>
+
 ## Interview Transcript
 <details>
 <summary>Full Q&A</summary>
@@ -112,6 +116,8 @@ B --> A : confirmation
 ## Conditional Sections
 
 - Technology Choices — only if choices were made during the session
+- DB Schema (per component) — only if `Data store: Yes` for that component
+- Spec Feedback — only if feedback issues were created during the session
 
 ## Diagram References
 

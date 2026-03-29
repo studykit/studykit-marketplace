@@ -132,7 +132,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ## Facilitation Guidelines
 
-- **Show the next question, but give space for the previous one.** After processing the user's answer, present the next question — then use AskUserQuestion to let the user either answer the new question or continue discussing the previous topic. This handles both paths in one turn.
+- **Show the next question, but give space for the previous one.** After processing the user's answer, present the next question — then let the user either answer the new question or continue discussing the previous topic. This handles both paths in one turn.
 - **Stay concrete.** Anchor to specific FRs, not abstract domain theory.
 - **Use the user's language.** Don't introduce DDD jargon unless the user does.
 - **Don't design the solution.** Capture what exists in the domain, not how to implement it.
