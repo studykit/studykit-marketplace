@@ -8,7 +8,7 @@ topic: "<topic>"
 created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>
 revision: 0
-status: final
+status: draft | final
 tags: []
 ---
 # Use Cases: <topic>
@@ -22,9 +22,9 @@ tags: []
 
 ## Actors
 
-| Actor | Description |
-|-------|-------------|
-| <name> | <who this person/system is and what they're trying to do> |
+| Actor | Type | Role | Description |
+|-------|------|------|-------------|
+| <name> | person / system | <privilege level, e.g., admin, editor, viewer, — for system> | <who this person/system is and what they're trying to do> |
 
 ## Use Case Diagram
 
@@ -108,6 +108,27 @@ end note
 <Questions that came up but weren't resolved. Topics to revisit.>
 - ...
 
+## Change Log
+
+| Revision | Date | Section | Change | Reason |
+|----------|------|---------|--------|--------|
+| 1 | <YYYY-MM-DD> | <section> | <what changed> | <why> |
+
+## Session Checkpoint (Revision <N>)
+> Last updated: <YYYY-MM-DD HH:mm>
+
+### Decisions Made
+- <key decision>
+
+### Open Items
+
+| Section | Item | What's Missing | Priority |
+|---------|------|---------------|----------|
+| <section> | <item reference> | <specific gap description> | High / Medium / Low |
+
+### Next Steps
+- <suggested work items for next iteration, derived from Open Items>
+
 ## Interview Transcript
 <details>
 <summary>Full Q&A</summary>
@@ -143,6 +164,7 @@ end note
 
 **Issue reference links:** See [issue-links.md](../../references/issue-links.md).
 
-**Required sections**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Interview Transcript.
+**Required sections**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Session Checkpoint, Interview Transcript.
 **Conditionally required:**
 - **Open Questions** — if unresolved topics remain
+- **Change Log** — only in Iteration mode (revision > 0)

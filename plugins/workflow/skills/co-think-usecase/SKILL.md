@@ -52,21 +52,56 @@ The working file is a living document that grows throughout the interview. The u
 | Create | Idea received (step 1) | Create the file with frontmatter, original idea, and empty sections |
 | Update | Each use case confirmed or split (steps 3-4) | Append the new use case; update actors table and diagram |
 | Update | Progress snapshot (every 4-5 exchanges) | Update the Context section with latest understanding |
-| Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, remove draft marker |
+| End iteration | User pauses the session | Increment revision, write Session Checkpoint (Revision N), update Change Log |
+| Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, set `status: final` |
 
 ### Working File Path
 
 At the start of the interview, determine the file path:
 - Default: `A4/co-think/<topic-slug>.usecase.md` relative to working directory
-- If the file already exists, this is a **continuation** — read the existing file, present the current state, and continue from where it left off
+- If the file already exists, this is an **iteration** — enter Iteration Mode (see below)
 - Ask the user only if they want a different location
 - Create the directory if needed
 
-### Initial File Content
+### New Session (file does not exist)
 
-Write this immediately after restating the idea. Follow the template in `references/output-template.md` — create the file with frontmatter (`status: draft`), the Original Idea section filled in, and placeholder text for Context, Actors, Use Case Diagram, Use Cases, and Open Questions.
+Write the file immediately after restating the idea. Follow the template in `references/output-template.md` — create the file with frontmatter (`status: draft`), the Original Idea section filled in, and placeholder text for Context, Actors, Use Case Diagram, Use Cases, and Open Questions.
 
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
+
+### Iteration Mode (file already exists)
+
+When the working file already exists, this is a returning session to refine the use cases.
+
+**Entry procedure:**
+1. Read the existing file completely.
+2. Present a brief status summary:
+   - Number of confirmed use cases
+   - Actors identified so far
+   - Open Items from previous session (if any)
+   - Open Questions (if any)
+3. Present the Open Items table (if it exists) as a selectable work backlog:
+   > **Open Items from last session:**
+   > | # | Section | Item | What's Missing | Priority |
+   > |---|---------|------|---------------|----------|
+   > | 1 | UC-3 | Situation | Too vague — needs concrete trigger | High |
+   > | 2 | Actors | — | Implicit approver actor not declared | Medium |
+   >
+   > Which items would you like to work on? Or would you prefer to add new use cases?
+4. The user chooses what to work on. Possible activities:
+   - **Add new use cases** — resume the Discovery Loop (step 2) as normal
+   - **Clarify existing UCs** — revisit flagged use cases one by one, asking targeted questions to fill gaps
+   - **Refine actors** — add missing actors, split actors with privilege differences, add system actors
+   - **Split oversized UCs** — process previously deferred SPLIT suggestions
+   - **Re-analyze relationships** — update dependencies, reinforcements, and groups after changes
+   - **Resolve Open Questions** — address unresolved topics from previous sessions
+
+**Iteration rules:**
+- Preserve all previously confirmed use cases — never remove or reorder them unless the user explicitly requests it.
+- New use cases get the next available UC-N ID (continue numbering from where the previous session left off).
+- When modifying an existing UC, show the before/after and confirm with the user before updating.
+- Increment the `revision` number in frontmatter at each iteration end.
+- Append this session's transcript to the existing Interview Transcript (as a new numbered round).
 
 ### How to Update
 
@@ -106,7 +141,11 @@ These are not stages to march through in order. Follow the conversation naturall
 
 When the user's answer is vague, ask for a concrete example. When they're stuck, offer 2-3 options to choose from.
 
-**Actor discovery:** As the conversation reveals people or systems that interact with the software, add them to the Actors table. Confirm with the user: "It sounds like there's a [role] involved here. Should I add them as an actor?"
+**Actor discovery:** As the conversation reveals people or systems that interact with the software, add them to the Actors table with Type and Role:
+- **Type** — determine from the situation and flow: is the actor a `person` (human user) or `system` (scheduler, external service, automated process)?
+- **Role** — determine from the actions the actor performs across use cases: actors who create/edit/delete have higher privilege than actors who only view. Use domain-appropriate labels (e.g., admin, editor, viewer). System actors use `—` for role.
+- Confirm with the user: "It sounds like there's a [name] involved here — they seem to be a [type] with [role]-level access based on [observed actions]. Should I add them as an actor?"
+- When the usecase-reviewer flags PRIVILEGE SPLIT (same actor performs actions at different privilege levels), revisit the Actor table and ask the user whether to split the actor into separate roles.
 
 ### 3. Progressive Use Case Extraction
 
@@ -182,15 +221,36 @@ After 5 or more use cases have been confirmed, analyze and present the relations
 
 The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper or add more use cases. Keep asking until the user explicitly ends the session.
 
-When the user indicates they're done:
+When the user indicates they're done, ask whether they want to:
+- **End this iteration** (come back later to refine further)
+- **Finalize** (mark as complete, create issues)
 
-1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path. The agent evaluates every use case for size, actor clarity, goal specificity, situation concreteness, flow completeness, outcome measurability, abstraction level, and overlap.
+### End Iteration (not finalizing)
+
+1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path.
 2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
    - `SPLIT` — propose the split and ask for confirmation
    - `VAGUE` / `UNCLEAR` / `WEAK` — present the suggestion and ask if the user wants to revise
    - `IMPLEMENTATION LEAK` — point out the implementation term and ask for the user-level intent
    - `OVERLAPS` — ask if the user wants to merge or differentiate
-   - The user can accept, modify, or dismiss each suggestion. Respect their decision.
+   - The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
+3. **Update the working file** with any revisions from the review.
+4. **Scan for Open Items** — review all sections for incomplete or unclear items:
+   - Use cases flagged by the reviewer but deferred by the user
+   - Actors suspected but not confirmed (from Actor Discovery feedback)
+   - Vague situations or weak outcomes the user chose not to address now
+   - Unresolved Open Questions
+   - Relationships not yet analyzed (if < 5 UCs)
+5. **Increment `revision`** in frontmatter and update `revised` timestamp. Keep `status: draft`.
+6. **Write the Session Checkpoint** — update the heading to `## Session Checkpoint (Revision N)` with the new revision number. Record decisions made and Open Items for next iteration.
+7. **Update the Change Log** — record all changes made in this iteration with the new revision number.
+8. **Append this session's Interview Transcript** as a new round.
+9. **Report** — show the user the current state and Open Items for next time.
+
+### Finalize
+
+1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path.
+2. **Present the review results** — walk through each flagged issue one at a time. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
 3. **Update the working file** with any revisions from the review.
 4. **Finalize the Use Case Diagram** — ensure all confirmed use cases, actors, and relationships (include/extend) are reflected in the PlantUML diagram.
 5. **Create GitHub Issues for each use case** — for each finalized use case:
@@ -210,8 +270,10 @@ When the user indicates they're done:
    - Ensure all confirmed Use Cases are present and in order
    - Ensure the Actors table is complete
    - Ensure the Use Case Diagram is complete
+   - Clear the Open Items table (all items should be resolved)
    - Add the Open Questions section if unresolved topics remain
    - Append the full Interview Transcript
+   - Set `status: final` in frontmatter
    - Remove any placeholder text
 7. **Report the path and issues** so the user can reference them.
 

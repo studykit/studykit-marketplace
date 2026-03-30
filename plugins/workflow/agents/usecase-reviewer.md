@@ -104,10 +104,38 @@ Verdict: `OK` | `OVERLAPS UC-N` (explain the overlap)
 
 ## Additional Checks
 
+### Actor Discovery
+
+Analyze all use case flows to identify actors that may be missing or need differentiation:
+
+- **Implicit actors in flows** — are there flow steps that imply a different person or system than the declared actor? (e.g., "receives approval" implies an approver; "notification is sent" implies a recipient)
+- **Permission differentiation** — are there flows where the same actor performs actions that typically require different privilege levels? (e.g., one UC has "creates item" and another has "deletes all items" — same actor for both?)
+- **System actors** — are there flows triggered by time, events, or automated processes that should have an explicit system actor? (e.g., "every midnight, expired sessions are cleaned up" → system/scheduler actor)
+
+For each finding, produce a recommendation:
+- `IMPLICIT ACTOR` — a flow step implies an undeclared actor. Suggest who it might be.
+- `PRIVILEGE SPLIT` — same actor performs actions with significantly different privilege levels. Suggest whether these should be separate actors.
+- `MISSING SYSTEM ACTOR` — automated/scheduled behavior has no declared actor.
+
 ### Actors Table Completeness
 - Every actor referenced in use cases appears in the Actors table
 - Every actor in the Actors table is referenced by at least one use case
 - Actor descriptions are specific enough to understand their perspective
+- **Type** is filled in for every actor: `person` or `system`
+- **Role** is filled in for every person actor (system actors use `—`): the privilege level should be consistent with the actions the actor performs across their use cases
+- If Type or Role is missing, verdict: `INCOMPLETE ACTOR` (specify which field is missing)
+
+### Actor–Use Case Consistency
+
+Cross-check each actor's Type and Role against the use cases they participate in:
+
+- **Type vs Situation/Flow**: A `person` actor's use cases should have human-initiated situations and user-level flow steps. A `system` actor's use cases should have automated/scheduled triggers. Flag if a `person` actor's UC has a system trigger (e.g., "every midnight") or a `system` actor's UC has a human action (e.g., "clicks a button").
+- **Role vs Flow actions**: The actions an actor performs across all their use cases should match their declared privilege level. Flag if:
+  - A `viewer` role actor creates, edits, or deletes in any flow
+  - An `admin` role actor only reads across all use cases (role may be overstated)
+  - Two actors have the same Role but perform significantly different levels of actions
+
+Verdict per item: `OK` | `TYPE MISMATCH` (actor Type contradicts UC situation/flow — describe the conflict) | `ROLE MISMATCH` (actor Role contradicts the actions observed in their UCs — describe which UCs and actions conflict)
 
 ### Use Case Diagram Accuracy
 - All use cases in the document appear in the diagram
@@ -126,8 +154,18 @@ Return your review in exactly this format:
 **Use cases with issues:** N
 **Verdict:** PASS | NEEDS REVISION
 
+### Actor Discovery
+- UC-3 step 4: IMPLICIT ACTOR — "manager approves the request" implies an approver actor not in Actors table. Suggest adding "Manager" actor.
+- UC-1 + UC-7: PRIVILEGE SPLIT — "User" both creates items (UC-1) and deletes all user data (UC-7). Consider whether these should be separate actors (e.g., User vs Admin).
+- UC-5: MISSING SYSTEM ACTOR — "expired sessions are cleaned up daily" has no declared actor. Suggest adding a "Scheduler" system actor.
+
 ### Actors Table Review
-- <actor>: OK | VAGUE — <details> | ORPHAN — not referenced by any use case
+- <actor>: OK | VAGUE — <details> | ORPHAN — not referenced by any use case | INCOMPLETE ACTOR — missing Type/Role
+
+### Actor–Use Case Consistency
+- <actor>: OK
+- <actor>: TYPE MISMATCH — declared as `person` but UC-5 has automated trigger "every midnight, expired sessions are cleaned up"
+- <actor>: ROLE MISMATCH — declared as `viewer` but UC-3 flow includes "deletes the record". Suggest elevating to `editor` or splitting into separate actors.
 
 ### Use Case Diagram Review
 - OK | MISSING UC — <list> | MISSING ACTOR — <list> | STALE RELATIONSHIP — <details>
@@ -148,6 +186,8 @@ Return your review in exactly this format:
 ...
 
 ### Summary
+- **Actor discovery:** <list of implicit actors, privilege splits, missing system actors>
+- **Actor–UC consistency:** <list of type/role mismatches>
 - **Split candidates:** UC-2, UC-5
 - **Vague situations:** UC-2, UC-7
 - **Incomplete flows:** UC-4

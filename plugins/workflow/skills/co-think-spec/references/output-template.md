@@ -15,8 +15,6 @@ created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>
 revision: 0
 status: draft | final
-covers:
-  - <ui | non-ui>               # omit if not yet determined
 tags: []
 ---
 ```
@@ -25,22 +23,33 @@ tags: []
 
 ```markdown
 # Specification: <topic>
-> Source: [<story-file-name>](./<story-file-name>)
+> Source: [<usecase-file-name>](./<usecase-file-name>)
 
 ## Overview
 <Brief summary of what this software does, who it's for, and the key design decisions. Updated as the spec grows across phases.>
+
+## Technology Stack
+
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| Language | <e.g., TypeScript> | <why> |
+| Framework | <e.g., Next.js> | <why> |
+| <other category> | <choice> | <why> |
+
+<Auto-detected from codebase in Step 0, or specified by the user. Must be filled before finalization.>
 
 ---
 
 ## Functional Requirements
 
-### Job Stories Reference
-<List all Job Stories / Use Cases from the source file for traceability. If any were decomposed, show the sub-stories with a note referencing the original.>
+### Use Case Reference
+<List all Use Cases from the source file for traceability. If any were decomposed, show the sub-use-cases with a note referencing the original.>
 
 ### [FR-1]. <short title>
-> Story: [STORY-1]
+> Use Case: [UC-1]
 
 <!-- For UI -->
+**Type:** UI
 **Screen/View:** <where this happens>
 **User action:** <what the user does>
 **System behavior:**
@@ -52,6 +61,7 @@ tags: []
 **Mock:** <path to mock HTML file, if created>
 
 <!-- For Non-UI -->
+**Type:** Non-UI
 **Trigger:** <what initiates this>
 **Input:** <format, parameters, validation>
 **Processing:** <business logic, rules, steps>
@@ -61,8 +71,44 @@ tags: []
 **Dependencies:** <other FRs this depends on, if any>
 
 ### [FR-2]. <short title>
-> Story: [STORY-1], [STORY-2]
+> Use Case: [UC-1], [UC-2]
 ...
+
+### UI Screen Groups
+
+| Screen | FRs | Mock |
+|--------|-----|------|
+| <screen name> | FR-1, FR-3 | [mock](<path to mock HTML>) |
+
+### Screen Navigation
+
+```plantuml
+@startuml
+(*) --> Dashboard
+Dashboard --> "Detail View" : clicks item
+Dashboard --> Settings : clicks settings icon
+"Detail View" --> Dashboard : clicks back
+Settings --> Dashboard : clicks done
+@enduml
+```
+
+<Text explanation of navigation transitions and entry points.>
+
+### Authorization Rules
+
+| FR | <Actor/Role 1> | <Actor/Role 2> | <System> |
+|----|----------------|----------------|----------|
+| FR-1. <title> | write | read | — |
+| FR-2. <title> | write | — | — |
+| FR-3. <title> | read | read | execute |
+
+<Access levels: `read`, `write`, `execute`, `—` (no access). Text explanation of authorization model and any special rules.>
+
+### Non-Functional Requirements
+
+| NFR | Description | Affected FRs | Measurable Criteria |
+|-----|-------------|-------------|---------------------|
+| <e.g., Performance> | <description> | FR-1, FR-3 | <e.g., response time < 200ms> |
 
 ### Open Questions
 <Unresolved decisions or ambiguities to revisit.>
@@ -112,8 +158,16 @@ State2 --> [*]
 
 ## Architecture
 
+### External Dependencies
+
+| External System | Used By | Purpose | Fallback |
+|----------------|---------|---------|----------|
+| <e.g., OAuth Provider> | FR-1, FR-2 | <purpose> | <what happens if unavailable> |
+
+<Text explanation of each dependency: what is sent/received, constraints, provider choice.>
+
 ### Technology Choices
-<Decisions made during the session with brief rationale. Only present if choices were made.>
+<Additional technology decisions beyond the Technology Stack (e.g., database, ORM, testing framework). Only present if choices were made.>
 
 | Choice | Decision | Rationale |
 |--------|----------|-----------|
@@ -155,7 +209,7 @@ entity "EntityName" as e1 {
 
 ##### Information Flow
 
-###### Story: <story reference>
+###### Use Case: <UC reference>
 
 ```plantuml
 @startuml
@@ -166,7 +220,15 @@ B --> A : confirmation
 @enduml
 ```
 
-<Text explanation of the flow for this story.>
+<Text explanation of the flow for this use case.>
+
+##### Interface Contracts
+
+| Operation | Direction | Request | Response | Notes |
+|-----------|-----------|---------|----------|-------|
+| <operation name> | <ComponentA → ComponentB> | <request schema> | <response schema> | <e.g., event, sync, async> |
+
+<Text explanation of the contracts. May be incomplete in early iterations — see Open Items for what remains.>
 
 ### Consistency Check
 <Results of cross-diagram and cross-phase consistency check. Any gaps identified and how they were resolved.>
@@ -178,21 +240,24 @@ B --> A : confirmation
 
 ## Change Log
 
-| Date | Section | Change | Reason |
-|------|---------|--------|--------|
-| <YYYY-MM-DD> | <section> | <what changed> | <why> |
+| Revision | Date | Section | Change | Reason |
+|----------|------|---------|--------|--------|
+| 1 | <YYYY-MM-DD> | <section> | <what changed> | <why> |
 
-## Session Checkpoint
+## Session Checkpoint (Revision <N>)
 > Last updated: <YYYY-MM-DD HH:mm>
 
 ### Decisions Made
 - <key decision>
 
 ### Open Items
-- <undecided topic>
+
+| Section | Item | What's Missing | Priority |
+|---------|------|---------------|----------|
+| <section> | <item reference> | <specific gap description> | High / Medium / Low |
 
 ### Next Steps
-- <what to work on next>
+- <suggested work items for next iteration, derived from Open Items>
 
 ## Interview Transcript
 <details>
@@ -206,12 +271,13 @@ B --> A : confirmation
 </details>
 ```
 
-**Issue reference links:** See [issue-links.md](../../references/issue-links.md). FR and STORY references use their canonical IDs (FR-1, STORY-1) throughout the document.
+**Issue reference links:** See [issue-links.md](../../references/issue-links.md). FR and UC references use their canonical IDs (FR-1, UC-1) throughout the document.
 
 ## Required Sections
 
 - Overview
-- Functional Requirements (with Job Stories Reference)
+- Technology Stack (must be filled before `status: final`)
+- Functional Requirements (with Use Case Reference)
 - Domain Model (Glossary, Concept Relationships)
 - Session Checkpoint
 - Interview Transcript
@@ -220,7 +286,13 @@ B --> A : confirmation
 
 - State Transitions — only if stateful entities exist
 - Architecture — only if the session reaches this phase
-- Technology Choices — only if choices were made
+- Technology Choices (Architecture) — only if additional choices beyond Technology Stack were made
+- Authorization Rules — only if actors have different privilege levels
+- Non-Functional Requirements — only if the user specifies NFRs
+- UI Screen Groups — only if UI use cases exist
+- Screen Navigation — only if UI Screen Groups exist
+- External Dependencies — only if the system uses external services
+- Interface Contracts (per component boundary) — progressively filled across iterations; required for `status: final`
 - DB Schema (per component) — only if `Data store: Yes`
 - Spec Feedback — only if feedback issues were created
 - Change Log — only in Iteration mode
