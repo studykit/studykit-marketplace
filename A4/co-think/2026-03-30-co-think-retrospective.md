@@ -71,8 +71,10 @@ co-think pipeline (story → requirement → domain → architecture) and co-rev
 - Requirement naturally drifts to implementation-level detail, which overlaps with architecture. The skill tries to keep it abstract, but that conflicts with how users actually work
 - **Proposed pipeline**: story → design (working title)
   - **story**: idea exploration, "why" collection. Independent skill, works well as-is
-  - **design**: unified skill combining domain (terminology/concepts) → requirement (what the system needs) → architecture (components/flows). One session, interleaving allowed, no forced phase transitions
-- Domain work (glossary, concept relationships, state transitions) becomes the first topic within design — establish shared language before diving into requirements and components
+  - **design**: unified skill combining domain (terminology/concepts), requirement (what the system needs), and architecture (components/flows) into one session
+- **Flow depends on context**:
+  - **First design**: requirement → domain/concept extraction → architecture. Sequential order helps bootstrap shared language from requirements before structuring components
+  - **Iteration**: no fixed order — enter from wherever the change is needed. Since each phase influences the others, changes in one phase must trigger an **impact propagation check** across the remaining phases
 - Reduces pipeline steps, output files to maintain, and eliminates the requirement ↔ architecture duplication problem
 
 ### Session continuity
