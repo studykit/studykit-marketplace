@@ -2,14 +2,14 @@
 type: domain
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
-date: 2026-03-29
-status: final
+created: 2026-03-29
+revised: 2026-03-30
 revision: 3
-last_revised: 2026-03-30
+status: final
 tags: []
 ---
 # Conceptual Model: interactive agent/prompt use cases
-> Source: [2026-03-28-1030-agent-orchestrator.requirement.md](./2026-03-28-1030-agent-orchestrator.requirement.md), [2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md)
+> Source: [agent-orchestrator.requirement.md](./agent-orchestrator.requirement.md), [agent-orchestrator.story.md](./agent-orchestrator.story.md)
 
 ## Overview
 The agent orchestrator domain centers on a two-level session hierarchy. A **Main Session** (user-started from CLI) can spawn zero or more **Child Sessions** (dedicated interactive conversations in separate iTerm2 tabs). This parent-child grouping is called a **Session Tree**, persisted as `session-tree.json`. Each child session loads an **Interactive Prompt** for its conversational stance and may optionally have an **Injected Skill** that determines its dialogue mode. Each session (both main and child) has a **Session Change Record** (`<session-id>.json`) that tracks all file modifications and key deliverables produced during the session. Inter-session communication — context injection, result notification, termination notification — is handled through Claude Code's hook infrastructure, not modeled as a separate domain concept. Result file registration and session status querying are performed by LLM-invoked skills (`/register-result`, `/session-status`), also treated as infrastructure.

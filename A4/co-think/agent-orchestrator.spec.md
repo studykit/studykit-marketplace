@@ -2,15 +2,16 @@
 type: spec
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
-date: 2026-03-30
-status: final
+created: 2026-03-30
+revised: 2026-03-30
 revision: 0
+status: final
 covers:
   - non-ui
 tags: []
 ---
 # Specification: interactive agent/prompt use cases
-> Source: [2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md), [2026-03-28-1030-agent-orchestrator.requirement.md](./2026-03-28-1030-agent-orchestrator.requirement.md), [2026-03-29-1500-agent-orchestrator.domain.md](./2026-03-29-1500-agent-orchestrator.domain.md), [2026-03-29-2100-agent-orchestrator.architecture.md](./2026-03-29-2100-agent-orchestrator.architecture.md)
+> Source: [agent-orchestrator.story.md](./agent-orchestrator.story.md), [agent-orchestrator.requirement.md](./agent-orchestrator.requirement.md), [agent-orchestrator.domain.md](./agent-orchestrator.domain.md), [agent-orchestrator.architecture.md](./agent-orchestrator.architecture.md)
 
 ## Overview
 Two layers for Claude Code's interactive agent system. First, a thin behavioral layer (conversation-first attitude) that sets the LLM's conversational stance when loaded as a system prompt. Second, an agent orchestrator that enables the main session to spawn, manage, and collect results from child sessions — each a dedicated interactive conversation running in a separate iTerm2 tab. Child sessions are user-facing interactive sessions, not background automation. Result file delivery uses per-session file tracking and LLM+user-driven registration — sessions do not read or modify session-tree.json directly but use skills to access session information.
@@ -849,7 +850,7 @@ STORY-7 and STORY-14 are behavioral rules delivered by the Interactive Prompt (F
 <details>
 <summary>Full Q&A — Requirements Phase</summary>
 
-*Requirements were developed in a separate co-think-requirement session. See [2026-03-28-1030-agent-orchestrator.requirement.md](./2026-03-28-1030-agent-orchestrator.requirement.md) for the full interview transcript.*
+*Requirements were developed in a separate co-think-requirement session. See [agent-orchestrator.requirement.md](./agent-orchestrator.requirement.md) for the full interview transcript.*
 
 </details>
 

@@ -45,20 +45,20 @@ If no argument is provided, ask the user for a slug, filename, or path.
 Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/co-think/`:
 
 1. **Full path** — use directly
-2. **Partial match** — glob for `A4/co-think/*<argument>*.story.md`, `A4/co-think/*<argument>*.usecase.md`, and `A4/co-think/*<argument>*.spec.md` (e.g., `agent-orchestrator` → finds matching files)
+2. **Partial match** — glob for `A4/co-think/*<argument>*.story.md`, `A4/co-think/*<argument>*.usecase.md`, and `A4/co-think/*<argument>*.spec.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
 After resolution, present the resolved file(s) and ask the user to confirm before reading:
 
 > **Resolved input files:**
-> - `A4/co-think/2026-03-27-1500-agent-orchestrator.story.md`
+> - `A4/co-think/agent-orchestrator.story.md`
 >
 > Proceed with these files?
 
 **Mode detection:**
-- If a `.spec.md` file is found → **Iteration** mode. Read the spec file and its source references.
-- If only story/use case files are found → **First Design** mode.
+- If the target `.spec.md` file already exists → **Iteration** mode. Read the spec file and its source references.
+- If only story/use case files are found (no existing spec) → **First Design** mode.
 
 The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
 
@@ -253,8 +253,8 @@ When the user drifts into implementation, redirect gently: "That's an implementa
 ### Working File Path
 
 At the start of the session, determine the file path:
-- **First Design**: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.spec.md`
-- **Iteration**: use the existing `.spec.md` file path
+- Default: `A4/co-think/<topic-slug>.spec.md`
+- If the file already exists, this is **Iteration** mode — read the existing file and continue from where it left off
 - Ask the user only if they want a different location
 
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."

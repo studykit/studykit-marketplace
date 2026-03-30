@@ -2,7 +2,7 @@
 
 ## File Path
 
-`A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.spec.md`
+`A4/co-think/<topic-slug>.spec.md`
 
 ## Frontmatter
 
@@ -11,10 +11,10 @@
 type: spec
 pipeline: co-think
 topic: "<topic>"
-date: <YYYY-MM-DD>
-status: draft | final
+created: <YYYY-MM-DD HH:mm>
+revised: <YYYY-MM-DD HH:mm>
 revision: 0
-last_revised:                    # omit until first revision
+status: draft | final
 covers:
   - <ui | non-ui>               # omit if not yet determined
 tags: []

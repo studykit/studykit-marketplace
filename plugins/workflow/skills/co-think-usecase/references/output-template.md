@@ -5,10 +5,10 @@
 type: usecase
 pipeline: co-think
 topic: "<topic>"
-date: <YYYY-MM-DD>
-status: final
+created: <YYYY-MM-DD HH:mm>
+revised: <YYYY-MM-DD HH:mm>
 revision: 0
-last_revised:                    # omit until first revision
+status: final
 tags: []
 ---
 # Use Cases: <topic>

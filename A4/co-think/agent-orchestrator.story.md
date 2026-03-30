@@ -2,9 +2,10 @@
 type: story
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
-date: 2026-03-27
-status: final
+created: 2026-03-27
+revised: 2026-03-27
 revision: 0
+status: final
 tags: []
 ---
 # Job Stories: interactive agent/prompt use cases

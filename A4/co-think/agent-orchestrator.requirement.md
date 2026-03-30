@@ -2,16 +2,16 @@
 type: requirement
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
-date: 2026-03-28
-status: final
+created: 2026-03-28
+revised: 2026-03-30
 revision: 4
-last_revised: 2026-03-30
+status: final
 covers:
   - non-ui
 tags: []
 ---
 # Functional Specification: interactive agent/prompt use cases
-> Source: [2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md)
+> Source: [agent-orchestrator.story.md](./agent-orchestrator.story.md)
 
 ## Overview
 Two layers for Claude Code's interactive agent system. First, a thin behavioral layer (conversation-first attitude) that sets the LLM's conversational stance when loaded as a system prompt. Second, an agent orchestrator that enables the main session to spawn, manage, and collect results from child sessions — each a dedicated interactive conversation running in a separate iTerm2 tab. Child sessions are user-facing interactive sessions, not background automation. Result file delivery uses per-session file tracking and LLM+user-driven registration — sessions do not read or modify session-tree.json directly but use skills to access session information.

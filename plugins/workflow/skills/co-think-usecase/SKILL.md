@@ -57,7 +57,8 @@ The working file is a living document that grows throughout the interview. The u
 ### Working File Path
 
 At the start of the interview, determine the file path:
-- Default: `A4/co-think/<YYYY-MM-DD-HHmm>-<topic-slug>.usecase.md` relative to working directory
+- Default: `A4/co-think/<topic-slug>.usecase.md` relative to working directory
+- If the file already exists, this is a **continuation** — read the existing file, present the current state, and continue from where it left off
 - Ask the user only if they want a different location
 - Create the directory if needed
 

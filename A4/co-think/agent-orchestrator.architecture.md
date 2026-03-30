@@ -2,14 +2,14 @@
 type: architecture
 pipeline: co-think
 topic: "interactive agent/prompt use cases"
-date: 2026-03-29
-status: final
+created: 2026-03-29
+revised: 2026-03-30
 revision: 5
-last_revised: 2026-03-30
+status: final
 tags: []
 ---
 # Architecture: interactive agent/prompt use cases
-> Source: [2026-03-27-1500-agent-orchestrator.story.md](./2026-03-27-1500-agent-orchestrator.story.md), [2026-03-28-1030-agent-orchestrator.requirement.md](./2026-03-28-1030-agent-orchestrator.requirement.md), [2026-03-29-1500-agent-orchestrator.domain.md](./2026-03-29-1500-agent-orchestrator.domain.md)
+> Source: [agent-orchestrator.story.md](./agent-orchestrator.story.md), [agent-orchestrator.requirement.md](./agent-orchestrator.requirement.md), [agent-orchestrator.domain.md](./agent-orchestrator.domain.md)
 
 ## Overview
 The agent orchestrator extends Claude Code's interactive session model with a two-level session hierarchy. Five components collaborate through two file-based data stores (`session-tree.json` and per-session `<session-id>.json`) and Claude Code's hook infrastructure. The **Session Manager** in the main session spawns child sessions in iTerm2 tabs. The **Session Bootstrap** hook initializes every session with a Session Change Record and environment setup — for child sessions, it additionally injects context and skill. The **Result Collector** hooks track file modifications in the Session Change Record and handle child session termination. The **Session Monitor** hook on the main session side watches for manifest changes and injects status updates. The **History Investigator** sub-agent reads past child session transcripts on demand.
