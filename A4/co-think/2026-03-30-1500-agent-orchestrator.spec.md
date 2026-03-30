@@ -95,7 +95,7 @@ Both files are plain text, loaded via `--append-system-prompt-file`. Delivered a
 **Trigger:**
 1. User requests via natural language
 2. Main session LLM suggests and user approves
-3. User invokes via skill (slash command)
+3. User invokes via `chat` skill (`/chat`)
 
 **Input:**
 - Topic/purpose (required)
@@ -104,7 +104,7 @@ Both files are plain text, loaded via `--append-system-prompt-file`. Delivered a
 
 **Processing:**
 1. Main session generates a child session ID and records initial session info (session ID, topic, reference file paths, context summary, skill) to `.claude/sessions/<main-conversation-id>/session-tree.json`
-2. Launch a new Claude Code interactive session in a new iTerm2 tab via: `claude --session-id <uuid> --append-system-prompt-file <path-to-interactive-child.txt>`
+2. Launch a new Claude Code interactive session in a new iTerm2 tab via `it2` CLI (iTerm2 shell integration): `it2 launch -- env SESSION_TREE=<session-tree.json-path> claude --session-id <uuid> --append-system-prompt-file <path-to-interactive-child.txt>`
 3. Child session's `SessionStart` hook fires on startup:
    - Reads the child session's entry from `session-tree.json`, identifies its session ID, and outputs the context to stdout (including skill invocation if specified) → automatically injected into the conversation context
    - Updates `session-tree.json` with the child session's transcript path (`transcript_path`) and process ID (`pid`)
@@ -126,7 +126,7 @@ Both files are plain text, loaded via `--append-system-prompt-file`. Delivered a
       "topic": "<topic/purpose>",
       "status": "pending | active | terminated | crashed | failed_to_start",
       "createdAt": "<ISO 8601 timestamp>",
-      "pid": "<Claude Code process ID, recorded by SessionStart hook>",
+      "pid": 12345,
       "skill": "<injected skill name or null>",
       "transcriptPath": "<recorded by SessionStart hook>",
       "resultUpdatedAt": "<ISO 8601 timestamp, updated when resultFiles changes in Session Change Record>",
@@ -141,7 +141,7 @@ Both files are plain text, loaded via `--append-system-prompt-file`. Delivered a
 
 **Error handling:**
 - iTerm2 not running: error message to user
-- Conversation ID unavailable: fallback handling required
+- Conversation ID unavailable: abort spawn and inform the user — session-tree.json requires the main session's conversation ID as the directory key, so spawning cannot proceed without it
 - Specified skill not found: main session LLM or skill verifies the skill exists before spawning. If invalid, inform the user and ask whether to proceed without the skill or specify a different one
 
 **Dependencies:** None (foundational FR)
@@ -156,25 +156,13 @@ Both files are plain text, loaded via `--append-system-prompt-file`. Delivered a
 > **Extracted to [FR-23]:** SessionEnd hook (status → terminated), FileChanged hook (main session notification)
 > **Replaced by:** [FR-20] (session file change tracking), [FR-21] (LLM-based result file identification), [FR-22] (result file registration), [FR-23] (child session termination notification)
 
-**Trigger:** Child session terminates
+This FR's original processing has been fully redesigned and split into:
+- **[FR-20]** — session file change tracking (replaces `children[].modifiedFiles` in session-tree.json)
+- **[FR-21]** — LLM-based result file identification (replaces `resultPatterns` automatic matching)
+- **[FR-22]** — result file registration via `/register-result` skill (replaces `children[].resultFiles` in session-tree.json)
+- **[FR-23]** — child session termination notification (extracted SessionEnd and FileChanged hooks)
 
-**Input:** Child session's result file path(s), termination status
-
-**Processing:**
-1. Child session tracks and registers file changes to `session-tree.json` via two mechanisms:
-   - **PostToolUse hook (tracking)**: On Write/Edit tool use, hook appends the file path to `children[].modifiedFiles`. No filtering — all file modifications are recorded.
-   - **LLM nudge or user directive (deliverables)**: The child session LLM may suggest registering a file as a deliverable when it judges the file to be a key output of the session — not incidental edits. Upon user approval, or when the user directly instructs, the LLM writes the file path to `children[].resultFiles`.
-2. Child session's `SessionEnd` hook fires on termination (including Ctrl+D):
-   - Updates `children[].status` to `terminated` in `session-tree.json`
-   - Triggered for all exit reasons: `prompt_input_exit`, `resume`, `clear`, `logout`, `other`
-3. Main session's `FileChanged` hook detects `session-tree.json` modification (matcher: `session-tree.json`, async)
-4. Hook reads updated `session-tree.json`, identifies the terminated child session, and returns JSON with `additionalContext` to inject termination info (child session topic, result file paths) into the main session's conversation context
-
-**Output:** Main session automatically becomes aware of child session termination and can access result file path(s) from `session-tree.json`
-
-**Error handling:**
-- Child session terminates without result file: status updated to `terminated`, result file path left empty
-- `FileChanged` hook fails to trigger: main session can still read `session-tree.json` manually on demand
+See the Plan Change section below and the individual replacement FRs for current behavior.
 
 **Dependencies:** [FR-17]
 
@@ -187,14 +175,15 @@ Both files are plain text, loaded via `--append-system-prompt-file`. Delivered a
 **Input:** Child session identifier (topic from `children[].topic` or child session ID from `children[].id`)
 
 **Processing:**
-1. Main session locates the child session's transcript path and result file paths from `session-tree.json`
-2. Main session LLM checks the transcript size. If the transcript is long, suggest using a sub-agent to read and summarize instead of reading directly — user decides
+1. Main session locates the child session's transcript path and result file paths from `session-tree.json`. If multiple child sessions share the same topic, present a disambiguation list (topic, createdAt, status) and let the user pick
+2. Main session LLM checks the transcript file size. For large transcripts (LLM judgment — e.g., transcript exceeds a few hundred lines), suggest using a sub-agent to read and summarize instead of reading directly — user decides
 3. Based on user's choice: read directly or spawn a sub-agent (via Claude Code Agent tool or prompt instruction) to read and summarize the transcript and result files within the main session
 
 **Output:** Answer or summary of the child session conversation
 
 **Error handling:**
 - Transcript file not found or deleted: inform user that history is unavailable
+- Multiple matching topics: present disambiguation list, do not auto-select
 
 **Dependencies:** [FR-17] (session-tree.json with transcript_path)
 
@@ -244,9 +233,14 @@ FR-20/21/22/23 redesign the result file delivery mechanism from [FR-18] (Child s
 
 **Implementation note:** Rename and repurpose existing `post_tool_result_collector.py`. Remove resultPatterns matching logic, convert to modifiedFiles tracking in `<session-id>.json`.
 
+**Session directory resolution:**
+- Child session: `SESSION_TREE` env var points to session-tree.json; the directory containing it is the session directory
+- Main session: no `SESSION_TREE` set. SessionStart hook derives the path from `session_id` in stdin JSON: `.claude/sessions/<session_id>/`. The directory is created lazily on first child spawn (FR-17), but the main session's own `<session-id>.json` is created here on startup
+
+**Hook execution order:** Claude Code guarantees SessionStart hooks complete before the first tool use. `CLAUDE_CODE_SESSION_ID` is written to `CLAUDE_ENV_FILE` during SessionStart, so it is available to all subsequent PostToolUse hooks. No race condition.
+
 **Error handling:**
 - `<session-id>.json` write failure: ignore, no impact on session
-- SESSION_TREE env var not set (main session): session directory path needs separate resolution
 
 **Dependencies:** [FR-17] (child session spawn)
 
@@ -292,7 +286,7 @@ FR-20/21/22/23 redesign the result file delivery mechanism from [FR-18] (Child s
 **Processing:**
 1. SessionStart hook records `CLAUDE_CODE_SESSION_ID` to `CLAUDE_ENV_FILE` to expose as environment variable
 2. On user approval or direct instruction, invoke `/register-result <file_path>` skill
-3. Skill script uses `$CLAUDE_CODE_SESSION_ID` to append file path to `resultFiles` in Session Change Record (`<session-id>.json`)
+3. Skill script uses `$CLAUDE_CODE_SESSION_ID` to append file path to `resultFiles` in Session Change Record (`<session-id>.json`). Duplicate paths are not added (deduplicated, same as `modifiedFiles`)
 4. If child session (`$SESSION_TREE` set): also updates `resultUpdatedAt` timestamp in the child entry of session-tree.json → existing `session_monitor.py` FileChanged hook notifies main session
 
 **Implementation required:** `/register-result` skill — script that takes file path as argument, appends it to `resultFiles` in `<session-id>.json`, and updates `resultUpdatedAt` in session-tree.json (child session only)
@@ -422,8 +416,8 @@ failed_to_start --> [*]
 - **pending**: Child session entry created in session-tree.json, iTerm2 pane launched, but bootstrap hook has not yet completed.
 - **active**: SessionStart bootstrap hook has completed — transcriptPath and pid recorded, user is interacting with the session.
 - **terminated**: SessionEnd hook has fired (including Ctrl+D). Status updated in `session-tree.json`. Result file paths, if any, have been recorded in the Session Change Record before termination.
-- **crashed**: Session Monitor (FileChanged hook) detected that the child process is no longer alive (`kill -0 <pid>` fails) while status was still `active`. SessionEnd hook never fired.
-- **failed_to_start**: Session Monitor (FileChanged hook) detected that status remained `pending` for longer than 30 seconds — the bootstrap hook never completed.
+- **crashed**: Session Monitor (FileChanged hook) lazily detected on the next FileChanged event that the child process is no longer alive (`kill -0 <pid>` fails) while status was still `active`. SessionEnd hook never fired.
+- **failed_to_start**: Session Monitor (FileChanged hook) lazily detected on the next FileChanged event that status remained `pending` for longer than 30 seconds — the bootstrap hook never completed.
 
 Main Session and Session Tree do not have domain-level state transitions.
 
@@ -477,7 +471,7 @@ HI --> ST : reads transcriptPath
 
 **Result Collector** — PostToolUse and SessionEnd hooks. PostToolUse hook fires in all sessions — receives `tool_input.file_path` via stdin JSON and appends all Write/Edit file paths to `modifiedFiles` in the session's `<session-id>.json` without filtering. Injects a short notification into context on new file addition. SessionEnd hook fires in child sessions only (when `$SESSION_TREE` is set) — marks the session as terminated in session-tree.json.
 
-**Session Monitor** — FileChanged hook on the main session (matcher: `session-tree.json`). Detects session-tree.json modifications and injects child session status changes (termination, new result files) into the main session's conversation context via stdout. On termination or `resultUpdatedAt` change, reads the child's Session Change Record for `resultFiles`.
+**Session Monitor** — FileChanged hook on the main session (matcher: `session-tree.json`). Detects session-tree.json modifications and injects child session status changes (termination, new result files) into the main session's conversation context via stdout. On termination or `resultUpdatedAt` change, reads the child's Session Change Record for `resultFiles`. On every firing, also lazily scans all `active`/`pending` entries for crash detection (`kill -0 <pid>`) and bootstrap handshake timeout (pending > 30s).
 
 **History Investigator** — sub-agent spawned by the main session on demand. Reads a child session's transcript and result files, returns a summary.
 
@@ -677,7 +671,7 @@ On child session termination, the SessionEnd hook updates the child's status to 
 
 #### Session Monitor
 
-**Responsibility:** Watches session-tree.json for changes on the main session side and injects relevant updates into the main session's conversation context. Reads child Session Change Records for result file details.
+**Responsibility:** Watches session-tree.json for changes on the main session side and injects relevant updates into the main session's conversation context. Reads child Session Change Records for result file details. On every firing, lazily scans all `active`/`pending` entries for crash detection and bootstrap handshake timeout.
 
 **Data store:** No
 
@@ -755,13 +749,15 @@ Session Change Records (`<session-id>.json`) do not require cross-session lockin
 
 #### Crash detection
 
-If a child session crashes (process killed, terminal closed abnormally), the SessionEnd hook never fires and the entry remains `active`. The Session Monitor detects this by checking `kill -0 <pid>` against the child's recorded PID. When the process is no longer alive and status is still `active`, the Session Monitor updates it to `crashed` and injects a notification into the main session.
+If a child session crashes (process killed, terminal closed abnormally), the SessionEnd hook never fires and the entry remains `active`. Crash detection is **lazy** — the Session Monitor piggybacks on the next FileChanged event for session-tree.json. Whenever the monitor fires (for any reason — another child's termination, result registration, etc.), it also scans all `active` entries and checks `kill -0 <pid>` against each child's recorded PID. When a process is no longer alive and status is still `active`, the Session Monitor updates it to `crashed` and injects a notification into the main session.
 
 The Session Bootstrap records `os.getppid()` (the parent PID, i.e., the Claude Code process) into the child entry during initialization. Since the hook runs as a child process of the Claude Code process, `os.getppid()` points to the Claude Code process — if this process dies, the Session Monitor's `kill -0` check (via `os.kill(pid, 0)`) will fail.
 
+**Limitation:** If only one child session exists and it crashes without triggering a session-tree.json write, the crash is not detected until the user manually queries session status (via `/session-status`) or a subsequent session-tree.json change occurs. This is an accepted trade-off — no periodic polling mechanism exists.
+
 #### Bootstrap handshake timeout
 
-Covers the case where the child process starts but the Bootstrap hook never completes — status remains `pending`. The Session Monitor checks for entries where `status == "pending"` AND `createdAt` is older than 30 seconds. When detected, status is updated to `failed_to_start` and a notification is injected into the main session.
+Covers the case where the child process starts but the Bootstrap hook never completes — status remains `pending`. Like crash detection, this is **lazy** — checked on the next FileChanged event. Whenever the Session Monitor fires, it also scans for entries where `status == "pending"` AND `createdAt` is older than 30 seconds. When detected, status is updated to `failed_to_start` and a notification is injected into the main session.
 
 This is distinct from crash detection: crash detection checks `active` entries with a recorded PID, while handshake timeout checks `pending` entries where the Bootstrap never ran.
 
@@ -796,8 +792,8 @@ All six domain concepts are housed in at least one component.
 **State transitions:**
 - Child Session `pending → active`: managed by Session Bootstrap's SessionStart hook — confirms the child process started and writes back transcriptPath and pid
 - Child Session `active → terminated`: managed by Result Collector's SessionEnd hook writing to session-tree.json
-- Child Session `active → crashed`: detected by Session Monitor via `kill -0 <pid>` when the child process is no longer alive and SessionEnd was never called
-- Child Session `pending → failed_to_start`: detected by Session Monitor when status is still `pending` and `createdAt` is older than 30 seconds (bootstrap never completed)
+- Child Session `active → crashed`: lazily detected by Session Monitor on the next FileChanged event via `kill -0 <pid>` when the child process is no longer alive and SessionEnd was never called
+- Child Session `pending → failed_to_start`: lazily detected by Session Monitor on the next FileChanged event when status is still `pending` and `createdAt` is older than 30 seconds (bootstrap never completed)
 
 #### Story coverage
 
@@ -837,7 +833,8 @@ STORY-7 and STORY-14 are behavioral rules delivered by the Interactive Prompt (F
 - `resultUpdatedAt` in session-tree.json as the cross-session notification trigger
 - Python `fcntl.flock()` for concurrent session-tree.json access
 - Session Bootstrap handles both main and child sessions (branching on `$SESSION_TREE`)
-- Crash detection via `kill -0 <pid>`, bootstrap timeout at 30 seconds
+- Lazy crash detection — piggybacks on FileChanged events, no periodic polling
+- `kill -0 <pid>` for crash detection, bootstrap timeout at 30 seconds
 
 ### Open Items
 - No unresolved questions at this time
