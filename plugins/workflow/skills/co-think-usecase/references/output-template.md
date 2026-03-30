@@ -36,9 +36,18 @@ actor "Meeting Organizer" as organizer
 actor "Team Member" as member
 
 rectangle "System" {
-  usecase "Share meeting summary" as UC1 : Generate and send\nsummary to team
-  usecase "Review weekly report" as UC2 : View aggregated\nweekly activity
-  usecase "Generate summary" as UC3 : Extract key decisions\nand action items
+  usecase UC1 as "Share meeting summary
+  --
+  Generate and send
+  summary to team"
+  usecase UC2 as "Review weekly report
+  --
+  View aggregated
+  weekly activity"
+  usecase UC3 as "Generate summary
+  --
+  Extract key decisions
+  and action items"
 }
 
 organizer --> UC1
@@ -155,7 +164,7 @@ end note
 **Use Case Diagram rules:**
 - Use PlantUML use case diagram syntax.
 - Show all actors and use cases with relationships (include/extend).
-- Use PlantUML's inline description syntax (`: description`) to show each use case's purpose at a glance.
+- Use PlantUML's multiline description syntax (`usecase UC1 as "Title\n--\nDescription"`) to show each use case's purpose at a glance.
 - Add notes for additional context where helpful.
 - Update the diagram each time a new use case is confirmed.
 

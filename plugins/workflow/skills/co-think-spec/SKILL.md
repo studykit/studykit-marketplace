@@ -239,6 +239,17 @@ When a technology choice arises:
 - **Lightweight decisions** — discuss inline and record with brief rationale.
 - **Heavy decisions** — ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/workflow:spark-decide` to evaluate options?"
 
+### Technical Claim Verification
+
+When writing or confirming any technical statement in the spec (API support, library capabilities, framework constraints, compatibility, etc.), verify it before recording:
+
+1. **Search official docs** — use `WebSearch`/`WebFetch` to check the claim against official documentation, release notes, or changelogs.
+2. **Check the codebase** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
+3. **Record the source** — when the verification result influences a spec decision, note it briefly (e.g., "Verified: Next.js App Router supports Server Actions as of v14 — [docs link]").
+4. **Flag uncertainty** — if official documentation is ambiguous or unavailable, tell the user: "I couldn't confirm this from official sources. Want to proceed as an assumption or investigate further?"
+
+Keep this lightweight — don't verify obvious facts, focus on claims that would cause implementation failures if wrong.
+
 ## Abstraction Level Guards
 
 **Applied per phase:**

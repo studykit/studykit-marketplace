@@ -296,6 +296,19 @@ If you catch yourself writing implementation details, stop and reframe at the co
 
 ---
 
+## 6.1. Technical Claim Verification
+
+When writing any technical statement in the spec (API support, library capabilities, framework constraints, version-dependent behavior, compatibility), verify it before recording:
+
+1. **Search official docs** — use `WebSearch`/`WebFetch` to check the claim against official documentation, release notes, or changelogs.
+2. **Check the codebase** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
+3. **Record the source** — when the verification result influences a spec decision, note it briefly (e.g., "Verified: Next.js App Router supports Server Actions as of v14 — [docs link]").
+4. **Flag uncertainty** — if official documentation is ambiguous or unavailable, record the claim in Open Items as an unverified assumption with Priority = High.
+
+Focus on claims that would cause implementation failures if wrong. Skip obvious or widely known facts.
+
+---
+
 ## 7. Self-Review Loop
 
 After writing the complete initial document:
@@ -321,6 +334,8 @@ After writing the complete initial document:
    | `MISSING NAVIGATION` | Add the Screen Navigation diagram |
    | `UNDECLARED DEPENDENCY` | Add the external dependency to the External Dependencies section |
    | `MISSING AUTH` / `INCOMPLETE AUTH` | Add or complete the Authorization Rules section |
+   | `UNVERIFIED` | Verify the claim via `WebSearch`/`WebFetch` or codebase inspection; add source reference if confirmed, or move to Open Items if unconfirmable |
+   | `SUSPECT` | Investigate immediately — search official docs to confirm or correct the claim; fix the spec text if wrong |
 
 4. Rewrite the file incorporating all fixes.
 

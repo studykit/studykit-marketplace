@@ -142,7 +142,23 @@ For screen navigation:
 
 Verdict per item: `OK` | `UNGROUPED` (UI FR not assigned to any screen) | `MISSING MOCK` (screen group has no mock) | `INCOHERENT` (describe why the grouping doesn't hold together) | `MISSING NAVIGATION` (no navigation diagram) | `DISCONNECTED` (screen has no incoming/outgoing transitions)
 
-### 6. Consistency — "Does the spec agree with itself?"
+### 6. Technical Claim Verification — "Are the technical statements actually true?"
+
+The developer will trust technical claims in the spec as fact. If a claim is wrong, the developer will build on a false assumption.
+
+Scan across all sections for technical claims — statements about what a technology, library, API, or framework can or cannot do. For each claim:
+- **Is it verifiable?** Skip obvious or widely known facts. Focus on specific capability claims, version-dependent behavior, compatibility statements, and API availability.
+- **Is it sourced?** Does the spec note where the claim was verified (docs link, codebase reference)?
+- **Is it plausible?** Based on your knowledge, does the claim seem accurate? Flag anything that sounds wrong or outdated.
+
+Examples of claims to check:
+- "Next.js App Router supports streaming responses" — true, but since which version?
+- "SQLite supports concurrent writes" — misleading without WAL mode context
+- "This library provides built-in rate limiting" — does it really?
+
+Verdict per item: `OK` | `UNVERIFIED` (technical claim with no source — could be true but developer can't confirm) | `SUSPECT` (claim seems incorrect or outdated based on available knowledge — describe why and suggest verification)
+
+### 7. Consistency — "Does the spec agree with itself?"
 
 When sections contradict each other, the developer doesn't know which to trust.
 
@@ -228,7 +244,14 @@ Return your review in exactly this format:
 - Detail View: DISCONNECTED — no incoming transition defined; developer can't determine how users reach this screen
 ...
 
-### 6. Consistency
+### 6. Technical Claim Verification
+
+- Architecture: UNVERIFIED — "Redis Streams supports consumer group rebalancing" — no docs link provided, developer cannot confirm
+- FR-4: SUSPECT — "SQLite handles concurrent writes natively" — misleading; requires WAL mode. Suggest verifying and adding context.
+- Technology Stack: OK — "Next.js App Router supports Server Actions as of v14" — sourced from official docs
+...
+
+### 7. Consistency
 
 - FR-2 ↔ Domain: CONFLICT — FR says sessions have 2 states (active/closed), domain model shows 3 (active/paused/closed). Developer doesn't know whether to implement "paused".
 - Architecture ↔ Domain: CONFLICT — domain concept "Archive" not housed in any component.
@@ -245,6 +268,7 @@ Return your review in exactly this format:
 - **Unclear ownership:** <list of items>
 - **Missing interface contracts:** <list of component boundaries>
 - **UI grouping issues:** <list of items>
+- **Unverified/suspect technical claims:** <list of items>
 - **Cross-section conflicts:** <list of items>
 
 ### Top Priority Fixes
@@ -261,5 +285,5 @@ Return your review in exactly this format:
 - Be constructive: always suggest concrete improvements.
 - Do not rewrite the spec — suggest improvements and let the facilitator handle revisions with the user.
 - If everything passes, say so clearly: "The specification is implementable. No revisions needed."
-- Prioritize by coding impact: missing technology stack > behavior gaps > consistency conflicts > unhandled errors > unclear ownership > UI grouping issues > imprecise language.
+- Prioritize by coding impact: missing technology stack > behavior gaps > suspect technical claims > consistency conflicts > unhandled errors > unclear ownership > UI grouping issues > unverified claims > imprecise language.
 - Only review sections that exist. If the spec is marked `status: final` but sections are missing, flag it.
