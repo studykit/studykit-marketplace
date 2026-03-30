@@ -1,0 +1,10 @@
+{
+  "name": "plantuml",
+  "description": "PlantUML diagram reference, creation, and validation plugin",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/claude-plugin-marketplace",
+  "license": "MIT",
+  "keywords": ["plantuml", "diagram", "uml", "sequence", "class", "activity", "visualization"]
+}
