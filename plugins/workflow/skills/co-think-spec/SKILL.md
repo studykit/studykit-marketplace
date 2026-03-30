@@ -1,6 +1,6 @@
 ---
 name: co-think-spec
-description: "This skill should be used when the user needs to create or iterate on a software specification — combining domain modeling, functional requirements, and architecture in one session. Trigger when the user says 'spec', 'specification', 'design the system', 'define requirements', 'domain model', 'architecture', 'what should we build', 'system design', 'component design', 'let's spec this out', 'define the system', or when use cases from co-think-usecase need to be turned into a buildable specification."
+description: "This skill should be used when the user needs to create or iterate on a software specification — combining domain modeling, functional requirements, and architecture in one session. Common triggers include: 'spec', 'specification', 'design the system', 'define requirements', 'domain model', 'architecture', 'what should we build', 'system design', 'component design', 'let's spec this out', 'define the system'. Also applicable when use cases from co-think-usecase need to be turned into a buildable specification."
 argument-hint: <path to use case file(s), or existing .spec.md file for iteration>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
@@ -116,109 +116,25 @@ When a use case is too big:
 2. Propose sub-use-cases.
 3. Once confirmed, proceed to specify each sub-use-case individually.
 
-#### What to clarify per use case
-
-**For UI use cases:**
-- Where does this happen? (which screen/view)
-- What does the user see? (elements, information, initial state)
-- What does the user do? (interactions, step-by-step flow)
-- What changes? (state transitions, feedback, result)
-- What can go wrong? (error states, validation, edge cases)
-
-**For Non-UI use cases:**
-- What triggers this? (command, API call, event, schedule)
-- What goes in? (input format, parameters, validation)
-- What comes out? (output format, success response)
-- What are the rules? (business logic, conditions, ordering)
-- What can go wrong? (error cases, invalid input, failure modes)
-
-#### Question techniques
-
-- Ask about **concrete scenarios**: "If a user does X in this situation, what should happen?"
-- Ask about **edge cases**: "What if the input is empty? What if there are 10,000 items?"
-- Ask about **boundaries**: "Is there a limit? What's the maximum/minimum?"
-- When the user is unsure, offer 2-3 concrete options.
+For detailed clarification checklists (UI vs Non-UI) and question techniques, read **`references/requirements-guide.md`** → "Question Techniques" section.
 
 After each FR is confirmed, write it to the output file immediately and update the task.
 
 ### Step 1.2: UI Screen Grouping
 
-After all use cases have been specified as FRs, group the UI FRs by screen or view:
-
-1. **Propose screen groups** — analyze UI FRs and group them by the screen/view where they occur. Present the grouping to the user:
-
-   > Here's how I'd group the UI requirements by screen:
-   >
-   > | Screen | FRs |
-   > |--------|-----|
-   > | Dashboard | FR-1, FR-3, FR-7 |
-   > | Settings | FR-4, FR-9 |
-   > | Detail View | FR-2, FR-5 |
-   >
-   > Does this grouping make sense? Any adjustments?
-
-2. **Confirm with the user** — the user may merge, split, or rename screen groups.
-3. **Define screen navigation** — after screen groups are confirmed, map how users move between screens. Present as a PlantUML activity diagram:
-
-   > Here's the navigation flow between screens:
-   >
-   > ```plantuml
-   > @startuml
-   > (*) --> Dashboard
-   > Dashboard --> "Detail View" : clicks item
-   > Dashboard --> Settings : clicks settings icon
-   > "Detail View" --> Dashboard : clicks back
-   > Settings --> Dashboard : clicks done
-   > @enduml
-   > ```
-   >
-   > Does this capture the navigation? Any missing transitions?
-
-4. **Confirm navigation with the user** — the user may add, remove, or relabel transitions.
-5. **Update the output file** — record the screen grouping and navigation in the Functional Requirements section.
+Group UI FRs by screen/view, confirm with the user, then define screen navigation as a PlantUML activity diagram. For the full procedure, read **`references/requirements-guide.md`** → "UI Screen Grouping" section.
 
 ### Step 1.3: Mock Generation
 
-For each confirmed screen group, create a mock UI:
-
-1. **Use the mock-html-generator agent** to create an HTML mock. Save to `A4/co-think/mock/<topic-slug>/`.
-2. **Present the mock** and gather feedback — the mock should reflect all FRs in the group.
-3. **Iterate if needed** — refine the mock based on feedback.
-4. **Refine FRs** — use the mock feedback to fill gaps, clarify interactions, and update the FRs.
-5. **Record the mock file path** in each FR that belongs to the group.
-
-Move to the next screen group only when the user confirms.
+For each confirmed screen group, invoke the `mock-html-generator` agent to create an HTML mock in `A4/co-think/mock/<topic-slug>/`. Present, iterate, refine FRs from feedback, and record mock paths. For the full procedure, read **`references/requirements-guide.md`** → "Mock Generation" section.
 
 ### Step 1.4: Authorization Rules
 
-After all FRs are specified, analyze the Actors table from the source use case file:
-
-1. **Check for role differentiation** — do actors have different privilege levels? (e.g., "User" vs "Admin", or "Viewer" vs "Editor")
-2. **If no differentiation** — skip this step, no section created.
-3. **If roles differ** — build an authorization matrix mapping actors to FRs:
-
-   > Based on the actors, here's how I'd map access:
-   >
-   > | FR | Admin | User | System |
-   > |----|-------|------|--------|
-   > | FR-1. Create item | write | write | — |
-   > | FR-2. Delete all items | write | — | — |
-   > | FR-3. View dashboard | read | read | — |
-   > | FR-4. Cleanup expired sessions | — | — | execute |
-   >
-   > Does this capture the access rules? Any adjustments?
-
-4. **Confirm with the user** — walk through each FR and verify the access level per actor.
-5. **Update the output file** — record the Authorization Rules section.
+Analyze the Actors table for role differentiation. If roles differ, build an authorization matrix (actor × FR → access level). Skip if no differentiation. For the full procedure, read **`references/requirements-guide.md`** → "Authorization Rules" section.
 
 ### Step 1.5: Non-Functional Requirements Nudge
 
-After all FRs are specified, ask the user once:
-
-> "Are there non-functional requirements that should constrain the implementation? For example: performance targets, security requirements, scalability needs, accessibility standards, or compliance rules. If not, we can skip this."
-
-- If yes → capture each NFR with: description, affected FRs, measurable criteria
-- If no → move on, no section created
+Ask the user once whether NFRs should constrain implementation (performance, security, scalability, accessibility, compliance). If yes, capture each with description, affected FRs, and measurable criteria. If no, skip. For details, read **`references/requirements-guide.md`** → "Non-Functional Requirements Nudge" section.
 
 ## Phase 2: Domain Model
 
@@ -325,7 +241,7 @@ When a technology choice arises:
 
 ## Abstraction Level Guards
 
-THIS IS CRITICAL — applied per phase:
+**Applied per phase:**
 
 ### Requirements
 - Capture **what the software should do**, not how to implement it
@@ -464,29 +380,15 @@ When the user indicates they're done, ask whether they want to:
 
 ### End Iteration (not finalizing)
 
-1. **Run the spec-reviewer agent** — invoke the `spec-reviewer` agent with the current output file path and all input file paths.
-2. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or defer items to the next iteration.
-3. **Update the output file** with any revisions from the review.
-4. **Scan for Open Items** — walk through each phase and identify incomplete or unclear items (see Session Checkpoint section).
-5. **Increment `revision`** in frontmatter, update `revised` timestamp. Keep `status: draft`.
-6. **Write the Session Checkpoint** — heading must be `## Session Checkpoint (Revision N)` with the new revision number. Record decisions made and Open Items.
-7. **Write the Change Log** — record all changes made in this iteration with the new revision number.
-8. **Append this session's Interview Transcript** as a new round.
-9. **Write the file** using the Write tool.
-10. **Report** — show the user the current state and Open Items for next time.
+Run the spec-reviewer agent, walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
+
+For the full step-by-step checklist, read **`references/session-procedures.md`** → "End Iteration" section.
 
 ### Finalize
 
-1. **Verify Technology Stack** — check that the Technology Stack section is filled in (at minimum: language and framework). If empty, ask the user: "The Technology Stack isn't specified yet. A coding agent needs this to implement the spec. What language and framework should we use?" Do not proceed to finalize until this is resolved.
-2. **Run the spec-reviewer agent** — invoke the `spec-reviewer` agent with the current output file path and all input file paths. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
-3. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or dismiss each suggestion.
-4. **Update the output file** with any revisions from the review.
-5. **Write the Session Checkpoint** — heading `## Session Checkpoint (Revision N)`, clear the Open Items table (all items should be resolved).
-6. **Write the Change Log** with the final revision number.
-7. **Finalize the file** — set `status: final` in frontmatter, ensure all sections are complete.
-8. **Show the Spec Feedback section prominently** — list all filed upstream feedback GitHub Issues.
-9. **Write the file** using the Write tool.
-10. **Report the path** so the user can reference it.
+Verify technology stack is filled, run the spec-reviewer agent (all issues must be resolved), write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
+
+For the full step-by-step checklist, read **`references/session-procedures.md`** → "Finalize" section.
 
 ### Output Format
 
