@@ -34,7 +34,7 @@ A good Use Case has:
 
 **Key differentiator of this skill:** guide discussion toward **how the user uses the system** — not how the system is built.
 
-Read `references/abstraction-guard.md` for the full list of banned terms, conversion examples, and which UC fields to check.
+Read `${CLAUDE_SKILL_DIR}/references/abstraction-guard.md` for the full list of banned terms, conversion examples, and which UC fields to check.
 
 **Interview-specific rules:**
 - NEVER ask implementation-level questions: data schemas, hook mechanisms, API design, technology choices, database structure, communication protocols
@@ -66,7 +66,7 @@ At the start of the interview, determine the file path:
 
 ### New Session (file does not exist)
 
-Write the file immediately after restating the idea. Follow the template in `references/output-template.md` — create the file with frontmatter (`status: draft`), the Original Idea section filled in, and placeholder text for Context, Actors, Use Case Diagram, Use Cases, and Open Questions.
+Write the file immediately after restating the idea. Follow the template in `${CLAUDE_SKILL_DIR}/references/output-template.md` — create the file with frontmatter (`status: draft`), the Original Idea section filled in, and placeholder text for Context, Actors, Use Case Diagram, Use Cases, and Open Questions.
 
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
 
@@ -75,13 +75,13 @@ Tell the user the file path so they can follow along: "I've started a working fi
 When the working file already exists, this is a returning session to refine the use cases.
 
 **Entry procedure:**
-1. Read the existing file completely. Check for unconsumed exploration reports (`A4/co-think/<topic-slug>.usecase.exploration-*.md` without `.consumed`).
+1. Read the existing file completely. Check the frontmatter `reflected_files` list, then check for exploration reports (`A4/co-think/<topic-slug>.usecase.exploration-*.md`) not listed in `reflected_files`.
 2. Present a brief status summary:
    - Number of confirmed use cases
    - Actors identified so far
    - Open Items from previous session (if any)
    - Open Questions (if any)
-   - Unconsumed exploration results (if any) — summarize the UC candidates found
+   - Unreflected exploration results (if any) — summarize the UC candidates found
 3. Present the Open Items table (if it exists) as a selectable work backlog:
    > **Open Items from last session:**
    > | # | Section | Item | What's Missing | Priority |
@@ -92,7 +92,7 @@ When the working file already exists, this is a returning session to refine the 
    > Which items would you like to work on? Or would you prefer to add new use cases?
 4. The user chooses what to work on. Possible activities:
    - **Add new use cases** — resume the Discovery Loop (step 2) as normal
-   - **Explore UC candidates from explorer** — review and flesh out UC candidates from unconsumed exploration reports. After reflecting, rename the exploration file to `.consumed.md`.
+   - **Explore UC candidates from explorer** — review and flesh out UC candidates from unreflected exploration reports. After reflecting, add the exploration file name to the frontmatter `reflected_files` list.
    - **Clarify existing UCs** — revisit flagged use cases one by one, asking targeted questions to fill gaps
    - **Refine actors** — add missing actors, split actors with privilege differences, add system actors
    - **Split oversized UCs** — process previously deferred SPLIT suggestions
@@ -179,7 +179,7 @@ After the user confirms or revises:
 
 ### 4. Use Case Splitting
 
-After a Use Case is confirmed, evaluate whether it is too large. Read `references/usecase-splitting.md` for the full splitting guide with signs, examples, and rules.
+After a Use Case is confirmed, evaluate whether it is too large. Read `${CLAUDE_SKILL_DIR}/references/usecase-splitting.md` for the full splitting guide with signs, examples, and rules.
 
 ### 5. Challenge Mode Shifts
 
@@ -214,12 +214,12 @@ Research is **not automatic** — only trigger when the user explicitly asks (e.
 > "We have N use cases so far. Want me to research similar products in the background to see if there are common features we haven't considered? I can do that while we keep talking."
 
 If the user agrees:
-1. Use `TeamCreate` to spawn a research worker in the background.
-2. Prompt the research worker with the current Context and confirmed UC list — ask it to find comparable products and identify features not yet covered.
-3. **Continue the interview** — do not wait for research results.
-4. When the research worker reports back, save the full results per `references/research-report.md` (label: numbered sequentially). Summarize findings at the next natural break:
+1. Launch a research subagent via `Agent` with `run_in_background: true`.
+2. Prompt the subagent with the current Context and confirmed UC list — ask it to find comparable products and identify features not yet covered.
+3. **Continue the interview** — do not wait for research results. You will be automatically notified when the agent completes.
+4. When notified, save the full results per `${CLAUDE_SKILL_DIR}/references/research-report.md` (label: numbered sequentially). Summarize findings at the next natural break:
    > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
-5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
+5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add the research report file name to the frontmatter `reflected_files` list. Add **Source** fields to any research-derived UCs going forward.
 6. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
 7. If the user doesn't pick any, record the candidates in Open Questions for future reference.
 
@@ -227,7 +227,7 @@ Only nudge once per session. If the user declines, do not ask again.
 
 ### 7. Use Case Relationship Analysis
 
-After 5 or more use cases have been confirmed, analyze and present the relationships between use cases. Read `references/usecase-relationships.md` for the full analysis guide covering dependency relationships, reinforcement relationships, use case groups, and presentation format.
+After 5 or more use cases have been confirmed, analyze and present the relationships between use cases. Read `${CLAUDE_SKILL_DIR}/references/usecase-relationships.md` for the full analysis guide covering dependency relationships, reinforcement relationships, use case groups, and presentation format.
 
 ## Facilitation Guidelines
 
@@ -246,18 +246,37 @@ When the user indicates they're done, ask whether they want to:
 - **End this iteration** (come back later to refine further)
 - **Finalize** (mark as complete, create issues)
 
+### Teammate Setup (lazy)
+
+On the first End Iteration or Finalize:
+
+1. Create an agent team via `TeamCreate` (team name: `co-think-<topic-slug>`).
+2. Spawn two teammates via `Agent` with `team_name` and `name`. Each teammate's initial prompt includes the shared reference file paths so it reads them once:
+   - **`reviewer`** — subagent_type: `usecase-reviewer`. Reviews UC quality and system completeness.
+   - **`explorer`** — subagent_type: `usecase-explorer`. Explores new perspectives for UC candidates.
+
+Both teammates persist for the rest of the session and retain their full context — they do not re-read references on subsequent tasks.
+
+**How to assign work to teammates:**
+1. Create a task via `TaskCreate` with a description of the work.
+2. Assign it via `TaskUpdate(owner: "<name>", status: "in_progress")` — this activates the teammate.
+3. The teammate's response is delivered automatically to the main session.
+4. For follow-up work on an already-active teammate, `SendMessage(to: "<name>")` also works.
+
+If a teammate stops unexpectedly, re-spawn it.
+
 ### End Iteration (not finalizing)
 
-Run the usecase-reviewer agent, walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
+Send the work to the `reviewer` and `explorer` teammates (launch them first if not yet running), walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
 
-For the full step-by-step checklist, read **`references/session-closing.md`** → "End Iteration" section.
+For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
 
 ### Finalize
 
-Run the usecase-reviewer agent (all issues must be resolved), finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
+Send the work to the `reviewer` teammate (launch it first if not yet running). All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
 
-For the full step-by-step checklist, read **`references/session-closing.md`** → "Finalize" section.
+For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "Finalize" section.
 
 ### Output Format
 
-Follow the Use Case template in `references/output-template.md` for the final file structure and required sections.
+Follow the Use Case template in `${CLAUDE_SKILL_DIR}/references/output-template.md` for the final file structure and required sections.

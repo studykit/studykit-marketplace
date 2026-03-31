@@ -35,6 +35,16 @@ If paths fail, locate via Glob for `plugins/workflow/skills/co-think-usecase/ref
 
 ## Output
 
-Write the revised document back to the UC document path. Update the Session Checkpoint with:
+Write the revised document back to the UC document path. Update the frontmatter: increment `revision`, append the review report file name to `reflected_files`, set `last_step` (e.g., `growth 1, review 1`), update `revised` timestamp. Update the Change Log (record the review report file name in the Source column) and Session Checkpoint with:
 - `Last Completed: Review round N`
 - `Changes` listing what was fixed
+
+## Return Summary
+
+After writing the revised document, return a concise summary to the caller:
+
+```
+total_ucs: <N>
+revised_ucs: <N>
+changes: <brief list of what was fixed>
+```

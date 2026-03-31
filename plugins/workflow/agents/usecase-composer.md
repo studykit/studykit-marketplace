@@ -30,15 +30,16 @@ You receive:
 1. **Output path** — file path where the result should be written (required)
 2. **User idea** — the feature, idea, brainstorm text, or UC candidates from a reviewer report (required)
 3. **Research results** — file path to similar systems research (optional; may not exist for expansion rounds)
-4. **Target system** — file path to existing `.usecase.md` (optional; when present, extend rather than create from scratch)
+4. **Code analysis** — file path to code analysis report (optional; may not exist when no source code was referenced)
+5. **Target system** — file path to existing `.usecase.md` (optional; when present, extend rather than create from scratch)
 
 ## Process
 
 ### 1. Define the Problem Space
 
-**New system:** Summarize in 2–4 sentences (what problem, who's affected, why it matters) → becomes the Context section.
+**New system:** Summarize in 2–4 sentences (what problem, who's affected, why it matters) → becomes the Context section. Set revision to 0.
 
-**Adding to target system:** Preserve existing Context unchanged. Record scope expansion concerns in Open Questions.
+**Adding to target system:** Preserve existing Context unchanged. Record scope expansion concerns in Open Questions. Preserve existing UC numbering and increment the revision number.
 
 ### 2. Discover Actors
 
@@ -53,14 +54,16 @@ Rules:
 
 ### 3. Compose Use Cases
 
-Read the research results file if provided. UCs come from the input:
+Read the research results file and code analysis file if provided. UCs come from the input:
 1. **From user idea/brainstorm** — each distinct goal or situation
 2. **From research** — high-value candidates not already covered (when research results exist)
-3. **From UC candidates** — when input contains reviewer-generated UC candidates, flesh each into a full UC
+3. **From code analysis** — implemented features that should be represented as UCs (when code analysis exists)
+4. **From UC candidates** — when input contains reviewer-generated UC candidates, flesh each into a full UC
 
 For each UC, fill all fields per the output template. The **Source** field is mandatory:
 - `input` — derived from the user's idea or brainstorm
 - `research — <which systems>` — discovered from similar systems research
+- `code — <what was found>` — discovered from code analysis of existing implementation
 - `implicit` — derived from reviewer's system completeness analysis
 
 When target system exists, number new UCs sequentially after the last existing UC.
@@ -102,6 +105,21 @@ Write the result to the file path provided by the invoking skill. The document f
 - Excluded Ideas (if any, with table)
 - Open Questions
 - Session Checkpoint (with `Last Completed: Initial composition`)
+
+Update the frontmatter:
+- `reflected_files` — append file names of all reference documents consumed during composition (e.g., research report, code analysis report, input files).
+- `last_step` — set to the current step (e.g., `growth 1 — compose`, `growth 2 — compose`).
+- `revised` — set to current timestamp.
+
+## Return Summary
+
+After writing the document, return a concise summary to the caller:
+
+```
+total_ucs: <N>
+added_ucs: <N>
+excluded: <N>
+```
 
 ## Autonomous Decision Rules
 

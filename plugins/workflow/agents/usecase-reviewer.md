@@ -256,6 +256,18 @@ Write the review report to the file path provided by the invoking skill. Use exa
 - **System completeness:** INCOMPLETE — 3 gaps, 3 UC candidates
 ```
 
+## Return Summary
+
+After writing the review report, return a concise summary to the caller (this is what the main session uses for decisions — it does not read the report file):
+
+```
+verdict: ALL_PASS | NEEDS_REVISION
+passed: <M> / <N>
+completeness: SUFFICIENT | INCOMPLETE
+uc_candidates:
+  - "<candidate title>" (from: <gap type>)
+```
+
 ## Rules
 
 - Review every single use case — do not skip any.

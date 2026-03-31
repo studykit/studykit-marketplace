@@ -10,6 +10,8 @@ revised: <YYYY-MM-DD HH:mm>
 revision: 0
 status: draft | final
 tags: []
+reflected_files: []
+last_step: ""
 ---
 # Use Cases: <topic>
 > Source: [<brainstorm-file-name>](./<brainstorm-file-name>)
@@ -140,9 +142,9 @@ end note
 
 ## Change Log
 
-| Revision | Date | Section | Change | Reason |
-|----------|------|---------|--------|--------|
-| 1 | <YYYY-MM-DD> | <section> | <what changed> | <why> |
+| Revision | Date | Section | Change | Reason | Source |
+|----------|------|---------|--------|--------|--------|
+| 1 | <YYYY-MM-DD> | <section> | <what changed> | <why> | <reference file that triggered this change> |
 
 ## Session Checkpoint (Revision <N>)
 > Last updated: <YYYY-MM-DD HH:mm>
