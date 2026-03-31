@@ -3,17 +3,31 @@
 ## End Iteration (not finalizing)
 
 1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path. Save the review report per `references/review-report.md` (label: revision number).
-2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
+2. **Present the review results** — show the user the review report. Walk through issues in this order:
+
+   **Actors Review** — for each actor with issues:
+   - `ORPHAN` — actor not referenced by any UC. Ask if the user wants to remove it or assign to a UC.
+   - `INCOMPLETE ACTOR` — ask the user to fill in the missing Type or Role.
+   - `PRIVILEGE SPLIT` — revisit the Actor table and ask the user whether to split the actor into separate roles.
+   - `TYPE MISMATCH` / `ROLE MISMATCH` — show the conflict between declared type/role and observed actions, ask the user to resolve.
+
+   **Cross-UC Findings** — for each finding:
+   - `STALE RELATIONSHIP` — show the outdated relationship and ask how to update it.
+   - `MISSING UC` / `MISSING ACTOR` in diagram — update the diagram after confirming with the user.
+
+   **Per-UC issues** — for each UC with verdict `NEEDS REVISION`:
    - `SPLIT` — propose the split and ask for confirmation
    - `VAGUE` / `UNCLEAR` / `WEAK` — present the suggestion and ask if the user wants to revise
-   - `IMPLEMENTATION LEAK` — point out the implementation term and ask for the user-level intent
-   - `OVERLAPS` — ask if the user wants to merge or differentiate
-   - `PRIVILEGE SPLIT` — revisit the Actor table and ask the user whether to split the actor into separate roles
-   - The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
+   - `IMPLEMENTATION LEAK` / `TOO ABSTRACT` — point out the problematic text and ask for the user-level intent
+   - `OVERLAPS UC-N` — ask if the user wants to merge or differentiate
+   - `MISSING ACTOR` / `IMPLICIT ACTOR` — present the discovered actor and ask if the user wants to add it
+   - `MISSING SYSTEM ACTOR` — present the automated behavior and ask if a system actor should be added
+
+   The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
 3. **Update the working file** with any revisions from the review.
 4. **Scan for Open Items** — review all sections for incomplete or unclear items:
    - Use cases flagged by the reviewer but deferred by the user
-   - Actors suspected but not confirmed (from Actor Discovery feedback)
+   - Actors suspected but not confirmed (from Actors Review feedback)
    - Vague situations or weak outcomes the user chose not to address now
    - Unresolved Open Questions
    - Relationships not yet analyzed (if < 5 UCs)
@@ -26,7 +40,7 @@
    usecase(<topic-slug>): revision N
    
    - UCs: <total count> (<added> added, <modified> revised)
-   - Reviewer verdict: <PASS / NEEDS REVISION>
+   - UCs passed: <M> / <N>
    - Open items: <count>
    ```
 10. **Report** — show the user the current state and Open Items for next time.
@@ -64,7 +78,7 @@
    usecase(<topic-slug>): finalize
    
    - UCs: <total count>
-   - Reviewer verdict: PASS
+   - UCs passed: <N> / <N>
    - GitHub issues: <issue numbers>
    ```
 8. **Report the path and issues** so the user can reference them.

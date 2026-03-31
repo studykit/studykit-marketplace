@@ -8,7 +8,7 @@ After each `usecase-reviewer` invocation, save the full review report to a separ
 
 Where `<label>` identifies the review context:
 - **co-think-usecase:** use the revision number (e.g., `review-1`, `review-2`) or `review-final` for finalization
-- **auto-usecase:** use the step label (e.g., `review-7a`, `review-7b`, `review-7c`)
+- **auto-usecase:** use the review round number (e.g., `review-1`, `review-2`)
 
 ## Frontmatter
 

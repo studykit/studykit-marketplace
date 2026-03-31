@@ -7,8 +7,19 @@ After each similar systems research, save the full research results to a separat
 `A4/co-think/<topic-slug>.usecase.research-<label>.md`
 
 Where `<label>` identifies the research context:
-- **auto-usecase:** `initial` for Step 3, `targeted-7b` for targeted research in Step 7b
+- **auto-usecase:** `initial` for Step 3
 - **co-think-usecase:** `1`, `2`, ... numbered sequentially per session
+
+## Consumed Naming Convention
+
+When research results have been reflected into the UC document (e.g., used in UC extraction), rename the file to mark it as consumed:
+
+`<topic-slug>.usecase.research-<label>.md` → `<topic-slug>.usecase.research-<label>.consumed.md`
+
+This allows resume detection via filename alone (Glob) without reading file contents:
+- `*.research-initial.consumed.md` → research already reflected, skip research step
+- `*.research-initial.md` (without consumed) → research done but not yet reflected, use existing results
+- Neither exists → run research
 
 ## Frontmatter
 

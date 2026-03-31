@@ -26,18 +26,20 @@ If `SKILL_DIR` is not resolved, locate the workflow plugin via Glob for `plugins
 
 ## Use Case Format
 
-Every Use Case follows the structure defined in `output-template.md` with one addition for autonomous mode:
+Every Use Case follows the structure defined in `output-template.md`. In autonomous mode, the **Source** field is mandatory for every UC:
 
-- **Source** field — tracks where each UC originated:
-  - `input` — derived from the user's idea or brainstorm
-  - `research — <which systems>` — discovered from similar systems research
-  - `implicit` — discovered during analysis as a prerequisite or complement
+- `input` — derived from the user's idea or brainstorm
+- `research — <which systems>` — discovered from similar systems research
+- `implicit` — discovered during analysis as a prerequisite or complement
 
 ## Resume Detection
 
 Before starting, check for existing progress:
 
-1. **Research report:** If `A4/co-think/<topic-slug>.usecase.research-initial.md` exists, skip Step 3 and use the existing results.
+1. **Research report:** Check for `A4/co-think/<topic-slug>.usecase.research-initial*.md`:
+   - `*.research-initial.consumed.md` exists → research already reflected in document, skip Step 3.
+   - `*.research-initial.md` exists (without consumed) → research completed but not yet reflected, skip Step 3 and pass to composer agent in Step 4.
+   - Neither exists → run Step 3.
 2. **Output file with checkpoint:** If `A4/co-think/<topic-slug>.usecase.md` exists and contains a **Session Checkpoint** section:
    - Read the checkpoint to determine the **last completed step**.
    - **Resume from the next step** — do not repeat completed work.
@@ -63,7 +65,9 @@ If a target system file exists, read it and extract: Context, Actors, existing U
 
 ### Step 3: Research Similar Systems
 
-Launch a research subagent in the background via `TeamCreate`. **Do not wait** — proceed to Steps 4a and 4b while research runs.
+Check for existing research results per Resume Detection. If research is needed:
+
+Launch a research subagent in the background via `TeamCreate`. **Do not wait** — proceed to Step 4 while research runs.
 
 Prompt the subagent:
 
@@ -79,249 +83,63 @@ Prompt the subagent:
 >
 > Return: **Similar systems**, **High-value UC candidates**, **Niche UC candidates**, **User-requested features**.
 
-Save the full research results per `references/research-report.md` (label: `initial`). The results feed into Step 4c (UC extraction) and Step 4g (practical value evidence).
+Save the full research results per `references/research-report.md` (label: `initial`).
 
-### Step 4: Analyze the Input
+### Step 4: Analyze and Generate Use Cases
 
-Work through the content systematically. Do NOT ask the user questions — make your best judgment and record uncertainties in Open Questions.
+If Step 3 launched a research subagent, wait for it to complete before invoking the composer agent.
 
-#### 4a. Define the Problem Space
+Invoke the `usecase-composer` agent with:
+- **User idea** — the input from Step 1
+- **Research results** — file path to research report from Step 3 (or existing report from Resume Detection)
+- **Target system** — file path to existing `.usecase.md` from Step 2 (if applicable)
 
-**New system:** Summarize in 2–4 sentences (what problem, who's affected, why it matters) → becomes the Context section.
+The composer agent handles: problem space definition, actor discovery, UC extraction, system completeness analysis, splitting, relationship analysis, fitness check, PlantUML diagram, abstraction guard, and initial Session Checkpoint.
 
-**Adding to target system:** Preserve existing Context unchanged. Record scope expansion concerns in Open Questions.
+After the composer agent returns, rename the research file to mark it as consumed:
+`<topic-slug>.usecase.research-initial.md` → `<topic-slug>.usecase.research-initial.consumed.md`
 
-#### 4b. Discover Actors
+### Step 5: Write the Document
 
-Identify every person or system that interacts with the software. For each: Name, Type (`person`/`system`), Role, Description.
-
-Rules:
-- **When target system exists:** reuse existing actors where possible. Only create new actors for uncovered privilege levels.
-- Prefer specific roles over generic "User"
-- Distinct permission levels → separate actors
-- Automated behaviors → system actor
-- When unsure → split and record in Open Questions
-
-#### 4c. Extract Use Cases
-
-**Wait for Step 3 research results before proceeding.**
-
-UCs come from **two sources**:
-1. **From user input** — each distinct goal or situation in the idea
-2. **From research** — high-value candidates from Step 3 not already covered
-
-For each UC, fill all fields per the output template + Source field. Number sequentially: UC-1, UC-2, ... (input-derived first, then research-derived).
-
-#### 4d. System Completeness Analysis
-
-After initial extraction, systematically scan for UCs that the system needs but no one explicitly mentioned. Work through three lenses:
-
-**Actor lifecycle** — for each actor, check whether the existing UCs cover their full interaction with the system:
-
-| Stage | Question |
-|-------|----------|
-| Entry | How does this actor first start using the system? (signup, onboarding, invitation) |
-| Core activity | What do they repeatedly do? Is the main loop fully covered? |
-| Management | How do they organize, edit, delete, or search what they've created? |
-| Exit | How do they leave, export data, or clean up? |
-
-Missing stages → UC candidates with `Source: implicit`.
-
-**Data lifecycle** — identify the key entities implied by existing UCs (e.g., "share a list" implies a List entity). For each entity, check CRUD coverage:
-
-| Entity | Create | Read | Update | Delete |
-|--------|--------|------|--------|--------|
-| *derived from existing UCs* | UC-? or missing | UC-? or missing | UC-? or missing | UC-? or missing |
-
-Empty cells where a user would reasonably need that operation → UC candidates with `Source: implicit`.
-
-**Actor interaction points** — when multiple actors exist, check:
-- Does one actor's output become another actor's input? (e.g., author publishes → reader views)
-- Are there approval, delegation, or sharing flows between actors?
-- Do permission differences require admin-level UCs? (invite, assign role, revoke access)
-
-Missing interaction points → UC candidates with `Source: implicit`.
-
-Finally, re-read the Context from Step 4a. If any stated goals are not yet covered by a UC, add candidates.
-
-Number new UCs sequentially after the last UC from Step 4c.
-
-#### 4e. Apply Splitting Rules
-
-Evaluate each UC against `usecase-splitting.md`. When splitting, use sub-numbering: UC-3 → UC-3a, UC-3b, UC-3c.
-
-#### 4f. Analyze Relationships
-
-Apply `usecase-relationships.md`. When target system exists, analyze relationships between new and existing UCs.
-
-#### 4g. Fitness and Practical Value Check
-
-Evaluate every candidate UC before including it.
-
-**System fitness** (target system only): Does this UC fall within the system's Context? If not → Excluded Ideas.
-
-**Practical value** — three criteria using research evidence:
-
-| Criterion | Include | Exclude |
-|-----------|---------|---------|
-| **Usage frequency** | Routine / repeated action | Rare edge case |
-| **User reach** | Majority of users | Tiny subset |
-| **Core goal contribution** | Directly serves system's purpose | Tangential |
-
-Decision: 2+ "Exclude" → drop. Record in Excluded Ideas with criteria scores and evidence.
-
-Research evidence overrides gut judgment: if similar systems commonly offer a feature, that is strong evidence for inclusion.
-
-### Step 5: Build the PlantUML Diagram
-
-Include all actors, all UCs (existing + new), actor→UC connections, `<<include>>` for dependencies, `<<extend>>` for reinforcements. Use PlantUML's inline description syntax.
-
-### Step 6: Write the Document
-
-Follow `output-template.md` using **auto-usecase** rules:
+Assemble the composer agent's output into the final document following `output-template.md` using **auto-usecase** rules:
 - Include: Original Idea, Context, Similar Systems Research, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Open Questions, Session Checkpoint
 - Include conditionally: Excluded Ideas (if any), Change Log (revision > 0 only)
 - Omit: Interview Transcript
 
 Frontmatter: `status: draft`, `revision: 0` (or increment), current date for `created`/`revised`, `tags: []`.
 
-**Abstraction guard:** Before writing, verify every flow step against `abstraction-guard.md`. No implementation terms may appear in any UC field.
+### Step 6: Review and Revision Loop
 
-Include a Session Checkpoint with `Last Completed Step: Step 6 — Initial draft` so the file is resumable before the first review pass.
+Repeat until all UCs pass and no actor issues remain, or the maximum number of rounds is reached:
 
-### Step 7: Self-Review and Enrichment Loop
+1. Invoke `usecase-reviewer` agent on the output file. Save the review report per `references/review-report.md` (label: `review-1`, `review-2`, `review-3`).
+2. If all UC verdicts are `PASS` and Actors Review has no issues, proceed to commit and exit the loop.
+3. Otherwise:
+   a. Pass the review report and document to the `usecase-reviser` agent to apply fixes.
+   b. Write the updated document with Session Checkpoint.
+   c. Commit to git (see Commit below).
+   d. Continue to next round.
 
-Three sub-steps: **7a** → **7b** → **7c**. Each: **enrich** → **review** (invoke `usecase-reviewer`) → **fix**. Use `TeamCreate` to parallelize review and research when beneficial.
+**Maximum:** 3 review rounds. Remaining issues after 3 rounds → Open Questions with `[Unresolved after review]`.
 
-**Review report persistence:** After each `usecase-reviewer` invocation, save the review report per `references/review-report.md` (label: step label, e.g., `review-7a`).
+### Commit
 
-**Quality checklist — run before each reviewer invocation:**
-
-- [ ] Every UC has all required fields (Actor, Goal, Situation, Flow, Expected Outcome, Source)
-- [ ] Every actor in UCs is in the Actors table with Type and Role
-- [ ] Every actor in the table is referenced by at least one UC
-- [ ] No flow step contains implementation terms (per abstraction-guard.md)
-- [ ] No goal contains "and" signaling multiple goals
-- [ ] No situation is generic — all are specific and observable
-- [ ] All outcomes are observable or measurable
-- [ ] PlantUML diagram includes all actors and all UCs
-- [ ] Split UCs use sub-numbering (UC-3a, UC-3b)
-- [ ] `status` is `draft`
-- [ ] Excluded Ideas section present with reason and criteria (if any excluded)
-- [ ] No new UC overlaps existing (when adding to target system)
-- [ ] Similar Systems Research section present
-- [ ] Open Questions populated with assumptions made
-
-#### Step 7a — Review + Fix + Concretize
-
-1. **Review:** Invoke `usecase-reviewer` agent on the output file.
-2. **Fix:** Apply verdict table below.
-3. **Enrich:** Walk every UC — strengthen vague flows, sharpen situations/outcomes, re-check research for missed high-value features (add with `Source: research`).
-4. Write updated file with **Session Checkpoint** (see below).
-5. **Commit to git** (see Step 7 Commit below).
-
-#### Step 7b — Catch Remaining Gaps + Targeted Research + Review + Fix
-
-1. **Discover remaining implicit UCs:** Step 4d should have caught most system-level gaps. This step is a safety net — for each UC, ask: "Does this assume another UC exists that isn't documented?" If 4d worked well, expect 0–2 additions here. Add missing ones with `Source: implicit`.
-2. **Targeted research:** If implicit UCs found, launch subagent to research whether similar systems offer those specific features. Save results per `references/research-report.md` (label: `targeted-7b`). Use results to validate, refine flows, and discover related UCs.
-3. **Fitness check:** Apply Step 4g to all new UCs. Failures → Excluded Ideas. Update diagram.
-4. **Review:** Invoke `usecase-reviewer`.
-5. **Fix:** Apply verdict table.
-6. Write updated file with **Session Checkpoint** (see below).
-7. **Commit to git** (see Step 7 Commit below).
-
-#### Step 7c — Stabilize + Review + Fix
-
-1. **Stabilize:** No new UCs. Consistency pass only — verify Sources, relationships, diagram.
-2. **Review:** Invoke `usecase-reviewer`. Final quality gate.
-3. **Fix:** Apply verdict table.
-4. Write updated file with **Session Checkpoint** (see below).
-5. **Commit to git** (see Step 7 Commit below).
-
-#### Step 7 Commit
-
-After each sub-step, stage all files under `A4/co-think/<topic-slug>.*` and commit:
+After each review round, stage all files under `A4/co-think/<topic-slug>.*` and commit:
 
 ```
-usecase(<topic-slug>): revision N — step 7a
+usecase(<topic-slug>): revision N — review <round>
 
 - UCs: <total count> (<added> added, <modified> revised)
-- Reviewer verdict: <PASS / NEEDS REVISION>
+- UCs passed: <M> / <N>
 - Open items: <count>
 ```
-
-#### Session Checkpoint (write after each sub-step)
-
-Update the `## Session Checkpoint` section in the output file after each sub-step, using the checkpoint format from `output-template.md` (Revision N). Add `Last Completed Step` and `Changes This Step` fields for resume support:
-
-```markdown
-## Session Checkpoint (Revision <N>)
-> Last updated: <YYYY-MM-DD HH:mm>
-
-### Last Completed Step
-- Step: <step number and name, e.g., "Step 7a — Review + Fix + Concretize">
-- Reviewer verdict: <PASS / NEEDS REVISION>
-
-### Changes This Step
-- <what was added, fixed, or enriched>
-
-### Open Items
-
-| Section | Item | What's Missing | Priority |
-|---------|------|---------------|----------|
-| <section> | <item> | <gap> | High / Medium / Low |
-
-### Next Steps
-- <what the next step will focus on, derived from Open Items>
-```
-
-This checkpoint enables **resume after interruption** — if the skill is re-invoked, it reads this section to skip completed work.
-
-#### Verdict → Action Table
-
-| Verdict | Action |
-|---------|--------|
-| `SPLIT` | Apply suggested split with sub-numbering |
-| `VAGUE` / `UNCLEAR` / `WEAK` | Rewrite flagged content with reviewer's suggestion |
-| `IMPLEMENTATION LEAK` | Rewrite at user level per abstraction-guard.md |
-| `OVERLAPS UC-N` | Merge or clearly differentiate situations |
-| `MISSING ACTOR` / `IMPLICIT ACTOR` | Add to Actors table + diagram |
-| `PRIVILEGE SPLIT` | Split actor if actions require different privilege levels |
-| `MISSING SYSTEM ACTOR` | Add system actor + assign to relevant UC |
-| `INCOMPLETE ACTOR` | Fill missing Type or Role |
-| `TYPE MISMATCH` / `ROLE MISMATCH` | Correct to match observed actions |
-| `MISSING UC` / `MISSING ACTOR` in diagram | Update PlantUML diagram |
-| `STALE RELATIONSHIP` | Update `<<include>>`/`<<extend>>` |
-
-#### Step 7 Rules
-
-- **Maximum:** 3 sub-steps (7a → 7b → 7c). Remaining issues → Open Questions with `[Unresolved after review]`.
-- **Stop early:** If reviewer verdict is `PASS` AND enrichment added nothing new.
-
-## Team Execution
-
-For complex or large-scope inputs, use `TeamCreate` to parallelize work:
-
-- **Research worker** — runs Step 3 research and targeted research (Step 7b) in background
-- **Writer** — drafts and revises the document
-- **Reviewer** — runs `usecase-reviewer` reviews
-
-Use teams when the input suggests 10+ use cases or multiple research domains. For simpler inputs, sequential `Agent` calls are sufficient.
 
 ## Autonomous Decision Rules
 
 Apply these consistently — no human interaction.
 
-1. **Ambiguous topic** → pick the most specific interpretation. Record in Open Questions.
-2. **Unclear actor role** → default to `viewer`. If actions suggest edit capability, use `editor`.
-3. **Splitting boundary** → default to splitting. Smaller UCs are better.
-4. **Vague situation** → construct a plausible concrete one. Record in Open Questions.
-5. **Unclear relationships** → err toward dependency over reinforcement. Record reasoning.
-6. **Output file exists** → read as target system. Preserve UC numbering, increment revision.
-7. **New UC overlaps existing** → exclude. Record in Excluded Ideas.
-8. **New UC outside scope** → exclude. Record in Excluded Ideas.
-9. **Practical value borderline** → prefer exclusion over inclusion.
-10. **Never** create GitHub Issues or set `status: final`.
+1. **Output file exists** → read as target system. Preserve UC numbering, increment revision.
+2. **Never** create GitHub Issues or set `status: final`.
 
 ## Final Output
 
@@ -330,6 +148,6 @@ Report to the user:
 - Number of UCs generated (new + preserved if adding to target)
 - UCs excluded and top reasons
 - Similar systems researched and key common features
-- Review steps completed
+- Review rounds completed
 - Unresolved issues in Open Questions
-- Final review verdict
+- UCs passed (M / N)

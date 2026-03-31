@@ -143,6 +143,12 @@ Verdict per item: `OK` | `TYPE MISMATCH` (actor Type contradicts UC situation/fl
 - Include/extend relationships match the use case dependencies
 - No orphan elements (actors or use cases in diagram but not in document, or vice versa)
 
+### Relationship Consistency
+- All dependency relationships (`<<include>>`) reflect actual prerequisites between use cases
+- All reinforcement relationships (`<<extend>>`) reflect actual enhancements between use cases
+- No stale relationships referencing use cases that were split, merged, or removed
+- Use Case Groups accurately reflect the current set of use cases
+
 ## Output Format
 
 Return your review in exactly this format:
@@ -151,24 +157,22 @@ Return your review in exactly this format:
 ## Use Case Review Report
 
 **Total use cases reviewed:** N
-**Use cases with issues:** N
-**Verdict:** PASS | NEEDS REVISION
+**UCs passed:** M / N
+**Actors with issues:** K
 
-### Actor Discovery
-- UC-3 step 4: IMPLICIT ACTOR — "manager approves the request" implies an approver actor not in Actors table. Suggest adding "Manager" actor.
-- UC-1 + UC-7: PRIVILEGE SPLIT — "User" both creates items (UC-1) and deletes all user data (UC-7). Consider whether these should be separate actors (e.g., User vs Admin).
-- UC-5: MISSING SYSTEM ACTOR — "expired sessions are cleaned up daily" has no declared actor. Suggest adding a "Scheduler" system actor.
+### Actors Review
+- Meeting Organizer: OK
+- Team Member: OK
+- Reviewer: ORPHAN — not referenced by any use case. Remove from table or assign to a use case.
+- Scheduler: INCOMPLETE ACTOR — missing Role. Suggest: —  (system actor)
+- User (UC-1, UC-7): PRIVILEGE SPLIT — creates items (UC-1) vs deletes all user data (UC-7). Consider separating into User vs Admin.
+- Notification Service: TYPE MISMATCH — declared as `person` but UC-5 has automated trigger "every midnight". Suggest changing to `system`.
+- Viewer: ROLE MISMATCH — declared as `viewer` but UC-3 flow includes "deletes the record". Suggest elevating to `editor`.
 
-### Actors Table Review
-- <actor>: OK | VAGUE — <details> | ORPHAN — not referenced by any use case | INCOMPLETE ACTOR — missing Type/Role
+### Cross-UC Findings
 
-### Actor–Use Case Consistency
-- <actor>: OK
-- <actor>: TYPE MISMATCH — declared as `person` but UC-5 has automated trigger "every midnight, expired sessions are cleaned up"
-- <actor>: ROLE MISMATCH — declared as `viewer` but UC-3 flow includes "deletes the record". Suggest elevating to `editor` or splitting into separate actors.
-
-### Use Case Diagram Review
-- OK | MISSING UC — <list> | MISSING ACTOR — <list> | STALE RELATIONSHIP — <details>
+#1: STALE RELATIONSHIP — UC-3 was split into UC-3a/3b but UC-5 still includes original UC-3. Update to reference UC-3a.
+#2: MISSING UC in diagram — UC-6 not in PlantUML diagram.
 
 ### Use Case Review
 
@@ -181,19 +185,39 @@ Return your review in exactly this format:
 - Abstraction: IMPLEMENTATION LEAK — step 3 says "query the database" → suggest: "search for matching records"
 - Outcome: WEAK — "results are available" → suggest: "matching records are displayed within 2 seconds, sorted by relevance"
 - Overlap: OK
+- Cross-UC: —
+- **UC Verdict: NEEDS REVISION**
 
 #### UC-2: <title>
+- Size: OK
+- Actor: OK
+- Goal: OK
+- Situation: OK
+- Flow: OK
+- Abstraction: OK
+- Outcome: OK
+- Overlap: OK
+- Cross-UC: —
+- **UC Verdict: PASS**
+
+#### UC-5: <title>
+- Size: OK
+- Actor: OK
+- Goal: OK
+- Situation: OK
+- Flow: OK
+- Abstraction: OK
+- Outcome: OK
+- Overlap: OK
+- Cross-UC: #1
+- **UC Verdict: NEEDS REVISION**
+
 ...
 
 ### Summary
-- **Actor discovery:** <list of implicit actors, privilege splits, missing system actors>
-- **Actor–UC consistency:** <list of type/role mismatches>
-- **Split candidates:** UC-2, UC-5
-- **Vague situations:** UC-2, UC-7
-- **Incomplete flows:** UC-4
-- **Implementation leaks:** UC-1, UC-6
-- **Weak outcomes:** UC-1, UC-4
-- **Overlapping pairs:** UC-3 ↔ UC-6
+- **UCs needing revision:** UC-1, UC-5
+- **Actors needing attention:** Reviewer (ORPHAN), Scheduler (INCOMPLETE), User (PRIVILEGE SPLIT)
+- **Cross-UC findings:** 2
 ```
 
 ## Rules
