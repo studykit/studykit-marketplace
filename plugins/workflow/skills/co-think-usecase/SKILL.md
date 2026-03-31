@@ -272,7 +272,7 @@ If a teammate stops unexpectedly, re-spawn it.
 
 ### End Iteration (not finalizing)
 
-Send the work to the `reviewer` and `explorer` teammates (launch them first if not yet running), walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
+Send the work to the `reviewer` and `explorer` teammates (launch them first if not yet running), walk through flagged issues with the user, scan for open items, increment revision, append a new entry to Revision History with Change Log, append the interview transcript, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
 

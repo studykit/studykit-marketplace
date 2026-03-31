@@ -103,7 +103,7 @@ Save the full research results per `references/research-report.md` (label: `init
 
 Skip if the input does not reference source code. Check for existing results per Resume Detection. If analysis is needed:
 
-Launch a code analysis subagent via `Agent` with `subagent_type: Explore`. Prompt the subagent:
+Launch a code analysis subagent via `Agent` (general-purpose). The subagent must both analyze the code and write the results file. Prompt the subagent:
 
 > Analyze the codebase at `<paths from Step 1>`.
 >
@@ -115,9 +115,7 @@ Launch a code analysis subagent via `Agent` with `subagent_type: Explore`. Promp
 > 4. Note any partially implemented or stubbed features.
 > 5. Identify data entities and their CRUD operations.
 >
-> Return: **Architecture summary**, **Implemented features**, **Actors**, **Partial/stub features**, **Data entities**.
-
-Save the results to `A4/co-think/<topic-slug>.usecase.code-analysis.md`.
+> Write the results to `A4/co-think/<topic-slug>.usecase.code-analysis.md` with frontmatter `label: code-analysis`, `topic: <topic-slug>`.
 
 ### Step 3: Compose and Refine Loop
 
