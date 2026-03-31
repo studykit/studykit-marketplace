@@ -2,7 +2,7 @@
 name: co-think-usecase
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'use cases', 'gather requirements', 'what do users need', 'break this down', or when a rough idea needs to be shaped into concrete Use Cases through a Socratic interview. Automatically detects and splits oversized use cases into smaller, independently valuable pieces."
 argument-hint: <idea or vague concept to turn into use cases>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
+allowed-tools: Read, Write, Agent, Bash, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList, TeamCreate, SendMessage
 ---
 
 # Use Case Discovery Facilitator
@@ -32,11 +32,12 @@ A good Use Case has:
 
 ## Abstraction Guard
 
-**Key differentiator of this skill:**
+**Key differentiator of this skill:** guide discussion toward **how the user uses the system** — not how the system is built.
 
-- The skill guides discussion toward **how the user uses the system** — not how the system is built
+Read `references/abstraction-guard.md` for the full list of banned terms, conversion examples, and which UC fields to check.
+
+**Interview-specific rules:**
 - NEVER ask implementation-level questions: data schemas, hook mechanisms, API design, technology choices, database structure, communication protocols
-- Use case content must NOT contain implementation terms (e.g., "REST API", "webhook", "database", "queue", "cache")
 - When the user mentions implementation details, ask for the intent behind it and convert to user behavior level:
   - User says: "It should use a webhook to notify" → Ask: "What should the user see or experience when they're notified? In what situation does this notification matter?"
   - User says: "We need a Redis cache for this" → Ask: "What's the experience you're after — is it about speed, or about something else?"
@@ -145,7 +146,6 @@ When the user's answer is vague, ask for a concrete example. When they're stuck,
 - **Type** — determine from the situation and flow: is the actor a `person` (human user) or `system` (scheduler, external service, automated process)?
 - **Role** — determine from the actions the actor performs across use cases: actors who create/edit/delete have higher privilege than actors who only view. Use domain-appropriate labels (e.g., admin, editor, viewer). System actors use `—` for role.
 - Confirm with the user: "It sounds like there's a [name] involved here — they seem to be a [type] with [role]-level access based on [observed actions]. Should I add them as an actor?"
-- When the usecase-reviewer flags PRIVILEGE SPLIT (same actor performs actions at different privilege levels), revisit the Actor table and ask the user whether to split the actor into separate roles.
 
 ### 3. Progressive Use Case Extraction
 
@@ -204,7 +204,26 @@ Look at it from a different angle.
 
 Use when: The conversation has gone deep in one direction without exploring alternatives.
 
-### 6. Use Case Relationship Analysis
+### 6. Similar Systems Research (on request)
+
+Research is **not automatic** — only trigger when the user explicitly asks (e.g., "what do similar apps do?", "check competitors", "look up existing solutions", "research this").
+
+**Nudge:** After 3+ use cases are confirmed and the conversation reaches a natural pause, offer once:
+> "We have N use cases so far. Want me to research similar products in the background to see if there are common features we haven't considered? I can do that while we keep talking."
+
+If the user agrees:
+1. Use `TeamCreate` to spawn a research worker in the background.
+2. Prompt the research worker with the current Context and confirmed UC list — ask it to find comparable products and identify features not yet covered.
+3. **Continue the interview** — do not wait for research results.
+4. When the research worker reports back, save the full results per `references/research-report.md` (label: numbered sequentially). Summarize findings at the next natural break:
+   > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
+5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
+6. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
+7. If the user doesn't pick any, record the candidates in Open Questions for future reference.
+
+Only nudge once per session. If the user declines, do not ask again.
+
+### 7. Use Case Relationship Analysis
 
 After 5 or more use cases have been confirmed, analyze and present the relationships between use cases. Read `references/usecase-relationships.md` for the full analysis guide covering dependency relationships, reinforcement relationships, use case groups, and presentation format.
 

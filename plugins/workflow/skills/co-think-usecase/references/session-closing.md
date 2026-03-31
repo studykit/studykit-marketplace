@@ -2,12 +2,13 @@
 
 ## End Iteration (not finalizing)
 
-1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path.
+1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path. Save the review report per `references/review-report.md` (label: revision number).
 2. **Present the review results** — show the user the review report. For each flagged issue, walk through it one at a time:
    - `SPLIT` — propose the split and ask for confirmation
    - `VAGUE` / `UNCLEAR` / `WEAK` — present the suggestion and ask if the user wants to revise
    - `IMPLEMENTATION LEAK` — point out the implementation term and ask for the user-level intent
    - `OVERLAPS` — ask if the user wants to merge or differentiate
+   - `PRIVILEGE SPLIT` — revisit the Actor table and ask the user whether to split the actor into separate roles
    - The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
 3. **Update the working file** with any revisions from the review.
 4. **Scan for Open Items** — review all sections for incomplete or unclear items:
@@ -20,11 +21,19 @@
 6. **Write the Session Checkpoint** — update the heading to `## Session Checkpoint (Revision N)` with the new revision number. Record decisions made and Open Items for next iteration.
 7. **Update the Change Log** — record all changes made in this iteration with the new revision number.
 8. **Append this session's Interview Transcript** as a new round.
-9. **Report** — show the user the current state and Open Items for next time.
+9. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+   ```
+   usecase(<topic-slug>): revision N
+   
+   - UCs: <total count> (<added> added, <modified> revised)
+   - Reviewer verdict: <PASS / NEEDS REVISION>
+   - Open items: <count>
+   ```
+10. **Report** — show the user the current state and Open Items for next time.
 
 ## Finalize
 
-1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path.
+1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path. Save the review report per `references/review-report.md` (label: `final`).
 2. **Present the review results** — walk through each flagged issue one at a time. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
 3. **Update the working file** with any revisions from the review.
 4. **Finalize the Use Case Diagram** — ensure all confirmed use cases, actors, and relationships (include/extend) are reflected in the PlantUML diagram.
@@ -50,4 +59,12 @@
    - Append the full Interview Transcript
    - Set `status: final` in frontmatter
    - Remove any placeholder text
-7. **Report the path and issues** so the user can reference them.
+7. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+   ```
+   usecase(<topic-slug>): finalize
+   
+   - UCs: <total count>
+   - Reviewer verdict: PASS
+   - GitHub issues: <issue numbers>
+   ```
+8. **Report the path and issues** so the user can reference them.

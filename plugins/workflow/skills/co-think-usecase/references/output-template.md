@@ -72,6 +72,7 @@ end note
   2. <user-level action step>
   3. ...
 - **Expected Outcome:** <what's different after the flow completes — observable/measurable>
+- **Source:** <input | research — <which systems> | implicit> *(include when research was performed; omit otherwise)*
 
 ### [UC-2]. <short title>
 - **Actor:** <actor name>
@@ -80,6 +81,7 @@ end note
 - **Flow:**
   1. ...
 - **Expected Outcome:** <outcome>
+- **Source:** <source> *(include when research was performed)*
 
 ### [UC-3]. <short title> *(split from original)*
 #### [UC-3a]. <short title>
@@ -102,6 +104,8 @@ end note
 
 ## Use Case Relationships
 
+*Not enough use cases for relationship analysis yet.*
+
 ### Dependencies
 - **[UC-1] → [UC-2]**: <reason>
 
@@ -112,6 +116,23 @@ end note
 | Group | Use Cases | Description |
 |-------|-----------|-------------|
 | <name> | [UC-1], [UC-2], ... | <description> |
+
+## Similar Systems Research
+*(include when research was performed; omit otherwise)*
+
+<Brief summary of similar products researched and common feature patterns discovered.>
+
+- **Similar systems:** <name — key features described as user goals> (up to 5 systems)
+- **High-value UC candidates:** <features/goals appearing in 3+ systems>
+- **Niche UC candidates:** <features found in only 1 system>
+- **User-requested features:** <from reviews/forums>
+
+## Excluded Ideas
+*(Include when research was performed and candidates were excluded. Omit if nothing was excluded.)*
+
+| UC Candidate | Source | Exclusion Reason | Usage Frequency | User Reach | Core Goal Contribution |
+|-------------|--------|-----------------|-----------------|------------|----------------------|
+| <candidate title> | input / research | <reason: outside system scope / overlaps UC-N / low practical value> | Routine / Rare | Majority / Subset | Direct / Tangential |
 
 ## Open Questions
 <Questions that came up but weren't resolved. Topics to revisit.>
@@ -171,9 +192,15 @@ end note
 **Abstraction rule:**
 - Flow steps must describe user-level actions only. No implementation terms (API, database, webhook, cache, queue, etc.).
 
-**Issue reference links:** See [issue-links.md](../../references/issue-links.md).
+**Issue reference links:** Read `${SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
 
-**Required sections**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Session Checkpoint, Interview Transcript.
+**Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships.
+**Additional required (co-think-usecase)**: Session Checkpoint, Interview Transcript.
+**Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Session Checkpoint.
 **Conditionally required:**
-- **Open Questions** — if unresolved topics remain
-- **Change Log** — only in Iteration mode (revision > 0)
+- **Similar Systems Research** — always in auto-usecase; in co-think-usecase only when research was performed
+- **Source field** (per UC) — always in auto-usecase; in co-think-usecase only when research was performed
+- **Open Questions** — if unresolved topics remain (co-think-usecase); always required (auto-usecase)
+- **Change Log** — only when revision > 0; omit on first auto-usecase write
+- **Excluded Ideas** — when research was performed and candidates were excluded; omit if nothing was excluded
+**Sections to OMIT in auto-usecase:** Interview Transcript
