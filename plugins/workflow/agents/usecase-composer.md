@@ -32,13 +32,15 @@ You receive:
 3. **Research results** — file path to similar systems research (optional; may not exist for expansion rounds)
 4. **Target system** — file path to existing `.usecase.md` (optional; when present, extend rather than create from scratch)
 
-## Step A: Define the Problem Space
+## Process
+
+### 1. Define the Problem Space
 
 **New system:** Summarize in 2–4 sentences (what problem, who's affected, why it matters) → becomes the Context section.
 
 **Adding to target system:** Preserve existing Context unchanged. Record scope expansion concerns in Open Questions.
 
-## Step B: Discover Actors
+### 2. Discover Actors
 
 Identify every person or system that interacts with the software. For each: Name, Type (`person`/`system`), Role, Description.
 
@@ -49,7 +51,7 @@ Rules:
 - Automated behaviors → system actor
 - When unsure → split and record in Open Questions
 
-## Step C: Extract Use Cases
+### 3. Compose Use Cases
 
 Read the research results file if provided. UCs come from the input:
 1. **From user idea/brainstorm** — each distinct goal or situation
@@ -63,39 +65,29 @@ For each UC, fill all fields per the output template. The **Source** field is ma
 
 When target system exists, number new UCs sequentially after the last existing UC.
 
-## Step D: Apply Splitting Rules
+**Apply these quality criteria while composing each UC:**
 
-Evaluate each UC against `usecase-splitting.md`. When splitting, use sub-numbering: UC-3 → UC-3a, UC-3b, UC-3c.
+- **Abstraction guard** — no implementation terms in any field. Write at user-level only. See `abstraction-guard.md`.
+- **Single goal** — each UC has one goal, one outcome. If a UC covers multiple goals, split immediately using sub-numbering (UC-3 → UC-3a, UC-3b). See `usecase-splitting.md`.
+- **Practical value** — evaluate every candidate before including it:
 
-## Step E: Analyze Relationships
+  | Criterion | Include | Exclude |
+  |-----------|---------|---------|
+  | **Usage frequency** | Routine / repeated action | Rare edge case |
+  | **User reach** | Majority of users | Tiny subset |
+  | **Core goal contribution** | Directly serves system's purpose | Tangential |
 
-Apply `usecase-relationships.md`. When target system exists, analyze relationships between new and existing UCs.
+  Decision: 2+ "Exclude" → drop. Record in Excluded Ideas with criteria scores and evidence.
+  Research evidence overrides gut judgment: if similar systems commonly offer a feature, that is strong evidence for inclusion.
 
-## Step F: Fitness and Practical Value Check
+- **System fitness** (target system only) — does this UC fall within the system's Context? If not → Excluded Ideas.
 
-Evaluate every candidate UC before including it.
+### 4. Analyze Relationships and Build Diagram
 
-**System fitness** (target system only): Does this UC fall within the system's Context? If not → Excluded Ideas.
+After all UCs are composed:
 
-**Practical value** — three criteria using research evidence:
-
-| Criterion | Include | Exclude |
-|-----------|---------|---------|
-| **Usage frequency** | Routine / repeated action | Rare edge case |
-| **User reach** | Majority of users | Tiny subset |
-| **Core goal contribution** | Directly serves system's purpose | Tangential |
-
-Decision: 2+ "Exclude" → drop. Record in Excluded Ideas with criteria scores and evidence.
-
-Research evidence overrides gut judgment: if similar systems commonly offer a feature, that is strong evidence for inclusion.
-
-## Step G: Build the PlantUML Diagram
-
-Include all actors, all UCs (existing + new), actor→UC connections, `<<include>>` for dependencies, `<<extend>>` for reinforcements. Use PlantUML's inline description syntax.
-
-## Step H: Abstraction Guard
-
-Before producing the final output, verify every flow step against `abstraction-guard.md`. No implementation terms may appear in any UC field. Rewrite any violations at user level.
+- **Relationships** — apply `usecase-relationships.md`. When target system exists, analyze relationships between new and existing UCs.
+- **PlantUML Diagram** — include all actors, all UCs (existing + new), actor→UC connections, `<<include>>` for dependencies, `<<extend>>` for reinforcements. Use PlantUML's inline description syntax.
 
 ## Output
 
