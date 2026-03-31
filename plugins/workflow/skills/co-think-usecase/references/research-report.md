@@ -1,6 +1,6 @@
 # Research Report Persistence
 
-After each similar systems research, save the full research results to a separate file.
+After each similar systems research, the research agent writes the results directly to the file path provided by the invoking skill.
 
 ## File Path
 

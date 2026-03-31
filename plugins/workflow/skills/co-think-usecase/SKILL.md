@@ -75,12 +75,13 @@ Tell the user the file path so they can follow along: "I've started a working fi
 When the working file already exists, this is a returning session to refine the use cases.
 
 **Entry procedure:**
-1. Read the existing file completely.
+1. Read the existing file completely. Check for unconsumed exploration reports (`A4/co-think/<topic-slug>.usecase.exploration-*.md` without `.consumed`).
 2. Present a brief status summary:
    - Number of confirmed use cases
    - Actors identified so far
    - Open Items from previous session (if any)
    - Open Questions (if any)
+   - Unconsumed exploration results (if any) — summarize the UC candidates found
 3. Present the Open Items table (if it exists) as a selectable work backlog:
    > **Open Items from last session:**
    > | # | Section | Item | What's Missing | Priority |
@@ -91,6 +92,7 @@ When the working file already exists, this is a returning session to refine the 
    > Which items would you like to work on? Or would you prefer to add new use cases?
 4. The user chooses what to work on. Possible activities:
    - **Add new use cases** — resume the Discovery Loop (step 2) as normal
+   - **Explore UC candidates from explorer** — review and flesh out UC candidates from unconsumed exploration reports. After reflecting, rename the exploration file to `.consumed.md`.
    - **Clarify existing UCs** — revisit flagged use cases one by one, asking targeted questions to fill gaps
    - **Refine actors** — add missing actors, split actors with privilege differences, add system actors
    - **Split oversized UCs** — process previously deferred SPLIT suggestions

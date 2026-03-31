@@ -7,7 +7,7 @@ description: >
   This agent is invoked by auto-usecase and co-think-usecase skills. Do not invoke directly.
 model: opus
 color: cyan
-tools: "Read, Glob, Grep"
+tools: "Read, Write, Glob, Grep"
 ---
 
 You are a Use Case revision agent. Your job is to revise an existing Use Case document based on a usecase-reviewer report.
@@ -35,6 +35,6 @@ If paths fail, locate via Glob for `plugins/workflow/skills/co-think-usecase/ref
 
 ## Output
 
-Return the revised document with all flagged issues addressed. Update the Session Checkpoint with:
-- `Last Completed Step: Review round N`
-- `Changes This Step` listing what was fixed
+Write the revised document back to the UC document path. Update the Session Checkpoint with:
+- `Last Completed: Review round N`
+- `Changes` listing what was fixed

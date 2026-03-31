@@ -1,6 +1,6 @@
 # Review Report Persistence
 
-After each `usecase-reviewer` invocation, save the full review report to a separate file.
+After each `usecase-reviewer` invocation, the reviewer agent writes the report directly to the file path provided by the invoking skill.
 
 ## File Path
 
@@ -8,7 +8,7 @@ After each `usecase-reviewer` invocation, save the full review report to a separ
 
 Where `<label>` identifies the review context:
 - **co-think-usecase:** use the revision number (e.g., `review-1`, `review-2`) or `review-final` for finalization
-- **auto-usecase:** use the review round number (e.g., `review-1`, `review-2`)
+- **auto-usecase:** use `g<iteration>-q<round>` format to distinguish growth iterations from quality rounds (e.g., `review-g1-q1`, `review-g1-q2`, `review-g2-q1`)
 
 ## Frontmatter
 

@@ -2,7 +2,7 @@
 name: auto-usecase
 description: "This skill should be used when the user wants to autonomously generate a complete Use Case document from an idea or brainstorm input without interactive interview. Triggers: 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'create use case doc automatically', 'no interview needed just generate', 'run auto-usecase on', or when the user provides an idea/brainstorm and wants a .usecase.md file produced without back-and-forth dialogue."
 argument-hint: <idea, brainstorm text, or file path to generate use cases from>
-allowed-tools: Read, Write, Edit, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TeamCreate, SendMessage, TaskCreate, TaskUpdate, TaskList
+allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TeamCreate, SendMessage, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Autonomous Use Case Generator
@@ -21,6 +21,7 @@ Before doing any analysis, read these files. They define the rules and format yo
 - `${SKILL_DIR}/../co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
 - `${SKILL_DIR}/../co-think-usecase/references/review-report.md` — how to persist reviewer reports
 - `${SKILL_DIR}/../co-think-usecase/references/research-report.md` — how to persist research results
+- `${SKILL_DIR}/../co-think-usecase/references/exploration-report.md` — how to persist exploration results
 
 If `SKILL_DIR` is not resolved, locate the workflow plugin via Glob for `plugins/workflow/skills/co-think-usecase/references/`.
 
@@ -45,6 +46,9 @@ Before starting, check for existing progress:
    - **Resume from the next step** — do not repeat completed work.
    - If the checkpoint shows a step was in progress, re-run that step from the beginning (the file state is the pre-step state).
 3. **Review reports:** Read any existing `A4/co-think/<topic-slug>.usecase.review-*.md` files to understand what was already flagged and fixed.
+4. **Exploration reports:** Check for `A4/co-think/<topic-slug>.usecase.exploration-*.md`:
+   - `*.consumed.md` → exploration already reflected, skip.
+   - `*.exploration-<label>.md` (without consumed) → exploration done but not yet reflected, use existing results in next compose iteration.
 
 This allows recovery from API limits, context window exhaustion, or other interruptions without starting over.
 
@@ -85,54 +89,93 @@ Prompt the subagent:
 
 Save the full research results per `references/research-report.md` (label: `initial`).
 
-### Step 4: Analyze and Generate Use Cases
+### Step 4: Compose and Refine Loop
 
-If Step 3 launched a research subagent, wait for it to complete before invoking the composer agent.
+This step runs an outer **growth loop** (compose → review → expand) and an inner **quality loop** (review → revise).
+
+#### Step 4a: Compose
+
+**First iteration:** If Step 3 launched a research subagent, wait for it to complete before invoking the composer agent.
 
 Invoke the `usecase-composer` agent with:
-- **User idea** — the input from Step 1
-- **Research results** — file path to research report from Step 3 (or existing report from Resume Detection)
-- **Target system** — file path to existing `.usecase.md` from Step 2 (if applicable)
+- **Output path** — `A4/co-think/<topic-slug>.usecase.md`
+- **User idea** — the input from Step 1 (first iteration) or UC Candidates from reviewer/explorer (subsequent iterations)
+- **Research results** — file path to research report from Step 3 (first iteration only)
+- **Target system** — file path to existing `.usecase.md` from Step 2, or the current document (subsequent iterations)
 
-The composer agent handles: problem space definition, actor discovery, UC extraction, system completeness analysis, splitting, relationship analysis, fitness check, PlantUML diagram, abstraction guard, and initial Session Checkpoint.
+The composer agent handles: problem space definition, actor discovery, UC extraction, splitting, relationship analysis, fitness check, PlantUML diagram, abstraction guard, and initial Session Checkpoint.
 
-After the composer agent returns, rename the research file to mark it as consumed:
+After the first compose, rename the research file to mark it as consumed:
 `<topic-slug>.usecase.research-initial.md` → `<topic-slug>.usecase.research-initial.consumed.md`
 
-### Step 5: Write the Document
+#### Step 4b: Verify and Commit
 
-Assemble the composer agent's output into the final document following `output-template.md` using **auto-usecase** rules:
-- Include: Original Idea, Context, Similar Systems Research, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Open Questions, Session Checkpoint
-- Include conditionally: Excluded Ideas (if any), Change Log (revision > 0 only)
-- Omit: Interview Transcript
+The composer agent writes the document directly. Verify the file exists at the output path and contains the expected sections per `output-template.md` **auto-usecase** rules:
+- Required: Original Idea, Context, Similar Systems Research, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Open Questions, Session Checkpoint
+- Conditional: Excluded Ideas (if any), Change Log (revision > 0 only)
+- Omitted: Interview Transcript
 
-Frontmatter: `status: draft`, `revision: 0` (or increment), current date for `created`/`revised`, `tags: []`.
+Commit after compose:
+```
+usecase(<topic-slug>): growth <iteration> — compose
 
-### Step 6: Review and Revision Loop
+- UCs: <total count> (<added> added)
+```
 
-Repeat until all UCs pass and no actor issues remain, or the maximum number of rounds is reached:
+#### Step 4c: Quality Loop (inner)
 
-1. Invoke `usecase-reviewer` agent on the output file. Save the review report per `references/review-report.md` (label: `review-1`, `review-2`, `review-3`).
-2. If all UC verdicts are `PASS` and Actors Review has no issues, proceed to commit and exit the loop.
+Repeat until all UCs pass and no actor issues remain, or the maximum is reached:
+
+1. Invoke `usecase-reviewer` agent with the output file and report path per `references/review-report.md` (label: `review-g<iteration>-q<round>`).
+2. If all UC verdicts are `PASS` and Actors Review has no issues:
+   a. Commit review report:
+      ```
+      usecase(<topic-slug>): growth <iteration>, review <round> — PASS
+
+      - UCs passed: <N> / <N>
+      ```
+   b. Exit quality loop.
 3. Otherwise:
-   a. Pass the review report and document to the `usecase-reviser` agent to apply fixes.
-   b. Write the updated document with Session Checkpoint.
-   c. Commit to git (see Commit below).
-   d. Continue to next round.
+   a. Pass the review report and document to the `usecase-reviser` agent to apply fixes. The reviser updates the Session Checkpoint (`Last Completed`, `Changes`) and Change Log (when revision > 0).
+   b. Commit review report + revised document:
+      ```
+      usecase(<topic-slug>): growth <iteration>, review <round>
 
-**Maximum:** 3 review rounds. Remaining issues after 3 rounds → Open Questions with `[Unresolved after review]`.
+      - UCs: <total count> (<modified> revised)
+      - UCs passed: <M> / <N>
+      ```
+   c. Continue to next round.
+
+**Maximum:** 3 quality rounds per growth iteration. Remaining quality issues → Open Questions with `[Unresolved after review]`.
+
+#### Step 4d: Growth Check (outer)
+
+After the quality loop passes (or reaches maximum), determine whether to expand the system:
+
+1. **System Completeness** — check the reviewer's assessment from the last review:
+   - **INCOMPLETE** with UC Candidates → pass the UC Candidates and current document back to Step 4a.
+   - **SUFFICIENT** → proceed to step 2.
+
+2. **Perspective Exploration** — invoke the `usecase-explorer` agent with the current document and report path per `references/exploration-report.md` (label: `exploration-<iteration>`, e.g., `exploration-1`). Commit after explorer:
+   ```
+   usecase(<topic-slug>): growth <iteration> — exploration
+
+   - Perspectives explored: <count>
+   - UC candidates found: <count>
+   ```
+   - UC Candidates found → pass the UC Candidates and current document back to Step 4a. After compose, rename the exploration file to `.consumed.md`.
+   - No candidates → exit the growth loop, proceed to Final Output.
+
+Completeness gaps are addressed first. Perspective exploration only runs when the system is structurally sufficient.
+
+**Maximum:** 3 growth iterations. Remaining gaps or unexplored perspectives → Open Questions with `[Unresolved after growth loop]`.
 
 ### Commit
 
-After each review round, stage all files under `A4/co-think/<topic-slug>.*` and commit:
-
-```
-usecase(<topic-slug>): revision N — review <round>
-
-- UCs: <total count> (<added> added, <modified> revised)
-- UCs passed: <M> / <N>
-- Open items: <count>
-```
+All commits stage files under `A4/co-think/<topic-slug>.*`. Commit timing:
+- **After compose** (Step 4b) — UC document created/updated
+- **After each quality round** (Step 4c) — review report (+ revised document if NEEDS REVISION)
+- **After exploration** (Step 4d) — exploration report
 
 ## Autonomous Decision Rules
 
@@ -148,6 +191,7 @@ Report to the user:
 - Number of UCs generated (new + preserved if adding to target)
 - UCs excluded and top reasons
 - Similar systems researched and key common features
-- Review rounds completed
+- Growth iterations and review rounds completed
+- System completeness status
 - Unresolved issues in Open Questions
 - UCs passed (M / N)

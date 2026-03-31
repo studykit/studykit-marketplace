@@ -2,7 +2,7 @@
 
 ## End Iteration (not finalizing)
 
-1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path. Save the review report per `references/review-report.md` (label: revision number).
+1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path and report path per `references/review-report.md` (label: revision number). The agent writes the report directly.
 2. **Present the review results** — show the user the review report. Walk through issues in this order:
 
    **Actors Review** — for each actor with issues:
@@ -23,19 +23,33 @@
    - `MISSING ACTOR` / `IMPLICIT ACTOR` — present the discovered actor and ask if the user wants to add it
    - `MISSING SYSTEM ACTOR` — present the automated behavior and ask if a system actor should be added
 
+   **System Completeness** — if `INCOMPLETE`, present the gaps and UC candidates:
+   - Show each gap (MISSING JOURNEY, USABILITY GAP, MISSING LIFECYCLE) with explanation
+   - Present the UC candidates as suggestions for the next iteration
+   - Ask: "Would you like to explore any of these now, or save them for next time?"
+   - If the user picks any, enter the Discovery Loop for those topics
+   - If the user defers, record as Open Items for next iteration
+
    The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
-3. **Update the working file** with any revisions from the review.
-4. **Scan for Open Items** — review all sections for incomplete or unclear items:
+3. **Run the usecase-explorer agent** — invoke the `usecase-explorer` agent with the current working file and report path per `references/exploration-report.md` (label: revision number). The agent writes the report directly. Present the exploration results:
+   - Show each perspective explored and UC candidates found
+   - Ask: "The explorer found these additional angles we haven't covered. Would you like to explore any now, or save them for next time?"
+   - If the user picks any, enter the Discovery Loop for those topics. After reflecting the results, rename the exploration file to `.consumed.md`.
+   - If the user defers, record as Open Items for next iteration (exploration file remains unconsumed for next session)
+4. **Update the working file** with any revisions from the review and exploration.
+5. **Scan for Open Items** — review all sections for incomplete or unclear items:
    - Use cases flagged by the reviewer but deferred by the user
    - Actors suspected but not confirmed (from Actors Review feedback)
    - Vague situations or weak outcomes the user chose not to address now
+   - System Completeness gaps and UC candidates deferred by the user
+   - Explorer perspectives and UC candidates deferred by the user
    - Unresolved Open Questions
    - Relationships not yet analyzed (if < 5 UCs)
-5. **Increment `revision`** in frontmatter and update `revised` timestamp. Keep `status: draft`.
-6. **Write the Session Checkpoint** — update the heading to `## Session Checkpoint (Revision N)` with the new revision number. Record decisions made and Open Items for next iteration.
-7. **Update the Change Log** — record all changes made in this iteration with the new revision number.
-8. **Append this session's Interview Transcript** as a new round.
-9. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+6. **Increment `revision`** in frontmatter and update `revised` timestamp. Keep `status: draft`.
+7. **Write the Session Checkpoint** — update the heading to `## Session Checkpoint (Revision N)` with the new revision number. Record decisions made and Open Items for next iteration.
+8. **Update the Change Log** — record all changes made in this iteration with the new revision number.
+9. **Append this session's Interview Transcript** as a new round.
+10. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
    ```
    usecase(<topic-slug>): revision N
    
@@ -47,8 +61,8 @@
 
 ## Finalize
 
-1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path. Save the review report per `references/review-report.md` (label: `final`).
-2. **Present the review results** — walk through each flagged issue one at a time. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
+1. **Run the usecase-reviewer agent** — invoke the `usecase-reviewer` agent with the current working file path and report path per `references/review-report.md` (label: `final`). The agent writes the report directly.
+2. **Present the review results** — walk through each flagged issue one at a time. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead. If System Completeness is `INCOMPLETE`, inform the user of the gaps and ask whether to proceed with finalization or end the iteration to address them first.
 3. **Update the working file** with any revisions from the review.
 4. **Finalize the Use Case Diagram** — ensure all confirmed use cases, actors, and relationships (include/extend) are reflected in the PlantUML diagram.
 5. **Create GitHub Issues for each use case** — for each finalized use case:

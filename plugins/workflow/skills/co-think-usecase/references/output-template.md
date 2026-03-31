@@ -147,6 +147,12 @@ end note
 ## Session Checkpoint (Revision <N>)
 > Last updated: <YYYY-MM-DD HH:mm>
 
+### Last Completed
+- <what was just completed, e.g., "Initial composition", "Review round 1", "Revision 2 — 3 UCs added">
+
+### Changes
+- <what was added, fixed, or enriched>
+
 ### Decisions Made
 - <key decision>
 
