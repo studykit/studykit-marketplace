@@ -53,7 +53,7 @@ The working file is a living document that grows throughout the interview. The u
 | Create | Idea received (step 1) | Create the file with frontmatter, original idea, and empty sections |
 | Update | Each use case confirmed or split (steps 3-4) | Append the new use case; update actors table and diagram |
 | Update | Progress snapshot (every 4-5 exchanges) | Update the Context section with latest understanding |
-| End iteration | User pauses the session | Increment revision, write Session Checkpoint (Revision N), update Change Log |
+| End iteration | User pauses the session | Increment revision, append new entry to Revision History with Change Log |
 | Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, set `status: final` |
 
 ### Working File Path
@@ -75,12 +75,16 @@ Tell the user the file path so they can follow along: "I've started a working fi
 When the working file already exists, this is a returning session to refine the use cases.
 
 **Entry procedure:**
-1. Read the existing file completely. Check the frontmatter `reflected_files` list, then check for exploration reports (`A4/co-think/<topic-slug>.usecase.exploration-*.md`) not listed in `reflected_files`.
+1. Read the existing file completely. Check the frontmatter `reflected_files` list, then check for companion reports not listed in `reflected_files`:
+   - Review reports (`<topic-slug>.usecase.review-*.md`) — read each unreflected review and extract NEEDS REVISION items and Cross-UC findings
+   - Exploration reports (`<topic-slug>.usecase.exploration-*.md`) — summarize UC candidates found
+   - For reports already in `reflected_files`, cross-check the Change Log to confirm their findings were recorded. Do not re-present resolved findings.
 2. Present a brief status summary:
    - Number of confirmed use cases
    - Actors identified so far
    - Open Items from previous session (if any)
    - Open Questions (if any)
+   - Unreflected review findings (if any) — list NEEDS REVISION items with UC ID, field, and issue
    - Unreflected exploration results (if any) — summarize the UC candidates found
 3. Present the Open Items table (if it exists) as a selectable work backlog:
    > **Open Items from last session:**
@@ -92,6 +96,7 @@ When the working file already exists, this is a returning session to refine the 
    > Which items would you like to work on? Or would you prefer to add new use cases?
 4. The user chooses what to work on. Possible activities:
    - **Add new use cases** — resume the Discovery Loop (step 2) as normal
+   - **Address review findings** — walk through NEEDS REVISION items from unreflected review reports one by one. After all findings are addressed (or explicitly deferred), add the review file name to `reflected_files` and record each change in the Change Log with the review file as Source.
    - **Explore UC candidates from explorer** — review and flesh out UC candidates from unreflected exploration reports. After reflecting, add the exploration file name to the frontmatter `reflected_files` list.
    - **Clarify existing UCs** — revisit flagged use cases one by one, asking targeted questions to fill gaps
    - **Refine actors** — add missing actors, split actors with privilege differences, add system actors
@@ -104,7 +109,7 @@ When the working file already exists, this is a returning session to refine the 
 - New use cases get the next available UC-N ID (continue numbering from where the previous session left off).
 - When modifying an existing UC, show the before/after and confirm with the user before updating.
 - Increment the `revision` number in frontmatter at each iteration end.
-- Append this session's transcript to the existing Interview Transcript (as a new numbered round).
+- Include this session's Interview Transcript in the Revision History entry for this iteration.
 
 ### How to Update
 

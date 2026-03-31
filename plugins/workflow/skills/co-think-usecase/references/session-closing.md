@@ -46,10 +46,8 @@
    - Unresolved Open Questions
    - Relationships not yet analyzed (if < 5 UCs)
 6. **Increment `revision`** in frontmatter, update `revised` timestamp, and set `last_step` to `revision N`. Keep `status: draft`.
-7. **Write the Session Checkpoint** — update the heading to `## Session Checkpoint (Revision N)` with the new revision number. Record decisions made and Open Items for next iteration.
-8. **Update the Change Log** — record all changes made in this iteration with the new revision number. Fill the Source column with the review/exploration report file name that triggered each change.
-9. **Append this session's Interview Transcript** as a new round.
-10. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+7. **Append a new entry to Revision History** — add a new `### Revision N — <timestamp>` subsection under `## Revision History`. Do not overwrite previous entries. Include: Last Completed, Decisions Made, Change Log (record all changes made in this iteration with the review/exploration report file name in the Source column), Open Items, Next Steps, and Interview Transcript (this session's Q&A in a collapsible `<details>` block).
+8. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
    ```
    usecase(<topic-slug>): revision N
    
@@ -57,7 +55,7 @@
    - UCs passed: <M> / <N>
    - Open items: <count>
    ```
-11. **Report** — show the user the current state and Open Items for next time.
+9. **Report** — show the user the current state and Open Items for next time.
 
 ## Finalize
 
@@ -84,7 +82,7 @@
    - Ensure the Use Case Diagram is complete
    - Clear the Open Items table (all items should be resolved)
    - Add the Open Questions section if unresolved topics remain
-   - Append the full Interview Transcript
+   - Append final Revision History entry (including Interview Transcript)
    - Set `status: final` and `last_step` to `finalize` in frontmatter
    - Remove any placeholder text
 7. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:

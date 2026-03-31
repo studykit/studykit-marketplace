@@ -291,7 +291,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 - After each component is confirmed, update the Architecture section.
 - Show progress: "That's 5 FRs defined, 3 concepts extracted. Let's continue."
 
-## Session Checkpoint
+## Revision History
 
 At the end of each session (whether wrapping up or pausing):
 
@@ -300,17 +300,22 @@ At the end of each session (whether wrapping up or pausing):
    - Domain Model: concepts referenced in FRs but not in glossary, missing state transitions
    - Architecture: components without interface contracts, information flows at abstract level, missing DB schemas
 2. **Increment `revision`** in frontmatter and update `revised` timestamp.
-3. **Write the checkpoint** with structured Open Items. The heading must include the revision number so readers know which iteration it belongs to:
+3. **Append a new entry** to Revision History. Previous entries are preserved — never overwrite them:
 
 ```markdown
-## Session Checkpoint (Revision N)
-> Last updated: <YYYY-MM-DD HH:mm>
+### Revision N — <YYYY-MM-DD HH:mm>
 
-### Decisions Made
+#### Decisions Made
 - <key decision 1>
 - <key decision 2>
 
-### Open Items
+#### Change Log
+
+| Section | Change | Reason | Source |
+|---------|--------|--------|--------|
+| <section> | <what changed> | <why> | <review report or source> |
+
+#### Open Items
 
 | Section | Item | What's Missing | Priority |
 |---------|------|---------------|----------|
@@ -319,7 +324,7 @@ At the end of each session (whether wrapping up or pausing):
 | FR-5 ↔ FR-7 | Concurrency | Conflict handling undecided | Medium |
 | Domain | Session | "Paused" state transitions incomplete | Medium |
 
-### Next Steps
+#### Next Steps
 - <suggested work items for the next iteration, derived from Open Items>
 ```
 
@@ -342,21 +347,6 @@ When entering **Iteration** mode:
    > Which item would you like to work on first? Or would you like to focus on something else?
 
 3. Let the user choose — they may pick from the backlog or bring new topics.
-
-## Change Log
-
-When modifying an existing spec (Iteration mode), record changes inline:
-
-```markdown
-## Change Log
-
-| Revision | Date | Section | Change | Reason |
-|----------|------|---------|--------|--------|
-| 1 | 2026-04-01 | FR-3 | Added error handling for empty input | Edge case discovered during implementation |
-| 1 | 2026-04-01 | Domain | Added "Archive" state to Session | New requirement FR-15 |
-```
-
-This replaces the separate co-revise process.
 
 ## Upstream Feedback Issues
 

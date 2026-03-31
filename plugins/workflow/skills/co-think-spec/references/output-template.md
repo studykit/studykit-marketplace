@@ -238,32 +238,34 @@ B --> A : confirmation
 ## Spec Feedback
 - [FR-3], [FR-5]: <reason and explanation> → #<issue-number>
 
-## Change Log
+## Revision History
 
-| Revision | Date | Section | Change | Reason |
-|----------|------|---------|--------|--------|
-| 1 | <YYYY-MM-DD> | <section> | <what changed> | <why> |
+Each iteration appends a new entry. Previous entries are preserved — never overwrite them.
 
-## Session Checkpoint (Revision <N>)
-> Last updated: <YYYY-MM-DD HH:mm>
+### Revision <N> — <YYYY-MM-DD HH:mm>
 
-### Decisions Made
+#### Decisions Made
 - <key decision>
 
-### Open Items
+#### Change Log
+
+| Section | Change | Reason | Source |
+|---------|--------|--------|--------|
+| <section> | <what changed> | <why> | <review report or source> |
+
+#### Open Items
 
 | Section | Item | What's Missing | Priority |
 |---------|------|---------------|----------|
 | <section> | <item reference> | <specific gap description> | High / Medium / Low |
 
-### Next Steps
+#### Next Steps
 - <suggested work items for next iteration, derived from Open Items>
 
-## Interview Transcript
+#### Interview Transcript
 <details>
-<summary>Full Q&A</summary>
+<summary>Q&A</summary>
 
-### Round 1
 **Q:** <question>
 **A:** <answer>
 
@@ -279,8 +281,7 @@ B --> A : confirmation
 - Technology Stack (must be filled before `status: final`)
 - Functional Requirements (with Use Case Reference)
 - Domain Model (Glossary, Concept Relationships)
-- Session Checkpoint
-- Interview Transcript
+- Revision History (including Interview Transcript per revision)
 
 ## Conditional Sections
 

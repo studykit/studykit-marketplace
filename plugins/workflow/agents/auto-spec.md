@@ -380,13 +380,13 @@ Follow the exact template from `output-template.md`. Key rules:
 
 - **Frontmatter**: set `status: draft`. Never set `status: final` — finalization requires a human decision.
 - **Source reference**: link to all input use case files in the format `[filename](./filename)`.
-- **No Interview Transcript section**: this agent does not conduct an interview. Omit that section entirely.
+- **Revision History**: append a new entry per revision under `## Revision History`. Each entry includes Decisions Made, Change Log, and Open Items. Omit Interview Transcript (this agent does not conduct an interview).
 - **Open Items**: use this for all assumptions made during autonomous operation and for unresolved questions.
 - **Decisions Made**: record every significant autonomous decision (e.g., technology choice, architecture pattern selection, naming disambiguation).
+- **Change Log**: include rows recording what changed and why (reviewer-driven fix or initial write).
 - **PlantUML diagrams**: every diagram must be syntactically valid. Use only PlantUML 1.x syntax.
 - **Revision**: start at `0`. Increment by 1 for each file rewrite (after each self-review iteration).
 - **Spec Feedback section**: omit unless you are recording reviewer-identified issues that could not be resolved.
-- **Change Log**: include one row per revision, recording what changed and why (reviewer-driven fix or initial write).
 
 ---
 

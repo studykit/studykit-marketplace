@@ -140,38 +140,37 @@ end note
 <Questions that came up but weren't resolved. Topics to revisit.>
 - ...
 
-## Change Log
+## Revision History
 
-| Revision | Date | Section | Change | Reason | Source |
-|----------|------|---------|--------|--------|--------|
-| 1 | <YYYY-MM-DD> | <section> | <what changed> | <why> | <reference file that triggered this change> |
+Each iteration appends a new entry. Previous entries are preserved — never overwrite them.
 
-## Session Checkpoint (Revision <N>)
-> Last updated: <YYYY-MM-DD HH:mm>
+### Revision <N> — <YYYY-MM-DD HH:mm>
 
-### Last Completed
+#### Last Completed
 - <what was just completed, e.g., "Initial composition", "Review round 1", "Revision 2 — 3 UCs added">
 
-### Changes
-- <what was added, fixed, or enriched>
-
-### Decisions Made
+#### Decisions Made
 - <key decision>
 
-### Open Items
+#### Change Log
+
+| Section | Change | Reason | Source |
+|---------|--------|--------|--------|
+| <section> | <what changed> | <why> | <reference file that triggered this change> |
+
+#### Open Items
 
 | Section | Item | What's Missing | Priority |
 |---------|------|---------------|----------|
 | <section> | <item reference> | <specific gap description> | High / Medium / Low |
 
-### Next Steps
+#### Next Steps
 - <suggested work items for next iteration, derived from Open Items>
 
-## Interview Transcript
+#### Interview Transcript
 <details>
-<summary>Full Q&A</summary>
+<summary>Q&A</summary>
 
-### Round 1
 **Q:** <question>
 **A:** <answer>
 
@@ -203,12 +202,11 @@ end note
 **Issue reference links:** Read `${SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
 
 **Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships.
-**Additional required (co-think-usecase)**: Session Checkpoint, Interview Transcript.
-**Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Session Checkpoint.
+**Additional required (co-think-usecase)**: Revision History (including Interview Transcript per revision).
+**Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Revision History.
 **Conditionally required:**
 - **Similar Systems Research** — always in auto-usecase; in co-think-usecase only when research was performed
 - **Source field** (per UC) — always in auto-usecase; in co-think-usecase only when research was performed
 - **Open Questions** — if unresolved topics remain (co-think-usecase); always required (auto-usecase)
-- **Change Log** — only when revision > 0; omit on first auto-usecase write
 - **Excluded Ideas** — when research was performed and candidates were excluded; omit if nothing was excluded
-**Sections to OMIT in auto-usecase:** Interview Transcript
+**Sections to OMIT in auto-usecase:** Interview Transcript (within Revision History)

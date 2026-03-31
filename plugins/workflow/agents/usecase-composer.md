@@ -104,7 +104,7 @@ Write the result to the file path provided by the invoking skill. The document f
 - Similar Systems Research (summary referencing the research file)
 - Excluded Ideas (if any, with table)
 - Open Questions
-- Session Checkpoint (with `Last Completed: Initial composition`)
+- Revision History (with `Last Completed: Initial composition`)
 
 Update the frontmatter:
 - `reflected_files` — append file names of all reference documents consumed during composition (e.g., research report, code analysis report, input files).

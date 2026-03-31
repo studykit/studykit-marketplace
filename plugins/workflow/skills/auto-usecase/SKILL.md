@@ -142,7 +142,7 @@ All four teammates persist across iterations and retain their full context — t
 3. The teammate's response is delivered automatically to the main session.
 4. For follow-up work on an already-active teammate, `SendMessage(to: "<name>")` also works.
 
-If a teammate stops unexpectedly, re-spawn it — file-based state (`reflected_files`, Session Checkpoint) ensures no work is lost.
+If a teammate stops unexpectedly, re-spawn it — file-based state (`reflected_files`, Revision History) ensures no work is lost.
 
 #### Step 3a: Compose
 
@@ -180,7 +180,7 @@ Repeat until all UCs pass and no actor issues remain, or the maximum is reached:
       ```
    b. Exit quality loop.
 3. Otherwise (`NEEDS_REVISION`):
-   a. **Always** create a task and assign it to the `reviser` teammate — do not apply fixes directly in the main session. Pass the review report and document paths. The reviser responds with a summary including UC count and changes applied. The reviser updates the Session Checkpoint (`Last Completed`, `Changes`) and Change Log (when revision > 0).
+   a. **Always** create a task and assign it to the `reviser` teammate — do not apply fixes directly in the main session. Pass the review report and document paths. The reviser responds with a summary including UC count and changes applied. The reviser appends a new Revision History (`Last Completed`, `Change Log`) under `## Revision History`.
    b. Commit review report + revised document (use counts from reviser's summary):
       ```
       usecase(<topic-slug>): growth <iteration>, review <round>
