@@ -309,47 +309,68 @@ Focus on claims that would cause implementation failures if wrong. Skip obvious 
 
 ---
 
-## 7. Self-Review Loop
+## 7. Self-Review and Enrichment Loop
 
-After writing the complete initial document:
+Each iteration has three phases: **enrich** (proactively strengthen), **review** (invoke `spec-reviewer`), and **fix** (address reviewer issues). Enrichment runs before review so that newly added content is covered by the reviewer in the same iteration. The enrichment scope narrows with each iteration to converge toward a stable spec.
 
-### Iteration 1
+Iteration 1 is an exception — it reviews the initial draft first, since there is no prior enrichment to validate.
 
-1. Invoke the `spec-reviewer` agent. Pass:
-   - The output `.spec.md` file path
-   - All input `.usecase.md` file paths
-2. Parse the review report section by section.
-3. For each issue found, apply the corresponding fix:
+#### Iteration 1 — Review + Fix + Deepen
 
-   | Issue Type | Action |
-   |------------|--------|
-   | `GAP` | Add the missing behavior, coverage, or sequence diagram step |
-   | `IMPRECISE` | Rewrite the flagged text with the precise language suggested |
-   | `UNHANDLED` | Add error/edge handling for the described scenario |
-   | `UNCLEAR` | Clarify the ownership or responsibility assignment |
-   | `CONFLICT` | Resolve the contradiction — pick one side and document why |
-   | `MISSING` / `INCOMPLETE` tech stack | Fill from codebase findings if possible; otherwise add to Open Items |
-   | `UNGROUPED` | Assign the FR to a screen group |
-   | `MISSING MOCK` | Generate the mock with mock-html-generator |
-   | `MISSING NAVIGATION` | Add the Screen Navigation diagram |
-   | `UNDECLARED DEPENDENCY` | Add the external dependency to the External Dependencies section |
-   | `MISSING AUTH` / `INCOMPLETE AUTH` | Add or complete the Authorization Rules section |
-   | `UNVERIFIED` | Verify the claim via `WebSearch`/`WebFetch` or codebase inspection; add source reference if confirmed, or move to Open Items if unconfirmable |
-   | `SUSPECT` | Investigate immediately — search official docs to confirm or correct the claim; fix the spec text if wrong |
+1. **Review:** Invoke the `spec-reviewer` agent. Pass the output `.spec.md` file path and all input `.usecase.md` file paths.
+2. **Fix:** Parse the review report and fix all issues per the verdict table below.
+3. **Enrich:**
+   - **Requirements:** Sharpen FR behavior steps — add missing intermediate steps, make error handling more specific, ensure every validation rule has a concrete limit
+   - **Domain Model:** Check glossary completeness — every domain-significant noun in FRs should have a glossary entry. Add missing state transitions where FRs imply state changes
+   - **Architecture:** Refine sequence diagrams — add missing error paths, ensure request/response descriptions are specific enough for a coding agent
+   - **Technical claims:** Re-scan for unverified technical statements and verify via `WebSearch`/`WebFetch`
+4. Write the updated file and update the `revised` timestamp.
 
-4. Rewrite the file incorporating all fixes.
+#### Iteration 2 — Cross-check + Review + Fix
 
-### Iterations 2 and 3
+1. **Enrich:**
+   - **FR ↔ Domain consistency:** Verify every domain concept is referenced in at least one FR, and every FR references only defined concepts
+   - **FR ↔ Architecture consistency:** Verify every FR has a sequence diagram, and sequence diagram steps match FR behavior steps
+   - **Interface contracts:** For every component boundary with information flow, ensure contract schemas are concrete — field names, types, required/optional
+   - **Edge cases:** For each FR, consider one additional failure mode not yet documented and add it
+2. **Review:** Invoke the `spec-reviewer` agent on the updated file. This validates both the iteration 1 enrichment and the iteration 2 enrichment.
+3. **Fix:** Parse the review report and fix all issues per the verdict table below.
+4. Write the updated file and update the `revised` timestamp.
 
-Run the reviewer again after each revision. Apply fixes as above.
+#### Iteration 3 — Stabilize + Review + Fix
 
-**Maximum 3 iterations total** (initial write + up to 2 re-reviews). This prevents infinite loops.
+1. **Stabilize:** No new content added. Final consistency pass only:
+   - Verify all cross-section references are valid
+   - Verify all PlantUML diagrams are syntactically consistent with the text
+   - Verify all technical claims have sources or are recorded in Open Items
+2. **Review:** Invoke the `spec-reviewer` agent on the updated file. Final quality gate.
+3. **Fix:** Parse the review report and fix all remaining issues per the verdict table below.
+4. Write the updated file and update the `revised` timestamp.
 
-### After 3 iterations
+#### Verdict → Action table (used in Fix phase of all iterations)
 
-If issues remain after the third reviewer pass:
-- Record each unresolved issue in the Open Items table with Section, Item, What's Missing, and Priority = High.
-- Do not attempt a fourth iteration.
+| Issue Type | Action |
+|------------|--------|
+| `GAP` | Add the missing behavior, coverage, or sequence diagram step |
+| `IMPRECISE` | Rewrite the flagged text with the precise language suggested |
+| `UNHANDLED` | Add error/edge handling for the described scenario |
+| `UNCLEAR` | Clarify the ownership or responsibility assignment |
+| `CONFLICT` | Resolve the contradiction — pick one side and document why |
+| `MISSING` / `INCOMPLETE` tech stack | Fill from codebase findings if possible; otherwise add to Open Items |
+| `UNGROUPED` | Assign the FR to a screen group |
+| `MISSING MOCK` | Generate the mock with mock-html-generator |
+| `MISSING NAVIGATION` | Add the Screen Navigation diagram |
+| `UNDECLARED DEPENDENCY` | Add the external dependency to the External Dependencies section |
+| `MISSING AUTH` / `INCOMPLETE AUTH` | Add or complete the Authorization Rules section |
+| `UNVERIFIED` | Verify the claim via `WebSearch`/`WebFetch` or codebase inspection; add source reference if confirmed, or move to Open Items if unconfirmable |
+| `SUSPECT` | Investigate immediately — search official docs to confirm or correct the claim; fix the spec text if wrong |
+| `NO CONTRACT` | Define the interface contract table for the flagged component boundary |
+
+#### Iteration rules
+
+**Iteration limit:** Maximum 3 iterations. If issues remain after the third review, record each unresolved issue in the Open Items table with Section, Item, What's Missing, and Priority = High. Do not attempt a fourth iteration.
+
+**Stop condition:** If the `spec-reviewer` verdict is `IMPLEMENTABLE` AND the enrichment phase added nothing new, stop iterating — even if later iterations remain.
 
 ---
 
