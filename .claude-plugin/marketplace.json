@@ -124,6 +124,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["structurizr", "c4-model", "architecture", "diagram", "dsl", "system-context", "container", "deployment"]
+    },
+    {
+      "name": "d2",
+      "source": "./plugins/d2",
+      "description": "D2 diagram creation, rendering, and visualization plugin",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["d2", "d2lang", "diagram", "architecture", "flowchart", "erd", "sequence", "visualization"]
     }
   ]
 }

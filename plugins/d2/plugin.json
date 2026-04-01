@@ -1,0 +1,7 @@
+{
+  "name": "d2",
+  "description": "D2 diagram creation, rendering, and visualization plugin",
+  "skills": [
+    "skills/draw"
+  ]
+}
