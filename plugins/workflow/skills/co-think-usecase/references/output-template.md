@@ -38,18 +38,23 @@ actor "Meeting Organizer" as organizer
 actor "Team Member" as member
 
 rectangle "System" {
-  usecase UC1 as "Share meeting summary
-  --
-  Generate and send
-  summary to team"
-  usecase UC2 as "Review weekly report
-  --
-  View aggregated
-  weekly activity"
-  usecase UC3 as "Generate summary
-  --
-  Extract key decisions
-  and action items"
+  package "Meeting Summary" {
+    usecase UC1 as "Share meeting summary
+    --
+    Generate and send
+    summary to team"
+    usecase UC3 as "Generate summary
+    --
+    Extract key decisions
+    and action items"
+  }
+
+  package "Reporting" {
+    usecase UC2 as "Review weekly report
+    --
+    View aggregated
+    weekly activity"
+  }
 }
 
 organizer --> UC1
@@ -193,6 +198,7 @@ Each iteration appends a new entry. Previous entries are preserved — never ove
 - Use PlantUML use case diagram syntax.
 - Show all actors and use cases with relationships (include/extend).
 - Use PlantUML's multiline description syntax (`usecase UC1 as "Title\n--\nDescription"`) to show each use case's purpose at a glance.
+- Group related use cases using `package "Group Name" { ... }` blocks inside the system `rectangle`. Derive groups from Use Case Groups in the relationship analysis. Before relationship analysis is done (< 5 UCs), use a single flat rectangle without packages.
 - Add notes for additional context where helpful.
 - Update the diagram each time a new use case is confirmed.
 

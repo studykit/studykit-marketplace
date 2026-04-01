@@ -28,6 +28,8 @@ In the PlantUML diagram, represent these as `<<extend>>` relationships where app
 
 Cluster use cases by the area they serve. A use case can appear in multiple groups if it spans areas.
 
+In the PlantUML diagram, represent groups as `package "Group Name" { ... }` blocks inside the system `rectangle`. This visually clusters related use cases together, making the diagram easier to read as the number of use cases grows.
+
 ## How to present
 
 > Here are the relationships between the use cases so far:

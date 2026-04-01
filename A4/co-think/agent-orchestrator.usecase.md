@@ -81,62 +81,70 @@ actor "Child Session" as child
 actor "File Tracker" as tracker
 
 rectangle "Agent Orchestrator" {
-  usecase UC1 as "Start conversation-first session
-  --
-  Load prompt that asks
-  clarifying questions first"
-  usecase UC2 as "Spawn child session
-  --
-  Create dedicated session
-  for sub-problem"
-  usecase UC3 as "Report child session status
-  --
-  Child writes status updates
-  for main to read"
-  usecase UC4 as "Access child result files
-  --
-  Retrieve output files
-  from child session"
-  usecase UC5 as "Investigate child history
-  --
-  Review reasoning from
-  past child session"
-  usecase UC6 as "Control session termination
-  --
-  User decides when
-  to end session"
-  usecase UC7 as "Inject skill at startup
-  --
-  Load skill content into
-  child session prompt"
-  usecase UC8 as "Track file changes
-  --
-  Record all files created
-  or modified"
-  usecase UC9 as "Identify result files
-  --
-  Suggest key deliverables
-  from file changes"
-  usecase UC10 as "Deliver results to main
-  --
-  Notify main session
-  of approved deliverables"
-  usecase UC11 as "Resume interrupted session
-  --
-  Restore session state
-  after interruption"
-  usecase UC12 as "Handle child session failure
-  --
-  Detect and recover from
-  child session errors"
-  usecase UC13 as "Fork session for exploration
-  --
-  Create parallel branch
-  to test alternative approach"
-  usecase UC14 as "Hand off context to session
-  --
-  Transfer conversation context
-  when delegating work"
+  package "Conversational Attitude" {
+    usecase UC1 as "Start conversation-first session
+    --
+    Load prompt that asks
+    clarifying questions first"
+    usecase UC6 as "Control session termination
+    --
+    User decides when
+    to end session"
+  }
+
+  package "Session Lifecycle" {
+    usecase UC2 as "Spawn child session
+    --
+    Create dedicated session
+    for sub-problem"
+    usecase UC3 as "Report child session status
+    --
+    Child writes status updates
+    for main to read"
+    usecase UC7 as "Inject skill at startup
+    --
+    Load skill content into
+    child session prompt"
+    usecase UC11 as "Resume interrupted session
+    --
+    Restore session state
+    after interruption"
+    usecase UC12 as "Handle child session failure
+    --
+    Detect and recover from
+    child session errors"
+    usecase UC13 as "Fork session for exploration
+    --
+    Create parallel branch
+    to test alternative approach"
+    usecase UC14 as "Hand off context to session
+    --
+    Transfer conversation context
+    when delegating work"
+  }
+
+  package "Child-to-Main Data Flow" {
+    usecase UC4 as "Access child result files
+    --
+    Retrieve output files
+    from child session"
+    usecase UC5 as "Investigate child history
+    --
+    Review reasoning from
+    past child session"
+    usecase UC8 as "Track file changes
+    --
+    Record all files created
+    or modified"
+    usecase UC9 as "Identify result files
+    --
+    Suggest key deliverables
+    from file changes"
+    usecase UC10 as "Deliver results to main
+    --
+    Notify main session
+    of approved deliverables"
+  }
 }
 
 user --> UC1
