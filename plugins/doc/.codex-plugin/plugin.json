@@ -1,0 +1,28 @@
+{
+  "name": "doc",
+  "version": "0.0.1",
+  "description": "A plugin for reading and searching various document formats including CHM files",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "documentation",
+    "chm",
+    "help-files",
+    "search",
+    "reading"
+  ],
+  "interface": {
+    "displayName": "Doc",
+    "shortDescription": "Read and extract structured content from documents",
+    "developerName": "studykit",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ]
+  },
+  "skills": "./skills/"
+}

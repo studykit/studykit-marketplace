@@ -1,0 +1,29 @@
+{
+  "name": "dom-analyzer",
+  "version": "0.1.2",
+  "description": "HTML/XML DOM structure analysis toolkit with hierarchy visualization and CSS selector discovery",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "html",
+    "xml",
+    "dom",
+    "css-selector",
+    "web-scraping",
+    "structure-analysis"
+  ],
+  "interface": {
+    "displayName": "DOM Analyzer",
+    "shortDescription": "Inspect HTML/XML structure and discover selectors",
+    "developerName": "studykit",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ]
+  },
+  "skills": "./skills/"
+}

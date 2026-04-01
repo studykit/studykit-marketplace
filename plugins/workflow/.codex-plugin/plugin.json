@@ -1,0 +1,31 @@
+{
+  "name": "workflow",
+  "version": "0.9.1",
+  "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "github",
+    "issue",
+    "commit",
+    "automation",
+    "code-study",
+    "architecture"
+  ],
+  "interface": {
+    "displayName": "Workflow",
+    "shortDescription": "Workflow helpers for issues, commits, and development decisions",
+    "developerName": "studykit",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ]
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}

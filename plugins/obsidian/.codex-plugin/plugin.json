@@ -1,0 +1,32 @@
+{
+  "name": "obsidian",
+  "version": "0.4.0",
+  "description": "Generate query blocks, modify templates, and guide plugin usage for Obsidian knowledge management (Dataview, Tasks, Jira Issue, Templater, CLI)",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "obsidian",
+    "dataview",
+    "tasks",
+    "dql",
+    "query",
+    "knowledge-management",
+    "cli",
+    "terminal",
+    "automation"
+  ],
+  "interface": {
+    "displayName": "Obsidian",
+    "shortDescription": "Obsidian workflows for queries, templates, and vault guidance",
+    "developerName": "studykit",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ]
+  },
+  "skills": "./skills/"
+}

@@ -1,0 +1,30 @@
+{
+  "name": "plantuml",
+  "version": "0.1.0",
+  "description": "PlantUML diagram reference, creation, and validation plugin",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "plantuml",
+    "diagram",
+    "uml",
+    "sequence",
+    "class",
+    "activity",
+    "visualization"
+  ],
+  "interface": {
+    "displayName": "PlantUML",
+    "shortDescription": "Create and reference PlantUML diagrams",
+    "developerName": "studykit",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ]
+  },
+  "skills": "./skills/"
+}

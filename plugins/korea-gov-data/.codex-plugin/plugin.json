@@ -1,0 +1,28 @@
+{
+  "name": "korea-gov-data",
+  "version": "0.1.0",
+  "description": "Extract and organize Open API specifications from data.go.kr (Korea Public Data Portal)",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "korea-gov-data",
+    "open-api",
+    "korea",
+    "public-data",
+    "api-spec"
+  ],
+  "interface": {
+    "displayName": "Korea Gov Data",
+    "shortDescription": "Work with Korean public-data API specifications",
+    "developerName": "studykit",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Read"
+    ]
+  },
+  "skills": "./skills/"
+}
