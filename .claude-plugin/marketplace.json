@@ -103,14 +103,14 @@
       "name": "plantuml",
       "source": "./plugins/plantuml",
       "description": "PlantUML diagram reference, creation, and validation plugin",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "author": {
         "name": "studykit"
       },
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
       "category": "development",
-      "keywords": ["plantuml", "diagram", "uml", "sequence", "class", "activity", "visualization"]
+      "keywords": ["plantuml", "diagram", "uml", "sequence", "class", "activity", "visualization", "c4", "architecture", "sprites"]
     },
     {
       "name": "structurizr",

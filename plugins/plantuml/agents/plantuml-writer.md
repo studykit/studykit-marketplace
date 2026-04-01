@@ -67,6 +67,9 @@ skills:
   - timing-diagram
   - json-yaml
   - other-diagrams
+  - c4-diagram
+  - sprites
+  - creole-and-links
 ---
 
 # PlantUML Diagram Writer

@@ -62,12 +62,13 @@ Research was conducted on multi-agent orchestration systems and AI coding assist
 
 ## Actors
 
-| Actor | Type | Role | Description |
-|-------|------|------|-------------|
-| User | person | editor | A person who starts sessions, guides conversations, and decides when sessions should end |
-| Main Session | system | -- | The orchestrating session that spawns child sessions, monitors their status, and collects their results |
-| Child Session | system | -- | A dedicated session spawned for a specific sub-problem or conversation topic |
-| File Tracker | system | -- | A component that monitors and records all file changes within the project directory during a session |
+| Actor         | Type   | Role   | Description                                                                                             |
+| ------------- | ------ | ------ | ------------------------------------------------------------------------------------------------------- |
+| User          | person | editor | A person who starts sessions, guides conversations, and decides when sessions should end                |
+| Main Session  | system | --     | The orchestrating session that spawns child sessions, monitors their status, and collects their results |
+| Child Session | system | --     | A dedicated session spawned for a specific sub-problem or conversation topic                            |
+| File Tracker  | system | --     | A component that monitors and records all file changes within the project directory during a session    |
+|               |        |        |                                                                                                         |
 
 ## Use Case Diagram
 
