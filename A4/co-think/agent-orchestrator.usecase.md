@@ -3,10 +3,12 @@ type: usecase
 pipeline: co-think
 topic: "agent orchestrator"
 created: 2026-03-31 10:00
-revised: 2026-03-31 21:30
-revision: 6
+revised: 2026-04-02 10:30
+revision: 8
 status: draft
 tags: []
+reflected_files: []
+last_step: "revision 8"
 ---
 # Use Cases: Agent Orchestrator
 > Source: [agent-orchestrator.story.md](./agent-orchestrator.story.md)
@@ -18,9 +20,9 @@ When should the interactive agent and prompt be used? Discover the core value an
 LLMs tend to jump to answers before fully understanding what the user actually wants. The agent orchestrator addresses this through two complementary capabilities:
 
 1. **Conversation quality** — establishing a conversation-first attitude where the assistant asks clarifying questions before taking action and the user controls when sessions end (UC-1, UC-6)
-2. **Session orchestration** — providing a multi-session architecture where a main session can spawn dedicated child sessions for sub-problems, automatically exchange information between sessions, and collect results when child sessions complete (UC-2 through UC-14)
+2. **Session orchestration** — providing a multi-session architecture where a main session can spawn named child sessions for sub-problems, automatically exchange information between sessions via hooks and FileChanged events, and collect results when child sessions complete (UC-2 through UC-12, UC-14)
 
-This enables focused, structured conversations without cluttering the main session, while giving the user full control over session lifecycle and access to all outputs.
+This is a single-user system. Hook scripts play a central role: they record session metadata (including transcript file paths), track file changes, validate preconditions (e.g., skill existence before spawning), and trigger event-driven notifications between sessions via Claude Code's FileChanged hook.
 
 ## Similar Systems Research
 
@@ -62,13 +64,11 @@ Research was conducted on multi-agent orchestration systems and AI coding assist
 
 ## Actors
 
-| Actor         | Type   | Role   | Description                                                                                             |
-| ------------- | ------ | ------ | ------------------------------------------------------------------------------------------------------- |
-| User          | person | editor | A person who starts sessions, guides conversations, and decides when sessions should end                |
-| Main Session  | system | --     | The orchestrating session that spawns child sessions, monitors their status, and collects their results |
-| Child Session | system | --     | A dedicated session spawned for a specific sub-problem or conversation topic                            |
-| File Tracker  | system | --     | A component that monitors and records all file changes within the project directory during a session    |
-|               |        |        |                                                                                                         |
+| Actor         | Type   | Role | Description                                                                                      |
+| ------------- | ------ | ---- | ------------------------------------------------------------------------------------------------ |
+| User          | person | —    | The single user who starts sessions, guides conversations, and decides when sessions end         |
+| Main Session  | system | —    | The orchestrating session that spawns child sessions, monitors their status, and collects results |
+| Child Session | system | —    | A dedicated named session spawned for a specific sub-problem or conversation topic               |
 
 ## Use Case Diagram
 
@@ -79,7 +79,6 @@ left to right direction
 actor "User" as user
 actor "Main Session" as main
 actor "Child Session" as child
-actor "File Tracker" as tracker
 
 rectangle "Agent Orchestrator" {
   package "Conversational Attitude" {
@@ -96,12 +95,12 @@ rectangle "Agent Orchestrator" {
   package "Session Lifecycle" {
     usecase UC2 as "Spawn child session
     --
-    Create dedicated session
+    Create named session
     for sub-problem"
     usecase UC3 as "Report child session status
     --
     Child writes status updates
-    for main to read"
+    main detects via hook"
     usecase UC7 as "Inject skill at startup
     --
     Load skill content into
@@ -114,10 +113,6 @@ rectangle "Agent Orchestrator" {
     --
     Detect and recover from
     child session errors"
-    usecase UC13 as "Fork session for exploration
-    --
-    Create parallel branch
-    to test alternative approach"
     usecase UC14 as "Hand off context to session
     --
     Transfer conversation context
@@ -136,7 +131,7 @@ rectangle "Agent Orchestrator" {
     usecase UC8 as "Track file changes
     --
     Record all files created
-    or modified"
+    or modified via hook"
     usecase UC9 as "Identify result files
     --
     Suggest key deliverables
@@ -155,7 +150,6 @@ user --> UC6
 user --> UC7
 user --> UC9
 user --> UC11
-user --> UC13
 
 main --> UC2
 main --> UC3
@@ -171,9 +165,6 @@ child --> UC6
 child --> UC8
 child --> UC9
 child --> UC10
-child --> UC13
-
-tracker --> UC8
 
 UC2 ..> UC7 : <<extend>>
 UC2 ..> UC14 : <<include>>
@@ -185,7 +176,6 @@ UC10 ..> UC9 : <<include>>
 UC1 ..> UC6 : <<extend>>
 UC11 ..> UC1 : <<extend>>
 UC12 ..> UC2 : <<extend>>
-UC13 ..> UC11 : <<include>>
 
 note right of UC1
   Foundational behavior --
@@ -198,18 +188,13 @@ note right of UC2
 end note
 
 note right of UC8
-  Background process --
-  no user trigger
+  Hook-based background
+  process in child session
 end note
 
 note right of UC12
   Error recovery --
   common in similar systems
-end note
-
-note right of UC13
-  Parallel exploration --
-  common in agent frameworks
 end note
 @enduml
 ```
@@ -219,7 +204,7 @@ end note
 ### [UC-1]. Start conversation-first session
 - **Actor:** User
 - **Goal:** Begin a session where the assistant asks clarifying questions before taking action
-- **Situation:** The user wants to explore an idea or discuss a topic and loads the interactive prompt via command-line flags (e.g., `--prompt conversation-first` or a skill reference)
+- **Situation:** The user wants to explore an idea or discuss a topic and loads the conversation-first prompt
 - **Flow:**
   1. User starts a session with the conversation-first prompt loaded
   2. User presents an initial idea or request
@@ -231,15 +216,18 @@ end note
 
 ### [UC-2]. Spawn child session
 - **Actor:** User, Main Session
-- **Goal:** Create a dedicated session for a sub-problem without cluttering the main conversation
+- **Goal:** Create a dedicated named session for a sub-problem without cluttering the main conversation
 - **Situation:** The main session encounters a sub-problem (design question, ambiguous requirement) that warrants a focused conversation, or the user explicitly requests a child session for a specific topic
 - **Flow:**
   1. Main session identifies a sub-problem suitable for dedicated exploration, or user requests a child session
-  2. Main session prepares the context to hand off to the child session (UC-14)
-  3. Main session creates a new child session in a separate terminal
-  4. The child session starts with the conversation-first prompt and handed-off context loaded
-  5. User is notified that a new session is available (e.g., terminal notification or status message)
-- **Expected Outcome:** A dedicated child session is running with relevant context and ready for focused conversation on the sub-problem
+  2. User specifies a session name (e.g., "auth-refactor"), or main session generates one from the sub-problem context
+  3. If a skill is specified, a hook validates that the skill exists before proceeding; if not found, the spawn is cancelled with a notification
+  4. Main session prepares the context to hand off to the child session (UC-14)
+  5. Main session creates a new named child session in a separate terminal
+  6. A hook records the child session metadata (session name, session ID, transcript file path) to the session registry
+  7. The child session starts with the conversation-first prompt and handed-off context loaded
+  8. User is notified that a new session is available (e.g., terminal notification or status message)
+- **Expected Outcome:** A dedicated named child session is running with relevant context and ready for focused conversation on the sub-problem; session metadata is recorded for main session access
 - **Source:** input
 
 ### [UC-3]. Report child session status
@@ -247,12 +235,12 @@ end note
 - **Goal:** Keep the main session aware of child session progress automatically
 - **Situation:** A child session is running alongside the main session and has produced new status or file updates
 - **Flow:**
-  1. Child session writes status updates and file paths to a shared location (e.g., a status file in the project directory)
-  2. Main session checks for updates from child sessions periodically
-  3. Main session retrieves the updates (status changes, new file paths)
+  1. Child session writes status updates and file paths to the session's status file
+  2. Main session's FileChanged hook detects the status file update
+  3. Main session retrieves the updates (status changes, new file paths) identified by child session name
   4. Main session records the updated information
   5. Main session displays the current child session status to the user
-- **Expected Outcome:** The main session has current visibility into child session progress without manual copy-pasting; user can see child status at a glance
+- **Expected Outcome:** The main session has current visibility into child session progress via event-driven notification; user can see child status at a glance
 - **Source:** input
 
 ### [UC-4]. Access child result files
@@ -260,8 +248,8 @@ end note
 - **Goal:** Reference output files from a child session directly
 - **Situation:** A child session has finished and produced result files that the main session needs
 - **Flow:**
-  1. Main session detects that a child session has completed (via status update)
-  2. Main session looks up the registered result file paths
+  1. Main session detects that a child session has completed (via FileChanged hook on status update)
+  2. Main session looks up the registered result file paths by child session name
   3. Main session retrieves the file paths from the registry
   4. Main session reads or processes the result files
 - **Expected Outcome:** The main session can access child session output files without searching for them; files are immediately available for reference or further processing
@@ -273,12 +261,12 @@ end note
 - **Situation:** The user wants to review what happened in a past child session without re-reading the full transcript
 - **Flow:**
   1. User requests investigation of a specific child session from the main session (e.g., "summarize what happened in the design session")
-  2. Main session retrieves the child session's conversation history from the persisted transcript
-  3. Main session analyzes the transcript and extracts key reasoning (decisions made, alternatives considered, rationale)
+  2. Main session looks up the child session's transcript file path from the session registry by name
+  3. Main session reads and analyzes the transcript, extracting key reasoning (decisions made, alternatives considered, rationale)
   4. Summary of reasoning is presented to the user
 - **Expected Outcome:** The user understands why the child session produced its output without reading the entire conversation; key decisions and rationale are highlighted
 - **Source:** input
-- **Risk:** High — requires conversation history to be persisted and accessible. Claude Code session transcripts may not be trivially accessible to another session. See Open Questions.
+- **Risk:** High — requires conversation history to be persisted and accessible. Hook scripts record transcript file paths at session creation to enable this access.
 
 ### [UC-6]. Control session termination
 - **Actor:** User, Child Session
@@ -299,24 +287,25 @@ end note
 - **Situation:** A child session is being created and the user has specified a skill to use, or the main session selects one based on the sub-problem context
 - **Flow:**
   1. User specifies a skill for the child session (e.g., "spawn a requirements session"), or main session selects one based on context
-  2. Main session retrieves the skill's content from the skill registry
-  3. Skill content is inserted into the child session's system prompt
-  4. Child session starts with the skill already active
+  2. A hook validates that the specified skill exists; if not found, the spawn is cancelled with a notification to the user
+  3. Main session retrieves the skill's content from the skill registry
+  4. Skill content is inserted into the child session's system prompt
+  5. Child session starts with the skill already active
 - **Expected Outcome:** The child session begins in the correct structured dialogue mode without additional setup; the skill's interview flow or analysis framework is immediately available
 - **Source:** input
 
 ### [UC-8]. Track file changes
-- **Actor:** File Tracker
+- **Actor:** Child Session
 - **Goal:** Maintain a complete record of all files produced during a session
-- **Situation:** Files are being created or modified within the project directory during a session's work (background process with no user trigger)
+- **Situation:** Files are being created or modified within the main session's working directory during a child session's work (hook-based background process with no user trigger)
 - **Flow:**
-  1. A file is created or modified within the project directory
-  2. File Tracker detects the change (via filesystem monitoring)
+  1. A file is created or modified within the working directory
+  2. A hook script in the child session detects the change
   3. File path, change type (created/modified/deleted), and timestamp are recorded
   4. The record is stored in the session's file change log
 - **Expected Outcome:** A complete list of all file changes is available for later review or processing; no file change is missed
 - **Source:** input
-- **Note:** File Tracker is the sole actor for this UC. While file changes occur "during a session's work," the tracking itself is performed by the File Tracker component, not by the Child Session. The Child Session consumes the file change log in UC-9.
+- **Note:** File change tracking is performed by a hook script bound to the child session. The hook operates as a background process with no user trigger.
 
 ### [UC-9]. Identify result files
 - **Actor:** User, Child Session
@@ -336,11 +325,11 @@ end note
 - **Goal:** Notify the main session of approved deliverables automatically
 - **Situation:** A file has been approved as a key deliverable in UC-9, or the user is terminating a child session in UC-6
 - **Flow:**
-  1. Child session writes the deliverable notification to the shared status location
-  2. Main session detects the deliverable notification during its periodic check
-  3. Main session retrieves the deliverable file path and metadata
+  1. Child session writes the deliverable notification to the session's status file
+  2. Main session's FileChanged hook detects the status file update
+  3. Main session retrieves the deliverable file path and metadata, identified by child session name
   4. Main session adds the file to its available resources
-- **Expected Outcome:** The main session can access child session results immediately after approval without searching; results flow automatically from child to main
+- **Expected Outcome:** The main session can access child session results immediately after approval without searching; results flow automatically from child to main via event-driven notification
 - **Source:** input
 
 ### [UC-11]. Resume interrupted session
@@ -348,47 +337,35 @@ end note
 - **Goal:** Continue a session after an interruption without losing progress
 - **Situation:** A session (main or child) was interrupted (network drop, terminal closed, system restart) and the user wants to continue where they left off
 - **Flow:**
-  1. User starts a new session and requests to resume (e.g., "resume last session" or references a session ID)
-  2. Main session retrieves the persisted session state (conversation history, file change log, child session registry)
+  1. User starts a new session and requests to resume (e.g., "resume last session" or references a session name)
+  2. Main session retrieves the persisted session state from hook-recorded session files (conversation history, file change log, child session registry)
   3. Main session restores the session context
   4. Main session presents a summary of where the session left off
   5. User confirms and continues the conversation
-- **Expected Outcome:** The user can continue their work without re-explaining context or losing prior progress; session state is fully restored
+- **Expected Outcome:** The user can continue their work without re-explaining context or losing prior progress; session state is fully restored from hook-persisted files
 - **Source:** research — common in LangGraph, CrewAI, Microsoft Foundry; highly requested by users
 
 ### [UC-12]. Handle child session failure
 - **Actor:** Main Session
 - **Goal:** Detect and recover gracefully when a child session fails or becomes unresponsive
-- **Situation:** A child session crashes, times out, or becomes unresponsive during its work
+- **Situation:** A child session crashes, times out, or becomes unresponsive during its work (including hook script failures such as file tracking)
 - **Flow:**
-  1. Main session detects that a child session has stopped responding (no status updates for configured timeout period)
-  2. Main session retrieves any partial results or file changes from the child session
+  1. Main session detects that a child session has stopped responding (no status updates for configured timeout period, detected via FileChanged hook absence)
+  2. Main session retrieves any partial results or file changes from the child session by name
   3. Main session notifies the user of the failure with available context (last known status, partial files)
   4. Main session offers recovery options (restart the child session, continue without it, or investigate)
   5. User selects a recovery action
 - **Expected Outcome:** Child session failures do not block the main session; partial work is preserved; user has clear options to proceed
 - **Source:** research — common in multi-agent frameworks (CrewAI, Google ADK); addresses user-requested feature for better error handling
 
-### [UC-13]. Fork session for exploration
-- **Actor:** User, Child Session
-- **Goal:** Create a parallel branch from the current session to explore an alternative approach without losing the original state
-- **Situation:** The user or child session reaches a decision point with multiple viable approaches and wants to test one path without committing to it (e.g., "Should we refactor or rewrite?")
-- **Flow:**
-  1. User requests a fork from the current session (e.g., "fork this session to try the refactor approach")
-  2. The session creates a checkpoint of the current state (conversation history, file changes, context)
-  3. A new forked session is created with the checkpoint as its starting point
-  4. The original session continues to be available (user can switch back to it at any time)
-  5. User is notified that the forked session is available for exploration
-- **Expected Outcome:** Two independent sessions exist: the original at the decision point (available for continued interaction), and the fork ready to explore the alternative; either can be continued or discarded
-- **Source:** research — common in Agent Factory, Google ADK, LangGraph; addresses user request for "what if" exploration
-- **Note:** The original session is not "paused" in a technical sense — the user simply chooses which session to interact with. Both sessions remain independent and can be resumed at any time.
+### ~~[UC-13]. Fork session for exploration~~ *(moved to Excluded Ideas)*
 
 ### [UC-14]. Hand off context to session
 - **Actor:** Main Session
 - **Goal:** Transfer relevant conversation context when delegating work to a child session
 - **Situation:** A child session is being spawned (UC-2) and needs to understand the context that led to its creation
 - **Flow:**
-  1. Main session identifies the relevant context for the child session (problem statement, constraints, prior decisions)
+  1. Main session identifies the relevant context for the child session (problem statement, constraints, prior decisions) — either automatically summarized or as specified by the user
   2. Main session compiles a context summary (not the full transcript, but key information)
   3. Main session includes the context summary in the child session's initial prompt
   4. Child session starts with awareness of why it was created and what it should focus on
@@ -409,7 +386,6 @@ end note
 - **[UC-9] -> [UC-10]**: Result file identification and approval triggers result delivery
 - **[UC-2] -> [UC-12]**: Child session failure handling requires a child session to exist
 - **[UC-1] -> [UC-11]**: Session resume requires a prior session to have existed (extends UC-1 as alternate start)
-- **[UC-11] -> [UC-13]**: Session forking requires checkpoint capability (uses same state persistence as resume)
 
 ### Reinforcements
 - **[UC-1] -> [UC-6]**: Conversation-first attitude and user-controlled termination together ensure the assistant never rushes at start or end
@@ -420,13 +396,12 @@ end note
 - **[UC-6] -> [UC-10]**: Session termination triggers result delivery, ensuring no results are lost on exit
 - **[UC-11] -> [UC-3]**: Session resume benefits from status reporting — resumed sessions can quickly sync on child session state
 - **[UC-14] -> [UC-2]**: Context handoff ensures child sessions are effective from the start
-- **[UC-13] -> [UC-11]**: Session forking reuses the checkpoint/resume infrastructure
 
 ### Use Case Groups
 | Group | Use Cases | Description |
 |-------|-----------|-------------|
 | Conversational Attitude | [UC-1], [UC-6] | Define how the assistant behaves within a session — applies to both main and child sessions |
-| Session Lifecycle | [UC-2], [UC-3], [UC-7], [UC-11], [UC-12], [UC-13], [UC-14] | Define how sessions are created, configured, monitored, resumed, forked, and recovered |
+| Session Lifecycle | [UC-2], [UC-3], [UC-7], [UC-11], [UC-12], [UC-14] | Define how sessions are created, configured, monitored, resumed, and recovered |
 | Child-to-Main Data Flow | [UC-4], [UC-5], [UC-8], [UC-9], [UC-10] | Define how outputs (files and reasoning) flow from child sessions back to the main session; UC-8/9/10 handle file delivery pipeline, UC-4/5 handle direct access and investigation |
 
 ## Excluded Ideas
@@ -439,21 +414,10 @@ end note
 | Task decomposition with dependency tracking | research (LangGraph, CrewAI) | This is more of an implementation pattern than a user-visible use case; the user's interaction with task decomposition happens through UC-2 (spawn child session) and UC-7 (inject skill) | Not a user-level use case |
 | Session monitoring dashboard | research (Microsoft Foundry, Google ADK) | Useful for enterprise scenarios with many concurrent sessions; current model assumes a single user with a handful of sessions where UC-3 provides sufficient visibility | Usage: routine; Reach: subset; Core goal: tangential |
 | Human-in-the-loop approval checkpoints | research (checkpoint patterns) | While valuable, this pattern is subsumed by UC-6 (control session termination) where the user explicitly decides when to proceed; adding formal approval gates adds process overhead for a conversational tool | Overlaps with UC-6; adds formality that contradicts conversation-first attitude |
+| Fork session for exploration (UC-13) | research (Agent Factory, Google ADK, LangGraph) | Deferred — user has not yet actively used Claude Code's fork feature; child sessions with main session fork create ambiguous ownership of existing child sessions | Usage: not yet adopted; Complexity: high for main+child scenarios |
 
 ## Open Questions
-- [Assumption] The User actor was assigned the `editor` role based on their ability to guide conversations and make decisions; if different privilege levels are needed (e.g., admin for configuration), this should be revisited.
-- [Assumption] File Tracker was modeled as a separate system actor; it may alternatively be a component within Child Session depending on implementation architecture. If merged, UC-8's actor changes to Child Session.
-- [Clarified] UC-1 (conversation-first attitude) applies to all sessions including child sessions — the prompt loaded in UC-1 is also used when spawning child sessions via UC-2. This is reflected in the reinforcement relationship [UC-1] -> [UC-2].
-- [Assumption] The "project directory" in UC-8 refers to the git repository root or the directory from which the session was started; the exact scope depends on implementation.
-- [To resolve] Alternative flows for error scenarios beyond UC-12 (skill injection failure, file tracker failure) are not documented — these may be needed for robustness.
-- [To resolve] Concurrent child sessions: The current use cases assume a main session can have multiple child sessions running simultaneously. UC-3, UC-4, UC-10, and UC-12 should handle identifying which child session an update or result came from. The exact mechanism (session IDs, naming) is left to implementation.
-- [Assumption] UC-8 is a background system process with no user-initiated trigger. It is modeled as a use case because it produces value (the file change log) consumed by UC-9 and UC-10.
-- [Feasibility] UC-5 (investigate child history), UC-11 (resume session), and UC-13 (fork session) require conversation history to be persisted and accessible. Claude Code session transcripts may not be trivially accessible to another session. Implementation may require explicit session logging or integration with a transcript storage mechanism.
-- [Assumption] UC-11 and UC-13 assume session state is persisted on termination or periodically. The persistence mechanism (file-based, database, etc.) is left to implementation.
-- [Assumption] UC-13 (fork session) assumes the checkpoint includes sufficient state to create an independent branch. The exact contents of a checkpoint (conversation history, file state, context) depend on implementation.
-- [Assumption] UC-14 (context handoff) assumes the main session can identify and summarize relevant context. The mechanism for determining "relevant context" (heuristics, user guidance, or LLM summarization) is left to implementation.
-- [Architecture] UC-3 and UC-10 describe status updates flowing from child to main via a "shared location" that main checks "periodically." This implies a polling model. Alternative: event-driven/push-based notification where the child session actively notifies the main session. Most similar systems use event-driven patterns. The choice impacts latency and resource usage.
-- [Architecture] UC-1 situation mentions specific CLI flags (e.g., `--prompt conversation-first`) as illustrative examples. The actual invocation mechanism depends on implementation.
+- *(All previously open questions were resolved in revision 7. See Change Log below.)*
 
 ## Change Log
 
@@ -519,3 +483,113 @@ end note
 | 6 | 2026-03-31 | Use Case Groups | Merged "Session Results" and "Result File Delivery" into "Child-to-Main Data Flow" | Reviewer noted unclear distinction between groups |
 | 6 | 2026-03-31 | Open Questions | Added polling vs push architecture question for UC-3/UC-10 | Reviewer noted architectural choice buried in flow |
 | 6 | 2026-03-31 | Open Questions | Added note about CLI flag examples being illustrative | Reviewer noted speculative details |
+| 7 | 2026-04-02 | Actors | User role changed from `editor` to `—` | Single-user system; privilege levels are unnecessary |
+| 7 | 2026-04-02 | Actors | Removed File Tracker actor; absorbed into Child Session | File tracking is a hook script bound to child session, not an independent process |
+| 7 | 2026-04-02 | UC-8 | Actor changed from File Tracker to Child Session; flow updated to hook-based detection | File tracking implemented as child session hook script |
+| 7 | 2026-04-02 | UC-2 | Added session naming (user-specified or auto-generated) and hook-based metadata recording to flow | Child sessions identified by name; session info recorded by hooks |
+| 7 | 2026-04-02 | UC-2 | Added hook-based skill validation as precondition | Skill existence checked before spawn; prevents failed child sessions |
+| 7 | 2026-04-02 | UC-3, UC-10 | Changed polling model to event-driven via FileChanged hook | Claude Code's FileChanged hook enables push-based notification |
+| 7 | 2026-04-02 | UC-4, UC-5, UC-12 | Updated to reference child sessions by name | Consistent with session naming scheme |
+| 7 | 2026-04-02 | UC-5 | Updated Risk note to reference hook-recorded transcript paths | Feasibility addressed by hook-based session metadata |
+| 7 | 2026-04-02 | UC-7 | Added hook-based skill validation step | Consistent with UC-2 precondition |
+| 7 | 2026-04-02 | UC-11 | Updated to reference hook-persisted session files | Session state restored from hook-recorded data |
+| 7 | 2026-04-02 | UC-1 | Generalized situation — removed specific CLI flag examples | CLI flags were illustrative; actual invocation depends on implementation |
+| 7 | 2026-04-02 | UC-14 | Updated flow to reflect dual context source (auto-summary + user-specified) | Context can be automatically summarized or explicitly specified by user |
+| 7 | 2026-04-02 | UC-13 | Moved to Excluded Ideas | User has not yet adopted fork feature; main+child fork creates ambiguous child ownership |
+| 7 | 2026-04-02 | Use Case Diagram | Removed File Tracker actor and UC-13; updated UC-8 note | Reflects actor consolidation and UC-13 exclusion |
+| 7 | 2026-04-02 | Relationships | Removed UC-13 references from dependencies, reinforcements, and groups | UC-13 excluded from scope |
+| 7 | 2026-04-02 | Context | Updated to reflect hook-centric architecture and single-user system | Resolved open questions inform the system description |
+| 7 | 2026-04-02 | Open Questions | All 12 open questions resolved | See individual change entries above |
+
+## Revision History
+
+### Revision 8 — 2026-04-02 10:30
+
+#### Last Completed
+- Resolved all 12 open questions from revision 6
+- Applied changes to file (revision 7)
+- Ran reviewer and explorer analysis
+
+#### Decisions Made
+- User role: `—` (single-user system, no privilege levels)
+- File Tracker absorbed into Child Session (hook-based)
+- Project directory = main session's working directory (Claude Code convention)
+- No additional error UCs needed (hook pre-validation + UC-12 covers failures)
+- Child sessions identified by name (user-specified or auto-generated)
+- All session metadata recorded by hook scripts (transcript paths, session info)
+- Event-driven communication via FileChanged hook (not polling)
+- Context handoff: auto-summary + user-specified
+- UC-13 (fork) deferred to Excluded Ideas
+
+#### Change Log
+
+| Section | Change | Reason | Source |
+|---------|--------|--------|--------|
+| (no file changes in revision 8 — all changes applied in revision 7) | — | — | — |
+
+#### Open Items
+
+| Section | Item | What's Missing | Priority |
+|---------|------|---------------|----------|
+| Actors | User Role `—` → `owner` | Person actors need a role even in single-user systems | Medium |
+| Cross-UC | Systemic implementation leak (10 UCs) | Flow steps reference hooks, status files, FileChanged, registry — should use actor-level descriptions | High |
+| Diagram | Missing UC-2 → UC-8 arrow | Dependency is documented but not in diagram | Low |
+| Diagram | UC-2 → UC-6 dependency/diagram mismatch | Dependency in text but intentionally removed from diagram — needs reconciliation | Low |
+| Completeness | No UC for listing all sessions | User can't ask "show me all my sessions" | Medium |
+| Completeness | No UC for cancelling child session mid-work | No immediate abort path (UC-6 is graceful, UC-12 is failure) | Medium |
+| Explorer | Discover available skills | First-time users can't learn what skills exist before UC-7 | Medium |
+| Explorer | Review past session landscape | No birds-eye view of all past sessions | Medium |
+| Explorer | Recover from hook failure | Hooks are load-bearing but silent failures not addressed | Medium |
+| Explorer | Handle session name collision | Sessions identified by name but no collision handling | Medium |
+| Explorer | Reuse session configuration | Regular users have no shortcut for repeated patterns | Low |
+| Explorer | Get guided session suggestions | No guidance for beginners on when to use child sessions | Low |
+| Explorer | Retract delivered results | No flow to reject/remove incorrect child results | Low |
+| Explorer | Clean up session history | No session record cleanup/archival UC | Low |
+
+#### Next Steps
+- Address systemic implementation leak: rewrite 10 UC flows to actor-level descriptions (highest impact single change)
+- Resolve User actor role (`owner`)
+- Evaluate completeness gap UC candidates (list sessions, cancel session)
+- Triage explorer UC candidates (prioritize: discover skills, hook failure recovery, session name collision)
+
+#### Interview Transcript
+<details>
+<summary>Q&A</summary>
+
+**Q:** User actor `editor` role — may need privilege levels?
+**A:** 항상 한명이 쓸 시스템이야. → Role 구분 불필요, `—`로 변경
+
+**Q:** File Tracker를 별도 actor로 유지할지, Child Session에 합칠지?
+**A:** Claude hook 발생시 동작하는 script. 특정 세션에서만 처리하는 hook이라. → Child Session에 흡수
+
+**Q:** "Project directory" 범위?
+**A:** Main session의 project directory. Claude의 project directory 개념을 따라가는 게 자연스럽더라고.
+
+**Q:** UC-12 외 추가 에러 플로우 필요?
+**A:** Hook으로 skill 존재유무를 확인후, 없으면 child 세션을 열지 않는 방법으로. → 별도 에러 UC 불필요
+
+**Q:** 동시 실행 child session 식별 방법?
+**A:** 세션에 이름을 붙이고 싶어. 사용자 지정 or 자동 생성 둘 다 가능 (C).
+
+**Q:** UC-8 백그라운드 프로세스 확인?
+**A:** 응. → Hook 기반 확인
+
+**Q:** Transcript 접근 방법?
+**A:** Child session 생성시 세션관련 정보를 기록하여, main session이 해당 정보를 참조하면 transcript 파일 위치를 알수 있어서. Child session 세션정보도 hook으로 기록.
+
+**Q:** 세션 상태 저장 메커니즘?
+**A:** 맞어. → Hook 기반 파일 저장/복원
+
+**Q:** UC-13 fork 시 checkpoint 내용?
+**A:** Fork는 현재 고려하지 않는 걸로. 아직 fork 기능을 많이 쓰지 않고 있어. Child session이 있는 main session fork 시 문제도 있음.
+
+**Q:** UC-14 컨텍스트 식별 메커니즘?
+**A:** 둘다. (자동 요약 + 사용자 지정)
+
+**Q:** UC-3, UC-10 polling vs event-driven?
+**A:** Claude의 FileChangedHook을 이용하면 될꺼 같아. → Event-driven
+
+**Q:** UC-1 CLI flag 예시 일반화?
+**A:** 어. → 일반화
+
+</details>
