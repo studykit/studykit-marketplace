@@ -262,6 +262,8 @@ On the first End Iteration or Finalize:
 
 Both teammates persist for the rest of the session and retain their full context — they do not re-read references on subsequent tasks.
 
+**Execution order:** Always assign work to the `reviewer` first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The `explorer` only receives work when the user explicitly chooses it.
+
 **How to assign work to teammates:**
 1. Create a task via `TaskCreate` with a description of the work.
 2. Assign it via `TaskUpdate(owner: "<name>", status: "in_progress")` — this activates the teammate.
@@ -272,7 +274,7 @@ If a teammate stops unexpectedly, re-spawn it.
 
 ### End Iteration (not finalizing)
 
-Send the work to the `reviewer` and `explorer` teammates (launch them first if not yet running), walk through flagged issues with the user, scan for open items, increment revision, append a new entry to Revision History with Change Log, append the interview transcript, and report.
+Send the work to the `reviewer` teammate first (launch teammates if not yet running). Walk through flagged issues with the user and update the working file. Then assign work to the `explorer` teammate against the updated file. Scan for open items, increment revision, append a new entry to Revision History with Change Log, append the interview transcript, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
 

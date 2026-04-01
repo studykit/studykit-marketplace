@@ -31,13 +31,22 @@
    - If the user defers, record as Open Items for next iteration
 
    The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
-3. **Assign exploration task** — create a task and assign it to the `explorer` teammate with the current working file and report path per `references/exploration-report.md` (label: revision number). The explorer writes the report and responds with results. Present the exploration results:
+3. **Update the working file with review revisions** — apply all accepted review changes to the working file. Add the review report file name to the frontmatter `reflected_files` list.
+4. **Ask for next step** — present the user with a choice:
+   > "Review changes have been applied. What would you like to do next?"
+   > 1. **Run exploration** — let the explorer find new perspectives and UC candidates based on the updated file
+   > 2. **Re-review** — run the reviewer again against the updated file (useful if significant changes were made)
+
+   - If the user chooses **exploration** → proceed to step 5.
+   - If the user chooses **re-review** → go back to step 1 with the updated file. The reviewer writes a new report (increment the label, e.g., `revision 3b`). Repeat steps 1–4 until the user chooses exploration or explicitly skips it.
+   - If the user wants to **skip exploration entirely** → proceed directly to step 7.
+5. **Assign exploration task** — create a task and assign it to the `explorer` teammate with the **updated** working file and report path per `references/exploration-report.md` (label: revision number). The explorer writes the report and responds with results. Present the exploration results:
    - Show each perspective explored and UC candidates found
    - Ask: "The explorer found these additional angles we haven't covered. Would you like to explore any now, or save them for next time?"
    - If the user picks any, enter the Discovery Loop for those topics. After reflecting the results, add the exploration file name to the frontmatter `reflected_files` list.
    - If the user defers, record as Open Items for next iteration (exploration file remains unconsumed for next session)
-4. **Update the working file** with any revisions from the review and exploration. Add the review report and exploration report file names to the frontmatter `reflected_files` list.
-5. **Scan for Open Items** — review all sections for incomplete or unclear items:
+6. **Update the working file with exploration results** — apply any accepted exploration changes. Add the exploration report file name to the frontmatter `reflected_files` list.
+7. **Scan for Open Items** — review all sections for incomplete or unclear items:
    - Use cases flagged by the reviewer but deferred by the user
    - Actors suspected but not confirmed (from Actors Review feedback)
    - Vague situations or weak outcomes the user chose not to address now
@@ -45,17 +54,17 @@
    - Explorer perspectives and UC candidates deferred by the user
    - Unresolved Open Questions
    - Relationships not yet analyzed (if < 5 UCs)
-6. **Increment `revision`** in frontmatter, update `revised` timestamp, and set `last_step` to `revision N`. Keep `status: draft`.
-7. **Append a new entry to Revision History** — add a new `### Revision N — <timestamp>` subsection under `## Revision History`. Do not overwrite previous entries. Include: Last Completed, Decisions Made, Change Log (record all changes made in this iteration with the review/exploration report file name in the Source column), Open Items, Next Steps, and Interview Transcript (this session's Q&A in a collapsible `<details>` block).
-8. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
-   ```
-   usecase(<topic-slug>): revision N
-   
-   - UCs: <total count> (<added> added, <modified> revised)
-   - UCs passed: <M> / <N>
-   - Open items: <count>
-   ```
-9. **Report** — show the user the current state and Open Items for next time.
+8. **Increment `revision`** in frontmatter, update `revised` timestamp, and set `last_step` to `revision N`. Keep `status: draft`.
+9. **Append a new entry to Revision History** — add a new `### Revision N — <timestamp>` subsection under `## Revision History`. Do not overwrite previous entries. Include: Last Completed, Decisions Made, Change Log (record all changes made in this iteration with the review/exploration report file name in the Source column), Open Items, Next Steps, and Interview Transcript (this session's Q&A in a collapsible `<details>` block).
+10. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+    ```
+    usecase(<topic-slug>): revision N
+    
+    - UCs: <total count> (<added> added, <modified> revised)
+    - UCs passed: <M> / <N>
+    - Open items: <count>
+    ```
+11. **Report** — show the user the current state and Open Items for next time.
 
 ## Finalize
 
