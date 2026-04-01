@@ -111,6 +111,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["plantuml", "diagram", "uml", "sequence", "class", "activity", "visualization"]
+    },
+    {
+      "name": "structurizr",
+      "source": "./plugins/structurizr",
+      "description": "Structurizr DSL diagram reference, creation, and C4 model visualization plugin",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["structurizr", "c4-model", "architecture", "diagram", "dsl", "system-context", "container", "deployment"]
     }
   ]
 }
