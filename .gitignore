@@ -215,3 +215,6 @@ session-tree.lock
 .obsidian/workspace-mobile.json
 .obsidian/plugins/obsidian-jira-issue/data.json
 
+
+# Ignore per-plugin local state
+.obsidian/plugins/*/data.json
