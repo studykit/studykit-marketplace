@@ -12,7 +12,7 @@ C4-PlantUML combines PlantUML with the [C4 model](https://c4model.com/) for desc
 
 ## Including the Library
 
-```plantuml
+```text
 ' Via PlantUML stdlib (no internet required, uses last released version)
 !include <C4/C4_Context>
 !include <C4/C4_Container>
@@ -219,11 +219,14 @@ BiRel(from, to, label, ?techn, ?descr, ?sprite, ?tags, ?link)
 Built-in sprites: `person`, `person2`, `robot`, `robot2`
 
 ```plantuml
-' Use external icon libraries
-!define DEVICONS https://raw.githubusercontent.com/tupadr3/plantuml-icon-font-sprites/master/devicons
-!include DEVICONS/angular.puml
+@startuml
+!include <C4/C4_Container>
+
+' Use stdlib icon libraries
+!include <tupadr3/devicons/angular>
 
 Container(spa, "SPA", "angular", "Web frontend", $sprite="angular")
+@enduml
 ```
 
 Sprite options: `$sprite="name"`, `$sprite="name,scale=0.5"`, `$sprite="name,scale=0.5,color=red"`
@@ -233,14 +236,20 @@ Sprite options: `$sprite="name"`, `$sprite="name,scale=0.5"`, `$sprite="name,sca
 Define custom tags for visual differentiation:
 
 ```plantuml
+@startuml
+!include <C4/C4_Container>
+
 AddElementTag("v1.0", $borderColor="#d73027")
 AddRelTag("async", $lineStyle=DashedLine(), $lineColor="orange")
 AddBoundaryTag("cloud", $bgColor="lightblue")
 
+Container(a, "Client", "React", "Frontend", $tags="v1.0")
 Container(api, "API", "Java", $tags="v1.0")
+ContainerDb(b, "Database", "PostgreSQL", "Primary data store")
 Rel(a, b, "Calls", $tags="async")
 
 SHOW_LEGEND()
+@enduml
 ```
 
 **Shape helpers:** `RoundedBoxShape()`, `EightSidedShape()`, `SharpCornerShape()`
@@ -251,10 +260,14 @@ SHOW_LEGEND()
 Attach property tables to elements:
 
 ```plantuml
+@startuml
+!include <C4/C4_Container>
+
 SetPropertyHeader("Property", "Value")
 AddProperty("Version", "2.1.0")
 AddProperty("SLA", "99.9%")
 Container(api, "API", "Java", "REST API")
+@enduml
 ```
 
 ## Additional Resources
@@ -263,3 +276,12 @@ Container(api, "API", "Java", "REST API")
 
 For complete macro signatures, element-specific tags, boundary tags, custom schemas, and advanced styling:
 - **`references/c4-macros.md`** — Full macro reference with all signatures and advanced features
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.

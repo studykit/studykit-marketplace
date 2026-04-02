@@ -92,7 +92,7 @@ Use `:` and `;` delimiters to create nodes with multiline content. This supports
 <code>
 template <typename T>
 class cname{
-void f1();
+void f1()
 ...
 }
 </code>
@@ -102,6 +102,7 @@ void f1();
 other template <typename T>
 class cname{
 ...
+}
 </code>
 ;
 @endmindmap
@@ -612,3 +613,12 @@ legend right
 endlegend
 @endmindmap
 ```
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.
