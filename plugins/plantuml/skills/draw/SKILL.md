@@ -1,10 +1,10 @@
 ---
-name: plantuml:create
+name: plantuml:draw
 description: >
-  Create PlantUML diagrams from natural language descriptions. Use when the user
-  says "create a diagram", "draw a sequence diagram", "generate UML", "make a
+  Draw PlantUML diagrams from natural language descriptions. Use when the user
+  says "draw a diagram", "create a sequence diagram", "generate UML", "make a
   PlantUML", "add a diagram to markdown", "insert plantuml block", or explicitly
-  invokes /plantuml:create.
+  invokes /plantuml:draw.
 argument-hint: <diagram description or "inject into file.md">
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---

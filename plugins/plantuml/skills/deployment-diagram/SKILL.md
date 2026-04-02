@@ -132,7 +132,6 @@ artifact f3
 artifact f4
 artifact f5
 artifact f6
-artifact f7
 artifact f8
 artifact f9
 artifact f10
@@ -146,7 +145,6 @@ artifact b3
 artifact b4
 artifact b5
 artifact b6
-artifact b7
 artifact b8
 artifact b9
 artifact b10
@@ -160,7 +158,6 @@ f3 --* b3 : "--*"
 f4 --o b4 : "--o"
 f5 --+ b5 : "--+"
 f6 --# b6 : "--#"
-f7 --\ b7 : "--\\"
 f8 --^ b8 : "--^"
 f9 --|> b9 : "--|>"
 f10 --||> b10 : "--||>"
@@ -169,6 +166,8 @@ f12 --@ b12 : "--@"
 f13 --0 b13 : "--0"
 @enduml
 ```
+
+`--\` 형태는 parser-sensitive 해서 복붙 시 `Syntax Error?`를 유발할 수 있으므로 예제에서 제외했습니다.
 
 ### Circle Arrows
 
@@ -416,9 +415,10 @@ node node {
 }
 
 actor user
+database db
 user --> p1
 user --> p2
-p3 --> database db
+p3 --> db
 @enduml
 ```
 
@@ -448,8 +448,11 @@ node "Application" {
   file "app.jar"
 }
 
-api --> database "Database"
-events --> queue "Message Queue"
+database "Database" as db
+queue "Message Queue" as mq
+
+api --> db
+events --> mq
 @enduml
 ```
 
@@ -841,3 +844,12 @@ orderSvc --> mq : events
 mq --> userSvc : consume
 @enduml
 ```
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.

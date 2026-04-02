@@ -223,3 +223,12 @@ end note
 
 For bracketed relationship styles (color, thickness, dashed), association classes, diamond associations, lollipop interfaces, hide/remove members and classes, tagged elements, layout helpers, skinparam customization, and large diagram splitting:
 - **`references/advanced.md`** — Advanced class diagram features and styling
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.

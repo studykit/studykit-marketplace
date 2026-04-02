@@ -135,10 +135,10 @@ Append `_` after the asterisks (OrgMode) or `+`/`-` (arithmetic) to remove the b
 + Project
 ++ Part One
 +++ Task 1.1
--_ LeftTask 1.2
-+_ Task 1.3
+---_ LeftTask 1.2
++++_ Task 1.3
 -- Part Two
-++_ Task 2.1
++++_ Task 2.1
 +++ Task 2.2
 @endwbs
 ```
@@ -356,3 +356,12 @@ This is ~~wave-underlined~~;
 - `<plain>` -- plain text
 - `<size:N>` -- font size
 - `<back:Color>` -- background color for inline text
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.

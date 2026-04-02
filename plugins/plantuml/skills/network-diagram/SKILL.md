@@ -390,10 +390,8 @@ nwdiag {
   network dmz {
     address = "210.x.x.x/24"
 
-    web01 [address = "210.x.x.1, 210.x.x.20",
-           description = "<$application_server>\n web01"]
-    web02 [address = "210.x.x.2",
-           description = "<$application_server>\n web02"];
+    web01 [address = "210.x.x.1, 210.x.x.20", description = "<$application_server>\n web01"];
+    web02 [address = "210.x.x.2", description = "<$application_server>\n web02"];
   }
 
   network internal {
@@ -401,10 +399,8 @@ nwdiag {
 
     web01 [address = "172.x.x.1"];
     web02 [address = "172.x.x.2"];
-    db01 [address = "172.x.x.100",
-          description = "<$database_server>\n db01"];
-    db02 [address = "172.x.x.101",
-          description = "<$database_server>\n db02"];
+    db01 [address = "172.x.x.100", description = "<$database_server>\n db01"];
+    db02 [address = "172.x.x.101", description = "<$database_server>\n db02"];
   }
 }
 @endnwdiag
@@ -428,10 +424,8 @@ nwdiag {
     address = "210.x.x.x/24"
 
     user [description = "<&person*4.5>\n user1"];
-    web01 [address = "210.x.x.1, 210.x.x.20",
-           description = "<&cog*4>\nweb01"]
-    web02 [address = "210.x.x.2",
-           description = "<&cog*4>\nweb02"];
+    web01 [address = "210.x.x.1, 210.x.x.20", description = "<&cog*4>\nweb01"];
+    web02 [address = "210.x.x.2", description = "<&cog*4>\nweb02"];
   }
 
   network internal {
@@ -439,12 +433,9 @@ nwdiag {
 
     web01 [address = "172.x.x.1"];
     web02 [address = "172.x.x.2"];
-    db01 [address = "172.x.x.100",
-          description = "<&spreadsheet*4>\n db01"];
-    db02 [address = "172.x.x.101",
-          description = "<&spreadsheet*4>\n db02"];
-    ptr [address = "172.x.x.110",
-         description = "<&print*4>\n ptr01"];
+    db01 [address = "172.x.x.100", description = "<&spreadsheet*4>\n db01"];
+    db02 [address = "172.x.x.101", description = "<&spreadsheet*4>\n db02"];
+    ptr [address = "172.x.x.110", description = "<&print*4>\n ptr01"];
   }
 }
 @endnwdiag
@@ -624,3 +615,12 @@ nwdiag {
 }
 @endnwdiag
 ```
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.

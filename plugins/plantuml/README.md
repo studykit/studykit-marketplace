@@ -6,7 +6,7 @@ A Claude Code plugin for creating, referencing, and validating PlantUML diagrams
 
 - **16 diagram reference skills** — Comprehensive syntax references for all major PlantUML diagram types, sourced from official documentation
 - **Diagram creation agent** — Proactively creates PlantUML diagrams from natural language descriptions
-- **`/plantuml:create` command** — Explicit diagram creation with support for `.puml` files and Markdown fenced code block injection
+- **`/plantuml:draw` command** — Explicit diagram creation with support for `.puml` files and Markdown fenced code block injection
 - **Syntax validation** — Local (`plantuml -checkonly`) and online (PlantUML server API) validation scripts
 
 ## Supported Diagram Types
@@ -21,11 +21,13 @@ A Claude Code plugin for creating, referencing, and validating PlantUML diagrams
 
 ## Prerequisites
 
-For local validation:
+For local validation, a bundled PlantUML jar (`scripts/plantuml*.jar`) is included. Requires Java:
 
 ```bash
-brew install plantuml
+java -version   # check if Java is available
 ```
+
+Alternatively, install the system CLI: `brew install plantuml`
 
 Online validation requires no local dependencies.
 
@@ -43,7 +45,7 @@ The `plantuml-writer` agent will trigger automatically.
 ### Explicit (Command)
 
 ```
-/plantuml:create sequence diagram of order processing
+/plantuml:draw sequence diagram of order processing
 ```
 
 ### Output Modes
@@ -73,7 +75,7 @@ plantuml/
 │   ├── validate.sh
 │   └── validate_online.py
 └── skills/
-    ├── create/SKILL.md
+    ├── draw/SKILL.md
     ├── sequence-diagram/SKILL.md
     ├── class-diagram/SKILL.md
     ├── activity-diagram/SKILL.md

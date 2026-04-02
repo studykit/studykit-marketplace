@@ -193,7 +193,7 @@ User -> Login
 
 ### Explicit URL Directive
 
-```plantuml
+```text
 url of MyClass is [[http://example.com/MyClass]]
 ```
 
@@ -201,7 +201,7 @@ url of MyClass is [[http://example.com/MyClass]]
 
 Set a global base URL:
 
-```plantuml
+```text
 skinparam topurl http://example.com/docs/
 ```
 
@@ -209,7 +209,7 @@ skinparam topurl http://example.com/docs/
 
 Use triple brackets for links on members:
 
-```plantuml
+```text
 class Foo {
   +method() [[[http://example.com/method]]]
 }
@@ -217,7 +217,7 @@ class Foo {
 
 ### Link Styling
 
-```plantuml
+```text
 skinparam hyperlinkColor #0066CC
 skinparam hyperlinkUnderline true
 ```
@@ -334,3 +334,12 @@ end note
 ## Applicability
 
 Creole markup and links are supported across **all diagram types**: sequence, class, activity, component, state, object, deployment, use case, timing, network, JSON/YAML, and more. Specific features may vary slightly by diagram type.
+
+## Validation
+
+After writing a `.puml` file or a PlantUML fenced block in Markdown, always validate the syntax:
+
+- **Local** (preferred): `bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>`
+- **Online** (fallback): `uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>`
+
+For PlantUML blocks embedded in Markdown, extract the content to a temporary `.puml` file before validating. If validation fails, read the error output, fix the syntax, and re-validate.
