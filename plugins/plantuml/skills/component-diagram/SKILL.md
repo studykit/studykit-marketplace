@@ -23,16 +23,13 @@ component [Last\ncomponent] as Comp4
 
 ### Naming Exceptions
 
-Component names starting with `$` require special handling since `$` is also used for tags:
+Component names starting with `$` can conflict with tag syntax in some contexts. A safer pattern is to use a quoted display name with a regular alias:
 
 ```plantuml
 @startuml
-component [$C1]
-component [$C2]
-$C2 component [$C2] as dollarC2
-remove $C1
-remove $C2
-remove dollarC2
+component "$C1" as dollarC1
+component "$C2" as dollarC2
+dollarC1 --> dollarC2
 @enduml
 ```
 
@@ -286,15 +283,15 @@ UML2 style:
 @startuml
 skinparam BackgroundColor transparent
 skinparam componentStyle uml2
-component A {
-   component "A.1" { }
-   component A.44 {
+package A {
+   component "A.1"
+   package A.44 {
       [A4.1]
    }
    component "A.2"
    [A.3]
-   component A.5 [ A.5]
-   component A.6 [ ]
+   [A.5]
+   [A.6]
 }
 [a]->[b]
 @enduml
@@ -306,15 +303,15 @@ Rectangle style:
 @startuml
 skinparam BackgroundColor transparent
 skinparam componentStyle rectangle
-component A {
-   component "A.1" { }
-   component A.44 {
+package A {
+   component "A.1"
+   package A.44 {
       [A4.1]
    }
    component "A.2"
    [A.3]
-   component A.5 [ A.5]
-   component A.6 [ ]
+   [A.5]
+   [A.6]
 }
 [a]->[b]
 @enduml
@@ -528,7 +525,7 @@ Ports define connection points on component boundaries. Use `port` (bidirectiona
 
 ```plantuml
 @startuml
-[c] component C {
+component "C" as c {
   port p1
   port p2
   port p3
@@ -547,7 +544,7 @@ p2 --> c1
 
 ```plantuml
 @startuml
-[c] component C {
+component "C" as c {
   portin p1
   portin p2
   portin p3
@@ -585,7 +582,7 @@ c1 --> p1
 
 ```plantuml
 @startuml
-[i] component C {
+component "C" as i {
   portin p1
   portin p2
   portin p3

@@ -526,21 +526,23 @@ HTML Creole tags supported in YAML values:
 - `<:emoji:>` (emoji)
 - `<img:url>` (inline images)
 
-### YAML Entities in Other Diagrams
+### YAML with Other Diagrams
 
-YAML data can be embedded within other diagram types using the `yaml` keyword, similar to JSON entities.
+For broad compatibility, keep YAML examples in dedicated `@startyaml` blocks. When mixing structured data into other diagram types, prefer `json` entities with `allowmixing`.
 
 ```plantuml
 @startuml
 allowmixing
 
-yaml config {
-  database:
-    host: db.example.com
-    port: 5432
-  cache:
-    host: cache.example.com
-    port: 6379
+json config {
+  "database": {
+    "host": "db.example.com",
+    "port": 5432
+  },
+  "cache": {
+    "host": "cache.example.com",
+    "port": 6379
+  }
 }
 
 component Server

@@ -128,9 +128,9 @@ Project starts 2020-07-01
 ```plantuml
 @startgantt
 [Prototype design] requires 13 days
-and is colored in Fuchsia/FireBrick
+[Prototype design] is colored in Fuchsia/FireBrick
 [Test prototype] requires 4 days
-and is colored in GreenYellow/Green
+[Test prototype] is colored in GreenYellow/Green
 [Test prototype] starts at [Prototype design]'s end
 @endgantt
 ```

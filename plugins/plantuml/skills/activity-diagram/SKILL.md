@@ -170,17 +170,14 @@ stop
 
 ## Colors on Activities
 
-Use `<<#color>>` stereotype after an activity for background color.
+Use `#color:` before an activity for broad renderer compatibility.
 
 ```plantuml
 @startuml
 start
 :starting progress;
-:reading configuration files
-These files should be edited at this point!;
-<<#HotPink>>
-:ending of the process;
-<<#AAAAAA>>
+#HotPink:reading configuration files\nThese files should be edited at this point!;
+#AAAAAA:ending of the process;
 @enduml
 ```
 
