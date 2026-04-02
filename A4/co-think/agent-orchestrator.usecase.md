@@ -171,6 +171,7 @@ UC2 ..> UC14 : <<include>>
 UC3 ..> UC2 : <<extend>>
 UC4 ..> UC2 : <<extend>>
 UC5 ..> UC2 : <<extend>>
+UC8 ..> UC2 : <<extend>>
 UC9 ..> UC8 : <<include>>
 UC10 ..> UC9 : <<include>>
 UC1 ..> UC6 : <<extend>>
@@ -533,7 +534,7 @@ end note
 |---------|------|---------------|----------|
 | Actors | User Role `—` → `owner` | Person actors need a role even in single-user systems | Medium |
 | Cross-UC | Systemic implementation leak (10 UCs) | Flow steps reference hooks, status files, FileChanged, registry — should use actor-level descriptions | High |
-| Diagram | Missing UC-2 → UC-8 arrow | Dependency is documented but not in diagram | Low |
+| ~~Diagram~~ | ~~Missing UC-2 → UC-8 arrow~~ | ~~Resolved: added to diagram~~ | ~~Low~~ |
 | Diagram | UC-2 → UC-6 dependency/diagram mismatch | Dependency in text but intentionally removed from diagram — needs reconciliation | Low |
 | Completeness | No UC for listing all sessions | User can't ask "show me all my sessions" | Medium |
 | Completeness | No UC for cancelling child session mid-work | No immediate abort path (UC-6 is graceful, UC-12 is failure) | Medium |
