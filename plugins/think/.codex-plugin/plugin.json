@@ -1,7 +1,7 @@
 {
-  "name": "workflow",
+  "name": "think",
   "version": "0.9.1",
-  "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
+  "description": "Co-thinking plugin — usecase/spec design, brainstorming, decision-making, and GitHub automation",
   "author": {
     "name": "studykit"
   },
@@ -17,8 +17,8 @@
     "architecture"
   ],
   "interface": {
-    "displayName": "Workflow",
-    "shortDescription": "Workflow helpers for issues, commits, and development decisions",
+    "displayName": "Think",
+    "shortDescription": "Co-thinking helpers for usecase/spec design, brainstorming, and decisions",
     "developerName": "studykit",
     "category": "Coding",
     "capabilities": [

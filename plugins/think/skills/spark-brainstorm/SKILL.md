@@ -122,4 +122,4 @@ Additional sections may be added when the session content warrants them (e.g., C
 
 If the brainstorming produced options that need to be evaluated and decided upon, suggest:
 
-> "If you'd like to evaluate these options and make a decision, you can run `/workflow:spark-decide <file_path>` to start a solution discovery session with these ideas as input."
+> "If you'd like to evaluate these options and make a decision, you can run `/think:spark-decide <file_path>` to start a solution discovery session with these ideas as input."

@@ -16,11 +16,9 @@ You are a Use Case revision agent. Your job is to revise an existing Use Case do
 
 Before revising, read these files. They define the rules you must follow.
 
-- `plugins/workflow/skills/co-think-usecase/references/output-template.md` — exact output format
-- `plugins/workflow/skills/co-think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
-- `plugins/workflow/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
-
-If paths fail, locate via Glob for `plugins/workflow/skills/co-think-usecase/references/`.
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/output-template.md` — exact output format
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
 
 ## Input
 

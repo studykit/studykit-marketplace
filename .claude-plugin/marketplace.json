@@ -61,9 +61,9 @@
       "keywords": ["html", "xml", "dom", "css-selector", "web-scraping", "structure-analysis"]
     },
     {
-      "name": "workflow",
-      "source": "./plugins/workflow",
-      "description": "Co-thinking workflow plugin — usecase/spec design, brainstorming, decision-making, and GitHub automation",
+      "name": "think",
+      "source": "./plugins/think",
+      "description": "Co-thinking plugin — usecase/spec design, brainstorming, decision-making, and GitHub automation",
       "version": "0.11.0",
       "author": {
         "name": "studykit"

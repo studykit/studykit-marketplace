@@ -242,7 +242,7 @@ When the user indicates they're done:
    - Append the Discussion Log
    - Remove any placeholder text
 5. **Report the path** so the user can reference it.
-7. **Suggest next steps** — If the decision leads to building something: "You can now use `/workflow:co-think-story <file_path>` to turn this decision into Job Stories."
+7. **Suggest next steps** — If the decision leads to building something: "You can now use `/think:co-think-story <file_path>` to turn this decision into Job Stories."
 
 ### Output Format
 

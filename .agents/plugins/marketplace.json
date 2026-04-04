@@ -65,10 +65,10 @@
       "category": "Coding"
     },
     {
-      "name": "workflow",
+      "name": "think",
       "source": {
         "source": "local",
-        "path": "./plugins/workflow"
+        "path": "./plugins/think"
       },
       "policy": {
         "installation": "AVAILABLE",

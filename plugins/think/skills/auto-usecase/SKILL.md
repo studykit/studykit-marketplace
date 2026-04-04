@@ -23,7 +23,7 @@ These files define the rules and format for use case documents. **Do not read th
 - `${CLAUDE_SKILL_DIR}/../co-think-usecase/references/research-report.md` — how to persist research results
 - `${CLAUDE_SKILL_DIR}/../co-think-usecase/references/exploration-report.md` — how to persist exploration results
 
-If `${CLAUDE_SKILL_DIR}` is not resolved, locate the workflow plugin via Glob for `plugins/workflow/skills/co-think-usecase/references/`.
+If `${CLAUDE_SKILL_DIR}` is not resolved, use `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/` instead.
 
 ## Use Case Format
 
@@ -39,7 +39,7 @@ Every Use Case follows the structure defined in `output-template.md`. In autonom
 Before starting, check for existing progress. If the output file (`A4/co-think/<topic-slug>.usecase.md`) exists, extract its `reflected_files` list via:
 
 ```bash
-uv run plugins/workflow/scripts/read_frontmatter.py A4/co-think/<topic-slug>.usecase.md reflected_files
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py A4/co-think/<topic-slug>.usecase.md reflected_files
 ```
 
 Do not read the output file itself. A file listed in `reflected_files` has already been reflected — do not read it and do not pass it to agents.

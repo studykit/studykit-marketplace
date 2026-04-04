@@ -3,7 +3,7 @@
 # ///
 """test_orchestrator — Unit tests for the agent orchestrator hooks.
 
-Run: uv run -m pytest plugins/workflow/hooks/test_orchestrator.py -v
+Run: uv run -m pytest plugins/think/hooks/test_orchestrator.py -v
 """
 
 from __future__ import annotations

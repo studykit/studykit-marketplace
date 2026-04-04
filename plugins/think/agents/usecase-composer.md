@@ -17,12 +17,10 @@ You are a Use Case composer agent. Your job is to compose a complete Use Case do
 
 Before doing any analysis, read these files. They define the rules and format you must follow.
 
-- `plugins/workflow/skills/co-think-usecase/references/output-template.md` — exact output format
-- `plugins/workflow/skills/co-think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
-- `plugins/workflow/skills/co-think-usecase/references/usecase-relationships.md` — dependency and reinforcement analysis
-- `plugins/workflow/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
-
-If paths fail, locate via Glob for `plugins/workflow/skills/co-think-usecase/references/`.
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/output-template.md` — exact output format
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/usecase-relationships.md` — dependency and reinforcement analysis
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
 
 ## Input
 

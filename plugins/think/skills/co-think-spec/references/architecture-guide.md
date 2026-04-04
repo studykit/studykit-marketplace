@@ -61,7 +61,7 @@ For each confirmed component:
 
 When a technology choice arises:
 - **Lightweight decisions** — discuss inline and record with brief rationale.
-- **Heavy decisions** — ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/workflow:spark-decide` to evaluate options?"
+- **Heavy decisions** — ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/think:spark-decide` to evaluate options?"
 
 ## Technical Claim Verification
 
