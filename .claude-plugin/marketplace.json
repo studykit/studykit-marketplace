@@ -8,20 +8,7 @@
     "version": "1.0.0"
   },
   "plugins": [
-    {
-      "name": "lang",
-      "source": "./plugins/lang",
-      "description": "A comprehensive plugin for English-Korean translation, text refinement, and vocabulary learning",
-      "version": "0.0.1",
-      "author": {
-        "name": "studykit"
-      },
-      "repository": "https://github.com/studykit/studykit-plugins",
-      "license": "MIT",
-      "category": "language",
-      "keywords": ["translation", "english", "korean", "vocabulary", "learning"]
-    },
-    {
+{
       "name": "doc",
       "source": "./plugins/doc",
       "description": "A plugin for reading and searching various document formats including CHM files",
