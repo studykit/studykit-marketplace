@@ -213,5 +213,4 @@ session-tree.lock
 **/node_modules/
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
-.obsidian/plugins/obsidian-jira-issue/data.json
-
+.obsidian/plugins/*/data.json
