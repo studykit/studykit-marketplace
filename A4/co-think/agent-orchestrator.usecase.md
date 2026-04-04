@@ -4,7 +4,7 @@ pipeline: co-think
 topic: "agent orchestrator"
 created: 2026-03-31 10:00
 revised: 2026-04-04
-revision: 10
+revision: 11
 status: draft
 tags: []
 reflected_files:
@@ -13,7 +13,8 @@ reflected_files:
   - agent-orchestrator.usecase.review-9.md
   - agent-orchestrator.usecase.review-10.md
   - agent-orchestrator.usecase.review-10b.md
-last_step: "revision 10"
+  - agent-orchestrator.usecase.review-10c.md
+last_step: "revision 11"
 ---
 # Use Cases: Agent Orchestrator
 > Source: [agent-orchestrator.story.md](./agent-orchestrator.story.md)
@@ -26,7 +27,7 @@ A user working in session A produces an artifact (e.g., a design document, a spe
 
 Claude Code's Agent tool only supports autonomous delegation: the parent sends a task and receives a result. It does not support spawning an interactive session where the user can have a back-and-forth conversation. To enable this, the orchestrator creates a new terminal pane (via tmux or similar) running a separate Claude session with pre-loaded context. When session B's discussion concludes, the results are automatically delivered to session A through file conventions and hook-based notifications.
 
-This is a single-user system. The orchestrator manages: session creation with context handoff (UC-2, UC-14), file change tracking during child sessions (UC-8), result identification and delivery back to the parent session (UC-9, UC-10), and user-controlled session termination that triggers result delivery (UC-6).
+This is a single-user system. The orchestrator manages: session creation with context handoff (UC-2, UC-14), session listing and resumption by name (UC-19, UC-11), file change tracking during child sessions (UC-8), result identification and delivery back to the parent session (UC-9, UC-10), and user-controlled session termination that triggers result delivery (UC-6).
 
 Hook scripts are the primary implementation mechanism: they record session metadata, track file changes, and trigger event-driven notifications between sessions. These details are deliberately kept out of use case flows, which describe only observable behavior.
 
@@ -100,6 +101,14 @@ rectangle "Agent Orchestrator" {
     --
     User decides when
     to end session"
+    usecase UC11 as "Resume child session
+    --
+    Reopen previous session
+    by name"
+    usecase UC19 as "List child sessions
+    --
+    Show available sessions
+    and their state"
   }
 
   package "Result Delivery" {
@@ -121,9 +130,13 @@ rectangle "Agent Orchestrator" {
 user --> UC2
 user --> UC6
 user --> UC9
+user --> UC11
+user --> UC19
 
 main --> UC2
 main --> UC10
+main --> UC11
+main --> UC19
 main --> UC14
 
 child --> UC6
@@ -217,6 +230,31 @@ end note
 - **Expected Outcome:** The user in the main session is informed of new deliverables from the child session, with file paths and brief descriptions, without having to ask
 - **Source:** input
 
+### [UC-11]. Resume child session
+- **Actor:** User, Main Session
+- **Goal:** Continue a previous child session's conversation by name
+- **Situation:** A child session was terminated (either gracefully after delivering results, or unexpectedly due to a crash or closed terminal) and the user wants to continue the conversation — for additional discussion or to pick up where it was interrupted
+- **Flow:**
+  1. User requests resumption by child session name (e.g., "reopen design-review")
+  2. Main session locates the session by name
+  3. If the session name is not found, the user is notified and asked to choose from available sessions
+  4. A new terminal pane opens, resuming the previous conversation with its full history intact
+  5. User is notified that the session is ready
+- **Expected Outcome:** The user continues the previous conversation without re-explaining context; the child session retains its full conversation history and is immediately available for interaction
+- **Source:** input
+
+### [UC-19]. List child sessions
+- **Actor:** User, Main Session
+- **Goal:** See which child sessions exist and their current state
+- **Situation:** The user wants to know which child sessions are available before deciding what to do next (e.g., resume one, check if one is still running, or spawn a new one)
+- **Flow:**
+  1. User asks for the session list (e.g., "what sessions do I have?")
+  2. Main session retrieves all child sessions
+  3. Main session presents the list with: session name, current state (active/terminated), and original purpose
+  4. User reviews the list
+- **Expected Outcome:** The user knows which child sessions exist and their state, enabling an informed decision about which session to resume, inspect, or whether to create a new one
+- **Source:** input
+
 ### [UC-14]. Hand off context to session
 - **Actor:** Main Session
 - **Goal:** Transfer relevant conversation context when delegating work to a child session
@@ -234,17 +272,20 @@ end note
 ### Dependencies
 - **[UC-2] -> [UC-14]**: Spawning a child session includes context handoff
 - **[UC-2] -> [UC-8]**: Spawning a child session creates a context in which file changes are tracked
+- **[UC-2] -> [UC-11]**: Resuming a child session requires a prior child session to have existed
+- **[UC-2] -> [UC-19]**: Listing child sessions requires at least one child session to have been spawned
 - **[UC-8] -> [UC-9]**: File change tracking must exist before the session can evaluate modified files
 - **[UC-9] -> [UC-10]**: Result file identification and approval triggers result delivery
 - **[UC-6] -> [UC-10]**: Session termination triggers result delivery
 
 ### Reinforcements
 - **[UC-6] + [UC-9]**: Together they ensure no deliverables are orphaned — UC-6 triggers result delivery at session end even if the user forgot to explicitly identify deliverables during the session
+- **[UC-19] -> [UC-11]**: The session list helps the user pick which session to resume by showing names and states
 
 ### Use Case Groups
 | Group | Use Cases | Description |
 |-------|-----------|-------------|
-| Session Lifecycle | [UC-2], [UC-6], [UC-14] | How sessions are created, configured with context, and terminated |
+| Session Lifecycle | [UC-2], [UC-6], [UC-11], [UC-14], [UC-19] | How sessions are created, configured with context, listed, resumed, and terminated |
 | Result Delivery | [UC-8], [UC-9], [UC-10] | How outputs (files) flow from child sessions back to the main session; UC-8 tracks changes, UC-9 identifies deliverables, UC-10 delivers them |
 
 ## Excluded Ideas
@@ -256,7 +297,6 @@ end note
 | Access child result files (UC-4) | input | Subsumed by UC-10 (deliver results to main); once results are delivered, direct file access is redundant | Covered by UC-10 |
 | Investigate child session history (UC-5) | input | Nice-to-have for debugging but not part of the core result-delivery flow; user can read transcripts manually | Usage: rare; Workaround exists |
 | Inject skill at session startup (UC-7) | input | Useful extension but not required for the core problem; skill injection can be specified in UC-2's context handoff | Absorbed into UC-14 context |
-| Resume interrupted session (UC-11) | research (LangGraph, CrewAI, Microsoft Foundry) | High complexity, fragile hook-based implementation; not part of the core problem of inter-session result delivery | Complexity: high; Core goal: tangential |
 | Handle child session failure (UC-12) | research (CrewAI, Google ADK) | More relevant for autonomous agents; interactive sessions have the user present to handle issues directly | Usage: rare for interactive sessions |
 | Fork session for exploration (UC-13) | research (Agent Factory, Google ADK, LangGraph) | Deferred — user has not yet actively used Claude Code's fork feature; high complexity | Usage: not yet adopted; Complexity: high |
 | Monitor child session dashboard (UC-15) | input | Adds complexity; with a small number of interactive sessions, the user can track them via terminal panes directly | Usage: low for interactive sessions; Workaround exists |
@@ -404,5 +444,64 @@ See git history for detailed change logs of revisions 4 through 9, which added U
 
 **Q:** UC-8 (Track file changes)는 빠져도 되는지?
 **A:** 유지해야 자동화가 됨.
+
+</details>
+
+### Revision 11 — 2026-04-04
+
+#### Last Completed
+- Added UC-11 (Resume child session) and UC-19 (List child sessions)
+- Review round 10c — all 8 UCs passed
+
+#### Decisions Made
+- UC-11 is independent from UC-19 — user can resume by name directly without listing first
+- UC-19 reinforces UC-11 but is not required
+- UC-19 does not extend UC-2 — the data prerequisite is captured in Dependencies only
+- Used UC-19 (new number) instead of reusing UC-15 to avoid confusion with the excluded dashboard UC
+
+#### Change Log
+
+| Section | Change | Reason | Source |
+|---------|--------|--------|--------|
+| Use Cases | Added UC-11 (Resume child session) | User needs to reopen terminated sessions for additional discussion or after unexpected closure | co-think interview |
+| Use Cases | Added UC-19 (List child sessions) | UC-11 requires users to know session names; listing provides discoverability | co-think interview |
+| Excluded Ideas | Removed UC-11 entry | UC-11 reinstated with narrower scope (child sessions only, using --resume) | co-think interview |
+| UC-11 | "looks up the session ID by name" → "locates the session by name" | Implementation leak — users interact with names, not internal IDs | agent-orchestrator.usecase.review-10c.md |
+| UC-19 | "retrieves all registered child sessions" → "retrieves all child sessions" | Implementation leak — "registered" implies internal bookkeeping | agent-orchestrator.usecase.review-10c.md |
+| Diagram | Removed UC-19 → UC-2 extend arrow | Incorrect relationship — data prerequisite already in Dependencies | agent-orchestrator.usecase.review-10c.md |
+| Diagram | Removed UC-11 → UC-2 extend arrow | UC-11 is independent, not an extension of UC-2 | co-think interview |
+| Context | Added session listing and resumption (UC-19, UC-11) | Reflects expanded scope | co-think interview |
+| Dependencies | Added UC-2 → UC-11 and UC-2 → UC-19 | Both require prior child sessions to exist | co-think interview |
+| Reinforcements | Added UC-19 → UC-11 | Session list helps user pick which session to resume | co-think interview |
+| Groups | Added UC-11, UC-19 to Session Lifecycle | Session listing and resumption are part of session lifecycle | co-think interview |
+
+#### Open Items
+
+| Section | Item | What's Missing | Priority |
+|---------|------|---------------|----------|
+| — | — | No open items | — |
+
+#### Next Steps
+- Review the 8 core UCs for completeness
+- Consider explorer run for additional perspectives
+
+#### Interview Transcript
+<details>
+<summary>Q&A</summary>
+
+**Q:** child session 종료 후, main session에서 다시 동일 child session을 재시작하고 싶은 경우가 있는데.
+**A:** (Facilitator asked about the scenario — additional discussion after normal termination, or recovery after unexpected closure. User confirmed both.)
+
+**Q:** UC-2에 alternative flow로 넣을지, 별도 UC로 만들지?
+**A:** (Facilitator recommended separate UC — different situation, different flow. User agreed.)
+
+**Q:** ��용자가 session-id를 언급하지 않고, 이름으로 지정하면 좋겠어.
+**A:** 맞음. "design-review 다시 열어줘"처럼 이름으로 재개.
+
+**Q:** UC-11은 결국 UC-19를 확장한 걸로 보이는데.
+**A:** (Facilitator noted UC-11 can be invoked independently by name without listing. Agreed UC-19 reinforces UC-11 but is not required.)
+
+**Q:** session의 이름을 알면 resume을 독자적으로 실행할 수 있잖아.
+**A:** 맞음. UC-11은 독립적.
 
 </details>
