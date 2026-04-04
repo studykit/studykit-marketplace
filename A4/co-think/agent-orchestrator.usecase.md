@@ -4,7 +4,7 @@ pipeline: co-think
 topic: "agent orchestrator"
 created: 2026-03-31 10:00
 revised: 2026-04-04
-revision: 11
+revision: 12
 status: draft
 tags: []
 reflected_files:
@@ -14,7 +14,9 @@ reflected_files:
   - agent-orchestrator.usecase.review-10.md
   - agent-orchestrator.usecase.review-10b.md
   - agent-orchestrator.usecase.review-10c.md
-last_step: "revision 11"
+  - agent-orchestrator.usecase.exploration-11.md
+  - agent-orchestrator.usecase.review-11.md
+last_step: "revision 12"
 ---
 # Use Cases: Agent Orchestrator
 > Source: [agent-orchestrator.story.md](./agent-orchestrator.story.md)
@@ -27,7 +29,7 @@ A user working in session A produces an artifact (e.g., a design document, a spe
 
 Claude Code's Agent tool only supports autonomous delegation: the parent sends a task and receives a result. It does not support spawning an interactive session where the user can have a back-and-forth conversation. To enable this, the orchestrator creates a new terminal pane (via tmux or similar) running a separate Claude session with pre-loaded context. When session B's discussion concludes, the results are automatically delivered to session A through file conventions and hook-based notifications.
 
-This is a single-user system. The orchestrator manages: session creation with context handoff (UC-2, UC-14), session listing and resumption by name (UC-19, UC-11), file change tracking during child sessions (UC-8), result identification and delivery back to the parent session (UC-9, UC-10), and user-controlled session termination that triggers result delivery (UC-6).
+This is a single-user system. The orchestrator manages: session creation with context handoff (UC-2, UC-14), session listing and resumption by name (UC-19, UC-11), context drift detection when referenced files change externally (UC-20), unexpected session end notification (UC-21), file change tracking during child sessions (UC-8), result identification and delivery back to the parent session (UC-9, UC-10), and user-controlled session termination that triggers result delivery (UC-6).
 
 Hook scripts are the primary implementation mechanism: they record session metadata, track file changes, and trigger event-driven notifications between sessions. These details are deliberately kept out of use case flows, which describe only observable behavior.
 
@@ -109,6 +111,14 @@ rectangle "Agent Orchestrator" {
     --
     Show available sessions
     and their state"
+    usecase UC20 as "Detect context drift
+    --
+    Inform user when
+    referenced files changed"
+    usecase UC21 as "Notify unexpected session end
+    --
+    Alert user when child
+    session ends abnormally"
   }
 
   package "Result Delivery" {
@@ -132,17 +142,21 @@ user --> UC6
 user --> UC9
 user --> UC11
 user --> UC19
+user --> UC20
+user --> UC21
 
 main --> UC2
 main --> UC10
 main --> UC11
 main --> UC19
+main --> UC21
 main --> UC14
 
 child --> UC6
 child --> UC8
 child --> UC9
 child --> UC10
+child --> UC20
 
 UC2 ..> UC14 : <<include>>
 UC2 ..> UC8 : <<extend>>
@@ -255,6 +269,30 @@ end note
 - **Expected Outcome:** The user knows which child sessions exist and their state, enabling an informed decision about which session to resume, inspect, or whether to create a new one
 - **Source:** input
 
+### [UC-20]. Detect context drift
+- **Actor:** Child Session, User
+- **Goal:** Inform the user when files referenced in the conversation have changed externally
+- **Situation:** A child session is active (newly resumed or mid-conversation) and a file that was part of the session's context has been modified outside the child session (by another session, the user in an editor, or an external tool)
+- **Flow:**
+  1. A referenced file is modified externally
+  2. The child session detects the change
+  3. The child session notifies the user which files changed and when
+  4. The user decides how to proceed (review the changes, continue with current context, or adjust the discussion)
+- **Expected Outcome:** The user is never unknowingly working with stale context; they are informed of changes promptly and can make an informed decision
+- **Source:** exploration-11
+
+### [UC-21]. Notify unexpected session end
+- **Actor:** Main Session, User
+- **Goal:** Inform the user when a child session ends unexpectedly
+- **Situation:** A child session crashes or becomes unresponsive while the user is working in another session
+- **Flow:**
+  1. A child session ends without going through the normal termination flow (UC-6)
+  2. The main session detects the unexpected termination
+  3. The main session notifies the user which session ended and any partial output that was produced
+  4. The user decides how to proceed (resume the session via UC-11, or continue without it)
+- **Expected Outcome:** The user is promptly aware of the unexpected termination and can decide whether to resume or move on; no silent failures
+- **Source:** exploration-11
+
 ### [UC-14]. Hand off context to session
 - **Actor:** Main Session
 - **Goal:** Transfer relevant conversation context when delegating work to a child session
@@ -274,6 +312,8 @@ end note
 - **[UC-2] -> [UC-8]**: Spawning a child session creates a context in which file changes are tracked
 - **[UC-2] -> [UC-11]**: Resuming a child session requires a prior child session to have existed
 - **[UC-2] -> [UC-19]**: Listing child sessions requires at least one child session to have been spawned
+- **[UC-2] -> [UC-20]**: Context drift detection requires a child session with referenced files
+- **[UC-2] -> [UC-21]**: Unexpected session end notification requires a child session to exist
 - **[UC-8] -> [UC-9]**: File change tracking must exist before the session can evaluate modified files
 - **[UC-9] -> [UC-10]**: Result file identification and approval triggers result delivery
 - **[UC-6] -> [UC-10]**: Session termination triggers result delivery
@@ -281,17 +321,20 @@ end note
 ### Reinforcements
 - **[UC-6] + [UC-9]**: Together they ensure no deliverables are orphaned — UC-6 triggers result delivery at session end even if the user forgot to explicitly identify deliverables during the session
 - **[UC-19] -> [UC-11]**: The session list helps the user pick which session to resume by showing names and states
+- **[UC-20] -> [UC-11]**: Context drift detection is especially valuable after session resume, when time has passed and files may have changed
+- **[UC-21] -> [UC-11]**: Unexpected termination notification naturally leads to session resume as a recovery path
 
 ### Use Case Groups
 | Group | Use Cases | Description |
 |-------|-----------|-------------|
-| Session Lifecycle | [UC-2], [UC-6], [UC-11], [UC-14], [UC-19] | How sessions are created, configured with context, listed, resumed, and terminated |
+| Session Lifecycle | [UC-2], [UC-6], [UC-11], [UC-14], [UC-19], [UC-20], [UC-21] | How sessions are created, configured with context, listed, resumed, monitored for drift, notified on failure, and terminated |
 | Result Delivery | [UC-8], [UC-9], [UC-10] | How outputs (files) flow from child sessions back to the main session; UC-8 tracks changes, UC-9 identifies deliverables, UC-10 delivers them |
 
 ## Excluded Ideas
 
 | Idea | Source | Reason | Criteria |
 |------|--------|--------|----------|
+| Review deliverables by session | exploration-11 | UC-10 delivers results with session name attached; sufficient for attribution without a separate review UC | Covered by UC-10 |
 | Conversation-first session (UC-1) | input | A prompt instruction, not an orchestration capability — achievable via CLAUDE.md or system prompt | Not a user-level use case of the orchestrator |
 | Report child session status (UC-3) | input | Real-time status monitoring adds complexity; the core problem only requires result delivery at session end | Usage: rare; Core goal: tangential |
 | Access child result files (UC-4) | input | Subsumed by UC-10 (deliver results to main); once results are delivered, direct file access is redundant | Covered by UC-10 |
@@ -503,5 +546,63 @@ See git history for detailed change logs of revisions 4 through 9, which added U
 
 **Q:** session의 이름을 알면 resume을 독자적으로 실행할 수 있잖아.
 **A:** 맞음. UC-11은 독립적.
+
+</details>
+
+### Revision 12 — 2026-04-04
+
+#### Last Completed
+- Explorer run (exploration-11): 3 UC candidates found
+- Added UC-20 (Detect context drift) and UC-21 (Notify unexpected session end)
+- Excluded candidate "Review deliverables by session" — UC-10 with session name is sufficient
+- Review round 11 — all 10 UCs passed
+
+#### Decisions Made
+- UC-20 covers both resume and mid-conversation drift detection (not just resume-time)
+- UC-20 situation broadened to include external editors and tools, not just other sessions
+- UC-21 is notification-only; recovery is delegated to UC-11 (resume)
+- "Review deliverables by session" excluded — session name in UC-10's delivery is sufficient for attribution
+
+#### Change Log
+
+| Section | Change | Reason | Source |
+|---------|--------|--------|--------|
+| Use Cases | Added UC-20 (Detect context drift) | Explorer found that referenced files can change while session is active or between sessions | agent-orchestrator.usecase.exploration-11.md |
+| Use Cases | Added UC-21 (Notify unexpected session end) | Explorer challenged UC-12 exclusion — user is in another session when child crashes | agent-orchestrator.usecase.exploration-11.md |
+| UC-20 | Broadened situation: "by another session" → "outside the child session (by another session, the user in an editor, or an external tool)" | Goal and flow already used broader "externally"; situation was inconsistent | agent-orchestrator.usecase.review-11.md |
+| Excluded Ideas | Added "Review deliverables by session" | UC-10 with session name provides sufficient attribution | co-think interview |
+| Context | Added UC-20 and UC-21 references | Reflects expanded scope | co-think interview |
+| Diagram | Added UC-20 and UC-21 with actor connections | New UCs need diagram representation | co-think interview |
+| Dependencies | Added UC-2 → UC-20 and UC-2 → UC-21 | Both require child sessions to exist | co-think interview |
+| Reinforcements | Added UC-20 → UC-11 and UC-21 → UC-11 | Both feed into session resume as follow-up action | co-think interview |
+| Groups | Added UC-20 and UC-21 to Session Lifecycle | Both are part of session monitoring | co-think interview |
+
+#### Open Items
+
+| Section | Item | What's Missing | Priority |
+|---------|------|---------------|----------|
+| — | — | No open items | — |
+
+#### Next Steps
+- Consider finalizing if scope is complete
+
+#### Interview Transcript
+<details>
+<summary>Q&A</summary>
+
+**Q:** (Explorer candidate 1) Flag context drift on session resume — 탐색해볼까?
+**A:** 1번부터 이야기해보자.
+
+**Q:** 별도 UC vs UC-11에 step 추가?
+**A:** child session에서 사용자가 대화 시 hook을 이용하여 파일이 변경됐는지 확인하면 가능하지 않을까? (→ facilitator redirected to user-level behavior, not implementation)
+
+**Q:** resume에만 한정할지, 활성 대화 중에도 감지할지?
+**A:** (Facilitator proposed separate UC covering both. User agreed.)
+
+**Q:** (Explorer candidate 2) Review deliverables by session — 세션 이름으로 불충분한 경우가 있나?
+**A:** 세션 이름이면 충분할 것 같은데. (→ excluded)
+
+**Q:** (Explorer candidate 3) Notify unexpected session end — 추가할까?
+**A:** 단순 알림이면 될 것 같다. 복구는 UC-11로 할 수 있으니.
 
 </details>
