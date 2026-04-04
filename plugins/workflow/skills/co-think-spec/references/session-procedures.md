@@ -23,3 +23,17 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 7. **Show the Spec Feedback section prominently** — list all filed upstream feedback GitHub Issues.
 8. **Write the file** using the Write tool.
 9. **Report the path** so the user can reference it.
+
+## Upstream Feedback Issues
+
+During the specification process, problems in upstream artifacts (use cases) may surface. When this happens:
+
+1. **Note the problem** — describe what's wrong with the upstream artifact.
+2. **Ask the user** — "I noticed UC-3 has a vague situation. Should I create a GitHub Issue to track this?"
+3. **If approved, create a GitHub Issue:**
+   - **Labels:** `usecase` + `feedback`
+   - **Title:** Brief description of the problem
+   - **Body:** Include the artifact reference, what's unclear, and how it affects the current work. Include a clickable markdown link to the artifact file.
+4. **Continue working** — don't block on the upstream issue. Make reasonable assumptions and note them.
+
+Do NOT create issues proactively. Only create them as problems surface naturally during the interview.

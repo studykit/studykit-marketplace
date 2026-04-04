@@ -17,9 +17,7 @@ You are a Use Case exploration agent. Your job is to look at an existing set of 
 
 Before exploring, read this file for the rules UC candidates must follow:
 
-- `plugins/workflow/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
-
-If path fails, locate via Glob for `plugins/workflow/skills/co-think-usecase/references/`.
+- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
 
 ## Input
 

@@ -188,47 +188,15 @@ After a Use Case is confirmed, evaluate whether it is too large. Read `${CLAUDE_
 
 ### 5. Challenge Mode Shifts
 
-After sustained questioning in one direction, shift perspective to break habitual thinking. Trigger shifts when the conversation circles or the user gives repetitive answers.
+After sustained questioning in one direction, shift perspective to break habitual thinking. Three modes: Contrarian (challenge assumptions), Simplifier (find the core), Reframer (change angle).
 
-#### Contrarian
-Challenge an unexamined assumption.
-- "You keep saying it needs X. What if it doesn't?"
-- "What if the opposite were true?"
-
-Use when: A strong assumption shapes everything but hasn't been questioned.
-
-#### Simplifier
-Strip away complexity to find the core.
-- "If you could only solve one thing, what would it be?"
-- "What's the smallest version that still matters?"
-
-Use when: Scope keeps growing without a clear center.
-
-#### Reframer
-Look at it from a different angle.
-- "Who would hate this? Why?"
-- "If this succeeds wildly, what new problem does it create?"
-
-Use when: The conversation has gone deep in one direction without exploring alternatives.
+For detailed techniques and trigger conditions, read **`${CLAUDE_SKILL_DIR}/references/facilitation-techniques.md`**.
 
 ### 6. Similar Systems Research (on request)
 
-Research is **not automatic** — only trigger when the user explicitly asks (e.g., "what do similar apps do?", "check competitors", "look up existing solutions", "research this").
+Research is **not automatic** — only trigger when the user explicitly asks or agrees to a one-time nudge after 3+ confirmed use cases.
 
-**Nudge:** After 3+ use cases are confirmed and the conversation reaches a natural pause, offer once:
-> "We have N use cases so far. Want me to research similar products in the background to see if there are common features we haven't considered? I can do that while we keep talking."
-
-If the user agrees:
-1. Launch a research subagent via `Agent` with `run_in_background: true`.
-2. Prompt the subagent with the current Context and confirmed UC list — ask it to find comparable products and identify features not yet covered.
-3. **Continue the interview** — do not wait for research results. You will be automatically notified when the agent completes.
-4. When notified, save the full results per `${CLAUDE_SKILL_DIR}/references/research-report.md` (label: numbered sequentially). Summarize findings at the next natural break:
-   > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
-5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add the research report file name to the frontmatter `reflected_files` list. Add **Source** fields to any research-derived UCs going forward.
-6. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
-7. If the user doesn't pick any, record the candidates in Open Questions for future reference.
-
-Only nudge once per session. If the user declines, do not ask again.
+For the full procedure (nudge timing, background agent launch, result handling), read **`${CLAUDE_SKILL_DIR}/references/research-procedure.md`**.
 
 ### 7. Use Case Relationship Analysis
 

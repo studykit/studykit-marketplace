@@ -132,145 +132,43 @@ When a use case is too big:
 2. Propose sub-use-cases.
 3. Once confirmed, proceed to specify each sub-use-case individually.
 
-For detailed clarification checklists (UI vs Non-UI) and question techniques, read **`references/requirements-guide.md`** → "Question Techniques" section.
+For detailed clarification checklists (UI vs Non-UI) and question techniques, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Question Techniques" section.
 
 After each FR is confirmed, write it to the output file immediately and update the task.
 
 ### Step 1.2: UI Screen Grouping
 
-Group UI FRs by screen/view, confirm with the user, then define screen navigation as a PlantUML activity diagram. For the full procedure, read **`references/requirements-guide.md`** → "UI Screen Grouping" section.
+Group UI FRs by screen/view, confirm with the user, then define screen navigation as a PlantUML activity diagram. For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "UI Screen Grouping" section.
 
 ### Step 1.3: Mock Generation
 
-For each confirmed screen group, invoke the `mock-html-generator` agent to create an HTML mock in `A4/co-think/mock/<topic-slug>/`. Present, iterate, refine FRs from feedback, and record mock paths. For the full procedure, read **`references/requirements-guide.md`** → "Mock Generation" section.
+For each confirmed screen group, invoke the `mock-html-generator` agent to create an HTML mock in `A4/co-think/mock/<topic-slug>/`. Present, iterate, refine FRs from feedback, and record mock paths. For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Mock Generation" section.
 
 ### Step 1.4: Authorization Rules
 
-Analyze the Actors table for role differentiation. If roles differ, build an authorization matrix (actor × FR → access level). Skip if no differentiation. For the full procedure, read **`references/requirements-guide.md`** → "Authorization Rules" section.
+Analyze the Actors table for role differentiation. If roles differ, build an authorization matrix (actor × FR → access level). Skip if no differentiation. For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Authorization Rules" section.
 
 ### Step 1.5: Non-Functional Requirements Nudge
 
-Ask the user once whether NFRs should constrain implementation (performance, security, scalability, accessibility, compliance). If yes, capture each with description, affected FRs, and measurable criteria. If no, skip. For details, read **`references/requirements-guide.md`** → "Non-Functional Requirements Nudge" section.
+Ask the user once whether NFRs should constrain implementation (performance, security, scalability, accessibility, compliance). If yes, capture each with description, affected FRs, and measurable criteria. If no, skip. For details, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Non-Functional Requirements Nudge" section.
 
 ## Phase 2: Domain Model
 
-Extract domain concepts through cross-cutting analysis of the functional requirements.
+Extract domain concepts through cross-cutting analysis of the functional requirements. Three topics: Concept Extraction, Relationship Mapping, and State Transition Analysis — each through interview with PlantUML diagrams.
 
-### Topic 2.1: Concept Extraction
-
-- Read all FRs horizontally — identify concepts (entities) that appear across multiple FRs
-- Present the initial concept list to the user
-- For each concept, through interview confirm: name, definition, 1-2 key attributes
-- Track which FRs reference each concept
-
-### Topic 2.2: Relationship Mapping
-
-- Identify relationships between concepts
-- Present as PlantUML class diagram (concept name + key attributes only, NO implementation types)
-- Accompanied by text explanation of each relationship
-- Show multiplicity (1..*, 0..1, etc.) where relevant
-
-### Topic 2.3: State Transition Analysis
-
-- Identify which concepts have state changes across FRs
-- For each stateful concept, map states, transitions, conditions, triggers
-- Present as PlantUML state diagram
-- Accompanied by text explanation
+For the detailed procedure per topic, read **`${CLAUDE_SKILL_DIR}/references/domain-model-guide.md`**.
 
 ## Phase 3: Architecture
 
-Design system architecture using the requirements and domain model.
+Design system architecture using the requirements and domain model. Topics: External Dependencies, Component Identification, Per-Component Deep Dive (DB schema, information flow, interface contracts), Technology Choices, and Technical Claim Verification.
 
-### Topic 3.0: External Dependencies
-
-Before designing internal components, identify external systems the software depends on:
-
-1. **Scan FRs for external interactions** — any FR that references sending email, payment, authentication via third-party, file storage, external data sources, etc.
-2. **Present the list** to the user:
-
-   > I've identified these external dependencies from the FRs:
-   >
-   > | External System | Used By | Purpose |
-   > |----------------|---------|---------|
-   > | OAuth Provider | FR-1, FR-2 | User authentication |
-   > | Email Service | FR-5 | Notification delivery |
-   >
-   > Are there other external services this system will use?
-
-3. **For each confirmed dependency**, clarify:
-   - What does the system send/receive?
-   - Are there constraints? (rate limits, pricing tiers, specific provider chosen or open)
-   - What happens if the external system is unavailable? (fallback behavior)
-4. **Record in the output file** — External Dependencies section under Architecture.
-
-### Topic 3.1: Component Identification
-
-- Propose an initial set of components from the input materials
-- Present the component list with responsibility descriptions
-- Through interview, confirm: component name, responsibility, whether it has its own data store
-- Present as PlantUML component diagram
-
-### Topic 3.2: Per-Component Deep Dive
-
-For each confirmed component:
-
-- **DB schema** (if the component has its own data store):
-  - Identify entities, attributes, and relationships
-  - Present as PlantUML IE diagram
-  - Not all components need a DB schema — ask before diving in
-
-- **Information flow** (per use case):
-  - For each use case involving this component, map the information flow between components
-  - Present as PlantUML sequence diagram — one per use case
-  - First iteration: "A sends user information to B" level is fine
-  - Subsequent iterations: progressively refine to **interface contract** level — communication method (REST, event, function call), operation name, request/response schema
-  - The goal by finalization: a coding agent can implement the interface without guessing
-
-- **Interface contracts** (per component boundary):
-  - Define how components communicate: API style, operations, request/response schemas
-  - This is not required in the first iteration — it emerges as the spec matures
-  - Present as a contract table per component pair:
-
-    > | Operation | Direction | Request | Response | Notes |
-    > |-----------|-----------|---------|----------|-------|
-    > | createSession | Client → SessionService | { userId, title } | { sessionId, status } | |
-    > | onSessionExpired | SessionService → NotificationService | { sessionId, reason } | — | event |
-
-### Technology Choices
-
-When a technology choice arises:
-- **Lightweight decisions** — discuss inline and record with brief rationale.
-- **Heavy decisions** — ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/workflow:spark-decide` to evaluate options?"
-
-### Technical Claim Verification
-
-When writing or confirming any technical statement in the spec (API support, library capabilities, framework constraints, compatibility, etc.), verify it before recording:
-
-1. **Search official docs** — use `WebSearch`/`WebFetch` to check the claim against official documentation, release notes, or changelogs.
-2. **Check the codebase** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
-3. **Record the source** — when the verification result influences a spec decision, note it briefly (e.g., "Verified: Next.js App Router supports Server Actions as of v14 — [docs link]").
-4. **Flag uncertainty** — if official documentation is ambiguous or unavailable, tell the user: "I couldn't confirm this from official sources. Want to proceed as an assumption or investigate further?"
-
-Keep this lightweight — don't verify obvious facts, focus on claims that would cause implementation failures if wrong.
+For the detailed procedure per topic, read **`${CLAUDE_SKILL_DIR}/references/architecture-guide.md`**.
 
 ## Abstraction Level Guards
 
-**Applied per phase:**
+Each phase has boundaries on what level of detail is appropriate — requirements capture *what*, domain models describe *what exists*, architecture defines *component interfaces*. None should include internal implementation details.
 
-### Requirements
-- Capture **what the software should do**, not how to implement it
-- No technology choices, no data schemas, no API endpoint designs
-
-### Domain Model
-- "What exists and how it connects" = confirmed, "how to build it" = not decided
-- No implementation types (VARCHAR, INT) in class diagrams
-- No API endpoints or serialization formats
-
-### Architecture
-- **First iteration**: "What components exist and what information they exchange" — sequence diagrams at information level, no interface contracts yet
-- **Subsequent iterations**: progressively add interface contracts — communication method, operations, request/response schemas. This is expected and necessary for coding agents.
-- DB schemas define entities and relationships, not implementation details (no index strategies)
-- **Always off-limits**: internal implementation of each component (algorithms, library choices within a component, internal data structures)
+For the full per-phase rules, read **`${CLAUDE_SKILL_DIR}/references/abstraction-guards.md`**.
 
 When the user drifts into component internals, redirect gently: "That's an internal implementation detail. Here, let's focus on the interface between components."
 
@@ -311,7 +209,7 @@ On **Iteration Mode entry**, compare and update as described in the Iteration Mo
 
 Increment `revision` in frontmatter and update `revised` timestamp when reflecting external input (review findings) or closing the session. Routine updates during the interview (FR confirmation, concept extraction) do not increment revision.
 
-Session history is stored in a separate file (`<topic-slug>.spec.history.md`). See `references/session-history.md` for the full format.
+Session history is stored in a separate file (`<topic-slug>.spec.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the full format.
 
 At the end of each session (whether wrapping up or pausing):
 
@@ -319,7 +217,7 @@ At the end of each session (whether wrapping up or pausing):
    - Requirements: FRs without error handling, vague input/output, missing validation
    - Domain Model: concepts referenced in FRs but not in glossary, missing state transitions
    - Architecture: components without interface contracts, information flows at abstract level, missing DB schemas
-2. **Append a Session Close entry** to the history file per `references/session-history.md`. **Increment `revision`** and update `revised` timestamp.
+2. **Append a Session Close entry** to the history file per `${CLAUDE_SKILL_DIR}/references/session-history.md`. **Increment `revision`** and update `revised` timestamp.
 3. **Update the working file** — update the Open Items and Next Steps sections with the current state.
 
 ### Iteration Mode Entry
@@ -342,17 +240,9 @@ When entering **Iteration** mode:
 
 ## Upstream Feedback Issues
 
-During the specification process, problems in upstream artifacts (use cases) may surface. When this happens:
+During the specification process, problems in upstream artifacts (use cases) may surface. Note the problem, ask the user before creating a GitHub Issue (labels: `usecase` + `feedback`), and continue working without blocking. Do NOT create issues proactively.
 
-1. **Note the problem** — describe what's wrong with the upstream artifact.
-2. **Ask the user** — "I noticed UC-3 has a vague situation. Should I create a GitHub Issue to track this?"
-3. **If approved, create a GitHub Issue:**
-   - **Labels:** `usecase` + `feedback`
-   - **Title:** Brief description of the problem
-   - **Body:** Include the artifact reference, what's unclear, and how it affects the current work. Include a clickable markdown link to the artifact file.
-4. **Continue working** — don't block on the upstream issue. Make reasonable assumptions and note them.
-
-Do NOT create issues proactively. Only create them as problems surface naturally during the interview.
+For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`** → "Upstream Feedback Issues" section.
 
 ## Facilitation Guidelines
 
@@ -365,72 +255,14 @@ Do NOT create issues proactively. Only create them as problems surface naturally
 
 ## Phase Review
 
-Reviews are handled by launching a `spec-reviewer` subagent. Each invocation is independent — context is passed via file paths.
+Reviews are handled by launching a `spec-reviewer` subagent. Each invocation is independent — context is passed via file paths. Four scopes: Requirements, Domain Model, Architecture, and Full.
 
-### Review Scopes
-
-Each phase has a focused review scope that maps to specific reviewer criteria:
-
-| Scope | Sections Reviewed | Reviewer Criteria | When |
-|-------|-------------------|-------------------|------|
-| **Requirements** | FRs, UI Screen Groups, Authorization | #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs) | After FRs are substantially defined |
-| **Domain Model** | Glossary, Relationships, State Transitions | #2 Precision (naming conflicts, glossary coverage), #7 Consistency (FR ↔ Domain only) | After concepts and relationships are mapped |
-| **Architecture** | Components, DB Schemas, Information Flows, Interface Contracts | #1 Behavior Coverage (sequence diagrams, component mapping), #4 Ownership, #6 Technical Claims (in architecture), #7 Consistency (full cross-section, cross-diagram) | After components and flows are defined |
-| **Full** | All sections | All criteria (#0–#7) | End Iteration, Finalize |
-
-### When to Trigger
-
-1. **Auto-suggest:** When the Navigation status table shows a phase as `Ready for review`, suggest it to the user: "Requirements look substantial enough for a phase review. Want me to send them to the reviewer?" Never auto-trigger — always ask.
-2. **User request:** The user can request a phase review at any time (e.g., "review the domain model"). Trigger immediately.
-3. **End Iteration / Finalize:** Always uses **Full** scope. See Wrapping Up section.
-
-### How to Request a Review
-
-Launch a `spec-reviewer` subagent via `Agent` with `subagent_type: "spec-reviewer"`. Include the scope, file paths, and report output path per `references/review-report.md` in the prompt.
-
-**Scoped review:**
-
-> **Scoped review request.**
-> Scope: **Requirements**
-> Review criteria: #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs).
-> Spec file: `<path>`
-> Source files: `<paths>`
-> Report path: `A4/co-think/<topic-slug>.spec.review-requirements-<revision>.md`
-> Only review the sections and criteria listed above. Skip all other criteria.
-
-**Full review:**
-
-> **Full review request.**
-> Scope: **Full**
-> Review all sections against all criteria (#0–#7).
-> Spec file: `<path>`
-> Source files: `<paths>`
-> Report path: `A4/co-think/<topic-slug>.spec.review-full-<revision>.md`
-
-If previous review reports exist, include their paths so the reviewer can see prior findings:
-
-> Previous review reports: `<paths>` — focus on whether previously flagged issues have been addressed.
-
-### After Review
-
-1. Present findings to the user, walking through flagged issues one at a time.
-2. Update the spec file with accepted revisions. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
-3. Update the Navigation status table: mark the phase as `Reviewed (rev N)`.
-4. If subsequent changes are made to a reviewed phase, change its review status to `Changes since last review`.
+For review scopes, trigger conditions, prompt formats, and post-review steps, read **`${CLAUDE_SKILL_DIR}/references/phase-review-guide.md`**.
 
 ## Agent Usage
 
-### Reviewer (subagent)
-
-Each review is a fresh `spec-reviewer` subagent invocation via `Agent(subagent_type: "spec-reviewer")`. The reviewer writes its report to a file per `references/review-report.md`, then returns a concise summary. Context is passed entirely through file paths — the spec file, source use case files, and any previous review reports.
-
-When previous review reports exist, include their paths in the prompt so the reviewer can check whether prior findings have been addressed.
-
-See **Phase Review** section for prompt formats.
-
-### Mock Generator (subagent)
-
-The `mock-html-generator` is invoked as a regular agent each time a mock is needed. Each screen group provides all necessary context (FRs, layout requirements) in the prompt.
+- **`spec-reviewer`** — launched via `Agent(subagent_type: "spec-reviewer")`. Context passed via file paths. See **`${CLAUDE_SKILL_DIR}/references/phase-review-guide.md`** for invocation details.
+- **`mock-html-generator`** — invoked as a regular agent for each screen group mock. Each invocation provides FRs, layout requirements, and output path in the prompt.
 
 ## Wrapping Up
 
@@ -444,14 +276,14 @@ When the user indicates they're done, ask whether they want to:
 
 Launch a **Full** scope `spec-reviewer` subagent. Walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
 
-For the full step-by-step checklist, read **`references/session-procedures.md`** → "End Iteration" section.
+For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`** → "End Iteration" section.
 
 ### Finalize
 
 Verify technology stack is filled, launch a **Full** scope `spec-reviewer` subagent. All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
 
-For the full step-by-step checklist, read **`references/session-procedures.md`** → "Finalize" section.
+For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`** → "Finalize" section.
 
 ### Output Format
 
-Follow the Specification template in `references/output-template.md` for the final file structure, field rules, and required sections.
+Follow the Specification template in `${CLAUDE_SKILL_DIR}/references/output-template.md` for the final file structure, field rules, and required sections.
