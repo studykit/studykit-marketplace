@@ -26,6 +26,7 @@ If paths fail, locate via Glob for `plugins/workflow/skills/co-think-usecase/ref
 
 1. **UC document** — file path to the `.usecase.md` file
 2. **Review report** — file path to the review report or the report content
+3. **History file** — file path to the `.usecase.history.md` file
 
 ## Process
 
@@ -35,9 +36,10 @@ If paths fail, locate via Glob for `plugins/workflow/skills/co-think-usecase/ref
 
 ## Output
 
-Write the revised document back to the UC document path. Update the frontmatter: increment `revision`, append the review report file name to `reflected_files`, set `last_step` (e.g., `growth 1, review 1`), update `revised` timestamp. Append a new Revision History under `## Revision History` with:
-- `Last Completed: Review round N`
-- `Change Log` table recording each change with the review report file name in the Source column
+1. **Write the revised document** back to the UC document path. Update the frontmatter: increment `revision`, append the review report file name to `reflected_files`, set `last_step` (e.g., `growth 1, review 1`), update `revised` timestamp. Update the Open Items and Next Steps sections.
+2. **Append a new entry to the history file** with:
+   - `Last Completed: Review round N`
+   - `Change Log` table recording each change with the review report file name in the Source column
 
 ## Return Summary
 

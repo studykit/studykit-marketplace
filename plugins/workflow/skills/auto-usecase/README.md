@@ -36,13 +36,10 @@ partition "Step 2: Research and Analysis" {
 
 partition "Step 3: Compose and Refine Loop" {
 
-  :TeamCreate + spawn\n**composer**, **reviewer**,\n**reviser**, **explorer**;
-  note right: persistent teammates,\nassign work via TaskCreate\n+ TaskUpdate(owner)
-
   while (Growth iteration <= 3?) is (continue)
 
     partition "3a: Compose" #LightBlue {
-      :TaskCreate + assign → **composer**;
+      :Launch **composer** subagent;
       note right: reflected_files updated\nin frontmatter
     }
 
@@ -50,13 +47,13 @@ partition "Step 3: Compose and Refine Loop" {
 
     partition "3c: Quality Loop (max 3)" #LightGreen {
       while (Quality round <= 3?) is (continue)
-        :TaskCreate + assign → **reviewer**;
+        :Launch **reviewer** subagent;
 
         if (All UCs PASS\n+ no Actor issues?) then (PASS)
           :**commit** review report;
           break
         else (NEEDS REVISION)
-          :TaskCreate + assign → **reviser**;
+          :Launch **reviser** subagent;
           :**commit** review report\n+ revised document;
         endif
       endwhile (max reached)
@@ -67,7 +64,7 @@ partition "Step 3: Compose and Refine Loop" {
       if (System Completeness?) then (INCOMPLETE)
         :UC Candidates\nfrom reviewer;
       else (SUFFICIENT)
-        :TaskCreate + assign → **explorer**;
+        :Launch **explorer** subagent;
         :**commit** exploration report;
 
         if (UC Candidates found?) then (yes)
@@ -100,10 +97,10 @@ stop
 
 | Agent | Lifecycle | Role |
 |-------|-----------|------|
-| **usecase-composer** | Persistent teammate | Compose UC document from input + research |
-| **usecase-reviewer** | Persistent teammate | Review UC quality + system completeness |
-| **usecase-reviser** | Persistent teammate | Fix issues flagged by reviewer |
-| **usecase-explorer** | Persistent teammate | Explore new perspectives for UC candidates |
+| **usecase-composer** | Subagent (per invocation) | Compose UC document from input + research |
+| **usecase-reviewer** | Subagent (per invocation) | Review UC quality + system completeness |
+| **usecase-reviser** | Subagent (per invocation) | Fix issues flagged by reviewer |
+| **usecase-explorer** | Subagent (per invocation) | Explore new perspectives for UC candidates |
 
 ## Loop Structure
 

@@ -104,12 +104,17 @@ Write the result to the file path provided by the invoking skill. The document f
 - Similar Systems Research (summary referencing the research file)
 - Excluded Ideas (if any, with table)
 - Open Questions
-- Revision History (with `Last Completed: Initial composition`)
+- Open Items
+- Next Steps
 
 Update the frontmatter:
 - `reflected_files` — append file names of all reference documents consumed during composition (e.g., research report, code analysis report, input files).
 - `last_step` — set to the current step (e.g., `growth 1 — compose`, `growth 2 — compose`).
 - `revised` — set to current timestamp.
+
+Also create or append to the history file (`<topic-slug>.usecase.history.md`) with an initial entry:
+- `Last Completed: Initial composition` (or `Growth N — compose` for subsequent iterations)
+- `Change Log` table recording UCs added and sources consumed
 
 ## Return Summary
 

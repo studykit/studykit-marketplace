@@ -2,7 +2,7 @@
 name: co-think-spec
 description: "This skill should be used when the user needs to create or iterate on a software specification — combining domain modeling, functional requirements, and architecture in one session. Common triggers include: 'spec', 'specification', 'design the system', 'define requirements', 'domain model', 'architecture', 'what should we build', 'system design', 'component design', 'let's spec this out', 'define the system'. Also applicable when use cases from co-think-usecase need to be turned into a buildable specification."
 argument-hint: <path to use case file(s), or existing .spec.md file for iteration>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList, TeamCreate, SendMessage
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Specification Builder
@@ -61,6 +61,20 @@ After resolution, present the resolved file(s) and ask the user to confirm befor
 - If only use case files are found (no existing spec) → **First Design** mode.
 
 The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
+
+**Iteration Mode entry:** When entering Iteration mode, check two things:
+
+1. **Source usecase changes** — compare the stored `sha` in spec frontmatter against the current file:
+   - Run `git hash-object <usecase-file-path>` to get the current SHA.
+   - If SHA matches → no changes, skip.
+   - If SHA differs → run `git diff <stored-sha> <current-sha>` to see exactly what changed. Also read the usecase's history file (`<topic-slug>.usecase.history.md`) for context on why changes were made.
+   - Present the changes to the user: "The source usecase has been updated. Changes: [list]. Review these changes before continuing?"
+   - Walk through each change with the user to determine spec impact (new FRs needed, existing FRs to update, domain/architecture implications).
+   - After reflecting, update `sources` in spec frontmatter (both `revision` and `sha`).
+
+2. **Unreflected review reports** — check for `A4/co-think/<topic-slug>.spec.review-*.md` files against `reflected_files` in frontmatter:
+   - Read each unreflected review report and extract issues that were not yet addressed.
+   - Present unreflected findings to the user alongside the Open Items from the last revision.
 
 After reading, list all use cases and any existing spec content found, then confirm with the user before proceeding.
 
@@ -271,6 +285,19 @@ At the start of the session, determine the file path:
 
 Tell the user the file path so they can follow along: "I've started a working file at `<path>`. It will update as we go."
 
+### Source Revision Tracking
+
+On **First Design**, record each source usecase file's current revision in the spec frontmatter:
+
+```yaml
+sources:
+  - file: <topic-slug>.usecase.md
+    revision: <current revision number>
+    sha: <git hash-object output>
+```
+
+On **Iteration Mode entry**, compare and update as described in the Iteration Mode entry procedure above.
+
 ### How to Update
 
 - **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
@@ -280,7 +307,11 @@ Tell the user the file path so they can follow along: "I've started a working fi
 - After each component is confirmed, update the Architecture section.
 - Show progress: "That's 5 FRs defined, 3 concepts extracted. Let's continue."
 
-## Revision History
+## Revision and Session History
+
+Increment `revision` in frontmatter and update `revised` timestamp when reflecting external input (review findings) or closing the session. Routine updates during the interview (FR confirmation, concept extraction) do not increment revision.
+
+Session history is stored in a separate file (`<topic-slug>.spec.history.md`). See `references/session-history.md` for the full format.
 
 At the end of each session (whether wrapping up or pausing):
 
@@ -288,41 +319,13 @@ At the end of each session (whether wrapping up or pausing):
    - Requirements: FRs without error handling, vague input/output, missing validation
    - Domain Model: concepts referenced in FRs but not in glossary, missing state transitions
    - Architecture: components without interface contracts, information flows at abstract level, missing DB schemas
-2. **Increment `revision`** in frontmatter and update `revised` timestamp.
-3. **Append a new entry** to Revision History. Previous entries are preserved — never overwrite them:
-
-```markdown
-### Revision N — <YYYY-MM-DD HH:mm>
-
-#### Decisions Made
-- <key decision 1>
-- <key decision 2>
-
-#### Change Log
-
-| Section | Change | Reason | Source |
-|---------|--------|--------|--------|
-| <section> | <what changed> | <why> | <review report or source> |
-
-#### Open Items
-
-| Section | Item | What's Missing | Priority |
-|---------|------|---------------|----------|
-| FR-3 | Input | Batch size limit undecided | High |
-| Architecture | AuthService ↔ SessionManager | Interface contract not defined | High |
-| FR-5 ↔ FR-7 | Concurrency | Conflict handling undecided | Medium |
-| Domain | Session | "Paused" state transitions incomplete | Medium |
-
-#### Next Steps
-- <suggested work items for the next iteration, derived from Open Items>
-```
-
-This enables a new session to pick up where the previous one left off.
+2. **Append a Session Close entry** to the history file per `references/session-history.md`. **Increment `revision`** and update `revised` timestamp.
+3. **Update the working file** — update the Open Items and Next Steps sections with the current state.
 
 ### Iteration Mode Entry
 
 When entering **Iteration** mode:
-1. Read the checkpoint first.
+1. Read the working file — Open Items and Next Steps show the current backlog.
 2. Present the Open Items table as a **work backlog**:
 
    > Here are the open items from the last session:
@@ -362,7 +365,7 @@ Do NOT create issues proactively. Only create them as problems surface naturally
 
 ## Phase Review
 
-The `reviewer` teammate handles all reviews — both per-phase reviews during the session and full-scope reviews at End Iteration / Finalize.
+Reviews are handled by launching a `spec-reviewer` subagent. Each invocation is independent — context is passed via file paths.
 
 ### Review Scopes
 
@@ -381,58 +384,53 @@ Each phase has a focused review scope that maps to specific reviewer criteria:
 2. **User request:** The user can request a phase review at any time (e.g., "review the domain model"). Trigger immediately.
 3. **End Iteration / Finalize:** Always uses **Full** scope. See Wrapping Up section.
 
-### How to Request a Scoped Review
+### How to Request a Review
 
-Send the review request to the `reviewer` teammate via `SendMessage`, specifying the scope explicitly:
+Launch a `spec-reviewer` subagent via `Agent` with `subagent_type: "spec-reviewer"`. Include the scope, file paths, and report output path per `references/review-report.md` in the prompt.
+
+**Scoped review:**
 
 > **Scoped review request.**
 > Scope: **Requirements**
 > Review criteria: #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs).
 > Spec file: `<path>`
 > Source files: `<paths>`
+> Report path: `A4/co-think/<topic-slug>.spec.review-requirements-<revision>.md`
 > Only review the sections and criteria listed above. Skip all other criteria.
 
-For **Full** scope:
+**Full review:**
 
 > **Full review request.**
 > Scope: **Full**
 > Review all sections against all criteria (#0–#7).
 > Spec file: `<path>`
 > Source files: `<paths>`
+> Report path: `A4/co-think/<topic-slug>.spec.review-full-<revision>.md`
+
+If previous review reports exist, include their paths so the reviewer can see prior findings:
+
+> Previous review reports: `<paths>` — focus on whether previously flagged issues have been addressed.
 
 ### After Review
 
 1. Present findings to the user, walking through flagged issues one at a time.
-2. Update the spec file with accepted revisions.
+2. Update the spec file with accepted revisions. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
 3. Update the Navigation status table: mark the phase as `Reviewed (rev N)`.
 4. If subsequent changes are made to a reviewed phase, change its review status to `Changes since last review`.
 
 ## Agent Usage
 
-### Reviewer Teammate (persistent)
+### Reviewer (subagent)
 
-The `reviewer` is a persistent teammate that accumulates context across review cycles (previous findings, what was fixed, iteration history).
+Each review is a fresh `spec-reviewer` subagent invocation via `Agent(subagent_type: "spec-reviewer")`. The reviewer writes its report to a file per `references/review-report.md`, then returns a concise summary. Context is passed entirely through file paths — the spec file, source use case files, and any previous review reports.
 
-**Setup (lazy):** On the first review request (phase review, End Iteration, or Finalize):
+When previous review reports exist, include their paths in the prompt so the reviewer can check whether prior findings have been addressed.
 
-1. Create an agent team via `TeamCreate` (team name: `co-think-spec-<topic-slug>`).
-2. Spawn the reviewer via `Agent` with `team_name` and `name`:
-   - **`reviewer`** — subagent_type: `spec-reviewer`. Reviews spec quality, flags issues, checks cross-phase consistency.
+See **Phase Review** section for prompt formats.
 
-The reviewer's initial prompt includes the output file path and all input file paths so it reads them once.
+### Mock Generator (subagent)
 
-**CRITICAL — Never terminate the reviewer.** It accumulates valuable context (previous review findings, resolved issues, iteration history) that makes each subsequent review more effective.
-
-- **Always use `SendMessage(to: "reviewer")` for follow-up reviews.** Do NOT spawn a new `Agent` — this creates a new agent and the old context is lost.
-- **Re-spawning is a last resort.** Only re-spawn if `SendMessage` fails with an error indicating the agent no longer exists. When re-spawning, include a brief summary of prior reviews so the new instance has minimal context.
-
-**How to assign work:**
-1. **First review:** Assign via `TaskUpdate(owner: "reviewer", status: "in_progress")` — this activates the teammate.
-2. **All subsequent reviews:** Use `SendMessage(to: "reviewer")`. This preserves accumulated context.
-
-### Mock Generator (one-shot)
-
-The `mock-html-generator` is invoked as a regular agent (no team) each time a mock is needed. Mock tasks are self-contained — each screen group provides all necessary context (FRs, layout requirements) in the prompt, so persistent context is not required.
+The `mock-html-generator` is invoked as a regular agent each time a mock is needed. Each screen group provides all necessary context (FRs, layout requirements) in the prompt.
 
 ## Wrapping Up
 
@@ -444,13 +442,13 @@ When the user indicates they're done, ask whether they want to:
 
 ### End Iteration (not finalizing)
 
-Send a **Full** scope review to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). Walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report. **Do not terminate teammates after the iteration ends** — they remain available for the next iteration with full context.
+Launch a **Full** scope `spec-reviewer` subagent. Walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
 
 For the full step-by-step checklist, read **`references/session-procedures.md`** → "End Iteration" section.
 
 ### Finalize
 
-Verify technology stack is filled, send a **Full** scope review to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
+Verify technology stack is filled, launch a **Full** scope `spec-reviewer` subagent. All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
 
 For the full step-by-step checklist, read **`references/session-procedures.md`** → "Finalize" section.
 

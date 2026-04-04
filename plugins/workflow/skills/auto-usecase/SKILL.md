@@ -2,7 +2,7 @@
 name: auto-usecase
 description: "This skill should be used when the user wants to autonomously generate a complete Use Case document from an idea or brainstorm input without interactive interview. Triggers: 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'create use case doc automatically', 'no interview needed just generate', 'run auto-usecase on', or when the user provides an idea/brainstorm and wants a .usecase.md file produced without back-and-forth dialogue."
 argument-hint: <idea, brainstorm text, or file path to generate use cases from>
-allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList, TeamCreate, SendMessage
+allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Autonomous Use Case Generator
@@ -13,7 +13,7 @@ Generate use cases for: **$ARGUMENTS**
 
 ## Shared References
 
-These files define the rules and format for use case documents. **Do not read them in the main session.** Pass the paths to agents — teammates read them on launch, fresh agents read them per invocation.
+These files define the rules and format for use case documents. **Do not read them in the main session.** Pass the paths to agents — each subagent reads them per invocation.
 
 - `${CLAUDE_SKILL_DIR}/../co-think-usecase/references/output-template.md` — exact output format (use **auto-usecase** sections)
 - `${CLAUDE_SKILL_DIR}/../co-think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
@@ -121,41 +121,31 @@ Launch a code analysis subagent via `Agent` (general-purpose). The subagent must
 
 This step runs an outer **growth loop** (compose → review → expand) and an inner **quality loop** (review → revise).
 
-#### Teammate Setup
+#### Agents
 
-Before entering the loop:
+Each step launches a fresh subagent. Context is passed entirely through file paths — the working file, history file, research/code analysis reports, review/exploration reports. File-based state (`reflected_files`, history file) ensures continuity across invocations.
 
-1. Create an agent team via `TeamCreate` (team name: `auto-usecase-<topic-slug>`).
-2. Spawn four teammates via `Agent` with `team_name` and `name`. Each teammate's initial prompt includes the shared reference file paths so it reads them once:
-   - **`composer`** — subagent_type: `usecase-composer`. Composes UC documents.
-   - **`reviewer`** — subagent_type: `usecase-reviewer`. Reviews UC quality and system completeness.
-   - **`reviser`** — subagent_type: `usecase-reviser`. Applies review fixes.
-   - **`explorer`** — subagent_type: `usecase-explorer`. Explores new perspectives for UC candidates.
+- **Composer:** `Agent(subagent_type: "usecase-composer")` — composes UC documents
+- **Reviewer:** `Agent(subagent_type: "usecase-reviewer")` — reviews UC quality and system completeness
+- **Reviser:** `Agent(subagent_type: "usecase-reviser")` — applies review fixes
+- **Explorer:** `Agent(subagent_type: "usecase-explorer")` — explores new perspectives for UC candidates
 
-All four teammates persist across iterations and retain their full context — they do not re-read references on subsequent tasks.
-
-**How to assign work to teammates:**
-1. Create a task via `TaskCreate` with a description of the work.
-2. Assign it via `TaskUpdate(owner: "<name>", status: "in_progress")` — this activates the teammate.
-3. The teammate's response is delivered automatically to the main session.
-4. For follow-up work on an already-active teammate, `SendMessage(to: "<name>")` also works.
-
-If a teammate stops unexpectedly, re-spawn it — file-based state (`reflected_files`, Revision History) ensures no work is lost.
+Include the shared reference file paths in each subagent prompt.
 
 #### Step 3a: Compose
 
-Create a task and assign it to the `composer` teammate with:
+Launch a `usecase-composer` subagent with:
 - **Output path** — `A4/co-think/<topic-slug>.usecase.md`
 - **User idea** — the input from Step 1 (first iteration) or UC Candidates from reviewer/explorer (subsequent iterations)
 - **Research results** — file path to research report from Step 2a (first iteration only)
 - **Code analysis** — file path to code analysis report from Step 2b (first iteration only, if exists)
 - **Target system** — file path to existing `.usecase.md` from Step 1, or the current document (subsequent iterations)
 
-**Do not read research results, code analysis reports, or input files in the main session.** Pass file paths only — the composer agent reads them directly. This avoids duplicating content into the main session context.
+**Do not read research results, code analysis reports, or input files in the main session.** Pass file paths only — the subagent reads them directly. This avoids duplicating content into the main session context.
 
 #### Step 3b: Verify and Commit
 
-The composer agent writes the document directly. Verify the file exists at the output path (do not read it). Section completeness is the composer's responsibility.
+The composer subagent writes the document directly. Verify the file exists at the output path (do not read it). Section completeness is the composer's responsibility.
 
 The composer responds with a summary including UC count. Use that for the commit message:
 ```
@@ -168,7 +158,7 @@ usecase(<topic-slug>): growth <iteration> — compose
 
 Repeat until all UCs pass and no actor issues remain, or the maximum is reached:
 
-1. Create a task and assign it to the `reviewer` teammate with the output file and report path per `references/review-report.md` (label: `review-g<iteration>-q<round>`). The reviewer responds with a summary: verdict (`ALL_PASS` or `NEEDS_REVISION`), pass count, total count, system completeness (`INCOMPLETE` or `SUFFICIENT`), and UC candidates if any.
+1. Launch a `usecase-reviewer` subagent with the output file and report path per `references/review-report.md` (label: `review-g<iteration>-q<round>`). If previous review reports exist from earlier rounds, include their paths so the reviewer can check whether prior findings have been addressed. The reviewer responds with a summary: verdict (`ALL_PASS` or `NEEDS_REVISION`), pass count, total count, system completeness (`INCOMPLETE` or `SUFFICIENT`), and UC candidates if any.
 2. If verdict is `ALL_PASS`:
    a. Commit review report:
       ```
@@ -178,7 +168,7 @@ Repeat until all UCs pass and no actor issues remain, or the maximum is reached:
       ```
    b. Exit quality loop.
 3. Otherwise (`NEEDS_REVISION`):
-   a. **Always** create a task and assign it to the `reviser` teammate — do not apply fixes directly in the main session. Pass the review report and document paths. The reviser responds with a summary including UC count and changes applied. The reviser appends a new Revision History (`Last Completed`, `Change Log`) under `## Revision History`.
+   a. **Always** launch a `usecase-reviser` subagent — do not apply fixes directly in the main session. Pass the review report, document path, and history file path (`<topic-slug>.usecase.history.md`). The reviser responds with a summary including UC count and changes applied. The reviser appends a new entry (`Last Completed`, `Change Log`) to the history file and updates Open Items + Next Steps in the working file.
    b. Commit review report + revised document (use counts from reviser's summary):
       ```
       usecase(<topic-slug>): growth <iteration>, review <round>
@@ -198,7 +188,7 @@ After the quality loop passes (or reaches maximum), determine whether to expand 
    - **INCOMPLETE** with UC Candidates → pass the UC Candidates back to Step 3a.
    - **SUFFICIENT** → proceed to Perspective Exploration.
 
-2. **Perspective Exploration** — create a task and assign it to the `explorer` teammate with the current document path and report path per `references/exploration-report.md` (label: `exploration-<iteration>`, e.g., `exploration-1`). Instruct the explorer to re-read the current document and avoid duplicating candidates from previous explorations. Commit after explorer:
+2. **Perspective Exploration** — launch a `usecase-explorer` subagent with the current document path and report path per `references/exploration-report.md` (label: `exploration-<iteration>`, e.g., `exploration-1`). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. Commit after explorer:
    ```
    usecase(<topic-slug>): growth <iteration> — exploration
 

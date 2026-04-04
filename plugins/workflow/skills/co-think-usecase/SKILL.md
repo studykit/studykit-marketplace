@@ -2,7 +2,7 @@
 name: co-think-usecase
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'use cases', 'gather requirements', 'what do users need', 'break this down', or when a rough idea needs to be shaped into concrete Use Cases through a Socratic interview. Automatically detects and splits oversized use cases into smaller, independently valuable pieces."
 argument-hint: <idea or vague concept to turn into use cases>
-allowed-tools: Read, Write, Agent, Bash, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList, TeamCreate, SendMessage
+allowed-tools: Read, Write, Agent, Bash, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Use Case Discovery Facilitator
@@ -53,7 +53,7 @@ The working file is a living document that grows throughout the interview. The u
 | Create | Idea received (step 1) | Create the file with frontmatter, original idea, and empty sections |
 | Update | Each use case confirmed or split (steps 3-4) | Append the new use case; update actors table and diagram |
 | Update | Progress snapshot (every 4-5 exchanges) | Update the Context section with latest understanding |
-| End iteration | User pauses the session | Increment revision, append new entry to Revision History with Change Log |
+| End iteration | User pauses the session | Increment revision, append Session Close to history file, update Open Items + Next Steps |
 | Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, set `status: final` |
 
 ### Working File Path
@@ -108,8 +108,8 @@ When the working file already exists, this is a returning session to refine the 
 - Preserve all previously confirmed use cases — never remove or reorder them unless the user explicitly requests it.
 - New use cases get the next available UC-N ID (continue numbering from where the previous session left off).
 - When modifying an existing UC, show the before/after and confirm with the user before updating.
-- Increment the `revision` number in frontmatter at each iteration end.
-- Include this session's Interview Transcript in the Revision History entry for this iteration.
+- Increment `revision` in frontmatter and update `revised` timestamp when reflecting external input (review findings, exploration results) or closing the session. Routine updates during the interview (UC confirmation, actor discovery) do not increment revision.
+- Session history (including Interview Transcript) is stored in a separate history file (`<topic-slug>.usecase.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
 
 ### How to Update
 
@@ -251,40 +251,24 @@ When the user indicates they're done, ask whether they want to:
 - **End this iteration** (come back later to refine further)
 - **Finalize** (mark as complete, create issues)
 
-### Teammate Setup (lazy)
+### Agent Usage
 
-On the first End Iteration or Finalize:
+Reviews and explorations are handled by launching subagents. Each invocation is independent — context is passed entirely through file paths (the working file, previous review/exploration reports).
 
-1. Create an agent team via `TeamCreate` (team name: `co-think-<topic-slug>`).
-2. Spawn **all** teammates via `Agent` with `team_name` and `name`. Team members cannot be added after team creation, so all must be spawned together. Each teammate's initial prompt includes the shared reference file paths so it reads them once:
-   - **`reviewer`** — subagent_type: `usecase-reviewer`. Reviews UC quality and system completeness.
-   - **`explorer`** — subagent_type: `usecase-explorer`. Explores new perspectives for UC candidates.
+- **Reviewer:** Launch via `Agent(subagent_type: "usecase-reviewer")`. Pass the working file path and report output path. If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
+- **Explorer:** Launch via `Agent(subagent_type: "usecase-explorer")`. Pass the working file path and report output path.
 
-Both teammates persist for the rest of the session and retain their full context — they do not re-read references on subsequent tasks.
-
-**CRITICAL — Never terminate teammates.** Teammates accumulate valuable context (previous review findings, explored perspectives, UC evolution history) that makes each subsequent interaction more effective. Terminating and re-spawning a teammate destroys this context.
-
-- **Never let a teammate end or terminate** after completing a task. If a teammate's response seems final, it is still alive — send follow-up work via `SendMessage`.
-- **Always use `SendMessage(to: "<name>")` for follow-up work** on an already-spawned teammate. Do NOT spawn a new `Agent` with the same name — this creates a new agent and the old context is lost.
-- **Re-spawning is a last resort.** Only re-spawn a teammate if `SendMessage` fails with an error indicating the agent no longer exists. When re-spawning, include a brief summary of prior work so the new instance has minimal context.
-
-**Execution order:** Always assign work to the `reviewer` first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The `explorer` only receives work when the user explicitly chooses it.
-
-**How to assign work to teammates:**
-1. Create a task via `TaskCreate` with a description of the work.
-2. **First task:** Assign it via `TaskUpdate(owner: "<name>", status: "in_progress")` — this activates the teammate.
-3. The teammate's response is delivered automatically to the main session.
-4. **All subsequent tasks:** Use `SendMessage(to: "<name>")` to send the work. This preserves the teammate's accumulated context from all prior tasks.
+**Execution order:** Always run the reviewer first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The explorer only runs when the user explicitly chooses it.
 
 ### End Iteration (not finalizing)
 
-Send the work to the `reviewer` teammate first (launch teammates if not yet running; use `SendMessage` if already running). Walk through flagged issues with the user and update the working file. Then assign work to the `explorer` teammate against the updated file (again, `SendMessage` if already running). Scan for open items, increment revision, append a new entry to Revision History with Change Log, append the interview transcript, and report. **Do not terminate teammates after the iteration ends** — they remain available for the next iteration with full context.
+Launch a `usecase-reviewer` subagent. Walk through flagged issues with the user and update the working file. Then, if the user chooses, launch a `usecase-explorer` subagent against the updated file. Scan for open items, append Session Close entry to the history file, update Open Items + Next Steps in the working file, increment revision, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
 
 ### Finalize
 
-Send the work to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
+Launch a `usecase-reviewer` subagent. All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "Finalize" section.
 

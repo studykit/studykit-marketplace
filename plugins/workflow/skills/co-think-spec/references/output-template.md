@@ -15,6 +15,11 @@ created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>
 revision: 0
 status: draft | final
+sources:
+  - file: <topic-slug>.usecase.md
+    revision: <usecase revision at time of reading>
+    sha: <git hash-object output at time of reading>
+reflected_files: []
 tags: []
 ---
 ```
@@ -238,39 +243,14 @@ B --> A : confirmation
 ## Spec Feedback
 - [FR-3], [FR-5]: <reason and explanation> → #<issue-number>
 
-## Revision History
-
-Each iteration appends a new entry. Previous entries are preserved — never overwrite them.
-
-### Revision <N> — <YYYY-MM-DD HH:mm>
-
-#### Decisions Made
-- <key decision>
-
-#### Change Log
-
-| Section | Change | Reason | Source |
-|---------|--------|--------|--------|
-| <section> | <what changed> | <why> | <review report or source> |
-
-#### Open Items
+## Open Items
 
 | Section | Item | What's Missing | Priority |
 |---------|------|---------------|----------|
 | <section> | <item reference> | <specific gap description> | High / Medium / Low |
 
-#### Next Steps
+## Next Steps
 - <suggested work items for next iteration, derived from Open Items>
-
-#### Interview Transcript
-<details>
-<summary>Q&A</summary>
-
-**Q:** <question>
-**A:** <answer>
-
-...
-</details>
 ```
 
 **Issue reference links:** See [issue-links.md](../../references/issue-links.md). FR and UC references use their canonical IDs (FR-1, UC-1) throughout the document.
@@ -281,7 +261,8 @@ Each iteration appends a new entry. Previous entries are preserved — never ove
 - Technology Stack (must be filled before `status: final`)
 - Functional Requirements (with Use Case Reference)
 - Domain Model (Glossary, Concept Relationships)
-- Revision History (including Interview Transcript per revision)
+- Open Items
+- Next Steps
 
 ## Conditional Sections
 
@@ -296,7 +277,6 @@ Each iteration appends a new entry. Previous entries are preserved — never ove
 - Interface Contracts (per component boundary) — progressively filled across iterations; required for `status: final`
 - DB Schema (per component) — only if `Data store: Yes`
 - Spec Feedback — only if feedback issues were created
-- Change Log — only in Iteration mode
 - Open Questions — only if unresolved topics remain
 
 ## Diagram References

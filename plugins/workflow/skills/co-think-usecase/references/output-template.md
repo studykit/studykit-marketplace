@@ -9,6 +9,7 @@ created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>
 revision: 0
 status: draft | final
+sources: []              # only when input is a file; omit for raw ideas
 tags: []
 reflected_files: []
 last_step: ""
@@ -145,50 +146,27 @@ end note
 <Questions that came up but weren't resolved. Topics to revisit.>
 - ...
 
-## Revision History
-
-Each iteration appends a new entry. Previous entries are preserved — never overwrite them.
-
-### Revision <N> — <YYYY-MM-DD HH:mm>
-
-#### Last Completed
-- <what was just completed, e.g., "Initial composition", "Review round 1", "Revision 2 — 3 UCs added">
-
-#### Decisions Made
-- <key decision>
-
-#### Change Log
-
-| Section | Change | Reason | Source |
-|---------|--------|--------|--------|
-| <section> | <what changed> | <why> | <reference file that triggered this change> |
-
-#### Open Items
+## Open Items
 
 | Section | Item | What's Missing | Priority |
 |---------|------|---------------|----------|
 | <section> | <item reference> | <specific gap description> | High / Medium / Low |
 
-#### Next Steps
+## Next Steps
 - <suggested work items for next iteration, derived from Open Items>
-
-#### Interview Transcript
-<details>
-<summary>Q&A</summary>
-
-**Q:** <question>
-**A:** <answer>
-
-...
-</details>
 ```
 
 **Source rules:**
 - Place source references as a blockquote directly under the title heading.
 - Use relative path links for references within the same repo. Use full GitHub URLs only in issue bodies.
-- If the idea came from a spark-brainstorm output file, add relative path links.
-- If the idea came from multiple sources, list them comma-separated on one line.
-- If the user provided a raw idea with no prior file, omit the source line entirely.
+- If the idea came from a spark-brainstorm output file, add relative path links and record in frontmatter `sources` with `sha` (via `git hash-object`):
+  ```yaml
+  sources:
+    - file: <brainstorm-file-name>
+      sha: <git hash-object output>
+  ```
+- If the idea came from multiple sources, list them comma-separated on one line. Record each file in `sources`.
+- If the user provided a raw idea with no prior file, omit the source line and `sources` field entirely.
 
 **Heading ID convention:**
 - Use cases use `UC-N` IDs (UC-1, UC-2...) as canonical identifiers throughout the document.
@@ -208,11 +186,10 @@ Each iteration appends a new entry. Previous entries are preserved — never ove
 **Issue reference links:** Read `${SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
 
 **Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships.
-**Additional required (co-think-usecase)**: Revision History (including Interview Transcript per revision).
-**Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Revision History.
+**Additional required (co-think-usecase)**: Open Items, Next Steps.
+**Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Open Items, Next Steps.
 **Conditionally required:**
 - **Similar Systems Research** — always in auto-usecase; in co-think-usecase only when research was performed
 - **Source field** (per UC) — always in auto-usecase; in co-think-usecase only when research was performed
 - **Open Questions** — if unresolved topics remain (co-think-usecase); always required (auto-usecase)
 - **Excluded Ideas** — when research was performed and candidates were excluded; omit if nothing was excluded
-**Sections to OMIT in auto-usecase:** Interview Transcript (within Revision History)

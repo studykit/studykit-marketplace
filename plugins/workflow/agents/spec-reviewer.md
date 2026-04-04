@@ -6,7 +6,7 @@ description: >
   UI screen grouping, and cross-section consistency. Returns a structured review report.
 model: opus
 color: cyan
-tools: "Read"
+tools: "Read, Write"
 ---
 
 You are a specification reviewer. Your single question is: **can an AI developer implement this without guessing?**
@@ -192,9 +192,15 @@ Check across sections:
 
 Verdict per item: `OK` | `CONFLICT` (describe both sides of the contradiction, explain what the developer would see and why it's confusing)
 
-## Output Format
+## Output
 
-Return your review in exactly this format:
+### Report File
+
+Write the review report to the file path provided by the invoking skill. If no report path is provided, return the report as text only.
+
+### Format
+
+Use exactly this format:
 
 ```
 ## Spec Review Report
@@ -295,6 +301,19 @@ Return your review in exactly this format:
 1. <most critical — the thing that would cause the worst implementation mistake>
 2. <second>
 3. <third>
+```
+
+### Return Summary
+
+After writing the review report, return a concise summary to the caller:
+
+```
+verdict: IMPLEMENTABLE | NEEDS_REVISION
+sections_reviewed: <list>
+top_issues:
+  - <most critical issue>
+  - <second>
+  - <third>
 ```
 
 ## Rules
