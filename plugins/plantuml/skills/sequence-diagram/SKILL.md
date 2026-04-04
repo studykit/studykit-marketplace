@@ -198,7 +198,8 @@ deactivate A
 @startuml
 alice -> bob ++ : hello
 bob -> bob ++ : self call
-bob -> babe **  ++ : create
+bob -> babe ** : create
+activate babe
 return done
 return rc
 bob -> george ** : create
@@ -206,6 +207,9 @@ bob -> george !! : delete
 return success
 @enduml
 ```
+
+If you need to both create and activate a participant, do it in two steps.
+The combined shortcut form `** ++` is rejected by current PlantUML versions.
 
 ## Return
 
