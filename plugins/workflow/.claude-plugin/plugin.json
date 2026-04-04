@@ -1,4 +1,4 @@
 {
   "name": "workflow",
-  "description": "Development workflow automation — GitHub issue creation, commit, push, and issue comment."
+  "description": "Co-thinking workflow plugin — usecase/spec design, brainstorming, decision-making, and GitHub automation"
 }

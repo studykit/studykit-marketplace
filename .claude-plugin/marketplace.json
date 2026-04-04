@@ -76,8 +76,8 @@
     {
       "name": "workflow",
       "source": "./plugins/workflow",
-      "description": "Development workflow automation with GitHub issue tracking, commit, push, and issue comment",
-      "version": "0.9.1",
+      "description": "Co-thinking workflow plugin — usecase/spec design, brainstorming, decision-making, and GitHub automation",
+      "version": "0.10.0",
       "author": {
         "name": "studykit"
       },
@@ -137,6 +137,19 @@
       "license": "MIT",
       "category": "development",
       "keywords": ["d2", "d2lang", "diagram", "architecture", "flowchart", "erd", "sequence", "visualization"]
+    },
+    {
+      "name": "spawn",
+      "source": "./plugins/spawn",
+      "description": "Spawn and orchestrate child Claude Code sessions in iTerm2 with session lifecycle management",
+      "version": "0.1.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["session", "spawn", "iterm2", "orchestrator", "child-session", "multi-session"]
     }
   ]
 }
