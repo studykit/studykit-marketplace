@@ -4,7 +4,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 
 ## End Iteration (not finalizing)
 
-1. **Send work to the `reviewer` teammate** — launch if not yet running; use `SendMessage` if already running. Provide the current output file path and all input file paths.
+1. **Send a Full scope review to the `reviewer` teammate** — launch if not yet running; use `SendMessage` if already running. Use the Full scope request format (all criteria #0–#7). Provide the current output file path and all input file paths.
 2. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or defer items to the next iteration.
 3. **Update the output file** with any revisions from the review.
 4. **Scan for Open Items** — walk through each phase and identify incomplete or unclear items (see Revision History section).
@@ -16,7 +16,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 ## Finalize
 
 1. **Verify Technology Stack** — check that the Technology Stack section is filled in (at minimum: language and framework). If empty, ask the user: "The Technology Stack isn't specified yet. A coding agent needs this to implement the spec. What language and framework should we use?" Do not proceed to finalize until this is resolved.
-2. **Send work to the `reviewer` teammate** — launch if not yet running; use `SendMessage` if already running. Provide the current output file path and all input file paths. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
+2. **Send a Full scope review to the `reviewer` teammate** — launch if not yet running; use `SendMessage` if already running. Use the Full scope request format (all criteria #0–#7). Provide the current output file path and all input file paths. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
 3. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or dismiss each suggestion.
 4. **Update the output file** with any revisions from the review.
 5. **Append a final entry to Revision History** — add `### Revision N — <timestamp>` under `## Revision History`. Include: Decisions Made, Change Log, cleared Open Items table (all items should be resolved), and Interview Transcript.

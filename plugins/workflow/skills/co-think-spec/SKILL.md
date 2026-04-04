@@ -87,13 +87,15 @@ The user controls all transitions — revisiting and interleaving are always wel
 
 > Here's where we are:
 >
-> | Phase | Status |
-> |-------|--------|
-> | Requirements | 5 FRs defined (3 UI, 2 Non-UI) |
-> | Domain Model | 3 concepts, 2 relationships |
-> | Architecture | Not started |
+> | Phase | Status | Review |
+> |-------|--------|--------|
+> | Requirements | 5 FRs defined (3 UI, 2 Non-UI) | Ready for review |
+> | Domain Model | 3 concepts, 2 relationships | Not reviewed |
+> | Architecture | Not started | — |
 >
-> What would you like to work on next? We can continue here, move to another phase, or wrap up.
+> What would you like to work on next? We can continue here, move to another phase, request a phase review, or wrap up.
+
+The **Review** column tracks per-phase review state: `—` (not enough content), `Ready for review`, `Reviewed (rev N)`, or `Changes since last review`. When a phase has meaningful content and hasn't been reviewed yet (or has changed since the last review), suggest a phase review — but always let the user decide.
 
 ## Phase 1: Functional Requirements
 
@@ -219,19 +221,6 @@ For each confirmed component:
     > |-----------|-----------|---------|----------|-------|
     > | createSession | Client → SessionService | { userId, title } | { sessionId, status } | |
     > | onSessionExpired | SessionService → NotificationService | { sessionId, reason } | — | event |
-
-### Topic 3.3: Consistency Check
-
-Verify the architecture against all inputs and across diagrams:
-
-- **Cross-diagram consistency**: component diagram, sequence diagrams, and ERDs reference the same components and data
-- **Domain model coverage**:
-  - Core concepts housed in at least one component
-  - Cross-boundary relationships reflected in information flows
-  - State transition responsibilities assigned to components
-- **Use case coverage**: every use case has at least one sequence diagram
-
-Present any gaps found and discuss with the user.
 
 ### Technology Choices
 
@@ -371,13 +360,60 @@ Do NOT create issues proactively. Only create them as problems surface naturally
 - **Flag cross-phase dependencies.** If a requirement change implies a domain or architecture change, say so.
 - **Every 3-4 items:** Brief progress snapshot.
 
+## Phase Review
+
+The `reviewer` teammate handles all reviews — both per-phase reviews during the session and full-scope reviews at End Iteration / Finalize.
+
+### Review Scopes
+
+Each phase has a focused review scope that maps to specific reviewer criteria:
+
+| Scope | Sections Reviewed | Reviewer Criteria | When |
+|-------|-------------------|-------------------|------|
+| **Requirements** | FRs, UI Screen Groups, Authorization | #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs) | After FRs are substantially defined |
+| **Domain Model** | Glossary, Relationships, State Transitions | #2 Precision (naming conflicts, glossary coverage), #7 Consistency (FR ↔ Domain only) | After concepts and relationships are mapped |
+| **Architecture** | Components, DB Schemas, Information Flows, Interface Contracts | #1 Behavior Coverage (sequence diagrams, component mapping), #4 Ownership, #6 Technical Claims (in architecture), #7 Consistency (full cross-section, cross-diagram) | After components and flows are defined |
+| **Full** | All sections | All criteria (#0–#7) | End Iteration, Finalize |
+
+### When to Trigger
+
+1. **Auto-suggest:** When the Navigation status table shows a phase as `Ready for review`, suggest it to the user: "Requirements look substantial enough for a phase review. Want me to send them to the reviewer?" Never auto-trigger — always ask.
+2. **User request:** The user can request a phase review at any time (e.g., "review the domain model"). Trigger immediately.
+3. **End Iteration / Finalize:** Always uses **Full** scope. See Wrapping Up section.
+
+### How to Request a Scoped Review
+
+Send the review request to the `reviewer` teammate via `SendMessage`, specifying the scope explicitly:
+
+> **Scoped review request.**
+> Scope: **Requirements**
+> Review criteria: #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs).
+> Spec file: `<path>`
+> Source files: `<paths>`
+> Only review the sections and criteria listed above. Skip all other criteria.
+
+For **Full** scope:
+
+> **Full review request.**
+> Scope: **Full**
+> Review all sections against all criteria (#0–#7).
+> Spec file: `<path>`
+> Source files: `<paths>`
+
+### After Review
+
+1. Present findings to the user, walking through flagged issues one at a time.
+2. Update the spec file with accepted revisions.
+3. Update the Navigation status table: mark the phase as `Reviewed (rev N)`.
+4. If subsequent changes are made to a reviewed phase, change its review status to `Changes since last review`.
+
 ## Agent Usage
 
 ### Reviewer Teammate (persistent)
 
 The `reviewer` is a persistent teammate that accumulates context across review cycles (previous findings, what was fixed, iteration history).
 
-**Setup (lazy):** On the first End Iteration or Finalize:
+**Setup (lazy):** On the first review request (phase review, End Iteration, or Finalize):
 
 1. Create an agent team via `TeamCreate` (team name: `co-think-spec-<topic-slug>`).
 2. Spawn the reviewer via `Agent` with `team_name` and `name`:
@@ -408,13 +444,13 @@ When the user indicates they're done, ask whether they want to:
 
 ### End Iteration (not finalizing)
 
-Send the work to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). Walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report. **Do not terminate teammates after the iteration ends** — they remain available for the next iteration with full context.
+Send a **Full** scope review to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). Walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report. **Do not terminate teammates after the iteration ends** — they remain available for the next iteration with full context.
 
 For the full step-by-step checklist, read **`references/session-procedures.md`** → "End Iteration" section.
 
 ### Finalize
 
-Verify technology stack is filled, send the work to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
+Verify technology stack is filled, send a **Full** scope review to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
 
 For the full step-by-step checklist, read **`references/session-procedures.md`** → "Finalize" section.
 

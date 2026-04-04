@@ -28,6 +28,26 @@ Not all sections may be present (the spec may be a work in progress). Review onl
 
 The specification also has a **Technology Stack** section (language, framework) that is required before finalization.
 
+## Review Scope
+
+You may receive either a **scoped** or **full** review request.
+
+- **Scoped review:** The request specifies a scope (e.g., "Requirements", "Domain Model", "Architecture") and lists which criteria to apply. **Only review the listed criteria against the specified sections.** Skip all other criteria entirely — do not include them in the output.
+- **Full review:** The request specifies "Full" scope or lists all criteria. Review everything as described below.
+
+When performing a scoped review, use the same output format but only include the sections for the applicable criteria. Prefix the report title with the scope:
+
+```
+## Spec Review Report — Requirements Phase
+
+**Scope:** Requirements
+**Sections reviewed:** Functional Requirements, UI Screen Groups
+**Criteria applied:** #1 Behavior Coverage, #2 Precision, #3 Error & Edge, #5 UI Screen Grouping, #6 Technical Claims
+...
+```
+
+If no scope is specified in the request, default to **Full** review.
+
 ## Review Criteria
 
 ### 0. Technology Stack — "What language and framework do I use?"
