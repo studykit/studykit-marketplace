@@ -2,7 +2,7 @@
 name: co-think-spec
 description: "This skill should be used when the user needs to create or iterate on a software specification — combining domain modeling, functional requirements, and architecture in one session. Common triggers include: 'spec', 'specification', 'design the system', 'define requirements', 'domain model', 'architecture', 'what should we build', 'system design', 'component design', 'let's spec this out', 'define the system'. Also applicable when use cases from co-think-usecase need to be turned into a buildable specification."
 argument-hint: <path to use case file(s), or existing .spec.md file for iteration>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
+allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList, TeamCreate, SendMessage
 ---
 
 # Specification Builder
@@ -371,6 +371,33 @@ Do NOT create issues proactively. Only create them as problems surface naturally
 - **Flag cross-phase dependencies.** If a requirement change implies a domain or architecture change, say so.
 - **Every 3-4 items:** Brief progress snapshot.
 
+## Agent Usage
+
+### Reviewer Teammate (persistent)
+
+The `reviewer` is a persistent teammate that accumulates context across review cycles (previous findings, what was fixed, iteration history).
+
+**Setup (lazy):** On the first End Iteration or Finalize:
+
+1. Create an agent team via `TeamCreate` (team name: `co-think-spec-<topic-slug>`).
+2. Spawn the reviewer via `Agent` with `team_name` and `name`:
+   - **`reviewer`** — subagent_type: `spec-reviewer`. Reviews spec quality, flags issues, checks cross-phase consistency.
+
+The reviewer's initial prompt includes the output file path and all input file paths so it reads them once.
+
+**CRITICAL — Never terminate the reviewer.** It accumulates valuable context (previous review findings, resolved issues, iteration history) that makes each subsequent review more effective.
+
+- **Always use `SendMessage(to: "reviewer")` for follow-up reviews.** Do NOT spawn a new `Agent` — this creates a new agent and the old context is lost.
+- **Re-spawning is a last resort.** Only re-spawn if `SendMessage` fails with an error indicating the agent no longer exists. When re-spawning, include a brief summary of prior reviews so the new instance has minimal context.
+
+**How to assign work:**
+1. **First review:** Assign via `TaskUpdate(owner: "reviewer", status: "in_progress")` — this activates the teammate.
+2. **All subsequent reviews:** Use `SendMessage(to: "reviewer")`. This preserves accumulated context.
+
+### Mock Generator (one-shot)
+
+The `mock-html-generator` is invoked as a regular agent (no team) each time a mock is needed. Mock tasks are self-contained — each screen group provides all necessary context (FRs, layout requirements) in the prompt, so persistent context is not required.
+
 ## Wrapping Up
 
 The specification ends only when the user says so. Never conclude on your own — even if all phases seem complete, the user may want to revisit or go deeper.
@@ -381,13 +408,13 @@ When the user indicates they're done, ask whether they want to:
 
 ### End Iteration (not finalizing)
 
-Run the spec-reviewer agent, walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report.
+Send the work to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). Walk through flagged issues with the user, scan for open items, increment revision, write the session checkpoint and change log, append the interview transcript, and report. **Do not terminate teammates after the iteration ends** — they remain available for the next iteration with full context.
 
 For the full step-by-step checklist, read **`references/session-procedures.md`** → "End Iteration" section.
 
 ### Finalize
 
-Verify technology stack is filled, run the spec-reviewer agent (all issues must be resolved), write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
+Verify technology stack is filled, send the work to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
 
 For the full step-by-step checklist, read **`references/session-procedures.md`** → "Finalize" section.
 

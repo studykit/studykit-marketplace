@@ -256,31 +256,35 @@ When the user indicates they're done, ask whether they want to:
 On the first End Iteration or Finalize:
 
 1. Create an agent team via `TeamCreate` (team name: `co-think-<topic-slug>`).
-2. Spawn two teammates via `Agent` with `team_name` and `name`. Each teammate's initial prompt includes the shared reference file paths so it reads them once:
+2. Spawn **all** teammates via `Agent` with `team_name` and `name`. Team members cannot be added after team creation, so all must be spawned together. Each teammate's initial prompt includes the shared reference file paths so it reads them once:
    - **`reviewer`** — subagent_type: `usecase-reviewer`. Reviews UC quality and system completeness.
    - **`explorer`** — subagent_type: `usecase-explorer`. Explores new perspectives for UC candidates.
 
 Both teammates persist for the rest of the session and retain their full context — they do not re-read references on subsequent tasks.
 
+**CRITICAL — Never terminate teammates.** Teammates accumulate valuable context (previous review findings, explored perspectives, UC evolution history) that makes each subsequent interaction more effective. Terminating and re-spawning a teammate destroys this context.
+
+- **Never let a teammate end or terminate** after completing a task. If a teammate's response seems final, it is still alive — send follow-up work via `SendMessage`.
+- **Always use `SendMessage(to: "<name>")` for follow-up work** on an already-spawned teammate. Do NOT spawn a new `Agent` with the same name — this creates a new agent and the old context is lost.
+- **Re-spawning is a last resort.** Only re-spawn a teammate if `SendMessage` fails with an error indicating the agent no longer exists. When re-spawning, include a brief summary of prior work so the new instance has minimal context.
+
 **Execution order:** Always assign work to the `reviewer` first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The `explorer` only receives work when the user explicitly chooses it.
 
 **How to assign work to teammates:**
 1. Create a task via `TaskCreate` with a description of the work.
-2. Assign it via `TaskUpdate(owner: "<name>", status: "in_progress")` — this activates the teammate.
+2. **First task:** Assign it via `TaskUpdate(owner: "<name>", status: "in_progress")` — this activates the teammate.
 3. The teammate's response is delivered automatically to the main session.
-4. For follow-up work on an already-active teammate, `SendMessage(to: "<name>")` also works.
-
-If a teammate stops unexpectedly, re-spawn it.
+4. **All subsequent tasks:** Use `SendMessage(to: "<name>")` to send the work. This preserves the teammate's accumulated context from all prior tasks.
 
 ### End Iteration (not finalizing)
 
-Send the work to the `reviewer` teammate first (launch teammates if not yet running). Walk through flagged issues with the user and update the working file. Then assign work to the `explorer` teammate against the updated file. Scan for open items, increment revision, append a new entry to Revision History with Change Log, append the interview transcript, and report.
+Send the work to the `reviewer` teammate first (launch teammates if not yet running; use `SendMessage` if already running). Walk through flagged issues with the user and update the working file. Then assign work to the `explorer` teammate against the updated file (again, `SendMessage` if already running). Scan for open items, increment revision, append a new entry to Revision History with Change Log, append the interview transcript, and report. **Do not terminate teammates after the iteration ends** — they remain available for the next iteration with full context.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
 
 ### Finalize
 
-Send the work to the `reviewer` teammate (launch it first if not yet running). All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
+Send the work to the `reviewer` teammate (launch if not yet running; use `SendMessage` if already running). All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "Finalize" section.
 
