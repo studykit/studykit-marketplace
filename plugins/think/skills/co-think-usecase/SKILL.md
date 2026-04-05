@@ -79,14 +79,21 @@ When the working file already exists, this is a returning session to refine the 
    - Review reports (`<topic-slug>.usecase.review-*.md`) — read each unreflected review and extract NEEDS REVISION items and Cross-UC findings
    - Exploration reports (`<topic-slug>.usecase.exploration-*.md`) — summarize UC candidates found
    - For reports already in `reflected_files`, cross-check the Change Log to confirm their findings were recorded. Do not re-present resolved findings.
-2. Present a brief status summary:
+2. **Check source file changes** — if `sources` exists in frontmatter, compare the stored `sha` against the current file for each source:
+   - Run `git hash-object <source-file-path>` to get the current SHA.
+   - If SHA matches → no changes, skip.
+   - If SHA differs → run `git diff <stored-sha> <current-sha>` to see what changed.
+   - Present the changes to the user: "The source file has been updated. Changes: [list]. Review these changes before continuing?"
+   - Walk through each change with the user to determine impact on existing use cases (new UCs needed, existing UCs to update, actors to add/modify).
+   - After reflecting, update `sources` in frontmatter (`sha` and any other tracked fields).
+3. Present a brief status summary:
    - Number of confirmed use cases
    - Actors identified so far
    - Open Items from previous session (if any)
    - Open Questions (if any)
    - Unreflected review findings (if any) — list NEEDS REVISION items with UC ID, field, and issue
    - Unreflected exploration results (if any) — summarize the UC candidates found
-3. Present the Open Items table (if it exists) as a selectable work backlog:
+4. Present the Open Items table (if it exists) as a selectable work backlog:
    > **Open Items from last session:**
    > | # | Section | Item | What's Missing | Priority |
    > |---|---------|------|---------------|----------|
@@ -94,7 +101,7 @@ When the working file already exists, this is a returning session to refine the 
    > | 2 | Actors | — | Implicit approver actor not declared | Medium |
    >
    > Which items would you like to work on? Or would you prefer to add new use cases?
-4. The user chooses what to work on. Possible activities:
+5. The user chooses what to work on. Possible activities:
    - **Add new use cases** — resume the Discovery Loop (step 2) as normal
    - **Address review findings** — walk through NEEDS REVISION items from unreflected review reports one by one. After all findings are addressed (or explicitly deferred), add the review file name to `reflected_files` and record each change in the Change Log with the review file as Source.
    - **Explore UC candidates from explorer** — review and flesh out UC candidates from unreflected exploration reports. After reflecting, add the exploration file name to the frontmatter `reflected_files` list.

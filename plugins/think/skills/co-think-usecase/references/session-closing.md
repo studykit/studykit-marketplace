@@ -54,8 +54,8 @@
    - Explorer perspectives and UC candidates deferred by the user
    - Unresolved Open Questions
    - Relationships not yet analyzed (if < 5 UCs)
-8. **Append a Session Close entry to the history file** (`<topic-slug>.usecase.history.md`) per `references/session-history.md`. Include: Revisions This Session, Last Completed, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript. **Increment `revision`** and update `revised` timestamp. Set `last_step` to `revision N`. Keep `status: draft`.
-9. **Update the working file** — update the Open Items and Next Steps sections with the current state. Write using the Write tool.
+8. **Append a Session Close entry to the history file** (`<topic-slug>.usecase.history.md`) per `references/session-history.md`. Include: Revisions This Session, Last Completed, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
+9. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Set `last_step` to `revision N`. Keep `status: draft`. Write using the Write tool.
 10. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
     ```
     usecase(<topic-slug>): revision N
@@ -91,8 +91,8 @@
    - Ensure the Use Case Diagram is complete
    - Clear the Open Items and Next Steps sections (all items should be resolved)
    - Add the Open Questions section if unresolved topics remain
-   - Append final Session Close entry to the history file (`<topic-slug>.usecase.history.md`) per `references/session-history.md`: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), cleared Open Items, and Interview Transcript. **Increment `revision`** and update `revised` timestamp.
-   - Set `status: final` and `last_step` to `finalize` in frontmatter
+   - Append final Session Close entry to the history file (`<topic-slug>.usecase.history.md`) per `references/session-history.md`: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), cleared Open Items, and Interview Transcript.
+   - Set `status: final` and `last_step` to `finalize` in frontmatter. **Increment `revision`** and update `revised` timestamp.
    - Remove any placeholder text
 7. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
    ```

@@ -217,8 +217,8 @@ At the end of each session (whether wrapping up or pausing):
    - Requirements: FRs without error handling, vague input/output, missing validation
    - Domain Model: concepts referenced in FRs but not in glossary, missing state transitions
    - Architecture: components without interface contracts, information flows at abstract level, missing DB schemas
-2. **Append a Session Close entry** to the history file per `${CLAUDE_SKILL_DIR}/references/session-history.md`. **Increment `revision`** and update `revised` timestamp.
-3. **Update the working file** — update the Open Items and Next Steps sections with the current state.
+2. **Append a Session Close entry** to the history file per `${CLAUDE_SKILL_DIR}/references/session-history.md`.
+3. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp.
 
 ### Iteration Mode Entry
 
