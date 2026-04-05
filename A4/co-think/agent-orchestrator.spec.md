@@ -3,8 +3,11 @@ type: spec
 pipeline: co-think
 topic: "agent orchestrator"
 created: 2026-03-30
-revised: 2026-04-04
-revision: 1
+revised: 2026-04-06
+revision: 2
+reflected_files:
+  - agent-orchestrator.spec.review-2.md
+  - agent-orchestrator.spec.review-full-2.md
 status: draft
 tags: []
 ---
@@ -16,13 +19,18 @@ An agent orchestrator that enables the main session to spawn, manage, and collec
 
 The orchestrator extends Claude Code's interactive session model with a two-level session hierarchy. Components collaborate through a file-based data store (`session-tree.json`) and Claude Code's hook infrastructure. All inter-session communication flows through `session-tree.json` — no direct IPC, no sockets, no shared memory.
 
-### Hook notification mechanism
+### Notification mechanism
 
-Several FRs reference "hook notification" or "injecting context." The mechanism is consistent across all FRs:
+Several FRs reference "hook notification" or "injecting context." The mechanism uses a two-stage pipeline:
 
-- **Hook scripts output JSON to stdout** with a `hookSpecificOutput.additionalContext` field
-- Claude Code renders stdout output as injected context in the session's conversation
-- This is distinct from the `bootstrapPromptSnippet` field in session-tree.json, which stores a free-form context fragment assembled into the child session's prompt at startup
+1. **Detection stage (FileChanged hook):** Detects changes and writes notifications to a queue file (`notifications.jsonl`). Also outputs a `systemMessage` via universal JSON output for immediate user visibility. FileChanged hooks do **not** support `additionalContext` — they cannot inject context into Claude's conversation directly.
+2. **Injection stage (UserPromptSubmit hook — NotificationRelayHook):** On each user message, reads the notification queue, injects accumulated notifications into Claude's context via `additionalContext`, then clears the queue.
+
+This means notifications reach the user immediately (via `systemMessage`) but reach Claude on the next user message (via `additionalContext`). Accepted trade-off for the hook model constraints.
+
+**Exception:** SessionStart hooks **do** support `additionalContext` directly — used by SessionStartHook for initial context injection on new sessions.
+
+This is distinct from the `bootstrapPromptSnippet` field in session-tree.json, which stores a free-form context fragment assembled into the child session's prompt at startup.
 
 ## Technology Stack
 
@@ -240,20 +248,18 @@ Fields per entry: topic, status, createdAt, resumeCount (if > 0), persona, refer
 **Trigger:** A file listed in the child session's `referenceFiles` is modified externally (by another session, editor, or tool)
 
 **Processing:**
-1. FileChanged hook fires in the child session (broad matcher, e.g., `"\.md$|\.py$|\.ts$|\.json$"`)
+1. FileChanged hook fires in the child session (matcher omitted or `".*"` — matches all files; regex on basename)
 2. Hook script checks `$SESSION_TREE` — exits early if not set (main session)
 3. Reads `session_id` from stdin, looks up own entry in session-tree.json via `$SESSION_TREE`
 4. Compares `file_path` from stdin against `referenceFiles`
 5. If no match → exit (irrelevant file change)
-6. If match → outputs notification to stdout (rendered as injected context by Claude Code): "Referenced file `<filename>` has been modified externally."
+6. If match → writes notification to queue file, outputs `systemMessage` for immediate user visibility. Claude receives the notification on the next user message via NotificationRelayHook.
 
-**Output:** User is notified in the child session that a referenced file changed. User decides how to proceed (review changes, continue with current context, or adjust discussion).
+**Output:** User is notified immediately via `systemMessage`. Claude is notified on next user message via `additionalContext` (NotificationRelayHook). User decides how to proceed.
 
 **Error handling:**
 - session-tree.json unreadable → exit silently, no notification
 - `referenceFiles` empty → exit early (nothing to watch)
-
-**Matcher scope:** The matcher must be broad enough to cover typical reference file types. Files outside the matcher pattern won't trigger drift detection — accepted limitation.
 
 **Dependencies:** [FR-1] (child session with referenceFiles)
 
@@ -278,9 +284,9 @@ Fields per entry: topic, status, createdAt, resumeCount (if > 0), persona, refer
    - If `resultFiles` exist → "Session `<topic>` terminated. Results: file1.md, file2.md"
    - If no `resultFiles` → "Session `<topic>` terminated. No result files registered. You can resume it to register deliverables."
 6. **Deliverable notification (FR-3):** Detects `resultUpdatedAt` change (comparing against snapshot) → read updated `resultFiles`, notify of new deliverables
-7. Outputs notification to stdout (rendered as injected context by Claude Code)
+7. Writes notifications to queue file, outputs `systemMessage` for immediate user visibility. Claude receives notifications on the next user message via NotificationRelayHook.
 
-**Output:** Main session user is informed of child session status changes with actionable context:
+**Output:** Main session user is informed immediately via `systemMessage`. Claude is informed on next user message via `additionalContext` (NotificationRelayHook). Actionable context:
 - Crash/timeout → user knows to resume or move on
 - Termination with results → user knows deliverables are available
 - Termination without results → user knows they can resume to register
@@ -427,7 +433,397 @@ Main Session and Session Tree do not have domain-level state transitions.
 
 ## Architecture
 
-*To be updated in a subsequent iteration to reflect new FRs.*
+### External Dependencies
+
+| External System | Used By | Purpose |
+|----------------|---------|---------|
+| iTerm2 (`it2` CLI + `iterm2` Python API) | FR-1, FR-4 | Terminal pane creation, existing session activation |
+| Claude Code CLI | FR-1, FR-4 | Session start (`--session-id`), resume (`--resume`), prompt loading (`--append-system-prompt-file`) |
+
+All inter-session communication flows through `session-tree.json` — no direct IPC, no sockets, no shared memory.
+
+### Component Overview
+
+```plantuml
+@startuml
+package "Skills / Commands" {
+  [ChatSkill] <<skill>>
+  [RegisterResultCommand] <<command>>
+  [SessionListCommand] <<command>>
+}
+
+package "Core" {
+  [SpawnOrchestrator]
+  [SessionTreeStore]
+}
+
+package "Hooks — Detection (FileChanged)" {
+  [SessionMonitorHook]
+  [ContextDriftHook]
+}
+
+package "Hooks — Lifecycle" {
+  [SessionStartHook]
+  [SessionEndHook]
+}
+
+package "Hooks — Injection (UserPromptSubmit)" {
+  [NotificationRelayHook]
+}
+
+package "Infrastructure" {
+  [iTerm2Launcher]
+}
+
+database "session-tree.json" as ST
+database "session-tree.last" as STL
+file "notifications.jsonl" as NQ
+file "Session System\nPrompt files" as SSP
+file "Persona files" as PF
+
+ChatSkill --> SpawnOrchestrator : invokes
+SpawnOrchestrator --> SessionTreeStore : read/write
+SpawnOrchestrator --> iTerm2Launcher : launch_pane / activate_pane
+SpawnOrchestrator --> PF : read persona
+SpawnOrchestrator --> SSP : generate prompt file
+
+RegisterResultCommand --> SessionTreeStore : append resultFiles
+SessionListCommand --> SessionTreeStore : read
+
+SessionStartHook --> SessionTreeStore : read/write
+SessionEndHook --> SessionTreeStore : write
+SessionMonitorHook --> SessionTreeStore : read/write
+ContextDriftHook --> SessionTreeStore : read
+
+SessionMonitorHook --> NQ : write notifications
+ContextDriftHook --> NQ : write notifications
+NotificationRelayHook --> NQ : read + clear
+
+SessionTreeStore --> ST : fcntl.flock
+SessionMonitorHook --> STL : snapshot diff
+@enduml
+```
+
+### Components
+
+#### SessionTreeStore
+
+**Responsibility:** Data access layer for session-tree.json. Provides atomic read-modify-write with file locking.
+
+**Data:** `session-tree.json`, `session-tree.last` (snapshot for SessionMonitorHook)
+
+**Public API:**
+
+| Operation | Caller(s) | Description |
+|-----------|-----------|-------------|
+| `st_read()` | All components | Shared-lock read; returns empty SessionTree if file absent |
+| `st_write(transform)` | SpawnOrchestrator, Hooks, RegisterResultCommand | Exclusive-lock atomic read-modify-write |
+| `st_find_child(id)` | Hooks | Convenience: `st_read().find_child(id)` |
+
+**Spec changes from current code:**
+- `ChildEntry` schema: `skill` → `persona`, `resultPatterns` removed, `resumeCount` / `resultUpdatedAt` / `bootstrapPromptSnippet` added
+- `status` enum: `resumed` and `failed_to_start` added
+
+#### SpawnOrchestrator
+
+**Responsibility:** Child session creation flow — topic uniqueness check, entry registration, Session System Prompt generation, iTerm2 launch. Also handles resume flow dispatch.
+
+**File:** `skills/chat/scripts/spawn_session.py`
+
+**Spawn flow (FR-1):**
+
+```plantuml
+@startuml
+participant "ChatSkill" as CS
+participant "SpawnOrchestrator" as SO
+participant "SessionTreeStore" as ST
+participant "iTerm2Launcher" as IL
+
+CS -> SO: spawn(session_id, topic, persona,\n  referenceFiles, bootstrapPromptSnippet)
+SO -> SO: nesting guard\n($SESSION_TREE set + not main?)
+SO -> ST: st_read()
+ST --> SO: SessionTree
+SO -> SO: topic uniqueness check\n(active/resumed/pending)
+alt topic collision
+  SO --> CS: error: topic already exists
+end
+SO -> ST: st_write(add_child)\n  status=pending
+SO -> SO: generate_prompt(persona, child_id)\n  → persona content + orchestrator instructions
+SO -> IL: launch_pane(session_tree,\n  child_id, prompt_file, topic)
+IL --> SO: done
+SO --> CS: child_id, topic, tree_path
+@enduml
+```
+
+**Resume flow dispatch (FR-4):**
+
+| Child status | pid alive? | Action |
+|---|---|---|
+| `active` / `resumed` | Yes | `activate_pane(topic)` — focus existing pane |
+| `active` / `resumed` | No | `launch_pane(resume=True)` — status is stale, actually crashed |
+| `terminated` / `crashed` | — | `launch_pane(resume=True)` |
+| `failed_to_start` | — | Resume not possible (no transcript) — inform user and offer to create new session with same topic (uniqueness check already excludes `failed_to_start`) |
+
+**Interface (CLI args):**
+
+| Parameter | Required | Description |
+|-----------|----------|-------------|
+| `--session-id` | Yes | Main session ID (`${CLAUDE_SESSION_ID}`) |
+| `--topic` | Yes | User-provided session name |
+| `--persona` | Yes | Persona file name (e.g., `discuss`) |
+| `--reference-files` | No | Comma-separated file paths |
+| `--bootstrap-prompt-snippet` | No | LLM-generated context summary |
+
+**`generate_prompt()` (internal function):** Reads the persona file from `prompts/<persona>.txt`, appends orchestrator instructions (result delivery behavior, wrap-up guidance), writes the combined file to `.claude/sessions/<main-id>/<child-id>.prompt.txt`.
+
+#### iTerm2Launcher
+
+**Responsibility:** iTerm2 terminal operations — create panes, activate existing panes.
+
+**File:** `hooks/lib/iterm2_launcher.py`
+
+**Interface:**
+
+| Function | Input | Description |
+|----------|-------|-------------|
+| `launch_pane(*, session_tree, session_id, prompt_file, title, plugin_dir?, resume=False)` | session params | Creates vertical split pane. `resume=False` → `claude --session-id`, `resume=True` → `claude --resume` |
+| `activate_pane(topic)` | topic name | Iterates all iTerm2 tabs/panes, finds pane where `name == topic`, calls `async_activate()` |
+
+#### SessionStartHook
+
+**Responsibility:** Child session bootstrap on startup and resume.
+
+**File:** `hooks/session_start_bootstrap.py`
+
+**Trigger:** SessionStart (every session start; no-op unless `$SESSION_TREE` is set and session_id matches a child entry)
+
+```plantuml
+@startuml
+participant "Claude Code" as CC
+participant "SessionStartHook" as SSH
+participant "SessionTreeStore" as ST
+
+CC -> SSH: stdin: { session_id, transcript_path }
+SSH -> SSH: $SESSION_TREE check (exit if unset)
+SSH -> ST: st_find_child(session_id)
+ST --> SSH: ChildEntry
+
+alt new session (status == pending)
+  SSH -> SSH: build context:\n  topic, referenceFiles, bootstrapPromptSnippet
+  SSH -> CC: stdout: { additionalContext: context }
+  SSH -> ST: st_write(status=active,\n  transcriptPath, pid)
+else resume (status != pending)
+  SSH -> ST: st_write(status=resumed,\n  resumeCount++, pid)\n  transcriptPath preserved
+  note right: no context re-injection\ncovers terminated, crashed,\nand stale active/resumed
+end
+@enduml
+```
+
+#### SessionEndHook
+
+**Responsibility:** Marks child session as terminated.
+
+**File:** `hooks/session_end_collector.py`
+
+**Trigger:** SessionEnd (child sessions only — `$SESSION_TREE` guard)
+
+**Processing:** Sets `status = "terminated"` for the matching child entry. The session-tree.json change triggers SessionMonitorHook (FR-7) on the main session side.
+
+**No spec changes from current code.**
+
+#### SessionMonitorHook
+
+**Responsibility:** Main session notification hub — detects child session status changes via snapshot diffing. Writes notifications to queue file + outputs `systemMessage` for immediate user visibility.
+
+**File:** `hooks/session_monitor.py`
+
+**Trigger:** FileChanged (matcher: `session-tree.json`) on main session
+
+**Detections:**
+
+| Condition | Action | Notification |
+|-----------|--------|-------------|
+| `active`/`resumed` + pid dead | → `crashed` | "Session X crashed" |
+| `pending` + >30s | → `failed_to_start` | "Session X failed to start" |
+| status → `terminated` (with results) | — | "Session X terminated. Results: ..." |
+| status → `terminated` (no results) | — | "Session X terminated. No results. Resume to register." |
+| `resultUpdatedAt` changed | — | "Session X registered new deliverables: ..." |
+
+**Output:** Writes notifications to `notifications.jsonl` (for NotificationRelayHook to inject into Claude context). Also outputs `systemMessage` in JSON stdout for immediate user visibility.
+
+**Spec changes from current code:**
+- Crash detection: add `resumed` status (not just `active`)
+- Deliverable notification: detect via `resultUpdatedAt` change (not just active status + resultFiles diff)
+- Notification delivery: `additionalContext` → notification queue file + `systemMessage` (FileChanged does not support `additionalContext`)
+
+#### ContextDriftHook
+
+**Responsibility:** Detects when a referenced file is modified externally. Writes notification to queue file + outputs `systemMessage` for immediate user visibility.
+
+**File:** `hooks/context_drift.py` (new)
+
+**Trigger:** FileChanged (matcher omitted or `".*"` — matches all files; regex on basename) on child sessions
+
+**Processing:**
+1. `$SESSION_TREE` check → exit if unset
+2. `st_find_child(session_id)` → get referenceFiles
+3. Compare `file_path` from stdin against referenceFiles
+4. If match → write notification to queue file, output `systemMessage`: "Referenced file \<name\> has been modified externally."
+5. If no match → exit
+
+**Matcher:** Omitted or `".*"` (regex on basename — matches all files). Script-side filtering against referenceFiles. Matcher cannot be per-session, so broad match + script comparison is the chosen trade-off.
+
+**Main session exclusion:** Main session's session_id is `mainSession.id`, which `st_find_child()` won't find → early exit.
+
+#### NotificationRelayHook
+
+**Responsibility:** Reads notification queue and injects unread notifications into Claude's context via `additionalContext`. Uses a cursor file for crash-safe delivery tracking.
+
+**File:** `hooks/notification_relay.py` (new)
+
+**Trigger:** UserPromptSubmit (every user message, in both main and child sessions)
+
+**Processing:**
+1. Determine queue and cursor file paths:
+   - If `$SESSION_TREE` is set → child session: `<session-tree-dir>/<session_id>.notifications.jsonl` / `.cursor`
+   - If `$SESSION_TREE` is not set → main session: `.claude/sessions/<session_id>/notifications.jsonl` / `.cursor`
+2. Read cursor file → `lastLine` (default 0 if absent)
+3. Read queue file from line `lastLine + 1` onward
+4. If no new entries → exit
+5. Combine `message` fields from all new entries
+6. Output `{ "additionalContext": "<combined messages>" }` to stdout
+7. Update cursor file with new `lastLine`
+
+**Queue file paths:**
+
+| Session | Queue | Cursor |
+|---|---|---|
+| Main | `.claude/sessions/<main-id>/notifications.jsonl` | `.claude/sessions/<main-id>/notifications.cursor` |
+| Child | `.claude/sessions/<main-id>/<child-id>.notifications.jsonl` | `.claude/sessions/<main-id>/<child-id>.notifications.cursor` |
+
+**Interface:**
+
+| Operation | Direction | Input | Output |
+|---|---|---|---|
+| hook trigger | Claude Code → NotificationRelayHook | stdin: `{ session_id }` | stdout: `{ additionalContext }` (if unread entries exist) |
+
+**Error handling:**
+- Queue file unreadable or absent → exit silently
+- Cursor file absent → start from line 0 (read all)
+- Queue file locked by writer → retry once, then skip
+
+### Notification Queue Schema
+
+Two separate schemas for main and child session queues.
+
+**Main session notifications** (written by SessionMonitorHook):
+
+```jsonl
+{"ts": "2026-04-06T10:00:00Z", "type": "crash", "childId": "uuid", "topic": "design-review", "message": "Session design-review crashed — process no longer alive"}
+{"ts": "2026-04-06T10:01:00Z", "type": "terminated", "childId": "uuid", "topic": "design-review", "resultFiles": ["spec.md"], "message": "Session design-review terminated. Results: spec.md"}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `ts` | Yes | ISO 8601 timestamp |
+| `type` | Yes | `crash` \| `failed_to_start` \| `terminated` \| `deliverable` |
+| `childId` | Yes | Child session UUID |
+| `topic` | Yes | Child session topic |
+| `resultFiles` | No | Registered deliverable paths (`terminated`, `deliverable` types) |
+| `message` | Yes | Human-readable notification text |
+
+**Child session notifications** (written by ContextDriftHook):
+
+```jsonl
+{"ts": "2026-04-06T10:00:00Z", "type": "context_drift", "file": "design-doc.md", "message": "Referenced file design-doc.md has been modified externally"}
+```
+
+| Field | Required | Description |
+|---|---|---|
+| `ts` | Yes | ISO 8601 timestamp |
+| `type` | Yes | `context_drift` |
+| `file` | Yes | Changed reference file path |
+| `message` | Yes | Human-readable notification text |
+
+**Cursor file** (`notifications.cursor`):
+
+```json
+{"lastLine": 5}
+```
+
+**Common contract:** NotificationRelayHook reads only the `message` field from both schemas to compose `additionalContext`.
+
+#### RegisterResultCommand
+
+**Responsibility:** Registers deliverable file paths from a child session into session-tree.json.
+
+**File:** `skills/register-result/SKILL.md` + `scripts/register_result.py`
+
+**Type:** Command (skill with `disable-model-invocation: true`, shell injection)
+
+**SKILL.md:**
+```yaml
+---
+description: Register deliverable files from this child session
+disable-model-invocation: true
+argument-hint: <file1> [file2] ...
+---
+!`uv run ${CLAUDE_SKILL_DIR}/scripts/register_result.py ${CLAUDE_SESSION_ID} $ARGUMENTS`
+```
+
+**Script interface:**
+- `sys.argv[1]` → session_id (from `${CLAUDE_SESSION_ID}`)
+- `sys.argv[2:]` → file paths
+- `os.environ["SESSION_TREE"]` → session-tree.json path
+
+**Processing:** Validates file existence, appends to `resultFiles` (deduplicated), updates `resultUpdatedAt`. The session-tree.json change triggers SessionMonitorHook (FR-7).
+
+**Error handling:**
+- `$SESSION_TREE` unset → "This command is only available in child sessions"
+- No arguments → "Usage: /register-result \<file1\> [file2] ..."
+- File doesn't exist → warn, skip that path
+
+**Replaces:** `post_tool_result_collector.py` (PostToolUse hook with resultPatterns — to be removed)
+
+#### SessionListCommand
+
+**Responsibility:** Lists all child sessions and their status.
+
+**File:** `skills/sessions/SKILL.md` + `scripts/list_sessions.py`
+
+**Type:** Command (skill with `disable-model-invocation: true`, shell injection)
+
+**SKILL.md:**
+```yaml
+---
+description: List child sessions and their status
+disable-model-invocation: true
+---
+!`uv run ${CLAUDE_SKILL_DIR}/scripts/list_sessions.py ${CLAUDE_SESSION_ID}`
+```
+
+**Script interface:**
+- `sys.argv[1]` → session_id (derives session-tree.json path: `.claude/sessions/<id>/session-tree.json`)
+
+**Output format:** See FR-5 for the formatted list structure.
+
+**Error handling:**
+- session-tree.json doesn't exist → "No child sessions yet"
+- No children entries → "No child sessions yet"
+
+#### ChatSkill
+
+**Responsibility:** Multi-step conversational flow for spawning a child session. LLM-orchestrated — gathers topic, persona, reference files, generates context summary, then invokes SpawnOrchestrator.
+
+**File:** `skills/chat/SKILL.md` + `scripts/spawn_session.py`
+
+**Type:** Skill (LLM reasoning required)
+
+**Spec changes from current code:**
+- Step 2: `skill` selection → `persona` selection (from pre-made persona files)
+- Step 5: `result patterns` selection → removed
+- Execute args: `--skill` → `--persona`, `--result-patterns` removed, `--additional-context` → `--bootstrap-prompt-snippet`
+- Nesting guard: reject `/chat` in child sessions (`$SESSION_TREE` set + not main session)
 
 ---
 
@@ -502,15 +898,12 @@ Initial spec based on STORY-based requirements (STORY-7 through STORY-18). Cover
 
 | Section | Item | What's Missing | Priority |
 |---------|------|---------------|----------|
-| Architecture | Full section | Needs update: new components for resume/list/drift, removed History Investigator | High |
-| FR-6 | Matcher pattern | Exact FileChanged matcher pattern undecided | Medium |
 | FR-1 | Orchestrator instructions | Exact prompt text for Session System Prompt not written | Medium |
 | FR-2 | Orchestrator instructions | Exact prompt text for wrap-up behavior not written | Medium |
 
 #### Next Steps
-- Update Architecture to reflect new FRs
 - Define exact orchestrator instruction prompt text
-- Implement: update `post_tool_result_collector.py` (remove `resultPatterns`), update `session_tree.py` (schema changes), update `/chat` skill (persona instead of skill), create `/register-result` skill, create `/sessions` skill, create context drift hook
+- Implement: update `session_tree.py` (schema changes), update `/chat` skill (persona instead of skill), create `/register-result` command, create `/sessions` command, create context drift hook, create notification relay hook, remove `post_tool_result_collector.py`
 
 #### Interview Transcript
 <details>
