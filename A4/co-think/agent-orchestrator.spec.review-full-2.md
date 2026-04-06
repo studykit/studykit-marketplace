@@ -65,13 +65,11 @@
 
 - FR-1 Processing step 4: IMPRECISE -- "Orchestrator instructions (result delivery behavior: identify deliverables before ending, notify user of key outputs)" -- the parenthetical is helpful but the actual orchestrator instruction content is listed as an Open Item. A developer implementing `generate_prompt()` would not know what to write in the orchestrator instructions section of the Session System Prompt. The spec acknowledges this ("Exact prompt text not written") but it remains a gap for implementation. Suggest: at minimum, provide a structured outline of the orchestrator instructions (sections, key directives, tone constraints).
 
-- FR-6 Processing step 1: IMPRECISE -- "matcher omitted or `"*"`" -- the spec says this is "regex on basename" but `"*"` is invalid regex (quantifier without preceding element). The correct regex for "match all files" would be `".*"`. The official docs confirm FileChanged matchers support regex patterns. Suggest: change to `".*"` or document that omitting the matcher achieves the same effect.
+- FR-1 step 6 vs iTerm2Launcher: IMPRECISE -- FR-1 says "Launch a new Claude Code session in a new iTerm2 tab" but iTerm2Launcher says `launch_pane()` "Creates vertical split pane." A tab and a vertical split pane are different iTerm2 concepts. The developer would implement different iTerm2 API calls depending on which is intended. Suggest: choose one term ("tab" or "vertical split pane") and use it consistently across all FRs and components.
 
-- ContextDriftHook component description: Same issue repeated -- "Omitted or `"*"` (regex on basename -- matches all files)" should be `".*"`.
+- FR-6 Processing step 1 / ContextDriftHook matcher: IMPRECISE -- The spec says matcher `".*"` (regex on basename). This appears twice (FR-6 and ContextDriftHook component). The spec hedges with "omitted or `".*"`" -- the developer needs a definitive choice. Suggest: pick one approach and state it as the requirement.
 
-- NotificationRelayHook: OK -- Processing steps are precise with clear queue file path derivation for both main and child sessions.
-
-- FR-7 "Notification queue format" listed as Open Item (Low priority): IMPRECISE -- The `notifications.jsonl` schema is undefined. SessionMonitorHook writes to it, ContextDriftHook writes to it, NotificationRelayHook reads from it. A developer implementing any of these three components would have to guess the JSONL entry format. Suggest: define a minimal schema (e.g., `{"timestamp": "ISO8601", "type": "crash|termination|deliverable|context_drift", "topic": "...", "message": "..."}`).
+- FR-7 snapshot file location: IMPRECISE -- "Hook maintains a snapshot file (`session-tree.last`) alongside session-tree.json." The word "alongside" is ambiguous. Given session-tree.json is at `.claude/sessions/<main-id>/session-tree.json`, "alongside" presumably means `.claude/sessions/<main-id>/session-tree.last`, but this should be stated explicitly.
 
 ---
 
@@ -79,33 +77,33 @@
 
 #### FR-1: Child session spawn
 - Error handling: OK -- Six error cases explicitly handled (iTerm2 not running, conversation ID unavailable, persona not found, topic collision, 30s timeout, nesting guard).
-- Boundary: OK -- Topic uniqueness scoped to non-terminated sessions.
+- Boundary: UNHANDLED -- What happens if `session-tree.json` is corrupted (invalid JSON)? SessionTreeStore's `st_read()` "returns empty SessionTree if file absent" but does not address corruption. A developer must decide: treat corrupt file as empty (lose data) or error out? Suggest: document the behavior for invalid JSON.
 
 #### FR-2: Control session termination
 - Error handling: OK -- Ctrl+D mid-conversation case addressed with recovery path via FR-4.
-- Edge: UNHANDLED -- What happens if the user closes the iTerm2 tab entirely (not Ctrl+D but the terminal pane itself)? Does SessionEndHook still fire? The Claude Code `SessionEnd` hook fires on session termination, but closing the terminal may kill the process before the hook runs. If the hook doesn't fire, the status remains `active` and is only caught by FR-7's crash detection (pid dead). This should be documented as expected behavior.
+- Edge: UNHANDLED -- What happens if the user closes the iTerm2 tab entirely (not Ctrl+D but the terminal window/pane itself)? Does SessionEndHook still fire? Closing the terminal may kill the process before the hook runs. If the hook doesn't fire, the status remains `active` and is only caught by FR-7's crash detection (pid dead). This behavior should be documented as the expected degradation path.
 
 #### FR-3: Result file registration
 - Error handling: OK -- No arguments, file doesn't exist, write failure, context compaction all addressed.
-- Boundary: UNHANDLED -- What happens if the same file is registered twice? The spec says "deduplicated" but doesn't specify whether the `resultUpdatedAt` is updated on a no-op dedup. If it is, SessionMonitorHook would fire a "new deliverables" notification for a file that was already registered. Suggest: clarify whether dedup skips the `resultUpdatedAt` update.
+- Boundary: UNHANDLED -- What happens if the same file is registered twice? The spec says "deduplicated" but doesn't specify whether `resultUpdatedAt` is updated on a no-op dedup. If it is, SessionMonitorHook would fire a "new deliverables" notification for already-registered files. Suggest: clarify whether dedup skips the `resultUpdatedAt` update.
 
 #### FR-4: Resume child session
 - Error handling: OK -- Four cases (not found, already active, transcript missing, prompt file missing).
-- Edge: OK -- `failed_to_start` now offers new session creation instead of blocking.
+- Edge: UNHANDLED -- What happens if the user tries to resume a `pending` session? The resume flow dispatch table covers `active/resumed`, `terminated/crashed`, and `failed_to_start`, but `pending` is missing. A session could theoretically be `pending` if the user requests resume immediately after spawn (before SessionStart hook completes). Suggest: add `pending` to the dispatch table (e.g., "inform user session is still starting, wait").
 
 #### FR-5: List child sessions
 - Error handling: OK
 
 #### FR-6: Detect context drift
 - Error handling: OK -- session-tree.json unreadable and empty referenceFiles both handled.
-- Edge: UNHANDLED -- What happens if a reference file is deleted (not modified)? FileChanged fires on deletion. The hook compares `file_path` against `referenceFiles`. If the deleted file matches, the notification says "Referenced file X has been modified externally" -- but "modified" is misleading for deletion. Suggest: either distinguish modification from deletion in the notification message, or document that "modified" covers all change types including deletion.
+- Edge: UNHANDLED -- What happens if a reference file is deleted (not modified)? FileChanged fires on deletion. The notification says "Referenced file X has been modified externally" -- but "modified" is misleading for deletion. Suggest: document that "modified" covers all change types, or distinguish modification from deletion.
 
 #### FR-7: Monitor session-tree changes
 - Error handling: OK -- Lazy detection caveat documented. PID reuse risk acknowledged.
-- Edge: OK -- Handshake timeout limitation (requires subsequent session-tree.json write) documented.
+- Edge: UNHANDLED -- What happens if `session-tree.last` (snapshot file) is missing or corrupt? Presumably it should be treated as "no previous snapshot" (notify for all current state), but this is not stated. Suggest: document the behavior.
 
 #### Domain: Child Session state transitions
-- OK -- All states have outgoing transitions except `failed_to_start` (intentionally terminal). The `resumed` state now has both `terminated` and `crashed` outgoing transitions.
+- OK -- All states have appropriate transitions. `failed_to_start` is terminal. `terminated` and `crashed` can transition to `resumed`.
 
 ---
 
@@ -116,41 +114,40 @@
 
 #### SpawnOrchestrator
 - OK -- Clear responsibility for spawn and resume. Resume dispatch table is well-structured.
-- UNCLEAR -- `generate_prompt()` content requirements. The orchestrator instructions are scattered across FR-2 and FR-3's "Orchestrator prompt instruction" boxes. A developer implementing this function would need to consolidate these into a single prompt. The spec should either consolidate these into a single section or explicitly say "generate_prompt() concatenates the instructions from FR-2 and FR-3."
+- UNCLEAR -- `generate_prompt()` content requirements. The orchestrator instructions are scattered across FR-2 and FR-3's "Orchestrator prompt instruction" boxes. A developer implementing this function would need to consolidate these into a single prompt file. The spec should either consolidate these into a single section or explicitly say "generate_prompt() concatenates the persona content with orchestrator instructions that cover: [list from FR-2 box] and [list from FR-3 box]."
 - **Previous review status:** Previously flagged. Still unresolved.
 
 #### iTerm2Launcher
 - OK -- Two functions with clear signatures and behavior.
 
 #### SessionStartHook
-- OK -- Sequence diagram covers both new-session and resume branches. The `else resume (status != pending)` branch now covers terminated, crashed, and stale active/resumed cases.
-- **Previous review status:** Previously flagged (stale active/resumed gap). Now resolved -- the diagram note says "covers terminated, crashed, and stale active/resumed."
+- OK -- Sequence diagram covers both new-session and resume branches. The `else resume (status != pending)` branch covers terminated, crashed, and stale active/resumed cases.
+- **Previous review status:** Previously flagged (stale active/resumed gap). Now resolved.
 
 #### SessionEndHook
 - OK
 
 #### SessionMonitorHook
-- OK -- Detection table is comprehensive. Notification delivery updated to queue + systemMessage pattern.
+- OK -- Detection table is comprehensive. Notification delivery uses queue + systemMessage pattern consistently.
 
 #### ContextDriftHook
 - OK -- Processing steps clear. Main session exclusion well-explained.
 
 #### NotificationRelayHook
-- OK -- New component with clear responsibility, trigger, processing, and error handling. Queue file path derivation logic is explicit for both main and child sessions.
+- OK -- New component with clear responsibility, trigger, processing, and error handling. Queue file paths explicitly documented for both main and child sessions.
 
 #### RegisterResultCommand
-- UNCLEAR -- SKILL.md uses `${CLAUDE_PLUGIN_ROOT}` in shell injection: `!`uv run ${CLAUDE_PLUGIN_ROOT}/skills/register-result/scripts/register_result.py ...``. The official skills documentation lists only `${CLAUDE_SKILL_DIR}` and `${CLAUDE_SESSION_ID}` as available string substitutions in SKILL.md. `${CLAUDE_PLUGIN_ROOT}` is an environment variable available in hook commands and MCP/LSP server configs, but there is a known bug ([#9354](https://github.com/anthropics/claude-code/issues/9354)) where it does not work in command/skill markdown files. Suggest: use `${CLAUDE_SKILL_DIR}/../register-result/scripts/register_result.py` or restructure so the script is in the same skill directory and use `${CLAUDE_SKILL_DIR}/scripts/register_result.py`.
-- **Previous review status:** Previously flagged as UNVERIFIED. Confirmed as a real issue per GitHub issue #9354.
+- OK -- SKILL.md shown with `${CLAUDE_SKILL_DIR}` and `${CLAUDE_SESSION_ID}` substitutions. Script interface is clear.
 
 #### SessionListCommand
-- Same issue as RegisterResultCommand -- uses `${CLAUDE_PLUGIN_ROOT}` in SKILL.md shell injection.
+- OK -- SKILL.md shown with `${CLAUDE_SKILL_DIR}` and `${CLAUDE_SESSION_ID}` substitutions.
 
 #### ChatSkill
 - UNCLEAR -- The actual SKILL.md content is not shown. Only "Spec changes from current code" is listed (4 bullet points). A developer implementing the updated `/chat` skill would need to know the full step list after applying these changes. Suggest: show the updated SKILL.md content or at minimum the updated step-by-step flow.
 - **Previous review status:** Previously flagged. Still unresolved.
 
-#### Unowned behavior
-- OK (resolved) -- SessionStartHook now handles stale `active`/`resumed` status via the `else resume (status != pending)` branch. The note "covers terminated, crashed, and stale active/resumed" clarifies this.
+#### Hook Configuration
+- UNCLEAR -- The spec defines 5 hooks with their triggers and matchers, but never shows the actual hook configuration (the JSON entries for `.claude/settings.json` hooks section or equivalent). A developer needs to know: what goes in the hooks configuration, which matchers to use, and whether each hook runs only in main sessions, only in child sessions, or both. The script-side guards (`$SESSION_TREE` checks) handle scoping, but the developer still needs to write the configuration file. Suggest: show the hook configuration entries, even as a summary table mapping hook name -> event -> matcher -> scope.
 
 ---
 
@@ -162,84 +159,61 @@
 
 ### 6. Technical Claim Verification
 
-#### CONFIRMED -- Notification architecture redesign (FileChanged cannot inject additionalContext)
-
-The previous review flagged this as SUSPECT: "FileChanged hooks cannot inject additionalContext." The spec has been redesigned with a two-stage notification pipeline:
-1. FileChanged hooks write to `notifications.jsonl` + output `systemMessage` (universal field)
-2. NotificationRelayHook (UserPromptSubmit) reads queue and injects `additionalContext`
-
-This is consistent with official Claude Code hooks documentation:
-- FileChanged hooks have "No decision control" and cannot use `additionalContext`
-- `systemMessage` is listed as a universal field available to all hooks (described as "Warning message shown to the user")
-- UserPromptSubmit hooks DO support `additionalContext`
-
-**Remaining concern:** The official docs describe `systemMessage` as "Warning message shown to the user" but the decision control table says FileChanged "Shows stderr to user only." It is ambiguous whether `systemMessage` from a FileChanged hook is actually displayed. The spec should verify empirically that `systemMessage` output from a FileChanged hook is shown to the user. If it is not, the "immediate user visibility" claim in the notification mechanism description is incorrect, and the user would only see notifications on the next interaction (via NotificationRelayHook).
-
-Source: [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks), [Automate workflows with hooks](https://code.claude.com/docs/en/hooks-guide)
-
-#### SUSPECT -- FileChanged matcher `"*"` (regex on basename)
-
-The spec says ContextDriftHook uses matcher `"*"` and describes it as "regex on basename." In regex, `*` is a quantifier that requires a preceding element. The regex `*` alone is invalid or matches nothing. The correct pattern would be `".*"` (dot-star: any character, zero or more times).
-
-Official docs confirm matchers support regex patterns. Examples use patterns like `mcp__.*__delete.*` (with dot-star, not bare star). The FileChanged matcher filters on "filename (basename of the changed file)."
-
-Suggest: change `"*"` to `".*"` throughout the spec, or document that omitting the matcher entirely achieves the same "match all files" behavior if that is supported.
-
-Source: [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks), [Automate workflows with hooks](https://code.claude.com/docs/en/hooks-guide)
-
-#### SUSPECT -- `${CLAUDE_PLUGIN_ROOT}` in SKILL.md shell injection
-
-RegisterResultCommand and SessionListCommand SKILL.md files use `${CLAUDE_PLUGIN_ROOT}` in shell injection (`` !`uv run ${CLAUDE_PLUGIN_ROOT}/...` ``). The official skills documentation lists only two available string substitutions: `${CLAUDE_SESSION_ID}` and `${CLAUDE_SKILL_DIR}`. `${CLAUDE_PLUGIN_ROOT}` is documented as an environment variable for hooks and MCP/LSP configs, but GitHub issue [#9354](https://github.com/anthropics/claude-code/issues/9354) confirms it does not work in command/skill markdown files.
-
-Suggest: use `${CLAUDE_SKILL_DIR}/scripts/register_result.py` (restructure so scripts are under each skill's own directory) or use a relative path from `${CLAUDE_SKILL_DIR}`.
-
-Source: [Extend Claude with skills](https://code.claude.com/docs/en/skills), [GitHub issue #9354](https://github.com/anthropics/claude-code/issues/9354)
-
 #### CONFIRMED -- `--append-system-prompt-file`, `--session-id`, `--resume` flags
-Verified in Claude Code CLI reference. Consistent with spec.
+Verified in Claude Code CLI reference. All three flags exist with the described behavior:
+- `--append-system-prompt-file`: "Load additional system prompt text from a file and append to the default prompt"
+- `--session-id`: "Use a specific session ID for the conversation (must be a valid UUID)"
+- `--resume`: "Resume a specific session by ID or name"
+
+Source: [CLI reference - Claude Code Docs](https://code.claude.com/docs/en/cli-reference)
+
+#### CONFIRMED -- FileChanged hooks do NOT support `additionalContext`
+The official hooks documentation lists FileChanged under events with "No decision control" -- used for side effects like logging or cleanup. It is NOT in the list of events supporting `additionalContext`. The spec's two-stage notification pipeline (queue file + NotificationRelayHook) is correctly motivated by this constraint.
+
+Source: [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks)
+
+#### CONFIRMED -- SessionStart and UserPromptSubmit support `additionalContext`
+Both are listed in the events supporting `additionalContext`. This validates the spec's design: SessionStartHook injects initial context, NotificationRelayHook (UserPromptSubmit) injects accumulated notifications.
+
+Source: [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks)
 
 #### CONFIRMED -- `${CLAUDE_SESSION_ID}` skill template variable
-Verified in official skills documentation. Listed in "Available string substitutions."
+Listed in "Available string substitutions" in the official skills documentation: "The current session ID. Useful for logging, creating session-specific files, or correlating skill output with sessions."
 
-Source: [Extend Claude with skills](https://code.claude.com/docs/en/skills)
+Source: [Extend Claude with skills - Claude Code Docs](https://code.claude.com/docs/en/skills)
 
 #### CONFIRMED -- `fcntl.flock()` for file locking
 Standard Python library on macOS/Linux.
 
+#### UNVERIFIED -- FileChanged `systemMessage` user visibility
+The spec claims FileChanged hooks output `systemMessage` for "immediate user visibility." The official docs list `systemMessage` as a universal field available to all hooks. However, the decision control table says FileChanged "Shows stderr to user only." It is ambiguous whether `systemMessage` from a FileChanged hook's JSON stdout is actually displayed to the user, or only stderr output is shown. If `systemMessage` does not work for FileChanged hooks, the "immediate user visibility" claim is incorrect and notifications would only reach the user on the next interaction (via NotificationRelayHook). Suggest: verify empirically.
+
+Source: [Hooks reference - Claude Code Docs](https://code.claude.com/docs/en/hooks)
+
 #### CONFIRMED -- iTerm2 `it2` CLI and `iterm2` Python API
-Already in use in existing codebase.
+Noted as "verified: used in existing `iterm2_launcher.py`" -- already in use in the codebase.
 
 ---
 
 ### 7. Consistency
 
-#### FR-2 <-> SessionEndHook: Terminal close behavior
-- OK -- FR-2 says "User closes terminal without graceful flow -> SessionEnd hook still fires." This is consistent with SessionEndHook's responsibility. However, as noted in Error & Edge, closing the iTerm2 tab (killing the process) may not trigger SessionEnd. The spec is internally consistent but may not match runtime behavior.
+#### FR-1 "iTerm2 tab" vs iTerm2Launcher "vertical split pane"
+- CONFLICT -- FR-1 step 6 says "Launch a new Claude Code session in a new iTerm2 tab" but iTerm2Launcher says `launch_pane()` "Creates vertical split pane." A tab and a vertical split pane are different iTerm2 concepts with different API calls. FR-4 compounds this by saying "activate its existing iTerm2 session (tab or pane, via iTerm2 Python API)." The developer would implement different code depending on which is correct. Suggest: unify the terminology.
 
-#### FR-6 <-> ContextDriftHook: Matcher specification
-- CONFLICT (minor) -- FR-6 Processing step 1 says `"*"` while ContextDriftHook component says `"*"`. Both are consistently wrong. The regex should be `".*"`. Not a cross-section conflict, but a shared error.
+#### FR-4 "multiple terminated matches" vs FR-1 uniqueness check
+- OK (after analysis) -- FR-4 step 4 says "If multiple terminated matches -> disambiguation list." This is possible because FR-1's uniqueness check only blocks `active`, `resumed`, and `pending` sessions -- terminated entries don't block the topic name. So a user can spawn "design-review", terminate it, spawn another "design-review", terminate it, then try to resume "design-review" and get two matches. The logic is consistent, though a brief note in FR-4 explaining why multiple matches can exist would help the developer.
 
-#### Domain Model state transitions <-> SessionStartHook: Resume from stale states
-- OK (resolved) -- The previous review flagged that SessionStartHook did not handle stale `active`/`resumed` status. The SessionStartHook sequence diagram now uses `else resume (status != pending)` which covers all non-pending states including stale active/resumed. The note "covers terminated, crashed, and stale active/resumed" makes this explicit.
-- **Previous review status:** Previously flagged as CONFLICT. Now resolved.
+#### Notification mechanism consistency across all sections
+- OK -- The Overview describes the two-stage pipeline. FR-6, FR-7, SessionMonitorHook, ContextDriftHook, and NotificationRelayHook all reference the same pattern (write to queue + systemMessage, inject via additionalContext on UserPromptSubmit). Notification queue schemas are fully defined with JSONL examples.
 
-#### FR-7 <-> SessionMonitorHook: Crash detection scope
-- OK (resolved) -- Both FR-7 and SessionMonitorHook detections table say `active`/`resumed` + pid dead. The "Spec changes from current code" section notes this is a change from current code (which only checks `active`).
+#### Domain Model state transitions vs FR behavior
+- OK -- All state transitions map correctly to FR processing steps and hook responsibilities.
 
-#### FR-7 <-> SessionMonitorHook: Notification delivery
-- OK (resolved) -- Both FR-7 and SessionMonitorHook now describe the same notification mechanism: write to queue file + output `systemMessage`. The previous review flagged the `additionalContext` approach; the redesigned pipeline is internally consistent.
+#### Component diagram vs sequence diagrams
+- OK -- All sequence diagram participants appear in the component diagram. No orphan components.
 
-#### SpawnOrchestrator dispatch <-> SessionStartHook: failed_to_start resume
-- OK -- SpawnOrchestrator says `failed_to_start -> Resume not possible, offer new session`. State diagram shows `failed_to_start` as terminal. Consistent.
-
-#### Architecture Component Diagram <-> Sequence Diagrams: Participant alignment
-- OK -- All sequence diagram participants appear in the component diagram. NotificationRelayHook is in the component diagram but not in any sequence diagram (acceptable since its behavior is simple: read queue, output, clear).
-
-#### session-tree.json Schema <-> SessionTreeStore
-- OK -- Schema changes documented explicitly in "Spec changes from current code."
-
-#### Overview notification mechanism <-> FR-6/FR-7 <-> Component descriptions
-- OK -- The Overview section describes the two-stage pipeline (FileChanged -> queue + systemMessage, UserPromptSubmit -> additionalContext). FR-6, FR-7, SessionMonitorHook, ContextDriftHook, and NotificationRelayHook all reference this same pattern consistently.
+#### session-tree.json schema vs component usage
+- OK -- All fields referenced by components (status, pid, resultFiles, resultUpdatedAt, referenceFiles, bootstrapPromptSnippet, resumeCount, transcriptPath) are in the schema.
 
 ---
 
@@ -247,15 +221,15 @@ Already in use in existing codebase.
 
 - **Technology stack:** OK
 - **Behavior gaps:** FR-2 (no termination sequence diagram), FR-3 (no registration sequence diagram), FR-4 (no end-to-end resume sequence diagram)
-- **Undeclared external dependencies:** Missing fallback for `it2` and `claude` CLI not installed
+- **Undeclared external dependencies:** Missing fallback for `it2` and `claude` binary not found
 - **Authorization issues:** None (single-user system)
-- **Imprecise language:** Orchestrator instruction content undefined (Open Item), notification queue JSONL schema undefined (Open Item), FileChanged matcher `"*"` should be `".*"`
-- **Unhandled errors/edges:** iTerm2 tab close vs Ctrl+D behavior, dedup no-op resultUpdatedAt, reference file deletion vs modification notification text
-- **Unclear ownership:** ChatSkill updated SKILL.md content not shown, orchestrator instruction template not consolidated, `${CLAUDE_PLUGIN_ROOT}` in SKILL.md does not work
+- **Imprecise language:** Orchestrator instruction content undefined (Open Item), "tab" vs "pane" inconsistency, FileChanged matcher choice not definitive, snapshot file path not explicit
+- **Unhandled errors/edges:** Corrupted session-tree.json, iTerm2 tab close behavior, dedup resultUpdatedAt, pending state in resume dispatch, reference file deletion, missing snapshot file
+- **Unclear ownership:** ChatSkill updated SKILL.md content not shown, orchestrator instructions scattered across FRs, hook configuration entries not shown
 - **Missing interface contracts:** N/A (status: draft)
 - **UI grouping issues:** N/A (non-UI)
-- **Unverified/suspect technical claims:** FileChanged `systemMessage` user visibility unverified empirically, `"*"` matcher is invalid regex, `${CLAUDE_PLUGIN_ROOT}` in SKILL.md confirmed broken
-- **Cross-section conflicts:** None remaining (previous conflicts resolved)
+- **Unverified/suspect technical claims:** FileChanged `systemMessage` user visibility
+- **Cross-section conflicts:** "tab" vs "pane" (FR-1 vs iTerm2Launcher)
 
 ### Previously Flagged Issues -- Resolution Status
 
@@ -263,9 +237,10 @@ Already in use in existing codebase.
 |-------|-----------------|----------------|
 | FileChanged hooks cannot inject additionalContext | SUSPECT | **Resolved** -- notification architecture redesigned with two-stage pipeline |
 | SessionStartHook stale active/resumed gap | CONFLICT | **Resolved** -- `else resume (status != pending)` covers all non-pending states |
-| FileChanged matcher syntax for broad matching | UNVERIFIED | **Partially resolved** -- spec says `"*"` but should be `".*"` |
-| `${CLAUDE_PLUGIN_ROOT}` in SKILL.md | UNVERIFIED | **Confirmed broken** -- needs fix |
+| FileChanged matcher `"*"` syntax | SUSPECT | **Resolved** -- spec now uses `".*"` throughout |
+| `${CLAUDE_PLUGIN_ROOT}` in SKILL.md | SUSPECT (confirmed broken) | **Resolved** -- SKILL.md now uses `${CLAUDE_SKILL_DIR}` |
 | SpawnOrchestrator failed_to_start handling | (implicit) | **Resolved** -- offers new session creation |
+| Notification queue JSONL schema undefined | IMPRECISE | **Resolved** -- full schemas defined for main and child session queues with examples |
 | No termination sequence diagram (FR-2) | GAP | **Still open** |
 | No registration sequence diagram (FR-3) | GAP | **Still open** |
 | No resume sequence diagram (FR-4) | GAP | **Partially addressed** (SessionStartHook diagram covers resume branch) |
@@ -275,8 +250,8 @@ Already in use in existing codebase.
 
 ### Top Priority Fixes
 
-1. **`${CLAUDE_PLUGIN_ROOT}` in SKILL.md shell injection (SUSPECT -- confirmed broken).** RegisterResultCommand and SessionListCommand both use `${CLAUDE_PLUGIN_ROOT}` in shell injection, which does not work in SKILL.md per GitHub issue #9354. These are core commands -- if shell injection fails, `/register-result` and `/sessions` are non-functional. Fix: restructure to use `${CLAUDE_SKILL_DIR}/scripts/...` or place scripts within each skill's own directory.
+1. **"Tab" vs "pane" inconsistency (CONFLICT).** FR-1 says "new iTerm2 tab" but iTerm2Launcher says "creates vertical split pane." These are different iTerm2 concepts requiring different API calls (`create_tab()` vs `split_pane()`). A developer cannot implement iTerm2Launcher without knowing which one is intended. This also affects FR-4's `activate_pane` -- finding an existing "tab" vs "pane" requires different iteration logic. Fix: choose one and update all references.
 
-2. **FileChanged matcher `"*"` is invalid regex (SUSPECT).** The ContextDriftHook matcher is specified as `"*"` in both FR-6 and the component description. In regex, `*` without a preceding element is invalid. Should be `".*"` to match all basenames. If the hook is deployed with `"*"`, it may fail to register as a FileChanged watcher or match nothing, silently disabling context drift detection.
+2. **Orchestrator instruction content undefined (IMPRECISE).** FR-1's `generate_prompt()` produces the Session System Prompt, which combines persona content with orchestrator instructions. The orchestrator instructions govern FR-2's wrap-up behavior and FR-3's deliverable identification -- core behaviors that the child session LLM depends on. The "Orchestrator prompt instruction" boxes in FR-2 and FR-3 provide bullet-point summaries, but the developer implementing `generate_prompt()` must write actual prompt text that produces reliable LLM behavior. At minimum, consolidate the instruction requirements into one place and provide a structured template.
 
-3. **Notification queue JSONL schema undefined (IMPRECISE).** Three components write to or read from `notifications.jsonl` (SessionMonitorHook writes, ContextDriftHook writes, NotificationRelayHook reads), but no schema is defined. A developer implementing any of these components independently would have to guess the entry format and hope it matches the others. Define a minimal schema.
+3. **Hook configuration entries not shown (UNCLEAR).** The spec defines 5 hooks with triggers, matchers, and processing logic, but never shows the hook configuration that registers them with Claude Code. A developer needs to create the hooks configuration (JSON entries specifying event, matcher, command, timeout) for each hook. The spec provides enough information to derive most entries, but the matcher values, timeout settings, and the distinction between main-session-only vs all-session hooks should be explicit. Fix: add a summary table or JSON snippet showing the hook configuration.
