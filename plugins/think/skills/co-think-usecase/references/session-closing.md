@@ -2,7 +2,7 @@
 
 ## End Iteration (not finalizing)
 
-1. **Launch reviewer subagent** — launch a `usecase-reviewer` subagent via `Agent(subagent_type: "usecase-reviewer")` with the current working file path and report path per `references/review-report.md` (label: revision number). If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed. The reviewer writes the report and returns results.
+1. **Launch reviewer subagent** — if a `usecase-reviewer` agent was already spawned in this session, offer the user a choice to reuse it (via `SendMessage`) or spawn fresh (see `${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`). For a fresh spawn, use `Agent(subagent_type: "usecase-reviewer", name: "reviewer")` with the current working file path and report path per `references/review-report.md` (label: revision number). If spawning fresh and a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed. The reviewer writes the report and returns results.
 2. **Present the review results** — show the user the review report. Walk through issues in this order:
 
    **Actors Review** — for each actor with issues:
@@ -40,7 +40,7 @@
    - If the user chooses **exploration** → proceed to step 5.
    - If the user chooses **re-review** → go back to step 1 with the updated file. The reviewer writes a new report (increment the label, e.g., `revision 3b`). Repeat steps 1–4 until the user chooses exploration or explicitly skips it.
    - If the user wants to **skip exploration entirely** → proceed directly to step 7.
-5. **Launch explorer subagent** — launch a `usecase-explorer` subagent via `Agent(subagent_type: "usecase-explorer")` with the **updated** working file and report path per `references/exploration-report.md` (label: revision number). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results. Present the exploration results:
+5. **Launch explorer subagent** — if a `usecase-explorer` agent was already spawned in this session, offer the user a choice to reuse it (via `SendMessage`) or spawn fresh (see `${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`). For a fresh spawn, use `Agent(subagent_type: "usecase-explorer", name: "explorer")` with the **updated** working file and report path per `references/exploration-report.md` (label: revision number). If spawning fresh and previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results. Present the exploration results:
    - Show each perspective explored and UC candidates found
    - Ask: "The explorer found these additional angles we haven't covered. Would you like to explore any now, or save them for next time?"
    - If the user picks any, enter the Discovery Loop for those topics. After reflecting the results, add the exploration file name to the frontmatter `reflected_files` list.
@@ -68,7 +68,7 @@
 
 ## Finalize
 
-1. **Launch final reviewer subagent** — launch a `usecase-reviewer` subagent via `Agent(subagent_type: "usecase-reviewer")` with the current working file path and report path per `references/review-report.md` (label: `final`). If previous review reports exist, include their paths. The reviewer writes the report and returns results.
+1. **Launch final reviewer subagent** — if a `usecase-reviewer` agent was already spawned in this session, offer the user a choice to reuse it or spawn fresh (see `${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`). For a fresh spawn, use `Agent(subagent_type: "usecase-reviewer", name: "reviewer")` with the current working file path and report path per `references/review-report.md` (label: `final`). If spawning fresh and previous review reports exist, include their paths. The reviewer writes the report and returns results.
 2. **Present the review results** — walk through each flagged issue one at a time. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead. If System Completeness is `INCOMPLETE`, inform the user of the gaps and ask whether to proceed with finalization or end the iteration to address them first.
 3. **Update the working file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp. Record changes in the Change Log with the review report file name as Source.
 4. **Finalize the Use Case Diagram** — ensure all confirmed use cases, actors, and relationships (include/extend) are reflected in the PlantUML diagram.

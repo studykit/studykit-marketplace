@@ -228,10 +228,12 @@ When the user indicates they're done, ask whether they want to:
 
 ### Agent Usage
 
-Reviews and explorations are handled by launching subagents. Each invocation is independent — context is passed entirely through file paths (the working file, previous review/exploration reports).
+Reviews and explorations are handled by launching subagents. On first invocation, assign a `name` for potential reuse. On subsequent invocations of the same agent type within the session, offer the user a choice between reusing the existing agent (prior context retained via `SendMessage`) or spawning a fresh one.
 
-- **Reviewer:** Launch via `Agent(subagent_type: "usecase-reviewer")`. Pass the working file path and report output path. If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
-- **Explorer:** Launch via `Agent(subagent_type: "usecase-explorer")`. Pass the working file path and report output path.
+For the full reuse pattern, trade-offs, and prompt format, see **`${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`**.
+
+- **Reviewer:** First launch via `Agent(subagent_type: "usecase-reviewer", name: "reviewer")`. Pass the working file path and report output path. If spawning fresh and a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
+- **Explorer:** First launch via `Agent(subagent_type: "usecase-explorer", name: "explorer")`. Pass the working file path and report output path.
 
 **Execution order:** Always run the reviewer first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The explorer only runs when the user explicitly chooses it.
 

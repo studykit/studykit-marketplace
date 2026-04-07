@@ -261,8 +261,12 @@ For review scopes, trigger conditions, prompt formats, and post-review steps, re
 
 ## Agent Usage
 
-- **`spec-reviewer`** — launched via `Agent(subagent_type: "spec-reviewer")`. Context passed via file paths. See **`${CLAUDE_SKILL_DIR}/references/phase-review-guide.md`** for invocation details.
-- **`mock-html-generator`** — invoked as a regular agent for each screen group mock. Each invocation provides FRs, layout requirements, and output path in the prompt.
+Subagents are launched with a `name` for potential reuse within the session. On subsequent invocations of the same agent type, offer the user a choice between reusing the existing agent (prior context retained via `SendMessage`) or spawning a fresh one.
+
+For the full reuse pattern, trade-offs, and prompt format, see **`${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`**.
+
+- **`spec-reviewer`** — first launch via `Agent(subagent_type: "spec-reviewer", name: "spec-reviewer")`. Context passed via file paths. See **`${CLAUDE_SKILL_DIR}/references/phase-review-guide.md`** for invocation details.
+- **`mock-html-generator`** — first launch via `Agent(subagent_type: "mock-html-generator", name: "mock-generator")`. Each invocation provides FRs, layout requirements, and output path in the prompt.
 
 ## Wrapping Up
 
