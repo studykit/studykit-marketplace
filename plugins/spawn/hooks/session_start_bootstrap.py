@@ -5,6 +5,9 @@
 
 Reads session-tree.json to find the child entry matching this session,
 then outputs context instructions to stdout for injection into the conversation.
+
+For new sessions (pending): injects full context and marks active.
+For resumed sessions: updates status to resumed, increments resume_count, no context injection.
 """
 
 from __future__ import annotations
@@ -30,15 +33,8 @@ def _build_context(child: ChildEntry) -> str:
             lines.append(f"- {f}")
         lines.append("")
 
-    if child.additional_context:
-        lines += ["**Additional context:**", child.additional_context, ""]
-
-    if child.result_patterns:
-        patterns_str = "`, `".join(child.result_patterns)
-        lines += ["**Result file patterns:**", f"Save your deliverables to paths matching: `{patterns_str}`", ""]
-
-    if child.skill:
-        lines += [f"**Skill:** Please invoke /{child.skill} to begin.", ""]
+    if child.bootstrap_prompt_snippet:
+        lines += ["**Context:**", child.bootstrap_prompt_snippet, ""]
 
     return "\n".join(lines)
 
@@ -58,26 +54,40 @@ def main() -> None:
     if child is None:
         return
 
-    context = _build_context(child)
-
-    response = {
-        "hookSpecificOutput": {
-            "hookEventName": "SessionStart",
-            "additionalContext": context,
-        },
-    }
-    print(json.dumps(response, ensure_ascii=False))
-
     ppid = os.getppid()
 
-    def update(tree: SessionTree) -> None:
-        c = tree.find_child(session_id)
-        if c:
-            c.status = "active"
-            c.transcript_path = transcript_path
-            c.pid = ppid
+    if child.status == "pending":
+        # New session: inject context and mark active
+        context = _build_context(child)
 
-    st_write(update)
+        response = {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": context,
+            },
+        }
+        print(json.dumps(response, ensure_ascii=False))
+
+        def activate(tree: SessionTree) -> None:
+            c = tree.find_child(session_id)
+            if c:
+                c.status = "active"
+                c.transcript_path = transcript_path
+                c.pid = ppid
+
+        st_write(activate)
+    else:
+        # Resume: update status, increment resume_count, update pid
+        # No context re-injection — conversation history already has it
+        def resume(tree: SessionTree) -> None:
+            c = tree.find_child(session_id)
+            if c:
+                c.status = "resumed"
+                c.resume_count += 1
+                c.pid = ppid
+                # transcript_path preserved (same transcript, appended to)
+
+        st_write(resume)
 
 
 if __name__ == "__main__":

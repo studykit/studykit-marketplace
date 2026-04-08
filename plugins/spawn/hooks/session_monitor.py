@@ -4,14 +4,14 @@
 """session_monitor — FileChanged hook (matcher: session-tree.json).
 
 Monitors child session status changes from the main session side.
-Outputs additionalContext JSON when notable changes are detected.
+Writes notifications to the queue file and outputs systemMessage JSON
+for immediate user visibility.
 """
 
 from __future__ import annotations
 
 import json
 import os
-import signal
 import sys
 import time
 from datetime import datetime, timezone
@@ -19,6 +19,7 @@ from pathlib import Path
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
+from notifications import append_notification, notification_queue_path
 from session_tree import ChildEntry, SessionTree, read_stdin_json, st_read, st_write
 
 
@@ -65,7 +66,11 @@ def main() -> None:
     last_file.write_text(json.dumps(current.to_dict(), ensure_ascii=False, indent=2) + "\n")
 
     notifications: list[str] = []
+    queue_entries: list[dict] = []
     now_epoch = time.time()
+
+    session_tree_dir = str(Path(session_tree_path).parent)
+    queue = notification_queue_path(session_tree_dir, "", is_main=True)
 
     prev_children: dict[str, ChildEntry] = {c.id: c for c in previous.children if c.id}
 
@@ -73,13 +78,11 @@ def main() -> None:
         if not child.id:
             continue
 
-        prev_status = ""
-        if has_previous:
-            prev = prev_children.get(child.id)
-            prev_status = prev.status if prev else ""
+        prev_entry = prev_children.get(child.id) if has_previous else None
+        prev_status = prev_entry.status if prev_entry else ""
 
-        # Crash detection
-        if child.status == "active" and child.pid is not None:
+        # Crash detection (active or resumed with dead pid)
+        if child.status in ("active", "resumed") and child.pid is not None:
             if not _pid_alive(child.pid):
                 def _mark_crashed(tree: SessionTree, _cid: str = child.id) -> None:
                     c = tree.find_child(_cid)
@@ -87,9 +90,12 @@ def main() -> None:
                         c.status = "crashed"
 
                 st_write(_mark_crashed)
-                notifications.append(
-                    f"- **{child.topic}** ({child.id}): crashed — process no longer alive"
-                )
+                msg = f"Session **{child.topic}** crashed — process no longer alive"
+                notifications.append(msg)
+                queue_entries.append({
+                    "type": "crash", "childId": child.id,
+                    "topic": child.topic, "message": msg,
+                })
                 continue
 
         # Handshake timeout
@@ -102,45 +108,58 @@ def main() -> None:
                         c.status = "failed_to_start"
 
                 st_write(_mark_failed)
-                notifications.append(
-                    f"- **{child.topic}** ({child.id}): failed to start — handshake timeout (>30s)"
-                )
+                msg = f"Session **{child.topic}** failed to start — handshake timeout (>30s)"
+                notifications.append(msg)
+                queue_entries.append({
+                    "type": "failed_to_start", "childId": child.id,
+                    "topic": child.topic, "message": msg,
+                })
                 continue
 
-        # New result files
-        if child.status == "active" and has_previous:
-            prev_entry = prev_children.get(child.id)
-            prev_files = set(prev_entry.result_files) if prev_entry else set()
-            curr_files = set(child.result_files)
-            new_files = sorted(curr_files - prev_files)
-            if new_files:
-                notifications.append(
-                    f"- **{child.topic}** ({child.id}): new result files: {', '.join(new_files)}"
-                )
+        # Deliverable notification via resultUpdatedAt change
+        if child.result_updated_at and prev_entry:
+            prev_updated = prev_entry.result_updated_at or ""
+            if child.result_updated_at != prev_updated:
+                files_str = ", ".join(child.result_files) if child.result_files else "(none)"
+                msg = f"Session **{child.topic}** registered new deliverables: {files_str}"
+                notifications.append(msg)
+                queue_entries.append({
+                    "type": "deliverable", "childId": child.id,
+                    "topic": child.topic, "resultFiles": child.result_files,
+                    "message": msg,
+                })
 
         # Terminated session
         if child.status == "terminated" and prev_status != "terminated":
             if child.result_files:
-                notifications.append(
-                    f"- **{child.topic}** ({child.id}): terminated — result files: {', '.join(child.result_files)}"
-                )
+                files_str = ", ".join(child.result_files)
+                msg = f"Session **{child.topic}** terminated. Results: {files_str}"
             else:
-                notifications.append(
-                    f"- **{child.topic}** ({child.id}): terminated"
-                )
+                msg = f"Session **{child.topic}** terminated. No result files registered. You can resume it to register deliverables."
+            notifications.append(msg)
+            queue_entries.append({
+                "type": "terminated", "childId": child.id,
+                "topic": child.topic,
+                "resultFiles": child.result_files,
+                "message": msg,
+            })
             continue
 
-        # Report other non-active statuses on first run
-        if not has_previous and child.status not in ("active", "terminated"):
-            notifications.append(
-                f"- **{child.topic}** ({child.id}): {child.status}"
-            )
+        # Report non-active statuses on first run (no previous snapshot)
+        if not has_previous and child.status not in ("active", "resumed", "terminated"):
+            msg = f"Session **{child.topic}**: {child.status}"
+            notifications.append(msg)
 
+    # Write to notification queue
+    for entry in queue_entries:
+        append_notification(queue, entry)
+
+    # Output systemMessage for immediate user visibility
     if notifications:
-        body = "## Child Session Updates\\n\\n"
+        body = "Child Session Updates:\n"
         for note in notifications:
-            body += f"{note}\\n"
-        print(json.dumps({"additionalContext": body}))
+            body += f"- {note}\n"
+        print(json.dumps({"systemMessage": body}, ensure_ascii=False))
 
 
 if __name__ == "__main__":

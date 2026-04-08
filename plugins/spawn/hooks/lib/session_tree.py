@@ -41,14 +41,16 @@ class ChildEntry:
     id: str
     topic: str
     status: str = "pending"
+    # Status values: pending | active | terminated | crashed | failed_to_start | resumed
     created_at: str = ""
     pid: int | None = None
-    skill: str | None = None
+    persona: str | None = None
     transcript_path: str | None = None
-    result_patterns: list[str] = field(default_factory=list)
     result_files: list[str] = field(default_factory=list)
+    result_updated_at: str | None = None
     reference_files: list[str] = field(default_factory=list)
-    additional_context: str | None = None
+    bootstrap_prompt_snippet: str | None = None
+    resume_count: int = 0
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -57,12 +59,13 @@ class ChildEntry:
             "status": self.status,
             "createdAt": self.created_at,
             "pid": self.pid,
-            "skill": self.skill,
+            "persona": self.persona,
             "transcriptPath": self.transcript_path,
-            "resultPatterns": self.result_patterns,
             "resultFiles": self.result_files,
+            "resultUpdatedAt": self.result_updated_at,
             "referenceFiles": self.reference_files,
-            "additionalContext": self.additional_context,
+            "bootstrapPromptSnippet": self.bootstrap_prompt_snippet,
+            "resumeCount": self.resume_count,
         }
 
     @classmethod
@@ -73,12 +76,13 @@ class ChildEntry:
             status=d.get("status", "pending"),
             created_at=d.get("createdAt", ""),
             pid=d.get("pid"),
-            skill=d.get("skill"),
+            persona=d.get("persona"),
             transcript_path=d.get("transcriptPath"),
-            result_patterns=d.get("resultPatterns") or [],
             result_files=d.get("resultFiles") or [],
+            result_updated_at=d.get("resultUpdatedAt"),
             reference_files=d.get("referenceFiles") or [],
-            additional_context=d.get("additionalContext"),
+            bootstrap_prompt_snippet=d.get("bootstrapPromptSnippet"),
+            resume_count=d.get("resumeCount", 0),
         )
 
 

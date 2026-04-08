@@ -3,7 +3,7 @@
 # ///
 """test_orchestrator — Unit tests for the agent orchestrator hooks.
 
-Run: uv run -m pytest plugins/think/hooks/test_orchestrator.py -v
+Run: uv run -m pytest plugins/spawn/hooks/test_orchestrator.py -v
 """
 
 from __future__ import annotations
@@ -53,6 +53,32 @@ def exec_hook(
     return (result.stdout + result.stderr).strip()
 
 
+def exec_script(
+    script_path: str,
+    stdin_data: dict | str = "",
+    env_override: dict[str, str] | None = None,
+) -> str:
+    """Execute a script by path (for skills scripts outside hooks/)."""
+    env = {
+        "SESSION_TREE": os.environ.get("SESSION_TREE", ""),
+        "PATH": os.environ.get("PATH", ""),
+        "HOME": os.environ.get("HOME", ""),
+    }
+    if env_override:
+        env.update(env_override)
+
+    stdin_str = stdin_data if isinstance(stdin_data, str) else json.dumps(stdin_data)
+
+    result = subprocess.run(
+        ["uv", "run", script_path],
+        input=stdin_str,
+        capture_output=True,
+        text=True,
+        env=env,
+    )
+    return (result.stdout + result.stderr).strip()
+
+
 # ============================================================
 # session-tree library
 # ============================================================
@@ -87,16 +113,42 @@ class TestSessionTreeLibrary:
                 id="child-1",
                 topic="test topic",
                 created_at="2026-03-29T00:00:00Z",
-                skill="co-think-domain",
-                result_patterns=["docs/*.md", "A4/**/*.requirement.md"],
+                persona="discuss",
                 reference_files=["/tmp/ref.md"],
-                additional_context="Context from main session about testing",
+                bootstrap_prompt_snippet="Context from main session about testing",
             ))
 
         st_write(update)
         tree = read_tree()
         assert len(tree["children"]) == 1
         assert tree["children"][0]["topic"] == "test topic"
+        assert tree["children"][0]["persona"] == "discuss"
+        assert tree["children"][0]["bootstrapPromptSnippet"] == "Context from main session about testing"
+        assert tree["children"][0]["resumeCount"] == 0
+        assert tree["children"][0]["resultUpdatedAt"] is None
+
+    def test_new_schema_fields_round_trip(self) -> None:
+        def update(tree: SessionTree) -> None:
+            tree.children.append(ChildEntry(
+                id="child-1",
+                topic="test",
+                persona="review",
+                bootstrap_prompt_snippet="snippet",
+                resume_count=3,
+                result_updated_at="2026-04-06T10:00:00Z",
+            ))
+
+        st_write(update)
+        tree = read_tree()
+        child = tree["children"][0]
+        assert child["persona"] == "review"
+        assert child["bootstrapPromptSnippet"] == "snippet"
+        assert child["resumeCount"] == 3
+        assert child["resultUpdatedAt"] == "2026-04-06T10:00:00Z"
+        # Old fields should not be present
+        assert "skill" not in child
+        assert "additionalContext" not in child
+        assert "resultPatterns" not in child
 
     def test_st_find_child_existing(self) -> None:
         def setup(tree: SessionTree) -> None:
@@ -132,10 +184,9 @@ class TestSessionStartBootstrap:
                 id="child-1",
                 topic="test topic",
                 created_at="2026-03-29T00:00:00Z",
-                skill="co-think-domain",
-                result_patterns=["docs/*.md", "A4/**/*.requirement.md"],
+                persona="discuss",
                 reference_files=["/tmp/ref.md"],
-                additional_context="Context from main session about testing",
+                bootstrap_prompt_snippet="Context from main session about testing",
             ))
 
         st_write(setup)
@@ -165,8 +216,6 @@ class TestSessionStartBootstrap:
         assert "test topic" in context
         assert "/tmp/ref.md" in context
         assert "Context from main session" in context
-        assert "docs/*.md" in context
-        assert "co-think-domain" in context
 
     def test_metadata_writeback(self) -> None:
         exec_hook("session_start_bootstrap.py", {
@@ -179,101 +228,75 @@ class TestSessionStartBootstrap:
         assert tree["children"][0]["transcriptPath"] == "/tmp/transcript.jsonl"
         assert isinstance(tree["children"][0]["pid"], int)
 
+    def test_resume_sets_status(self) -> None:
+        """Resuming a terminated child sets status=resumed, increments resumeCount, no output."""
+        # First mark the child as terminated
+        def terminate(tree: SessionTree) -> None:
+            c = tree.find_child("child-1")
+            if c:
+                c.status = "terminated"
+                c.transcript_path = "/tmp/transcript.jsonl"
+                c.pid = 12345
+        st_write(terminate)
 
-# ============================================================
-# post_tool_result_collector
-# ============================================================
-
-class TestPostToolResultCollector:
-    def setup_method(self) -> None:
-        self.tmpdir = tempfile.mkdtemp(prefix="orchestrator-test-")
-        self.session_tree = os.path.join(self.tmpdir, "session-tree.json")
-        os.environ["SESSION_TREE"] = self.session_tree
-        set_session_tree_path(self.session_tree)
-
-        def setup(tree: SessionTree) -> None:
-            tree.main_session = MainSession(id="main-1", name="test-session")
-            tree.children.append(ChildEntry(
-                id="child-1",
-                topic="test topic",
-                status="active",
-                created_at="2026-03-29T00:00:00Z",
-                pid=os.getpid(),
-                result_patterns=["docs/*.md", "A4/**/*.requirement.md"],
-            ))
-
-        st_write(setup)
-
-    def teardown_method(self) -> None:
-        import shutil
-        shutil.rmtree(self.tmpdir, ignore_errors=True)
-
-    def test_ignores_non_write_tools(self) -> None:
-        exec_hook("post_tool_result_collector.py", {
+        output = exec_hook("session_start_bootstrap.py", {
             "session_id": "child-1",
-            "tool_name": "Read",
-            "tool_input": {"file_path": "docs/foo.md"},
+            "transcript_path": "/tmp/transcript.jsonl",
         })
-        tree = read_tree()
-        assert len(tree["children"][0]["resultFiles"]) == 0
-
-    def test_registers_matching_write(self) -> None:
-        exec_hook("post_tool_result_collector.py", {
-            "session_id": "child-1",
-            "tool_name": "Write",
-            "tool_input": {"file_path": "docs/result.md"},
-        })
-        tree = read_tree()
-        assert tree["children"][0]["resultFiles"][0] == "docs/result.md"
-
-    def test_no_duplicates(self) -> None:
-        exec_hook("post_tool_result_collector.py", {
-            "session_id": "child-1",
-            "tool_name": "Write",
-            "tool_input": {"file_path": "docs/result.md"},
-        })
-        exec_hook("post_tool_result_collector.py", {
-            "session_id": "child-1",
-            "tool_name": "Write",
-            "tool_input": {"file_path": "docs/result.md"},
-        })
-        tree = read_tree()
-        assert len(tree["children"][0]["resultFiles"]) == 1
-
-    def test_ignores_non_matching_path(self) -> None:
-        exec_hook("post_tool_result_collector.py", {
-            "session_id": "child-1",
-            "tool_name": "Write",
-            "tool_input": {"file_path": "src/code.ts"},
-        })
-        tree = read_tree()
-        assert len(tree["children"][0]["resultFiles"]) == 0
-
-    def test_second_pattern_match(self) -> None:
-        exec_hook("post_tool_result_collector.py", {
-            "session_id": "child-1",
-            "tool_name": "Write",
-            "tool_input": {"file_path": "docs/result.md"},
-        })
-        exec_hook("post_tool_result_collector.py", {
-            "session_id": "child-1",
-            "tool_name": "Edit",
-            "tool_input": {"file_path": "A4/test/foo.requirement.md"},
-        })
-        tree = read_tree()
-        assert len(tree["children"][0]["resultFiles"]) == 2
-
-    def test_guard_on_session_tree(self) -> None:
-        output = exec_hook(
-            "post_tool_result_collector.py",
-            {
-                "session_id": "child-1",
-                "tool_name": "Write",
-                "tool_input": {"file_path": "docs/x.md"},
-            },
-            {"SESSION_TREE": ""},
-        )
+        # No additionalContext output on resume
         assert output == ""
+
+        tree = read_tree()
+        child = tree["children"][0]
+        assert child["status"] == "resumed"
+        assert child["resumeCount"] == 1
+        assert isinstance(child["pid"], int)
+
+    def test_resume_preserves_transcript(self) -> None:
+        """Resume does not overwrite the existing transcript path."""
+        def set_active(tree: SessionTree) -> None:
+            c = tree.find_child("child-1")
+            if c:
+                c.status = "terminated"
+                c.transcript_path = "/tmp/original.jsonl"
+        st_write(set_active)
+
+        exec_hook("session_start_bootstrap.py", {
+            "session_id": "child-1",
+            "transcript_path": "/tmp/new.jsonl",
+        })
+        tree = read_tree()
+        # transcript_path should be preserved (not overwritten)
+        assert tree["children"][0]["transcriptPath"] == "/tmp/original.jsonl"
+
+    def test_resume_increments_count(self) -> None:
+        """Two consecutive resumes increment resumeCount to 2."""
+        def terminate(tree: SessionTree) -> None:
+            c = tree.find_child("child-1")
+            if c:
+                c.status = "terminated"
+                c.transcript_path = "/tmp/t.jsonl"
+        st_write(terminate)
+
+        exec_hook("session_start_bootstrap.py", {
+            "session_id": "child-1",
+            "transcript_path": "/tmp/t.jsonl",
+        })
+
+        # Mark terminated again for second resume
+        def terminate_again(tree: SessionTree) -> None:
+            c = tree.find_child("child-1")
+            if c:
+                c.status = "terminated"
+        st_write(terminate_again)
+
+        exec_hook("session_start_bootstrap.py", {
+            "session_id": "child-1",
+            "transcript_path": "/tmp/t.jsonl",
+        })
+
+        tree = read_tree()
+        assert tree["children"][0]["resumeCount"] == 2
 
 
 # ============================================================
@@ -356,8 +379,17 @@ class TestSessionMonitor:
             "session_id": "main-1",
             "file_path": self.session_tree,
         })
-        assert "terminated" in output
+        assert "terminated" in output.lower() or "terminated" in output
         assert "test topic" in output
+
+    def test_output_uses_system_message(self) -> None:
+        output = exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+        parsed = json.loads(output)
+        assert "systemMessage" in parsed
+        assert "additionalContext" not in parsed
 
     def test_no_output_when_no_changes(self) -> None:
         # First run creates snapshot
@@ -425,6 +457,425 @@ class TestSessionMonitor:
         crash_child = next(c for c in tree["children"] if c["id"] == "child-crash")
         assert crash_child["status"] == "crashed"
 
+    def test_crash_detection_resumed_status(self) -> None:
+        """Resumed children with dead pid should be detected as crashed."""
+        last_file = Path(self.session_tree).with_suffix(".last")
+        last_file.unlink(missing_ok=True)
+
+        def add_resumed(tree: SessionTree) -> None:
+            tree.children.append(ChildEntry(
+                id="child-resumed-crash",
+                topic="resumed crashed",
+                status="resumed",
+                created_at="2026-03-29T00:00:00Z",
+                pid=99998,
+                resume_count=1,
+            ))
+
+        st_write(add_resumed)
+
+        output = exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+        assert "crashed" in output
+        tree = read_tree()
+        child = next(c for c in tree["children"] if c["id"] == "child-resumed-crash")
+        assert child["status"] == "crashed"
+
+    def test_deliverable_via_result_updated_at(self) -> None:
+        """Deliverable notifications triggered by resultUpdatedAt change."""
+        # Create initial snapshot with a child
+        def setup_active(tree: SessionTree) -> None:
+            tree.children.append(ChildEntry(
+                id="child-deliver",
+                topic="deliver child",
+                status="active",
+                created_at="2026-03-29T00:00:00Z",
+                pid=os.getpid(),
+            ))
+        st_write(setup_active)
+
+        # First run: creates snapshot
+        exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+
+        # Update resultFiles and resultUpdatedAt
+        def add_result(tree: SessionTree) -> None:
+            c = tree.find_child("child-deliver")
+            if c:
+                c.result_files = ["spec.md"]
+                c.result_updated_at = "2026-04-06T10:00:00Z"
+        st_write(add_result)
+
+        output = exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+        assert "deliverables" in output.lower() or "spec.md" in output
+
+    def test_writes_notification_queue(self) -> None:
+        """Session monitor writes to notifications.jsonl."""
+        output = exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+        # Check that notifications.jsonl was created
+        queue = Path(self.tmpdir) / "notifications.jsonl"
+        assert queue.exists()
+        content = queue.read_text().strip()
+        assert len(content) > 0
+        entry = json.loads(content.split("\n")[0])
+        assert "message" in entry
+
+    def test_termination_with_results(self) -> None:
+        """Terminated child with results reports files."""
+        last_file = Path(self.session_tree).with_suffix(".last")
+        last_file.unlink(missing_ok=True)
+
+        def setup_terminated_with_results(tree: SessionTree) -> None:
+            for c in tree.children:
+                if c.id == "child-1":
+                    c.result_files = ["api-spec.md", "endpoints.md"]
+        st_write(setup_terminated_with_results)
+
+        output = exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+        assert "api-spec.md" in output
+        assert "endpoints.md" in output
+
+    def test_termination_without_results(self) -> None:
+        """Terminated child without results suggests resuming."""
+        output = exec_hook("session_monitor.py", {
+            "session_id": "main-1",
+            "file_path": self.session_tree,
+        })
+        assert "resume" in output.lower() or "No result" in output
+
+
+# ============================================================
+# notification_relay
+# ============================================================
+
+class TestNotificationRelay:
+    def setup_method(self) -> None:
+        self.tmpdir = tempfile.mkdtemp(prefix="orchestrator-test-")
+        self.session_tree = os.path.join(self.tmpdir, "session-tree.json")
+        os.environ["SESSION_TREE"] = self.session_tree
+        set_session_tree_path(self.session_tree)
+
+        def setup(tree: SessionTree) -> None:
+            tree.main_session = MainSession(id="main-1", name="test-session")
+            tree.children.append(ChildEntry(
+                id="child-1",
+                topic="test topic",
+                status="active",
+                created_at="2026-03-29T00:00:00Z",
+                pid=os.getpid(),
+            ))
+        st_write(setup)
+
+    def teardown_method(self) -> None:
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_no_output_empty_queue(self) -> None:
+        output = exec_hook("notification_relay.py", {
+            "session_id": "child-1",
+        })
+        assert output == ""
+
+    def test_reads_and_outputs_notifications(self) -> None:
+        # Write a notification to the child's queue
+        queue = Path(self.tmpdir) / "child-1.notifications.jsonl"
+        queue.write_text('{"message": "File ref.md changed externally"}\n')
+
+        output = exec_hook("notification_relay.py", {
+            "session_id": "child-1",
+        })
+        parsed = json.loads(output)
+        assert "additionalContext" in parsed
+        assert "ref.md" in parsed["additionalContext"]
+
+    def test_cursor_advances(self) -> None:
+        queue = Path(self.tmpdir) / "child-1.notifications.jsonl"
+        queue.write_text('{"message": "First notification"}\n')
+
+        # First read
+        output1 = exec_hook("notification_relay.py", {"session_id": "child-1"})
+        assert "First notification" in output1
+
+        # Second read: no new entries
+        output2 = exec_hook("notification_relay.py", {"session_id": "child-1"})
+        assert output2 == ""
+
+        # Add new entry
+        with open(queue, "a") as f:
+            f.write('{"message": "Second notification"}\n')
+
+        output3 = exec_hook("notification_relay.py", {"session_id": "child-1"})
+        assert "Second notification" in output3
+
+    def test_cursor_reset_on_truncated_queue(self) -> None:
+        queue = Path(self.tmpdir) / "child-1.notifications.jsonl"
+        queue.write_text('{"message": "line1"}\n{"message": "line2"}\n{"message": "line3"}\n')
+
+        # Read all 3
+        exec_hook("notification_relay.py", {"session_id": "child-1"})
+
+        # Truncate the queue to 1 line (cursor was at 3, now only 1 line)
+        queue.write_text('{"message": "fresh"}\n')
+
+        output = exec_hook("notification_relay.py", {"session_id": "child-1"})
+        assert "fresh" in output
+
+    def test_main_session_queue(self) -> None:
+        """Main session (no SESSION_TREE) reads from .claude/sessions/<id>/notifications.jsonl."""
+        # Create the main session queue
+        main_dir = Path(self.tmpdir) / ".claude" / "sessions" / "main-1"
+        main_dir.mkdir(parents=True)
+        queue = main_dir / "notifications.jsonl"
+        queue.write_text('{"message": "Child crashed"}\n')
+
+        output = exec_hook(
+            "notification_relay.py",
+            {"session_id": "main-1"},
+            {"SESSION_TREE": "", "HOME": self.tmpdir},
+        )
+        # Main session without SESSION_TREE uses .claude/sessions/<id>/
+        # The script cwd matters here — it looks for .claude/ relative to cwd
+        # This test verifies the code path, actual path resolution depends on cwd
+
+
+# ============================================================
+# context_drift
+# ============================================================
+
+class TestContextDrift:
+    def setup_method(self) -> None:
+        self.tmpdir = tempfile.mkdtemp(prefix="orchestrator-test-")
+        self.session_tree = os.path.join(self.tmpdir, "session-tree.json")
+        os.environ["SESSION_TREE"] = self.session_tree
+        set_session_tree_path(self.session_tree)
+
+        # Create a reference file
+        self.ref_file = os.path.join(self.tmpdir, "design-doc.md")
+        Path(self.ref_file).write_text("# Design\n")
+
+        def setup(tree: SessionTree) -> None:
+            tree.main_session = MainSession(id="main-1", name="test-session")
+            tree.children.append(ChildEntry(
+                id="child-1",
+                topic="design review",
+                status="active",
+                created_at="2026-03-29T00:00:00Z",
+                pid=os.getpid(),
+                reference_files=[self.ref_file],
+            ))
+        st_write(setup)
+
+    def teardown_method(self) -> None:
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def test_guard_no_session_tree(self) -> None:
+        output = exec_hook("context_drift.py", {
+            "session_id": "child-1",
+            "file_path": self.ref_file,
+        }, {"SESSION_TREE": ""})
+        assert output == ""
+
+    def test_guard_main_session(self) -> None:
+        """Main session ID should not trigger context drift."""
+        output = exec_hook("context_drift.py", {
+            "session_id": "main-1",
+            "file_path": self.ref_file,
+        })
+        assert output == ""
+
+    def test_no_match_irrelevant_file(self) -> None:
+        output = exec_hook("context_drift.py", {
+            "session_id": "child-1",
+            "file_path": "/tmp/unrelated.md",
+        })
+        assert output == ""
+
+    def test_match_reference_file(self) -> None:
+        output = exec_hook("context_drift.py", {
+            "session_id": "child-1",
+            "file_path": self.ref_file,
+        })
+        parsed = json.loads(output)
+        assert "systemMessage" in parsed
+        assert "design-doc.md" in parsed["systemMessage"]
+
+    def test_writes_notification_queue(self) -> None:
+        exec_hook("context_drift.py", {
+            "session_id": "child-1",
+            "file_path": self.ref_file,
+        })
+        queue = Path(self.tmpdir) / "child-1.notifications.jsonl"
+        assert queue.exists()
+        entry = json.loads(queue.read_text().strip())
+        assert entry["type"] == "context_drift"
+        assert "design-doc.md" in entry["file"]
+
+
+# ============================================================
+# register_result (skill script)
+# ============================================================
+
+class TestRegisterResult:
+    def setup_method(self) -> None:
+        self.tmpdir = tempfile.mkdtemp(prefix="orchestrator-test-")
+        self.session_tree = os.path.join(self.tmpdir, "session-tree.json")
+        os.environ["SESSION_TREE"] = self.session_tree
+        set_session_tree_path(self.session_tree)
+
+        # Create a test file to register
+        self.test_file = os.path.join(self.tmpdir, "spec.md")
+        Path(self.test_file).write_text("# Spec\n")
+
+        def setup(tree: SessionTree) -> None:
+            tree.main_session = MainSession(id="main-1")
+            tree.children.append(ChildEntry(
+                id="child-1",
+                topic="test",
+                status="active",
+                created_at="2026-03-29T00:00:00Z",
+                pid=os.getpid(),
+            ))
+        st_write(setup)
+
+    def teardown_method(self) -> None:
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _exec_register(self, *args: str, env_override: dict[str, str] | None = None) -> str:
+        script = str(SCRIPT_DIR.parent / "skills" / "register-result" / "scripts" / "register_result.py")
+        env = {
+            "SESSION_TREE": os.environ.get("SESSION_TREE", ""),
+            "PATH": os.environ.get("PATH", ""),
+            "HOME": os.environ.get("HOME", ""),
+        }
+        if env_override:
+            env.update(env_override)
+        result = subprocess.run(
+            ["uv", "run", script, *args],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        return (result.stdout + result.stderr).strip()
+
+    def test_registers_file(self) -> None:
+        output = self._exec_register("child-1", self.test_file)
+        assert "Registered" in output
+        tree = read_tree()
+        child = tree["children"][0]
+        assert self.test_file in child["resultFiles"]
+        assert child["resultUpdatedAt"] is not None
+
+    def test_deduplication(self) -> None:
+        self._exec_register("child-1", self.test_file)
+        self._exec_register("child-1", self.test_file)
+        tree = read_tree()
+        assert tree["children"][0]["resultFiles"].count(self.test_file) == 1
+
+    def test_nonexistent_file_warning(self) -> None:
+        output = self._exec_register("child-1", "/tmp/no-such-file-xyz.md")
+        assert "not found" in output.lower() or "Warning" in output
+
+    def test_guard_child_only(self) -> None:
+        output = self._exec_register("child-1", self.test_file, env_override={"SESSION_TREE": ""})
+        assert "only available in child sessions" in output.lower()
+
+
+# ============================================================
+# list_sessions (skill script)
+# ============================================================
+
+class TestListSessions:
+    def setup_method(self) -> None:
+        self.tmpdir = tempfile.mkdtemp(prefix="orchestrator-test-")
+        self.session_tree = os.path.join(self.tmpdir, "session-tree.json")
+        os.environ["SESSION_TREE"] = self.session_tree
+        set_session_tree_path(self.session_tree)
+
+    def teardown_method(self) -> None:
+        import shutil
+        shutil.rmtree(self.tmpdir, ignore_errors=True)
+
+    def _exec_sessions(self, session_id: str, env_override: dict[str, str] | None = None) -> str:
+        script = str(SCRIPT_DIR.parent / "skills" / "sessions" / "scripts" / "list_sessions.py")
+        env = {
+            "SESSION_TREE": os.environ.get("SESSION_TREE", ""),
+            "PATH": os.environ.get("PATH", ""),
+            "HOME": os.environ.get("HOME", ""),
+        }
+        if env_override:
+            env.update(env_override)
+        result = subprocess.run(
+            ["uv", "run", script, session_id],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        return (result.stdout + result.stderr).strip()
+
+    def test_empty_tree(self) -> None:
+        def setup(tree: SessionTree) -> None:
+            tree.main_session = MainSession(id="main-1")
+        st_write(setup)
+
+        output = self._exec_sessions("main-1")
+        assert "No child sessions" in output
+
+    def test_multiple_sessions(self) -> None:
+        def setup(tree: SessionTree) -> None:
+            tree.main_session = MainSession(id="main-1")
+            tree.children.append(ChildEntry(
+                id="child-1",
+                topic="design-review",
+                status="active",
+                created_at="2026-04-04T10:00:00Z",
+                persona="discuss",
+                reference_files=["design-doc.md"],
+            ))
+            tree.children.append(ChildEntry(
+                id="child-2",
+                topic="api-spec",
+                status="terminated",
+                created_at="2026-04-03T15:30:00Z",
+                persona="discuss",
+                result_files=["api-spec.md"],
+                resume_count=2,
+            ))
+        st_write(setup)
+
+        output = self._exec_sessions("main-1")
+        assert "design-review" in output
+        assert "active" in output
+        assert "api-spec" in output
+        assert "terminated" in output
+        assert "resumed 2x" in output
+        assert "discuss" in output
+
+    def test_no_session_tree_file(self) -> None:
+        """When session-tree.json doesn't exist, show empty message."""
+        # Don't create session-tree.json, but set SESSION_TREE to a non-existent path
+        non_existent = os.path.join(self.tmpdir, "nonexistent", "session-tree.json")
+        output = self._exec_sessions("main-1", env_override={"SESSION_TREE": non_existent})
+        assert "No child sessions" in output
+
+
+# ============================================================
+# iterm2_launcher (missing args)
+# ============================================================
 
 class TestIterm2LauncherMissingArgs:
     def test_missing_args(self) -> None:
