@@ -1,5 +1,5 @@
 #!/bin/bash
-# Render a D2 file to PNG and open it
+# Render a D2 file to PNG
 # Usage: bash preview.sh <path-to-d2-file> [theme-id] [layout-engine]
 #
 # theme-id: 3 (default, Flagship Terrastruct). Run `d2 themes` for full list.
@@ -37,5 +37,3 @@ d2 --theme "$THEME" $LAYOUT_FLAG "$D2_FILE" "$OUTPUT"
 
 echo ""
 echo "Rendered diagram: $OUTPUT"
-
-open "$OUTPUT"

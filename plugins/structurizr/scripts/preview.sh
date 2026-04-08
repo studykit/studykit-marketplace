@@ -52,10 +52,5 @@ for png in "$OUTPUT_DIR"/*.png; do
     [ -f "$png" ] && echo "  $png"
 done
 
-# Open all rendered PNGs
-for png in "$OUTPUT_DIR"/*.png; do
-    [ -f "$png" ] && open "$png"
-done
-
 # Cleanup
 rm -rf "$WORK_DIR"

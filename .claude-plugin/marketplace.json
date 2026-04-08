@@ -103,7 +103,7 @@
       "name": "structurizr",
       "source": "./plugins/structurizr",
       "description": "Structurizr DSL diagram reference, creation, and C4 model visualization plugin",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "studykit"
       },
@@ -116,7 +116,7 @@
       "name": "d2",
       "source": "./plugins/d2",
       "description": "D2 diagram creation, rendering, and visualization plugin",
-      "version": "0.1.0",
+      "version": "0.1.1",
       "author": {
         "name": "studykit"
       },

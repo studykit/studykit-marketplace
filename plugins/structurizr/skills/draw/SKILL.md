@@ -37,7 +37,7 @@ After writing the `.dsl` file, always render it so the user can see the diagram 
 bash ${CLAUDE_PLUGIN_ROOT}/scripts/preview.sh <output.dsl>
 ```
 
-This uses `structurizr` to export to PlantUML, then `plantuml` to render PNG images. All diagrams open automatically.
+This uses `structurizr` to export to PlantUML, then `plantuml` to render PNG images.
 
 Prerequisites: `brew install structurizr plantuml`
 

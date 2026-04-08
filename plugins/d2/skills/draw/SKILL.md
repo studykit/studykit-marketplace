@@ -48,7 +48,7 @@ Prerequisites: `brew install d2`
 For sketch (hand-drawn) style, render directly:
 
 ```bash
-d2 --sketch --theme 3 <output.d2> <output.png> && open <output.png>
+d2 --sketch --theme 3 <output.d2> <output.png>
 ```
 
 To export as other formats:
@@ -139,7 +139,7 @@ D2 supports multiple layout engines, each with different strengths. Set via CLI 
 The preview script uses the default engine (dagre). To use a different engine, render directly:
 
 ```bash
-d2 --layout elk --theme 3 <output.d2> <output.png> && open <output.png>
+d2 --layout elk --theme 3 <output.d2> <output.png>
 ```
 
 ### Interpreting User Requests
