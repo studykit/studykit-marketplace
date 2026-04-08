@@ -41,7 +41,7 @@ bash ${CLAUDE_PLUGIN_ROOT}/scripts/preview.sh <output.d2> [theme-id] [layout-eng
 ```
 
 - **theme-id**: Default is `3` (Flagship Terrastruct) — clean, professional output. See themes section for all IDs.
-- **layout-engine**: `dagre` (default) or `elk`. See layout engine section for when to use each.
+- **layout-engine**: `elk` (default) or `dagre`. See layout engine section for when to use each.
 
 Prerequisites: `brew install d2`
 
@@ -133,19 +133,19 @@ D2 supports multiple layout engines, each with different strengths. Set via CLI 
 
 | Engine | Flag | Description |
 |--------|------|-------------|
-| dagre | `--layout dagre` | Default. Fast, hierarchical/layered layout (Graphviz DOT-based) |
-| elk | `--layout elk` | More mature, better for complex diagrams. Supports width/height on containers |
+| dagre | `--layout dagre` | Fast, hierarchical/layered layout (Graphviz DOT-based) |
+| elk | `--layout elk` | Default. More mature, better for complex diagrams. Supports width/height on containers |
 
-The preview script uses the default engine (dagre). To use a different engine, render directly:
+The preview script uses the default engine (elk). To use a different engine, render directly:
 
 ```bash
-d2 --layout elk --theme 3 <output.d2> <output.png>
+d2 --layout dagre --theme 3 <output.d2> <output.png>
 ```
 
 ### Interpreting User Requests
 
-- "dagre", "기본 레이아웃", "default layout" -> dagre (default)
-- "elk", "복잡한 레이아웃", "complex layout" -> elk
+- "elk", "기본 레이아웃", "default layout" -> elk (default)
+- "dagre", "계층형 레이아웃", "hierarchical layout" -> dagre
 - "hierarchical", "계층형" -> dagre (designed for hierarchical layouts)
 - "compact", "밀집" -> elk (generally produces more compact output)
 
