@@ -5,8 +5,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing an imple
 ## End Iteration (not finalizing)
 
 1. **Offer a review** — ask the user if they want to run a `plan-reviewer` before closing. If yes:
-   - If a `plan-reviewer` agent was already spawned in this session, offer to reuse it (via `SendMessage`) or spawn fresh (see `${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`).
-   - For a fresh spawn, use `Agent(subagent_type: "plan-reviewer", name: "plan-reviewer")` with the Full scope request format (all criteria #1–#8). Provide the current plan file path, spec file path, report path per `references/review-report.md` (label: `full-<revision>`), and any previous review report paths.
+   - Spawn a fresh `Agent(subagent_type: "plan-reviewer")` with the Full scope request format (all criteria #1–#8). Provide the current plan file path, spec file path, report path per `references/review-report.md` (label: `full-<revision>`), and any previous review report paths.
    - Walk through each flagged issue. The user can accept, modify, or defer items.
    - Update the output file with revisions. Add the review report filename to `reflected_files`.
 2. **Scan for Open Items** — walk through each section and identify incomplete or unclear items.

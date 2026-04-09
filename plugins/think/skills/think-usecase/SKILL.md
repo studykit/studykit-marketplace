@@ -44,23 +44,29 @@ Read `${CLAUDE_SKILL_DIR}/references/abstraction-guard.md` for the full list of 
 
 ## Progressive File Writing
 
-The working file is a living document that grows throughout the interview. The user can open it at any time to see the current state.
+The working file grows through **checkpoint writes** rather than after every confirmed item. Between checkpoints, confirmed use cases are tracked via tasks (TaskCreate/TaskUpdate). This keeps the conversation flowing without constant file I/O, while limiting data loss if the session is interrupted.
 
 ### File Lifecycle
 
 | Phase | Trigger | What happens to the file |
 |-------|---------|--------------------------|
 | Create | Idea received (step 1) | Create the file with frontmatter, original idea, and empty sections |
-| Update | Each use case confirmed or split (steps 3-4) | Append the new use case; update actors table and diagram |
-| Update | Progress snapshot (every 4-5 exchanges) | Update the Context section with latest understanding |
-| End iteration | User pauses the session | Increment revision, append Session Close to history file, update Open Items + Next Steps |
+| Checkpoint | Every 3 confirmed use cases | Batch-write all unwritten confirmed UCs, update actors table, diagram, and Context |
+| Checkpoint | Phase transition or challenge mode shift | Write all pending confirmed content |
+| Checkpoint | Before review (reviewer launch) | Write all pending confirmed content so the reviewer sees the latest state |
+| End iteration | User pauses the session | Write all pending content, increment revision, append Session Close to history file, update Open Items + Next Steps |
 | Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, set `status: final` |
 
 ### Working File Path
 
-At the start of the interview, determine the file path:
-- Default: `A4/<topic-slug>.usecase.md` relative to working directory
-- If the file already exists, this is an **iteration** — enter Iteration Mode (see below)
+At the start of the interview, determine the file path from **$ARGUMENTS**:
+
+1. **Full path or filename** — if the argument matches an existing `.usecase.md` file, use it directly → Iteration Mode
+2. **Partial match** — glob for `A4/*<argument>*.usecase.md`. If multiple matches, present candidates and ask the user to pick
+3. **No existing file** — treat the argument as an idea. Derive a topic slug (lowercase, hyphen-separated, 2–5 words). File path: `A4/<topic-slug>.usecase.md`
+   - If this path already exists → Iteration Mode
+   - Otherwise → New Session
+
 - Ask the user only if they want a different location
 - Create the directory if needed
 
@@ -120,10 +126,11 @@ When the working file already exists, this is a returning session to refine the 
 
 ### How to Update
 
-- **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
+- **Track confirmed items via tasks** — after each use case is confirmed, create a task (e.g., `UC-1: <title>`) and mark it completed. This gives the user a running overview via TaskList without writing the file.
+- **Write at checkpoints only** — when a checkpoint trigger fires (see File Lifecycle), use the Write tool to rewrite the entire file with all pending confirmed content. This keeps the file consistent and avoids partial edit issues.
 - **Preserve all previously confirmed use cases** — never remove or reorder them during updates.
-- **Update the Context section** with the latest understanding each time you write.
-- **Update the Actors table** when a new actor is identified.
+- **Update the Context section** with the latest understanding at each checkpoint.
+- **Update the Actors table** when a new actor is identified (included in the next checkpoint write).
 - **Update the Use Case Diagram** when use cases are added, showing relationships (include/extend) between them.
 
 ## Interview Flow
@@ -186,8 +193,8 @@ As the conversation reveals enough context, draft a Use Case and present it to t
 > Does this capture it? Anything to adjust?
 
 After the user confirms or revises:
-1. **Update the working file** — append the confirmed use case to the Use Cases section, update Actors table if new actor, update the Use Case Diagram, and update Context.
-2. **Track progress with tasks** — create a task for the confirmed use case (e.g., `UC-1: <title>`) and mark it as completed. This gives the user a running overview via TaskList.
+1. **Track via task** — create a task for the confirmed use case (e.g., `UC-1: <title>`) and mark it as completed. This gives the user a running overview via TaskList.
+2. **Check for checkpoint** — if this confirmation triggers a checkpoint (every 3 UCs, phase transition, or before review), batch-write all unwritten confirmed UCs to the working file, update Actors table, Use Case Diagram, and Context.
 
 ### 4. Use Case Splitting
 
@@ -228,12 +235,10 @@ When the user indicates they're done, ask whether they want to:
 
 ### Agent Usage
 
-Reviews and explorations are handled by launching subagents. On first invocation, assign a `name` for potential reuse. On subsequent invocations of the same agent type within the session, offer the user a choice between reusing the existing agent (prior context retained via `SendMessage`) or spawning a fresh one.
+Reviews and explorations are handled by launching fresh subagents. Always spawn a fresh agent — context is passed via file paths, not agent memory.
 
-For the full reuse pattern, trade-offs, and prompt format, see **`${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`**.
-
-- **Reviewer:** First launch via `Agent(subagent_type: "usecase-reviewer", name: "reviewer")`. Pass the working file path and report output path. If spawning fresh and a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
-- **Explorer:** First launch via `Agent(subagent_type: "usecase-explorer", name: "explorer")`. Pass the working file path and report output path.
+- **Reviewer:** Launch via `Agent(subagent_type: "usecase-reviewer")`. Pass the working file path and report output path. If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
+- **Explorer:** Launch via `Agent(subagent_type: "usecase-explorer")`. Pass the working file path and report output path.
 
 **Execution order:** Always run the reviewer first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The explorer only runs when the user explicitly chooses it.
 
@@ -248,6 +253,8 @@ For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/sess
 Launch a `usecase-reviewer` subagent. All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "Finalize" section.
+
+After finalizing, suggest the next step: "To turn these use cases into a specification, run `/think:think-spec <file_path>`."
 
 ### Output Format
 

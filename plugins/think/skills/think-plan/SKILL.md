@@ -117,7 +117,7 @@ Work through the spec systematically to identify implementation units. For each 
 4. **Draft the unit** and present it for confirmation.
 5. Move to the next unit only when the user confirms.
 
-After each unit is confirmed, write it to the output file immediately.
+After each unit is confirmed, track it via a task (e.g., `IU-1: <title>`, marked completed). The file is written at checkpoints — not after every unit (see Progressive File Writing).
 
 ### Progress Snapshots
 
@@ -150,7 +150,7 @@ For each confirmed unit, fill in the remaining details. Work through units in im
 3. **Acceptance criteria** — measurable criteria derived from FR behavior steps.
 4. **Risk assessment** — any risks specific to this unit.
 
-After each unit's details are confirmed, update the output file.
+After each unit's details are confirmed, track completion via a task update. The file is updated at the next checkpoint.
 
 ## Step 6: Risk Assessment
 
@@ -206,13 +206,21 @@ On **Iteration Mode entry**, compare and update as described in the Iteration Mo
 
 ### How to Update
 
+- **Track confirmed items via tasks** — after each unit is confirmed or detailed, create/update a task (e.g., `IU-1: <title>`) and mark it completed. This gives the user a running overview via TaskList without writing the file.
 - **Use the Write tool** for initial file creation (skeleton with frontmatter, Overview, and Implementation Strategy).
-- **Use the Edit tool** for all subsequent updates — adding units, updating details, adding sections. This avoids rewriting the entire file and reduces the risk of accidentally dropping confirmed content.
+- **Use the Edit tool** at checkpoints for subsequent updates — adding units, updating details, adding sections. This avoids rewriting the entire file and reduces the risk of accidentally dropping confirmed content.
 - **Never remove or reorder confirmed units.**
-- After each unit is confirmed, add it to the Implementation Units section.
-- After dependency mapping, add the Dependency Graph section.
-- After each detail pass, update the unit with file mappings, tests, and criteria.
 - Show progress: "That's 4 units defined, 2 fully detailed. Let's continue."
+
+### Checkpoint Triggers
+
+| Trigger | When |
+|---------|------|
+| Unit count | Every 3 confirmed units during Unit Derivation |
+| Step transition | Moving between steps (Unit Derivation → Dependency Mapping → Detail Pass → Risk Assessment) |
+| Before review | Before launching a `plan-reviewer` subagent |
+| Navigation status | When presenting the step status table to the user |
+| Session end | End iteration or finalize |
 
 ## Revision and Session History
 
@@ -251,11 +259,9 @@ Walk through each flagged issue with the user. They can accept, modify, or defer
 
 ## Agent Usage
 
-Subagents are launched with a `name` for potential reuse within the session. On subsequent invocations of the same agent type, offer the user a choice between reusing the existing agent or spawning a fresh one.
+Always spawn fresh subagents — context is passed via file paths, not agent memory.
 
-For the full reuse pattern, see **`${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`**.
-
-- **`plan-reviewer`** — first launch via `Agent(subagent_type: "plan-reviewer", name: "plan-reviewer")`. Context passed via file paths.
+- **`plan-reviewer`** — launch via `Agent(subagent_type: "plan-reviewer")`. Context passed via file paths.
 
 ## Wrapping Up
 
@@ -266,6 +272,8 @@ When the user indicates they're done, ask whether they want to:
 - **Finalize** (mark as ready for implementation)
 
 For the full step-by-step checklists, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`**.
+
+After finalizing, suggest the next step: "To start implementing this plan, run `/think:think-code <file_path>`."
 
 ### Output Format
 

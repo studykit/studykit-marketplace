@@ -21,7 +21,7 @@ Each phase has a focused review scope that maps to specific reviewer criteria:
 
 ## How to Request a Review
 
-If a `spec-reviewer` agent was already spawned in this session, offer the user a choice to reuse it (via `SendMessage`) or spawn fresh (see `${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`). For a fresh spawn, use `Agent(subagent_type: "spec-reviewer", name: "spec-reviewer")`. Include the scope, file paths, and report output path per `review-report.md` (in this references directory) in the prompt.
+Spawn a fresh `Agent(subagent_type: "spec-reviewer")`. Include the scope, file paths, and report output path per `review-report.md` (in this references directory) in the prompt.
 
 **Scoped review:**
 

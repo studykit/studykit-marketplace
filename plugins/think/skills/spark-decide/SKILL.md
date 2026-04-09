@@ -26,11 +26,14 @@ The working file is a living document that grows throughout the session. The use
 
 ### File Lifecycle
 
+The file grows through **checkpoint writes** rather than after every confirmed item. Between checkpoints, confirmed options and findings are tracked via tasks.
+
 | Phase | Trigger | What happens to the file |
 |-------|---------|--------------------------|
 | Create | Problem framed (Phase 1 complete) | Create file with frontmatter, context, and empty sections |
-| Update | Each option researched (Phase 3) | Append research findings |
-| Update | Evaluation completed (Phase 4) | Add evaluation matrix and analysis |
+| Checkpoint | Every 2 options researched (Phase 3) | Batch-write all unwritten research findings |
+| Checkpoint | Phase transition (e.g., Research → Evaluation) | Write all pending confirmed content |
+| Checkpoint | Before review (reviewer launch) | Write all pending content so the reviewer sees the latest state |
 | Finalize | Decision made (Phase 5) | Fill all sections, append discussion log, change status to final |
 
 ### Working File Path
@@ -87,9 +90,10 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ### How to Update
 
-- **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
+- **Track confirmed items via tasks** — after each option is confirmed or researched, create/update a task (e.g., `Option A: <name> — researched`) and mark it completed. This gives the user a running overview without writing the file.
+- **Write at checkpoints only** — when a checkpoint trigger fires (see File Lifecycle), use the Write tool to rewrite the entire file with all pending confirmed content. This keeps the file consistent and avoids partial edit issues.
 - **Preserve all previously confirmed content** — never remove or reorder confirmed options, findings, or evaluation results.
-- **Update the Context and Success Criteria** if new information emerges during the session.
+- **Update the Context and Success Criteria** if new information emerges during the session (included in the next checkpoint write).
 - **Keep the `status: draft` marker** in frontmatter until wrap-up.
 
 ## Navigation Rules
@@ -149,7 +153,7 @@ Help brainstorm 3-7 candidate options. Techniques:
 
 For each option, capture a one-sentence description. Confirm the final list before proceeding.
 
-Update the working file with the confirmed options.
+Write a checkpoint — update the working file with the confirmed options (phase transition).
 
 ## Phase 3: Research
 
@@ -161,7 +165,7 @@ For each promising option, investigate using WebSearch/WebFetch and codebase exp
 2. **Research one option at a time** — Present findings, then ask: "Anything else you want to know about this before we move on?"
 3. **Be objective** — Present both strengths and limitations. Do not advocate for any option during research.
 4. **Cite sources** — Include links or references for factual claims.
-5. **Update the file** — After each option is researched, append findings to the Research Findings section.
+5. **Track via task** — After each option is researched, mark the task completed. Findings are batch-written to the file at the next checkpoint.
 
 ### Research depth
 
@@ -242,7 +246,6 @@ When the user indicates they're done:
    - Append the Discussion Log
    - Remove any placeholder text
 5. **Report the path** so the user can reference it.
-7. **Suggest next steps** — If the decision leads to building something: "You can now use `/think:co-think-story <file_path>` to turn this decision into Job Stories."
 
 ### Output Format
 

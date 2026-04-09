@@ -134,7 +134,7 @@ When a use case is too big:
 
 For detailed clarification checklists (UI vs Non-UI) and question techniques, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Question Techniques" section.
 
-After each FR is confirmed, write it to the output file immediately and update the task.
+After each FR is confirmed, track it via a task (e.g., `FR-1: <title>`, marked completed). The file is written at checkpoints — not after every FR (see Progressive File Writing).
 
 ### Step 1.2: UI Screen Grouping
 
@@ -198,12 +198,20 @@ On **Iteration Mode entry**, compare and update as described in the Iteration Mo
 
 ### How to Update
 
-- **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
+- **Track confirmed items via tasks** — after each FR, concept, or component is confirmed, create a task (e.g., `FR-1: <title>`) and mark it completed. This gives the user a running overview via TaskList without writing the file.
+- **Write at checkpoints only** — when a checkpoint trigger fires (see below), use the Write tool to rewrite the entire file with all pending confirmed content. This keeps the file consistent and avoids partial edit issues.
 - **Preserve all previously confirmed content** — never remove or reorder confirmed items.
-- After each FR is confirmed, update the Requirements section.
-- After each concept is confirmed, update the Domain Model section.
-- After each component is confirmed, update the Architecture section.
 - Show progress: "That's 5 FRs defined, 3 concepts extracted. Let's continue."
+
+### Checkpoint Triggers
+
+| Trigger | When |
+|---------|------|
+| Item count | Every 3 confirmed items within a phase (3 FRs, 3 concepts, etc.) |
+| Phase transition | Moving between Requirements → Domain Model → Architecture |
+| Before review | Before launching a `spec-reviewer` subagent |
+| Navigation status | When presenting the phase status table to the user |
+| Session end | End iteration or finalize |
 
 ## Revision and Session History
 
@@ -261,12 +269,10 @@ For review scopes, trigger conditions, prompt formats, and post-review steps, re
 
 ## Agent Usage
 
-Subagents are launched with a `name` for potential reuse within the session. On subsequent invocations of the same agent type, offer the user a choice between reusing the existing agent (prior context retained via `SendMessage`) or spawning a fresh one.
+Always spawn fresh subagents — context is passed via file paths, not agent memory.
 
-For the full reuse pattern, trade-offs, and prompt format, see **`${CLAUDE_PLUGIN_ROOT}/references/agent-reuse-guide.md`**.
-
-- **`spec-reviewer`** — first launch via `Agent(subagent_type: "spec-reviewer", name: "spec-reviewer")`. Context passed via file paths. See **`${CLAUDE_SKILL_DIR}/references/phase-review-guide.md`** for invocation details.
-- **`mock-html-generator`** — first launch via `Agent(subagent_type: "mock-html-generator", name: "mock-generator")`. Each invocation provides FRs, layout requirements, and output path in the prompt.
+- **`spec-reviewer`** — launch via `Agent(subagent_type: "spec-reviewer")`. Context passed via file paths. See **`${CLAUDE_SKILL_DIR}/references/phase-review-guide.md`** for invocation details.
+- **`mock-html-generator`** — launch via `Agent(subagent_type: "mock-html-generator")`. Each invocation provides FRs, layout requirements, and output path in the prompt.
 
 ## Wrapping Up
 
@@ -287,6 +293,8 @@ For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/sess
 Verify technology stack is filled, launch a **Full** scope `spec-reviewer` subagent. All issues must be resolved. Write the final session checkpoint, set `status: final`, show spec feedback issues, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`** → "Finalize" section.
+
+After finalizing, suggest the next step: "To create an implementation plan from this spec, run `/think:think-plan <file_path>`."
 
 ### Output Format
 
