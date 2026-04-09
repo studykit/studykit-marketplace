@@ -39,7 +39,7 @@ A well-sized unit should:
 - Touch 1-3 components
 - Be independently testable
 - Result in a meaningful, working increment
-- Be completable in a single focused session
+- Require roughly under ~500 lines of new or changed code
 
 ### Splitting Large Units
 

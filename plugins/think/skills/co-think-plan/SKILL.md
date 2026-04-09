@@ -27,6 +27,8 @@ Input is a spec file (no existing `.impl-plan.md`). Follows a guided sequence:
 
 Input is an existing `.impl-plan.md` file. No fixed order — enter from wherever the change is needed.
 
+**Entry procedure:** Read `${CLAUDE_SKILL_DIR}/references/iteration-entry.md` and follow the checks before starting work.
+
 **Impact propagation rule:** when something changes in one unit, check whether it affects other units:
 - Unit split → do dependencies need updating? Does the order change?
 - FR added to a unit → does the test strategy cover it? Does the file mapping need new entries?
@@ -57,22 +59,8 @@ After resolution, present the resolved file(s) and ask the user to confirm befor
 > Proceed with these files?
 
 **Mode detection:**
-- If the target `.impl-plan.md` file already exists → **Iteration** mode. Read the plan file and its source spec.
+- If the target `.impl-plan.md` file already exists → **Iteration** mode. Read the plan file and its source spec, then follow `${CLAUDE_SKILL_DIR}/references/iteration-entry.md`.
 - If only a spec file is found (no existing plan) → **First Design** mode.
-
-**Iteration Mode entry:** When entering Iteration mode, check two things:
-
-1. **Source spec changes** — compare the stored `sha` in plan frontmatter against the current file:
-   - Run `git hash-object <spec-file-path>` to get the current SHA.
-   - If SHA matches → no changes, skip.
-   - If SHA differs → run `git diff <stored-sha> <current-sha>` to see exactly what changed.
-   - Present the changes to the user: "The source spec has been updated. Changes: [list]. Review these changes before continuing?"
-   - Walk through each change with the user to determine plan impact (new units needed, existing units to update, dependency changes).
-   - After reflecting, update `sources` in plan frontmatter (both `revision` and `sha`).
-
-2. **Unreflected review reports** — check for `A4/co-think/<topic-slug>.impl-plan.review-*.md` files against `reflected_files` in frontmatter:
-   - Read each unreflected review report and extract issues that were not yet addressed.
-   - Present unreflected findings to the user alongside the Open Items from the last revision.
 
 After reading, list the spec overview and any existing plan content found, then confirm with the user before proceeding.
 
@@ -218,46 +206,19 @@ On **Iteration Mode entry**, compare and update as described in the Iteration Mo
 
 ### How to Update
 
-- **Use the Write tool** to rewrite the entire file each time. This keeps the file consistent and avoids partial edit issues.
-- **Preserve all previously confirmed content** — never remove or reorder confirmed units.
-- After each unit is confirmed, update the Implementation Units section.
+- **Use the Write tool** for initial file creation (skeleton with frontmatter, Overview, and Implementation Strategy).
+- **Use the Edit tool** for all subsequent updates — adding units, updating details, adding sections. This avoids rewriting the entire file and reduces the risk of accidentally dropping confirmed content.
+- **Never remove or reorder confirmed units.**
+- After each unit is confirmed, add it to the Implementation Units section.
 - After dependency mapping, add the Dependency Graph section.
 - After each detail pass, update the unit with file mappings, tests, and criteria.
 - Show progress: "That's 4 units defined, 2 fully detailed. Let's continue."
 
 ## Revision and Session History
 
-Increment `revision` in frontmatter and update `revised` timestamp when reflecting external input (review findings) or closing the session. Routine updates during the interview (unit confirmation, detail additions) do not increment revision.
+For revision increment rules, read `${CLAUDE_SKILL_DIR}/references/revision-rules.md`.
 
 Session history is stored in a separate file (`<topic-slug>.impl-plan.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the full format.
-
-At the end of each session:
-
-1. **Scan for incomplete items** — walk through each unit and identify what's missing or underspecified:
-   - Units without file mappings
-   - Units without test strategies
-   - Units with vague acceptance criteria
-   - Missing dependency declarations
-2. **Append a Session Close entry** to the history file per `${CLAUDE_SKILL_DIR}/references/session-history.md`.
-3. **Update the working file** — update the Open Items and Next Steps sections. **Increment `revision`** and update `revised` timestamp.
-
-### Iteration Mode Entry
-
-When entering **Iteration** mode:
-1. Read the working file — Open Items and Next Steps show the current backlog.
-2. Present the Open Items table as a **work backlog**:
-
-   > Here are the open items from the last session:
-   >
-   > | # | Section | Item | What's Missing |
-   > |---|---------|------|---------------|
-   > | 1 | IU-3 | Test Strategy | No test scenarios defined |
-   > | 2 | IU-5 | File Mapping | Paths not specified |
-   > | ...
-   >
-   > Which item would you like to work on first? Or would you like to focus on something else?
-
-3. Let the user choose — they may pick from the backlog or bring new topics.
 
 ## Review
 
