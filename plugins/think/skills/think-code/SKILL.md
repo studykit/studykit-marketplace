@@ -1,5 +1,5 @@
 ---
-name: co-think-code
+name: think-code
 description: "This skill should be used when the user needs to execute an implementation plan — autonomously implementing code unit by unit from an .impl-plan.md file. Common triggers include: 'implement the plan', 'code this plan', 'execute the plan', 'start coding', 'build from the plan', 'implement IU-1', 'continue implementation', 'resume coding'. Also applicable when a finalized impl-plan needs to be turned into working code."
 version: 0.1.0
 argument-hint: <path to .impl-plan.md file>
@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Executor
 
-Takes an implementation plan (from co-think-plan) and executes it — implementing code unit by unit through `code-executor` agents. This skill is an **orchestrator**: it manages execution order, tracks progress, and delegates actual implementation to agents. It does not write application code itself.
+Takes an implementation plan (from think-plan) and executes it — implementing code unit by unit through `code-executor` agents. This skill is an **orchestrator**: it manages execution order, tracks progress, and delegates actual implementation to agents. It does not write application code itself.
 
 ## Step 0: Input
 
@@ -21,15 +21,15 @@ If no argument is provided, ask the user for a slug, filename, or path.
 Arguments can be full paths, partial filenames, or slugs. Resolve in order:
 
 1. **Full path** — use directly if the file exists
-2. **Partial match** — glob for `A4/co-think/*<argument>*.impl-plan.md`
-3. **Fallback** — if `A4/co-think/` does not exist, glob for `**/*<argument>*.impl-plan.md` from the project root
+2. **Partial match** — glob for `A4/*<argument>*.impl-plan.md`
+3. **Fallback** — if `A4/` does not exist, glob for `**/*<argument>*.impl-plan.md` from the project root
 4. **Multiple matches** — present the candidates and ask the user to pick
 5. **No match** — inform the user and ask for a different term
 
 After resolution, present the resolved file and ask the user to confirm before reading:
 
 > **Resolved input file:**
-> - `A4/co-think/agent-orchestrator.impl-plan.md`
+> - `A4/agent-orchestrator.impl-plan.md`
 >
 > Proceed with this file?
 

@@ -13,7 +13,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing an imple
 3. **Append a Session Close entry** to the history file per `references/session-history.md`. Include: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
 4. **Update the working file** — update Open Items and Next Steps. Increment revision per `references/revision-rules.md`. Keep `status: draft`.
 5. **Report** — show the user the current state and Open Items for next time.
-6. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+6. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     impl-plan(<topic-slug>): revision N
     
@@ -29,7 +29,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing an imple
 4. **Append a final Session Close entry** to the history file per `references/session-history.md`. Include cleared Open Items.
 5. **Update the working file** — clear Open Items and Next Steps. Set `status: final`. Increment revision per `references/revision-rules.md`.
 6. **Report the path** so the user can reference it.
-7. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+7. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     impl-plan(<topic-slug>): finalize
     

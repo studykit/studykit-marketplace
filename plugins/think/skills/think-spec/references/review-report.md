@@ -4,7 +4,7 @@ After each `spec-reviewer` invocation, the reviewer agent writes the report dire
 
 ## File Path
 
-`A4/co-think/<topic-slug>.spec.review-<label>.md`
+`A4/<topic-slug>.spec.review-<label>.md`
 
 Where `<label>` identifies the review context:
 - **Phase review:** use the scope and revision number (e.g., `review-requirements-1`, `review-domain-2`, `review-architecture-3`)

@@ -4,11 +4,11 @@ After each `usecase-explorer` invocation, the explorer agent writes the report d
 
 ## File Path
 
-`A4/co-think/<topic-slug>.usecase.exploration-<label>.md`
+`A4/<topic-slug>.usecase.exploration-<label>.md`
 
 Where `<label>` identifies the exploration context:
 - **auto-usecase:** use the growth iteration number — one report per growth iteration (e.g., `exploration-1`, `exploration-2`, `exploration-3`)
-- **co-think-usecase:** use the revision number (e.g., `exploration-1`, `exploration-2`)
+- **think-usecase:** use the revision number (e.g., `exploration-1`, `exploration-2`)
 
 ## Consumed Naming Convention
 
@@ -42,4 +42,4 @@ Write the explorer's full report as-is below the frontmatter — do not summariz
 
 - Preserves exploration results for auditing and traceability
 - Enables resume after interruption: read existing reports to avoid re-exploring
-- Allows the user to review exploration context in co-think-usecase sessions
+- Allows the user to review exploration context in think-usecase sessions

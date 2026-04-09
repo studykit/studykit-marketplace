@@ -4,10 +4,10 @@ After each `usecase-reviewer` invocation, the reviewer agent writes the report d
 
 ## File Path
 
-`A4/co-think/<topic-slug>.usecase.review-<label>.md`
+`A4/<topic-slug>.usecase.review-<label>.md`
 
 Where `<label>` identifies the review context:
-- **co-think-usecase:** use the revision number (e.g., `review-1`, `review-2`) or `review-final` for finalization
+- **think-usecase:** use the revision number (e.g., `review-1`, `review-2`) or `review-final` for finalization
 - **auto-usecase:** use `g<iteration>-q<round>` format to distinguish growth iterations from quality rounds (e.g., `review-g1-q1`, `review-g1-q2`, `review-g2-q1`)
 
 ## Frontmatter

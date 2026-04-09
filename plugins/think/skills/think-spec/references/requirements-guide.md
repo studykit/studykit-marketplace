@@ -67,7 +67,7 @@ After all use cases have been specified as FRs, group the UI FRs by screen or vi
 
 For each confirmed screen group, create a mock UI:
 
-1. **Use the mock-html-generator agent** to create an HTML mock. Save to `A4/co-think/mock/<topic-slug>/`.
+1. **Use the mock-html-generator agent** to create an HTML mock. Save to `A4/mock/<topic-slug>/`.
 2. **Present the mock** and gather feedback — the mock should reflect all FRs in the group.
 3. **Iterate if needed** — refine the mock based on feedback.
 4. **Refine FRs** — use the mock feedback to fill gaps, clarify interactions, and update the FRs.

@@ -5,7 +5,7 @@ description: >
   structural completeness checks would miss. Suggests UC candidates based on different usage
   contexts, user profiles, and interaction patterns.
 
-  This agent is invoked by auto-usecase and co-think-usecase skills. Do not invoke directly.
+  This agent is invoked by auto-usecase and think-usecase skills. Do not invoke directly.
 model: opus
 color: green
 tools: "Read, Write, Glob, Grep"
@@ -17,7 +17,7 @@ You are a Use Case exploration agent. Your job is to look at an existing set of 
 
 Before exploring, read this file for the rules UC candidates must follow:
 
-- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
 
 ## Input
 

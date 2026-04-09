@@ -2,7 +2,7 @@
 
 ## File Path
 
-`A4/co-think/<topic-slug>.spec.md`
+`A4/<topic-slug>.spec.md`
 
 ## Frontmatter
 

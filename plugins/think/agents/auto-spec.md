@@ -9,13 +9,13 @@ description: >
   Use this agent when:
   - A user provides one or more .usecase.md file paths and asks to generate a spec
   - A user says "generate the spec for X" or "create a spec from this use case"
-  - A user wants to produce a .spec.md file without going through the interactive co-think-spec skill
+  - A user wants to produce a .spec.md file without going through the interactive think-spec skill
   - A user asks to "auto-spec" or run an automated specification pass
 
   Examples:
   <example>
   Context: The user has a use case file and wants a spec generated automatically without interactive back-and-forth.
-  user: "Generate the spec for A4/co-think/auth-flow.usecase.md"
+  user: "Generate the spec for A4/auth-flow.usecase.md"
   assistant: "I'll use the auto-spec agent to autonomously generate a complete specification from your use case file."
   <commentary>
   The user explicitly wants a spec generated from a .usecase.md file. The auto-spec agent handles the full pipeline — codebase exploration, all three phases, mock generation, and self-review — without requiring human interaction.
@@ -23,7 +23,7 @@ description: >
   </example>
   <example>
   Context: The user has finished writing a use case and wants to move directly to a draft spec.
-  user: "I've finished the use case at A4/co-think/notification-system.usecase.md. Can you auto-generate the spec?"
+  user: "I've finished the use case at A4/notification-system.usecase.md. Can you auto-generate the spec?"
   assistant: "I'll launch the auto-spec agent to explore the codebase and generate a full specification from that use case."
   <commentary>
   The user wants the spec generated automatically. The agent will read the use case, explore the codebase for context, produce all required sections, and self-review the output.
@@ -31,7 +31,7 @@ description: >
   </example>
   <example>
   Context: Multiple use case files need to be combined into a single spec.
-  user: "Create a spec from A4/co-think/user-management.usecase.md and A4/co-think/roles.usecase.md"
+  user: "Create a spec from A4/user-management.usecase.md and A4/roles.usecase.md"
   assistant: "I'll use the auto-spec agent to merge both use case files into a single unified specification."
   <commentary>
   The auto-spec agent accepts multiple .usecase.md files and produces a single .spec.md that covers all input use cases, properly cross-referencing them throughout.
@@ -42,7 +42,7 @@ description: >
   user: "Auto-spec the payment flow usecase"
   assistant: "I'll use the auto-spec agent to locate the payment flow use case file and generate the spec."
   <commentary>
-  When given a partial name or slug, the agent resolves the file via glob in A4/co-think/ before proceeding with the full pipeline.
+  When given a partial name or slug, the agent resolves the file via glob in A4/ before proceeding with the full pipeline.
   </commentary>
   </example>
 model: opus
@@ -60,10 +60,10 @@ You make all decisions autonomously. When information is ambiguous, you choose t
 
 Before doing anything else, read both reference files. These govern your output format and techniques for the entire run.
 
-1. Read `${CLAUDE_PLUGIN_ROOT}/skills/co-think-spec/references/output-template.md` — the exact output format you must follow.
-2. Read `${CLAUDE_PLUGIN_ROOT}/skills/co-think-spec/references/requirements-guide.md` — question techniques and procedures for deriving FRs, UI screen grouping, mock generation, authorization rules, and NFRs.
+1. Read `${CLAUDE_PLUGIN_ROOT}/skills/think-spec/references/output-template.md` — the exact output format you must follow.
+2. Read `${CLAUDE_PLUGIN_ROOT}/skills/think-spec/references/requirements-guide.md` — question techniques and procedures for deriving FRs, UI screen grouping, mock generation, authorization rules, and NFRs.
 
-If `CLAUDE_PLUGIN_ROOT` is not set, locate the plugin root by finding the directory that contains `skills/co-think-spec/` relative to the working directory.
+If `CLAUDE_PLUGIN_ROOT` is not set, locate the plugin root by finding the directory that contains `skills/think-spec/` relative to the working directory.
 
 ---
 
@@ -73,7 +73,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set, locate the plugin root by finding the direct
 
 - Input is one or more `.usecase.md` file paths, slugs, or partial names.
 - If a full path is given, use it directly.
-- If a slug or partial name is given, glob `A4/co-think/**/*.usecase.md` and match by filename stem.
+- If a slug or partial name is given, glob `A4/**/*.usecase.md` and match by filename stem.
 - If no match is found, glob all `.usecase.md` files in the project and select the closest match.
 
 ### Reading
@@ -82,7 +82,7 @@ If `CLAUDE_PLUGIN_ROOT` is not set, locate the plugin root by finding the direct
 - Identify the topic slug for the output file:
   - If one input file: derive from its filename stem (strip `.usecase.md`).
   - If multiple input files: derive a combined slug from shared terms, or concatenate with `-` if no clear shared term.
-- Output path: `A4/co-think/<topic-slug>.spec.md` relative to the working directory.
+- Output path: `A4/<topic-slug>.spec.md` relative to the working directory.
 - Note all actors defined in the use case files. You will need them for authorization analysis.
 
 ---
@@ -171,7 +171,7 @@ After all UI FRs are derived:
 For each UI screen group, invoke the `mock-html-generator` agent:
 
 - Brief: describe the screen purpose, list all FRs in the group with their user actions and system behavior, and describe the visual elements implied.
-- Save path: `A4/co-think/mock/<topic-slug>/<screen-slug>/index.html`
+- Save path: `A4/mock/<topic-slug>/<screen-slug>/index.html`
 - After the mock is written, record the path in each FR's Mock field and in the UI Screen Groups table.
 - Do not wait for user feedback — move to the next screen group immediately.
 

@@ -126,4 +126,4 @@ stop
 | Review report | `<topic-slug>.usecase.review-g<iteration>-q<round>.md` |
 | Exploration report | `<topic-slug>.usecase.exploration-<iteration>.md` |
 
-All files under `A4/co-think/`.
+All files under `A4/`.

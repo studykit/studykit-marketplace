@@ -30,7 +30,7 @@ If a `spec-reviewer` agent was already spawned in this session, offer the user a
 > Review criteria: #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs).
 > Spec file: `<path>`
 > Source files: `<paths>`
-> Report path: `A4/co-think/<topic-slug>.spec.review-requirements-<revision>.md`
+> Report path: `A4/<topic-slug>.spec.review-requirements-<revision>.md`
 > Only review the sections and criteria listed above. Skip all other criteria.
 
 **Full review:**
@@ -40,7 +40,7 @@ If a `spec-reviewer` agent was already spawned in this session, offer the user a
 > Review all sections against all criteria (#0–#7).
 > Spec file: `<path>`
 > Source files: `<paths>`
-> Report path: `A4/co-think/<topic-slug>.spec.review-full-<revision>.md`
+> Report path: `A4/<topic-slug>.spec.review-full-<revision>.md`
 
 If previous review reports exist, include their paths so the reviewer can see prior findings:
 

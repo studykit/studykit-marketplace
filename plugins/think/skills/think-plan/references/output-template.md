@@ -2,7 +2,7 @@
 
 ## File Path
 
-`A4/co-think/<topic-slug>.impl-plan.md`
+`A4/<topic-slug>.impl-plan.md`
 
 ## Frontmatter
 
@@ -83,13 +83,13 @@ tags: []
 - [ ] <error case — e.g., "POST /login with invalid password returns 401 with error message">
 
 **Completion Note:**
-<Written by co-think-code orchestrator on successful implementation. Records implementation decisions, minor deviations from plan, and rationale. Example:>
+<Written by think-code orchestrator on successful implementation. Records implementation decisions, minor deviations from plan, and rationale. Example:>
 - <spec called for bcrypt but used argon2 — already in use by existing codebase>
 - <added index on `email` column for login query performance>
 - <test uses in-memory SQLite instead of PostgreSQL for faster execution>
 
 **Deviation Note:**
-<Written by co-think-code orchestrator when the agent reports a major deviation — the plan assumes something that doesn't hold in the actual codebase. Status is reset to TODO (retryable after plan revision). Example:>
+<Written by think-code orchestrator when the agent reports a major deviation — the plan assumes something that doesn't hold in the actual codebase. Status is reset to TODO (retryable after plan revision). Example:>
 - Issue: <Plan specifies OAuth2 with Google provider, but existing codebase uses SAML for all auth flows>
 - Impact: <Cannot proceed without a design decision on auth coexistence>
 - Decision: <user skipped (2026-04-09) — revisit after plan update>
@@ -171,10 +171,10 @@ Units are numbered sequentially: `IU-1`, `IU-2`, etc. IU stands for "Implementat
 
 ## Execution Tracking Fields
 
-The following fields are used by `co-think-code` (the implementation executor skill) and are **optional** for plan authors:
+The following fields are used by `think-code` (the implementation executor skill) and are **optional** for plan authors:
 
-- **Status** — `TODO` (default) | `IN_PROGRESS` | `DONE`. Managed by the co-think-code orchestrator during execution. Plan authors do not need to set this field.
+- **Status** — `TODO` (default) | `IN_PROGRESS` | `DONE`. Managed by the think-code orchestrator during execution. Plan authors do not need to set this field.
 - **Completion Note** — Written by the orchestrator after successful implementation. Records implementation decisions, minor deviations, and rationale.
 - **Deviation Note** — Written by the orchestrator when the executing agent reports a major deviation (plan assumes something that doesn't hold in the actual codebase). Status is reset to `TODO` so the unit can be retried after plan revision.
 
-> `BLOCKED` is not a plan file status. The co-think-code orchestrator derives blocked state at runtime from the dependency graph — it is tracked in the session's TaskList, not persisted in the plan file.
+> `BLOCKED` is not a plan file status. The think-code orchestrator derives blocked state at runtime from the dependency graph — it is tracked in the session's TaskList, not persisted in the plan file.

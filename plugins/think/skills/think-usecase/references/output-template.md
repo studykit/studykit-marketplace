@@ -186,10 +186,10 @@ end note
 **Issue reference links:** Read `${SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
 
 **Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships.
-**Additional required (co-think-usecase)**: Open Items, Next Steps.
+**Additional required (think-usecase)**: Open Items, Next Steps.
 **Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Open Items, Next Steps.
 **Conditionally required:**
-- **Similar Systems Research** — always in auto-usecase; in co-think-usecase only when research was performed
-- **Source field** (per UC) — always in auto-usecase; in co-think-usecase only when research was performed
-- **Open Questions** — if unresolved topics remain (co-think-usecase); always required (auto-usecase)
+- **Similar Systems Research** — always in auto-usecase; in think-usecase only when research was performed
+- **Source field** (per UC) — always in auto-usecase; in think-usecase only when research was performed
+- **Open Questions** — if unresolved topics remain (think-usecase); always required (auto-usecase)
 - **Excluded Ideas** — when research was performed and candidates were excluded; omit if nothing was excluded

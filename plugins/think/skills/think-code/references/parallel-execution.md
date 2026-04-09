@@ -1,6 +1,6 @@
 # Parallel Execution
 
-Procedure for implementing multiple units in parallel using git worktrees. This reference is read by the co-think-code orchestrator when a phase contains parallelizable units.
+Procedure for implementing multiple units in parallel using git worktrees. This reference is read by the think-code orchestrator when a phase contains parallelizable units.
 
 ## 1. When to Parallelize
 
@@ -95,7 +95,7 @@ After merge and integration test:
 
 2. **Commit the plan update** separately from the code commits:
    ```
-   co-think-code: update plan status for Phase N
+   think-code: update plan status for Phase N
 
    - IU-3: DONE
    - IU-4: DONE

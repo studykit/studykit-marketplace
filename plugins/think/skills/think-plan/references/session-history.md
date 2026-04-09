@@ -4,7 +4,7 @@ Session history is stored in a separate file from the working plan file to keep 
 
 ## File Path
 
-`A4/co-think/<topic-slug>.impl-plan.history.md`
+`A4/<topic-slug>.impl-plan.history.md`
 
 ## Format
 

@@ -11,7 +11,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 5. **Append a Session Close entry to the history file** (`<topic-slug>.spec.history.md`) per `references/session-history.md`. Include: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
 6. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Keep `status: draft`. Write using the Write tool.
 7. **Report** — show the user the current state and Open Items for next time.
-8. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+8. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     spec(<topic-slug>): revision N
     
@@ -30,7 +30,7 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 7. **Show the Spec Feedback section prominently** — list all filed upstream feedback GitHub Issues.
 8. **Write the file** using the Write tool.
 9. **Report the path** so the user can reference it.
-10. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+10. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     spec(<topic-slug>): finalize
     

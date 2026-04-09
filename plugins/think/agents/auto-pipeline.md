@@ -24,7 +24,7 @@ description: >
   </example>
   <example>
   Context: User has a brainstorm file and wants both documents generated automatically.
-  user: "Generate the full pipeline from A4/co-think/quiz-builder.brainstorm.md"
+  user: "Generate the full pipeline from A4/quiz-builder.brainstorm.md"
   assistant: "I'll launch the auto-pipeline agent to produce both the use case document and the spec from that brainstorm file."
   <commentary>
   The user explicitly wants the full pipeline run on a file. auto-pipeline should trigger, pass the file to auto-usecase, then feed the result to auto-spec.
@@ -81,8 +81,8 @@ Slug derivation rules (same logic used by `auto-usecase`):
 - Keep slugs lowercase, hyphen-separated, 2–5 words maximum.
 
 Record the expected slug. You will use it to construct the verification paths:
-- Use case output: `A4/co-think/<slug>.usecase.md`
-- Spec output: `A4/co-think/<slug>.spec.md`
+- Use case output: `A4/<slug>.usecase.md`
+- Spec output: `A4/<slug>.spec.md`
 
 Note: the slug is a best-effort prediction. `auto-usecase` may choose a slightly different slug. If the predicted file is not found after the agent runs, use Glob to locate the actual output (see Step 1 below).
 
@@ -101,10 +101,10 @@ After the agent completes:
 
 #### 1a. Locate the output file
 
-Check whether the predicted file exists at `A4/co-think/<slug>.usecase.md`.
+Check whether the predicted file exists at `A4/<slug>.usecase.md`.
 
 If the predicted file does not exist:
-- Use Glob to search `A4/co-think/*.usecase.md` for recently created files.
+- Use Glob to search `A4/*.usecase.md` for recently created files.
 - Read the agent's final output message to identify the actual file path it reported.
 - Use that path as the confirmed `.usecase.md` path for Step 2.
 
@@ -136,17 +136,17 @@ Use the auto-spec agent to generate the spec from <absolute-path-to-usecase-file
 
 Always pass the absolute path. Resolve it using Bash if needed:
 ```bash
-realpath A4/co-think/<slug>.usecase.md
+realpath A4/<slug>.usecase.md
 ```
 
 After the agent completes:
 
 #### 2a. Locate the output file
 
-Check whether the spec file exists at `A4/co-think/<slug>.spec.md`.
+Check whether the spec file exists at `A4/<slug>.spec.md`.
 
 If the predicted file does not exist:
-- Use Glob to search `A4/co-think/*.spec.md` for recently created files.
+- Use Glob to search `A4/*.spec.md` for recently created files.
 - Read the agent's final output message to identify the actual file path it reported.
 
 If no `.spec.md` file can be located:
@@ -162,7 +162,7 @@ Read the confirmed `.spec.md` file and extract:
 - Number of components (count rows in the Components section)
 - Open items (count rows in the Open Items table; note if empty)
 - Final review verdict (look for `IMPLEMENTABLE` or `NEEDS REVISION` language in the file or the agent's output)
-- Mock files generated (check whether `A4/co-think/mock/<slug>/` exists; if so, list subdirectories)
+- Mock files generated (check whether `A4/mock/<slug>/` exists; if so, list subdirectories)
 
 Record these for the final report.
 
@@ -175,13 +175,13 @@ Present a concise summary in this exact format:
 ```
 ## Pipeline Complete
 
-### Use Cases (`A4/co-think/<slug>.usecase.md`)
+### Use Cases (`A4/<slug>.usecase.md`)
 - Use cases: N
 - Actors: N
 - Review verdict: PASS / NEEDS REVISION
 - Open questions: N items
 
-### Specification (`A4/co-think/<slug>.spec.md`)
+### Specification (`A4/<slug>.spec.md`)
 - Functional requirements: N
 - Domain concepts: N
 - Components: N
@@ -191,7 +191,7 @@ Present a concise summary in this exact format:
 ### Files Generated
 1. `<absolute path to .usecase.md>`
 2. `<absolute path to .spec.md>`
-3. Mock files: `A4/co-think/mock/<slug>/` (if UI use cases exist)
+3. Mock files: `A4/mock/<slug>/` (if UI use cases exist)
 ```
 
 If mock files exist, list each subdirectory (screen slug) under item 3. If no mocks were generated, omit item 3.

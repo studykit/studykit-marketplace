@@ -1,23 +1,26 @@
 # Session History
 
-Session history is stored in a separate file from the working spec file to keep the spec lean.
+Session history is stored in a separate file from the working usecase file to keep the document lean.
 
 ## File Path
 
-`A4/co-think/<topic-slug>.spec.history.md`
+`A4/<topic-slug>.usecase.history.md`
 
 ## Format
 
 ```markdown
 ---
 type: session-history
-source: <topic-slug>.spec.md
+source: <topic-slug>.usecase.md
 ---
 
 ### Session Close — <YYYY-MM-DD HH:mm>
 
 #### Revisions This Session
 - Revision N: <what was reflected>
+
+#### Last Completed
+- <what was just completed>
 
 #### Decisions Made
 - <key decision>

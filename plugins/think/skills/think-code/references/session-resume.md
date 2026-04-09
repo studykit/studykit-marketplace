@@ -1,6 +1,6 @@
 # Session Resume
 
-Procedure for resuming implementation from a previous session. This reference is read by the co-think-code orchestrator when it detects an existing session (not all units are TODO).
+Procedure for resuming implementation from a previous session. This reference is read by the think-code orchestrator when it detects an existing session (not all units are TODO).
 
 ## 1. Detect Previous Progress
 

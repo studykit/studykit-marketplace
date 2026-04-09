@@ -4,7 +4,7 @@ After each `plan-reviewer` invocation, the reviewer agent writes the report dire
 
 ## File Path
 
-`A4/co-think/<topic-slug>.impl-plan.review-<label>.md`
+`A4/<topic-slug>.impl-plan.review-<label>.md`
 
 Where `<label>` identifies the review context:
 - **Phase review:** use the scope (e.g., `review-coverage-1`, `review-feasibility-1`)

@@ -1,5 +1,5 @@
 ---
-name: co-think-plan
+name: think-plan
 description: "This skill should be used when the user needs to create or iterate on an implementation plan from a specification — breaking down a spec into ordered, testable implementation units with dependencies, file mappings, and test strategies. Common triggers include: 'plan', 'implementation plan', 'plan the implementation', 'break down the spec', 'what should I build first', 'implementation order', 'create an impl plan', 'how to implement this spec'. Also applicable when a finalized spec needs to be turned into an actionable development roadmap."
 argument-hint: <path to .spec.md file, or existing .impl-plan.md file for iteration>
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Agent, Glob, Grep, Bash, EnterPlanMode, ExitPlanMode
 
 # Implementation Plan Builder
 
-Takes a specification (from co-think-spec) and builds an implementation plan — ordered, testable implementation units with dependencies, file mappings, and test strategies — through collaborative dialogue.
+Takes a specification (from think-spec) and builds an implementation plan — ordered, testable implementation units with dependencies, file mappings, and test strategies — through collaborative dialogue.
 
 ## Modes
 
@@ -44,17 +44,17 @@ If no argument is provided, ask the user for a slug, filename, or path.
 
 ### File Resolution
 
-Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/co-think/`:
+Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/`:
 
 1. **Full path** — use directly
-2. **Partial match** — glob for `A4/co-think/*<argument>*.spec.md` and `A4/co-think/*<argument>*.impl-plan.md`
+2. **Partial match** — glob for `A4/*<argument>*.spec.md` and `A4/*<argument>*.impl-plan.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
 After resolution, present the resolved file(s) and ask the user to confirm before reading:
 
 > **Resolved input files:**
-> - `A4/co-think/agent-orchestrator.spec.md`
+> - `A4/agent-orchestrator.spec.md`
 >
 > Proceed with these files?
 
@@ -185,7 +185,7 @@ The user controls all transitions. After completing work on any topic, present t
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/co-think/<topic-slug>.impl-plan.md`
+- Default: `A4/<topic-slug>.impl-plan.md`
 - If the file already exists, this is **Iteration** mode — read the existing file and continue from where it left off
 - Ask the user only if they want a different location
 

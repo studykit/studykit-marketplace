@@ -1,7 +1,7 @@
 ---
 type: impl-plan
 pipeline: co-think
-topic: "co-think-code"
+topic: "think-code"
 created: 2026-04-09 14:00
 revised: 2026-04-09 15:30
 revision: 1
@@ -14,13 +14,13 @@ reflected_files: []
 tags: [skill, autonomous-coder, impl-plan-executor]
 ---
 
-# Implementation Plan: co-think-code
+# Implementation Plan: think-code
 
 > Source: Design discussion (2026-04-09) — no formal spec; requirements derived from conversation.
 
 ## Overview
 
-A new skill `co-think-code` for the `think` plugin that autonomously executes `.impl-plan.md` files. It reads the implementation plan, works through units in dependency order, implements code, runs tests, commits per unit, and records progress + implementation decisions back into the plan file.
+A new skill `think-code` for the `think` plugin that autonomously executes `.impl-plan.md` files. It reads the implementation plan, works through units in dependency order, implements code, runs tests, commits per unit, and records progress + implementation decisions back into the plan file.
 
 This completes the co-think pipeline: **usecase → spec → plan → code**.
 
@@ -29,27 +29,28 @@ This completes the co-think pipeline: **usecase → spec → plan → code**.
 | Category | Choice |
 |----------|--------|
 | Format | Markdown (SKILL.md + reference docs) |
-| Location | `plugins/think/skills/co-think-code/` |
-| Pattern | Same as co-think-plan, co-think-spec |
+| Location | `plugins/think/skills/think-code/` |
+| Pattern | Same as think-plan, think-spec |
 
 ## Implementation Strategy
 
 - **Approach:** Bottom-up. First extend the plan output format (status/completion note), then build the skill definition, then reference docs.
 - **Incremental delivery:** Each IU produces a standalone, reviewable artifact.
-- **Key constraint:** The coder skill must be compatible with existing `.impl-plan.md` files produced by co-think-plan.
+- **Key constraint:** The coder skill must be compatible with existing `.impl-plan.md` files produced by think-plan.
 
 ---
 
 ## Implementation Units
 
-### [IU-1]. Extend co-think-plan output template with status tracking
+### [IU-1]. Extend think-plan output template with status tracking
 
 **FRs:** Progress tracking, completion notes
-**Components:** co-think-plan output-template.md
+**Components:** think-plan output-template.md
 **Dependencies:** None
+**Status:** DONE
 
 **Description:**
-Add three new fields to the IU section format in `co-think-plan/references/output-template.md`:
+Add three new fields to the IU section format in `think-plan/references/output-template.md`:
 1. `**Status:**` field with values `TODO | IN_PROGRESS | DONE` (default: `TODO`)
 2. `**Completion Note:**` section — a bulleted list recording implementation decisions, deviations from plan, and rationale. Written by orchestrator on success.
 3. `**Deviation Note:**` section — written by orchestrator when an agent reports a major deviation (plan assumes something that doesn't hold in the actual codebase). Records: what the plan assumed, what reality is, and the impact. Status is reset to `TODO` (retryable after plan revision). Example:
@@ -60,7 +61,7 @@ Add three new fields to the IU section format in `co-think-plan/references/outpu
    - Decision: user skipped (2026-04-09) — revisit after plan update
    ```
 
-These fields are optional for plan authors (co-think-plan doesn't set them), but required for the coder (co-think-code reads and writes them).
+These fields are optional for plan authors (think-plan doesn't set them), but required for the coder (think-code reads and writes them).
 
 > **Note:** `BLOCKED` is NOT a plan file status. The orchestrator derives blocked state at runtime from the dependency graph when an IU fails — it is tracked via TaskList within the session, not persisted in the plan file. On session resume, blocked state is re-derived from the dependency graph + current statuses.
 
@@ -68,7 +69,7 @@ These fields are optional for plan authors (co-think-plan doesn't set them), but
 
 | Action | Path | Change |
 |--------|------|--------|
-| Modify | `plugins/think/skills/co-think-plan/references/output-template.md` | Add Status field and Completion Note section to IU template |
+| Modify | `plugins/think/skills/think-plan/references/output-template.md` | Add Status field and Completion Note section to IU template |
 
 **Test Strategy:**
 - **Type:** Manual review
@@ -87,13 +88,14 @@ These fields are optional for plan authors (co-think-plan doesn't set them), but
 ### [IU-2]. Create SKILL.md — orchestrator skill definition
 
 **FRs:** Autonomous execution, plan reading, session resume, agent orchestration
-**Components:** co-think-code SKILL.md
+**Components:** think-code SKILL.md
 **Dependencies:** [IU-1], [IU-8]
+**Status:** DONE
 
 **Description:**
-Create the main skill file at `plugins/think/skills/co-think-code/SKILL.md`. The skill is an **orchestrator** — it reads the plan, manages execution order, and delegates actual implementation to `code-executor` agents. The skill itself does not write application code.
+Create the main skill file at `plugins/think/skills/think-code/SKILL.md`. The skill is an **orchestrator** — it reads the plan, manages execution order, and delegates actual implementation to `code-executor` agents. The skill itself does not write application code.
 
-1. **Input resolution** — resolve `.impl-plan.md` file from arguments (same pattern as co-think-plan)
+1. **Input resolution** — resolve `.impl-plan.md` file from arguments (same pattern as think-plan)
 2. **Mode detection** — Fresh Start (all units TODO) vs Resume (some units DONE)
 3. **Step 0: Codebase exploration** — understand project structure, conventions, build/test setup. Critically: identify the **test framework, test runner command, and test report format** (e.g., `npm test`, `pytest`, `./gradlew test`). This context is passed to every agent.
 4. **Step 1: Plan review** — read the plan, list units and statuses, confirm with user before starting
@@ -127,13 +129,13 @@ Create the main skill file at `plugins/think/skills/co-think-code/SKILL.md`. The
 - On deviation: mark spawn task as completed (with deviation metadata), create task `"IU-N: report deviation to user"`, and tasks marking downstream IUs as blocked
 - TaskList is session-scoped — cross-session state lives in the plan file's Status fields
 
-Frontmatter: `name: co-think-code`, tools include Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList.
+Frontmatter: `name: think-code`, tools include Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList.
 
 **Files:**
 
 | Action | Path | Change |
 |--------|------|--------|
-| Create | `plugins/think/skills/co-think-code/SKILL.md` | Orchestrator skill definition |
+| Create | `plugins/think/skills/think-code/SKILL.md` | Orchestrator skill definition |
 
 **Test Strategy:**
 - **Type:** Manual review + dry run
@@ -146,7 +148,7 @@ Frontmatter: `name: co-think-code`, tools include Read, Write, Edit, Bash, Glob,
 
 **Acceptance Criteria:**
 - [ ] Skill frontmatter follows existing pattern (name, description, argument-hint, allowed-tools)
-- [ ] Input resolution logic matches co-think-plan's pattern
+- [ ] Input resolution logic matches think-plan's pattern
 - [ ] Fresh Start and Resume modes are clearly distinguished
 - [ ] Skill delegates implementation to `code-executor` agents — does not write application code itself
 - [ ] Sequential phase: one agent per IU
@@ -161,8 +163,9 @@ Frontmatter: `name: co-think-code`, tools include Read, Write, Edit, Bash, Glob,
 ### [IU-3]. Create reference — execution-procedure.md
 
 **FRs:** Implementation guidance per unit
-**Components:** co-think-code references
+**Components:** think-code references
 **Dependencies:** [IU-2]
+**Status:** DONE
 
 **Description:**
 Detailed procedure for implementing a single IU. Content:
@@ -186,7 +189,7 @@ Detailed procedure for implementing a single IU. Content:
 
 | Action | Path | Change |
 |--------|------|--------|
-| Create | `plugins/think/skills/co-think-code/references/execution-procedure.md` | Full execution procedure |
+| Create | `plugins/think/skills/think-code/references/execution-procedure.md` | Full execution procedure |
 
 **Test Strategy:**
 - **Type:** Manual review
@@ -204,8 +207,9 @@ Detailed procedure for implementing a single IU. Content:
 ### [IU-4]. Create reference — test-and-commit.md
 
 **FRs:** Test validation, commit conventions, progress recording
-**Components:** co-think-code references
+**Components:** think-code references
 **Dependencies:** [IU-2]
+**Status:** DONE
 
 **Description:**
 Procedure for test execution, failure handling, and committing. Content:
@@ -228,7 +232,7 @@ Procedure for test execution, failure handling, and committing. Content:
 
 | Action | Path | Change |
 |--------|------|--------|
-| Create | `plugins/think/skills/co-think-code/references/test-and-commit.md` | Full test and commit procedure |
+| Create | `plugins/think/skills/think-code/references/test-and-commit.md` | Full test and commit procedure |
 
 **Test Strategy:**
 - **Type:** Manual review
@@ -247,8 +251,9 @@ Procedure for test execution, failure handling, and committing. Content:
 ### [IU-5]. Create reference — session-resume.md
 
 **FRs:** Cross-session continuity
-**Components:** co-think-code references
+**Components:** think-code references
 **Dependencies:** [IU-2]
+**Status:** DONE
 
 **Description:**
 Procedure for resuming work from a previous session. Content:
@@ -269,7 +274,7 @@ Procedure for resuming work from a previous session. Content:
 
 | Action | Path | Change |
 |--------|------|--------|
-| Create | `plugins/think/skills/co-think-code/references/session-resume.md` | Full session resume procedure |
+| Create | `plugins/think/skills/think-code/references/session-resume.md` | Full session resume procedure |
 
 **Test Strategy:**
 - **Type:** Manual review
@@ -291,6 +296,7 @@ Procedure for resuming work from a previous session. Content:
 **FRs:** Plugin discoverability
 **Components:** marketplace.json, plugin description
 **Dependencies:** [IU-2]
+**Status:** DONE
 
 **Description:**
 Update the marketplace to reflect the new skill:
@@ -319,8 +325,9 @@ Update the marketplace to reflect the new skill:
 ### [IU-7]. Create reference — parallel-execution.md
 
 **FRs:** Parallel unit implementation via worktrees
-**Components:** co-think-code references
+**Components:** think-code references
 **Dependencies:** [IU-2]
+**Status:** DONE
 
 **Description:**
 Procedure for implementing multiple units in parallel using git worktrees. Content:
@@ -350,7 +357,7 @@ Procedure for implementing multiple units in parallel using git worktrees. Conte
 
 | Action | Path | Change |
 |--------|------|--------|
-| Create | `plugins/think/skills/co-think-code/references/parallel-execution.md` | Full parallel execution procedure |
+| Create | `plugins/think/skills/think-code/references/parallel-execution.md` | Full parallel execution procedure |
 
 **Test Strategy:**
 - **Type:** Manual review
@@ -373,9 +380,10 @@ Procedure for implementing multiple units in parallel using git worktrees. Conte
 **FRs:** Autonomous IU implementation
 **Components:** agents/code-executor.md
 **Dependencies:** None
+**Status:** DONE
 
 **Description:**
-Create the agent definition at `plugins/think/agents/code-executor.md`. This agent receives a single IU and implements it end-to-end. It is spawned by the co-think-code skill (orchestrator).
+Create the agent definition at `plugins/think/agents/code-executor.md`. This agent receives a single IU and implements it end-to-end. It is spawned by the think-code skill (orchestrator).
 
 **Agent receives from orchestrator:**
 - The IU section from the plan (description, file mappings, test strategy, acceptance criteria)
@@ -383,8 +391,8 @@ Create the agent definition at `plugins/think/agents/code-executor.md`. This age
 - Completion notes from recently completed IUs (for context on prior decisions)
 
 **Agent references (via `${CLAUDE_PLUGIN_ROOT}`):**
-- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-code/references/execution-procedure.md` — implementation procedure
-- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-code/references/test-and-commit.md` — test execution and commit conventions
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-code/references/execution-procedure.md` — implementation procedure
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-code/references/test-and-commit.md` — test execution and commit conventions
 
 **Agent responsibilities:**
 1. Read the execution procedure and test-and-commit references above
@@ -478,7 +486,7 @@ IU7 --> IU2 : depends on
 - ~~Parallel unit execution~~ → Resolved: use `Agent(isolation: "worktree")` for same-phase units (IU-7)
 - ~~Test scope~~ → Resolved: Step 0 identifies test framework/runner; each IU runs its own tests via project runner with path filter
 - ~~IU-level testing~~ → Resolved: every IU must produce its own unit tests as part of implementation
-- ~~Agent reference access~~ → Resolved: agent uses `${CLAUDE_PLUGIN_ROOT}/skills/co-think-code/references/` (IU-8)
+- ~~Agent reference access~~ → Resolved: agent uses `${CLAUDE_PLUGIN_ROOT}/skills/think-code/references/` (IU-8)
 - ~~Plan file update responsibility~~ → Resolved: orchestrator only (A); agent returns completion note as text, does not touch plan file (IU-2, IU-4, IU-8)
 - ~~BLOCKED status in plan file~~ → Resolved: BLOCKED is runtime-only, derived from dependency graph; not persisted in plan file (IU-1 note)
 - ~~Orchestrator-agent contract~~ → Resolved: input/output contract specified in IU-2

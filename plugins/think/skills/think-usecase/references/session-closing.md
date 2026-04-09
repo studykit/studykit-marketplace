@@ -56,7 +56,7 @@
    - Relationships not yet analyzed (if < 5 UCs)
 8. **Append a Session Close entry to the history file** (`<topic-slug>.usecase.history.md`) per `references/session-history.md`. Include: Revisions This Session, Last Completed, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
 9. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Set `last_step` to `revision N`. Keep `status: draft`. Write using the Write tool.
-10. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+10. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     usecase(<topic-slug>): revision N
     
@@ -73,7 +73,7 @@
 3. **Update the working file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp. Record changes in the Change Log with the review report file name as Source.
 4. **Finalize the Use Case Diagram** — ensure all confirmed use cases, actors, and relationships (include/extend) are reflected in the PlantUML diagram.
 5. **Create GitHub Issues for each use case** — for each finalized use case:
-   1. Create a GitHub Issue with label `usecase`. Title: prefixed with the UC ID (e.g., `UC-1: Share meeting summary`). Body: the full use case text + a clickable markdown link to the working file (e.g., `[A4/co-think/file.usecase.md](https://github.com/{owner}/{repo}/blob/main/A4/co-think/file.usecase.md)`).
+   1. Create a GitHub Issue with label `usecase`. Title: prefixed with the UC ID (e.g., `UC-1: Share meeting summary`). Body: the full use case text + a clickable markdown link to the working file (e.g., `[A4/file.usecase.md](https://github.com/{owner}/{repo}/blob/main/A4/file.usecase.md)`).
    2. Keep the UC-N ID in the heading as-is (e.g., `### UC-1. Share meeting summary` stays unchanged).
    3. Add a `<!-- references -->` section at the end of the file mapping each UC ID to its GitHub issue URL.
    4. Present the issue mapping to the user:
@@ -94,7 +94,7 @@
    - Append final Session Close entry to the history file (`<topic-slug>.usecase.history.md`) per `references/session-history.md`: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), cleared Open Items, and Interview Transcript.
    - Set `status: final` and `last_step` to `finalize` in frontmatter. **Increment `revision`** and update `revised` timestamp.
    - Remove any placeholder text
-7. **Commit to git** — stage all files under `A4/co-think/<topic-slug>.*` and commit:
+7. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
    ```
    usecase(<topic-slug>): finalize
    

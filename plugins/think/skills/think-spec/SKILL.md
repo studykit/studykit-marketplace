@@ -1,13 +1,13 @@
 ---
-name: co-think-spec
-description: "This skill should be used when the user needs to create or iterate on a software specification — combining domain modeling, functional requirements, and architecture in one session. Common triggers include: 'spec', 'specification', 'design the system', 'define requirements', 'domain model', 'architecture', 'what should we build', 'system design', 'component design', 'let's spec this out', 'define the system'. Also applicable when use cases from co-think-usecase need to be turned into a buildable specification."
+name: think-spec
+description: "This skill should be used when the user needs to create or iterate on a software specification — combining domain modeling, functional requirements, and architecture in one session. Common triggers include: 'spec', 'specification', 'design the system', 'define requirements', 'domain model', 'architecture', 'what should we build', 'system design', 'component design', 'let's spec this out', 'define the system'. Also applicable when use cases from think-usecase need to be turned into a buildable specification."
 argument-hint: <path to use case file(s), or existing .spec.md file for iteration>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Specification Builder
 
-Takes use cases (from co-think-usecase) and builds a unified specification — domain model, functional requirements, and system architecture — through collaborative dialogue in a single session. Phases interleave naturally; no forced boundaries.
+Takes use cases (from think-usecase) and builds a unified specification — domain model, functional requirements, and system architecture — through collaborative dialogue in a single session. Phases interleave naturally; no forced boundaries.
 
 ## Modes
 
@@ -42,17 +42,17 @@ If no argument is provided, ask the user for a slug, filename, or path.
 
 ### File Resolution
 
-Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/co-think/`:
+Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/`:
 
 1. **Full path** — use directly
-2. **Partial match** — glob for `A4/co-think/*<argument>*.usecase.md` and `A4/co-think/*<argument>*.spec.md`
+2. **Partial match** — glob for `A4/*<argument>*.usecase.md` and `A4/*<argument>*.spec.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
 After resolution, present the resolved file(s) and ask the user to confirm before reading:
 
 > **Resolved input files:**
-> - `A4/co-think/agent-orchestrator.usecase.md`
+> - `A4/agent-orchestrator.usecase.md`
 >
 > Proceed with these files?
 
@@ -72,7 +72,7 @@ The source reference in the output file should be placed as a blockquote under t
    - Walk through each change with the user to determine spec impact (new FRs needed, existing FRs to update, domain/architecture implications).
    - After reflecting, update `sources` in spec frontmatter (both `revision` and `sha`).
 
-2. **Unreflected review reports** — check for `A4/co-think/<topic-slug>.spec.review-*.md` files against `reflected_files` in frontmatter:
+2. **Unreflected review reports** — check for `A4/<topic-slug>.spec.review-*.md` files against `reflected_files` in frontmatter:
    - Read each unreflected review report and extract issues that were not yet addressed.
    - Present unreflected findings to the user alongside the Open Items from the last revision.
 
@@ -142,7 +142,7 @@ Group UI FRs by screen/view, confirm with the user, then define screen navigatio
 
 ### Step 1.3: Mock Generation
 
-For each confirmed screen group, invoke the `mock-html-generator` agent to create an HTML mock in `A4/co-think/mock/<topic-slug>/`. Present, iterate, refine FRs from feedback, and record mock paths. For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Mock Generation" section.
+For each confirmed screen group, invoke the `mock-html-generator` agent to create an HTML mock in `A4/mock/<topic-slug>/`. Present, iterate, refine FRs from feedback, and record mock paths. For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Mock Generation" section.
 
 ### Step 1.4: Authorization Rules
 
@@ -177,7 +177,7 @@ When the user drifts into component internals, redirect gently: "That's an inter
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/co-think/<topic-slug>.spec.md`
+- Default: `A4/<topic-slug>.spec.md`
 - If the file already exists, this is **Iteration** mode — read the existing file and continue from where it left off
 - Ask the user only if they want a different location
 

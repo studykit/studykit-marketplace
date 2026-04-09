@@ -15,18 +15,18 @@ Generate implementation plan for: **$ARGUMENTS**
 
 These files define the rules and format for implementation plan documents. **Do not read them in the main session.** Pass the paths to agents — each subagent reads them per invocation.
 
-- `${CLAUDE_SKILL_DIR}/../co-think-plan/references/output-template.md` — exact output format
-- `${CLAUDE_SKILL_DIR}/../co-think-plan/references/planning-guide.md` — unit derivation, sizing, dependency, and test strategy guidance
-- `${CLAUDE_SKILL_DIR}/../co-think-plan/references/review-report.md` — how to persist reviewer reports
+- `${CLAUDE_SKILL_DIR}/../think-plan/references/output-template.md` — exact output format
+- `${CLAUDE_SKILL_DIR}/../think-plan/references/planning-guide.md` — unit derivation, sizing, dependency, and test strategy guidance
+- `${CLAUDE_SKILL_DIR}/../think-plan/references/review-report.md` — how to persist reviewer reports
 
-If `${CLAUDE_SKILL_DIR}` is not resolved, use `${CLAUDE_PLUGIN_ROOT}/skills/co-think-plan/references/` instead.
+If `${CLAUDE_SKILL_DIR}` is not resolved, use `${CLAUDE_PLUGIN_ROOT}/skills/think-plan/references/` instead.
 
 ## Resume Detection
 
-Before starting, check for existing progress. If the output file (`A4/co-think/<topic-slug>.impl-plan.md`) exists, extract its `reflected_files` list and `last_step` via:
+Before starting, check for existing progress. If the output file (`A4/<topic-slug>.impl-plan.md`) exists, extract its `reflected_files` list and `last_step` via:
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py A4/co-think/<topic-slug>.impl-plan.md reflected_files last_step
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py A4/<topic-slug>.impl-plan.md reflected_files last_step
 ```
 
 Do not read the output file itself. A file listed in `reflected_files` has already been reflected — do not read it and do not pass it to agents.
@@ -34,7 +34,7 @@ Do not read the output file itself. A file listed in `reflected_files` has alrea
 1. **Last completed step:** Extract `last_step` from frontmatter:
    - If set → **resume from the next step** — do not repeat completed work.
    - If empty or absent → no prior progress, start from Step 1.
-2. **Review reports:** Check existing `A4/co-think/<topic-slug>.impl-plan.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
+2. **Review reports:** Check existing `A4/<topic-slug>.impl-plan.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
 
 ## Step-by-Step Process
 
@@ -43,11 +43,11 @@ Do not read the output file itself. A file listed in `reflected_files` has alrea
 Resolve the input from **$ARGUMENTS**:
 
 1. **Full path** — use directly if it ends with `.spec.md`
-2. **Partial match** — glob for `A4/co-think/*<argument>*.spec.md`
+2. **Partial match** — glob for `A4/*<argument>*.spec.md`
 3. **Multiple matches** — pick the most recently modified
 4. **No match** — report error and stop
 
-Determine the **topic slug** from the spec filename. Output path: `A4/co-think/<topic-slug>.impl-plan.md`.
+Determine the **topic slug** from the spec filename. Output path: `A4/<topic-slug>.impl-plan.md`.
 
 ### Step 2: Read Spec and Explore Codebase
 
@@ -67,7 +67,7 @@ Explore the codebase to understand:
 
 ### Step 3: Derive Implementation Units
 
-Based on the spec analysis, choose an implementation strategy and derive units. Read `${CLAUDE_SKILL_DIR}/../co-think-plan/references/planning-guide.md` for strategy options.
+Based on the spec analysis, choose an implementation strategy and derive units. Read `${CLAUDE_SKILL_DIR}/../think-plan/references/planning-guide.md` for strategy options.
 
 **Decision rules (autonomous):**
 - If spec has 3+ components with DB schemas → **hybrid** (foundation first, then features)
@@ -162,7 +162,7 @@ Repeat until all criteria pass or maximum reached:
 
 ### Commit
 
-All commits stage files under `A4/co-think/<topic-slug>.*`. Commit timing:
+All commits stage files under `A4/<topic-slug>.*`. Commit timing:
 - **After compose** (Step 7) — plan document created
 - **After each quality round** (Step 8) — review report (+ revised plan if NEEDS_REVISION)
 

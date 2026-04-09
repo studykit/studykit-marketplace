@@ -16,7 +16,7 @@ Compare the stored `sha` in plan frontmatter against the current file:
 
 ## 2. Unreflected Review Reports
 
-Check for `A4/co-think/<topic-slug>.impl-plan.review-*.md` files against the `reflected_files` list in frontmatter:
+Check for `A4/<topic-slug>.impl-plan.review-*.md` files against the `reflected_files` list in frontmatter:
 
 1. Identify review report files not listed in `reflected_files`.
 2. Read each unreflected report and extract issues not yet addressed.

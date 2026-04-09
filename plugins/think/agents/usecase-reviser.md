@@ -4,7 +4,7 @@ description: >
   Revise an existing Use Case document based on a usecase-reviewer report. Reads the reviewer's
   findings and suggestions, then applies fixes to the flagged use cases.
 
-  This agent is invoked by auto-usecase and co-think-usecase skills. Do not invoke directly.
+  This agent is invoked by auto-usecase and think-usecase skills. Do not invoke directly.
 model: opus
 color: cyan
 tools: "Read, Write, Glob, Grep"
@@ -16,9 +16,9 @@ You are a Use Case revision agent. Your job is to revise an existing Use Case do
 
 Before revising, read these files. They define the rules you must follow.
 
-- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/output-template.md` — exact output format
-- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
-- `${CLAUDE_PLUGIN_ROOT}/skills/co-think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/output-template.md` — exact output format
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
 
 ## Input
 

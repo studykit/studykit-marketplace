@@ -4,11 +4,11 @@ After each similar systems research, the research agent writes the results direc
 
 ## File Path
 
-`A4/co-think/<topic-slug>.usecase.research-<label>.md`
+`A4/<topic-slug>.usecase.research-<label>.md`
 
 Where `<label>` identifies the research context:
 - **auto-usecase:** `initial` for Step 3
-- **co-think-usecase:** `1`, `2`, ... numbered sequentially per session
+- **think-usecase:** `1`, `2`, ... numbered sequentially per session
 
 ## Consumed Naming Convention
 

@@ -1,5 +1,5 @@
 ---
-name: co-think-usecase
+name: think-usecase
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'use cases', 'gather requirements', 'what do users need', 'break this down', or when a rough idea needs to be shaped into concrete Use Cases through a Socratic interview. Automatically detects and splits oversized use cases into smaller, independently valuable pieces."
 argument-hint: <idea or vague concept to turn into use cases>
 allowed-tools: Read, Write, Agent, Bash, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
@@ -59,7 +59,7 @@ The working file is a living document that grows throughout the interview. The u
 ### Working File Path
 
 At the start of the interview, determine the file path:
-- Default: `A4/co-think/<topic-slug>.usecase.md` relative to working directory
+- Default: `A4/<topic-slug>.usecase.md` relative to working directory
 - If the file already exists, this is an **iteration** — enter Iteration Mode (see below)
 - Ask the user only if they want a different location
 - Create the directory if needed
