@@ -57,6 +57,7 @@ tags: []
 **FRs:** [FR-1], [FR-3]
 **Components:** <ComponentA>, <ComponentB>
 **Dependencies:** None | [IU-N], [IU-M]
+**Status:** TODO | IN_PROGRESS | DONE
 
 **Description:**
 <What this unit implements. Reference specific FR behavior steps and component responsibilities. Be concrete — not "set up auth" but "implement JWT token generation and validation in AuthService, expose login endpoint with email/password input, return token on success and 401 on failure.">
@@ -80,6 +81,18 @@ tags: []
 **Acceptance Criteria:**
 - [ ] <measurable criterion derived from FR behavior — e.g., "POST /login with valid credentials returns 200 with JWT token">
 - [ ] <error case — e.g., "POST /login with invalid password returns 401 with error message">
+
+**Completion Note:**
+<Written by co-think-code orchestrator on successful implementation. Records implementation decisions, minor deviations from plan, and rationale. Example:>
+- <spec called for bcrypt but used argon2 — already in use by existing codebase>
+- <added index on `email` column for login query performance>
+- <test uses in-memory SQLite instead of PostgreSQL for faster execution>
+
+**Deviation Note:**
+<Written by co-think-code orchestrator when the agent reports a major deviation — the plan assumes something that doesn't hold in the actual codebase. Status is reset to TODO (retryable after plan revision). Example:>
+- Issue: <Plan specifies OAuth2 with Google provider, but existing codebase uses SAML for all auth flows>
+- Impact: <Cannot proceed without a design decision on auth coexistence>
+- Decision: <user skipped (2026-04-09) — revisit after plan update>
 
 ---
 
@@ -155,3 +168,13 @@ Units are numbered sequentially: `IU-1`, `IU-2`, etc. IU stands for "Implementat
 ## Diagram References
 
 - **Dependency graph**: Use [PlantUML Component Diagram](https://plantuml.com/component-diagram) syntax with `-->` arrows for "depends on" relationships.
+
+## Execution Tracking Fields
+
+The following fields are used by `co-think-code` (the implementation executor skill) and are **optional** for plan authors:
+
+- **Status** — `TODO` (default) | `IN_PROGRESS` | `DONE`. Managed by the co-think-code orchestrator during execution. Plan authors do not need to set this field.
+- **Completion Note** — Written by the orchestrator after successful implementation. Records implementation decisions, minor deviations, and rationale.
+- **Deviation Note** — Written by the orchestrator when the executing agent reports a major deviation (plan assumes something that doesn't hold in the actual codebase). Status is reset to `TODO` so the unit can be retried after plan revision.
+
+> `BLOCKED` is not a plan file status. The co-think-code orchestrator derives blocked state at runtime from the dependency graph — it is tracked in the session's TaskList, not persisted in the plan file.

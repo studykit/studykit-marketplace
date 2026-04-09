@@ -63,8 +63,8 @@
     {
       "name": "think",
       "source": "./plugins/think",
-      "description": "Co-thinking plugin — usecase/spec/implementation-plan design, brainstorming, decision-making, and GitHub automation",
-      "version": "0.12.0",
+      "description": "Co-thinking plugin — usecase/spec/implementation-plan design, autonomous code execution, brainstorming, decision-making, and GitHub automation",
+      "version": "0.13.0",
       "author": {
         "name": "studykit"
       },
@@ -129,7 +129,7 @@
       "name": "spawn",
       "source": "./plugins/spawn",
       "description": "Spawn and orchestrate child Claude Code sessions in iTerm2 with session lifecycle management",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "author": {
         "name": "studykit"
       },
