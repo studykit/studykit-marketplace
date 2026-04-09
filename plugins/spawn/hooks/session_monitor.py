@@ -21,6 +21,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "lib"))
 
 from notifications import append_notification, notification_queue_path
 from session_tree import ChildEntry, SessionTree, read_stdin_json, st_read, st_write
+from sessions_statusline_cache import update_cache
 
 
 def _pid_alive(pid: int) -> bool:
@@ -153,6 +154,11 @@ def main() -> None:
     # Write to notification queue
     for entry in queue_entries:
         append_notification(queue, entry)
+
+    # Update statusline cache
+    main_session_id = current.main_session.id if current.main_session else ""
+    if main_session_id:
+        update_cache(session_tree_path, main_session_id)
 
     # Output systemMessage for immediate user visibility
     if notifications:

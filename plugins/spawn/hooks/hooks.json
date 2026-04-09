@@ -28,7 +28,7 @@
     "UserPromptSubmit": [
       {
         "hooks": [
-          {
+{
             "type": "command",
             "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/hooks/notification_relay.py\"",
             "timeout": 5,

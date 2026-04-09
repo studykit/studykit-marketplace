@@ -1,0 +1,157 @@
+# Implementation Plan Output Template
+
+## File Path
+
+`A4/co-think/<topic-slug>.impl-plan.md`
+
+## Frontmatter
+
+```yaml
+---
+type: impl-plan
+pipeline: co-think
+topic: "<topic>"
+created: <YYYY-MM-DD HH:mm>
+revised: <YYYY-MM-DD HH:mm>
+revision: 0
+status: draft | final
+sources:
+  - file: <topic-slug>.spec.md
+    revision: <spec revision at time of reading>
+    sha: <git hash-object output at time of reading>
+reflected_files: []
+tags: []
+---
+```
+
+## Template
+
+```markdown
+# Implementation Plan: <topic>
+> Source: [<spec-file-name>](./<spec-file-name>)
+
+## Overview
+<Brief summary of what is being implemented, the scope, and overall approach. Reference the source spec.>
+
+## Technology Stack
+<Carry over from the spec's Technology Stack. Do not redefine — reference the spec for details.>
+
+| Category | Choice |
+|----------|--------|
+| Language | <e.g., TypeScript> |
+| Framework | <e.g., Next.js> |
+
+## Implementation Strategy
+<Overall approach to implementation. Key decisions about ordering, parallelism, and incremental delivery.>
+
+- **Approach:** <e.g., bottom-up starting from data layer, or feature-by-feature vertical slices>
+- **Incremental delivery:** <how to keep the system testable at each step>
+- **Key constraints:** <anything from the spec that shapes implementation order>
+
+---
+
+## Implementation Units
+
+### [IU-1]. <short title>
+
+**FRs:** [FR-1], [FR-3]
+**Components:** <ComponentA>, <ComponentB>
+**Dependencies:** None | [IU-N], [IU-M]
+
+**Description:**
+<What this unit implements. Reference specific FR behavior steps and component responsibilities. Be concrete — not "set up auth" but "implement JWT token generation and validation in AuthService, expose login endpoint with email/password input, return token on success and 401 on failure.">
+
+**Files:**
+
+| Action | Path | Change |
+|--------|------|--------|
+| Create | `src/services/auth.service.ts` | JWT generation, validation, login logic |
+| Create | `src/models/user.ts` | User entity with email, passwordHash, createdAt |
+| Modify | `src/app.ts` | Register auth routes |
+
+**Test Strategy:**
+- **Type:** <unit | integration | E2E>
+- **Scenarios:**
+  - <concrete scenario 1: input → expected output>
+  - <concrete scenario 2: error case → expected error>
+- **Isolation:** <mock/stub strategy for external dependencies, if any>
+- **Test files:** `tests/services/auth.service.test.ts`
+
+**Acceptance Criteria:**
+- [ ] <measurable criterion derived from FR behavior — e.g., "POST /login with valid credentials returns 200 with JWT token">
+- [ ] <error case — e.g., "POST /login with invalid password returns 401 with error message">
+
+---
+
+### [IU-2]. <short title>
+...
+
+---
+
+## Dependency Graph
+
+```plantuml
+@startuml
+[IU-1] as IU1
+[IU-2] as IU2
+[IU-3] as IU3
+[IU-4] as IU4
+
+IU2 --> IU1 : depends on
+IU3 --> IU1 : depends on
+IU4 --> IU2 : depends on
+IU4 --> IU3 : depends on
+@enduml
+```
+
+<Text explanation of the implementation order and why this sequence makes sense. Note any units that can be implemented in parallel.>
+
+### Implementation Order
+
+| Phase | Units | Can Parallelize |
+|-------|-------|-----------------|
+| 1 | IU-1 | — |
+| 2 | IU-2, IU-3 | Yes |
+| 3 | IU-4 | — |
+
+---
+
+## Risk Assessment
+
+| Risk | Impact | Likelihood | Mitigation | Affected Units |
+|------|--------|------------|------------|----------------|
+| <risk description> | High / Medium / Low | High / Medium / Low | <mitigation strategy> | IU-1, IU-3 |
+
+---
+
+## Open Items
+
+| Section | Item | What's Missing | Priority |
+|---------|------|---------------|----------|
+| <section> | <item reference> | <specific gap description> | High / Medium / Low |
+
+## Next Steps
+- <suggested actions for implementation>
+```
+
+## Required Sections
+
+- Overview
+- Technology Stack (carried from spec)
+- Implementation Strategy
+- Implementation Units (at least one)
+- Dependency Graph (with Implementation Order table)
+- Open Items
+
+## Conditional Sections
+
+- Risk Assessment — only if non-trivial risks are identified
+- Next Steps — only if the plan is not yet finalized
+
+## Unit ID Convention
+
+Units are numbered sequentially: `IU-1`, `IU-2`, etc. IU stands for "Implementation Unit." Numbering does not imply implementation order — the Dependency Graph and Implementation Order table define the actual sequence.
+
+## Diagram References
+
+- **Dependency graph**: Use [PlantUML Component Diagram](https://plantuml.com/component-diagram) syntax with `-->` arrows for "depends on" relationships.
