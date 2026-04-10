@@ -35,7 +35,7 @@ Maintain `A4/<topic-slug>.spec.research-index.md` as a lookup table. Update the 
 ```markdown
 | # | File | Tags | Summary | Date |
 |---|------|------|---------|------|
-| 1 | research-nextjs-server-actions.md | Next.js, Server Actions, v14 | 공식 문서, 버전별 지원 범위, 제약사항 정리 | 2026-04-10 |
+| 1 | research-nextjs-server-actions.md | Next.js, Server Actions, v14 | Official docs, version-specific support scope, constraints summary | 2026-04-10 |
 ```
 
 Before launching a new research subagent, check the index to avoid duplicate research.

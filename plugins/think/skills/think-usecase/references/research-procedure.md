@@ -21,7 +21,7 @@ If the user agrees:
    ```markdown
    | # | File | Tags | Summary | Date |
    |---|------|------|---------|------|
-   | 1 | research-competitor-task-management.md | Notion, Coda, Slite, 협업, 권한 | 기능 비교, 공통 패턴 5건, 포럼 사용자 요청 정리 | 2026-04-10 |
+   | 1 | research-competitor-task-management.md | Notion, Coda, Slite, collaboration, permissions | Feature comparison, 5 common patterns, user request summary from forums | 2026-04-10 |
    ```
 6. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
 7. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.

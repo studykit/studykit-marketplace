@@ -183,7 +183,7 @@ end note
 **Abstraction rule:**
 - Flow steps must describe user-level actions only. No implementation terms (API, database, webhook, cache, queue, etc.).
 
-**Issue reference links:** Read `${SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
+**Issue reference links:** Read `${CLAUDE_SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
 
 **Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships.
 **Additional required (think-usecase)**: Open Items, Next Steps.

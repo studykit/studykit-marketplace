@@ -10,16 +10,6 @@ Where `<label>` identifies the exploration context:
 - **auto-usecase:** use the growth iteration number — one report per growth iteration (e.g., `exploration-1`, `exploration-2`, `exploration-3`)
 - **think-usecase:** use the revision number (e.g., `exploration-1`, `exploration-2`)
 
-## Consumed Naming Convention
-
-When exploration results have been reflected into the UC document (e.g., UC candidates composed into full UCs), rename the file to mark it as consumed:
-
-`<topic-slug>.usecase.exploration-<label>.md` → `<topic-slug>.usecase.exploration-<label>.consumed.md`
-
-This allows resume detection via filename alone (Glob) without reading file contents:
-- `*.exploration-<label>.consumed.md` → exploration already reflected, skip
-- `*.exploration-<label>.md` (without consumed) → exploration done but not yet reflected, use existing results
-- Neither exists → run explorer
 
 ## Frontmatter
 

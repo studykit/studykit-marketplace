@@ -83,8 +83,8 @@ Maintain `A4/<topic-slug>.spec.research-index.md` as a lookup table:
 ```markdown
 | # | File | Tags | Summary | Date |
 |---|------|------|---------|------|
-| 1 | research-nextjs-server-actions.md | Next.js, Server Actions, v14 | 공식 문서, 버전별 지원 범위, 제약사항 정리 | 2026-04-10 |
-| 2 | research-postgres-jsonb-index.md | PostgreSQL, JSONB, GIN index | 성능 벤치마크, 쿼리 패턴별 인덱스 전략 | 2026-04-10 |
+| 1 | research-nextjs-server-actions.md | Next.js, Server Actions, v14 | Official docs, version-specific support scope, constraints summary | 2026-04-10 |
+| 2 | research-postgres-jsonb-index.md | PostgreSQL, JSONB, GIN index | Performance benchmarks, index strategy per query pattern | 2026-04-10 |
 ```
 
 Use the index as the primary lookup — do not read research report files unless you need the full details. Before launching a new research subagent, check the index first; if the claim was already verified, read the existing report only if the summary is insufficient.

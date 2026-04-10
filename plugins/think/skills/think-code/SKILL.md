@@ -1,7 +1,6 @@
 ---
 name: think-code
 description: "This skill should be used when the user needs to execute an implementation plan — autonomously implementing code unit by unit from an .impl-plan.md file. Common triggers include: 'implement the plan', 'code this plan', 'execute the plan', 'start coding', 'build from the plan', 'implement IU-1', 'continue implementation', 'resume coding'. Also applicable when a finalized impl-plan needs to be turned into working code."
-version: 0.1.0
 argument-hint: <path to .impl-plan.md file>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
