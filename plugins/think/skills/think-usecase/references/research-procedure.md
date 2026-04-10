@@ -15,8 +15,14 @@ If the user agrees:
 1. Launch a research subagent via `Agent` with `run_in_background: true`.
 2. Prompt the subagent with the current Context and confirmed UC list — ask it to find comparable products and identify features not yet covered.
 3. **Continue the interview** — do not wait for research results. Notification arrives automatically when the agent completes.
-4. When notified, save the full results per `research-report.md` (in this references directory) with label numbered sequentially. Summarize findings at the next natural break:
+4. When notified, save the full results per `research-report.md` (in this references directory) with a descriptive label (e.g., `research-competitor-task-management.md`). Summarize findings at the next natural break:
    > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
-5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add the research report file name to the frontmatter `reflected_files` list. Add **Source** fields to any research-derived UCs going forward.
-6. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
-7. If the user doesn't pick any, record the candidates in Open Questions for future reference.
+5. **Update the research index** — append an entry to `A4/<topic-slug>.usecase.research-index.md`:
+   ```markdown
+   | # | File | Tags | Summary | Date |
+   |---|------|------|---------|------|
+   | 1 | research-competitor-task-management.md | Notion, Coda, Slite, 협업, 권한 | 기능 비교, 공통 패턴 5건, 포럼 사용자 요청 정리 | 2026-04-10 |
+   ```
+6. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
+7. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
+8. If the user doesn't pick any, record the candidates in Open Questions for future reference.

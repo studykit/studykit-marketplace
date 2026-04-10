@@ -6,20 +6,7 @@ After each similar systems research, the research agent writes the results direc
 
 `A4/<topic-slug>.usecase.research-<label>.md`
 
-Where `<label>` identifies the research context:
-- **auto-usecase:** `initial` for Step 3
-- **think-usecase:** `1`, `2`, ... numbered sequentially per session
-
-## Consumed Naming Convention
-
-When research results have been reflected into the UC document (e.g., used in UC extraction), rename the file to mark it as consumed:
-
-`<topic-slug>.usecase.research-<label>.md` → `<topic-slug>.usecase.research-<label>.consumed.md`
-
-This allows resume detection via filename alone (Glob) without reading file contents:
-- `*.research-initial.consumed.md` → research already reflected, skip research step
-- `*.research-initial.md` (without consumed) → research done but not yet reflected, use existing results
-- Neither exists → run research
+Where `<label>` is a short descriptive slug of the research context (e.g., `competitor-task-management`, `collaboration-features`).
 
 ## Frontmatter
 
@@ -40,8 +27,12 @@ Write the research worker's full output as-is below the frontmatter — do not s
 - Niche UC candidates (unique to 1 system)
 - User-requested features (from reviews/forums)
 
+## Research Index
+
+Maintain `A4/<topic-slug>.usecase.research-index.md` as a lookup table. Update the index each time a new research report is created. Use the index as the primary lookup — do not read research report files unless you need the full details.
+
 ## Purpose
 
 - Preserves raw research data for auditing and traceability
-- Enables resume after interruption: read existing reports to avoid re-researching
+- Enables resume after interruption: check the research index to avoid re-researching
 - Allows the user to review full research context beyond the summary in the main document

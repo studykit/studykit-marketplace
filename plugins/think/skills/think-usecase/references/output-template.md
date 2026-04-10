@@ -80,7 +80,7 @@ end note
   2. <user-level action step>
   3. ...
 - **Expected Outcome:** <what's different after the flow completes — observable/measurable>
-- **Source:** <input | research — <which systems> | implicit> *(include when research was performed; omit otherwise)*
+- **Source:** <input | research — <which systems> (ref: research-<label>.md) | implicit> *(include when research was performed; omit otherwise)*
 
 ### [UC-2]. <short title>
 - **Actor:** <actor name>
@@ -89,7 +89,7 @@ end note
 - **Flow:**
   1. ...
 - **Expected Outcome:** <outcome>
-- **Source:** <source> *(include when research was performed)*
+- **Source:** <source> *(include when research was performed, with ref: research-<label>.md)*
 
 ### [UC-3]. <short title> *(split from original)*
 #### [UC-3a]. <short title>
@@ -128,7 +128,7 @@ end note
 ## Similar Systems Research
 *(include when research was performed; omit otherwise)*
 
-<Brief summary of similar products researched and common feature patterns discovered.>
+<Brief summary of similar products researched and common feature patterns discovered.> (ref: research-<label>.md)
 
 - **Similar systems:** <name — key features described as user goals> (up to 5 systems)
 - **High-value UC candidates:** <features/goals appearing in 3+ systems>

@@ -65,11 +65,26 @@ When a technology choice arises:
 
 ## Technical Claim Verification
 
-When writing or confirming any technical statement in the spec (API support, library capabilities, framework constraints, compatibility, etc.), verify it before recording:
+When writing or confirming any technical statement in the spec (API support, library capabilities, framework constraints, compatibility, etc.), verify it before recording. Keep this lightweight — don't verify obvious facts, focus on claims that would cause implementation failures if wrong.
 
-1. **Search official docs** — use `WebSearch`/`WebFetch` to check the claim against official documentation, release notes, or changelogs.
-2. **Check the codebase** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
-3. **Record the source** — when the verification result influences a spec decision, note it briefly (e.g., "Verified: Next.js App Router supports Server Actions as of v14 — [docs link]").
-4. **Flag uncertainty** — if official documentation is ambiguous or unavailable, tell the user: "I couldn't confirm this from official sources. Want to proceed as an assumption or investigate further?"
+### Procedure
 
-Keep this lightweight — don't verify obvious facts, focus on claims that would cause implementation failures if wrong.
+1. **Check the codebase first** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files. If confirmed, no research subagent needed.
+2. **Launch a research subagent** — if the claim requires external verification, spawn a background `Agent` with `run_in_background: true`. Prompt it with the specific claim and ask it to verify against official documentation, release notes, or changelogs using `WebSearch`/`WebFetch`.
+3. **Continue the interview** — keep working within the current phase while waiting. **Do not transition to the next phase** until all pending research results have been received and reflected.
+4. **When notified** — the subagent writes results to `A4/<topic-slug>.spec.research-<label>.md` per `${CLAUDE_SKILL_DIR}/references/research-report.md`. Update the research index (`A4/<topic-slug>.spec.research-index.md`).
+5. **Reflect the result** — apply the verification outcome to the spec. Add an inline reference to the research report where the claim is recorded (e.g., `(ref: research-nextjs-server-actions.md)`).
+6. **Flag uncertainty** — if official documentation is ambiguous or unavailable, tell the user: "I couldn't confirm this from official sources. Want to proceed as an assumption or investigate further?"
+
+### Research Index
+
+Maintain `A4/<topic-slug>.spec.research-index.md` as a lookup table:
+
+```markdown
+| # | File | Tags | Summary | Date |
+|---|------|------|---------|------|
+| 1 | research-nextjs-server-actions.md | Next.js, Server Actions, v14 | 공식 문서, 버전별 지원 범위, 제약사항 정리 | 2026-04-10 |
+| 2 | research-postgres-jsonb-index.md | PostgreSQL, JSONB, GIN index | 성능 벤치마크, 쿼리 패턴별 인덱스 전략 | 2026-04-10 |
+```
+
+Use the index as the primary lookup — do not read research report files unless you need the full details. Before launching a new research subagent, check the index first; if the claim was already verified, read the existing report only if the summary is insufficient.
