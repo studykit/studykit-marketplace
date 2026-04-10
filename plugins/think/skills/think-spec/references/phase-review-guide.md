@@ -8,7 +8,7 @@ Each phase has a focused review scope that maps to specific reviewer criteria:
 
 | Scope | Sections Reviewed | Reviewer Criteria | When |
 |-------|-------------------|-------------------|------|
-| **Requirements** | FRs, UI Screen Groups, Authorization | #1 Behavior Coverage (FR completeness only), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs) | After FRs are substantially defined |
+| **Requirements** | FRs, UI Screen Groups, Authorization | #1 Behavior Coverage (FR completeness only; external dependency references are informational notes, not verdicts), #2 Precision (FR language), #3 Error & Edge (FR error handling), #5 UI Screen Grouping, #6 Technical Claims (in FRs) | After FRs are substantially defined |
 | **Domain Model** | Glossary, Relationships, State Transitions | #2 Precision (naming conflicts, glossary coverage), #7 Consistency (FR ↔ Domain only) | After concepts and relationships are mapped |
 | **Architecture** | Components, DB Schemas, Information Flows, Interface Contracts | #1 Behavior Coverage (sequence diagrams, component mapping), #4 Ownership, #6 Technical Claims (in architecture), #7 Consistency (full cross-section, cross-diagram) | After components and flows are defined |
 | **Full** | All sections | All criteria (#0–#7) | End Iteration, Finalize |

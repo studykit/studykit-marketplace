@@ -75,10 +75,13 @@ For each FR:
 - If Architecture section exists: does the sequence diagram reflect the same steps as the FR?
 
 For external dependencies:
-- Do any FRs reference external interactions (email, payment, auth, file storage, external APIs) without a corresponding entry in the External Dependencies section?
+- Do any FRs reference external interactions (email, payment, auth, file storage, external APIs)?
 - If an External Dependencies section exists: does each dependency specify what is sent/received and fallback behavior?
 
-Verdict per item: `OK` | `GAP` (describe what's missing and where the developer would have to guess) | `UNDECLARED DEPENDENCY` (FR references external system not listed in External Dependencies)
+**If Architecture section exists:** verdict per item: `OK` | `UNDECLARED DEPENDENCY` (FR references external system not listed in External Dependencies)
+**If Architecture section does not exist:** do not issue a verdict. Instead, list detected external references as an informational note: `NOTE — FR references <system>; to be defined in Architecture → External Dependencies`. This is an early signal, not a finding.
+
+Verdict per item: `OK` | `GAP` (describe what's missing and where the developer would have to guess)
 
 For authorization:
 - If the source use cases have multiple actors with different roles: is an Authorization Rules section present?
@@ -229,6 +232,10 @@ Use exactly this format:
 - FR-5: UNDECLARED DEPENDENCY — references sending email but no Email Service in External Dependencies
 - OAuth Provider: OK — send/receive and fallback defined
 
+*If Architecture section does not exist, use informational notes instead of verdicts:*
+- NOTE — FR-5 references email sending; to be defined in Architecture → External Dependencies
+- NOTE — FR-1, FR-2 reference OAuth provider; to be defined in Architecture → External Dependencies
+
 #### Authorization
 - MISSING AUTH — source use cases have "Admin" and "User" actors but no Authorization Rules section
 - OR: FR-7: INCOMPLETE AUTH — not listed in authorization matrix
@@ -290,7 +297,7 @@ Use exactly this format:
 ### Summary
 - **Technology stack:** OK | MISSING | INCOMPLETE
 - **Behavior gaps:** <list of use cases/FRs with gaps>
-- **Undeclared external dependencies:** <list of FRs referencing unlisted external systems>
+- **External dependencies:** <list of undeclared dependencies (if Architecture exists) or informational notes (if Architecture not yet written)>
 - **Authorization issues:** <missing section, incomplete matrix, or inconsistent access levels>
 - **Imprecise language:** <list of items>
 - **Unhandled errors/edges:** <list of items>
