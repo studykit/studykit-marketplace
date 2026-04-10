@@ -52,7 +52,7 @@ The working file grows through **checkpoint writes** rather than after every con
 |-------|---------|--------------------------|
 | Create | Idea received (step 1) | Create the file with frontmatter, original idea, and empty sections |
 | Checkpoint | Every 3 confirmed use cases | Batch-write all unwritten confirmed UCs, update actors table, diagram, and Context |
-| Checkpoint | Phase transition or challenge mode shift | Write all pending confirmed content |
+| Checkpoint | Interview stage transition or challenge mode shift | Write all pending confirmed content |
 | Checkpoint | Before review (reviewer launch) | Write all pending confirmed content so the reviewer sees the latest state |
 | End iteration | User pauses the session | Write all pending content, increment revision, append Session Close to history file, update Open Items + Next Steps |
 | Finalize | User ends the session (wrap-up) | Fill remaining sections, append transcript, set `status: final` |
@@ -91,7 +91,7 @@ When the working file already exists, this is a returning session to refine the 
    - If SHA differs → run `git diff <stored-sha> <current-sha>` to see what changed.
    - Present the changes to the user: "The source file has been updated. Changes: [list]. Review these changes before continuing?"
    - Walk through each change with the user to determine impact on existing use cases (new UCs needed, existing UCs to update, actors to add/modify).
-   - After reflecting, update `sources` in frontmatter (`sha` and any other tracked fields).
+   - After reflecting, update `sources` in frontmatter (`sha` and any other tracked fields). If the working file content changed, **increment `revision`** and update `revised` timestamp.
 3. Present a brief status summary:
    - Number of confirmed use cases
    - Actors identified so far
@@ -109,8 +109,8 @@ When the working file already exists, this is a returning session to refine the 
    > Which items would you like to work on? Or would you prefer to add new use cases?
 5. The user chooses what to work on. Possible activities:
    - **Add new use cases** — resume the Discovery Loop (step 2) as normal
-   - **Address review findings** — walk through NEEDS REVISION items from unreflected review reports one by one. After all findings are addressed (or explicitly deferred), add the review file name to `reflected_files` and record each change in the Change Log with the review file as Source.
-   - **Explore UC candidates from explorer** — review and flesh out UC candidates from unreflected exploration reports. After reflecting, add the exploration file name to the frontmatter `reflected_files` list.
+   - **Address review findings** — walk through NEEDS REVISION items from unreflected review reports one by one. After all findings are addressed (or explicitly deferred), add the review file name to `reflected_files` and record each change in the Change Log with the review file as Source. If the working file content changed, **increment `revision`** and update `revised` timestamp.
+   - **Explore UC candidates from explorer** — review and flesh out UC candidates from unreflected exploration reports. After reflecting, add the exploration file name to the frontmatter `reflected_files` list. If the working file content changed, **increment `revision`** and update `revised` timestamp.
    - **Clarify existing UCs** — revisit flagged use cases one by one, asking targeted questions to fill gaps
    - **Refine actors** — add missing actors, split actors with privilege differences, add system actors
    - **Split oversized UCs** — process previously deferred SPLIT suggestions
@@ -121,7 +121,7 @@ When the working file already exists, this is a returning session to refine the 
 - Preserve all previously confirmed use cases — never remove or reorder them unless the user explicitly requests it.
 - New use cases get the next available UC-N ID (continue numbering from where the previous session left off).
 - When modifying an existing UC, show the before/after and confirm with the user before updating.
-- Increment `revision` in frontmatter and update `revised` timestamp when reflecting external input (review findings, exploration results) or closing the session. Routine updates during the interview (UC confirmation, actor discovery) do not increment revision.
+- Increment `revision` in frontmatter and update `revised` timestamp when: before launching a reviewer/explorer subagent (stamps the reviewed snapshot), reflecting external input (source file changes, review findings, exploration results) that changes the working file content, or closing the session. Routine updates during the interview (UC confirmation, actor discovery) do not increment revision.
 - Session history (including Interview Transcript) is stored in a separate history file (`<topic-slug>.usecase.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
 
 ### How to Update
@@ -194,7 +194,7 @@ As the conversation reveals enough context, draft a Use Case and present it to t
 
 After the user confirms or revises:
 1. **Track via task** — create a task for the confirmed use case (e.g., `UC-1: <title>`) and mark it as completed. This gives the user a running overview via TaskList.
-2. **Check for checkpoint** — if this confirmation triggers a checkpoint (every 3 UCs, phase transition, or before review), batch-write all unwritten confirmed UCs to the working file, update Actors table, Use Case Diagram, and Context.
+2. **Check for checkpoint** — if this confirmation triggers a checkpoint (every 3 UCs, interview stage transition, or before review), batch-write all unwritten confirmed UCs to the working file, update Actors table, Use Case Diagram, and Context.
 
 ### 4. Use Case Splitting
 

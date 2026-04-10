@@ -70,11 +70,12 @@ The source reference in the output file should be placed as a blockquote under t
    - If SHA differs → run `git diff <stored-sha> <current-sha>` to see exactly what changed. Also read the usecase's history file (`<topic-slug>.usecase.history.md`) for context on why changes were made.
    - Present the changes to the user: "The source usecase has been updated. Changes: [list]. Review these changes before continuing?"
    - Walk through each change with the user to determine spec impact (new FRs needed, existing FRs to update, domain/architecture implications).
-   - After reflecting, update `sources` in spec frontmatter (both `revision` and `sha`).
+   - After reflecting, update `sources` in spec frontmatter (both `revision` and `sha`). If the working file content changed, **increment `revision`** and update `revised` timestamp.
 
 2. **Unreflected review reports** — check for `A4/<topic-slug>.spec.review-*.md` files against `reflected_files` in frontmatter:
    - Read each unreflected review report and extract issues that were not yet addressed.
    - Present unreflected findings to the user alongside the Open Items from the last revision.
+   - After reflecting, add the review report filenames to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
 
 After reading, list all use cases and any existing spec content found, then confirm with the user before proceeding.
 
@@ -208,14 +209,14 @@ On **Iteration Mode entry**, compare and update as described in the Iteration Mo
 | Trigger | When |
 |---------|------|
 | Item count | Every 3 confirmed items within a phase (3 FRs, 3 concepts, etc.) |
-| Phase transition | Moving between Requirements → Domain Model → Architecture |
+| Phase transition | Moving between Requirements → Domain Model → Architecture. **Increment `revision`** if content changed during the phase. |
 | Before review | Before launching a `spec-reviewer` subagent |
 | Navigation status | When presenting the phase status table to the user |
 | Session end | End iteration or finalize |
 
 ## Revision and Session History
 
-Increment `revision` in frontmatter and update `revised` timestamp when reflecting external input (review findings) or closing the session. Routine updates during the interview (FR confirmation, concept extraction) do not increment revision.
+Increment `revision` in frontmatter and update `revised` timestamp when: before launching a reviewer subagent (stamps the reviewed snapshot), reflecting source usecase changes, reflecting review findings, phase transition with content changes, or closing the session. Routine updates during the interview (FR confirmation, concept extraction) do not increment revision.
 
 Session history is stored in a separate file (`<topic-slug>.spec.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the full format.
 

@@ -46,6 +46,10 @@ If previous review reports exist, include their paths so the reviewer can see pr
 
 > Previous review reports: `<paths>` — focus on whether previously flagged issues have been addressed.
 
+## Before Review
+
+Before launching the reviewer subagent, write a checkpoint and **increment `revision`**. This stamps the exact document state the reviewer will evaluate. The review report uses this post-bump revision in its filename and frontmatter.
+
 ## After Review
 
 1. Present findings to the user, walking through flagged issues one at a time.

@@ -4,14 +4,15 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 
 ## End Iteration (not finalizing)
 
-1. **Launch a Full scope `spec-reviewer` subagent** — spawn a fresh `Agent(subagent_type: "spec-reviewer")` with the Full scope request format (all criteria #0–#7). Provide the current output file path, all input file paths, report path per `references/review-report.md` (label: `full-<revision>`), and any previous review report paths.
-2. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or defer items to the next iteration.
-3. **Update the output file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
-4. **Scan for Open Items** — walk through each phase and identify incomplete or unclear items.
-5. **Append a Session Close entry to the history file** (`<topic-slug>.spec.history.md`) per `references/session-history.md`. Include: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
-6. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Keep `status: draft`. Write using the Write tool.
-7. **Report** — show the user the current state and Open Items for next time.
-8. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
+1. **Pre-review checkpoint** — write all pending confirmed content to the working file and **increment `revision`**. This stamps the exact document state the reviewer will evaluate.
+2. **Launch a Full scope `spec-reviewer` subagent** — spawn a fresh `Agent(subagent_type: "spec-reviewer")` with the Full scope request format (all criteria #0–#7). Provide the current output file path, all input file paths, report path per `references/review-report.md` (label: `full-<revision>`), and any previous review report paths.
+3. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or defer items to the next iteration.
+4. **Update the output file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
+5. **Scan for Open Items** — walk through each phase and identify incomplete or unclear items.
+6. **Append a Session Close entry to the history file** (`<topic-slug>.spec.history.md`) per `references/session-history.md`. Include: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
+7. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Keep `status: draft`. Write using the Write tool.
+8. **Report** — show the user the current state and Open Items for next time.
+9. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     spec(<topic-slug>): revision N
     
@@ -22,15 +23,16 @@ Detailed step-by-step checklists for ending an iteration and finalizing a specif
 ## Finalize
 
 1. **Verify Technology Stack** — check that the Technology Stack section is filled in (at minimum: language and framework). If empty, ask the user: "The Technology Stack isn't specified yet. A coding agent needs this to implement the spec. What language and framework should we use?" Do not proceed to finalize until this is resolved.
-2. **Launch a Full scope `spec-reviewer` subagent** — spawn a fresh `Agent(subagent_type: "spec-reviewer")` with the Full scope request format (all criteria #0–#7). Provide the current output file path, all input file paths, report path per `references/review-report.md` (label: `final`), and any previous review report paths. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
-3. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or dismiss each suggestion.
-4. **Update the output file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
-5. **Append a final Session Close entry to the history file** (`<topic-slug>.spec.history.md`) per `references/session-history.md`. Include: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), cleared Open Items, and Interview Transcript.
-6. **Update the working file** — clear Open Items and Next Steps. Set `status: final` in frontmatter, ensure all sections are complete. **Increment `revision`** and update `revised` timestamp.
-7. **Show the Spec Feedback section prominently** — list all filed upstream feedback GitHub Issues.
-8. **Write the file** using the Write tool.
-9. **Report the path** so the user can reference it.
-10. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
+2. **Pre-review checkpoint** — write all pending confirmed content to the working file and **increment `revision`**. This stamps the exact document state the reviewer will evaluate.
+3. **Launch a Full scope `spec-reviewer` subagent** — spawn a fresh `Agent(subagent_type: "spec-reviewer")` with the Full scope request format (all criteria #0–#7). Provide the current output file path, all input file paths, report path per `references/review-report.md` (label: `final`), and any previous review report paths. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead.
+4. **Present the review results** — walk through each flagged issue one at a time. The user can accept, modify, or dismiss each suggestion.
+5. **Update the output file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
+6. **Append a final Session Close entry to the history file** (`<topic-slug>.spec.history.md`) per `references/session-history.md`. Include: Revisions This Session, Decisions Made, Change Log (interview-driven changes only), cleared Open Items, and Interview Transcript.
+7. **Update the working file** — clear Open Items and Next Steps. Set `status: final` in frontmatter, ensure all sections are complete. **Increment `revision`** and update `revised` timestamp.
+8. **Show the Spec Feedback section prominently** — list all filed upstream feedback GitHub Issues.
+9. **Write the file** using the Write tool.
+10. **Report the path** so the user can reference it.
+11. **Commit to git** — stage all files under `A4/<topic-slug>.*` and commit:
     ```
     spec(<topic-slug>): finalize
     
