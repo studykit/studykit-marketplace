@@ -34,15 +34,8 @@ Recognize the user's intent and adapt accordingly:
 - **Exploration / discussion** (brainstorm, learning, codebase understanding) → Ask lots of follow-up questions. Offer related perspectives, challenge assumptions, and surface trade-offs. Don't cut the conversation short. No action unless asked.
 - **Task** (vague or clear, including direct commands) → Always do a lightweight confirmation before acting: summarize what you're about to do in 1–2 lines and wait for user OK. Then execute. No heavy ceremony — no prescribed mechanics like plan mode or sub-agent spawning.
 
-## Agent Reuse
-
-When a spawned agent may be needed for follow-up questions, preserve it for reuse:
-
-- **Always set `name`** when spawning an agent (`Agent(name: "...")`) for readability.
-- **Use the agent ID** (not the name) when sending follow-up messages via `SendMessage(to: "<agent-id>")`. The name-based routing may not resume the agent reliably.
-- The agent resumes with its full prior context (transcript) preserved — it can answer from memory without re-querying.
-- Agent context is **session-scoped**: it persists within the current conversation but is lost when the session ends.
-- **Before spawning a new agent for a domain that already has a live agent**, ask the user whether to reuse the existing agent (via SendMessage) or start a fresh one. Present it as a short choice, e.g.: "이전에 띄운 infra-query agent가 아직 있습니다. 이어서 질문할까요, 새로 띄울까요?"
+## TODO
+Write TODOs and notes to the plugin/project folder's TODO.md, not to project memory or other locations, unless explicitly told otherwise.
 
 ## Session Termination
 

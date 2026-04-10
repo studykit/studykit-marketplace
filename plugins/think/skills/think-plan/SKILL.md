@@ -148,20 +148,18 @@ For each confirmed unit, fill in the remaining details. Work through units in im
 1. **File mapping** — specific file paths and change descriptions. Reference codebase conventions from Step 0.
 2. **Test strategy** — read `${CLAUDE_SKILL_DIR}/references/planning-guide.md` → "Test Strategy Selection" for guidance. Derive test scenarios from the FRs.
 3. **Acceptance criteria** — measurable criteria derived from FR behavior steps.
-4. **Risk assessment** — any risks specific to this unit.
 
 After each unit's details are confirmed, track completion via a task update. The file is updated at the next checkpoint.
 
 ## Step 6: Risk Assessment
 
-After all units are detailed, review cross-cutting risks:
+After all units are detailed, launch a risk assessment:
 
-- **Complex integrations** — units that depend on external services
-- **Schema migrations** — units that modify existing database schemas
-- **Performance-sensitive areas** — units with NFR constraints
-- **Unknowns** — areas where the spec has Open Items
-
-Present risks and ask the user for mitigation strategies or acceptance.
+1. **Pre-assessment checkpoint** — write all pending confirmed content to the working file.
+2. **Launch a `risk-assessor` subagent** — pass the plan file path, spec file path, and report output path per `${CLAUDE_SKILL_DIR}/references/risk-report.md`. If a previous risk report exists, include its path so the assessor can check whether prior risks have been addressed.
+3. **Walk through the report** with the user. For each risk, the user can accept the mitigation, modify it, or dismiss the risk.
+4. **If any risks are accepted or modified:** write the confirmed risks to the **Risk Assessment** section as a summary table. Add the risk report filename to `reflected_files`. Increment `revision` and update `revised` per `${CLAUDE_SKILL_DIR}/references/revision-rules.md`.
+5. **If all risks are dismissed:** add the risk report filename to `reflected_files`. Increment `revision` and update `revised`. The Risk Assessment section is not added — the revision with only a `reflected_files` update signals that the report was reviewed and dismissed.
 
 ## Navigation
 
@@ -217,7 +215,7 @@ On **Iteration Mode entry**, compare and update as described in the Iteration Mo
 | Trigger | When |
 |---------|------|
 | Unit count | Every 3 confirmed units during Unit Derivation |
-| Step transition | Moving between steps (Unit Derivation → Dependency Mapping → Detail Pass → Risk Assessment) |
+| Step transition | Moving between steps (Unit Derivation → Dependency Mapping → Detail Pass) |
 | Before review | Before launching a `plan-reviewer` subagent |
 | Navigation status | When presenting the step status table to the user |
 | Session end | End iteration or finalize |
@@ -262,6 +260,7 @@ Walk through each flagged issue with the user. They can accept, modify, or defer
 Always spawn fresh subagents — context is passed via file paths, not agent memory.
 
 - **`plan-reviewer`** — launch via `Agent(subagent_type: "plan-reviewer")`. Context passed via file paths.
+- **`risk-assessor`** — launch via `Agent(subagent_type: "risk-assessor")`. Pass plan file path, spec file path, and report output path per `${CLAUDE_SKILL_DIR}/references/risk-report.md`.
 
 ## Wrapping Up
 
