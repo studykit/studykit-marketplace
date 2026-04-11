@@ -107,6 +107,18 @@ After codebase exploration, fill the **Launch & Verify** section. This informati
    - API → "call the health endpoint and get 200"
    - CLI → "run `<tool> --help` and see usage info"
 
+7. **Test isolation** — determine flags or configuration to run the app in a clean environment, free from interference by other installed plugins, extensions, or user state. Start from the defaults below, then **search the platform's official documentation** (e.g., VS Code CLI reference, Electron command-line switches) for the current project's exact flags:
+
+   | App Type | Default Isolation | Docs to Search |
+   |----------|------------------|----------------|
+   | VS Code Extension | `--disable-extensions` (loads only the dev extension) | VS Code CLI reference |
+   | Electron | `--user-data-dir=<tmpdir>` (clean profile, no leftover state) | Electron command-line switches |
+   | Web app | Browser incognito / clean profile (no browser extensions) | Verify tool docs (Playwright, etc.) |
+   | API service | Dedicated test port + `NODE_ENV=test` (or equivalent) | Framework docs |
+   | CLI | Already isolated per invocation | — |
+
+   The defaults above are starting points. Search the official docs to confirm the flags are current and to discover project-specific options (e.g., `--extensions-dir` for VS Code, `--no-sandbox` for Electron on CI). Record the final isolation value in the plan.
+
 ## Foundation Unit Validation
 
 After defining the first unit(s) in Phase 1, verify they produce a **minimally interactive system**, not just project scaffolding.

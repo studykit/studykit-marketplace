@@ -69,15 +69,15 @@ If build fails → report as L1 failure in the integration report. Attempt to di
 
 ### Launch
 
-Run the launch command and wait for the app to be ready:
+Apply the **Test isolation** flags from the plan's Launch & Verify section (or the defaults from the table below) to the launch command. Then run and wait for the app to be ready:
 
-| App Type | Launch | Ready Signal |
-|----------|--------|-------------|
-| Web app | `<launch command>` (background) | HTTP response from launch URL |
-| VS Code Extension | `code --extensionDevelopmentPath=.` | Extension Host window opens |
-| Electron | `<launch command>` (background) | Window appears |
-| API service | `<launch command>` (background) | HTTP response from health/root endpoint |
-| CLI | N/A (run per test) | N/A |
+| App Type | Launch | Ready Signal | Default Isolation |
+|----------|--------|-------------|-------------------|
+| Web app | `<launch command>` (background) | HTTP response from launch URL | Browser incognito / clean profile |
+| VS Code Extension | `code --extensionDevelopmentPath=.` | Extension Host window opens | `--disable-extensions` |
+| Electron | `<launch command>` (background) | Window appears | `--user-data-dir=<tmpdir>` |
+| API service | `<launch command>` (background) | HTTP response from health/root endpoint | Dedicated test port |
+| CLI | N/A (run per test) | N/A | — |
 
 Timeout: 60 seconds. If the app doesn't become ready → report as L1 failure.
 
