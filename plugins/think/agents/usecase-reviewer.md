@@ -105,6 +105,28 @@ Flag use cases that cover the same actor-goal-situation as another, even if word
 
 Verdict: `OK` | `OVERLAPS UC-N` (explain the overlap)
 
+### 9. Precision — Are validation and error handling addressed?
+
+For each UC with a Validation or Error handling field:
+- Are the constraints user-visible and specific? (not "validates input" but "empty messages cannot be sent; maximum 100KB diagram source")
+- Are error states described from the user's perspective? (not "returns 500" but "displays error message with retry option")
+- If the UC has meaningful failure modes but no Error handling field, flag it.
+
+For UCs without these fields: skip silently if the UC has no meaningful constraints or failure modes.
+
+Verdict: `OK` | `MISSING PRECISION` (describe what validation/error handling is missing) | `IMPLEMENTATION LEAK` (error handling uses system-internal language — suggest user-visible alternative)
+
+### 10. Domain Model — Is the domain model complete and consistent?
+
+*Only applies if a Domain Model section exists.*
+
+- **Glossary coverage:** Every domain-significant noun used across 3+ UCs should appear in the glossary. Flag missing concepts.
+- **Relationship completeness:** Are all relationships between concepts captured? Flag concepts that appear together in UCs but have no defined relationship.
+- **State completeness:** For stateful concepts, do state diagrams include all states implied by UCs? Flag missing states or transitions.
+- **Naming consistency:** Are the same concepts called the same name across UCs and the glossary? Flag naming conflicts.
+
+Verdict per item: `OK` | `MISSING CONCEPT` (concept used in UCs but not in glossary) | `MISSING RELATIONSHIP` (concepts appear together but relationship undefined) | `MISSING STATE` (UC implies a state not in the diagram) | `NAMING CONFLICT` (same concept called different names)
+
 ## Additional Checks
 
 ### Actor Discovery
@@ -184,6 +206,7 @@ Write the review report to the file path provided by the invoking skill. Use exa
 **Total use cases reviewed:** N
 **UCs passed:** M / N
 **Actors with issues:** K
+**Domain model:** OK | NEEDS REVISION | NOT YET CREATED
 **System completeness:** INCOMPLETE | SUFFICIENT
 
 ### Actors Review
@@ -211,6 +234,7 @@ Write the review report to the file path provided by the invoking skill. Use exa
 - Abstraction: IMPLEMENTATION LEAK — step 3 says "query the database" → suggest: "search for matching records"
 - Outcome: WEAK — "results are available" → suggest: "matching records are displayed within 2 seconds, sorted by relevance"
 - Overlap: OK
+- Precision: MISSING PRECISION — UC has failure modes (external data source unavailable) but no Error handling field
 - Cross-UC: —
 - **UC Verdict: NEEDS REVISION**
 
@@ -223,6 +247,7 @@ Write the review report to the file path provided by the invoking skill. Use exa
 - Abstraction: OK
 - Outcome: OK
 - Overlap: OK
+- Precision: OK
 - Cross-UC: —
 - **UC Verdict: PASS**
 
@@ -256,9 +281,30 @@ Write the review report to the file path provided by the invoking skill. Use exa
 - "Admin completes initial setup" (from: MISSING LIFECYCLE)
 - "Developer sends a message and views Claude's response" (from: IMPLICIT PREREQUISITE)
 
+### Domain Model Review
+
+*Only if Domain Model section exists.*
+
+#### Glossary Coverage
+- Session: OK
+- RenderedBlock: OK
+- MISSING CONCEPT — "deliverable" used in UC-11, UC-17, UC-18 but not in glossary
+
+#### Relationships
+- Session → RenderedBlock: OK
+- MISSING RELATIONSHIP — Session and Persona appear together in UC-9 but no relationship defined
+
+#### State Transitions
+- Session states: OK
+- MISSING STATE — UC-14 implies an "error" state for RenderedBlock not in the diagram
+
+#### Naming Consistency
+- OK | NAMING CONFLICT — UC-5 uses "message" but glossary defines "ConversationMessage"
+
 ### Summary
 - **UCs needing revision:** UC-1, UC-5
 - **Actors needing attention:** Reviewer (ORPHAN), Scheduler (INCOMPLETE), User (PRIVILEGE SPLIT)
+- **Domain model issues:** <list, or "none">
 - **Cross-UC findings:** 2
 - **System completeness:** INCOMPLETE — 3 gaps, 3 UC candidates
 ```
@@ -270,6 +316,7 @@ After writing the review report, return a concise summary to the caller (this is
 ```
 verdict: ALL_PASS | NEEDS_REVISION
 passed: <M> / <N>
+domain_model: OK | NEEDS_REVISION | NOT_YET_CREATED
 completeness: SUFFICIENT | INCOMPLETE
 uc_candidates:
   - "<candidate title>" (from: <gap type>)

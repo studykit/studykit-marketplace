@@ -27,7 +27,8 @@ Glob for `A4/<slug>*` and check which files exist:
 | Artifact | File pattern | Produced by |
 |----------|-------------|-------------|
 | Use Cases | `<slug>.usecase.md` | think-usecase, auto-usecase |
-| Spec | `<slug>.spec.md` | think-spec |
+| Architecture | `<slug>.arch.md` | think-arch |
+| Scaffold | `<slug>.scaffold.md` | auto-scaffold |
 | Impl Plan | `<slug>.impl-plan.md` | think-plan, auto-plan |
 | Integration Report | `<slug>.integration-report.r*.md` | think-verify |
 
@@ -54,16 +55,17 @@ Ask: **"What are you trying to do?"** and show the options:
 ### Pipeline (interactive)
 | Skill | What it does |
 |-------|-------------|
-| `think-usecase` | Shape a vague idea into concrete Use Cases through dialogue |
-| `think-spec` | Turn use cases into a spec (domain model + FRs + architecture) |
-| `think-plan` | Break a spec into ordered, testable implementation units |
+| `think-usecase` | Shape a vague idea into concrete Use Cases + Domain Model through dialogue |
+| `think-arch` | Design architecture — tech stack, components, interfaces, test strategy |
+| `think-plan` | Break an architecture into ordered, testable implementation units |
 | `think-code` | Execute the plan — implement code unit by unit |
-| `think-verify` | Launch the app and verify each FR works |
+| `think-verify` | Launch the app and verify each UC works |
 
 ### Pipeline (autonomous)
 | Skill | What it does |
 |-------|-------------|
 | `auto-usecase` | Auto-generate use cases without interview |
+| `auto-scaffold` | Set up project structure, dependencies, build, and test infrastructure |
 | `auto-plan` | Auto-generate impl plan without interview |
 
 ### Standalone
@@ -112,11 +114,15 @@ Use a simplified waterfall trace to locate where the issue is:
 **Layer 1 — Use Cases**: Are there open items or unreflected review feedback in the usecase file?
 - If yes → recommend `think-usecase` to iterate.
 
-**Layer 2 — Spec**: Is there a spec? Does it have open items, unresolved review feedback, or a source SHA mismatch with the usecase file?
-- If no spec exists → recommend `think-spec` to create one.
-- If spec has issues → recommend `think-spec` to iterate.
+**Layer 2 — Architecture**: Is there an arch file? Does it have open items, unresolved review feedback, or a source SHA mismatch with the usecase file?
+- If no arch exists → recommend `think-arch` to create one.
+- If arch has issues → recommend `think-arch` to iterate.
 
-**Layer 3 — Plan**: Is there a plan? Does it have open items, or IUs in BLOCKED/DEVIATED status? Does the source SHA match the spec?
+**Layer 2.5 — Scaffold**: Is there a scaffold report? Does it show all checks passing? Is it current with the arch file?
+- If no scaffold exists → recommend `auto-scaffold` to set up the dev environment.
+- If scaffold has failures → check if arch issues (recommend `think-arch`) or environment issues (report to user).
+
+**Layer 3 — Plan**: Is there a plan? Does it have open items, or IUs in BLOCKED/DEVIATED status? Does the source SHA match the arch?
 - If no plan exists → recommend `think-plan` to create one.
 - If plan has issues → recommend `think-plan` to iterate.
 
@@ -126,7 +132,7 @@ Use a simplified waterfall trace to locate where the issue is:
 
 **Layer 5 — Verification**: All IUs are DONE and files look aligned on paper.
 - If no integration report exists → recommend `think-verify`.
-- If integration report exists with failures → read the failure details and trace back to the responsible layer (spec/plan/code) using the report's own diagnosis.
+- If integration report exists with failures → read the failure details and trace back to the responsible layer (usecase/arch/plan/code) using the report's own diagnosis.
 
 ### 3.4 Present diagnosis
 
@@ -138,7 +144,8 @@ Report to the user in this format:
 | Stage | Artifact | Status |
 |-------|----------|--------|
 | Use Cases | <slug>.usecase.md | <status summary> |
-| Spec | <slug>.spec.md | <status summary or "not yet created"> |
+| Architecture | <slug>.arch.md | <status summary or "not yet created"> |
+| Scaffold | <slug>.scaffold.md | <status summary or "not yet run"> |
 | Plan | <slug>.impl-plan.md | <status summary or "not yet created"> |
 | Code | <N/M IUs done> | <summary> |
 | Verification | <slug>.integration-report.r*.md | <status summary or "not yet run"> |

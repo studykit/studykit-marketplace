@@ -2,9 +2,17 @@
 
 ## End Iteration (not finalizing)
 
-1. **Pre-review checkpoint** — write all pending confirmed content to the working file and **increment `revision`**. This stamps the exact document state the reviewer will evaluate.
-2. **Launch reviewer subagent** — spawn a fresh `Agent(subagent_type: "usecase-reviewer")` with the current working file path and report path per `references/review-report.md` (label: revision number). If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed. The reviewer writes the report and returns results.
-3. **Present the review results** — show the user the review report. Walk through issues in this order:
+Exploration and review are a combined process: **Explorer → Review**. Explorer finds gaps and new UC candidates first, then Review validates all UCs (existing + newly added) in one pass.
+
+1. **Pre-checkpoint** — write all pending confirmed content to the working file and **increment `revision`**.
+2. **Launch explorer subagent** — spawn a fresh `Agent(subagent_type: "usecase-explorer")` with the current working file and report path per `references/exploration-report.md` (label: revision number). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results.
+3. **Present exploration results** — show each perspective explored and UC candidates found:
+   - Ask: "The explorer found these additional angles. Which ones should we add?"
+   - If the user picks any, enter the Discovery Loop for those topics (full precision: validation, error handling, etc.)
+   - If the user defers any, record as Open Items for next iteration
+   - After reflecting, add the exploration file name to `reflected_files`. **Increment `revision`** and update `revised` timestamp.
+4. **Launch reviewer subagent** — spawn a fresh `Agent(subagent_type: "usecase-reviewer")` with the **updated** working file (now including any newly added UCs from exploration) and report path per `references/review-report.md` (label: revision number). If a previous review report exists, include its path. The reviewer writes the report and returns results.
+5. **Present the review results** — walk through issues in this order:
 
    **Actors Review** — for each actor with issues:
    - `ORPHAN` — actor not referenced by any UC. Ask if the user wants to remove it or assign to a UC.
@@ -20,33 +28,24 @@
    - `SPLIT` — propose the split and ask for confirmation
    - `VAGUE` / `UNCLEAR` / `WEAK` — present the suggestion and ask if the user wants to revise
    - `IMPLEMENTATION LEAK` / `TOO ABSTRACT` — point out the problematic text and ask for the user-level intent
+   - `MISSING PRECISION` — ask the user to add validation/error handling
    - `OVERLAPS UC-N` — ask if the user wants to merge or differentiate
    - `MISSING ACTOR` / `IMPLICIT ACTOR` — present the discovered actor and ask if the user wants to add it
    - `MISSING SYSTEM ACTOR` — present the automated behavior and ask if a system actor should be added
 
+   **Domain Model Review** — if Domain Model section exists:
+   - `MISSING CONCEPT` / `MISSING RELATIONSHIP` / `MISSING STATE` / `NAMING CONFLICT` — walk through each finding and resolve with the user
+
    **System Completeness** — if `INCOMPLETE`, present the gaps and UC candidates:
-   - Show each gap (MISSING JOURNEY, USABILITY GAP, MISSING LIFECYCLE) with explanation
-   - Present the UC candidates as suggestions for the next iteration
-   - Ask: "Would you like to explore any of these now, or save them for next time?"
+   - Show each gap (MISSING JOURNEY, USABILITY GAP, MISSING LIFECYCLE, IMPLICIT PREREQUISITE) with explanation
+   - Present the UC candidates as suggestions
+   - Ask: "Would you like to address any of these now, or save them for next time?"
    - If the user picks any, enter the Discovery Loop for those topics
    - If the user defers, record as Open Items for next iteration
 
    The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
-4. **Update the working file with review revisions** — apply all accepted review changes to the working file. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
-5. **Ask for next step** — present the user with a choice:
-   > "Review changes have been applied. What would you like to do next?"
-   > 1. **Run exploration** — let the explorer find new perspectives and UC candidates based on the updated file
-   > 2. **Re-review** — run the reviewer again against the updated file (useful if significant changes were made)
-
-   - If the user chooses **exploration** → proceed to step 6.
-   - If the user chooses **re-review** → go back to step 1 with the updated file (pre-review checkpoint bumps revision, so the new report naturally gets a distinct label). Repeat steps 1–5 until the user chooses exploration or explicitly skips it.
-   - If the user wants to **skip exploration entirely** → proceed directly to step 8.
-6. **Launch explorer subagent** — spawn a fresh `Agent(subagent_type: "usecase-explorer")` with the **updated** working file and report path per `references/exploration-report.md` (label: revision number). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results. Present the exploration results:
-   - Show each perspective explored and UC candidates found
-   - Ask: "The explorer found these additional angles we haven't covered. Would you like to explore any now, or save them for next time?"
-   - If the user picks any, enter the Discovery Loop for those topics. After reflecting the results, add the exploration file name to the frontmatter `reflected_files` list.
-   - If the user defers, record as Open Items for next iteration (exploration file remains unconsumed for next session)
-7. **Update the working file with exploration results** — apply any accepted exploration changes. Add the exploration report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp.
+6. **Update the working file with review revisions** — apply all accepted review changes. Add the review report file name to `reflected_files`. **Increment `revision`** and update `revised` timestamp.
+7. **Re-review check** — if significant changes were made during the review walk-through (e.g., UCs split, new UCs from completeness gaps), ask: "Significant changes were made. Run the reviewer again?" If yes, go back to step 4. If no, proceed.
 8. **Scan for Open Items** — review all sections for incomplete or unclear items:
    - Use cases flagged by the reviewer but deferred by the user
    - Actors suspected but not confirmed (from Actors Review feedback)
@@ -69,7 +68,8 @@
 
 ## Finalize
 
-1. **Pre-review checkpoint** — write all pending confirmed content to the working file and **increment `revision`**. This stamps the exact document state the reviewer will evaluate.
+1. **Verify Domain Model** — check that the Domain Model section exists with at least a Glossary and Concept Relationships diagram. If missing, inform the user: "Domain Model is required before finalization. It provides the shared vocabulary for architecture and implementation." Do not proceed until resolved.
+1b. **Pre-review checkpoint** — write all pending confirmed content to the working file and **increment `revision`**. This stamps the exact document state the reviewer will evaluate.
 2. **Launch final reviewer subagent** — spawn a fresh `Agent(subagent_type: "usecase-reviewer")` with the current working file path and report path per `references/review-report.md` (label: `final`). If previous review reports exist, include their paths. The reviewer writes the report and returns results.
 3. **Present the review results** — walk through each flagged issue one at a time. All issues should be resolved before finalization; if the user defers any, suggest ending the iteration instead. If System Completeness is `INCOMPLETE`, inform the user of the gaps and ask whether to proceed with finalization or end the iteration to address them first.
 4. **Update the working file** with any revisions from the review. Add the review report file name to the frontmatter `reflected_files` list. **Increment `revision`** and update `revised` timestamp. Record changes in the Change Log with the review report file name as Source.

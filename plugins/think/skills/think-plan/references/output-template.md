@@ -16,8 +16,8 @@ revised: <YYYY-MM-DD HH:mm>
 revision: 0
 status: draft | final
 sources:
-  - file: <topic-slug>.spec.md
-    revision: <spec revision at time of reading>
+  - file: <topic-slug>.arch.md
+    revision: <arch revision at time of reading>
     sha: <git hash-object output at time of reading>
 reflected_files: []
 tags: []
@@ -28,13 +28,13 @@ tags: []
 
 ```markdown
 # Implementation Plan: <topic>
-> Source: [<spec-file-name>](./<spec-file-name>)
+> Source: [<arch-file-name>](./<arch-file-name>)
 
 ## Overview
-<Brief summary of what is being implemented, the scope, and overall approach. Reference the source spec.>
+<Brief summary of what is being implemented, the scope, and overall approach. Reference the source architecture.>
 
 ## Technology Stack
-<Carry over from the spec's Technology Stack. Do not redefine — reference the spec for details.>
+<Carry over from the arch's Technology Stack. Do not redefine — reference the arch for details.>
 
 | Category | Choice |
 |----------|--------|
@@ -46,7 +46,7 @@ tags: []
 
 - **Approach:** <e.g., bottom-up starting from data layer, or feature-by-feature vertical slices>
 - **Incremental delivery:** <how to keep the system testable at each step>
-- **Key constraints:** <anything from the spec that shapes implementation order>
+- **Key constraints:** <anything from the architecture that shapes implementation order>
 
 ---
 
@@ -142,7 +142,7 @@ IU4 --> IU3 : depends on
 | Test isolation | <flags/config for a clean test environment — e.g., `--disable-extensions`, `--user-data-dir=<tmpdir>`> |
 | Smoke scenario | <the single most basic user interaction — e.g., "type a message and see a response"> |
 
-<Derived from the spec's Technology Stack and codebase exploration. Used by think-code for build verification and by think-verify for integration testing. Also serves as the user's guide for manual verification.>
+<Derived from the arch's Technology Stack and scaffold report. If a scaffold report exists, use its Verified Commands directly. Used by think-code for build verification and by think-verify for integration testing. Also serves as the user's guide for manual verification.>
 
 ---
 
@@ -177,7 +177,7 @@ IU4 --> IU3 : depends on
 ## Required Sections
 
 - Overview
-- Technology Stack (carried from spec)
+- Technology Stack (carried from arch)
 - Implementation Strategy
 - Implementation Units (at least one)
 - Launch & Verify

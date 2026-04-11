@@ -108,7 +108,15 @@ As the conversation reveals enough context, draft a Use Case and present it to t
 >
 > Does this capture it? Anything to adjust?
 
-After the user confirms or revises:
+After the user confirms the core UC, **immediately drill into precision**:
+
+- **Validation:** "Are there input constraints? Limits? Required formats?" — capture as business rules the user can see (e.g., "empty messages cannot be sent", "maximum 100KB diagram source")
+- **Error handling:** "What does the user see when this fails?" — capture user-visible failure states (e.g., "rendering failed indicator with raw source access", "error message with retry option")
+- **Boundary conditions:** "What happens at the edges?" — empty input, maximum items, concurrent access, timeouts
+
+Record confirmed validation/error handling in the UC's **Validation** and **Error handling** fields. These fields are optional — skip if the UC has no meaningful constraints or failure modes. Keep all descriptions at user-visible level (what the user sees), not system-internal level (how the system handles it).
+
+After precision is confirmed:
 1. **Track via task** — create a task for the confirmed use case (e.g., `UC-1: <title>`) and mark it as completed. This gives the user a running overview via TaskList.
 2. **Check for checkpoint** — if this confirmation triggers a checkpoint (every 3 UCs, interview stage transition, or before review), batch-write all unwritten confirmed UCs to the working file, update Actors table, Use Case Diagram, and Context.
 
@@ -132,6 +140,82 @@ For the full procedure (nudge timing, background agent launch, result handling),
 
 After 5 or more use cases have been confirmed, analyze and present the relationships between use cases. Read `${CLAUDE_SKILL_DIR}/references/usecase-relationships.md` for the full analysis guide covering dependency relationships, reinforcement relationships, use case groups, and presentation format.
 
+### 8. Platform Capabilities Audit
+
+After all UC-derived use cases are confirmed, perform a final audit for implicit platform capabilities — shared behaviors that multiple UCs assume but no UC defines.
+
+1. **Scan all UC flows** — identify user actions or system behaviors that appear across 3+ UCs but aren't themselves covered by any UC.
+
+   Common patterns to check:
+   - **Input mechanisms** — message input, form submission, command entry, search box
+   - **Display mechanisms** — conversation display, list views, real-time response streaming, status indicators
+   - **Navigation infrastructure** — view routing, tab management, sidebar, breadcrumbs
+   - **State lifecycle** — session restore on launch, data persistence across restarts, undo/redo
+
+2. **Present findings** to the user:
+
+   > These capabilities are assumed by multiple UCs but not yet defined:
+   >
+   > | Assumed Capability | Referenced By | Example UC Text |
+   > |-------------------|---------------|-----------------|
+   > | Message input and sending | UC-1, UC-7, UC-8, UC-15 | "user types a question" |
+   > | Conversation display with streaming | UC-1, UC-2, UC-3 | "response displays inline" |
+   >
+   > Should I create UCs for these?
+
+3. **Create UCs** for confirmed gaps. These UCs reference the Overview rather than a specific source:
+   - **Actor:** (platform capability — implicit across [list dependent UCs])
+
+4. Skip silently if no gaps are found.
+
+### 9. UI Screen Grouping (if UI use cases exist)
+
+After all UCs (including platform capabilities) are confirmed, group UI-related UCs by screen or view:
+
+1. **Propose screen groups** — analyze UCs and group them by the screen/view where the interaction occurs.
+2. **Confirm with the user** — they may merge, split, or rename groups.
+3. **Define screen navigation** — map how users move between screens. Present as a PlantUML activity diagram.
+4. **Record** in the output file's UI Screen Groups section.
+
+### 10. Mock Generation (optional, per screen group)
+
+For each confirmed screen group, optionally create an HTML mock:
+
+1. Invoke the `mock-html-generator` agent to create an HTML mock in `A4/mock/<topic-slug>/`.
+2. Present the mock and gather feedback.
+3. Refine UCs from mock feedback — fill gaps, clarify interactions.
+4. Record mock file paths in the output file.
+
+Move to the next screen group only when the user confirms. Mock generation is suggested but not required — the user can skip it.
+
+### 11. Non-Functional Requirements (optional)
+
+Ask the user once whether NFRs should constrain implementation:
+
+> "Are there non-functional requirements? For example: performance targets, security requirements, scalability needs, accessibility standards, compliance rules. If not, we can skip this."
+
+- If yes → capture each NFR with: description, affected UCs, measurable criteria
+- If no → skip, no section created
+
+### 12. Domain Model Extraction
+
+After UCs are substantially complete (including platform capabilities and precision), extract domain concepts through cross-cutting analysis. This produces the shared vocabulary that architecture and implementation will use.
+
+For the detailed procedure (concept extraction, relationship mapping, state transition analysis), read **`${CLAUDE_SKILL_DIR}/references/domain-model-guide.md`**.
+
+The Domain Model has three topics:
+1. **Concept Extraction** — identify entities that appear across multiple UCs, confirm name/definition/key attributes
+2. **Relationship Mapping** — identify relationships between concepts, present as PlantUML class diagram
+3. **State Transition Analysis** — identify stateful concepts, map states/transitions/conditions as PlantUML state diagram
+
+Domain Model uses the same interview style — present findings, confirm with the user, iterate. Track confirmed concepts via tasks.
+
+**Abstraction rule for Domain Model:**
+- "What exists and how it connects" = confirmed
+- "How to build it" = not decided
+- No implementation types (VARCHAR, INT) in diagrams
+- No API endpoints or serialization formats
+
 ## Wrapping Up
 
 The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper or add more use cases. Keep asking until the user explicitly ends the session.
@@ -142,26 +226,27 @@ When the user indicates they're done, ask whether they want to:
 
 ### Agent Usage
 
-Reviews and explorations are handled by launching fresh subagents. Always spawn a fresh agent — context is passed via file paths, not agent memory.
+Reviews, explorations, and mock generation are handled by launching fresh subagents. Always spawn a fresh agent — context is passed via file paths, not agent memory.
 
 - **Reviewer:** Launch via `Agent(subagent_type: "usecase-reviewer")`. Pass the working file path and report output path. If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
 - **Explorer:** Launch via `Agent(subagent_type: "usecase-explorer")`. Pass the working file path and report output path.
+- **Mock generator:** Launch via `Agent(subagent_type: "mock-html-generator")`. Each invocation provides UCs, layout requirements, and output path in the prompt.
 
-**Execution order:** Always run the reviewer first. After the review cycle completes (user walks through findings, working file is updated), the user decides the next step: run exploration, re-review the updated file, or skip exploration. The explorer only runs when the user explicitly chooses it.
+**Execution order:** Explorer runs first (find gaps and new UC candidates), then Reviewer validates all UCs (existing + newly added) in one pass. Both are required steps, not optional.
 
 ### End Iteration (not finalizing)
 
-Launch a `usecase-reviewer` subagent. Walk through flagged issues with the user and update the working file. Then, if the user chooses, launch a `usecase-explorer` subagent against the updated file. Scan for open items, append Session Close entry to the history file, update Open Items + Next Steps in the working file, increment revision, and report.
+Launch `usecase-explorer` → reflect accepted candidates → launch `usecase-reviewer` → walk through findings → update working file. If significant changes were made during review, optionally re-run the reviewer. Scan for open items, append Session Close entry to the history file, update Open Items + Next Steps, increment revision, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
 
 ### Finalize
 
-Launch a `usecase-reviewer` subagent. All issues must be resolved. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
+Launch `usecase-explorer` → reflect candidates → launch `usecase-reviewer`. All issues must be resolved. Verify Domain Model is complete. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "Finalize" section.
 
-After finalizing, suggest the next step: "To turn these use cases into a specification, run `/think:think-spec <file_path>`."
+After finalizing, suggest the next step: "To design the architecture from these use cases, run `/think:think-arch <file_path>`."
 
 ### Output Format
 

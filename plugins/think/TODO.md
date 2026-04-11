@@ -1,10 +1,10 @@
 # TODO
 
-## auto-spec skill
+## auto-arch skill
 
-Create `auto-spec` skill to bridge the autonomous pipeline gap:
-- auto-usecase (.usecase.md) → **auto-spec** (.spec.md) → auto-plan (.impl-plan.md)
-- Currently users must use interactive think-spec in between
+Create `auto-arch` skill to bridge the autonomous pipeline gap:
+- auto-usecase (.usecase.md) → **auto-arch** (.arch.md) → auto-scaffold → auto-plan (.impl-plan.md)
+- Currently users must use interactive think-arch in between
 
 ## compass skill (pipeline navigator)
 
@@ -33,9 +33,9 @@ Create a post-verification learning capture skill:
 ## Pipeline orchestrator
 
 Create a mode or thin wrapper to chain the full autonomous pipeline:
-- auto-usecase → auto-spec → auto-plan → think-code → think-verify
+- auto-usecase → auto-arch → auto-scaffold → auto-plan → think-code → think-verify
 - Eliminates manual invocation and file path passing between steps
-- Depends on: auto-spec completion
+- Depends on: auto-arch completion
 
 ## auto-plan downstream handoff
 
@@ -53,6 +53,7 @@ Add think-code suggestion to auto-plan's Final Output:
 
 ## auto pipeline full handoff chain
 
-Once auto-spec is ready, add downstream suggestions:
-- auto-usecase → auto-spec
-- auto-spec → auto-plan
+Once auto-arch is ready, add downstream suggestions:
+- auto-usecase → auto-arch
+- auto-arch → auto-scaffold
+- auto-scaffold → auto-plan

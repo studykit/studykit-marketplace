@@ -1,7 +1,7 @@
 ---
 name: think-verify
 description: "This skill should be used when the user needs to verify that an implemented project actually works — launching the application, interacting with its UI, and checking each FR against the running product. Common triggers include: 'verify', 'verify the implementation', 'does it work', 'test the app', 'integration test', 'check if it runs', 'smoke test', 'verify the build'. Also applicable after think-code completes all IUs and the user wants end-to-end verification."
-argument-hint: <path to .impl-plan.md or .spec.md file, or topic slug>
+argument-hint: <path to .impl-plan.md or .arch.md file, or topic slug>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 
@@ -20,14 +20,15 @@ If no argument is provided, ask the user for a slug, filename, or path.
 Arguments can be full paths, partial filenames, or slugs. Resolve in order:
 
 1. **Full path** — use directly if the file exists
-2. **Partial match** — glob for `A4/*<argument>*.impl-plan.md` and `A4/*<argument>*.spec.md`
+2. **Partial match** — glob for `A4/*<argument>*.impl-plan.md` and `A4/*<argument>*.arch.md`
 3. **Fallback** — if `A4/` does not exist, glob from project root
 4. **Multiple matches** — present candidates and ask the user to pick
 5. **No match** — inform the user and ask for a different term
 
 After resolution, read:
 - The `.impl-plan.md` file (for Launch & Verify, file mappings, Shared Integration Points)
-- The `.spec.md` file (for FR list, UI Screen Groups, platform capabilities)
+- The `.arch.md` file (for component structure, interface contracts, test strategy)
+- The `.usecase.md` file (for UC list, platform capabilities, validation/error handling)
 - Any existing `A4/<topic-slug>.integration-report.r*.md` files (for prior verification results)
 
 ## Step 1: Environment Setup
@@ -151,7 +152,7 @@ verify(<topic-slug>): integration report
 
 ## Step 7: Report to User
 
-Present a summary table (build status, test suite results, FR pass/fail counts, auto-fixes, issues by stage). For issues requiring upstream fixes, point the user to the relevant skill (`think-spec` or `think-plan` — they detect integration reports automatically).
+Present a summary table (build status, test suite results, UC pass/fail counts, auto-fixes, issues by stage). For issues requiring upstream fixes, point the user to the relevant skill (`think-usecase`, `think-arch`, or `think-plan` — they detect integration reports automatically).
 
 Clean up any launched dev servers and browser tabs.
 

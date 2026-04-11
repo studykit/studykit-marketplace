@@ -80,6 +80,9 @@ end note
   2. <user-level action step>
   3. ...
 - **Expected Outcome:** <what's different after the flow completes — observable/measurable>
+- **Validation:** <input rules, constraints, limits — what the user sees when input is invalid. Omit if no meaningful constraints.>
+- **Error handling:** <what the user sees when things go wrong — failure states, recovery options. Omit if no meaningful failure modes.>
+- **Dependencies:** <other UCs this depends on, if any>
 - **Source:** <input | research — <which systems> (ref: research-<label>.md) | implicit> *(include when research was performed; omit otherwise)*
 
 ### [UC-2]. <short title>
@@ -89,6 +92,8 @@ end note
 - **Flow:**
   1. ...
 - **Expected Outcome:** <outcome>
+- **Validation:** <constraints, if any>
+- **Error handling:** <failure states, if any>
 - **Source:** <source> *(include when research was performed, with ref: research-<label>.md)*
 
 ### [UC-3]. <short title> *(split from original)*
@@ -99,6 +104,8 @@ end note
 - **Flow:**
   1. ...
 - **Expected Outcome:** <outcome>
+- **Validation:** <constraints, if any>
+- **Error handling:** <failure states, if any>
 
 #### [UC-3b]. <short title>
 - **Actor:** <actor name>
@@ -107,6 +114,8 @@ end note
 - **Flow:**
   1. ...
 - **Expected Outcome:** <outcome>
+- **Validation:** <constraints, if any>
+- **Error handling:** <failure states, if any>
 
 ...
 
@@ -124,6 +133,84 @@ end note
 | Group | Use Cases | Description |
 |-------|-----------|-------------|
 | <name> | [UC-1], [UC-2], ... | <description> |
+
+## UI Screen Groups
+
+| Screen | UCs | Mock |
+|--------|-----|------|
+| <screen name> | UC-1, UC-3 | [mock](<path to mock HTML>) |
+
+### Screen Navigation
+
+```plantuml
+@startuml
+(*) --> Dashboard
+Dashboard --> "Detail View" : clicks item
+Dashboard --> Settings : clicks settings icon
+"Detail View" --> Dashboard : clicks back
+Settings --> Dashboard : clicks done
+@enduml
+```
+
+<Text explanation of navigation transitions and entry points.>
+
+## Authorization Rules
+
+| UC | <Actor/Role 1> | <Actor/Role 2> | <System> |
+|----|----------------|----------------|----------|
+| UC-1. <title> | write | read | — |
+| UC-2. <title> | write | — | — |
+
+<Access levels: `read`, `write`, `execute`, `—` (no access). Only present if actors have different privilege levels.>
+
+## Non-Functional Requirements
+
+| NFR | Description | Affected UCs | Measurable Criteria |
+|-----|-------------|-------------|---------------------|
+| <e.g., Performance> | <description> | UC-1, UC-3 | <e.g., response time < 200ms> |
+
+---
+
+## Domain Model
+
+### Domain Glossary
+
+| Concept | Definition | Key Attributes | Related UCs |
+|---------|-----------|----------------|-------------|
+| <name>  | <definition> | <1-2 key attributes> | [UC-1], [UC-3] |
+
+### Concept Relationships
+
+```plantuml
+@startuml
+class Concept1 {
+  attribute1
+  attribute2
+}
+class Concept2 {
+  attribute1
+}
+Concept1 "1" -- "*" Concept2 : contains
+@enduml
+```
+
+<Text explanation of each relationship>
+
+### State Transitions
+
+#### <Entity Name>
+
+```plantuml
+@startuml
+[*] --> State1
+State1 --> State2 : condition
+State2 --> [*]
+@enduml
+```
+
+<Text explanation of states, transitions, and conditions>
+
+---
 
 ## Similar Systems Research
 *(include when research was performed; omit otherwise)*
@@ -185,10 +272,16 @@ end note
 
 **Issue reference links:** Read `${CLAUDE_SKILL_DIR}/../../references/issue-links.md` for GitHub issue link formatting rules.
 
-**Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships.
-**Additional required (think-usecase)**: Open Items, Next Steps.
-**Additional required (auto-usecase)**: Similar Systems Research, Open Questions, Open Items, Next Steps.
+**Required sections (both skills)**: Original Idea, Context, Actors, Use Case Diagram, Use Cases, Use Case Relationships, Open Items, Next Steps.
+**Additional required (auto-usecase)**: Similar Systems Research, Open Questions.
 **Conditionally required:**
+- **Validation / Error handling** (per UC) — only when the UC has meaningful constraints or failure modes
+- **Dependencies** (per UC) — only when the UC depends on another UC
+- **UI Screen Groups** — only if UI use cases exist
+- **Screen Navigation** — only if UI Screen Groups exist
+- **Authorization Rules** — only if actors have different privilege levels
+- **Non-Functional Requirements** — only if the user specifies NFRs
+- **Domain Model** (Glossary, Relationships, State Transitions) — required before finalization; State Transitions only if stateful entities exist
 - **Similar Systems Research** — always in auto-usecase; in think-usecase only when research was performed
 - **Source field** (per UC) — always in auto-usecase; in think-usecase only when research was performed
 - **Open Questions** — if unresolved topics remain (think-usecase); always required (auto-usecase)

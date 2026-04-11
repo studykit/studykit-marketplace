@@ -1,14 +1,14 @@
 # Planning Guide
 
-Detailed procedures for deriving implementation units from a specification.
+Detailed procedures for deriving implementation units from an architecture document.
 
 ## Unit Derivation Strategy
 
-There are three common approaches. Choose based on the spec's characteristics:
+There are three common approaches. Choose based on the architecture's characteristics:
 
 ### 1. Component-First (Bottom-Up)
 
-Best when the spec has a clear Architecture section with well-defined components and DB schemas.
+Best when the architecture has well-defined components and DB schemas.
 
 1. Start with components that have no dependencies on other components (leaf nodes).
 2. Build up layer by layer — data models first, then services, then API/UI layers.
@@ -62,7 +62,7 @@ After codebase exploration, fill the **Launch & Verify** section. This informati
 
 ### Auto-detection procedure
 
-1. **App type** — derive from spec's Technology Stack and codebase structure:
+1. **App type** — derive from arch's Technology Stack and codebase structure:
 
    | Detection Signal | App Type |
    |-----------------|----------|
@@ -101,7 +101,7 @@ After codebase exploration, fill the **Launch & Verify** section. This informati
    | CLI | Bash execution | — |
    | Native desktop | computer-use MCP | — |
 
-6. **Smoke scenario** — identify the single most basic user interaction from the spec's FRs. This is the minimum bar for "the app works":
+6. **Smoke scenario** — identify the single most basic user interaction from the source UCs. This is the minimum bar for "the app works":
    - Chat app → "type a message and see a response"
    - CRUD app → "create an item and see it in the list"
    - API → "call the health endpoint and get 200"
@@ -197,7 +197,7 @@ This table is included in the prompt for every coder agent that touches the file
 
 ### Deriving File Paths
 
-Use the spec's Technology Stack and codebase conventions to determine paths:
+Use the arch's Technology Stack and codebase conventions to determine paths:
 
 1. **Explore the existing codebase** — check directory structure, naming conventions, existing patterns.
 2. **Follow framework conventions** — e.g., Next.js uses `app/` for routes, Django uses `<app>/models.py`.

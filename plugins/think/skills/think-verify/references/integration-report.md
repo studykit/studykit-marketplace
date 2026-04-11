@@ -108,8 +108,11 @@ fix_commits: []      # git hashes of auto-fix commits
 
 ## Upstream Actions Required
 
-### Spec Issues
-> To address these, run `think-spec` on the spec file. It will detect this report during iteration entry.
+### Usecase Issues
+> To address these, run `think-usecase` on the usecase file. It will detect this report during iteration entry.
+
+### Architecture Issues
+> To address these, run `think-arch` on the arch file. It will detect this report during iteration entry.
 
 - [ ] <issue description — what FR to add or modify>
 

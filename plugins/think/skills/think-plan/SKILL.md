@@ -1,13 +1,13 @@
 ---
 name: think-plan
 description: "This skill should be used when the user needs to create or iterate on an implementation plan from a specification — breaking down a spec into ordered, testable implementation units with dependencies, file mappings, and test strategies. Common triggers include: 'plan', 'implementation plan', 'plan the implementation', 'break down the spec', 'what should I build first', 'implementation order', 'create an impl plan', 'how to implement this spec'. Also applicable when a finalized spec needs to be turned into an actionable development roadmap."
-argument-hint: <path to .spec.md file, or existing .impl-plan.md file for iteration>
+argument-hint: <path to .arch.md file, or existing .impl-plan.md file for iteration>
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Implementation Plan Builder
 
-Takes a specification (from think-spec) and builds an implementation plan — ordered, testable implementation units with dependencies, file mappings, and test strategies — through collaborative dialogue.
+Takes an architecture document (from think-arch) and builds an implementation plan — ordered, testable implementation units with dependencies, file mappings, and test strategies — through collaborative dialogue. The scaffold report (from auto-scaffold) provides verified build/test/launch commands.
 
 ## Modes
 
@@ -43,7 +43,7 @@ If no argument is provided, ask the user for a slug, filename, or path.
 Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/`:
 
 1. **Full path** — use directly
-2. **Partial match** — glob for `A4/*<argument>*.spec.md` and `A4/*<argument>*.impl-plan.md`
+2. **Partial match** — glob for `A4/*<argument>*.arch.md` and `A4/*<argument>*.impl-plan.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
@@ -51,7 +51,7 @@ After resolution, present the resolved file(s) and ask the user to confirm befor
 
 **Mode detection:**
 - If no existing `.impl-plan.md` → **First Design** mode. Proceed to Step 0.
-- If an existing `.impl-plan.md` is found → read the plan and its source spec, then run the **Existing Plan Entry** procedure to determine the mode.
+- If an existing `.impl-plan.md` is found → read the plan and its source arch, then run the **Existing Plan Entry** procedure to determine the mode.
 
 After reading, list the spec overview and any existing plan content found, then confirm with the user before proceeding.
 
@@ -59,13 +59,13 @@ After reading, list the spec overview and any existing plan content found, then 
 
 When an existing `.impl-plan.md` is found, perform these checks to assess the current state and determine the mode.
 
-### 1. Source Spec Change Detection
+### 1. Source Arch Change Detection
 
 Compare the stored `sha` in plan frontmatter against the current file:
 
-1. Run `git hash-object <spec-file-path>` to get the current SHA.
-2. If SHA matches the frontmatter `sha` → no spec changes.
-3. If SHA differs → run `git diff <stored-sha> <current-sha> -- <spec-file-path>` to see what changed. Present the changes to the user.
+1. Run `git hash-object <arch-file-path>` to get the current SHA.
+2. If SHA matches the frontmatter `sha` → no arch changes.
+3. If SHA differs → run `git diff <stored-sha> <current-sha> -- <arch-file-path>` to see what changed. Present the changes to the user.
 
 ### 2. Unreflected Reports
 
@@ -73,6 +73,7 @@ Check for report files not listed in the plan's `reflected_files`:
 
 - `A4/<topic-slug>.impl-plan.review-*.md` (review reports)
 - `A4/<topic-slug>.integration-report.r*.md` (integration reports)
+- `A4/<topic-slug>.scaffold.md` (scaffold reports — check if arch source SHA differs from plan's, indicating scaffold was re-run)
 
 Read each unreflected report and extract unaddressed issues. For integration reports, prioritize issues where `Stage` is **plan**.
 
@@ -88,20 +89,20 @@ If yes:
 
 ### 4. Mode Determination
 
-Based on the spec diff, assess the scope of change:
+Based on the arch diff, assess the scope of change:
 
-- **Iteration** — minor spec changes (FR additions/modifications, scope adjustments)
-- **Redesign (First Design)** — major spec changes (strategy change, architecture restructuring, domain model redesign)
+- **Iteration** — minor arch changes (component additions/modifications, contract updates)
+- **Redesign (First Design)** — major arch changes (technology stack change, architecture restructuring)
 
-Present the judgment with rationale. The user can override. Iteration → present work backlog. Redesign → proceed to Step 0 with existing plan as reference. No spec changes → default to Iteration.
+Present the judgment with rationale. The user can override. Iteration → present work backlog. Redesign → proceed to Step 0 with existing plan as reference. No arch changes → default to Iteration.
 
 ## Step 0: Explore the Codebase
 
 Explore the codebase to ground the plan in reality — project structure, naming conventions, existing patterns, test setup, and build configuration. Reference what you find during the interview.
 
-## Step 1: Understand the Spec
+## Step 1: Understand the Architecture
 
-Read the spec thoroughly and present a summary (FR counts, components, domain concepts, external dependencies). Note spec characteristics that shape the planning approach (heavy data model → component-first; independent features → feature-first; mix → hybrid).
+Read the arch thoroughly and present a summary (component count, UC coverage, external dependencies, test strategy tiers). Also read the source usecase file (from arch frontmatter `sources`) for UC details, domain model, and validation/error handling. Note characteristics that shape the planning approach (heavy data model → component-first; independent features → feature-first; mix → hybrid).
 
 ## Step 2: Strategy Selection
 
@@ -136,9 +137,18 @@ After each unit's details are confirmed, track completion via a task update. The
 
 ## Step 6: Launch & Verify
 
-Fill the **Launch & Verify** section using findings from Step 0 (Codebase Exploration) and the spec's Technology Stack. Read **`${CLAUDE_SKILL_DIR}/references/planning-guide.md`** → "Launch & Verify Derivation" for the auto-detection procedure.
+Fill the **Launch & Verify** section. If a scaffold report exists (`A4/<topic-slug>.scaffold.md`), read it and use the **Verified Commands** directly — these are confirmed working commands, not auto-detected guesses. Map them to the Launch & Verify fields:
 
-Present the detected values to the user for confirmation. If any value cannot be auto-detected, ask the user.
+| Scaffold Report Field | Launch & Verify Field |
+|----------------------|----------------------|
+| Build command (PASS) | Build command |
+| Run command (PASS) | Launch command |
+| Test commands (per tier) | Test runner commands |
+| App type (from Environment) | App type |
+
+If no scaffold report exists, fall back to auto-detection using findings from Step 0 and the arch's Technology Stack. Read **`${CLAUDE_SKILL_DIR}/references/planning-guide.md`** → "Launch & Verify Derivation" for the auto-detection procedure.
+
+Present the values to the user for confirmation.
 
 ## Step 7: Risk Assessment
 

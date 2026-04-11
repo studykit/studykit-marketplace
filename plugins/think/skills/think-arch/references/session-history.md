@@ -1,17 +1,17 @@
 # Session History
 
-Session history is stored in a separate file from the working spec file to keep the spec lean.
+Session history is stored in a separate file from the working arch file to keep the arch lean.
 
 ## File Path
 
-`A4/<topic-slug>.spec.history.md`
+`A4/<topic-slug>.arch.history.md`
 
 ## Format
 
 ```markdown
 ---
 type: session-history
-source: <topic-slug>.spec.md
+source: <topic-slug>.arch.md
 ---
 
 ### Session Close — <YYYY-MM-DD HH:mm>
@@ -49,7 +49,7 @@ source: <topic-slug>.spec.md
 
 ## Rules
 
-- Each session appends a new `### Session Close` entry. Previous entries are preserved — never overwrite them.
-- The Change Log records **interview-driven changes only**. Review/exploration reflection changes are recorded at reflection time in the working file's revision increment, not duplicated here.
-- Open Items and Next Steps are **also maintained in the working file body** for quick access. The history copy preserves the snapshot at session close.
+- Each session appends a new `### Session Close` entry. Previous entries are preserved.
+- The Change Log records **interview-driven changes only**. Review reflection changes are recorded at reflection time in the working file's revision increment.
+- Open Items and Next Steps are **also maintained in the working file body** for quick access.
 - Use the Write tool to append new entries. Read the existing file first to preserve previous entries.

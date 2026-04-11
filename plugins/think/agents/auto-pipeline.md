@@ -1,10 +1,11 @@
 ---
 name: auto-pipeline
 description: >
-  End-to-end autonomous document pipeline: takes a raw idea or brainstorm input and produces both
-  a Use Case document (.usecase.md) and a Specification document (.spec.md) in sequence — without
-  human interaction. Orchestrates auto-usecase (skill) and auto-spec (agent) in sequence, passing
-  the output of the first as input to the second.
+  DEPRECATED — auto-spec was removed in the pipeline restructuring
+  (see A4/2026-04-12-think-pipeline-restructuring.decide.md). The new pipeline is:
+  auto-usecase → auto-arch → auto-scaffold → auto-plan. auto-arch does not exist yet.
+  This agent will be updated when auto-arch is implemented.
+  Original: End-to-end autonomous document pipeline that orchestrates auto-usecase and auto-spec.
 
   Use this agent when:
   - A user provides an idea, description, brainstorm text, or file path and wants both a use case

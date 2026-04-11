@@ -4,27 +4,35 @@ A top-down diagnosis procedure that checks each pipeline stage in order. **Stop 
 
 ## Steps
 
-### Step 4.1: Does an FR exist for this capability?
+### Step 4.1: Does a UC exist for this capability?
 
-Search the spec's FR list for an FR that covers the failed behavior.
+Search the usecase file's UC list for a UC that covers the failed behavior.
 
-- If **no FR found** → **SPEC issue** (missing FR or missing platform capability).
-  - Check: is this a platform capability assumed by multiple FRs? (e.g., message input, conversation display)
+- If **no UC found** → **USECASE issue** (missing UC or missing platform capability).
+  - Check: is this a platform capability assumed by multiple UCs? (e.g., message input, conversation display)
   - Check: was this excluded in the usecase's Excluded Ideas as "basic behavior"?
-  - Recommended fix: add FR to spec.
-  - **Stop here.** Do not check plan or code — there's nothing to implement without an FR.
+  - Recommended fix: add UC to the usecase file.
+  - **Stop here.** Do not check architecture, plan, or code.
 
-### Step 4.2: Does an IU cover this FR?
+### Step 4.2: Does the architecture cover this UC?
 
-Find the IU(s) assigned to this FR in the plan.
+Check the arch file for component(s) and information flows addressing this UC.
 
-- If **no IU covers the FR** → **PLAN issue** (FR not mapped to any IU).
-  - Recommended fix: assign FR to an existing or new IU.
+- If **no component or flow covers the UC** → **ARCH issue** (UC not addressed in architecture).
+  - Recommended fix: add component assignment or information flow for this UC.
   - **Stop here.**
 
-### Step 4.3: Are the IU's instructions sufficient?
+### Step 4.3: Does an IU cover this UC?
 
-Read the IU's description, file mapping, and acceptance criteria. Check whether they adequately describe the work needed for this FR to function:
+Find the IU(s) assigned to this UC in the plan.
+
+- If **no IU covers the UC** → **PLAN issue** (UC not mapped to any IU).
+  - Recommended fix: assign UC to an existing or new IU.
+  - **Stop here.**
+
+### Step 4.4: Are the IU's instructions sufficient?
+
+Read the IU's description, file mapping, and acceptance criteria. Check whether they adequately describe the work needed for this UC to function:
 
 - Does the file mapping include all necessary files? (e.g., HTML entry point, component mount file)
 - Does the description specify integration behavior? (e.g., "mount in DOM" vs just "wire up handlers")
@@ -35,7 +43,7 @@ Read the IU's description, file mapping, and acceptance criteria. Check whether 
   - Recommended fix: expand IU description, file mapping, or Shared Integration Points.
   - **Stop here.**
 
-### Step 4.4: Does the code match the IU instructions?
+### Step 4.5: Does the code match the IU instructions?
 
 Read the actual implementation files. Check whether the code does what the IU says:
 
@@ -51,16 +59,17 @@ Read the actual implementation files. Check whether the code does what the IU sa
 
 | Trace Step | Check | Failure → Stage |
 |-----------|-------|----------------|
-| 4.1 | FR exists in spec? | No → **spec** |
-| 4.2 | IU covers FR in plan? | No → **plan** |
-| 4.3 | IU instructions sufficient? | No → **plan** |
-| 4.4 | Code matches IU? | No → **code** |
+| 4.1 | UC exists in usecase file? | No → **usecase** |
+| 4.2 | Architecture covers this UC? | No → **arch** |
+| 4.3 | IU covers UC in plan? | No → **plan** |
+| 4.4 | IU instructions sufficient? | No → **plan** |
+| 4.5 | Code matches IU? | No → **code** |
 
 ## Recording
 
 For each diagnosed issue, record:
-- What failed (FR reference + description)
-- Which trace step identified the root cause (4.1 / 4.2 / 4.3 / 4.4)
+- What failed (UC reference + description)
+- Which trace step identified the root cause (4.1 / 4.2 / 4.3 / 4.4 / 4.5)
 - Root cause (what's missing or wrong)
-- Responsible stage (spec / plan / code)
+- Responsible stage (usecase / arch / plan / code)
 - Recommended fix (specific and actionable)
