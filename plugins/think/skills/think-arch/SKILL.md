@@ -11,22 +11,8 @@ Takes use cases (from think-usecase) and designs the system architecture — tec
 
 ## Modes
 
-This skill operates in two modes, determined by the input:
-
-### First Design
-
-Input is a use case file (no existing `.arch.md`). Follows a guided sequence:
-
-1. **Technology Stack** — language, framework, platform decisions
-2. **External Dependencies** — identify and detail external systems
-3. **Component Design** — identify components, information flows, DB schemas, interface contracts
-4. **Test Strategy** — tier-by-tier test tool selection based on the technology stack
-
-The sequence builds from foundational decisions (tech stack) to detailed design (contracts). The user can jump between topics freely.
-
-### Iteration
-
-Input is an existing `.arch.md` file. No fixed order — enter from wherever the change is needed.
+- **No existing `.arch.md`** → start from Phase 1 (Technology Stack) and follow the guided sequence.
+- **Existing `.arch.md`** → run Iteration Mode entry checks (feedback, source changes), then the user chooses which area to work on. They can start from Phase 1 if a fundamental rethink is needed, or jump to any specific area.
 
 **Impact propagation rule:** when something changes in one area, check whether it affects others:
 - Technology stack change → do components need restructuring? Do test tools need changing?
@@ -53,12 +39,12 @@ Arguments can be full paths, partial filenames, or slugs. Resolve them by search
 After resolution, present the resolved file(s) and ask the user to confirm before reading.
 
 **Mode detection:**
-- If the target `.arch.md` file already exists → **Iteration** mode. Read the arch file and its source references.
-- If only use case files are found (no existing arch) → **First Design** mode.
+- If the target `.arch.md` already exists → read the arch file, then run the **Existing Arch Entry** checks below.
+- If only use case files are found (no existing arch) → start from Phase 1.
 
 The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
 
-**Iteration Mode entry:** When entering Iteration mode, perform these checks to assess the current state.
+**Existing Arch Entry:** Perform these checks to assess the current state and determine where to start.
 
 ### 1. Source Usecase Changes
 
@@ -80,16 +66,9 @@ Check for report files not listed in `reflected_files`:
 
 For integration reports, prioritize issues where the diagnosis stage is **arch**. For plan deviations, read the Deviation Note to determine if the root cause is an architecture assumption that doesn't hold.
 
-### 3. Mode Determination
+### 3. Recommend Starting Point
 
-Based on the collected feedback (usecase changes, scaffold failures, integration report issues, plan deviations), assess the scope of change:
-
-- **Iteration** — targeted fixes: specific component needs restructuring, a test tool needs replacing, an interface contract needs updating
-- **Redesign (First Design)** — fundamental rethink: technology stack change, major component restructuring, architecture approach doesn't work for the problem
-
-Present the judgment with rationale. The user can override. Iteration → present work backlog (open items + unreflected findings). Redesign → proceed to Phase 1 with existing arch as reference. No changes and no feedback → default to Iteration.
-
-After reading, list the usecase overview, Domain Model concepts, existing arch content, and any unreflected feedback, then confirm with the user before proceeding.
+Analyze the collected feedback and open items. Recommend which area to work on first, with rationale. The user can follow the recommendation or choose a different starting point.
 
 ## Session Task List
 
