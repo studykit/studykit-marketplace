@@ -72,7 +72,7 @@ Verdict per item: `OK` | `UNCLEAR` (describe what a developer couldn't determine
 
 ### 5. Interface Contracts — "How do components talk to each other?"
 
-*For `status: final` only — in draft, flag as informational.*
+Flag missing contracts as informational in early iterations, as blocking issues when the architecture is mature (all components defined, information flows mapped).
 
 - Does every component boundary with information flow have an interface contract table?
 - Does each contract specify: operation name, direction, request schema, response schema?

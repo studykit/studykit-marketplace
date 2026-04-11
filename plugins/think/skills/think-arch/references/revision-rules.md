@@ -12,7 +12,6 @@ Increment `revision` and update `revised` when:
 4. **Reflecting scaffold feedback** — after applying changes from an `auto-scaffold` report
 5. **Area transition with content changes** — when moving between Technology Stack → External Dependencies → Component Design → Test Strategy, if the previous area's content changed
 6. **Session close** — at the end of an iteration (as part of the session close procedure)
-7. **Finalization** — when setting `status: final`
 
 Each of these events increments revision by exactly 1. All other file updates (checkpoint writes, component confirmations, contract additions) do not increment revision.
 

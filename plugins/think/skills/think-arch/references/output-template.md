@@ -14,7 +14,7 @@ topic: "<topic>"
 created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>
 revision: 0
-status: draft | final
+status: draft
 sources:
   - file: <topic-slug>.usecase.md
     revision: <usecase revision at time of reading>

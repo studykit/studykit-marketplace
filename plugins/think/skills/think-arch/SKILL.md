@@ -73,11 +73,32 @@ The source reference in the output file should be placed as a blockquote under t
 
 After reading, list the usecase overview, Domain Model concepts, and any existing arch content, then confirm with the user before proceeding.
 
+## Session Task List
+
+At the start of the session, create a task list showing the major areas so the user can track progress. Mark each area as `in_progress` when entering it and `completed` when done.
+
+**First Design tasks:**
+- `"Explore codebase"` → `in_progress`
+- `"Technology Stack"` → `pending`
+- `"External Dependencies"` → `pending`
+- `"Component Design"` → `pending`
+- `"Test Strategy"` → `pending`
+- `"Wrap up"` → `pending`
+
+**Iteration tasks** (adjust based on the work backlog):
+- `"Review open items and backlog"` → `in_progress`
+- `"Address selected items"` → `pending`
+- `"Wrap up"` → `pending`
+
+The user can freely navigate between areas. Update task status as areas are worked on — an area can go back to `in_progress` if revisited.
+
 ## Step 0: Explore the Codebase
 
 Explore the codebase to ground the architecture in reality — existing project structure, naming conventions, dependencies, build setup, and test configuration. Reference what you find during the interview.
 
 If a codebase already exists, record the detected technology stack and confirm with the user.
+
+Mark "Explore codebase" as `completed`.
 
 ## Navigation
 
@@ -231,13 +252,9 @@ Always spawn fresh subagents — context is passed via file paths, not agent mem
 
 The architecture ends only when the user says so. Never conclude on your own.
 
-When the user indicates they're done, ask whether they want to:
-- **End this iteration** (come back later to refine further)
-- **Finalize** (mark as ready for scaffold and implementation)
+When the user indicates they're done, proceed to **End Iteration**.
 
-For the full step-by-step checklists, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`**.
-
-After finalizing, suggest the next step: "To set up the development environment from this architecture, run `/think:auto-scaffold <file_path>`."
+For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`**.
 
 ### Output Format
 

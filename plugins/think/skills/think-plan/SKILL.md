@@ -104,6 +104,16 @@ Explore the codebase to ground the plan in reality — project structure, naming
 
 Read the arch thoroughly and present a summary (component count, UC coverage, external dependencies, test strategy tiers). Also read the source usecase file (from arch frontmatter `sources`) for UC details, domain model, and validation/error handling. Note characteristics that shape the planning approach (heavy data model → component-first; independent features → feature-first; mix → hybrid).
 
+### Architecture Completeness Check
+
+Before proceeding to planning, verify the architecture has sufficient detail:
+- **Technology Stack** — filled with at least language and framework
+- **Test Strategy** — filled with at least unit tier
+- **Components** — at least one component with interface contracts
+- **Information Flows** — UCs that involve multiple components should have sequence diagrams
+
+If critical gaps exist, inform the user: "The architecture is missing [X]. Planning without this will force the implementation to guess. Would you like to address this in think-arch first, or proceed with the current state?" Let the user decide.
+
 ## Step 2: Strategy Selection
 
 Present the implementation strategy options to the user. Read **`${CLAUDE_SKILL_DIR}/references/planning-guide.md`** → "Unit Derivation Strategy" for the detailed options.
