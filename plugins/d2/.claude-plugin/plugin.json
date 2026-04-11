@@ -1,4 +1,10 @@
 {
   "name": "d2",
-  "description": "D2 diagram creation, rendering, and visualization plugin"
+  "description": "D2 diagram composition, rendering, and visualization plugin",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/claude-plugin-marketplace",
+  "license": "MIT",
+  "keywords": ["d2", "diagram", "architecture", "sequence", "erd", "flowchart", "visualization"]
 }
