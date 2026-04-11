@@ -56,6 +56,57 @@ Merge when a unit:
 - Is a trivial setup step always done alongside another unit
 - Has no independent test value
 
+## Launch & Verify Derivation
+
+After codebase exploration, fill the **Launch & Verify** section. This information is used by think-code (build verification), think-verify (integration testing), and the user (manual testing).
+
+### Auto-detection procedure
+
+1. **App type** — derive from spec's Technology Stack and codebase structure:
+
+   | Detection Signal | App Type |
+   |-----------------|----------|
+   | `engines.vscode` in package.json | VS Code Extension |
+   | `next`, `vite`, `react-scripts` in dependencies | Web app |
+   | `electron` in dependencies | Electron app |
+   | `express`, `fastify`, `koa`, `hono` in dependencies | API service |
+   | `bin` field in package.json | CLI tool |
+   | `flask`, `django`, `fastapi` in requirements | Python web app |
+   | `main.go` with `http.ListenAndServe` | Go API service |
+
+2. **Build command** — check `package.json` scripts (`build`, `compile`), `Makefile`, `pyproject.toml`, `Cargo.toml`, `build.gradle`.
+
+3. **Launch command** — check `package.json` scripts (`dev`, `start`, `serve`), `.vscode/launch.json`, framework conventions:
+
+   | App Type | Typical Launch |
+   |----------|---------------|
+   | VS Code Extension | `code --extensionDevelopmentPath=${workspaceFolder}` (from launch.json) |
+   | Next.js / Vite | `npm run dev` |
+   | Express / Fastify | `npm start` or `node dist/index.js` |
+   | Electron | `npm start` or `electron .` |
+   | CLI | `node dist/cli.js` or `./target/release/<name>` |
+   | Django | `python manage.py runserver` |
+   | FastAPI | `uvicorn main:app --reload` |
+
+4. **Launch URL/view** — derive from app type (web → `http://localhost:<port>`, extension → panel/view name, CLI → N/A).
+
+5. **Verify tool** — select based on app type:
+
+   | App Type | Primary Tool | Fallback |
+   |----------|-------------|----------|
+   | Web app | Playwright CLI (`@playwright/cli`) | chrome MCP |
+   | VS Code Extension | WebdriverIO + wdio-vscode-service | computer-use MCP |
+   | Electron | Playwright `electron.launch()` | computer-use MCP |
+   | API service | Playwright CLI or curl | direct HTTP requests |
+   | CLI | Bash execution | — |
+   | Native desktop | computer-use MCP | — |
+
+6. **Smoke scenario** — identify the single most basic user interaction from the spec's FRs. This is the minimum bar for "the app works":
+   - Chat app → "type a message and see a response"
+   - CRUD app → "create an item and see it in the list"
+   - API → "call the health endpoint and get 200"
+   - CLI → "run `<tool> --help` and see usage info"
+
 ## Foundation Unit Validation
 
 After defining the first unit(s) in Phase 1, verify they produce a **minimally interactive system**, not just project scaffolding.

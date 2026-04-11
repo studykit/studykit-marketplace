@@ -151,7 +151,25 @@ For each confirmed unit, fill in the remaining details. Work through units in im
 
 After each unit's details are confirmed, track completion via a task update. The file is updated at the next checkpoint.
 
-## Step 6: Risk Assessment
+## Step 6: Launch & Verify
+
+Fill the **Launch & Verify** section using findings from Step 0 (Codebase Exploration) and the spec's Technology Stack. Read **`${CLAUDE_SKILL_DIR}/references/planning-guide.md`** → "Launch & Verify Derivation" for the auto-detection procedure.
+
+Present the detected values to the user for confirmation:
+
+> **Launch & Verify:**
+> - App type: VS Code Extension
+> - Build: `npm run compile`
+> - Launch: `code --extensionDevelopmentPath=.`
+> - View: "Visual Claude" webview panel
+> - Verify tool: WebdriverIO + wdio-vscode-service
+> - Smoke: "open the panel and send a message"
+>
+> Does this look right?
+
+If any value cannot be auto-detected, ask the user.
+
+## Step 7: Risk Assessment
 
 After all units are detailed, launch a risk assessment:
 
@@ -174,6 +192,7 @@ The user controls all transitions. After completing work on any topic, present t
 > | Unit Derivation | 6/6 units defined |
 > | Dependency Mapping | Done |
 > | Detail Pass | 4/6 units detailed |
+> | Launch & Verify | Done |
 > | Risk Assessment | Not started |
 >
 > What would you like to work on next?

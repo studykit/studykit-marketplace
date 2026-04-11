@@ -91,7 +91,22 @@ Analyze inter-unit dependencies:
 3. Identify parallelizable units (no mutual dependencies).
 4. Generate the PlantUML dependency diagram and Implementation Order table.
 
-### Step 5: Risk Assessment
+### Step 5: Launch & Verify Detection
+
+Fill the **Launch & Verify** section by auto-detecting values from the spec's Technology Stack and codebase findings from Step 2. Read `${CLAUDE_SKILL_DIR}/../think-plan/references/planning-guide.md` → "Launch & Verify Derivation" for the detection procedure.
+
+For each field:
+1. **App type** — detect from dependencies and project structure
+2. **Build command** — detect from package scripts, Makefile, or build config
+3. **Launch command** — detect from package scripts, launch.json, or framework conventions
+4. **Launch URL/view** — derive from app type
+5. **Verify tool** — select based on app type (see detection table in planning-guide)
+6. **Verify fallback** — select the next-best option for the app type
+7. **Smoke scenario** — identify the single most basic user interaction from the spec's FRs
+
+If any value cannot be detected, record it in Open Items as "Launch & Verify: <field> — could not auto-detect, user should specify."
+
+### Step 6: Risk Assessment
 
 Identify cross-cutting risks:
 - External service integrations
@@ -99,12 +114,14 @@ Identify cross-cutting risks:
 - Performance-sensitive areas (from NFRs)
 - Areas where the spec has Open Items
 
-### Step 6: Write the Plan
+### Step 7: Write the Plan
 
 Write the complete `.impl-plan.md` file per the output template. Include all sections:
 - Overview, Technology Stack, Implementation Strategy
 - All implementation units with full details
+- Launch & Verify
 - Dependency Graph with Implementation Order
+- Shared Integration Points (if applicable)
 - Risk Assessment
 - Open Items (any decisions made autonomously that the user should review)
 
@@ -113,7 +130,7 @@ Update frontmatter:
 last_step: compose
 ```
 
-### Step 7: Verify and Commit
+### Step 8: Verify and Commit
 
 Verify the file exists at the output path (do not read it). Commit:
 ```
@@ -123,7 +140,7 @@ impl-plan(<topic-slug>): compose
 - FRs covered: <count> / <total>
 ```
 
-### Step 8: Quality Loop
+### Step 9: Quality Loop
 
 Repeat until all criteria pass or maximum reached:
 

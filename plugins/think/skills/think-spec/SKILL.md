@@ -77,6 +77,21 @@ The source reference in the output file should be placed as a blockquote under t
    - Present unreflected findings to the user alongside the Open Items from the last revision.
    - After reflecting, add the review report filenames to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
 
+3. **Integration report feedback** — check for `A4/<topic-slug>.integration-report.md`:
+   - If it exists and its filename is not in `reflected_files`, read it.
+   - Extract issues where `Stage` is **spec** (missing FRs, ambiguous behavior, platform capability gaps).
+   - Present these as high-priority upstream feedback:
+
+     > **Integration verification found spec-level issues:**
+     >
+     > | # | Issue | Recommended Fix |
+     > |---|-------|----------------|
+     > | 1 | No FR for conversation input UI — 8 FRs blocked | Add platform FR for message input + display |
+     >
+     > These should be addressed before other work. Review?
+
+   - After reflecting, add the integration report filename to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
+
 After reading, list all use cases and any existing spec content found, then confirm with the user before proceeding.
 
 ## Step 0: Explore the Codebase

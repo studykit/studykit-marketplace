@@ -23,7 +23,25 @@ Check for `A4/<topic-slug>.impl-plan.review-*.md` files against the `reflected_f
 3. Present unreflected findings to the user alongside the Open Items from the last revision.
 4. After reflecting, add the review report filenames to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
 
-## 3. Present Work Backlog
+## 3. Integration Report Feedback
+
+Check for `A4/<topic-slug>.integration-report.md`:
+
+1. If it exists and its filename is not in `reflected_files`, read it.
+2. Extract issues where `Stage` is **plan** (missing Shared Integration Points, IU scope gaps, Launch & Verify issues).
+3. Present these as high-priority upstream feedback:
+
+   > **Integration verification found plan-level issues:**
+   >
+   > | # | Issue | Recommended Fix |
+   > |---|-------|----------------|
+   > | 1 | Shared Integration Points missing for main.ts | Define integration pattern for IU-1, IU-2, IU-7 contributions |
+   >
+   > These should be addressed before other work. Review?
+
+4. After reflecting, add the integration report filename to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
+
+## 4. Present Work Backlog
 
 After the checks above, present the Open Items table as a work backlog:
 

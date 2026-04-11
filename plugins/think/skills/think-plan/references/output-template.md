@@ -129,6 +129,22 @@ IU4 --> IU3 : depends on
 
 ---
 
+## Launch & Verify
+
+| Item | Value |
+|------|-------|
+| App type | <e.g., Web app, VS Code Extension, CLI, API service, Electron app> |
+| Build command | <e.g., `npm run compile`, `npm run build`, `cargo build`> |
+| Launch command | <e.g., `npm run dev`, `code --extensionDevelopmentPath=.`, `npm start`> |
+| Launch URL/view | <e.g., `http://localhost:3000`, "Visual Claude webview panel", N/A for CLI> |
+| Verify tool | <e.g., Playwright CLI, WebdriverIO + wdio-vscode-service, computer-use MCP> |
+| Verify fallback | <e.g., chrome MCP, computer-use MCP, manual> |
+| Smoke scenario | <the single most basic user interaction — e.g., "type a message and see a response"> |
+
+<Derived from the spec's Technology Stack and codebase exploration. Used by think-code for build verification and by think-verify for integration testing. Also serves as the user's guide for manual verification.>
+
+---
+
 ## Shared Integration Points
 
 | File | Integration Pattern | Contributing IUs |
@@ -163,6 +179,7 @@ IU4 --> IU3 : depends on
 - Technology Stack (carried from spec)
 - Implementation Strategy
 - Implementation Units (at least one)
+- Launch & Verify
 - Dependency Graph (with Implementation Order table)
 - Open Items
 
