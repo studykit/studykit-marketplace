@@ -115,6 +115,31 @@ Design system architecture using the UCs and Domain Model. Read **`${CLAUDE_SKIL
 
 Use the Domain Model from the usecase file as the shared vocabulary. Component names, schema fields, and contract parameters should use Domain Model terms.
 
+### Domain Model Modifications
+
+During component design, you may discover that the Domain Model needs changes — a concept should be split, a missing state identified, a relationship refined, or a new concept added. When this happens:
+
+1. **Discuss with the user** — present the finding and proposed change.
+2. **Spawn a `domain-updater` agent** with the usecase file path and the structured change request:
+
+   ```
+   Agent(subagent_type: "domain-updater", prompt: """
+   Usecase file: <absolute path to .usecase.md>
+   Changes:
+   - Section: Glossary, Action: add, Content: { Concept: "Sidechain Request", Definition: "...", Key Attributes: "...", Related UCs: "UC-3, UC-9" }, Reason: "Discovered during component design — needed to distinguish sidechain SDK calls from regular session calls"
+   """)
+   ```
+
+3. **On success** — the agent returns the new revision and SHA. Update the arch frontmatter `sources` SHA with the returned value. Record the change in the arch file's Upstream Changes section:
+
+   | Source File | Section | Change | Reason |
+   |------------|---------|--------|--------|
+   | `<slug>.usecase.md` | Domain Model / Glossary | Added "Sidechain Request" concept | Discovered during component design — needed to distinguish sidechain SDK calls from regular session calls |
+
+4. **On failure** — report the error to the user and decide how to proceed.
+
+This keeps the Domain Model as the single source of truth in the usecase file while allowing architecture work to refine it without switching skills.
+
 ## Phase 4: Test Strategy
 
 Select test tools for each tier based on the technology stack. Read **`${CLAUDE_SKILL_DIR}/references/test-strategy-guide.md`** for the detailed procedure.
@@ -200,6 +225,7 @@ Pass arch file path, usecase file path, report output path per `${CLAUDE_SKILL_D
 Always spawn fresh subagents — context is passed via file paths, not agent memory.
 
 - **`arch-reviewer`** — launch via `Agent(subagent_type: "arch-reviewer")`. Context passed via file paths.
+- **`domain-updater`** — launch via `Agent(subagent_type: "domain-updater")`. Pass usecase file path and structured change request. Returns new revision and SHA.
 
 ## Wrapping Up
 

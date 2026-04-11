@@ -8,7 +8,7 @@ topic: "<topic>"
 created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>
 revision: 0
-status: draft | final
+status: draft
 sources: []              # only when input is a file; omit for raw ideas
 tags: []
 reflected_files: []

@@ -72,11 +72,35 @@ When the working file already exists, this is a returning session to refine the 
 
 ## Interview Flow
 
+### Session Task List
+
+At the start of the session (both New Session and Iteration), create a task list showing the major phases so the user can track progress. Mark each phase as `in_progress` when entering it and `completed` when done.
+
+**New Session tasks:**
+- `"Receive idea and create file"` → `in_progress`
+- `"Discover use cases"` → `pending`
+- `"Platform capabilities audit"` → `pending`
+- `"Domain model extraction"` → `pending`
+- `"Wrap up"` → `pending`
+
+**Iteration tasks** (adjust based on the work backlog):
+- `"Review open items and backlog"` → `in_progress`
+- `"Address selected items"` → `pending`
+- `"Wrap up"` → `pending`
+
+Add conditional tasks as they become relevant during the session:
+- `"UI screen grouping"` — when UI use cases are confirmed
+- `"Mock generation"` — when the user agrees to create mocks
+- `"Non-functional requirements"` — when the user has NFRs to capture
+- `"Relationship analysis"` — when 5+ UCs are confirmed
+
+Update task status as you move through phases. This gives the user a live overview without having to ask.
+
 ### 1. Receive the Idea
 
 Take the user's input — it may be a raw idea, a brainstorming output, or a vague description. Restate the idea back in one sentence to confirm understanding.
 
-**Then immediately create the working file** as described in Progressive File Writing above.
+**Then immediately create the working file** as described in Progressive File Writing above. Mark "Receive idea and create file" as `completed`. Mark "Discover use cases" as `in_progress`.
 
 ### 2. Discovery Loop
 
@@ -142,6 +166,8 @@ After 5 or more use cases have been confirmed, analyze and present the relations
 
 ### 8. Platform Capabilities Audit
 
+Mark "Discover use cases" as `completed`. Mark "Platform capabilities audit" as `in_progress`.
+
 After all UC-derived use cases are confirmed, perform a final audit for implicit platform capabilities — shared behaviors that multiple UCs assume but no UC defines.
 
 1. **Scan all UC flows** — identify user actions or system behaviors that appear across 3+ UCs but aren't themselves covered by any UC.
@@ -199,6 +225,8 @@ Ask the user once whether NFRs should constrain implementation:
 
 ### 12. Domain Model Extraction
 
+Mark "Platform capabilities audit" as `completed` (if it was the previous phase). Mark "Domain model extraction" as `in_progress`.
+
 After UCs are substantially complete (including platform capabilities and precision), extract domain concepts through cross-cutting analysis. This produces the shared vocabulary that architecture and implementation will use.
 
 For the detailed procedure (concept extraction, relationship mapping, state transition analysis), read **`${CLAUDE_SKILL_DIR}/references/domain-model-guide.md`**.
@@ -220,9 +248,7 @@ Domain Model uses the same interview style — present findings, confirm with th
 
 The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper or add more use cases. Keep asking until the user explicitly ends the session.
 
-When the user indicates they're done, ask whether they want to:
-- **End this iteration** (come back later to refine further)
-- **Finalize** (mark as complete, create issues)
+When the user indicates they're done, mark the current phase task as `completed` and proceed to **End Iteration**.
 
 ### Agent Usage
 
@@ -234,19 +260,11 @@ Reviews, explorations, and mock generation are handled by launching fresh subage
 
 **Execution order:** Explorer runs first (find gaps and new UC candidates), then Reviewer validates all UCs (existing + newly added) in one pass. Both are required steps, not optional.
 
-### End Iteration (not finalizing)
+### End Iteration
 
-Launch `usecase-explorer` → reflect accepted candidates → launch `usecase-reviewer` → walk through findings → update working file. If significant changes were made during review, optionally re-run the reviewer. Scan for open items, append Session Close entry to the history file, update Open Items + Next Steps, increment revision, and report.
+Launch `usecase-explorer` → reflect accepted candidates → launch `usecase-reviewer` → walk through findings → update working file. If significant changes were made during review, optionally re-run the reviewer. Scan for open items, optionally create GitHub Issues, append Session Close entry to the history file, update Open Items + Next Steps, increment revision, and report.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "End Iteration" section.
-
-### Finalize
-
-Launch `usecase-explorer` → reflect candidates → launch `usecase-reviewer`. All issues must be resolved. Verify Domain Model is complete. Finalize the use case diagram, create GitHub Issues for each use case, write the final file with `status: final`, and report.
-
-For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`** → "Finalize" section.
-
-After finalizing, suggest the next step: "To design the architecture from these use cases, run `/think:think-arch <file_path>`."
 
 ### Output Format
 

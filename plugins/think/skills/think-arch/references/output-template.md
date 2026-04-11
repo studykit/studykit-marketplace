@@ -137,6 +137,14 @@ B --> A : confirmation
 ## Consistency Check
 <Results of cross-diagram and cross-area consistency check. Any gaps identified and how they were resolved.>
 
+## Upstream Changes
+
+<Domain Model modifications made to the usecase file during this architecture session. Only present if changes were made.>
+
+| Source File | Section | Change | Reason |
+|------------|---------|--------|--------|
+| <slug>.usecase.md | Domain Model / Glossary | <what changed> | <why — discovered during which phase> |
+
 ---
 
 ## Open Items
@@ -165,6 +173,7 @@ B --> A : confirmation
 - Interface Contracts (per component boundary) — progressively filled across iterations; required for `status: final`
 - Information Flow (per UC) — progressively filled; required for `status: final`
 - Consistency Check — only if cross-area issues were found and resolved
+- Upstream Changes — only if Domain Model was modified in the usecase file during this session
 - Next Steps — only if the architecture is not yet finalized
 
 ## Diagram References
