@@ -18,23 +18,30 @@ These files define the rules and format for implementation plan documents. **Do 
 - `${CLAUDE_SKILL_DIR}/../think-plan/references/output-template.md` — exact output format
 - `${CLAUDE_SKILL_DIR}/../think-plan/references/planning-guide.md` — unit derivation, sizing, dependency, and test strategy guidance
 - `${CLAUDE_SKILL_DIR}/../think-plan/references/review-report.md` — how to persist reviewer reports
+- `${CLAUDE_SKILL_DIR}/references/session-history.md` — history file format for autonomous decision tracking
 
 If `${CLAUDE_SKILL_DIR}` is not resolved, use `${CLAUDE_PLUGIN_ROOT}/skills/think-plan/references/` instead.
 
 ## Resume Detection
 
-Before starting, check for existing progress. If the output file (`A4/<topic-slug>.impl-plan.md`) exists, extract its `reflected_files` list and `last_step` via:
+Before starting, check for existing progress. If the output file (`A4/<topic-slug>.impl-plan.md`) exists, extract its `reflected_files` list, `last_step`, and `sources` via:
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py A4/<topic-slug>.impl-plan.md reflected_files last_step
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py A4/<topic-slug>.impl-plan.md reflected_files last_step sources
 ```
 
 Do not read the output file itself. A file listed in `reflected_files` has already been reflected — do not read it and do not pass it to agents.
 
-1. **Last completed step:** Extract `last_step` from frontmatter:
+1. **Spec change detection:** Compare the stored `sha` in `sources` against the current spec file (`git hash-object <spec-file-path>`).
+   - If SHA differs → run `git diff <stored-sha> <current-sha> -- <spec-file-path>` and assess the scope of change:
+     - Minor changes (FR additions/modifications, wording) → **resume** from the next step, incorporating the changes.
+     - Major changes (strategy change, component restructuring, domain model redesign) → **restart from Step 1**, regenerating the plan entirely.
+     - If the spec changes affect file mappings or codebase conventions (e.g., new components, directory restructuring), also check whether the files listed in the plan's file mappings still exist and whether codebase conventions have changed. Factor these findings into the resume/restart decision.
+   - If SHA matches → no spec changes, proceed to step 2.
+2. **Last completed step:** Extract `last_step` from frontmatter:
    - If set → **resume from the next step** — do not repeat completed work.
    - If empty or absent → no prior progress, start from Step 1.
-2. **Review reports:** Check existing `A4/<topic-slug>.impl-plan.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
+3. **Review reports:** Check existing `A4/<topic-slug>.impl-plan.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
 
 ## Step-by-Step Process
 
@@ -130,9 +137,19 @@ Update frontmatter:
 last_step: compose
 ```
 
-### Step 8: Verify and Commit
+### Step 8: Write History — Compose Entry
 
-Verify the file exists at the output path (do not read it). Commit:
+Write the initial entry to `A4/<topic-slug>.impl-plan.history.md` per `${CLAUDE_SKILL_DIR}/references/session-history.md`. Record:
+- Strategy decision and rationale
+- Unit summary (count, FR coverage)
+- Key autonomous decisions made during Steps 3–6
+- Open Items identified at compose time
+
+If the history file already exists (resume scenario), append the new entry — do not overwrite previous entries.
+
+### Step 9: Verify and Commit
+
+Verify the plan and history files exist at their output paths (do not read them). Commit:
 ```
 impl-plan(<topic-slug>): compose
 
@@ -140,7 +157,7 @@ impl-plan(<topic-slug>): compose
 - FRs covered: <count> / <total>
 ```
 
-### Step 9: Quality Loop
+### Step 10: Quality Loop
 
 Repeat until all criteria pass or maximum reached:
 
@@ -151,21 +168,23 @@ Repeat until all criteria pass or maximum reached:
    - Any previous review report paths
 
 2. If verdict is `ACTIONABLE`:
-   a. Commit review report:
+   a. Append a **Quality Round** entry to the history file — record verdict only (no changes table).
+   b. Commit review report + history:
       ```
       impl-plan(<topic-slug>): review <round> — PASS
       
       - Units: <N>
       - All criteria passed
       ```
-   b. Exit quality loop.
+   c. Exit quality loop.
 
 3. If verdict is `NEEDS_REVISION`:
    a. Read the review report to understand the issues.
    b. Read the current plan file.
    c. Apply fixes directly — update units, dependencies, file mappings, test strategies as needed.
    d. Write the updated plan file. Update frontmatter: `last_step: review-<round>`, add review report to `reflected_files`.
-   e. Commit review report + revised plan:
+   e. Append a **Quality Round** entry to the history file — record verdict, changes applied, decisions made, and remaining issues.
+   f. Commit review report + revised plan + history:
       ```
       impl-plan(<topic-slug>): review <round>
       
@@ -173,15 +192,15 @@ Repeat until all criteria pass or maximum reached:
       - Issues fixed: <count>
       - Remaining: <count>
       ```
-   f. Continue to next round.
+   g. Continue to next round.
 
 **Maximum:** 3 quality rounds. Remaining issues → Open Items with `[Unresolved after review]`.
 
 ### Commit
 
 All commits stage files under `A4/<topic-slug>.*`. Commit timing:
-- **After compose** (Step 7) — plan document created
-- **After each quality round** (Step 8) — review report (+ revised plan if NEEDS_REVISION)
+- **After compose** (Steps 7–8) — plan document + history compose entry
+- **After each quality round** (Step 10) — review report + history entry (+ revised plan if NEEDS_REVISION)
 
 ## Autonomous Decision Rules
 

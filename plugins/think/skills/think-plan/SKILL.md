@@ -11,23 +11,19 @@ Takes a specification (from think-spec) and builds an implementation plan — or
 
 ## Modes
 
-This skill operates in two modes, determined by the input:
+This skill operates in two modes:
 
 ### First Design
 
-Input is a spec file (no existing `.impl-plan.md`). Follows a guided sequence:
+Full planning sequence from Step 0 through Step 7. Applies when:
+- No existing `.impl-plan.md` (new plan)
+- Existing plan requires redesign (determined during Existing Plan Entry)
 
-1. **Codebase Exploration** — understand the existing project structure and conventions
-2. **Strategy Selection** — choose an implementation approach (component-first, feature-first, hybrid)
-3. **Unit Derivation** — break the spec into implementation units
-4. **Dependency Mapping** — establish ordering and parallelism
-5. **Detail Pass** — fill in file mappings, test strategies, acceptance criteria per unit
+In the redesign case, the existing plan is retained as a reference but the planning process starts fresh from Step 0.
 
 ### Iteration
 
-Input is an existing `.impl-plan.md` file. No fixed order — enter from wherever the change is needed.
-
-**Entry procedure:** Read `${CLAUDE_SKILL_DIR}/references/iteration-entry.md` and follow the checks before starting work.
+Partial updates to an existing plan. No fixed order — enter from wherever the change is needed.
 
 **Impact propagation rule:** when something changes in one unit, check whether it affects other units:
 - Unit split → do dependencies need updating? Does the order change?
@@ -59,10 +55,58 @@ After resolution, present the resolved file(s) and ask the user to confirm befor
 > Proceed with these files?
 
 **Mode detection:**
-- If the target `.impl-plan.md` file already exists → **Iteration** mode. Read the plan file and its source spec, then follow `${CLAUDE_SKILL_DIR}/references/iteration-entry.md`.
-- If only a spec file is found (no existing plan) → **First Design** mode.
+- If no existing `.impl-plan.md` → **First Design** mode. Proceed to Step 0.
+- If an existing `.impl-plan.md` is found → read the plan and its source spec, then run the **Existing Plan Entry** procedure to determine the mode.
 
 After reading, list the spec overview and any existing plan content found, then confirm with the user before proceeding.
+
+## Existing Plan Entry
+
+When an existing `.impl-plan.md` is found, perform these checks to assess the current state and determine the mode.
+
+### 1. Source Spec Change Detection
+
+Compare the stored `sha` in plan frontmatter against the current file:
+
+1. Run `git hash-object <spec-file-path>` to get the current SHA.
+2. If SHA matches the frontmatter `sha` → no spec changes.
+3. If SHA differs → run `git diff <stored-sha> <current-sha> -- <spec-file-path>` to see what changed. Present the changes to the user.
+
+### 2. Unreflected Reports
+
+Check for report files not listed in the plan's `reflected_files`:
+
+- `A4/<topic-slug>.impl-plan.review-*.md` (review reports)
+- `A4/<topic-slug>.integration-report.md` (integration reports)
+
+Read each unreflected report and extract unaddressed issues. For integration reports, prioritize issues where `Stage` is **plan**.
+
+### 3. Codebase Change Check (User Option)
+
+Ask the user: "Would you also like to check for codebase changes against the plan's file mappings?"
+
+If yes:
+- Check whether files listed in the plan's file mappings have been created, modified, or deleted since the plan's last revision.
+- Present findings to the user.
+
+### 4. Mode Determination
+
+Based on the spec diff (from step 1), assess the scope of change:
+
+- **Iteration** — minor spec changes: FR additions/modifications, scope adjustments within the existing structure
+- **Redesign (First Design)** — major spec changes: strategy change, component architecture restructuring, domain model redesign
+
+Present the judgment with rationale:
+
+> Spec changes include a strategy shift from monolith to microservices and 3 new components. This requires a **redesign** — I'll start from Step 0 with the existing plan as reference.
+>
+> Proceed?
+
+The user can override the judgment. If the user confirms:
+- **Iteration** → present the work backlog (Open Items from last revision plus unreflected report issues) and let the user choose what to work on.
+- **Redesign** → proceed to Step 0. The existing plan is kept as reference but not carried forward structurally.
+
+If no spec changes were detected, default to **Iteration** and present the work backlog.
 
 ## Step 0: Explore the Codebase
 
