@@ -1,6 +1,6 @@
 # Test and Commit
 
-Procedure for test execution and committing. This reference is read by the `code-executor` agent.
+Procedure for test execution and committing. This reference is read by the `coder` agent.
 
 ## 1. Test Framework Context
 

@@ -99,7 +99,7 @@ For the full Waterfall Trace procedure, read **`${CLAUDE_SKILL_DIR}/references/w
 
 For issues diagnosed as **code**-level:
 
-1. Spawn a `code-executor` agent with:
+1. Spawn a `coder` agent with:
    - The specific issue description
    - The relevant IU context from the plan
    - The fix to apply (e.g., "mount ConversationView in main.ts")

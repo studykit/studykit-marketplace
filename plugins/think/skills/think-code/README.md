@@ -1,6 +1,6 @@
 # think-code
 
-Execute an implementation plan by orchestrating `code-executor` agents unit by unit.
+Execute an implementation plan by orchestrating `coder` agents unit by unit.
 
 ## Workflow
 
@@ -28,7 +28,7 @@ while (More phases to execute?) is (yes)
     while (More units in phase?) is (yes)
       :Create tasks;
       :Mark IU IN_PROGRESS;
-      :Spawn fresh code-executor agent;
+      :Spawn fresh coder agent;
       if (Agent success?) then (yes)
         :Mark IU DONE;
         :Write completion note;

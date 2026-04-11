@@ -32,7 +32,7 @@ if (Build passes?) then (yes)
     while (Remaining FAIL or BLOCKED?) is (yes)
       :Run Waterfall Trace;
       if (Root cause is code?) then (yes)
-        :Spawn code-executor for fix;
+        :Spawn coder for fix;
         :Re-verify affected FR;
       else (no)
         :Record spec / plan issue;

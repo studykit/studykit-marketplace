@@ -1,5 +1,5 @@
 ---
-name: code-executor
+name: coder
 description: >
   Implement a single implementation unit (IU) from an impl-plan: write code,
   write tests, run tests, commit. Returns completion note and status.

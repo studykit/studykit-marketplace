@@ -1,6 +1,6 @@
 # Execution Procedure
 
-Step-by-step procedure for implementing a single implementation unit (IU). This reference is read by the `code-executor` agent at the start of each IU.
+Step-by-step procedure for implementing a single implementation unit (IU). This reference is read by the `coder` agent at the start of each IU.
 
 ## 1. Read the IU
 

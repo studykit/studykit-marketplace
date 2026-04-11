@@ -152,7 +152,7 @@ IU4 --> IU3 : depends on
 |------|-------------------|-----------------|
 | <path> | <how contributions from different IUs compose> | <IU-N: what it adds, IU-M: what it adds> |
 
-<Text explanation of how shared files are coordinated across units. Each code-executor agent receives this table for files it touches, so it knows both its piece and the overall pattern.>
+<Text explanation of how shared files are coordinated across units. Each coder agent receives this table for files it touches, so it knows both its piece and the overall pattern.>
 
 ---
 

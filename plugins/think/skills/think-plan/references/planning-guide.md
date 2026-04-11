@@ -175,7 +175,7 @@ For each FR assigned to a unit:
 
 ## Shared File Integration
 
-When the file mapping shows 3+ IUs modifying the same file, that file is a **shared integration point**. Without explicit coordination, each IU's code-executor agent adds its piece in isolation — message handlers get registered but components never get mounted, routes get defined but never wired to the app.
+When the file mapping shows 3+ IUs modifying the same file, that file is a **shared integration point**. Without explicit coordination, each IU's coder agent adds its piece in isolation — message handlers get registered but components never get mounted, routes get defined but never wired to the app.
 
 After completing all unit file mappings, scan for shared integration points:
 
@@ -191,7 +191,7 @@ Example:
 | `src/webview/index.html` | Container divs for UI regions + script wiring | IU-1: app shell with `#app`, IU-2: `#conversation` container, IU-7: `#sidebar` container |
 | `src/extension.ts` | Component registration + message handler dispatch | IU-1: activation + panel, IU-2: RenderingEngine, IU-6: PersonaStore |
 
-This table is included in the prompt for every code-executor agent that touches the file, so each agent knows both its contribution AND the overall integration pattern.
+This table is included in the prompt for every coder agent that touches the file, so each agent knows both its contribution AND the overall integration pattern.
 
 ## File Mapping
 

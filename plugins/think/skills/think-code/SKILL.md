@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Executor
 
-Takes an implementation plan (from think-plan) and executes it — implementing code unit by unit through `code-executor` agents. This skill is an **orchestrator**: it manages execution order, tracks progress, and delegates actual implementation to agents. It does not write application code itself.
+Takes an implementation plan (from think-plan) and executes it — implementing code unit by unit through `coder` agents. This skill is an **orchestrator**: it manages execution order, tracks progress, and delegates actual implementation to agents. It does not write application code itself.
 
 ## Step 0: Input
 
@@ -37,7 +37,7 @@ After reading the plan, scan all IU statuses:
 
 ## Step 2: Codebase Exploration
 
-Explore the project to understand structure, conventions, patterns, test setup, and build configuration. The **test framework, runner command, and report format** are critical — identify them explicitly. This context is passed to every `code-executor` agent.
+Explore the project to understand structure, conventions, patterns, test setup, and build configuration. The **test framework, runner command, and report format** are critical — identify them explicitly. This context is passed to every `coder` agent.
 
 ## Step 3: Plan Review
 
@@ -57,7 +57,7 @@ For each unit in the phase:
 
 2. Mark the IU as `IN_PROGRESS` in the plan file (via Edit tool).
 
-3. Spawn a **fresh** `Agent(subagent_type: "code-executor")` with:
+3. Spawn a **fresh** `Agent(subagent_type: "coder")` with:
    - The IU section from the plan (description, file mappings, test strategy, acceptance criteria)
    - Codebase context from Step 0 (project structure, conventions, test framework/runner command)
    - Completion notes from the last 2-3 completed IUs (for context on prior decisions)
@@ -82,7 +82,7 @@ Read `${CLAUDE_SKILL_DIR}/references/parallel-execution.md` and follow the full 
 
 Summary:
 1. Create tasks for each unit (spawn + update plan)
-2. Spawn one `Agent(subagent_type: "code-executor", isolation: "worktree")` per unit
+2. Spawn one `Agent(subagent_type: "coder", isolation: "worktree")` per unit
 3. All agents work independently in isolated worktrees
 4. After all agents complete: merge worktrees, run full test suite, update plan file
 

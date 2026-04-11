@@ -26,9 +26,9 @@ For each parallelizable unit:
 
    ```
    Agent(
-     subagent_type: "code-executor",
+     subagent_type: "coder",
      isolation: "worktree",
-     name: "code-executor-IU-N",
+     name: "coder-IU-N",
      prompt: <IU details + codebase context + recent completion notes>
    )
    ```
