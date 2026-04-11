@@ -49,12 +49,7 @@ Arguments can be full paths, partial filenames, or slugs. Resolve them by search
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
-After resolution, present the resolved file(s) and ask the user to confirm before reading:
-
-> **Resolved input files:**
-> - `A4/agent-orchestrator.usecase.md`
->
-> Proceed with these files?
+After resolution, present the resolved file(s) and ask the user to confirm before reading.
 
 **Mode detection:**
 - If the target `.spec.md` file already exists → **Iteration** mode. Read the spec file and its source references.
@@ -77,102 +72,35 @@ The source reference in the output file should be placed as a blockquote under t
    - Present unreflected findings to the user alongside the Open Items from the last revision.
    - After reflecting, add the review report filenames to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
 
-3. **Integration report feedback** — check for `A4/<topic-slug>.integration-report.r*.md`:
-   - For each matching report whose filename is not in `reflected_files`, read it.
-   - Extract issues where `Stage` is **spec** (missing FRs, ambiguous behavior, platform capability gaps).
-   - Present these as high-priority upstream feedback:
-
-     > **Integration verification found spec-level issues:**
-     >
-     > | # | Issue | Recommended Fix |
-     > |---|-------|----------------|
-     > | 1 | No FR for conversation input UI — 8 FRs blocked | Add platform FR for message input + display |
-     >
-     > These should be addressed before other work. Review?
-
-   - After reflecting, add each handled integration report filename to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp.
+3. **Integration report feedback** — check for `A4/<topic-slug>.integration-report.r*.md` not in `reflected_files`. Extract issues where `Stage` is **spec** and present as high-priority upstream feedback. After reflecting, add handled report filenames to `reflected_files`. If content changed, **increment `revision`** and update `revised` timestamp.
 
 After reading, list all use cases and any existing spec content found, then confirm with the user before proceeding.
 
 ## Step 0: Explore the Codebase
 
-Before starting, explore the current codebase to understand:
+Explore the codebase to ground the spec in reality — existing domain terms, architecture, conventions, and constraints. Reference what you find during the interview.
 
-- **Project structure** — directories, key files, tech stack
-- **Existing features** — what's already built, patterns in use
-- **Domain terms already in use** — naming conventions, existing entities, vocabulary
-- **Existing architecture** — current components, services, communication patterns
-- **Database** — existing schemas, migrations, ORM usage
-- **Constraints** — frameworks, conventions, dependencies that the spec should respect
-
-This grounds the specification in reality. Reference what you find during the interview — e.g., "I see the project already uses the term 'Workspace' for grouping items. Should we align with that?"
-
-If the codebase already exists, record the detected technology stack (language, frameworks, key libraries) in the Technology Stack section of the output file. Present it to the user for confirmation: "I detected the project uses TypeScript with Next.js and Prisma. Should I record this as the technology stack?"
+If a codebase already exists, record the detected technology stack in the Technology Stack section and confirm with the user.
 
 ## Navigation
 
 The spec covers three phases. In **First Design** mode, start with Requirements and follow the guided sequence. In **Iteration** mode, start wherever the user wants.
 
-The user controls all transitions — revisiting and interleaving are always welcome. Do NOT auto-advance to the next phase. After completing work on any topic (or when the conversation reaches a natural pause), present the current status:
-
-> Here's where we are:
->
-> | Phase | Status | Review |
-> |-------|--------|--------|
-> | Requirements | 5 FRs defined (3 UI, 2 Non-UI) | Ready for review |
-> | Domain Model | 3 concepts, 2 relationships | Not reviewed |
-> | Architecture | Not started | — |
->
-> What would you like to work on next? We can continue here, move to another phase, request a phase review, or wrap up.
-
-The **Review** column tracks per-phase review state: `—` (not enough content), `Ready for review`, `Reviewed (rev N)`, or `Changes since last review`. When a phase has meaningful content and hasn't been reviewed yet (or has changed since the last review), suggest a phase review — but always let the user decide.
+The user controls all transitions — revisiting and interleaving are always welcome. Do NOT auto-advance to the next phase. After completing work on any topic, present a status table showing each phase's progress and review state (`—`, `Ready for review`, `Reviewed (rev N)`, `Changes since last review`). When a phase has unreviewed content, suggest a review — but let the user decide.
 
 ## Phase 1: Functional Requirements
 
 ### Step 1.0: Scan Excluded Ideas from Source Usecase
 
-Before deriving FRs, read the source usecase's **Excluded Ideas** table (if present). Items excluded with reason containing "basic behavior", "basic UI behavior", "basic app behavior", or "not a user-level use case" are **platform capability candidates** — behaviors that aren't use cases but are prerequisites for use cases to function.
+Before deriving FRs, read the source usecase's **Excluded Ideas** table (if present). Items excluded as "basic behavior" or "not a user-level use case" are **platform capability candidates** — prerequisites assumed by multiple UCs.
 
-For each such item:
-1. Check whether the capability is assumed by 2+ UCs in the document (e.g., "main session create/close" is assumed by every UC that involves conversation).
-2. If yes → this is a platform FR candidate. Present to the user:
-
-   > The usecase document excluded these as "basic behavior," but they appear to be prerequisites for multiple UCs:
-   >
-   > | Excluded Item | Assumed By | Suggested FR |
-   > |--------------|------------|-------------|
-   > | Main session create/close | UC-1 through UC-9 | Conversation UI — message input, display, and response streaming |
-   >
-   > Should I create FRs for these?
-
-3. If the user confirms, create FRs for each platform capability. These FRs reference the Overview rather than a specific UC:
-
-   ```
-   > Use Case: (platform capability — implicit across all conversation UCs)
-   ```
-
-4. If no Excluded Ideas table exists, or no items match the criteria, skip this step silently.
+For items assumed by 2+ UCs, present them as platform FR candidates and ask the user to confirm. Confirmed platform FRs reference the Overview rather than a specific UC. Skip silently if no Excluded Ideas table exists or no items match.
 
 ### Step 1.1: Use-Case-by-Use-Case Specification
 
-Work through use cases one at a time. For each use case:
+Work through use cases one at a time. For each: present the UC, check size (decompose if 3+ independent behaviors), tag as UI or Non-UI, clarify gaps, draft the FR, and stay until concrete enough for AI to develop. Move to the next only when confirmed.
 
-1. **Present the use case** and confirm it's still relevant.
-2. **Check use case size** — if the use case is too big (3+ independent behaviors), decompose it first.
-3. **Tag as UI or Non-UI** — determine whether this use case involves a user interface. A single use case file may contain both UI and Non-UI use cases.
-4. **Ask clarifying questions** — one at a time — to fill in the gaps.
-5. **Draft the FR** and present it for confirmation.
-6. **Stay until concrete** — do not move to the next use case until the current FR is detailed enough for AI to develop.
-7. Move to the next use case only when the user confirms.
-
-#### Use Case Decomposition
-
-When a use case is too big:
-1. Tell the user: "This use case seems to cover multiple distinct behaviors. I'd like to break it down."
-2. Propose sub-use-cases.
-3. Once confirmed, proceed to specify each sub-use-case individually.
-
-For detailed clarification checklists (UI vs Non-UI) and question techniques, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Question Techniques" section.
+For clarification checklists (UI vs Non-UI) and question techniques, read **`${CLAUDE_SKILL_DIR}/references/requirements-guide.md`** → "Question Techniques" section.
 
 After each FR is confirmed, track it via a task (e.g., `FR-1: <title>`, marked completed). The file is written at checkpoints — not after every FR (see Progressive File Writing).
 
@@ -225,16 +153,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ### Source Revision Tracking
 
-On **First Design**, record each source usecase file's current revision in the spec frontmatter:
-
-```yaml
-sources:
-  - file: <topic-slug>.usecase.md
-    revision: <current revision number>
-    sha: <git hash-object output>
-```
-
-On **Iteration Mode entry**, compare and update as described in the Iteration Mode entry procedure above.
+On **First Design**, record each source usecase file's current revision and SHA (`git hash-object`) in spec frontmatter `sources`. On **Iteration Mode entry**, compare and update as described above.
 
 ### How to Update
 
@@ -270,36 +189,13 @@ At the end of each session (whether wrapping up or pausing):
 
 ### Iteration Mode Entry
 
-When entering **Iteration** mode:
-1. Read the working file — Open Items and Next Steps show the current backlog.
-2. Present the Open Items table as a **work backlog**:
-
-   > Here are the open items from the last session:
-   >
-   > | # | Section | Item | What's Missing |
-   > |---|---------|------|---------------|
-   > | 1 | Architecture | AuthService ↔ SessionManager | Interface contract not defined |
-   > | 2 | FR-3 | Input | Batch size limit undecided |
-   > | ...
-   >
-   > Which item would you like to work on first? Or would you like to focus on something else?
-
-3. Let the user choose — they may pick from the backlog or bring new topics.
+When entering **Iteration** mode, read the working file's Open Items and Next Steps, present them as a work backlog, and let the user choose what to work on.
 
 ## Upstream Feedback Issues
 
 During the specification process, problems in upstream artifacts (use cases) may surface. Note the problem, ask the user before creating a GitHub Issue (labels: `usecase` + `feedback`), and continue working without blocking. Do NOT create issues proactively.
 
 For the full procedure, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`** → "Upstream Feedback Issues" section.
-
-## Facilitation Guidelines
-
-- **One question at a time.** Show the next question, but give space for the previous one.
-- **Stay concrete.** Anchor to specific use cases and FRs, not abstract theory.
-- **Use the user's language.** Don't introduce jargon unless the user does.
-- **Don't design the solution.** Capture what the system needs, not how to implement it.
-- **Flag cross-phase dependencies.** If a requirement change implies a domain or architecture change, say so.
-- **Every 3-4 items:** Brief progress snapshot.
 
 ## Phase Review
 

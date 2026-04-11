@@ -13,22 +13,7 @@ Discover use cases for: **$ARGUMENTS**
 
 ## Use Case Format
 
-Every Use Case follows this structure:
-
-| Field | Description |
-|-------|-------------|
-| **Actor** | Who performs this action (from the Actors table) |
-| **Goal** | What the actor is trying to achieve |
-| **Situation** | The context or trigger — when and why this happens |
-| **Flow** | Numbered user-level action steps |
-| **Expected Outcome** | What's different after the flow completes |
-
-A good Use Case has:
-- An **identified actor** — a specific person or system in a real situation, not a generic role
-- A **concrete goal** — what the actor wants to accomplish
-- A **specific situation** — the trigger or context that makes this relevant ("after finishing a 30-minute meeting" not "when managing meetings")
-- A **step-by-step flow** — numbered actions at the user behavior level, no implementation details
-- An **observable outcome** — something you can see, measure, or verify
+Every Use Case has five fields: **Actor** (specific person or system, not generic role), **Goal** (what they want to accomplish), **Situation** (concrete trigger — "after finishing a 30-minute meeting" not "when managing meetings"), **Flow** (numbered user-level action steps, no implementation details), and **Expected Outcome** (observable, measurable result).
 
 ## Abstraction Guard
 
@@ -36,11 +21,7 @@ A good Use Case has:
 
 Read `${CLAUDE_SKILL_DIR}/references/abstraction-guard.md` for the full list of banned terms, conversion examples, and which UC fields to check.
 
-**Interview-specific rules:**
-- NEVER ask implementation-level questions: data schemas, hook mechanisms, API design, technology choices, database structure, communication protocols
-- When the user mentions implementation details, ask for the intent behind it and convert to user behavior level:
-  - User says: "It should use a webhook to notify" → Ask: "What should the user see or experience when they're notified? In what situation does this notification matter?"
-  - User says: "We need a Redis cache for this" → Ask: "What's the experience you're after — is it about speed, or about something else?"
+When the user mentions implementation details, ask for the intent behind it and convert to user behavior level.
 
 ## Progressive File Writing
 
@@ -99,30 +80,9 @@ Take the user's input — it may be a raw idea, a brainstorming output, or a vag
 
 ### 2. Discovery Loop
 
-The goal is to uncover enough context to write concrete Use Cases. Each question should target one of these gaps:
+Uncover enough context to write concrete Use Cases by targeting four gaps: **What's happening now?** (current situation/trigger), **Who's involved?** (people → actors), **What should change?** (desired action → flow), **What does success look like?** (outcome). Follow the conversation naturally, targeting whichever gap is most unclear.
 
-- **What's happening now?** — The current situation, pain, or trigger that makes this idea relevant. Real scenarios, not abstract problems.
-- **Who's involved?** — The people in this situation. Their context, what they're trying to do, how they cope today. These become **actors**.
-- **What should change?** — The desired action or capability. What the user wants to do that they can't do now. This becomes the **flow**.
-- **What does success look like?** — The outcome after the action. How things are different, better, or faster. This becomes the **expected outcome**.
-
-These are not stages to march through in order. Follow the conversation naturally, targeting whichever gap is most unclear.
-
-**Question techniques:**
-
-| Gap | Style | Example |
-|-----|-------|---------|
-| What's happening now? | Ask for a concrete scenario | "Walk me through a specific time this problem came up. What were you doing?" |
-| Who's involved? | Ask about the people and context | "Who else is affected when this happens? What are they trying to get done?" |
-| What should change? | Ask about the desired action | "In that moment, what do you wish you could do instead? Walk me through the steps." |
-| What does success look like? | Ask about the outcome | "If that worked, what's different afterward? How would you know it worked?" |
-
-When the user's answer is vague, ask for a concrete example. When they're stuck, offer 2-3 options to choose from.
-
-**Actor discovery:** As the conversation reveals people or systems that interact with the software, add them to the Actors table with Type and Role:
-- **Type** — determine from the situation and flow: is the actor a `person` (human user) or `system` (scheduler, external service, automated process)?
-- **Role** — determine from the actions the actor performs across use cases: actors who create/edit/delete have higher privilege than actors who only view. Use domain-appropriate labels (e.g., admin, editor, viewer). System actors use `—` for role.
-- Confirm with the user: "It sounds like there's a [name] involved here — they seem to be a [type] with [role]-level access based on [observed actions]. Should I add them as an actor?"
+**Actor discovery:** As the conversation reveals people or systems, add them to the Actors table with Type (`person`/`system`) and Role (derived from their actions across UCs — e.g., admin, editor, viewer; system actors use `—`). Confirm each new actor with the user.
 
 ### 3. Progressive Use Case Extraction
 
@@ -171,15 +131,6 @@ For the full procedure (nudge timing, background agent launch, result handling),
 ### 7. Use Case Relationship Analysis
 
 After 5 or more use cases have been confirmed, analyze and present the relationships between use cases. Read `${CLAUDE_SKILL_DIR}/references/usecase-relationships.md` for the full analysis guide covering dependency relationships, reinforcement relationships, use case groups, and presentation format.
-
-## Facilitation Guidelines
-
-- **Build on answers, don't interrogate.** Curious colleague, not cross-examination.
-- **Use the user's own words.** Don't introduce jargon they didn't use.
-- **Offer options when stuck.** "Would it be more like A, B, or something else?"
-- **Redirect implementation talk.** If the user drifts into implementation ("we could use Redis"), redirect: "Good thought for later — what's the underlying need? What should the user experience?"
-- **Keep flows at user level.** Steps should describe what the user does and sees, not what the system does internally.
-- **Every 4-5 exchanges:** Brief progress snapshot — confirmed use cases so far, what's still unclear, where the next question will go. Update the working file with the latest Context.
 
 ## Wrapping Up
 

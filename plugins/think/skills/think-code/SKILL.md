@@ -25,12 +25,7 @@ Arguments can be full paths, partial filenames, or slugs. Resolve in order:
 4. **Multiple matches** — present the candidates and ask the user to pick
 5. **No match** — inform the user and ask for a different term
 
-After resolution, present the resolved file and ask the user to confirm before reading:
-
-> **Resolved input file:**
-> - `A4/agent-orchestrator.impl-plan.md`
->
-> Proceed with this file?
+After resolution, present the resolved file and ask the user to confirm before reading.
 
 ## Step 1: Mode Detection
 
@@ -42,31 +37,11 @@ After reading the plan, scan all IU statuses:
 
 ## Step 2: Codebase Exploration
 
-Before implementing anything, explore the project to understand:
-
-- **Project structure** — directories, key files, source layout
-- **Naming conventions** — how files and directories are named
-- **Existing patterns** — how similar features are structured
-- **Test setup** — testing framework, test runner command, test file locations, test report format
-- **Build configuration** — package manager, build tool, existing scripts
-
-The **test framework, runner command, and report format** are critical — they determine how every agent runs tests. Identify them explicitly (e.g., `npm test`, `pytest`, `./gradlew test`).
-
-This context is passed to every `code-executor` agent.
+Explore the project to understand structure, conventions, patterns, test setup, and build configuration. The **test framework, runner command, and report format** are critical — identify them explicitly. This context is passed to every `code-executor` agent.
 
 ## Step 3: Plan Review
 
-Present a summary of the plan:
-
-> **Plan Summary:**
-> - **Units:** 6 total (2 DONE, 4 TODO)
-> - **Current phase:** Phase 2
-> - **Next unit:** IU-3 (Authentication Service)
-> - **Test runner:** `npm test`
->
-> Ready to start?
-
-Wait for user confirmation before proceeding.
+Present a summary of the plan (unit counts by status, current phase, next unit, test runner) and wait for user confirmation before proceeding.
 
 ## Step 4: Orchestration Loop
 
@@ -115,18 +90,7 @@ Summary:
 
 When an agent reports a major deviation (plan vs reality mismatch):
 
-1. Present the deviation report to the user:
-
-   ```
-   ⚠ IU-3: Authentication Service — DEVIATION
-
-   Issue:
-     Plan specifies OAuth2 with Google provider, but existing codebase
-     uses SAML for all auth flows.
-
-   Impact:
-     Cannot proceed without a design decision on auth coexistence.
-   ```
+1. Present the deviation (issue + impact) to the user.
 
 2. Write `**Deviation Note:**` to the plan file with issue, impact, and the user's decision.
 
@@ -154,49 +118,15 @@ Build errors and unit test failures are the agent's responsibility — only plan
 
 ## TaskList Usage
 
-TaskList serves as the orchestrator's **session-scoped work queue**:
-
-- Before spawning agents for a phase, create tasks for each IU:
-  - `"IU-N: spawn agent"` → `in_progress`
-  - `"IU-N: update plan file"` → `pending` (blocked by spawn task)
-- When agent returns: mark spawn task completed, then execute the plan update task
-- On deviation: mark spawn task completed (with deviation metadata), create task `"IU-N: report deviation to user"`, and tasks marking downstream IUs as blocked
-- TaskList is session-scoped — **cross-session state lives in the plan file's Status fields**
+TaskList is the session-scoped work queue. Create tasks per IU (spawn + update plan), update on completion/deviation. Cross-session state lives in the plan file's Status fields.
 
 ## Session Management
 
 The user can pause at any phase boundary. Progress is preserved in the plan file — completed units stay `DONE`, in-progress units are marked, and completion/deviation notes are written.
 
-After each phase, show status:
-
-> **Phase 2 complete:**
-> - IU-3: DONE
-> - IU-4: DONE
->
-> **Next:** Phase 3 (IU-5, IU-6 — parallel)
->
-> Continue?
+After each phase, show status (completed units, next phase) and ask to continue.
 
 ## Wrapping Up
 
-When all units are done, or when the user pauses:
+When all units are done or the user pauses, present a summary (completed, remaining, blocked counts). The user decides when to stop. Never conclude on your own.
 
-> **Implementation Summary:**
-> - **Completed:** IU-1, IU-2, IU-3, IU-4 (4/6)
-> - **Remaining:** IU-5 (TODO), IU-6 (TODO)
-> - **Blocked:** none
->
-> All completed units have passing tests and are committed.
-
-The user decides when to stop. Never conclude on your own.
-
-## Additional Resources
-
-### Reference Files
-
-For detailed procedures, consult:
-
-- **`references/execution-procedure.md`** — Step-by-step procedure followed by each code-executor agent (read the IU, align with codebase, implement, handle deviations, write completion note)
-- **`references/test-and-commit.md`** — Test execution and commit conventions for agents (test framework discovery, IU-level test requirements, commit message format)
-- **`references/parallel-execution.md`** — Full parallel execution and merge procedure (worktree spawning, merge sequencing, integration test, deviation propagation)
-- **`references/session-resume.md`** — Resume and interrupted session handling (context recovery, state consistency check, partial work cleanup)

@@ -47,12 +47,7 @@ Arguments can be full paths, partial filenames, or slugs. Resolve them by search
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
-After resolution, present the resolved file(s) and ask the user to confirm before reading:
-
-> **Resolved input files:**
-> - `A4/agent-orchestrator.spec.md`
->
-> Proceed with these files?
+After resolution, present the resolved file(s) and ask the user to confirm before reading.
 
 **Mode detection:**
 - If no existing `.impl-plan.md` → **First Design** mode. Proceed to Step 0.
@@ -93,88 +88,30 @@ If yes:
 
 ### 4. Mode Determination
 
-Based on the spec diff (from step 1), assess the scope of change:
+Based on the spec diff, assess the scope of change:
 
-- **Iteration** — minor spec changes: FR additions/modifications, scope adjustments within the existing structure
-- **Redesign (First Design)** — major spec changes: strategy change, component architecture restructuring, domain model redesign
+- **Iteration** — minor spec changes (FR additions/modifications, scope adjustments)
+- **Redesign (First Design)** — major spec changes (strategy change, architecture restructuring, domain model redesign)
 
-Present the judgment with rationale:
-
-> Spec changes include a strategy shift from monolith to microservices and 3 new components. This requires a **redesign** — I'll start from Step 0 with the existing plan as reference.
->
-> Proceed?
-
-The user can override the judgment. If the user confirms:
-- **Iteration** → present the work backlog (Open Items from last revision plus unreflected report issues) and let the user choose what to work on.
-- **Redesign** → proceed to Step 0. The existing plan is kept as reference but not carried forward structurally.
-
-If no spec changes were detected, default to **Iteration** and present the work backlog.
+Present the judgment with rationale. The user can override. Iteration → present work backlog. Redesign → proceed to Step 0 with existing plan as reference. No spec changes → default to Iteration.
 
 ## Step 0: Explore the Codebase
 
-Before starting, explore the current codebase to understand:
-
-- **Project structure** — directories, key files, existing source layout
-- **Naming conventions** — how files and directories are named (kebab-case, camelCase, etc.)
-- **Existing patterns** — how similar features are structured (controllers, services, models, etc.)
-- **Test setup** — testing framework, test file locations, test naming conventions
-- **Build configuration** — package manager, build tool, existing scripts
-
-This grounds the implementation plan in reality. Reference what you find during the interview — e.g., "I see existing services follow a `src/services/<name>.service.ts` pattern. Should we follow that?"
+Explore the codebase to ground the plan in reality — project structure, naming conventions, existing patterns, test setup, and build configuration. Reference what you find during the interview.
 
 ## Step 1: Understand the Spec
 
-Read the spec thoroughly and present a summary:
-
-> **Spec Summary:**
-> - **FRs:** 8 total (5 UI, 3 Non-UI)
-> - **Components:** 4 (AuthService, UserStore, NotificationService, WebUI)
-> - **Domain concepts:** 6
-> - **External dependencies:** 2 (OAuth Provider, Email Service)
->
-> Ready to start planning?
-
-Note any spec characteristics that shape the planning approach:
-- Heavy data model → consider component-first (bottom-up)
-- Independent features → consider feature-first (vertical slices)
-- Mix of foundation + features → consider hybrid
+Read the spec thoroughly and present a summary (FR counts, components, domain concepts, external dependencies). Note spec characteristics that shape the planning approach (heavy data model → component-first; independent features → feature-first; mix → hybrid).
 
 ## Step 2: Strategy Selection
 
 Present the implementation strategy options to the user. Read **`${CLAUDE_SKILL_DIR}/references/planning-guide.md`** → "Unit Derivation Strategy" for the detailed options.
 
-Propose a recommendation based on the spec analysis:
-
-> Based on the spec, I recommend a **hybrid** approach:
-> 1. Foundation units first (DB schemas, shared utilities)
-> 2. Then vertical feature slices
->
-> Rationale: The spec has a clear data model that multiple features depend on, so building the foundation first avoids rework.
->
-> Does this approach work for you?
+Propose a recommendation based on the spec analysis with rationale.
 
 ## Step 3: Unit Derivation
 
-Work through the spec systematically to identify implementation units. For each proposed unit:
-
-1. **Present the unit** — name, FRs covered, components involved.
-2. **Check sizing** — read `${CLAUDE_SKILL_DIR}/references/planning-guide.md` → "Unit Sizing Guidelines". If too large, propose splitting. If too small, propose merging.
-3. **Ask clarifying questions** — one at a time — about scope, boundaries, and priorities.
-4. **Draft the unit** and present it for confirmation.
-5. Move to the next unit only when the user confirms.
-
-After each unit is confirmed, track it via a task (e.g., `IU-1: <title>`, marked completed). The file is written at checkpoints — not after every unit (see Progressive File Writing).
-
-### Progress Snapshots
-
-Every 2-3 units, show progress:
-
-> **Progress:**
-> - IU-1: User data model and schema (FR-1, FR-2) — confirmed
-> - IU-2: Authentication service (FR-3, FR-4) — confirmed
-> - IU-3: [working on it]
->
-> FRs covered: 4/8 | Components covered: 2/4
+Work through the spec systematically to identify implementation units. For each: present the unit (name, FRs, components), check sizing per `${CLAUDE_SKILL_DIR}/references/planning-guide.md` → "Unit Sizing Guidelines", clarify scope, draft, and confirm. Track confirmed units via tasks. Show progress every 2-3 units.
 
 ## Step 4: Dependency Mapping
 
@@ -201,19 +138,7 @@ After each unit's details are confirmed, track completion via a task update. The
 
 Fill the **Launch & Verify** section using findings from Step 0 (Codebase Exploration) and the spec's Technology Stack. Read **`${CLAUDE_SKILL_DIR}/references/planning-guide.md`** → "Launch & Verify Derivation" for the auto-detection procedure.
 
-Present the detected values to the user for confirmation:
-
-> **Launch & Verify:**
-> - App type: VS Code Extension
-> - Build: `npm run compile`
-> - Launch: `code --extensionDevelopmentPath=.`
-> - View: "Visual Claude" webview panel
-> - Verify tool: WebdriverIO + wdio-vscode-service
-> - Smoke: "open the panel and send a message"
->
-> Does this look right?
-
-If any value cannot be auto-detected, ask the user.
+Present the detected values to the user for confirmation. If any value cannot be auto-detected, ask the user.
 
 ## Step 7: Risk Assessment
 
@@ -227,21 +152,7 @@ After all units are detailed, launch a risk assessment:
 
 ## Navigation
 
-The user controls all transitions. After completing work on any topic, present the current status:
-
-> Here's where we are:
->
-> | Step | Status |
-> |------|--------|
-> | Codebase Exploration | Done |
-> | Strategy Selection | Hybrid approach |
-> | Unit Derivation | 6/6 units defined |
-> | Dependency Mapping | Done |
-> | Detail Pass | 4/6 units detailed |
-> | Launch & Verify | Done |
-> | Risk Assessment | Not started |
->
-> What would you like to work on next?
+The user controls all transitions. After completing work on any topic, present a status table for all steps.
 
 ## Progressive File Writing
 
@@ -256,16 +167,7 @@ Tell the user the file path so they can follow along: "I've started a working fi
 
 ### Source Revision Tracking
 
-On **First Design**, record the source spec file's current revision in the plan frontmatter:
-
-```yaml
-sources:
-  - file: <topic-slug>.spec.md
-    revision: <current revision number>
-    sha: <git hash-object output>
-```
-
-On **Iteration Mode entry**, compare and update as described in the Iteration Mode entry procedure above.
+On **First Design**, record the source spec file's current revision and SHA (`git hash-object`) in plan frontmatter `sources`. On **Iteration Mode entry**, compare and update as described above.
 
 ### How to Update
 
@@ -293,32 +195,9 @@ Session history is stored in a separate file (`<topic-slug>.impl-plan.history.md
 
 ## Review
 
-Reviews are handled by launching a `plan-reviewer` subagent. Each invocation is independent — context is passed via file paths.
+Reviews are handled by launching a `plan-reviewer` subagent. Suggest a review when all units are detailed, before finalizing, or after significant iteration changes — but let the user decide.
 
-### Triggering a Review
-
-Suggest a review when:
-- All units are defined and detailed
-- Before finalizing the plan
-- After significant changes in iteration mode
-
-Always let the user decide. Present:
-
-> All 6 units are defined and detailed. Would you like to run a review before finalizing?
-
-### Review Invocation
-
-Launch with: `Agent(subagent_type: "plan-reviewer", name: "plan-reviewer")`
-
-Provide:
-- Plan file path
-- Spec file path
-- Report output path per `${CLAUDE_SKILL_DIR}/references/review-report.md`
-- Any previous review report paths
-
-### Post-Review
-
-Walk through each flagged issue with the user. They can accept, modify, or defer.
+Launch with `Agent(subagent_type: "plan-reviewer")`, providing plan file path, spec file path, report output path per `${CLAUDE_SKILL_DIR}/references/review-report.md`, and any previous review report paths. Walk through flagged issues with the user.
 
 ## Agent Usage
 
@@ -343,11 +222,3 @@ After finalizing, suggest the next step: "To start implementing this plan, run `
 
 Follow the Implementation Plan template in `${CLAUDE_SKILL_DIR}/references/output-template.md` for the final file structure.
 
-## Facilitation Guidelines
-
-- **One question at a time.** Don't overwhelm with multiple decisions.
-- **Stay concrete.** Anchor to specific FRs and components, not abstract patterns.
-- **Use the spec's language.** Reference FR IDs, component names, and domain terms from the spec.
-- **Challenge assumptions.** If the user proposes an order, check dependencies. If a unit seems too large, suggest splitting.
-- **Show the impact.** When something changes, trace the effect on dependencies, tests, and ordering.
-- **Every 2-3 units:** Brief progress snapshot.
