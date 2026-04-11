@@ -56,6 +56,24 @@ Merge when a unit:
 - Is a trivial setup step always done alongside another unit
 - Has no independent test value
 
+## Foundation Unit Validation
+
+After defining the first unit(s) in Phase 1, verify they produce a **minimally interactive system**, not just project scaffolding.
+
+**Check:** Can a user perform the most basic interaction after the foundation unit is complete?
+
+| Application Type | Minimum Viable Interaction |
+|-----------------|---------------------------|
+| Chat / conversation app | User can type a message, send it, and see a response |
+| CRUD application | User can create one entity and see it listed |
+| Dashboard | User can see at least one real data point displayed |
+| CLI tool | User can invoke the tool and see meaningful output |
+| API service | A client can call one endpoint and get a valid response |
+
+If the foundation unit only produces empty scaffolding (boilerplate files, placeholder HTML, wired-up message types with no UI, "Ready" status text with no input mechanism), it is **incomplete**. Expand it to include the minimal interaction loop, or create a dedicated IU for it.
+
+A scaffold that cannot be used is not a testable increment — it is dead code until later units bring it to life. The foundation unit's acceptance criteria must include at least one end-to-end interaction scenario, not just "extension activates without error" or "project compiles."
+
 ## Dependency Analysis
 
 ### Finding Dependencies
@@ -91,6 +109,26 @@ For each FR assigned to a unit:
 2. **Error cases** — derive from FR's "Error handling" section
 3. **Boundary cases** — derive from FR's "Validation" section
 4. **State transitions** — derive from Domain Model's state diagrams (if the FR involves stateful entities)
+
+## Shared File Integration
+
+When the file mapping shows 3+ IUs modifying the same file, that file is a **shared integration point**. Without explicit coordination, each IU's code-executor agent adds its piece in isolation — message handlers get registered but components never get mounted, routes get defined but never wired to the app.
+
+After completing all unit file mappings, scan for shared integration points:
+
+1. **Identify shared files** — any file appearing in 3+ IUs' file mapping tables.
+2. **Define the integration pattern** — for each shared file, describe how the contributions from different IUs compose into a working whole.
+3. **Add a Shared Integration Points table** to the plan (see output template).
+
+Example:
+
+| File | Integration Pattern | Contributing IUs |
+|------|-------------------|-----------------|
+| `src/webview/main.ts` | Message handler registration + DOM component mounting | IU-1: scaffold + ready handler, IU-2: ConversationView mount + render handlers, IU-7: Sidebar mount + spawn handlers |
+| `src/webview/index.html` | Container divs for UI regions + script wiring | IU-1: app shell with `#app`, IU-2: `#conversation` container, IU-7: `#sidebar` container |
+| `src/extension.ts` | Component registration + message handler dispatch | IU-1: activation + panel, IU-2: RenderingEngine, IU-6: PersonaStore |
+
+This table is included in the prompt for every code-executor agent that touches the file, so each agent knows both its contribution AND the overall integration pattern.
 
 ## File Mapping
 

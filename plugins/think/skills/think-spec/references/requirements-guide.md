@@ -105,3 +105,35 @@ After all FRs are specified, ask the user once:
 
 - If yes → capture each NFR with: description, affected FRs, measurable criteria
 - If no → move on, no section created
+
+## Platform Capability Audit (Step 1.6)
+
+After all UC-derived FRs and any platform FRs from Step 1.0 are confirmed, perform a final audit for implicit platform capabilities — shared behaviors that multiple FRs assume but no FR defines.
+
+1. **Scan all FR flows** — identify user actions or system behaviors that appear across 3+ FRs but aren't themselves covered by any FR.
+
+   Common patterns to check:
+   - **Input mechanisms** — message input, form submission, command entry, search box
+   - **Display mechanisms** — conversation display, list views, real-time response streaming, status indicators
+   - **Navigation infrastructure** — view routing, tab management, sidebar, breadcrumbs
+   - **State lifecycle** — session restore on launch, data persistence across restarts, undo/redo
+
+2. **Present findings** to the user:
+
+   > These capabilities are assumed by multiple FRs but not yet defined:
+   >
+   > | Assumed Capability | Referenced By | Example FR Text |
+   > |-------------------|---------------|-----------------|
+   > | Message input and sending | FR-1, FR-7, FR-8, FR-15 | "user types a question" |
+   > | Conversation display with streaming | FR-1, FR-2, FR-3 | "response displays inline" |
+   >
+   > Should I create FRs for these?
+
+3. **Create FRs** for confirmed gaps. These FRs reference the Overview rather than a specific UC:
+   ```
+   > Use Case: (platform capability — implicit across [list dependent FRs])
+   ```
+
+4. If Step 1.0 already created platform FRs from Excluded Ideas, check whether they cover the gaps found here. Only create new FRs for gaps not already addressed.
+
+5. If no gaps are found, skip silently.

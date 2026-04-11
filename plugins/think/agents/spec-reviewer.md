@@ -198,6 +198,22 @@ Check across sections:
 
 Verdict per item: `OK` | `CONFLICT` (describe both sides of the contradiction, explain what the developer would see and why it's confusing)
 
+### 8. Implicit Capabilities — "Do FRs assume something that no FR provides?"
+
+FRs describe differentiating features but may assume shared platform capabilities (e.g., a message input box, a navigation menu, a conversation display, data persistence) that no FR explicitly defines. If these capabilities are missing, the developer builds features on a non-existent foundation — every feature works in tests but the application has no working entry point.
+
+For each FR, check:
+- Does the "User action" or "System behavior" reference a UI element, interaction mechanism, or infrastructure that no other FR creates? (e.g., "user types a question" assumes an input box exists; "response displays inline" assumes a conversation view exists)
+- Do 3+ FRs share the same assumed capability?
+
+Cross-FR pattern detection:
+- Identify verbs/actions repeated across 3+ FRs with no covering FR (e.g., "sends a message", "views the response", "navigates to", "types a command")
+- Identify UI elements referenced by 3+ FRs that no FR creates (e.g., "input box", "conversation view", "sidebar", "tab bar")
+
+Also check the source usecase's **Excluded Ideas** table (if present): items excluded as "basic behavior" or "not a user-level use case" that are assumed by multiple UCs should have corresponding platform FRs in the spec. If they don't, flag them.
+
+Verdict per item: `OK` | `IMPLICIT GAP` (describe the assumed capability, list which FRs depend on it, and suggest an FR to fill the gap)
+
 ## Output
 
 ### Report File
@@ -294,6 +310,13 @@ Use exactly this format:
 - Sequence Diagram ↔ Component Diagram: CONFLICT — "NotificationService" appears in UC-3 sequence diagram but is not in the component diagram.
 ...
 
+### 8. Implicit Capabilities
+
+- IMPLICIT GAP — 8 FRs reference "user types a question" or "user sends a message" (FR-1, FR-7, FR-8, FR-9, FR-13, FR-15, FR-16, FR-17) but no FR defines the message input mechanism or conversation display. The developer has no spec for the core interaction loop.
+- IMPLICIT GAP — Excluded Ideas table lists "Main session create/close" as "basic UI behavior" but no platform FR covers session creation UI or conversation streaming.
+- OK — navigation between views is covered by Screen Navigation diagram.
+...
+
 ### Summary
 - **Technology stack:** OK | MISSING | INCOMPLETE
 - **Behavior gaps:** <list of use cases/FRs with gaps>
@@ -306,6 +329,7 @@ Use exactly this format:
 - **UI grouping issues:** <list of items>
 - **Unverified/suspect technical claims:** <list of items>
 - **Cross-section conflicts:** <list of items>
+- **Implicit capability gaps:** <list of platform capabilities assumed but not defined>
 
 ### Top Priority Fixes
 1. <most critical — the thing that would cause the worst implementation mistake>
@@ -334,5 +358,5 @@ top_issues:
 - Be constructive: always suggest concrete improvements.
 - Do not rewrite the spec — suggest improvements and let the facilitator handle revisions with the user.
 - If everything passes, say so clearly: "The specification is implementable. No revisions needed."
-- Prioritize by coding impact: missing technology stack > behavior gaps > suspect technical claims > consistency conflicts > unhandled errors > unclear ownership > UI grouping issues > unverified claims > imprecise language.
+- Prioritize by coding impact: missing technology stack > implicit capability gaps > behavior gaps > suspect technical claims > consistency conflicts > unhandled errors > unclear ownership > UI grouping issues > unverified claims > imprecise language.
 - Only review sections that exist. If the spec is marked `status: final` but sections are missing, flag it.

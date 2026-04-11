@@ -114,6 +114,30 @@ The **Review** column tracks per-phase review state: `—` (not enough content),
 
 ## Phase 1: Functional Requirements
 
+### Step 1.0: Scan Excluded Ideas from Source Usecase
+
+Before deriving FRs, read the source usecase's **Excluded Ideas** table (if present). Items excluded with reason containing "basic behavior", "basic UI behavior", "basic app behavior", or "not a user-level use case" are **platform capability candidates** — behaviors that aren't use cases but are prerequisites for use cases to function.
+
+For each such item:
+1. Check whether the capability is assumed by 2+ UCs in the document (e.g., "main session create/close" is assumed by every UC that involves conversation).
+2. If yes → this is a platform FR candidate. Present to the user:
+
+   > The usecase document excluded these as "basic behavior," but they appear to be prerequisites for multiple UCs:
+   >
+   > | Excluded Item | Assumed By | Suggested FR |
+   > |--------------|------------|-------------|
+   > | Main session create/close | UC-1 through UC-9 | Conversation UI — message input, display, and response streaming |
+   >
+   > Should I create FRs for these?
+
+3. If the user confirms, create FRs for each platform capability. These FRs reference the Overview rather than a specific UC:
+
+   ```
+   > Use Case: (platform capability — implicit across all conversation UCs)
+   ```
+
+4. If no Excluded Ideas table exists, or no items match the criteria, skip this step silently.
+
 ### Step 1.1: Use-Case-by-Use-Case Specification
 
 Work through use cases one at a time. For each use case:

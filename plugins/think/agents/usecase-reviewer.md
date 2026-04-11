@@ -164,10 +164,15 @@ Evaluate whether the existing set of use cases covers the system adequately. Che
 - Can entities be created but never viewed, updated, or deleted?
 - Are there entities that users would reasonably need to manage but have no UC?
 
+**Entry action prerequisites** — for each UC's first flow step, check whether the actor has an established means to perform that action within the system:
+- If step 1 says "user types X", "user sends Y", "user asks Z", or "user enters a command" — there must be either (a) another UC that establishes the input/interaction mechanism, or (b) the Context section explicitly identifies the mechanism as a platform prerequisite.
+- If 3+ UCs share the same unestablished entry action (e.g., "types a message" with no UC defining the messaging interface), this is a strong signal that a platform capability is missing.
+
 For each gap found, produce a UC candidate:
 - `MISSING JOURNEY` — a user journey has a dead end or missing step
 - `USABILITY GAP` — a common user need is not covered (search, bulk operations)
 - `MISSING LIFECYCLE` — an actor or entity lifecycle stage is absent
+- `IMPLICIT PREREQUISITE` — 3+ UCs assume a capability (e.g., message input) that no UC provides and no platform prerequisite declares
 
 ## Output
 
@@ -243,11 +248,13 @@ Write the review report to the file path provided by the invoking skill. Use exa
 - MISSING JOURNEY — User can create items but no way to search or filter them. Affects: UC-1, UC-2.
 - USABILITY GAP — No undo flow for destructive actions (UC-3 deletes permanently).
 - MISSING LIFECYCLE — Actor "Admin" has no onboarding UC.
+- IMPLICIT PREREQUISITE — 8 UCs assume "user types/sends a message" but no UC defines the message input mechanism. Affects: UC-1, UC-2, UC-8, UC-9, UC-10, UC-12, UC-14, UC-16.
 
 #### UC Candidates
 - "Editor searches items by keyword" (from: MISSING JOURNEY)
 - "Editor undoes a deletion within 30 seconds" (from: USABILITY GAP)
 - "Admin completes initial setup" (from: MISSING LIFECYCLE)
+- "Developer sends a message and views Claude's response" (from: IMPLICIT PREREQUISITE)
 
 ### Summary
 - **UCs needing revision:** UC-1, UC-5

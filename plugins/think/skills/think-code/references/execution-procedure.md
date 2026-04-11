@@ -23,6 +23,7 @@ Before creating or modifying files, check the surrounding codebase:
 - **Import conventions** — how do existing files import modules? Absolute or relative paths? Index files?
 - **Code style** — tabs or spaces? Semicolons? Naming conventions (camelCase, snake_case)?
 - **Existing patterns** — if you're creating a service, how are other services structured? If you're adding a route, how are other routes registered?
+- **External library APIs** — when using a third-party library, read its actual type definitions or API docs (e.g., `.d.ts` files in `node_modules/`, docstrings, official documentation) before writing code. Never guess an API shape from memory. Mocks and stubs must also match the real API — a mock that diverges from the actual types creates a false-green test suite.
 
 Follow the project's conventions even if the plan suggests something slightly different. Record any deviation in the completion note.
 
@@ -42,6 +43,18 @@ Work through the file mapping table in order:
    - Preserve existing style, formatting, and patterns
 
 Use the acceptance criteria as implementation checkpoints. After writing code for each criterion, mentally verify: "does my code satisfy this?"
+
+### UI Render Reachability Check
+
+For IUs that create or modify UI components (webview components, React components, HTML views, page templates, etc.), verify after implementation:
+
+1. **Mount point exists** — is there a container element in the entry HTML/view where this component renders? If the IU creates a `ConversationView` class, there must be a `<div id="conversation">` (or equivalent) in the HTML where it mounts.
+2. **Component is instantiated** — is the component actually created and mounted in the application's runtime code, not just exported as a module? A module that exists but is never imported and called is dead code.
+3. **Entry point references it** — does the application's main entry file (`main.ts`, `App.tsx`, `index.html`, etc.) import and use this component?
+
+If any check fails, fix it before proceeding. A UI component that passes unit tests but is never rendered is not a working increment.
+
+When the IU's file mapping says "Modify main.ts — Wire up X," this means **both** message/event handler registration **AND** DOM rendering/mounting. If a Shared Integration Points table was provided in the prompt, follow its integration pattern for each shared file.
 
 ## 4. Handle Plan Deviations
 

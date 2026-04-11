@@ -86,6 +86,7 @@ For each unit in the phase:
    - The IU section from the plan (description, file mappings, test strategy, acceptance criteria)
    - Codebase context from Step 0 (project structure, conventions, test framework/runner command)
    - Completion notes from the last 2-3 completed IUs (for context on prior decisions)
+   - **Shared Integration Points** — if the plan has a Shared Integration Points table, include the rows for every file this IU touches. This tells the agent how its modifications fit into the overall integration pattern.
 
    Each IU gets a fresh agent — no reuse across units. Prior decisions are communicated via completion notes in the prompt, not via agent memory.
 
@@ -143,6 +144,7 @@ Build errors and unit test failures are the agent's responsibility — only plan
 - IU section: description, file mappings, test strategy, acceptance criteria
 - Codebase context: project structure, conventions, test framework/runner command
 - Recent completion notes from prior IUs
+- Shared Integration Points rows for files this IU touches (if the plan has this section)
 
 **Output (agent result):**
 - `status`: `success` | `deviation`

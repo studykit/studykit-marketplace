@@ -129,6 +129,16 @@ IU4 --> IU3 : depends on
 
 ---
 
+## Shared Integration Points
+
+| File | Integration Pattern | Contributing IUs |
+|------|-------------------|-----------------|
+| <path> | <how contributions from different IUs compose> | <IU-N: what it adds, IU-M: what it adds> |
+
+<Text explanation of how shared files are coordinated across units. Each code-executor agent receives this table for files it touches, so it knows both its piece and the overall pattern.>
+
+---
+
 ## Risk Assessment
 
 | Risk | Impact | Likelihood | Mitigation | Affected Units |
@@ -158,6 +168,7 @@ IU4 --> IU3 : depends on
 
 ## Conditional Sections
 
+- Shared Integration Points — only if any file appears in 3+ IUs' file mappings
 - Risk Assessment — only if non-trivial risks are identified
 - Next Steps — only if the plan is not yet finalized
 

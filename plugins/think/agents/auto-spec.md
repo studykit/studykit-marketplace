@@ -128,6 +128,19 @@ If no codebase exists (empty or new project), note "No existing codebase detecte
 
 Process each use case from the input files.
 
+### 3.0 Scan Excluded Ideas for platform capabilities
+
+Before deriving FRs, read the source usecase's **Excluded Ideas** table (if present). Items excluded with reason containing "basic behavior", "basic UI behavior", "basic app behavior", or "not a user-level use case" are **platform capability candidates** — behaviors that aren't use cases but are prerequisites for use cases to function.
+
+For each such item:
+1. Check whether the capability is assumed by 2+ UCs in the document (e.g., "main session create/close" is assumed by every UC that involves conversation).
+2. If yes → create a platform FR for it. These FRs reference the Overview rather than a specific UC:
+   ```
+   > Use Case: (platform capability — implicit across all conversation UCs)
+   ```
+3. Record each platform FR decision in Open Items for user review.
+4. If no Excluded Ideas table exists, or no items match the criteria, skip silently.
+
 ### 3.1 Per-use-case FR derivation
 
 For each use case:
@@ -365,6 +378,7 @@ Iteration 1 is an exception — it reviews the initial draft first, since there 
 | `UNVERIFIED` | Verify the claim via `WebSearch`/`WebFetch` or codebase inspection; add source reference if confirmed, or move to Open Items if unconfirmable |
 | `SUSPECT` | Investigate immediately — search official docs to confirm or correct the claim; fix the spec text if wrong |
 | `NO CONTRACT` | Define the interface contract table for the flagged component boundary |
+| `IMPLICIT GAP` | Create a platform FR for the assumed capability. Reference Overview, not a specific UC. List the dependent FRs in the UC reference line. |
 
 #### Iteration rules
 
