@@ -2,9 +2,10 @@
 name: d2:compose
 description: >
   Compose D2 diagram output or syntax guidance from natural language requests. This
-  skill should be used when the user says "draw a diagram", "create an architecture diagram", "generate
-  D2", "make a D2 diagram", "add a diagram to markdown", "insert d2 block",
-  "show the syntax for a D2 diagram", or explicitly invokes /d2:compose.
+  skill should be used when the user says "draw a diagram", "create an architecture
+  diagram", "generate D2", "make a D2 diagram", "add a diagram to markdown", "insert
+  d2 block", "show the syntax for a D2 diagram", "validate my D2 file", "check this
+  diagram", or explicitly invokes /d2:compose.
 argument-hint: [create|reference|check] <diagram request or file>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, WebFetch
 ---
@@ -55,7 +56,7 @@ If the request needs features not covered by local references, fetch from the [o
 1. Read the target file or snippet
 2. If embedded in Markdown, extract only the `d2` fenced block body into a temp `.d2` file
    - If multiple blocks exist, check the user-specified one or report which block was checked
-3. Validate by rendering: `bash ${CLAUDE_SKILL_DIR}/scripts/preview.sh <file.d2>`
+3. Validate syntax: `bash ${CLAUDE_SKILL_DIR}/scripts/validate.sh <file.d2>`
 4. Report pass/fail; on failure, explain the cause and show a corrected snippet
 5. Do **not** modify files unless the user explicitly asks
 

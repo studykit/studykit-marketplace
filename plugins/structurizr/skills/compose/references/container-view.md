@@ -1,9 +1,3 @@
----
-name: container-view
-disable-model-invocation: true
-description: Structurizr DSL container view syntax reference. Use when creating or debugging C4 container diagrams that zoom into a software system to show its applications, services, and data stores.
----
-
 > Source: https://docs.structurizr.com/dsl/cookbook/container-view/
 
 # Container View Reference

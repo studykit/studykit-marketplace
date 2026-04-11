@@ -1,9 +1,3 @@
----
-name: system-context-view
-disable-model-invocation: true
-description: Structurizr DSL system context view and system landscape view syntax reference. Use when creating or debugging C4 system context diagrams that show a software system in its environment with users and external dependencies.
----
-
 > Source: https://docs.structurizr.com/dsl/cookbook/system-context-view/
 
 # System Context View Reference

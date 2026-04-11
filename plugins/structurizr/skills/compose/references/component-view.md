@@ -1,9 +1,3 @@
----
-name: component-view
-disable-model-invocation: true
-description: Structurizr DSL component view syntax reference. Use when creating or debugging C4 component diagrams that zoom into a container to show its internal components and their interactions.
----
-
 > Source: https://docs.structurizr.com/dsl/cookbook/component-view/
 
 # Component View Reference

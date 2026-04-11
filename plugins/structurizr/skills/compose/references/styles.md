@@ -1,9 +1,3 @@
----
-name: styles
-disable-model-invocation: true
-description: Structurizr DSL styles and themes reference. Use when styling C4 diagrams — customizing colors, shapes, borders, fonts, and relationship appearances in Structurizr DSL.
----
-
 > Source: https://docs.structurizr.com/dsl/cookbook/element-styles/
 
 # Styles Reference

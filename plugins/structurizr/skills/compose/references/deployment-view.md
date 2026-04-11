@@ -1,9 +1,3 @@
----
-name: deployment-view
-disable-model-invocation: true
-description: Structurizr DSL deployment view syntax reference. Use when creating or debugging C4 deployment diagrams that show how containers map onto infrastructure nodes like servers, cloud services, and Docker containers.
----
-
 > Source: https://docs.structurizr.com/dsl/cookbook/deployment-view/
 
 # Deployment View Reference

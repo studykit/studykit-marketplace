@@ -1,11 +1,11 @@
 ---
 name: plantuml:compose
 description: >
-  Compose PlantUML output or syntax guidance from natural language requests. Use
-  when the user says "draw a diagram", "create a sequence diagram", "generate
-  UML", "make a PlantUML", "add a diagram to markdown", "insert plantuml
-  block", "show the syntax for a PlantUML diagram", or explicitly invokes
-  /plantuml:compose.
+  Compose PlantUML output or syntax guidance from natural language requests. This
+  skill should be used when the user says "draw a diagram", "create a sequence
+  diagram", "generate UML", "make a PlantUML", "add a diagram to markdown",
+  "insert plantuml block", "show the syntax for a PlantUML diagram", "validate
+  my PlantUML", "check this diagram file", or explicitly invokes /plantuml:compose.
 argument-hint: [create|reference|check] <diagram request or file>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 ---

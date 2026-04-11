@@ -90,39 +90,39 @@
       "name": "plantuml",
       "source": "./plugins/plantuml",
       "description": "PlantUML diagram reference, creation, and validation plugin",
+      "version": "0.3.0",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "diagram",
+      "keywords": ["plantuml", "diagram", "uml", "sequence", "class", "activity", "visualization", "c4", "architecture", "sprites"]
+    },
+    {
+      "name": "structurizr",
+      "source": "./plugins/structurizr",
+      "description": "Structurizr DSL diagram composition, C4 model visualization, and architecture documentation plugin",
       "version": "0.2.0",
       "author": {
         "name": "studykit"
       },
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
-      "category": "development",
-      "keywords": ["plantuml", "diagram", "uml", "sequence", "class", "activity", "visualization", "c4", "architecture", "sprites"]
-    },
-    {
-      "name": "structurizr",
-      "source": "./plugins/structurizr",
-      "description": "Structurizr DSL diagram reference, creation, and C4 model visualization plugin",
-      "version": "0.1.1",
-      "author": {
-        "name": "studykit"
-      },
-      "repository": "https://github.com/studykit/studykit-plugins",
-      "license": "MIT",
-      "category": "development",
+      "category": "diagram",
       "keywords": ["structurizr", "c4-model", "architecture", "diagram", "dsl", "system-context", "container", "deployment"]
     },
     {
       "name": "d2",
       "source": "./plugins/d2",
-      "description": "D2 diagram creation, rendering, and visualization plugin",
-      "version": "0.1.2",
+      "description": "D2 diagram composition, rendering, and visualization plugin",
+      "version": "0.2.0",
       "author": {
         "name": "studykit"
       },
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
-      "category": "development",
+      "category": "diagram",
       "keywords": ["d2", "d2lang", "diagram", "architecture", "flowchart", "erd", "sequence", "visualization"]
     },
     {

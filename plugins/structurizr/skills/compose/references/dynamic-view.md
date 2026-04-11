@@ -1,9 +1,3 @@
----
-name: dynamic-view
-disable-model-invocation: true
-description: Structurizr DSL dynamic view syntax reference. Use when creating or debugging C4 dynamic diagrams that show runtime behavior, interaction flows, or sequence-like step-by-step scenarios.
----
-
 > Source: https://docs.structurizr.com/dsl/cookbook/dynamic-view/
 
 # Dynamic View Reference
