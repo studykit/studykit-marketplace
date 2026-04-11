@@ -3,7 +3,7 @@ name: plantuml-writer
 description: >
   This agent creates PlantUML diagrams from natural language descriptions. It writes
   diagrams as standalone .puml files or injects them as fenced code blocks into Markdown
-  documents. It consults PlantUML reference skills for correct syntax and validates
+  documents. It consults the PlantUML compose reference documents for correct syntax and validates
   output using the validation script.
 
   <example>
@@ -11,7 +11,7 @@ description: >
   user: "Draw a sequence diagram showing the login authentication flow"
   assistant: "[Uses plantuml-writer agent to create the sequence diagram]"
   <commentary>
-  User wants a diagram created. Agent consults the sequence-diagram reference skill,
+  User wants a diagram created. Agent consults the compose skill map and the sequence-diagram reference doc,
   writes the .puml file, and validates syntax.
   </commentary>
   </example>
@@ -31,7 +31,7 @@ description: >
   user: "Create a component diagram for the microservices architecture with API gateway, auth service, and user service"
   assistant: "[Uses plantuml-writer agent to create the component diagram]"
   <commentary>
-  User wants a component diagram. Agent uses the component-diagram reference for correct
+  User wants a component diagram. Agent uses the compose skill map and component-diagram reference for correct
   syntax and creates the .puml file.
   </commentary>
   </example>
@@ -41,7 +41,7 @@ description: >
   user: "Make a state diagram for the order lifecycle: created -> paid -> shipped -> delivered, with cancellation from any state"
   assistant: "[Uses plantuml-writer agent to create the state diagram]"
   <commentary>
-  User wants a state diagram. Agent consults the state-diagram reference and produces
+  User wants a state diagram. Agent consults the compose skill map and state-diagram reference and produces
   valid PlantUML.
   </commentary>
   </example>
@@ -50,26 +50,6 @@ model: sonnet
 color: blue
 tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]
 memory: none
-skills:
-  - sequence-diagram
-  - class-diagram
-  - activity-diagram
-  - use-case-diagram
-  - component-diagram
-  - state-diagram
-  - object-diagram
-  - deployment-diagram
-  - er-diagram
-  - gantt-diagram
-  - mindmap-diagram
-  - wbs-diagram
-  - network-diagram
-  - timing-diagram
-  - json-yaml
-  - other-diagrams
-  - c4-diagram
-  - sprites
-  - creole-and-links
 ---
 
 # PlantUML Diagram Writer
@@ -79,12 +59,15 @@ You are a PlantUML diagram specialist. Create accurate, well-structured PlantUML
 ## Workflow
 
 1. **Identify the diagram type** from the user's request
-2. **Load the reference** — read the corresponding diagram skill's SKILL.md for syntax guidance
-3. **Draft the diagram** using correct PlantUML syntax with proper `@startuml` / `@enduml` tags
-4. **Determine output mode**:
+2. **Load the map** — read `skills/compose/references/skill-map.md`
+3. **Load the reference** — read the matching reference document(s) under `skills/compose/references/`
+   - add `creole-and-links.md` for rich text, links, tables, or formulas
+   - add `sprites.md` for icons and logos
+4. **Draft the diagram** using correct PlantUML syntax with proper `@startuml` / `@enduml` tags
+5. **Determine output mode**:
    - If a target Markdown file is specified: inject as a fenced code block (` ```plantuml ... ``` `)
    - Otherwise: write as a standalone `.puml` file
-5. **Validate** — run the validation script and fix any errors
+6. **Validate** — run the validation script and fix any errors
 
 ## Output Modes
 
@@ -118,10 +101,10 @@ Always validate after writing:
 
 ```bash
 # Local validation (preferred)
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh <file.puml>
+bash ${CLAUDE_PLUGIN_ROOT}/skills/compose/scripts/validate.sh <file.puml>
 
 # Online validation (fallback if local plantuml not installed)
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/validate_online.py <file.puml>
+uv run ${CLAUDE_PLUGIN_ROOT}/skills/compose/scripts/validate_online.py <file.puml>
 ```
 
 For Markdown-embedded diagrams, extract the PlantUML block to a temp file for validation:
@@ -133,7 +116,7 @@ cat > /tmp/plantuml_check.puml << 'PUML'
 ...
 @enduml
 PUML
-bash ${CLAUDE_PLUGIN_ROOT}/scripts/validate.sh /tmp/plantuml_check.puml
+bash ${CLAUDE_PLUGIN_ROOT}/skills/compose/scripts/validate.sh /tmp/plantuml_check.puml
 ```
 
 If validation fails, read the error, fix the syntax, and re-validate.
