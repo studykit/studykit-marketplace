@@ -58,20 +58,38 @@ After resolution, present the resolved file(s) and ask the user to confirm befor
 
 The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
 
-**Iteration Mode entry:** When entering Iteration mode, check:
+**Iteration Mode entry:** When entering Iteration mode, perform these checks to assess the current state.
 
-1. **Source usecase changes** — compare the stored `sha` in arch frontmatter against the current file:
-   - Run `git hash-object <usecase-file-path>` to get the current SHA.
-   - If SHA matches → no changes, skip.
-   - If SHA differs → run `git diff <stored-sha> <current-sha>` to see exactly what changed. Also read the usecase's history file for context.
-   - Present the changes to the user and walk through impact on architecture.
-   - After reflecting, update `sources` in frontmatter. If content changed, **increment `revision`** and update `revised` timestamp.
+### 1. Source Usecase Changes
 
-2. **Unreflected review reports** — check for `A4/<topic-slug>.arch.review-*.md` files against `reflected_files` in frontmatter. Read each unreflected review report and extract issues.
+Compare the stored `sha` in arch frontmatter against the current file:
+- Run `git hash-object <usecase-file-path>` to get the current SHA.
+- If SHA matches → no changes, skip.
+- If SHA differs → run `git diff <stored-sha> <current-sha>` to see exactly what changed. Also read the usecase's history file for context.
+- Present the changes to the user and walk through impact on architecture.
+- After reflecting, update `sources` in frontmatter. If content changed, **increment `revision`** and update `revised` timestamp.
 
-3. **Unreflected scaffold reports** — check for `A4/<topic-slug>.scaffold.md` not in `reflected_files`. Extract issues where feedback targets architecture. Present as high-priority upstream feedback.
+### 2. Unreflected Reports
 
-After reading, list the usecase overview, Domain Model concepts, and any existing arch content, then confirm with the user before proceeding.
+Check for report files not listed in `reflected_files`:
+
+- `A4/<topic-slug>.arch.review-*.md` (review reports)
+- `A4/<topic-slug>.scaffold.md` (scaffold reports — issues where `Stage: arch`)
+- `A4/<topic-slug>.integration-report.r*.md` (integration reports — issues where `Stage: arch`)
+- `A4/<topic-slug>.impl-plan.md` (check for IUs with Deviation Notes that trace back to architecture)
+
+For integration reports, prioritize issues where the diagnosis stage is **arch**. For plan deviations, read the Deviation Note to determine if the root cause is an architecture assumption that doesn't hold.
+
+### 3. Mode Determination
+
+Based on the collected feedback (usecase changes, scaffold failures, integration report issues, plan deviations), assess the scope of change:
+
+- **Iteration** — targeted fixes: specific component needs restructuring, a test tool needs replacing, an interface contract needs updating
+- **Redesign (First Design)** — fundamental rethink: technology stack change, major component restructuring, architecture approach doesn't work for the problem
+
+Present the judgment with rationale. The user can override. Iteration → present work backlog (open items + unreflected findings). Redesign → proceed to Phase 1 with existing arch as reference. No changes and no feedback → default to Iteration.
+
+After reading, list the usecase overview, Domain Model concepts, existing arch content, and any unreflected feedback, then confirm with the user before proceeding.
 
 ## Session Task List
 
