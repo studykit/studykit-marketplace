@@ -29,7 +29,7 @@ Glob for `A4/<slug>*` and check which files exist:
 | Use Cases | `<slug>.usecase.md` | think-usecase, auto-usecase |
 | Spec | `<slug>.spec.md` | think-spec |
 | Impl Plan | `<slug>.impl-plan.md` | think-plan, auto-plan |
-| Integration Report | `<slug>.integration-report.md` | think-verify |
+| Integration Report | `<slug>.integration-report.r*.md` | think-verify |
 
 Also check for review reports and history files (e.g., `<slug>.usecase.review-report.md`).
 
@@ -141,7 +141,7 @@ Report to the user in this format:
 | Spec | <slug>.spec.md | <status summary or "not yet created"> |
 | Plan | <slug>.impl-plan.md | <status summary or "not yet created"> |
 | Code | <N/M IUs done> | <summary> |
-| Verification | <slug>.integration-report.md | <status summary or "not yet run"> |
+| Verification | <slug>.integration-report.r*.md | <status summary or "not yet run"> |
 
 ## Diagnosis
 

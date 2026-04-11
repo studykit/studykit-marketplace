@@ -2,7 +2,11 @@
 
 ## File Path
 
-`A4/<topic-slug>.integration-report.md`
+`A4/<topic-slug>.integration-report.r<plan-revision>[.<n>].md`
+
+Where the filename is derived from the plan revision:
+- **First verify run for plan revision N:** `integration-report.rN.md`
+- **Repeated verify run for the same plan revision:** `integration-report.rN.2.md`, `integration-report.rN.3.md`, etc.
 
 ## Frontmatter
 
@@ -126,3 +130,9 @@ fix_commits: []      # git hashes of auto-fix commits
 
 - Auto-Fix Attempts — only if auto-fixes were attempted
 - Upstream Actions Required — only if spec or plan issues were found
+
+## Purpose
+
+- Preserves every verification run as its own artifact, similar to review reports
+- Makes it obvious which plan revision a verify run corresponds to
+- Enables downstream skills to read the latest unreflected integration report(s) without losing the audit trail

@@ -28,7 +28,7 @@ Arguments can be full paths, partial filenames, or slugs. Resolve in order:
 After resolution, read:
 - The `.impl-plan.md` file (for Launch & Verify, file mappings, Shared Integration Points)
 - The `.spec.md` file (for FR list, UI Screen Groups, platform capabilities)
-- Any existing `.integration-report.md` (for prior verification results)
+- Any existing `A4/<topic-slug>.integration-report.r*.md` files (for prior verification results)
 
 ## Step 1: Environment Setup
 
@@ -233,7 +233,12 @@ For issues diagnosed as **code**-level:
 
 ## Step 6: Integration Report
 
-Write the report to `A4/<topic-slug>.integration-report.md`.
+Generate a fresh report file for every verify run. Do **not** overwrite a previous integration report.
+
+Write the report to `A4/<topic-slug>.integration-report.r<plan-revision>[.<n>].md`.
+- Use the source plan file's `revision` from frontmatter.
+- If no report exists yet for that revision, write `r<plan-revision>`.
+- If a report already exists for that revision, append `.2`, `.3`, etc. like review-report style run preservation.
 
 ### Report Format
 
@@ -278,7 +283,7 @@ Present the results:
 > **Issues requiring upstream fixes:**
 > 1. [spec] No FR for conversation input UI — 8 FRs blocked
 >
-> Report saved to `A4/<topic-slug>.integration-report.md`
+> Report saved to `A4/<topic-slug>.integration-report.r<plan-revision>[.<n>].md`
 >
 > To fix spec issues, run `think-spec` — it will detect this report automatically.
 > To fix plan issues, run `think-plan` — it will detect this report automatically.
@@ -334,6 +339,6 @@ navigate → read_page → form_input → find → screenshot → verify
 
 ## Session Management
 
-The user can pause at any point. Progress is preserved in the integration report — verified FRs stay recorded, auto-fixes stay committed.
+The user can pause at any point. Progress is preserved in the generated integration reports — verified FRs stay recorded, auto-fixes stay committed, and each verification run remains auditable.
 
 After reporting, the user decides next steps. Never conclude on your own.

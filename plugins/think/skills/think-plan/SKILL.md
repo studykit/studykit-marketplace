@@ -77,9 +77,11 @@ Compare the stored `sha` in plan frontmatter against the current file:
 Check for report files not listed in the plan's `reflected_files`:
 
 - `A4/<topic-slug>.impl-plan.review-*.md` (review reports)
-- `A4/<topic-slug>.integration-report.md` (integration reports)
+- `A4/<topic-slug>.integration-report.r*.md` (integration reports)
 
 Read each unreflected report and extract unaddressed issues. For integration reports, prioritize issues where `Stage` is **plan**.
+
+After reflecting changes from an integration report, add each handled integration report filename to `reflected_files`. If the working file content changed, **increment `revision`** and update `revised` timestamp per `${CLAUDE_SKILL_DIR}/references/revision-rules.md`.
 
 ### 3. Codebase Change Check (User Option)
 
