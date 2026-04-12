@@ -1,6 +1,6 @@
 # dom-analyzer
 
-HTML DOM structure analysis plugin for hierarchy exploration, selector discovery, and selector debugging.
+HTML/XML DOM structure analysis plugin for hierarchy exploration, selector discovery, and selector debugging.
 
 ## Components
 
@@ -8,9 +8,11 @@ HTML DOM structure analysis plugin for hierarchy exploration, selector discovery
 |------|------|---------|
 | Agent | `html-analyzer` | Analyze DOM structure level by level and recommend selectors |
 | Skill | `html-tree` | Internal workflow and usage guidance for DOM analysis |
-| Script | `skills/html-tree/scripts/html-tree.ts` | CLI for DOM hierarchy visualization |
+| Script | `skills/html-tree/scripts/html-tree.py` | CLI for DOM hierarchy visualization |
+| Script | `scripts/validate-read-size.sh` | Guardrail for oversized HTML inputs |
+| Script | `scripts/restrict-huge-dom.sh` | Helper for limiting very large DOM reads |
 
-## What The CLI Supports
+## What the CLI Supports
 
 - Full document tree visualization
 - Depth-limited exploration with `--max-depth`
@@ -18,29 +20,31 @@ HTML DOM structure analysis plugin for hierarchy exploration, selector discovery
 - Ancestor context with `--show-parents`
 - Single-match inspection with `--match-index`
 - Optional text node output with `--show-text`
-- Compact or full attribute display with `--compact`, `--full`, `--no-attributes`
+- Compact or full attribute display with `--full` and `--no-attributes`
+- Highlighting the selected path with `--highlight-path`
 - File output with `--output`
 
 ## Prerequisites
 
-- [Deno](https://deno.com/) runtime
+- [uv](https://docs.astral.sh/uv/)
+- Python 3 compatible with `uv run`
 
-No install step required — dependencies are declared inline via Deno's `npm:` specifiers.
+No install step is required — the CLI declares its dependencies inline and `uv run` resolves them automatically.
 
 ## CLI Usage
 
 ```bash
-deno run --allow-read dom-analyzer/skills/html-tree/scripts/html-tree.ts <html-file> [options]
+uv run plugins/dom-analyzer/skills/html-tree/scripts/html-tree.py <html-file> [options]
 ```
 
 Common examples:
 
 ```bash
-deno run --allow-read html-tree.ts page.html --max-depth 3
-deno run --allow-read html-tree.ts page.html --selector "article"
-deno run --allow-read html-tree.ts page.html --selector ".story" --show-parents 2 --highlight-path
-deno run --allow-read html-tree.ts page.html --selector "article" --match-index 1 --show-text
-deno run --allow-read html-tree.ts page.html --full --output analysis.txt
+uv run plugins/dom-analyzer/skills/html-tree/scripts/html-tree.py page.html --max-depth 3
+uv run plugins/dom-analyzer/skills/html-tree/scripts/html-tree.py page.html --selector "article"
+uv run plugins/dom-analyzer/skills/html-tree/scripts/html-tree.py page.html --selector ".story" --show-parents 2 --highlight-path
+uv run plugins/dom-analyzer/skills/html-tree/scripts/html-tree.py page.html --selector "article" --match-index 1 --show-text
+uv run plugins/dom-analyzer/skills/html-tree/scripts/html-tree.py page.html --full --output analysis.txt
 ```
 
 ## Options
@@ -49,8 +53,7 @@ deno run --allow-read html-tree.ts page.html --full --output analysis.txt
 |--------|-------------|
 | `--show-text` | Include text nodes in output |
 | `--no-attributes` | Hide all attributes |
-| `--full` | Show all attributes except suppressed SVG/path attributes |
-| `--compact` | Compact attribute mode; default behavior |
+| `--full` | Show all attributes |
 | `--max-depth <n>` | Limit traversal depth |
 | `--output <file>` | Write output to file |
 | `--selector <css>` | Visualize only nodes matching a CSS selector |
@@ -79,7 +82,7 @@ Show me the hierarchy around the main content area
 
 ## Related Files
 
-- [`dom-analyzer/agents/html-analyzer.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/agents/html-analyzer.md)
-- [`dom-analyzer/skills/html-tree/SKILL.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/skills/html-tree/SKILL.md)
-- [`dom-analyzer/skills/html-tree/references/cli-options.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/skills/html-tree/references/cli-options.md)
-- [`dom-analyzer/skills/html-tree/references/workflows.md`](/Volumes/NVME/GitHub/studykit-plugins/dom-analyzer/skills/html-tree/references/workflows.md)
+- `plugins/dom-analyzer/agents/html-analyzer.md`
+- `plugins/dom-analyzer/skills/html-tree/SKILL.md`
+- `plugins/dom-analyzer/skills/html-tree/references/cli-options.md`
+- `plugins/dom-analyzer/skills/html-tree/references/workflows.md`

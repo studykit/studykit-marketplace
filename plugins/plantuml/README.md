@@ -1,95 +1,78 @@
 # PlantUML Plugin
 
-A Claude Code plugin for creating, referencing, and validating PlantUML diagrams.
+A plugin for composing, referencing, and validating PlantUML diagrams.
+
+## Components
+
+| Type | Name | Purpose |
+|------|------|---------|
+| Skill | `plantuml:compose` | Create, reference, or validate PlantUML from natural language |
+| Script | `skills/compose/scripts/validate.sh` | Local validation using the bundled PlantUML jar |
+| Script | `skills/compose/scripts/validate_online.py` | Online validation fallback |
 
 ## Features
 
-- **16 diagram reference skills** — Comprehensive syntax references for all major PlantUML diagram types, sourced from official documentation
-- **Diagram creation agent** — Proactively creates PlantUML diagrams from natural language descriptions
-- **`/plantuml:draw` command** — Explicit diagram creation with support for `.puml` files and Markdown fenced code block injection
-- **Syntax validation** — Local (`plantuml -checkonly`) and online (PlantUML server API) validation scripts
+- **Create mode** — generate standalone `.puml` files or PlantUML fenced blocks for Markdown
+- **Reference mode** — explain syntax and provide minimal examples without modifying files
+- **Check mode** — validate `.puml` files or embedded Markdown blocks and explain failures
+- **Bundled references** — includes diagram-specific references and advanced syntax notes under `skills/compose/references/`
+- **Local + online validation** — use the bundled jar locally or fall back to the online validator
 
-## Supported Diagram Types
+## Supported Reference Topics
 
-| Category | Diagrams |
-|----------|----------|
-| UML Structural | Class, Object, Component, Deployment |
-| UML Behavioral | Sequence, Activity, State, Use Case, Timing |
-| Non-UML | ER, Gantt, MindMap, WBS, Network (nwdiag) |
-| Data | JSON, YAML visualization |
-| Other | Salt wireframes, Archimate, Ditaa, EBNF, Regex |
+The bundled references currently cover:
+
+- Sequence, class, activity, use case, component, deployment, object, state, ER, Gantt, mindmap, WBS, network, timing, JSON/YAML, C4, and other specialized diagrams
+- Supplemental topics such as Creole formatting, links, sprites, and sprite names
 
 ## Prerequisites
 
-For local validation, a bundled PlantUML jar (`scripts/plantuml*.jar`) is included. Requires Java:
+For local validation, Java is required because the plugin bundles `skills/compose/scripts/plantuml.1.2026.2.jar`.
 
 ```bash
-java -version   # check if Java is available
+java -version
 ```
 
-Alternatively, install the system CLI: `brew install plantuml`
-
-Online validation requires no local dependencies.
+Online validation requires no local PlantUML installation.
 
 ## Usage
 
-### Automatic (Agent)
+### Explicit Skill
 
-Simply ask Claude to create a diagram:
-
-> "Draw a sequence diagram showing the login authentication flow"
-> "Add a class diagram of the User model to docs/architecture.md"
-
-The `plantuml-writer` agent will trigger automatically.
-
-### Explicit (Command)
-
-```
-/plantuml:draw sequence diagram of order processing
+```text
+/plantuml:compose create sequence diagram of order processing
+/plantuml:compose reference class diagram syntax for generics
+/plantuml:compose check docs/architecture.md
 ```
 
-### Output Modes
+### Inferred Mode
 
-1. **Standalone `.puml` file** — Default when no target file is specified
-2. **Markdown injection** — Inserts a `plantuml` fenced code block into an existing `.md` file
+You can also ask naturally:
 
-### Validation
+> Draw a sequence diagram showing the login flow
+> Show me the PlantUML syntax for a deployment diagram
+> Validate this PlantUML block in my Markdown file
+
+## Validation
 
 ```bash
-# Local (requires plantuml CLI)
-bash scripts/validate.sh diagram.puml
+# Local
+bash plugins/plantuml/skills/compose/scripts/validate.sh diagram.puml
 
-# Online (no local deps)
-uv run scripts/validate_online.py diagram.puml
+# Online fallback
+uv run plugins/plantuml/skills/compose/scripts/validate_online.py diagram.puml
 ```
 
 ## Plugin Structure
 
-```
+```text
 plantuml/
 ├── .claude-plugin/
-│   └── plugin.json
-├── agents/
-│   └── plantuml-writer.md
-├── scripts/
-│   ├── validate.sh
-│   └── validate_online.py
+├── .codex-plugin/
+├── README.md
 └── skills/
-    ├── draw/SKILL.md
-    ├── sequence-diagram/SKILL.md
-    ├── class-diagram/SKILL.md
-    ├── activity-diagram/SKILL.md
-    ├── use-case-diagram/SKILL.md
-    ├── component-diagram/SKILL.md
-    ├── state-diagram/SKILL.md
-    ├── object-diagram/SKILL.md
-    ├── deployment-diagram/SKILL.md
-    ├── er-diagram/SKILL.md
-    ├── gantt-diagram/SKILL.md
-    ├── mindmap-diagram/SKILL.md
-    ├── wbs-diagram/SKILL.md
-    ├── network-diagram/SKILL.md
-    ├── timing-diagram/SKILL.md
-    ├── json-yaml/SKILL.md
-    └── other-diagrams/SKILL.md
+    └── compose/
+        ├── SKILL.md
+        ├── references/
+        └── scripts/
 ```

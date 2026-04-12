@@ -2,6 +2,11 @@
 
 Designs system architecture through collaborative dialogue — technology stack, external dependencies, components, information flows, interface contracts, and test strategy. Works from use cases produced by think-usecase.
 
+## Current Notes
+
+- **Primary file:** `plugins/think/skills/think-arch/SKILL.md`
+- **Current behavior:** Collaborative architecture design skill. It supports both first-pass design and iteration on an existing `.arch.md`, with reviewer feedback when the user wants it.
+
 ## Workflow
 
 ```plantuml

@@ -2,6 +2,11 @@
 
 A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. Progressively produces Use Cases — concrete descriptions of how users interact with the system, grounded in real situations.
 
+## Current Notes
+
+- **Primary file:** `plugins/think/skills/think-usecase/SKILL.md`
+- **Current behavior:** Socratic use-case discovery skill. It writes and grows a working `.usecase.md`, checkpoints confirmed content, and can launch review / exploration support near wrap-up.
+
 ## Workflow
 
 ```plantuml

@@ -1,57 +1,56 @@
 # JDK Source Viewer Plugin
 
-A Claude Code plugin for viewing, searching, and understanding JDK internal source code during Java development and debugging.
+A plugin for viewing, searching, and understanding JDK internal source code during Java development and debugging.
+
+## Components
+
+| Type | Name | Purpose |
+|------|------|---------|
+| Agent | `jdk-explorer` | Isolated execution context for source lookup and analysis |
+| Skill | `lookup` | Search JDK source and recommend what to read next |
 
 ## Features
 
-- **JDK source exploration**: View Java standard library source code (e.g., `java.util.HashMap`, `java.lang.String`)
-- **Code search**: Search within JDK sources for patterns, methods, or keywords
-- **Implementation explanations**: Get detailed explanations of how JDK classes work internally
-- **Automatic caching**: Extracted sources saved for reuse across sessions at `~/.cache/jdk-sources/`
-- **GitHub fallback**: Access OpenJDK source when local installation unavailable
-
-## Installation
-
-Add this plugin to your Claude Code configuration.
+- **JDK source exploration**: View Java standard library source code (for example `java.util.HashMap`, `java.lang.String`)
+- **Code search**: Search within cached JDK sources for classes, methods, and patterns
+- **Implementation explanations**: Explain how JDK classes work internally and point to the relevant code paths
+- **Automatic caching**: Extracted sources are saved for reuse at `~/.cache/jdk-sources/`
+- **GitHub fallback**: Falls back to OpenJDK on GitHub when a local source archive is unavailable
+- **Symbol indexing**: Uses `universal-ctags` and `readtags` for fast symbol lookup
 
 ## Usage
 
-### Skill: `/lookup` (Auto or Manual)
+### Skill: `lookup`
 
-The **lookup** skill searches JDK source and recommends which code to read. It runs in an isolated context using the **jdk-explorer** agent as execution environment (`context: fork` + `agent` pattern).
+Use the `lookup` skill directly, or trigger it with questions about JDK internals.
 
-**Invoke manually:**
-```
-/lookup How does HashMap work internally?
-/lookup Show me the String source code from JDK
-/lookup Why does ConcurrentHashMap not allow null keys?
-```
+Examples:
 
-**Or let Claude trigger it automatically** when you ask about JDK internals:
-```
-"I'm getting a ConcurrentModificationException from ArrayList, what's happening?"
-"What's the difference between HashMap and LinkedHashMap internally?"
+```text
+How does HashMap work internally?
+Show me the String source code from JDK
+Why does ConcurrentHashMap not allow null keys?
 ```
 
 The skill will:
-1. Determine the JDK version from your project
-2. Ensure source is cached at `~/.cache/jdk-sources/` (extract src.zip or clone from GitHub)
-3. Build ctags index for fast symbol lookup
+1. Determine the JDK version from project build files first
+2. Ensure source is cached at `~/.cache/jdk-sources/` (extract `src.zip` or use GitHub fallback)
+3. Build a `ctags` index when needed
 4. Search and analyze the relevant source code
-5. Recommend which files/methods to read and why
+5. Recommend which files and methods to read, in order
 
 ## Cache Structure
 
-```
+```text
 ~/.cache/jdk-sources/
-├── zip/                          # From local src.zip
+├── zip/
 │   └── jdk-21/
-│       ├── tags                  # ctags index
+│       ├── tags
 │       └── java.base/java/util/HashMap.java
-└── git/                          # From GitHub OpenJDK
-    ├── jdk.git/                  # Bare repository
+└── git/
+    ├── jdk.git/
     └── jdk-21/
-        ├── tags                  # ctags index
+        ├── tags
         └── src/java.base/share/classes/java/util/HashMap.java
 ```
 
@@ -59,4 +58,17 @@ The skill will:
 
 - JDK installation with `src.zip` (recommended)
 - Or internet access for GitHub OpenJDK fallback
-- `universal-ctags` for symbol indexing (`brew install universal-ctags`)
+- `universal-ctags` for symbol indexing
+- `readtags` available from the same ctags installation
+
+Example install on macOS:
+
+```bash
+brew install universal-ctags
+```
+
+## Related Files
+
+- `plugins/jdk-source/agents/jdk-explorer.md`
+- `plugins/jdk-source/skills/lookup/SKILL.md`
+- `plugins/jdk-source/.codex-plugin/plugin.json`

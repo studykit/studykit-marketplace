@@ -1,6 +1,6 @@
 {
   "name": "plantuml",
-  "version": "0.1.0",
+  "version": "0.3.0",
   "description": "PlantUML diagram reference, creation, and validation plugin",
   "author": {
     "name": "studykit"

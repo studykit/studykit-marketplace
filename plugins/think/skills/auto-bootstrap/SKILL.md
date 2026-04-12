@@ -144,14 +144,14 @@ If any verification step fails:
 2. **Do not attempt to fix arch issues** — these require architecture decisions. Record and move on.
 
 3. **Research before fixing environment issues** — do not guess from error messages alone. Before attempting a fix:
-   a. **Spawn a research agent** — launch an `Agent(model: "sonnet")` with the error message, relevant config files, and the technology stack. The agent should:
-      - Search official documentation via `WebSearch`/`WebFetch` for the authoritative fix
+   a. **Spawn an api-researcher agent** — launch an `Agent(subagent_type: "api-researcher")` with the error message, relevant config files, and the technology stack. The agent should:
+      - Search API/library documentation via `chub` first, then fall back to `WebSearch`/`WebFetch`
       - Read library source code when documentation is insufficient (e.g., checking default config, supported options, version-specific behavior)
       - Check version-specific notes, known issues, and migration guides
       - Write findings to `A4/<topic-slug>.bootstrap.research-<label>.md` per the format below. `<label>` is a short slug describing the issue (e.g., `jest-esm-flags`, `esbuild-target-mismatch`)
    b. **Apply the fix** based on the research agent's findings, not assumptions.
    c. **Re-verify** after fix.
-   d. If the fix fails, spawn a new research agent with the updated error — do not retry the same fix.
+   d. If the fix fails, spawn a new api-researcher agent with the updated error — do not retry the same fix.
 
 4. **Record in report** — issues with `Stage: arch` become upstream feedback for think-arch. Issues with `Stage: environment` are recorded with a reference to the research report that informed the fix.
 

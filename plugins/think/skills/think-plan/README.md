@@ -2,6 +2,11 @@
 
 Takes an architecture document and autonomously plans, implements, and tests the project — iterating until integration and smoke tests pass. Delegates IU implementation to per-IU subagents and orchestrates the execution order, progress tracking, and cycle loop.
 
+## Current Notes
+
+- **Primary file:** `plugins/think/skills/think-plan/SKILL.md`
+- **Current behavior:** Autonomous planning-and-execution orchestrator. It writes `.plan.md`, uses `plan-reviewer`, delegates IUs to `iu-implementer`, and uses `test-runner` for integration/smoke verification.
+
 ## Workflow
 
 ```plantuml

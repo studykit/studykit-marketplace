@@ -131,21 +131,14 @@ think-plan updates IU statuses in `.plan.md` as subagents complete their work.
 Execute IUs following the dependency graph:
 
 1. **Identify ready IUs** — IUs whose dependencies are all `done` and whose own status is `pending` (or `failed` in a retry cycle).
-2. **Spawn subagents** — one per ready IU, using `model: "sonnet"`. Independent IUs can run in parallel.
+2. **Spawn subagents** — one per ready IU, using `Agent(subagent_type: "iu-implementer")`. Independent IUs can run in parallel.
 
 Each subagent receives:
 - The specific IU details (description, file mappings, acceptance criteria)
 - Relevant interface contracts from the plan (contracts the IU consumes or provides)
 
-The subagent:
-1. Implements code per the IU description and file mappings
-2. Writes unit tests for the code it implemented
-3. **All unit tests must pass** before returning
-4. Commits: code + unit tests
-5. Returns: result (pass/fail), summary of what was implemented, any issues encountered
-
 ```
-Agent(model: "sonnet", prompt: """
+Agent(subagent_type: "iu-implementer", prompt: """
 IU: <IU identifier and title>
 Description: <IU description from plan>
 Source files: <list of source files to create/modify>
@@ -154,13 +147,8 @@ Acceptance criteria: <from plan>
 Interface contracts: <relevant contracts this IU consumes or provides>
 
 Implement this IU and write unit tests. All unit tests must pass.
-
-Rules:
-- Implement only this IU — do not modify files outside the listed source and test files
-- Write unit tests in the specified test file paths
-- Commit code + unit tests
-- Return: result (pass/fail), summary of changes, issues encountered
-- Record factual results only — do not classify issues as plan/arch/usecase
+Commit code + unit tests.
+Return: result (pass/fail), summary of changes, issues encountered.
 """)
 ```
 
@@ -174,23 +162,18 @@ Rules:
 
 After all IUs are `done` (or after handling failures), run integration and smoke tests:
 
-1. **Spawn a test subagent** (`model: "sonnet"`) with the plan's test plan section and Launch & Verify config.
-2. The subagent runs integration and smoke tests, writes results to `A4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
-3. The subagent records **factual results only** — no diagnosis classification.
+1. **Spawn a test-runner agent** via `Agent(subagent_type: "test-runner")` with the plan's test plan section and Launch & Verify config.
+2. The agent runs integration and smoke tests, writes results to `A4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
+3. The agent records **factual results only** — no diagnosis classification.
 4. **Commit:** test report
 
 ```
-Agent(model: "sonnet", prompt: """
+Agent(subagent_type: "test-runner", prompt: """
 Plan file: <absolute path to .plan.md>
 
 Run integration and smoke tests as defined in the plan's test plan section.
 Write the test report to A4/<slug>.test-report.c<N>.md per the template
 in references/test-report.md.
-
-Rules:
-- Use the Launch & Verify config from the plan for build/run/test commands
-- Record factual results only — do not classify failures as plan/arch/usecase
-- Commit the test report
 """)
 ```
 
@@ -294,8 +277,8 @@ Append-only event log in `A4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/r
 Always spawn fresh agents — context is passed via file paths or inline details, not agent memory.
 
 - **`plan-reviewer`** — launch via `Agent(subagent_type: "plan-reviewer")`. Pass plan file path, arch file path, usecase file path, and report output path.
-- **IU implementation subagent** — launch via `Agent(model: "sonnet")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts). Implements one IU + unit tests. Returns result summary. Independent IUs can be spawned in parallel.
-- **Test subagent** — launch via `Agent(model: "sonnet")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Does not classify failures.
+- **`iu-implementer`** — launch via `Agent(subagent_type: "iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts). Implements one IU + unit tests. Has chub skill preloaded for API lookups. Independent IUs can be spawned in parallel.
+- **`test-runner`** — launch via `Agent(subagent_type: "test-runner")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Has chub skill preloaded. Does not classify failures.
 
 ## Output Format
 

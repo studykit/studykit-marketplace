@@ -2,6 +2,11 @@
 
 A solution discovery facilitator that helps move from multiple options to a well-reasoned decision through structured research and evaluation. Produces an Architecture Decision Record (ADR) with rationale, rejected alternatives, and next steps.
 
+## Current Notes
+
+- **Primary file:** `plugins/think/skills/spark-decide/SKILL.md`
+- **Current behavior:** Interactive decision-making skill. It frames the problem, researches options, applies an evaluation framework, and finalizes an ADR-style decision file.
+
 ## Workflow
 
 ```plantuml

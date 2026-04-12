@@ -6,7 +6,7 @@ description: >
   Manages revision increment, revised timestamp, and returns the updated SHA.
   Spawned by think-arch when architecture design discovers domain model changes.
 model: sonnet
-color: orange
+color: yellow
 tools: "Read, Edit, Bash"
 ---
 
