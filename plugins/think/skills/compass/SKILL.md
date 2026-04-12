@@ -32,7 +32,7 @@ Glob for `A4/<slug>*` and check which files exist:
 | Plan | `<slug>.plan.md` | think-plan, auto-plan |
 | Test Report | `<slug>.test-report.c*.md` | think-plan |
 
-Also check for review reports and history files (e.g., `<slug>.usecase.review-report.md`).
+Also check for review reports and history files (e.g., `<slug>.usecase.review-*.md`, `<slug>.arch.review-*.md`, `<slug>.plan.review-*.md`).
 
 If **no artifacts found** for the slug: skip to **Step 2** (Fresh Start), treating the argument as a topic description.
 

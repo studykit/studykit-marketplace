@@ -35,7 +35,7 @@ Mix both approaches: foundation units (schemas, shared services) first, then ver
 ## Unit Sizing Guidelines
 
 A well-sized unit should:
-- Cover 1-5 related FRs
+- Cover 1-5 related UCs (or UC subsets — e.g., validation + error handling from a single UC)
 - Touch 1-3 components
 - Be independently testable
 - Result in a meaningful, working increment
@@ -44,7 +44,7 @@ A well-sized unit should:
 ### Splitting Large Units
 
 Split when a unit:
-- Covers more than 5 FRs across unrelated areas
+- Covers more than 5 UCs across unrelated areas
 - Touches more than 3 components with no clear theme
 - Mixes schema creation with complex business logic
 - Would require both backend and frontend work that can be separated
@@ -167,11 +167,11 @@ For each unit, check:
 
 ### Test Scenario Derivation
 
-For each FR assigned to a unit:
-1. **Happy path** — derive from FR's "System behavior" steps
-2. **Error cases** — derive from FR's "Error handling" section
-3. **Boundary cases** — derive from FR's "Validation" section
-4. **State transitions** — derive from Domain Model's state diagrams (if the FR involves stateful entities)
+For each UC assigned to a unit:
+1. **Happy path** — derive from UC's Flow steps and Expected Outcome
+2. **Error cases** — derive from UC's Error handling field
+3. **Boundary cases** — derive from UC's Validation field
+4. **State transitions** — derive from Domain Model's state diagrams (if the UC involves stateful entities)
 
 ## Shared File Integration
 

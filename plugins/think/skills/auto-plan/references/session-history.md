@@ -4,14 +4,14 @@ Session history captures autonomous decisions and quality round changes so that 
 
 ## File Path
 
-`A4/<topic-slug>.impl-plan.history.md`
+`A4/<topic-slug>.plan.history.md`
 
 ## Format
 
 ```markdown
 ---
 type: session-history
-source: <topic-slug>.impl-plan.md
+source: <topic-slug>.plan.md
 ---
 
 ### Compose — <YYYY-MM-DD HH:mm>
@@ -22,11 +22,11 @@ source: <topic-slug>.impl-plan.md
 
 #### Unit Summary
 - Total units: <count>
-- FR coverage: <covered> / <total>
+- UC coverage: <covered> / <total>
 
 #### Key Decisions
 - <autonomous decision — e.g., "split auth into two units because token refresh has no shared state with login">
-- <autonomous decision — e.g., "assigned ambiguous FR-7 to unit 3 based on component overlap">
+- <autonomous decision — e.g., "assigned ambiguous UC-7 to unit 3 based on component overlap">
 
 #### Open Items at Compose
 - <items recorded as needing user review>
@@ -54,7 +54,7 @@ source: <topic-slug>.impl-plan.md
 ## Rules
 
 - **Compose entry** is written once after Step 7 (initial plan creation).
-- **Quality round entries** are appended after each revision in Step 9. Rounds with verdict `ACTIONABLE` record only the verdict — no changes table.
+- **Quality round entries** are appended after each revision in Step 10. Rounds with verdict `ACTIONABLE` record only the verdict — no changes table.
 - Previous entries are preserved — never overwrite them.
 - Use the Write tool to append new entries. Read the existing file first to preserve previous entries.
 - Keep entries concise. The goal is decision rationale, not a full diff.

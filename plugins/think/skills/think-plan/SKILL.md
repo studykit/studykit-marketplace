@@ -36,8 +36,9 @@ When an existing `.plan.md` is found:
 2. **Source change detection** — compare `sources` SHA against current files (`git hash-object`). If changed, assess scope:
    - Minor changes → resume from current phase, incorporating changes
    - Major changes (tech stack, architecture restructuring) → restart from Phase 1
-3. **Check unreflected reports** — compare existing report files against `reflected_files`. Read any unreflected reports and reflect them before continuing.
-4. Continue from the recorded phase/cycle.
+3. **Scaffold staleness** — if a scaffold report exists, compare its source arch SHA against the current arch file. If the arch changed after scaffold was generated, warn the user that scaffold commands may be outdated and suggest re-running `auto-scaffold`.
+4. **Check unreflected reports** — compare existing report files against `reflected_files`. Read any unreflected reports and reflect them before continuing.
+5. Continue from the recorded phase/cycle.
 
 ---
 
@@ -47,9 +48,13 @@ When an existing `.plan.md` is found:
 
 Read the `.arch.md` and `.usecase.md` thoroughly. Extract:
 - Technology stack, components, interface contracts
-- All FRs (IDs, behavior steps, validation, error handling)
+- All UCs (IDs, actors, goals, flows, expected outcomes, validation, error handling)
 - Domain model, external dependencies
 - Test strategy tiers
+
+Check for a scaffold report (`A4/<slug>.scaffold.md`):
+- If present → read it. Extract verified build, run, and test commands. These are used directly in Launch & Verify (Step 3) instead of auto-detection. Also note any issues with `Stage: arch` — these may indicate architecture assumptions that don't hold.
+- If absent → proceed without it. Suggest running `auto-scaffold` first, but continue if the user chooses not to.
 
 ### Step 2: Explore Codebase
 
@@ -62,7 +67,7 @@ Enter plan mode. Generate the implementation plan covering:
 - Implementation units with descriptions, file mappings, dependencies
 - Dependency graph and implementation order
 - Test plan: unit tests per IU + project-level integration and smoke tests
-- Launch & verify configuration
+- Launch & Verify configuration — if a scaffold report exists, use its verified commands directly for build, launch, and test runner commands; otherwise, auto-detect per planning guide
 
 Exit plan mode. Write the plan to `A4/<slug>.plan.md` per `${CLAUDE_SKILL_DIR}/references/output-template.md`.
 

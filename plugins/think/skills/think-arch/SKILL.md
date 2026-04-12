@@ -254,6 +254,14 @@ When the user indicates they're done, proceed to **End Iteration**.
 
 For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`**.
 
+### Next Step
+
+After the architecture is finalized, suggest the next pipeline step:
+
+> The architecture is ready. The next step is `auto-scaffold` to set up the dev environment (project structure, dependencies, test infrastructure) and verify everything builds and runs before planning implementation.
+>
+> Run: `/think:auto-scaffold <slug>`
+
 ### Output Format
 
 Follow the Architecture template in `${CLAUDE_SKILL_DIR}/references/output-template.md` for the final file structure.

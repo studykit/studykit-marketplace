@@ -163,3 +163,13 @@ When re-run on an existing scaffold (e.g., after arch changes):
 This skill runs autonomously. No user interaction during execution. The user invokes it and receives the scaffold report when done.
 
 If a verification step fails and cannot be auto-fixed, the report documents the failure. The user decides next steps based on the report.
+
+## Next Step
+
+After reporting results, suggest the next pipeline step:
+
+> The dev environment is ready. The next step is `think-plan` to generate an implementation plan and build from the architecture.
+>
+> Run: `/think:think-plan <slug>`
+
+If the scaffold has unresolved `Stage: arch` issues, suggest `think-arch` first to address architecture-level problems before planning.
