@@ -123,19 +123,19 @@ When the user's criteria are vague, ask for a concrete example. When they list t
 
 ## Situation Assessment & Framework Selection
 
-After Problem Framing, assess the decision to select an evaluation framework. Read the corresponding file from `references/`.
+After Problem Framing, assess the decision to select an evaluation framework:
 
-| Decision type | Framework | File |
-|---------------|-----------|------|
-| Multiple options (3+), quantifiable criteria | Weighted Scoring | `references/weighted-scoring.md` |
-| Comparing against status quo / baseline | Pugh Matrix | `references/pugh-matrix.md` |
-| Quick decision, 2-3 options, informal | Pros-Cons-Risks | `references/pros-cons-risks.md` |
-| Strategic, external factors matter | SWOT per Option | `references/swot-analysis.md` |
-| Resource-constrained, ROI matters | Cost-Benefit | `references/cost-benefit.md` |
+| Decision type | Framework |
+|---------------|-----------|
+| Multiple options (3+), quantifiable criteria | Weighted Scoring |
+| Comparing against status quo / baseline | Pugh Matrix |
+| Quick decision, 2-3 options, informal | Pros-Cons-Risks |
+| Strategic, external factors matter | SWOT per Option |
+| Resource-constrained, ROI matters | Cost-Benefit |
 
 If the decision type is ambiguous, default to Pros-Cons-Risks (simplest) and escalate to Weighted Scoring if more rigor is needed.
 
-After selecting, read the framework reference file and follow its process steps to guide the evaluation phase.
+After selecting, apply the framework's standard process to guide the evaluation phase.
 
 Update the `framework` field in the working file frontmatter.
 

@@ -27,19 +27,19 @@ Ask 1-2 focused questions to determine these dimensions if the user's initial pr
 
 ## Technique Selection Matrix
 
-Based on your assessment, select the most appropriate technique by reading the corresponding file from `references/`.
+Based on your assessment, select the most appropriate technique:
 
-| Situation | Technique | File |
-|-----------|-----------|------|
-| Existing target + Divergent | SCAMPER | `references/scamper.md` |
-| Blank slate + Divergent | Free Brainstorming | `references/free-brainstorming.md` |
-| Blank slate + Divergent (complex topic) | Mind Mapping | `references/mind-mapping.md` |
-| Stuck + Divergent | Reverse Brainstorming | `references/reverse-brainstorming.md` |
-| Stuck + Need fresh perspective | Random Stimulus | `references/random-stimulus.md` |
-| Organizing ideas (multi-perspective) | Six Thinking Hats | `references/six-thinking-hats.md` |
-| Organizing ideas (grouping) | Affinity Diagram | `references/affinity-diagram.md` |
+| Situation | Technique |
+|-----------|-----------|
+| Existing target + Divergent | SCAMPER |
+| Blank slate + Divergent | Free Brainstorming |
+| Blank slate + Divergent (complex topic) | Mind Mapping |
+| Stuck + Divergent | Reverse Brainstorming |
+| Stuck + Need fresh perspective | Random Stimulus |
+| Organizing ideas (multi-perspective) | Six Thinking Hats |
+| Organizing ideas (grouping) | Affinity Diagram |
 
-After selecting, read the technique file and follow its process steps and facilitator prompts to guide the session.
+After selecting, apply the technique's standard process to guide the session.
 
 ## Facilitation Guidelines
 
@@ -74,7 +74,9 @@ When 8-15+ ideas have been generated, suggest organizing with Six Thinking Hats 
 
 ## Wrapping Up
 
-When the brainstorming reaches a natural conclusion or the user indicates they're done:
+The session ends only when the user says so. Never conclude on your own.
+
+When the user indicates they're done:
 
 1. **Ask to summarize** — Ask: "Would you like me to summarize what we've covered?" and wait for the user's response.
 2. **If the user declines** — End the session immediately.

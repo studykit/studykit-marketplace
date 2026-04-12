@@ -349,7 +349,7 @@ The architecture ends only when the user says so. Never conclude on your own.
 
 When the user indicates they're done, proceed to **End Iteration**.
 
-For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-procedures.md`**.
+For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`**.
 
 ### Next Step
 
