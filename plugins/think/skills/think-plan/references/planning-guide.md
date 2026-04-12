@@ -58,7 +58,7 @@ Merge when a unit:
 
 ## Launch & Verify Derivation
 
-After codebase exploration, fill the **Launch & Verify** section. This information is used by think-code (build verification), think-verify (integration testing), and the user (manual testing).
+After codebase exploration, fill the **Launch & Verify** section. This information is used during Phase 2 for build verification and integration/smoke testing.
 
 ### Auto-detection procedure
 

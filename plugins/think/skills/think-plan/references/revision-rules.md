@@ -6,15 +6,12 @@ Rules for when to increment `revision` in the plan frontmatter and update the `r
 
 Increment `revision` and update `revised` when:
 
-1. **Before review** — immediately before launching a reviewer subagent (checkpoint write + revision increment together). This stamps the exact document state the reviewer will evaluate.
-2. **Reflecting source spec changes** — after applying changes from an updated source spec at iteration entry
-3. **Reflecting review findings** — after applying changes from a `plan-reviewer` report
-4. **Reflecting integration report findings** — after applying changes from a `think-verify` integration report
-5. **Reflecting risk assessment findings** — after applying confirmed risks from a `risk-assessor` report to the Risk Assessment section
-6. **Session close** — at the end of an iteration (as part of the session close procedure)
-7. **Finalization** — when setting `status: final`
+1. **Plan initial creation** — first write of the plan file (revision 1)
+2. **Reflecting a review report** — after auto-reflecting plan-reviewer findings (Phase 1)
+3. **Reflecting a test report** — after updating the plan based on test failures (Phase 2)
+4. **Status change** — when transitioning `status` (draft → verified → implementing → complete / blocked)
 
-Each of these events increments revision by exactly 1, even if multiple changes are made in the same event. All other file updates (checkpoint writes, unit confirmations, detail additions, dependency graph updates) do not increment revision.
+Each event increments revision by exactly 1, even if multiple changes are made in the same event.
 
 ## Update Procedure
 
@@ -22,4 +19,5 @@ When incrementing:
 
 1. Increment `revision` by 1
 2. Set `revised` to current timestamp (`YYYY-MM-DD HH:mm`)
-3. If reflecting a review, integration report, or risk assessment, also add the report filename to `reflected_files`
+3. If reflecting a report, add the report filename to `reflected_files`
+4. Update `phase` and `cycle` as appropriate

@@ -1,6 +1,6 @@
 # think-plan
 
-Collaboratively derive an implementation plan from a specification, including units, dependencies, file mappings, and verification strategy.
+Autonomously generate an implementation plan from an architecture document, implement it, and iterate until integration and smoke tests pass.
 
 ## Workflow
 
@@ -10,60 +10,73 @@ title think-plan Workflow
 skinparam activityFontSize 12
 
 start
-:Resolve spec / plan input;
-if (Existing .impl-plan.md?) then (yes)
-  :Run existing-plan entry;
-  if (Major spec or plan change?) then (redesign)
-    :Switch to first-design flow;
-  else (iteration)
-    :Load backlog and choose update area;
-  endif
+:Resolve arch / plan input;
+
+if (Existing .plan.md?) then (yes)
+  :Resume from recorded phase/cycle;
 else (no)
-  :Start first-design flow;
+  :Start fresh;
 endif
 
-:Explore codebase patterns and test setup;
-:Summarize spec;
-:Select implementation strategy;
+partition "Phase 1 — Plan + Verification" {
+  :Read arch + usecase;
+  :Explore codebase;
+  :Generate plan (plan mode);
+  :Write plan file;
 
-:Derive implementation units with user;
-while (More units to define?) is (yes)
-  :Present unit;
-  :Adjust size / scope;
-  :Confirm unit;
-endwhile (no)
+  repeat
+    :Spawn plan-reviewer agent;
+    :Write review report;
+    if (Issues found?) then (yes)
+      if (Arch/usecase issue?) then (yes)
+        :Stop — notify user;
+        stop
+      else (plan issue)
+        :Auto-reflect into plan;
+      endif
+    endif
+  repeat while (More rounds? (max 3)) is (yes)
+  -> verification passed;
+}
 
-:Map dependencies;
-:Generate implementation order and PlantUML graph;
+partition "Phase 2 — Implement + Test (max 3 cycles)" {
+  repeat
+    :Implement + write unit tests;
+    :Unit tests must pass;
+    :Run integration + smoke tests;
+    :Write test report;
+    if (Tests pass?) then (yes)
+      :Set status: complete;
+      stop
+    else (no)
+      if (Arch/usecase issue?) then (yes)
+        :Stop — notify user;
+        stop
+      else (plan issue)
+        :Update plan from report;
+      endif
+    endif
+  repeat while (More cycles? (max 3)) is (yes)
+  -> cycles exhausted;
+  :Stop — notify user with reports;
+}
 
-while (More unit details to fill?) is (yes)
-  :Define file mapping;
-  :Define test strategy;
-  :Define acceptance criteria;
-endwhile (no)
-
-:Derive Launch & Verify section;
-:Write checkpointed plan updates;
-
-if (Run risk assessment?) then (yes)
-  :Launch risk assessor;
-  :Reflect accepted risks into plan;
-endif
-
-:Show status and let user continue, iterate, or stop;
 stop
 @enduml
 ```
 
 ## Main Deliverables
 
-- Ordered implementation units (IUs)
-- Dependency graph + implementation order
-- Per-IU file mappings, tests, acceptance criteria
-- Launch & Verify section
-- Optional reflected risk assessment
+- Implementation plan (`.plan.md`) with IUs, dependency graph, test plan
+- Working code with passing unit tests
+- Integration + smoke test results
+- Review and test reports for traceability
 
-## Mode Split
+## File Structure
 
-- **First Design**: full flow from codebase exploration to risk assessment.
-- **Iteration**: inspect spec changes, unreflected reports, and backlog before editing the plan.
+```
+A4/<slug>.plan.md              — plan
+A4/<slug>.plan.history.md      — event log (append-only)
+A4/<slug>.plan.review-r<N>.md  — Phase 1 verification reports
+A4/<slug>.test-report.c<N>.md  — Phase 2 test reports
+```

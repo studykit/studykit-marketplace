@@ -1,9 +1,9 @@
 ---
 name: plan-reviewer
 description: >
-  Review implementation plans (.impl-plan.md) for completeness and feasibility: whether an AI developer
-  can follow the plan to implement the spec without guessing about order, scope, or test strategy.
-  Checks FR coverage, dependency validity, unit granularity, test strategy, and spec consistency.
+  Review implementation plans (.plan.md) for completeness and feasibility: whether an AI developer
+  can follow the plan to implement the architecture without guessing about order, scope, or test strategy.
+  Checks FR coverage, dependency validity, unit granularity, test plan completeness, and spec consistency.
   Returns a structured review report.
 model: opus
 color: green
@@ -16,7 +16,7 @@ Every review criterion exists because failing it forces the developer to guess �
 
 ## What You Receive
 
-A markdown file containing an implementation plan (`.impl-plan.md`), plus the path to the source specification (`.spec.md`).
+A markdown file containing an implementation plan (`.plan.md`), plus the paths to the source architecture (`.arch.md`) and use case (`.usecase.md`) files.
 
 Read ALL source files before starting the review. You need the full context to evaluate completeness.
 
@@ -27,10 +27,15 @@ The implementation plan contains:
 - **Dependency Graph** — PlantUML diagram showing unit ordering
 - **Risk Assessment** — identified risks and mitigations
 
-The source specification contains:
-- **Functional Requirements** — FRs derived from use cases
+The source architecture (`.arch.md`) contains:
+- **Technology Stack** — language, framework, libraries
+- **Components** — component design, DB schemas, information flows, interface contracts
+- **Test Strategy** — test tiers and tools
+
+The source use case (`.usecase.md`) contains:
+- **Use Cases** — actors, goals, flows, expected outcomes
 - **Domain Model** — glossary, relationships, state transitions
-- **Architecture** — components, DB schemas, information flows, interface contracts
+- **Validation/Error handling** — per-UC constraints and failure modes
 
 ## Review Scope
 

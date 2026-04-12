@@ -29,8 +29,8 @@ Glob for `A4/<slug>*` and check which files exist:
 | Use Cases | `<slug>.usecase.md` | think-usecase, auto-usecase |
 | Architecture | `<slug>.arch.md` | think-arch |
 | Scaffold | `<slug>.scaffold.md` | auto-scaffold |
-| Impl Plan | `<slug>.impl-plan.md` | think-plan, auto-plan |
-| Integration Report | `<slug>.integration-report.r*.md` | think-verify |
+| Plan | `<slug>.plan.md` | think-plan, auto-plan |
+| Test Report | `<slug>.test-report.c*.md` | think-plan |
 
 Also check for review reports and history files (e.g., `<slug>.usecase.review-report.md`).
 
@@ -57,9 +57,7 @@ Ask: **"What are you trying to do?"** and show the options:
 |-------|-------------|
 | `think-usecase` | Shape a vague idea into concrete Use Cases + Domain Model through dialogue |
 | `think-arch` | Design architecture — tech stack, components, interfaces, test strategy |
-| `think-plan` | Break an architecture into ordered, testable implementation units |
-| `think-code` | Execute the plan — implement code unit by unit |
-| `think-verify` | Launch the app and verify each UC works |
+| `think-plan` | Plan, implement, and test — autonomously iterate until tests pass |
 
 ### Pipeline (autonomous)
 | Skill | What it does |
@@ -91,17 +89,19 @@ Read each existing artifact file's **frontmatter and status sections only** (not
 - **Status** field (draft, in-review, final, etc.)
 - **Open Items** section — unresolved issues from reviews
 - **Source SHA** fields — whether upstream changes have propagated
-- **IU statuses** (from impl-plan) — TODO, IN_PROGRESS, DONE, BLOCKED, DEVIATED
+- **Plan status** (from plan) — draft, verified, implementing, complete, blocked
+- **Plan phase** — plan-review, implement, test
+- **Plan cycle** — current test cycle (1-3)
 
-If an integration report exists, read the **verdict summary table** and **issue list**.
+If test reports exist (`<slug>.test-report.c*.md`), read the **summary table** and **failure analysis**.
 
-If review reports exist (e.g., `<slug>.spec.review-report.md`), read their verdict (ACTIONABLE / NEEDS_REVISION).
+If review reports exist (e.g., `<slug>.plan.review-r*.md`), read their verdict (ACTIONABLE / NEEDS_REVISION).
 
 ### 3.2 Read implementation state
 
-If an impl-plan exists with IUs in DONE status:
+If a plan exists with `status: implementing` or `status: complete`:
 
-1. Read the plan's **file mappings** for completed IUs.
+1. Read the plan's **file mappings** for IUs.
 2. Check whether the mapped files actually exist (Glob).
 3. For files that exist, do a lightweight check — read the first 30 lines to confirm the file's purpose matches the IU's description (e.g., component name, exports, main function).
 
@@ -122,17 +122,12 @@ Use a simplified waterfall trace to locate where the issue is:
 - If no scaffold exists → recommend `auto-scaffold` to set up the dev environment.
 - If scaffold has failures → check if arch issues (recommend `think-arch`) or environment issues (report to user).
 
-**Layer 3 — Plan**: Is there a plan? Does it have open items, or IUs in BLOCKED/DEVIATED status? Does the source SHA match the arch?
-- If no plan exists → recommend `think-plan` to create one.
-- If plan has issues → recommend `think-plan` to iterate.
-
-**Layer 4 — Code**: Are there IUs still in TODO or IN_PROGRESS? Do completed IU file mappings match actual files?
-- If unfinished IUs → recommend `think-code` to continue.
-- If file mismatches → recommend `think-code` to re-execute affected IUs.
-
-**Layer 5 — Verification**: All IUs are DONE and files look aligned on paper.
-- If no integration report exists → recommend `think-verify`.
-- If integration report exists with failures → read the failure details and trace back to the responsible layer (usecase/arch/plan/code) using the report's own diagnosis.
+**Layer 3 — Plan + Implementation + Testing**: Is there a plan? What is its status?
+- If no plan exists → recommend `think-plan` to create and execute one.
+- If `status: blocked` → read the latest review or test report to understand why. Trace back to the responsible layer (arch/usecase).
+- If `status: draft` or `status: verified` → recommend `think-plan` to continue (implementation not started or not complete).
+- If `status: implementing` → check `phase` and `cycle` to determine progress. Recommend `think-plan` to resume.
+- If `status: complete` → check whether file mappings match actual files. If mismatches, recommend `think-plan` to re-run.
 
 ### 3.4 Present diagnosis
 
@@ -146,9 +141,7 @@ Report to the user in this format:
 | Use Cases | <slug>.usecase.md | <status summary> |
 | Architecture | <slug>.arch.md | <status summary or "not yet created"> |
 | Scaffold | <slug>.scaffold.md | <status summary or "not yet run"> |
-| Plan | <slug>.impl-plan.md | <status summary or "not yet created"> |
-| Code | <N/M IUs done> | <summary> |
-| Verification | <slug>.integration-report.r*.md | <status summary or "not yet run"> |
+| Plan | <slug>.plan.md | <status, phase, cycle — or "not yet created"> |
 
 ## Diagnosis
 

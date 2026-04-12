@@ -62,7 +62,8 @@ Check for report files not listed in `reflected_files`:
 - `A4/<topic-slug>.arch.review-*.md` (review reports)
 - `A4/<topic-slug>.scaffold.md` (scaffold reports — issues where `Stage: arch`)
 - `A4/<topic-slug>.integration-report.r*.md` (integration reports — issues where `Stage: arch`)
-- `A4/<topic-slug>.impl-plan.md` (check for IUs with Deviation Notes that trace back to architecture)
+- `A4/<topic-slug>.plan.md` (check for blocked status with arch-level issues)
+- `A4/<topic-slug>.test-report.c*.md` (check for failures diagnosed as arch-level)
 
 For integration reports, prioritize issues where the diagnosis stage is **arch**. For plan deviations, read the Deviation Note to determine if the root cause is an architecture assumption that doesn't hold.
 

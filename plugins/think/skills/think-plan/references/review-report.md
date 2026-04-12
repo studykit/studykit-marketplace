@@ -4,21 +4,18 @@ After each `plan-reviewer` invocation, the reviewer agent writes the report dire
 
 ## File Path
 
-`A4/<topic-slug>.impl-plan.review-<label>.md`
+`A4/<topic-slug>.plan.review-r<N>.md`
 
-Where `<label>` identifies the review context:
-- **Phase review:** use the scope (e.g., `review-coverage-1`, `review-feasibility-1`)
-- **Full review (End Iteration):** use the revision number (e.g., `review-full-1`, `review-full-2`)
-- **Final review (Finalize):** use `review-final`
+Where `<N>` is the review round number (1, 2, 3).
 
 ## Frontmatter
 
 ```markdown
 ---
 type: review-report
-source: <topic-slug>.impl-plan.md
-scope: <Coverage | Feasibility | Full>
-revision: <current revision number>
+source: <topic-slug>.plan.md
+round: <N>
+revision: <plan revision at time of review>
 reviewed: <YYYY-MM-DD HH:mm>
 ---
 ```
@@ -31,5 +28,4 @@ Write the reviewer's full report as-is below the frontmatter — do not summariz
 
 - Preserves the review trail for auditing across iterations
 - Enables resume after interruption: read existing reports to understand what was already flagged and fixed
-- Allows comparison of review quality across iterations
-- Provides context to fresh subagent invocations via file path passing
+- Tracks which reports have been reflected via the plan's `reflected_files` frontmatter
