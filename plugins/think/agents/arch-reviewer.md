@@ -87,7 +87,7 @@ Verdict per item: `OK` | `NO CONTRACT` (boundary has flow but no contract) | `IN
 - Does it cover at least the unit tier?
 - For each tier: is the tool named with version constraint? Is the rationale clear?
 - Are there architecture layers (e.g., webview, extension host) that no test tier covers?
-- Are there special setup requirements noted for auto-scaffold?
+- Are there special setup requirements noted for auto-bootstrap?
 
 Verdict per item: `OK` | `MISSING TIER` (architecture layer has no test coverage) | `UNVERIFIED TOOL` (tool compatibility not confirmed) | `NO SETUP NOTES` (tool requires special setup but none documented)
 

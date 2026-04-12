@@ -62,14 +62,13 @@ tested: <YYYY-MM-DD HH:mm>
 
 ### Failure Analysis
 
-For each failure:
+For each failure, record **facts only** — do not classify as plan/arch/usecase. Diagnosis is performed by think-plan after reading this report.
 
 #### <test name>
 - **Error:** <error message or behavior>
 - **Expected:** <what should have happened>
-- **Diagnosis:** <plan | arch | usecase>
-- **Root cause:** <specific issue — e.g., "IU-3 missing DB connection config" or "arch component contract incorrect">
-- **Suggested fix:** <what to change in the plan, arch, or usecase>
+- **Root cause:** <what the subagent identified as the issue — e.g., "DB connection config missing", "API endpoint returns 404", "component contract mismatch">
+- **Attempted fixes:** <what was tried and why it didn't resolve the issue>
 
 ### Summary
 
@@ -80,12 +79,13 @@ For each failure:
 | Smoke | <n> | <n> | <n> |
 
 **Overall:** PASS | FAIL
-**Diagnosis breakdown:** <N> plan issues, <N> arch issues, <N> usecase issues
 ```
 
-## Diagnosis Categories
+## Diagnosis
 
-Each failure must be classified into one of:
+Diagnosis classification (plan / arch / usecase) is **not performed by the subagent**. The subagent records factual results only — what failed, what error occurred, what was tried.
+
+think-plan reads this report and classifies each failure using its knowledge of the architecture and plan context:
 
 - **plan** — the implementation plan has incorrect or missing information (wrong file mapping, missing dependency, incomplete test strategy). Fix by updating the plan.
 - **arch** — the architecture document has an issue (incorrect contract, missing component interaction, wrong tech choice). Cannot fix in the plan — requires upstream arch update.
@@ -93,7 +93,7 @@ Each failure must be classified into one of:
 
 ## Purpose
 
-- Provides structured failure analysis for automated plan updates
+- Provides factual failure records for think-plan to analyze and classify
 - Enables diagnosis-based routing: plan issues are auto-fixed, arch/usecase issues stop the pipeline
 - Preserves the testing trail across cycles
 - Tracks which reports have been reflected via the plan's `reflected_files` frontmatter

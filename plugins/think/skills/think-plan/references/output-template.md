@@ -9,7 +9,6 @@
 ```yaml
 ---
 type: plan
-pipeline: co-think
 topic: "<topic>"
 revision: 0
 status: draft | verified | implementing | complete | blocked

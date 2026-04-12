@@ -70,7 +70,7 @@ Read the use case file (`.usecase.md`, from arch frontmatter `sources`). Extract
 - Domain model terms
 - NFRs (if any)
 
-Check for a scaffold report (`A4/<topic-slug>.scaffold.md`):
+Check for a bootstrap report (`A4/<topic-slug>.bootstrap.md`):
 - If present → read it. Extract verified build, run, and test commands. These are used directly in Launch & Verify (Step 5) instead of auto-detection.
 - If absent → proceed without it (Step 5 will auto-detect).
 
@@ -110,14 +110,14 @@ Analyze inter-unit dependencies:
 
 Fill the **Launch & Verify** section.
 
-**If a scaffold report exists** (from Step 2): use its verified commands directly for build command, launch command, and test runner commands. These are tested and known to work.
+**If a bootstrap report exists** (from Step 2): use its verified commands directly for build command, launch command, and test runner commands. These are tested and known to work.
 
-**If no scaffold report exists**: auto-detect values from the arch's Technology Stack and codebase findings from Step 2. Read `${CLAUDE_SKILL_DIR}/../think-plan/references/planning-guide.md` → "Launch & Verify Derivation" for the detection procedure.
+**If no bootstrap report exists**: auto-detect values from the arch's Technology Stack and codebase findings from Step 2. Read `${CLAUDE_SKILL_DIR}/../think-plan/references/planning-guide.md` → "Launch & Verify Derivation" for the detection procedure.
 
 For each field:
 1. **App type** — detect from dependencies and project structure
-2. **Build command** — from scaffold report or detect from package scripts, Makefile, or build config
-3. **Launch command** — from scaffold report or detect from package scripts, launch.json, or framework conventions
+2. **Build command** — from bootstrap report or detect from package scripts, Makefile, or build config
+3. **Launch command** — from bootstrap report or detect from package scripts, launch.json, or framework conventions
 4. **Launch URL/view** — derive from app type
 5. **Smoke scenario** — identify the single most basic user interaction from the UCs
 

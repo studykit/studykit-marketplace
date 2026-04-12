@@ -1,129 +1,89 @@
 # auto-usecase
 
-Autonomously generate a complete `.usecase.md` file from raw input without human interaction.
+Autonomously generates a complete Use Case document from an idea or brainstorm input — no human interaction. Runs research, composes, reviews, and expands through iterative growth loops.
 
 ## Workflow
 
 ```plantuml
-@startuml auto-usecase-workflow
+@startuml
 title auto-usecase Workflow
-skinparam activityFontSize 12
 
 start
 
-:Step 1: Understand Input;
-note right
-  Determine topic slug,
-  identify target system (if any)
-end note
+partition "Step 1: Understand Input" {
+  :Parse input
+  (idea, file path, or description);
+  :Determine topic slug;
+  if (Output file exists?) then (yes)
+    :Resume Detection
+    (check research, code analysis,
+    last_step, reflected_files);
+  else (no)
+  endif
+}
 
-partition "Step 2: Research and Analysis" {
+partition "Step 2: Research & Analysis" {
   fork
-    :Step 2a: Research similar systems;
-    note right
-      Skip if listed in
-      frontmatter reflected_files
-    end note
+    :2a: Research Similar Systems
+    (launch research agent,
+    search comparable products,
+    identify UC candidates);
   fork again
-    :Step 2b: Analyze source code;
-    note left
-      Skip if no source code
-      referenced, or listed
-      in frontmatter reflected_files
-    end note
+    if (Source code referenced?) then (yes)
+      :2b: Analyze Source Code
+      (launch code analysis agent,
+      extract features and actors);
+    else (no)
+    endif
   end fork
 }
 
-partition "Step 3: Compose and Refine Loop" {
+partition "Step 3: Compose & Refine" {
+  repeat :Growth Iteration;
 
-  while (Growth iteration <= 3?) is (continue)
+    :3a: Compose
+    (launch usecase-composer agent);
 
-    partition "3a: Compose" #LightBlue {
-      :Launch **composer** subagent;
-      note right: reflected_files updated\nin frontmatter
-    }
+    :3b: Verify & Commit;
 
-    :3b: Verify and **commit**;
-
-    partition "3c: Quality Loop (max 3)" #LightGreen {
-      while (Quality round <= 3?) is (continue)
-        :Launch **reviewer** subagent;
-
-        if (All UCs PASS\n+ no Actor issues?) then (PASS)
-          :**commit** review report;
+    partition "3c: Quality Loop (inner)" {
+      repeat
+        :Launch usecase-reviewer agent;
+        if (Verdict?) then (ALL_PASS)
+          :Commit review report;
           break
-        else (NEEDS REVISION)
-          :Launch **reviser** subagent;
-          :**commit** review report\n+ revised document;
+        else (NEEDS_REVISION)
+          :Launch usecase-reviser agent;
+          :Commit revised document;
         endif
-      endwhile (max reached)
-      :Remaining issues\n-> Open Questions;
+      backward :Next quality round;
+      repeat while (Round <= 3?) is (yes) ->max reached;
     }
 
-    partition "3d: Growth Check" #LightYellow {
-      if (System Completeness?) then (INCOMPLETE)
-        :UC Candidates\nfrom reviewer;
+    partition "3d: Growth Check (outer)" {
+      if (System completeness?) then (INCOMPLETE)
+        :Pass UC Candidates
+        back to compose;
       else (SUFFICIENT)
-        :Launch **explorer** subagent;
-        :**commit** exploration report;
-
+        :Launch usecase-explorer agent;
         if (UC Candidates found?) then (yes)
-          :UC Candidates\nfrom explorer;
+          :Pass candidates
+          back to compose;
         else (no)
           break
         endif
       endif
     }
 
-  endwhile (max reached)
-  :Remaining gaps\n-> Open Questions;
+  backward :Next growth iteration;
+  repeat while (Iteration <= 3?) is (yes) ->max reached;
 }
 
-:Final Output;
-note right
-  Report: file path, UC count,
-  exclusions, research summary,
-  growth/review rounds,
-  completeness status,
-  UCs passed (M/N)
-end note
+:Report results
+(UCs generated, coverage,
+growth iterations, review status);
 
 stop
 
 @enduml
 ```
-
-## Agents
-
-| Agent | Lifecycle | Role |
-|-------|-----------|------|
-| **usecase-composer** | Subagent (per invocation) | Compose UC document from input + research |
-| **usecase-reviewer** | Subagent (per invocation) | Review UC quality + system completeness |
-| **usecase-reviser** | Subagent (per invocation) | Fix issues flagged by reviewer |
-| **usecase-explorer** | Subagent (per invocation) | Explore new perspectives for UC candidates |
-
-## Loop Structure
-
-- **Growth Loop** (outer, max 3): Compose → Quality → Growth Check
-- **Quality Loop** (inner, max 3): Review → Revise until PASS
-- **Growth Check**: System Completeness first, then Perspective Exploration
-
-## Commit Points
-
-| Timing | Contents |
-|--------|----------|
-| After compose (3b) | UC document |
-| After each quality round (3c) | Review report (+ revised document if NEEDS REVISION) |
-| After exploration (3d) | Exploration report |
-
-## File Naming
-
-| File | Pattern |
-|------|---------|
-| UC document | `<topic-slug>.usecase.md` |
-| Research report | `<topic-slug>.usecase.research-initial.md` |
-| Code analysis report | `<topic-slug>.usecase.code-analysis.md` |
-| Review report | `<topic-slug>.usecase.review-g<iteration>-q<round>.md` |
-| Exploration report | `<topic-slug>.usecase.exploration-<iteration>.md` |
-
-All files under `A4/`.

@@ -74,33 +74,62 @@ When the working file already exists, this is a returning session to refine the 
 
 ### Session Task List
 
-At the start of the session (both New Session and Iteration), create a task list showing the major phases so the user can track progress. Mark each phase as `in_progress` when entering it and `completed` when done.
+Use the task list as a live workflow map. The user should be able to check the task list at any point and understand exactly where they are and what remains.
 
-**New Session tasks:**
-- `"Receive idea and create file"` → `in_progress`
-- `"Discover use cases"` → `pending`
+**Naming convention:** Phase-level tasks use the phase name. Sub-tasks use `<phase prefix>: <detail>` format. Sub-tasks are created **dynamically** when entering a phase — not all upfront.
+
+**Task lifecycle:**
+- Mark phase-level task `in_progress` when entering the phase.
+- Create sub-tasks as work items are identified within the phase.
+- Mark sub-tasks `completed` as each is confirmed.
+- Mark phase-level task `completed` when all sub-tasks are done.
+- If the user navigates back to a completed phase, set it back to `in_progress`.
+
+**New Session** — create phase-level tasks at session start:
+- `"Step 1: Receive idea and create file"` → `in_progress`
+- `"Discovery: Use cases"` → `pending`
 - `"Platform capabilities audit"` → `pending`
-- `"Domain model extraction"` → `pending`
-- `"Wrap up"` → `pending`
+- `"Domain model: Concept extraction"` → `pending`
+- `"Domain model: Relationship mapping"` → `pending`
+- `"Domain model: State transitions"` → `pending`
+- `"Wrap Up: Explorer review"` → `pending`
+- `"Wrap Up: Reviewer validation"` → `pending`
+- `"Wrap Up: Record open items & commit"` → `pending`
 
-**Iteration tasks** (adjust based on the work backlog):
+**Iteration** — adjust based on the work backlog:
 - `"Review open items and backlog"` → `in_progress`
-- `"Address selected items"` → `pending`
-- `"Wrap up"` → `pending`
+- One task per selected item (e.g., `"Revise UC-3: Update error handling"`)
+- `"Wrap Up: Explorer review"` → `pending`
+- `"Wrap Up: Reviewer validation"` → `pending`
+- `"Wrap Up: Record open items & commit"` → `pending`
 
-Add conditional tasks as they become relevant during the session:
+**Conditional tasks** — add when they become relevant:
+- `"Discovery: Relationship analysis"` — when 5+ UCs are confirmed
 - `"UI screen grouping"` — when UI use cases are confirmed
 - `"Mock generation"` — when the user agrees to create mocks
 - `"Non-functional requirements"` — when the user has NFRs to capture
-- `"Relationship analysis"` — when 5+ UCs are confirmed
 
-Update task status as you move through phases. This gives the user a live overview without having to ask.
+**Dynamic sub-task examples:**
+
+Discovery — per confirmed UC:
+- `"Discovery: UC-1 Share meeting summary"`
+- `"Discovery: UC-2 Search history"`
+- `"Discovery: UC-3 Export transcript"`
+
+Platform capabilities audit — per identified gap:
+- `"Platform audit: Message input and sending"`
+- `"Platform audit: Conversation display with streaming"`
+
+Domain model — per confirmed concept or relationship:
+- `"Domain model: Concept — Session"`
+- `"Domain model: Concept — Message"`
+- `"Domain model: Relationship — Session contains Messages"`
 
 ### 1. Receive the Idea
 
 Take the user's input — it may be a raw idea, a brainstorming output, or a vague description. Restate the idea back in one sentence to confirm understanding.
 
-**Then immediately create the working file** as described in Progressive File Writing above. Mark "Receive idea and create file" as `completed`. Mark "Discover use cases" as `in_progress`.
+**Then immediately create the working file** as described in Progressive File Writing above. Mark "Step 1: Receive idea and create file" as `completed`. Mark "Discovery: Use cases" as `in_progress`.
 
 ### 2. Discovery Loop
 
@@ -166,7 +195,7 @@ After 5 or more use cases have been confirmed, analyze and present the relations
 
 ### 8. Platform Capabilities Audit
 
-Mark "Discover use cases" as `completed`. Mark "Platform capabilities audit" as `in_progress`.
+Mark "Discovery: Use cases" as `completed`. Mark "Platform capabilities audit" as `in_progress`.
 
 After all UC-derived use cases are confirmed, perform a final audit for implicit platform capabilities — shared behaviors that multiple UCs assume but no UC defines.
 
@@ -225,7 +254,7 @@ Ask the user once whether NFRs should constrain implementation:
 
 ### 12. Domain Model Extraction
 
-Mark "Platform capabilities audit" as `completed` (if it was the previous phase). Mark "Domain model extraction" as `in_progress`.
+Mark "Platform capabilities audit" as `completed` (if it was the previous phase). Mark "Domain model: Concept extraction" as `in_progress`.
 
 After UCs are substantially complete (including platform capabilities and precision), extract domain concepts through cross-cutting analysis. This produces the shared vocabulary that architecture and implementation will use.
 

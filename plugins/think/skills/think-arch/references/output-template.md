@@ -9,7 +9,6 @@
 ```yaml
 ---
 type: arch
-pipeline: co-think
 topic: "<topic>"
 created: <YYYY-MM-DD HH:mm>
 revised: <YYYY-MM-DD HH:mm>

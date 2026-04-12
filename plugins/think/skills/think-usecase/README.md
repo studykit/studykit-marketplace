@@ -1,79 +1,127 @@
 # think-usecase
 
-Collaboratively turn an idea into concrete use cases through an interview-driven workflow.
+A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. Progressively produces Use Cases — concrete descriptions of how users interact with the system, grounded in real situations.
 
 ## Workflow
 
 ```plantuml
-@startuml think-usecase-workflow
+@startuml
 title think-usecase Workflow
-skinparam activityFontSize 12
 
 start
-:Resolve input and working file;
-if (Existing .usecase.md?) then (yes)
-  :Run iteration entry checks;
-else (no)
-  :Create draft working file;
-endif
 
-while (User wants to continue?) is (yes)
-  :Discovery loop;
-  note right
-    Ask about current situation,
-    actors, desired change,
-    and success outcome
-  end note
+partition "Session Start" {
+  if (Existing .usecase.md?) then (yes)
+    :Iteration Mode
+    (entry checks: unreflected reports,
+    source changes, work backlog);
+  else (no)
+    :New Session;
+    :Receive and restate idea;
+    :Create working file;
+  endif
+}
 
-  if (Enough detail for a UC?) then (yes)
-    :Draft use case;
-    :Confirm / revise with user;
-    :Track confirmed UC via task;
+partition "Discovery Loop" {
+  repeat
+    :Target gaps:
+    What's happening now?
+    Who's involved?
+    What should change?
+    What does success look like?;
 
-    if (Checkpoint triggered?) then (yes)
-      :Write working file update;
-      :Update actors / context / diagram;
+    :Discover actors
+    (person/system, role);
+
+    partition "UC Extraction" {
+      :Draft UC when context sufficient
+      (Actor, Goal, Situation,
+      Flow, Expected Outcome);
+      :Present to user for confirmation;
+      :Drill into precision
+      (validation, error handling,
+      boundary conditions);
+      :Track via task;
+    }
+
+    :Check for UC splitting
+    (too large?);
+
+    if (Every 3 confirmed UCs) then (checkpoint)
+      :Batch-write to file;
+    else (continue)
     endif
 
-    if (UC too large?) then (yes)
-      :Split into smaller UCs;
+    if (Sustained one direction?) then (yes)
+      :Challenge mode shift
+      (Contrarian / Simplifier / Reframer);
+    else (no)
     endif
-  endif
 
-  if (5+ UCs confirmed?) then (yes)
-    :Analyze UC relationships;
-  endif
+    if (3+ UCs and user agrees?) then (yes)
+      :Similar Systems Research
+      (background agent);
+    else (no)
+    endif
 
-  if (User requested research?) then (yes)
-    :Run similar-systems research;
-  endif
-endwhile (no)
+    if (5+ UCs confirmed?) then (yes)
+      :Relationship Analysis
+      (dependency, reinforcement, groups);
+    else (no)
+    endif
 
-:Choose end iteration or finalize;
-:Run reviewer;
-if (User chose exploration?) then (yes)
-  :Run explorer;
-endif
-if (Finalize?) then (yes)
-  :Finalize file and create issues;
-else (no)
-  :Append session close and next steps;
-endif
+  repeat while (User continues?) is (yes) ->done;
+}
+
+partition "Platform Capabilities Audit" {
+  :Scan UC flows for
+  implicit shared behaviors;
+  :Present assumed capabilities;
+  :Create UCs for confirmed gaps;
+}
+
+partition "UI Screen Grouping" {
+  if (UI use cases exist?) then (yes)
+    :Group UCs by screen/view;
+    :Define screen navigation;
+    if (User wants mocks?) then (yes)
+      :Mock Generation
+      (per screen group via agent);
+    else (no)
+    endif
+  else (no)
+  endif
+}
+
+partition "Non-Functional Requirements" {
+  if (User has NFRs?) then (yes)
+    :Capture NFRs with
+    affected UCs and criteria;
+  else (no)
+  endif
+}
+
+partition "Domain Model Extraction" {
+  :Concept Extraction
+  (entities across UCs);
+  :Relationship Mapping
+  (PlantUML class diagram);
+  :State Transition Analysis
+  (PlantUML state diagram);
+}
+
+partition "Wrap Up" {
+  :Launch usecase-explorer agent;
+  :Reflect accepted candidates;
+  :Launch usecase-reviewer agent;
+  :Walk through findings;
+  :Update working file;
+  :Append session close to history;
+  :Suggest next step:
+  think-arch;
+}
+
 stop
+
 @enduml
 ```
-
-## Core Flow
-
-1. Resolve or create the `.usecase.md` working file.
-2. Interview the user to uncover scenarios, actors, desired behavior, and outcomes.
-3. Convert concrete scenarios into confirmed use cases.
-4. Write checkpoint updates instead of rewriting on every turn.
-5. Review at the end of the session, then optionally explore gaps or finalize.
-
-## Key Side Flows
-
-- **Iteration mode**: resume from an existing `.usecase.md` with entry checks.
-- **Use case splitting**: break oversized UCs into smaller independent value slices.
-- **Research**: only on request or explicit agreement.
-- **Review / exploration**: reviewer first, explorer only if the user chooses it.

@@ -3,7 +3,6 @@
 ```markdown
 ---
 type: decide
-pipeline: spark
 topic: "<topic>"
 date: <YYYY-MM-DD>
 status: final

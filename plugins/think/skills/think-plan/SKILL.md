@@ -19,7 +19,7 @@ If no argument is provided, ask the user for a slug, filename, or path.
 
 Arguments can be full paths, partial filenames, or slugs. Resolve by searching `A4/`:
 
-1. **Full path** — use directly
+1. **Full path** — extract the slug from the filename (e.g., `A4/chat-app.arch.md` → `chat-app`), then scan for related files: `A4/*<slug>*.arch.md` and `A4/*<slug>*.plan.md`
 2. **Partial match** — glob for `A4/*<argument>*.arch.md` and `A4/*<argument>*.plan.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
@@ -36,7 +36,7 @@ When an existing `.plan.md` is found:
 2. **Source change detection** — compare `sources` SHA against current files (`git hash-object`). If changed, assess scope:
    - Minor changes → resume from current phase, incorporating changes
    - Major changes (tech stack, architecture restructuring) → restart from Phase 1
-3. **Scaffold staleness** — if a scaffold report exists, compare its source arch SHA against the current arch file. If the arch changed after scaffold was generated, warn the user that scaffold commands may be outdated and suggest re-running `auto-scaffold`.
+3. **Bootstrap staleness** — if a bootstrap report exists, compare its source arch SHA against the current arch file. If the arch changed after the bootstrap was generated, warn the user that bootstrap commands may be outdated and suggest re-running `auto-bootstrap`.
 4. **Check unreflected reports** — compare existing report files against `reflected_files`. Read any unreflected reports and reflect them before continuing.
 5. Continue from the recorded phase/cycle.
 
@@ -52,9 +52,9 @@ Read the `.arch.md` and `.usecase.md` thoroughly. Extract:
 - Domain model, external dependencies
 - Test strategy tiers
 
-Check for a scaffold report (`A4/<slug>.scaffold.md`):
+Check for a bootstrap report (`A4/<slug>.bootstrap.md`):
 - If present → read it. Extract verified build, run, and test commands. These are used directly in Launch & Verify (Step 3) instead of auto-detection. Also note any issues with `Stage: arch` — these may indicate architecture assumptions that don't hold.
-- If absent → proceed without it. Suggest running `auto-scaffold` first, but continue if the user chooses not to.
+- If absent → proceed without it. Suggest running `auto-bootstrap` first, but continue if the user chooses not to.
 
 ### Step 2: Explore Codebase
 
@@ -66,8 +66,13 @@ Enter plan mode. Generate the implementation plan covering:
 - Implementation strategy (component-first / feature-first / hybrid) — read `${CLAUDE_SKILL_DIR}/references/planning-guide.md` for guidance
 - Implementation units with descriptions, file mappings, dependencies
 - Dependency graph and implementation order
-- Test plan: unit tests per IU + project-level integration and smoke tests
-- Launch & Verify configuration — if a scaffold report exists, use its verified commands directly for build, launch, and test runner commands; otherwise, auto-detect per planning guide
+- Test plan:
+  - **Test file convention** — directory structure, naming pattern, co-location rules (derive from bootstrap report or existing codebase)
+  - **Integration test cases** — which component interactions to verify, scenario description, expected outcome, test file path
+  - **Smoke test cases** — which UC critical paths to verify end-to-end, scenario steps, expected outcome, test file path
+  - Unit test content is not specified — IU subagents decide what to test based on the code they implement
+- IU file mappings must include both source files and unit test file paths (following the test file convention)
+- Launch & Verify configuration — if a bootstrap report exists, use its verified commands directly for build, launch, and test runner commands; otherwise, auto-detect per planning guide
 
 Exit plan mode. Write the plan to `A4/<slug>.plan.md` per `${CLAUDE_SKILL_DIR}/references/output-template.md`.
 
@@ -106,43 +111,121 @@ After verification passes:
 
 ## Phase 2 — Implement + Test Loop (max 3 cycles)
 
-### Step 5: Implement + Unit Test
+Implementation is delegated to subagents on a per-IU basis. Each subagent runs in a fresh context and receives only its assigned IU details. think-plan orchestrates the execution order, tracks progress, and manages the cycle loop.
 
-Implement the plan following the implementation order from the dependency graph:
+### IU Status Tracking
 
-- Write code per IU file mappings and descriptions
-- Write unit tests per IU test strategy
-- **All unit tests must pass** before proceeding to Step 6
+Each IU in `.plan.md` has a status field:
 
-Unit test failures are resolved within this step — they do not consume cycle count.
+| Status | Meaning |
+|--------|---------|
+| `pending` | Not yet assigned |
+| `implementing` | Assigned to a subagent |
+| `done` | Implemented + unit tests pass |
+| `failed` | Implementation or unit test failed |
 
-**Commit:** code + unit tests
+think-plan updates IU statuses in `.plan.md` as subagents complete their work.
+
+### Step 5: IU Implementation
+
+Execute IUs following the dependency graph:
+
+1. **Identify ready IUs** — IUs whose dependencies are all `done` and whose own status is `pending` (or `failed` in a retry cycle).
+2. **Spawn subagents** — one per ready IU, using `model: "sonnet"`. Independent IUs can run in parallel.
+
+Each subagent receives:
+- The specific IU details (description, file mappings, acceptance criteria)
+- Relevant interface contracts from the plan (contracts the IU consumes or provides)
+
+The subagent:
+1. Implements code per the IU description and file mappings
+2. Writes unit tests for the code it implemented
+3. **All unit tests must pass** before returning
+4. Commits: code + unit tests
+5. Returns: result (pass/fail), summary of what was implemented, any issues encountered
+
+```
+Agent(model: "sonnet", prompt: """
+IU: <IU identifier and title>
+Description: <IU description from plan>
+Source files: <list of source files to create/modify>
+Test files: <list of unit test file paths>
+Acceptance criteria: <from plan>
+Interface contracts: <relevant contracts this IU consumes or provides>
+
+Implement this IU and write unit tests. All unit tests must pass.
+
+Rules:
+- Implement only this IU — do not modify files outside the listed source and test files
+- Write unit tests in the specified test file paths
+- Commit code + unit tests
+- Return: result (pass/fail), summary of changes, issues encountered
+- Record factual results only — do not classify issues as plan/arch/usecase
+""")
+```
+
+3. **Track progress** — as each subagent completes:
+   - Pass → set IU status to `done`, identify next ready IUs, spawn their subagents
+   - Fail → set IU status to `failed`, record the failure summary. Continue with other independent IUs.
+
+4. **Checkpoint** — after every 3 completed IUs, update `.plan.md` with current statuses and commit.
 
 ### Step 6: Integration + Smoke Test
 
+After all IUs are `done` (or after handling failures), run integration and smoke tests:
+
+1. **Spawn a test subagent** (`model: "sonnet"`) with the plan's test plan section and Launch & Verify config.
+2. The subagent runs integration and smoke tests, writes results to `A4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
+3. The subagent records **factual results only** — no diagnosis classification.
+4. **Commit:** test report
+
+```
+Agent(model: "sonnet", prompt: """
+Plan file: <absolute path to .plan.md>
+
 Run integration and smoke tests as defined in the plan's test plan section.
+Write the test report to A4/<slug>.test-report.c<N>.md per the template
+in references/test-report.md.
 
-Write results to `A4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
-
-**Commit:** test report + history entry
+Rules:
+- Use the Launch & Verify config from the plan for build/run/test commands
+- Record factual results only — do not classify failures as plan/arch/usecase
+- Commit the test report
+""")
+```
 
 ### Step 7: Analyze Results
 
-If all tests pass:
+Read the test report and IU failure summaries.
+
+**If all IUs are `done` and all integration/smoke tests pass:**
 - Set `status: complete`
 - **Commit:** updated plan + history entry
 - Report success to user. Done.
 
-If tests fail — read the report and analyze each failure:
-- **Plan issues** → update the plan to address the failures. Add report to `reflected_files`. Increment `revision`. Increment `cycle`. Go to Step 5.
-- **Arch/usecase issues** → **stop**. Set `status: blocked`. Report to user with specific issues and which upstream document needs updating.
+**If there are failures** — classify each failure using the plan and arch context from Phase 1:
 
-**Commit:** updated plan + history entry
+1. **Identify failures** — from IU failure summaries and/or the test report.
+2. **Classify** — determine whether the root cause is plan, arch, or usecase:
+   - **Arch/usecase issues** → **stop**. Set `status: blocked`. Report to user with specific issues and which upstream document needs updating. **Commit:** updated plan + history entry.
 
-If cycle 3 exhausted with failures:
+3. **Plan issues — autonomous plan revision:**
+   a. Identify affected IUs from the failure root causes
+   b. Revise affected IUs — update descriptions, file mappings, dependencies, or acceptance criteria as needed
+   c. Check for ripple effects — if a revised IU is a dependency of other IUs (per dependency graph), verify those IUs still hold
+   d. Reset affected IU statuses to `pending`. Dependent IUs that need re-implementation also reset to `pending`.
+   e. Add test report to `reflected_files`. Increment `revision`.
+   f. **Commit:** updated plan + history entry
+
+4. **Verify revised plan** — spawn `plan-reviewer` agent with the updated plan. If the reviewer finds:
+   - **Plan-level issues** → fix and re-verify (max 2 rounds within this step)
+   - **Arch/usecase issues** → **stop**. Set `status: blocked`. Report to user.
+   - **No issues** → increment `cycle`. Go to Step 5 (only `pending` IUs are re-implemented).
+
+**If cycle 3 exhausted with failures:**
 - Set `status: blocked`
 - **Commit:** updated plan + history entry
-- Report to user: current state, all test reports, and remaining failures.
+- Report to user: current state, all test reports, IU statuses, and remaining failures.
 
 ---
 
@@ -162,7 +245,6 @@ A4/<slug>.test-report.c2.md    — Phase 2 test report (cycle 2)
 ```yaml
 ---
 type: plan
-pipeline: co-think
 topic: "<topic>"
 revision: 1
 status: draft | verified | implementing | complete | blocked
@@ -200,16 +282,20 @@ Append-only event log in `A4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/r
 | Plan initial creation | plan + history |
 | Review reflection | report + updated plan + history |
 | Verification passed | updated plan + history |
-| Implementation + unit test pass | code + tests |
-| Test report written | report + history |
-| Test reflection + plan update | updated plan + history |
+| IU subagent: code + unit tests | code + tests (by subagent, per IU) |
+| IU progress checkpoint | updated plan (every 3 IUs) |
+| Test subagent: integration/smoke report | report (by subagent) |
+| Test analysis + plan revision | updated plan + history |
+| Plan revision review | report + updated plan + history |
 | Final pass or blocked | updated plan + history |
 
 ## Agent Usage
 
-Always spawn fresh agents — context is passed via file paths, not agent memory.
+Always spawn fresh agents — context is passed via file paths or inline details, not agent memory.
 
 - **`plan-reviewer`** — launch via `Agent(subagent_type: "plan-reviewer")`. Pass plan file path, arch file path, usecase file path, and report output path.
+- **IU implementation subagent** — launch via `Agent(model: "sonnet")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts). Implements one IU + unit tests. Returns result summary. Independent IUs can be spawned in parallel.
+- **Test subagent** — launch via `Agent(model: "sonnet")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Does not classify failures.
 
 ## Output Format
 

@@ -17,7 +17,7 @@ Determine the user's situation by checking for existing pipeline artifacts.
 
 ### 1.1 Resolve topic
 
-- If `$ARGUMENTS` is a file path or topic slug: extract the topic slug (e.g., `my-app` from `A4/my-app.spec.md` or from the literal `my-app`).
+- If `$ARGUMENTS` is a file path or topic slug: extract the topic slug (e.g., `my-app` from `A4/my-app.usecase.md` or from the literal `my-app`).
 - If `$ARGUMENTS` is empty or a free-text description: skip to **Step 2** (Fresh Start).
 
 ### 1.2 Scan artifacts
@@ -28,11 +28,11 @@ Glob for `A4/<slug>*` and check which files exist:
 |----------|-------------|-------------|
 | Use Cases | `<slug>.usecase.md` | think-usecase, auto-usecase |
 | Architecture | `<slug>.arch.md` | think-arch |
-| Scaffold | `<slug>.scaffold.md` | auto-scaffold |
+| Bootstrap | `<slug>.bootstrap.md` | auto-bootstrap |
 | Plan | `<slug>.plan.md` | think-plan, auto-plan |
 | Test Report | `<slug>.test-report.c*.md` | think-plan |
 
-Also check for review reports and history files (e.g., `<slug>.usecase.review-*.md`, `<slug>.arch.review-*.md`, `<slug>.plan.review-*.md`).
+Also check for review reports and archived bootstrap reports (e.g., `<slug>.usecase.review-*.md`, `<slug>.arch.review-*.md`, `<slug>.plan.review-*.md`, `<slug>.bootstrap.r*.md`).
 
 If **no artifacts found** for the slug: skip to **Step 2** (Fresh Start), treating the argument as a topic description.
 
@@ -63,7 +63,7 @@ Ask: **"What are you trying to do?"** and show the options:
 | Skill | What it does |
 |-------|-------------|
 | `auto-usecase` | Auto-generate use cases without interview |
-| `auto-scaffold` | Set up project structure, dependencies, build, and test infrastructure |
+| `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
 | `auto-plan` | Auto-generate impl plan without interview |
 
 ### Standalone
@@ -118,9 +118,9 @@ Use a simplified waterfall trace to locate where the issue is:
 - If no arch exists → recommend `think-arch` to create one.
 - If arch has issues → recommend `think-arch` to iterate.
 
-**Layer 2.5 — Scaffold**: Is there a scaffold report? Does it show all checks passing? Is it current with the arch file?
-- If no scaffold exists → recommend `auto-scaffold` to set up the dev environment.
-- If scaffold has failures → check if arch issues (recommend `think-arch`) or environment issues (report to user).
+**Layer 2.5 — Bootstrap**: Is there a bootstrap report? Does it show all checks passing? Is it current with the arch file?
+- If no bootstrap exists → recommend `auto-bootstrap` to set up the dev environment.
+- If bootstrap has failures → check if arch issues (recommend `think-arch`) or environment issues (report to user).
 
 **Layer 3 — Plan + Implementation + Testing**: Is there a plan? What is its status?
 - If no plan exists → recommend `think-plan` to create and execute one.
@@ -140,7 +140,7 @@ Report to the user in this format:
 |-------|----------|--------|
 | Use Cases | <slug>.usecase.md | <status summary> |
 | Architecture | <slug>.arch.md | <status summary or "not yet created"> |
-| Scaffold | <slug>.scaffold.md | <status summary or "not yet run"> |
+| Bootstrap | <slug>.bootstrap.md | <status summary or "not yet run"> |
 | Plan | <slug>.plan.md | <status, phase, cycle — or "not yet created"> |
 
 ## Diagnosis

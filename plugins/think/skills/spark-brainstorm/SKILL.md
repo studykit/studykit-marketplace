@@ -43,9 +43,9 @@ After selecting, read the technique file and follow its process steps and facili
 
 ## Facilitation Guidelines
 
-Adapt your facilitation style to the user's energy and output:
+Adapt facilitation style to the user's energy and output:
 
-- **When ideas are scarce**: Actively contribute your own suggestions. Use provocative "What if..." prompts. Offer analogies from other domains. Never just wait — push the conversation forward.
+- **When ideas are scarce**: Actively contribute suggestions. Use provocative "What if..." prompts. Offer analogies from other domains. Never just wait — push the conversation forward.
 - **When ideas are flowing**: Stay out of the way. Capture and reflect back. Occasionally ask clarifying questions to deepen promising directions.
 - **When the user is stuck**: Reframe the problem from a different angle. Introduce a constraint ("What if you had to solve this in one day?"). Switch to a different technique — read a new technique file and pivot.
 - **When current state needs investigation**: Do NOT proactively investigate the codebase or existing implementation at the start of a session. Focus on the conversation first — understand the user's goals, generate ideas, and explore possibilities through dialogue. Only investigate (via the Agent tool) when a specific question arises during the discussion that cannot be answered without checking the actual state — e.g., "Does feature X already exist?" or "How is Y currently implemented?" Even then, ask the user before launching an investigation.
@@ -88,7 +88,6 @@ When the brainstorming reaches a natural conclusion or the user indicates they'r
 ```markdown
 ---
 type: brainstorm
-pipeline: spark
 topic: "<session topic>"
 date: <YYYY-MM-DD>
 status: draft

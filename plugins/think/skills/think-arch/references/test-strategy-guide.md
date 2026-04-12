@@ -34,4 +34,4 @@ For each tier, record:
 - **Tool name and version constraint** (e.g., `@vscode/test-electron@^2.5`)
 - **What it tests** — which layer/boundary
 - **Rationale** — why this tool over alternatives
-- **Special setup notes** — anything auto-scaffold needs to know (e.g., "requires Java for PlantUML", "needs display server for E2E")
+- **Special setup notes** — anything auto-bootstrap needs to know (e.g., "requires Java for PlantUML", "needs display server for E2E")

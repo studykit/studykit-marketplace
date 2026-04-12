@@ -34,4 +34,4 @@ Then proceed:
     - Areas completed: <list>
     - Open items: <count>
     ```
-8. Mark "Record open items and commit" as `completed`. **Report** — show the user the current state and Open Items for next time. Suggest: "To set up the development environment, run `/think:auto-scaffold <file_path>`."
+8. Mark "Record open items and commit" as `completed`. **Report** — show the user the current state and Open Items for next time. Suggest: "To set up the development environment, run `/think:auto-bootstrap <file_path>`."

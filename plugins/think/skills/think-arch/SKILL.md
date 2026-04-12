@@ -11,8 +11,10 @@ Takes use cases (from think-usecase) and designs the system architecture — tec
 
 ## Modes
 
-- **No existing `.arch.md`** → start from Phase 1 (Technology Stack) and follow the guided sequence.
-- **Existing `.arch.md`** → run Iteration Mode entry checks (feedback, source changes), then the user chooses which area to work on. They can start from Phase 1 if a fundamental rethink is needed, or jump to any specific area.
+- **No existing `.arch.md`** → **First Design**. Start from Phase 1 (Technology Stack) and follow the guided sequence.
+- **Existing `.arch.md`** → run Iteration Mode entry checks (feedback, source changes, impact assessment):
+  - **Additive Feature** → new UCs fit within existing architecture. Add information flows and interface contracts only.
+  - **Iteration** → architecture changes needed. The user chooses which area to work on, or starts from Phase 1 for a fundamental rethink.
 
 **Impact propagation rule:** when something changes in one area, check whether it affects others:
 - Technology stack change → do components need restructuring? Do test tools need changing?
@@ -31,7 +33,7 @@ If no argument is provided, ask the user for a slug, filename, or path.
 
 Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/`:
 
-1. **Full path** — use directly
+1. **Full path** — extract the slug from the filename (e.g., `A4/chat-app.usecase.md` → `chat-app`), then scan for related files: `A4/*<slug>*.usecase.md` and `A4/*<slug>*.arch.md`
 2. **Partial match** — glob for `A4/*<argument>*.usecase.md` and `A4/*<argument>*.arch.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
@@ -60,35 +62,97 @@ Compare the stored `sha` in arch frontmatter against the current file:
 Check for report files not listed in `reflected_files`:
 
 - `A4/<topic-slug>.arch.review-*.md` (review reports)
-- `A4/<topic-slug>.scaffold.md` (scaffold reports — issues where `Stage: arch`)
+- `A4/<topic-slug>.bootstrap.md` (bootstrap reports — issues where `Stage: arch`)
 - `A4/<topic-slug>.integration-report.r*.md` (integration reports — issues where `Stage: arch`)
 - `A4/<topic-slug>.plan.md` (check for blocked status with arch-level issues)
 - `A4/<topic-slug>.test-report.c*.md` (check for failures diagnosed as arch-level)
 
 For integration reports, prioritize issues where the diagnosis stage is **arch**. For plan deviations, read the Deviation Note to determine if the root cause is an architecture assumption that doesn't hold.
 
-### 3. Recommend Starting Point
+### 3. Impact Assessment
+
+When source usecase changes include **new UCs**, assess whether the existing architecture can accommodate them:
+
+- Do the new UCs require **new components** not present in the current design?
+- Do they introduce **new external dependencies**?
+- Do they require **technology stack changes**?
+- Do they fundamentally change **information flows** between existing components?
+
+**If yes to any** → full **Iteration** path. Recommend which areas need rework.
+**If no** → **Additive Feature** path. The new UCs fit within existing components and patterns — only new information flows and interface contracts are needed.
+
+Present the assessment to the user and let them confirm the path.
+
+### 4. Recommend Starting Point
 
 Analyze the collected feedback and open items. Recommend which area to work on first, with rationale. The user can follow the recommendation or choose a different starting point.
 
 ## Session Task List
 
-At the start of the session, create a task list showing the major areas so the user can track progress. Mark each area as `in_progress` when entering it and `completed` when done.
+Use the task list as a live workflow map. The user should be able to check the task list at any point and understand exactly where they are and what remains.
 
-**First Design tasks:**
-- `"Explore codebase"` → `in_progress`
-- `"Technology Stack"` → `pending`
-- `"External Dependencies"` → `pending`
-- `"Component Design"` → `pending`
-- `"Test Strategy"` → `pending`
-- `"Wrap up"` → `pending`
+### Naming Convention
 
-**Iteration tasks** (adjust based on the work backlog):
+Tasks use a prefix to show structure. Phase-level tasks use the phase name. Sub-tasks use `<phase prefix>: <detail>` format.
+
+- Phase-level: `"Phase 1: Technology Stack"`
+- Sub-task: `"Phase 1: Select language/framework"`, `"Phase 1: Evaluate key libraries"`
+
+Sub-tasks are created **dynamically** when entering a phase — not all upfront. For example, Phase 3 sub-tasks are created per component after components are identified.
+
+### Task Lifecycle
+
+- Mark phase-level task `in_progress` when entering the phase.
+- Create sub-tasks as work items are identified within the phase.
+- Mark sub-tasks `completed` as each is confirmed.
+- Mark phase-level task `completed` when all sub-tasks are done.
+- If the user navigates back to a completed phase, set it back to `in_progress`.
+
+### Initial Task Lists
+
+Create phase-level tasks at session start. Sub-tasks are added dynamically during work.
+
+**First Design:**
+- `"Step 0: Explore codebase"` → `in_progress`
+- `"Phase 1: Technology Stack"` → `pending`
+- `"Phase 2: External Dependencies"` → `pending`
+- `"Phase 3: Component Design"` → `pending`
+- `"Phase 4: Test Strategy"` → `pending`
+- `"Wrap Up: Save progress"` → `pending`
+- `"Wrap Up: Review (arch-reviewer)"` → `pending`
+- `"Wrap Up: Record open items & commit"` → `pending`
+
+**Iteration:**
 - `"Review open items and backlog"` → `in_progress`
-- `"Address selected items"` → `pending`
-- `"Wrap up"` → `pending`
+- One task per selected area (e.g., `"Phase 2: Revise external dependencies"`)
+- `"Wrap Up: Save progress"` → `pending`
+- `"Wrap Up: Review (arch-reviewer)"` → `pending`
+- `"Wrap Up: Record open items & commit"` → `pending`
 
-The user can freely navigate between areas. Update task status as areas are worked on — an area can go back to `in_progress` if revisited.
+**Additive Feature:**
+- `"Map new UCs to components"` → `in_progress`
+- One task per new UC (e.g., `"UC-5: Information flow & contracts"`) — created after mapping
+- `"Test coverage for new flows"` → `pending`
+- `"Wrap Up: Save progress"` → `pending`
+- `"Wrap Up: Review (arch-reviewer)"` → `pending`
+- `"Wrap Up: Record open items & commit"` → `pending`
+
+### Dynamic Sub-Task Examples
+
+**Phase 2** — after identifying dependencies:
+- `"Phase 2: Clarify Auth Provider"`
+- `"Phase 2: Clarify Payment Gateway"`
+- `"Phase 2: Clarify Email Service"`
+
+**Phase 3** — after identifying components:
+- `"Phase 3: Component A — deep dive"`
+- `"Phase 3: Component B — deep dive"`
+- `"Phase 3: Component C — deep dive"`
+
+**Phase 4** — after identifying test tiers:
+- `"Phase 4: Unit test tools"`
+- `"Phase 4: Integration test tools"`
+- `"Phase 4: E2E test tools"`
 
 ## Step 0: Explore the Codebase
 
@@ -103,6 +167,40 @@ Mark "Explore codebase" as `completed`.
 The architecture covers four areas. In **First Design** mode, start with Technology Stack and follow the guided sequence. In **Iteration** mode, start wherever the user wants.
 
 The user controls all transitions. After completing work on any topic, present a status table showing each area's progress. When an area has unreviewed content, suggest a review — but let the user decide.
+
+## Additive Feature Path
+
+When Impact Assessment determines that new UCs fit within the existing architecture, follow this lighter path instead of the full phase sequence.
+
+### Step 1: Map New UCs to Components
+
+For each new UC, identify which existing components are involved. Present the mapping as a table:
+
+| New UC | Components | Notes |
+|--------|-----------|-------|
+| UC-N | Component A, Component B | Similar to UC-X pattern |
+
+Confirm the mapping with the user.
+
+### Step 2: Per-UC Deep Dive
+
+For each new UC, add to the existing architecture:
+
+1. **Information Flow** — sequence diagram showing how the UC flows through the mapped components. Follow the same format used for existing UCs in the arch file.
+2. **Interface Contracts** — new operations or extensions to existing contracts needed to support the UC. Reference existing contracts where the pattern is reused.
+
+If the Domain Model needs new terms or refinements, use the same **Domain Model Modifications** procedure from Phase 3.
+
+### Step 3: Test Coverage
+
+Review the test strategy for new flows:
+- Are existing test tiers sufficient?
+- Do the new UCs require additional integration or E2E test cases?
+- Record any additions in the Test Strategy section.
+
+### Step 4: Wrap Up
+
+Follow the standard **Wrapping Up** procedure — increment revision, update session history, suggest next step.
 
 ## Phase 1: Technology Stack
 
@@ -229,7 +327,7 @@ On **First Design**, record each source usecase file's current revision and SHA 
 
 ## Revision and Session History
 
-Increment `revision` and update `revised` when: before launching a reviewer subagent, reflecting source usecase changes, reflecting review/scaffold findings, area transition with content changes, or closing the session. Routine updates during the interview do not increment revision.
+Increment `revision` and update `revised` when: before launching a reviewer subagent, reflecting source usecase changes, reflecting review/bootstrap findings, area transition with content changes, or closing the session. Routine updates during the interview do not increment revision.
 
 Session history is stored in `<topic-slug>.arch.history.md`. See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
 
@@ -258,9 +356,9 @@ For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/sess
 
 After the architecture is finalized, suggest the next pipeline step:
 
-> The architecture is ready. The next step is `auto-scaffold` to set up the dev environment (project structure, dependencies, test infrastructure) and verify everything builds and runs before planning implementation.
+> The architecture is ready. The next step is `auto-bootstrap` to set up the dev environment (project structure, dependencies, test infrastructure) and verify everything builds and runs before planning implementation.
 >
-> Run: `/think:auto-scaffold <slug>`
+> Run: `/think:auto-bootstrap <slug>`
 
 ### Output Format
 

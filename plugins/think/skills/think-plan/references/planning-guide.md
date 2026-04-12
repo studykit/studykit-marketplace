@@ -121,7 +121,7 @@ After codebase exploration, fill the **Launch & Verify** section. This informati
 
 ## Foundation Unit Validation
 
-After defining the first unit(s) in Phase 1, verify they produce a **minimally interactive system**, not just project scaffolding.
+auto-bootstrap has already set up the project structure, dependencies, build configuration, and test infrastructure. The foundation unit builds on that base to produce the **first minimally interactive system**.
 
 **Check:** Can a user perform the most basic interaction after the foundation unit is complete?
 
@@ -133,9 +133,9 @@ After defining the first unit(s) in Phase 1, verify they produce a **minimally i
 | CLI tool | User can invoke the tool and see meaningful output |
 | API service | A client can call one endpoint and get a valid response |
 
-If the foundation unit only produces empty scaffolding (boilerplate files, placeholder HTML, wired-up message types with no UI, "Ready" status text with no input mechanism), it is **incomplete**. Expand it to include the minimal interaction loop, or create a dedicated IU for it.
+If the foundation unit only produces boilerplate on top of the existing base (placeholder HTML, wired-up message types with no UI, "Ready" status text with no input mechanism), it is **incomplete**. Expand it to include the minimal interaction loop, or create a dedicated IU for it.
 
-A scaffold that cannot be used is not a testable increment — it is dead code until later units bring it to life. The foundation unit's acceptance criteria must include at least one end-to-end interaction scenario, not just "extension activates without error" or "project compiles."
+A foundation unit that cannot be used is not a testable increment — it is dead code until later units bring it to life. The acceptance criteria must include at least one end-to-end interaction scenario, not just "extension activates without error" or "project compiles."
 
 ## Dependency Analysis
 
@@ -187,7 +187,7 @@ Example:
 
 | File | Integration Pattern | Contributing IUs |
 |------|-------------------|-----------------|
-| `src/webview/main.ts` | Message handler registration + DOM component mounting | IU-1: scaffold + ready handler, IU-2: ConversationView mount + render handlers, IU-7: Sidebar mount + spawn handlers |
+| `src/webview/main.ts` | Message handler registration + DOM component mounting | IU-1: initial setup + ready handler, IU-2: ConversationView mount + render handlers, IU-7: Sidebar mount + spawn handlers |
 | `src/webview/index.html` | Container divs for UI regions + script wiring | IU-1: app shell with `#app`, IU-2: `#conversation` container, IU-7: `#sidebar` container |
 | `src/extension.ts` | Component registration + message handler dispatch | IU-1: activation + panel, IU-2: RenderingEngine, IU-6: PersonaStore |
 

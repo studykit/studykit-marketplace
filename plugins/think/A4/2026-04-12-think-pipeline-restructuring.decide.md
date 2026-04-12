@@ -192,3 +192,42 @@ Combining UC discovery, architecture design, and scaffold setup into a single sk
 5. Update think-verify waterfall trace for usecase/arch stage split
 6. Update compass pipeline routing
 7. Revisit TODO.md items (auto-spec → auto-arch, pipeline orchestrator)
+
+## Implementation Status
+
+Reflects the state of implementation as of 2026-04-12.
+
+### Completed
+
+| # | Next Step | Result |
+|---|----------|--------|
+| 1 | Expanded think-usecase output format | Done — think-usecase now includes validation/error handling per UC, platform capabilities audit, Domain Model extraction (glossary, relationships, state transitions), UI screen grouping, and mock generation. 13 reference files support the skill. |
+| 2 | Design think-arch | Done — think-arch covers Technology Stack, External Dependencies, Component Design (DB schema, information flows, interface contracts), and Test Strategy. 8 reference files, arch-reviewer and domain-updater agents. |
+| 3 | Design auto-scaffold | Done — implemented as **auto-bootstrap** (renamed from auto-scaffold). Sets up project structure, dependencies, build config, and test infrastructure per tier. Verifies build, run, test runners, and dev loop. Outputs `.bootstrap.md` (not `.scaffold.md`). |
+| 4 | Update think-plan | Done — accepts `.arch.md` input, reads bootstrap report for verified Launch & Verify commands, no scaffold IUs. Phase 1 (plan + verification) and Phase 2 (implement + test loop, max 3 cycles). |
+| 5 | Update think-verify waterfall trace | Removed — think-verify was removed from the pipeline. Its waterfall trace diagnostic was absorbed into compass (Pipeline Diagnosis mode, Layer 1–3 trace). |
+| 6 | Update compass pipeline routing | Done — compass reflects the new pipeline: think-usecase → think-arch → auto-bootstrap → think-plan. Also routes to autonomous variants (auto-usecase, auto-plan) and ideation skills (spark-brainstorm, spark-decide). |
+| 7 | Revisit TODO.md items | Partially done — auto-spec was not created. auto-usecase and auto-plan exist as autonomous alternatives to think-usecase and think-plan respectively. |
+
+### Additional changes beyond the original plan
+
+| Change | Detail |
+|--------|--------|
+| think-code removed | Implementation is now handled within think-plan's Phase 2 (implement + test loop). A separate coding skill was unnecessary — think-plan autonomously implements, runs tests, and iterates. |
+| think-verify removed | Verification is embedded in think-plan (Phase 2 test cycles) and compass (pipeline diagnosis). A dedicated verification skill was redundant. |
+| spec-reviewer agent removed | Replaced by usecase-reviewer (UC quality + system completeness) and arch-reviewer (architecture quality). |
+| coder agent removed | Implementation is done directly in think-plan's Phase 2, not delegated to a coder subagent. |
+| risk-assessor agent removed | Risk assessment is handled inline within auto-plan (Step 6) and think-plan's review process. |
+| domain-updater agent added | Spawned by think-arch during Component Design when Domain Model changes are needed. Updates the `.usecase.md` Domain Model without switching skills. |
+| auto-usecase added | Autonomous UC generation without interactive interview. Uses usecase-composer, usecase-reviewer, usecase-reviser, and usecase-explorer agents in a compose → quality → growth loop. |
+| auto-plan added | Autonomous plan generation without interactive interview. Shares think-plan's references and plan-reviewer agent. |
+
+### Final pipeline
+
+```
+[Interactive]   think-usecase → think-arch → auto-bootstrap → think-plan
+[Autonomous]    auto-usecase  → think-arch → auto-bootstrap → auto-plan
+[Ideation]      spark-brainstorm → spark-decide
+[Navigation]    compass
+[Standalone]    web-design-mock
+```

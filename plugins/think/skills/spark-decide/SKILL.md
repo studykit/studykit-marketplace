@@ -50,7 +50,6 @@ Write this after Problem Framing is complete:
 ```markdown
 ---
 type: decide
-pipeline: spark
 topic: "<topic>"
 date: <YYYY-MM-DD>
 status: draft

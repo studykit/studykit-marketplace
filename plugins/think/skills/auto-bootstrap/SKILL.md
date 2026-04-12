@@ -1,13 +1,13 @@
 ---
-name: auto-scaffold
-description: "This skill should be used when the user needs to set up a development base from an architecture document — project structure, dependencies, build configuration, and test infrastructure for each tier. Common triggers include: 'scaffold', 'set up the project', 'bootstrap the project', 'create the dev environment', 'set up testing'. Also applicable after think-arch finalizes and before think-plan starts."
+name: auto-bootstrap
+description: "This skill should be used when the user needs to set up a development base from an architecture document — project structure, dependencies, build configuration, and test infrastructure for each tier. Common triggers include: 'bootstrap', 'set up the project', 'bootstrap the project', 'create the dev environment', 'set up testing'. Also applicable after think-arch finalizes and before think-plan starts."
 argument-hint: <path to .arch.md file>
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 
-# Project Scaffold
+# Project Bootstrap
 
-Takes an architecture document (from think-arch) and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure for each tier. This skill runs autonomously with no user interaction during execution. It produces a scaffold report that think-plan reads as verified input.
+Takes an architecture document (from think-arch) and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure for each tier. This skill runs autonomously with no user interaction during execution. It produces a bootstrap report that think-plan reads as verified input.
 
 ## What This Skill Does
 
@@ -48,8 +48,8 @@ Also read the source `.usecase.md` (from arch frontmatter `sources`) for project
 
 Check whether a codebase already exists:
 
-- **No existing code** → fresh scaffold (Step 2)
-- **Existing code** → incremental scaffold. Identify what's already in place (project structure, dependencies, build config, test setup) and what's missing. Only set up what's needed.
+- **No existing code** → fresh bootstrap (Step 2)
+- **Existing code** → incremental bootstrap. Identify what's already in place (project structure, dependencies, build config, test setup) and what's missing. Only set up what's needed.
 
 ## Step 2: Project Structure
 
@@ -111,9 +111,9 @@ Make a trivial code change → rebuild → run tests → SUCCESS / FAIL
 
 This verifies the edit → build → test cycle works end-to-end.
 
-## Step 5: Scaffold Report
+## Step 5: Bootstrap Report
 
-Generate the scaffold report. Read `${CLAUDE_SKILL_DIR}/references/scaffold-report.md` for the exact template.
+Generate the bootstrap report. Read `${CLAUDE_SKILL_DIR}/references/bootstrap-report.md` for the exact template.
 
 The report includes:
 - **Environment** — technology stack, project structure summary
@@ -124,9 +124,9 @@ The report includes:
 
 ### Commit
 
-Stage and commit all scaffold files:
+Stage and commit all bootstrap files:
 ```
-scaffold(<topic-slug>): initial project setup
+bootstrap(<topic-slug>): initial project setup
 
 - Build: PASS/FAIL
 - Test tiers: N/M passing
@@ -141,26 +141,37 @@ If any verification step fails:
    - **arch** — architecture's technology choice or test tool selection is incompatible (e.g., WebdriverIO doesn't support the VS Code version)
    - **environment** — local environment issue (e.g., missing Java for PlantUML, no display server for E2E)
 
-2. **Record in report** — issues with `Stage: arch` become upstream feedback for think-arch. Issues with `Stage: environment` are recorded as setup prerequisites.
+2. **Do not attempt to fix arch issues** — these require architecture decisions. Record and move on.
 
-3. **Attempt auto-fix for environment issues** — install missing tools, configure paths. Re-verify after fix.
+3. **Research before fixing environment issues** — do not guess from error messages alone. Before attempting a fix:
+   a. **Spawn a research agent** — launch an `Agent(model: "sonnet")` with the error message, relevant config files, and the technology stack. The agent should:
+      - Search official documentation via `WebSearch`/`WebFetch` for the authoritative fix
+      - Read library source code when documentation is insufficient (e.g., checking default config, supported options, version-specific behavior)
+      - Check version-specific notes, known issues, and migration guides
+      - Write findings to `A4/<topic-slug>.bootstrap.research-<label>.md` per the format below. `<label>` is a short slug describing the issue (e.g., `jest-esm-flags`, `esbuild-target-mismatch`)
+   b. **Apply the fix** based on the research agent's findings, not assumptions.
+   c. **Re-verify** after fix.
+   d. If the fix fails, spawn a new research agent with the updated error — do not retry the same fix.
 
-4. **Do not attempt to fix arch issues** — these require architecture decisions. Record and move on.
+4. **Record in report** — issues with `Stage: arch` become upstream feedback for think-arch. Issues with `Stage: environment` are recorded with a reference to the research report that informed the fix.
+
+Research reports use the format in `${CLAUDE_SKILL_DIR}/references/research-report-format.md`.
 
 ## Iteration
 
-When re-run on an existing scaffold (e.g., after arch changes):
+When re-run on an existing bootstrap (e.g., after arch changes):
 
-1. Read the existing scaffold report from frontmatter `sources`
-2. Diff the current `.arch.md` against the scaffold report's source SHA
-3. Identify what changed (new test tier, different tool, new dependency)
-4. Apply only the incremental changes
-5. Re-verify all checks
-6. Generate a new scaffold report (new revision)
+1. **Archive the current report** — rename `A4/<slug>.bootstrap.md` to `A4/<slug>.bootstrap.r<current-revision>.md` before writing the new report. This preserves the previous result as-is.
+2. Read the archived report's frontmatter `sources`
+3. Diff the current `.arch.md` against the archived report's source SHA
+4. Identify what changed (new test tier, different tool, new dependency)
+5. Apply only the incremental changes
+6. Re-verify all checks
+7. Write the new report to `A4/<slug>.bootstrap.md` with incremented revision
 
 ## Session Management
 
-This skill runs autonomously. No user interaction during execution. The user invokes it and receives the scaffold report when done.
+This skill runs autonomously. No user interaction during execution. The user invokes it and receives the bootstrap report when done.
 
 If a verification step fails and cannot be auto-fixed, the report documents the failure. The user decides next steps based on the report.
 
@@ -172,4 +183,4 @@ After reporting results, suggest the next pipeline step:
 >
 > Run: `/think:think-plan <slug>`
 
-If the scaffold has unresolved `Stage: arch` issues, suggest `think-arch` first to address architecture-level problems before planning.
+If the bootstrap has unresolved `Stage: arch` issues, suggest `think-arch` first to address architecture-level problems before planning.

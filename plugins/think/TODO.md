@@ -18,29 +18,24 @@ Remaining work:
 
 Create a skill for restructuring existing codebases:
 - Analyzes an existing codebase and identifies restructuring opportunities
-- Produces a spec delta + impl plan that feeds into think-code
+- Produces an architecture delta + plan that feeds into think-plan
 - Fills the gap: current pipeline is greenfield-only (idea → code)
 - Common need: "I have existing code, help me rethink/restructure it"
 
 ## spark-retrospective skill
 
-Create a post-verification learning capture skill:
-- Runs after think-verify completes
-- Analyzes: integration report, deviation notes from think-code, review cycle counts
+Create a post-implementation learning capture skill:
+- Runs after think-plan completes (Phase 2 — all tests pass or blocked)
+- Analyzes: test reports, plan review cycle counts, blocked status diagnoses
 - Surfaces patterns and lessons learned across the project
 - Useful for cross-project learning, not just current iteration feedback
 
 ## Pipeline orchestrator
 
 Create a mode or thin wrapper to chain the full autonomous pipeline:
-- auto-usecase → auto-arch → auto-scaffold → auto-plan → think-code → think-verify
+- auto-usecase → auto-arch → auto-scaffold → auto-plan
 - Eliminates manual invocation and file path passing between steps
 - Depends on: auto-arch completion
-
-## auto-plan downstream handoff
-
-Add think-code suggestion to auto-plan's Final Output:
-- auto-plan → think-code
 
 ## ~~auto-plan history file~~
 
@@ -51,9 +46,10 @@ Add think-code suggestion to auto-plan's Final Output:
 
 **Done** — `skills/auto-plan/references/session-history.md`, integrated into SKILL.md Steps 8–10
 
-## auto pipeline full handoff chain
+## auto pipeline handoff chain
 
 Once auto-arch is ready, add downstream suggestions:
 - auto-usecase → auto-arch
 - auto-arch → auto-scaffold
 - auto-scaffold → auto-plan
+- auto-plan: no downstream suggestion (think-plan Phase 2 handles implementation)
