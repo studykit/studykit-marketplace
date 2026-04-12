@@ -107,7 +107,7 @@ After codebase exploration, fill the **Launch & Verify** section. This informati
    - API → "call the health endpoint and get 200"
    - CLI → "run `<tool> --help` and see usage info"
 
-7. **Test isolation** — determine flags or configuration to run the app in a clean environment, free from interference by other installed plugins, extensions, or user state. Start from the defaults below, then **spawn an `Agent(subagent_type: "api-researcher")` to search the platform's official documentation** (e.g., VS Code CLI reference, Electron command-line switches) for the current project's exact flags:
+7. **Test isolation** — determine flags or configuration to run the app in a clean environment, free from interference by other installed plugins, extensions, or user state. Start from the defaults below, then **spawn an `Agent(subagent_type: "think:api-researcher")` to search the platform's official documentation** (e.g., VS Code CLI reference, Electron command-line switches) for the current project's exact flags:
 
    | App Type | Default Isolation | Docs to Search |
    |----------|------------------|----------------|

@@ -283,9 +283,9 @@ When the user indicates they're done, mark the current phase task as `completed`
 
 Reviews, explorations, and mock generation are handled by launching fresh subagents. Always spawn a fresh agent — context is passed via file paths, not agent memory.
 
-- **Reviewer:** Launch via `Agent(subagent_type: "usecase-reviewer")`. Pass the working file path and report output path. If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
-- **Explorer:** Launch via `Agent(subagent_type: "usecase-explorer")`. Pass the working file path and report output path.
-- **Mock generator:** Launch via `Agent(subagent_type: "mock-html-generator")`. Each invocation provides UCs, layout requirements, and output path in the prompt.
+- **Reviewer:** Launch via `Agent(subagent_type: "think:usecase-reviewer")`. Pass the working file path and report output path. If a previous review report exists, include its path so the reviewer can check whether prior findings have been addressed.
+- **Explorer:** Launch via `Agent(subagent_type: "think:usecase-explorer")`. Pass the working file path and report output path.
+- **Mock generator:** Launch via `Agent(subagent_type: "think:mock-html-generator")`. Each invocation provides UCs, layout requirements, and output path in the prompt.
 
 **Execution order:** Explorer runs first (find gaps and new UC candidates), then Reviewer validates all UCs (existing + newly added) in one pass. Both are required steps, not optional.
 

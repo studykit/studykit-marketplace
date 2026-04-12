@@ -144,7 +144,7 @@ If any verification step fails:
 2. **Do not attempt to fix arch issues** — these require architecture decisions. Record and move on.
 
 3. **Research before fixing environment issues** — do not guess from error messages alone. Before attempting a fix:
-   a. **Spawn an api-researcher agent** — launch an `Agent(subagent_type: "api-researcher")` with the error message, relevant config files, and the technology stack. The agent should:
+   a. **Spawn an api-researcher agent** — launch an `Agent(subagent_type: "think:api-researcher")` with the error message, relevant config files, and the technology stack. The agent should:
       - Search API/library documentation via `chub` first, then fall back to `WebSearch`/`WebFetch`
       - Read library source code when documentation is insufficient (e.g., checking default config, supported options, version-specific behavior)
       - Check version-specific notes, known issues, and migration guides

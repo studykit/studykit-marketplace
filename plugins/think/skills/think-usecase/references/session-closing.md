@@ -22,13 +22,13 @@ If the user confirms, create a task list so they can track progress:
 Then proceed:
 
 1. **Pre-checkpoint** — write all pending confirmed content to the working file. If content was written, **increment `revision`**, update `revised` timestamp, and **commit** (`A4/<topic-slug>.*`). Mark "Save progress" as `completed`.
-2. Mark "Explore" as `in_progress`. **Launch explorer subagent** — spawn a fresh `Agent(subagent_type: "usecase-explorer")` with the current working file and report path per `references/exploration-report.md` (label: revision number). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results.
+2. Mark "Explore" as `in_progress`. **Launch explorer subagent** — spawn a fresh `Agent(subagent_type: "think:usecase-explorer")` with the current working file and report path per `references/exploration-report.md` (label: revision number). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results.
 3. **Present exploration results** — show each perspective explored and UC candidates found:
    - Ask: "The explorer found these additional angles. Which ones should we add?"
    - If the user picks any, enter the Discovery Loop for those topics (full precision: validation, error handling, etc.)
    - If the user defers any, record as Open Items for next iteration
    - If changes were made, add the exploration file name to `reflected_files`, **increment `revision`**, update `revised` timestamp, and **commit** (`A4/<topic-slug>.*`).
-4. Mark "Explore" as `completed`. Mark "Review" as `in_progress`. **Launch reviewer subagent** — spawn a fresh `Agent(subagent_type: "usecase-reviewer")` with the **updated** working file (now including any newly added UCs from exploration) and report path per `references/review-report.md` (label: revision number). If a previous review report exists, include its path. The reviewer writes the report and returns results.
+4. Mark "Explore" as `completed`. Mark "Review" as `in_progress`. **Launch reviewer subagent** — spawn a fresh `Agent(subagent_type: "think:usecase-reviewer")` with the **updated** working file (now including any newly added UCs from exploration) and report path per `references/review-report.md` (label: revision number). If a previous review report exists, include its path. The reviewer writes the report and returns results.
 5. **Present the review results** — walk through issues in this order:
 
    **Actors Review** — for each actor with issues:

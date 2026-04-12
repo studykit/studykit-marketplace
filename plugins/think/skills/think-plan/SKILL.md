@@ -84,7 +84,7 @@ Record source file SHAs in frontmatter. Set `phase: plan-review`, `revision: 1`.
 
 For each round:
 
-1. Spawn a `plan-reviewer` agent via `Agent(subagent_type: "plan-reviewer")` — pass plan file path, arch file path, usecase file path, and report output path per `${CLAUDE_SKILL_DIR}/references/review-report.md`.
+1. Spawn a `plan-reviewer` agent via `Agent(subagent_type: "think:plan-reviewer")` — pass plan file path, arch file path, usecase file path, and report output path per `${CLAUDE_SKILL_DIR}/references/review-report.md`.
 
    The agent checks:
    - FR coverage (every FR mapped to at least one IU)
@@ -131,14 +131,14 @@ think-plan updates IU statuses in `.plan.md` as subagents complete their work.
 Execute IUs following the dependency graph:
 
 1. **Identify ready IUs** — IUs whose dependencies are all `done` and whose own status is `pending` (or `failed` in a retry cycle).
-2. **Spawn subagents** — one per ready IU, using `Agent(subagent_type: "iu-implementer")`. Independent IUs can run in parallel.
+2. **Spawn subagents** — one per ready IU, using `Agent(subagent_type: "think:iu-implementer")`. Independent IUs can run in parallel.
 
 Each subagent receives:
 - The specific IU details (description, file mappings, acceptance criteria)
 - Relevant interface contracts from the plan (contracts the IU consumes or provides)
 
 ```
-Agent(subagent_type: "iu-implementer", prompt: """
+Agent(subagent_type: "think:iu-implementer", prompt: """
 IU: <IU identifier and title>
 Description: <IU description from plan>
 Source files: <list of source files to create/modify>
@@ -162,13 +162,13 @@ Return: result (pass/fail), summary of changes, issues encountered.
 
 After all IUs are `done` (or after handling failures), run integration and smoke tests:
 
-1. **Spawn a test-runner agent** via `Agent(subagent_type: "test-runner")` with the plan's test plan section and Launch & Verify config.
+1. **Spawn a test-runner agent** via `Agent(subagent_type: "think:test-runner")` with the plan's test plan section and Launch & Verify config.
 2. The agent runs integration and smoke tests, writes results to `A4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
 3. The agent records **factual results only** — no diagnosis classification.
 4. **Commit:** test report
 
 ```
-Agent(subagent_type: "test-runner", prompt: """
+Agent(subagent_type: "think:test-runner", prompt: """
 Plan file: <absolute path to .plan.md>
 
 Run integration and smoke tests as defined in the plan's test plan section.
@@ -276,9 +276,9 @@ Append-only event log in `A4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/r
 
 Always spawn fresh agents — context is passed via file paths or inline details, not agent memory.
 
-- **`plan-reviewer`** — launch via `Agent(subagent_type: "plan-reviewer")`. Pass plan file path, arch file path, usecase file path, and report output path.
-- **`iu-implementer`** — launch via `Agent(subagent_type: "iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts). Implements one IU + unit tests. Has chub skill preloaded for API lookups. Independent IUs can be spawned in parallel.
-- **`test-runner`** — launch via `Agent(subagent_type: "test-runner")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Has chub skill preloaded. Does not classify failures.
+- **`plan-reviewer`** — launch via `Agent(subagent_type: "think:plan-reviewer")`. Pass plan file path, arch file path, usecase file path, and report output path.
+- **`iu-implementer`** — launch via `Agent(subagent_type: "think:iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts). Implements one IU + unit tests. Has chub skill preloaded for API lookups. Independent IUs can be spawned in parallel.
+- **`test-runner`** — launch via `Agent(subagent_type: "think:test-runner")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Has chub skill preloaded. Does not classify failures.
 
 ## Output Format
 

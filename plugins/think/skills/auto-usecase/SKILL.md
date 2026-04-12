@@ -125,10 +125,10 @@ This step runs an outer **growth loop** (compose → review → expand) and an i
 
 Each step launches a fresh subagent. Context is passed entirely through file paths — the working file, history file, research/code analysis reports, review/exploration reports. File-based state (`reflected_files`, history file) ensures continuity across invocations.
 
-- **Composer:** `Agent(subagent_type: "usecase-composer")` — composes UC documents
-- **Reviewer:** `Agent(subagent_type: "usecase-reviewer")` — reviews UC quality and system completeness
-- **Reviser:** `Agent(subagent_type: "usecase-reviser")` — applies review fixes
-- **Explorer:** `Agent(subagent_type: "usecase-explorer")` — explores new perspectives for UC candidates
+- **Composer:** `Agent(subagent_type: "think:usecase-composer")` — composes UC documents
+- **Reviewer:** `Agent(subagent_type: "think:usecase-reviewer")` — reviews UC quality and system completeness
+- **Reviser:** `Agent(subagent_type: "think:usecase-reviser")` — applies review fixes
+- **Explorer:** `Agent(subagent_type: "think:usecase-explorer")` — explores new perspectives for UC candidates
 
 Include the shared reference file paths in each subagent prompt.
 
