@@ -6,12 +6,11 @@ Rules for when to increment `revision` in the arch frontmatter and update the `r
 
 Increment `revision` and update `revised` when:
 
-1. **Before review** — immediately before launching a reviewer subagent (checkpoint write + revision increment together). This stamps the exact document state the reviewer will evaluate.
-2. **Reflecting source usecase changes** — after applying changes from an updated source usecase at iteration entry
-3. **Reflecting review findings** — after applying changes from an `arch-reviewer` report
-4. **Reflecting bootstrap feedback** — after applying changes from an `auto-bootstrap` report
-5. **Area transition with content changes** — when moving between Technology Stack → External Dependencies → Component Design → Test Strategy, if the previous area's content changed
-6. **Session close** — at the end of an iteration (as part of the session close procedure)
+1. **Reflecting source usecase changes** — after applying changes from an updated source usecase at iteration entry
+2. **Reflecting review findings** — after applying changes from an `arch-reviewer` report
+3. **Reflecting bootstrap feedback** — after applying changes from an `auto-bootstrap` report
+4. **Area transition with content changes** — when moving between Technology Stack → External Dependencies → Component Design → Test Strategy, if the previous area's content changed
+5. **Session close** — at the end of an iteration (as part of the session close procedure)
 
 Each of these events increments revision by exactly 1. All other file updates (checkpoint writes, component confirmations, contract additions) do not increment revision.
 

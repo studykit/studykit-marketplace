@@ -120,14 +120,14 @@ Create phase-level tasks at session start. Sub-tasks are added dynamically durin
 - `"Phase 4: Test Strategy"` → `pending`
 - `"Wrap Up: Save progress"` → `pending`
 - `"Wrap Up: Review (arch-reviewer)"` → `pending`
-- `"Wrap Up: Record open items & commit"` → `pending`
+- `"Wrap Up: Record open items"` → `pending`
 
 **Iteration:**
 - `"Review open items and backlog"` → `in_progress`
 - One task per selected area (e.g., `"Phase 2: Revise external dependencies"`)
 - `"Wrap Up: Save progress"` → `pending`
 - `"Wrap Up: Review (arch-reviewer)"` → `pending`
-- `"Wrap Up: Record open items & commit"` → `pending`
+- `"Wrap Up: Record open items"` → `pending`
 
 **Additive Feature:**
 - `"Map new UCs to components"` → `in_progress`
@@ -135,7 +135,7 @@ Create phase-level tasks at session start. Sub-tasks are added dynamically durin
 - `"Test coverage for new flows"` → `pending`
 - `"Wrap Up: Save progress"` → `pending`
 - `"Wrap Up: Review (arch-reviewer)"` → `pending`
-- `"Wrap Up: Record open items & commit"` → `pending`
+- `"Wrap Up: Record open items"` → `pending`
 
 ### Dynamic Sub-Task Examples
 
@@ -321,13 +321,12 @@ On **First Design**, record each source usecase file's current revision and SHA 
 |---------|------|
 | Item count | Every 3 confirmed items within an area |
 | Area transition | Moving between Technology Stack → External Dependencies → Component Design → Test Strategy. **Increment `revision`** if content changed. |
-| Before review | Before launching an `arch-reviewer` subagent |
 | Navigation status | When presenting the area status table |
 | Session end | End iteration or finalize |
 
 ## Revision and Session History
 
-Increment `revision` and update `revised` when: before launching a reviewer subagent, reflecting source usecase changes, reflecting review/bootstrap findings, area transition with content changes, or closing the session. Routine updates during the interview do not increment revision.
+Increment `revision` and update `revised` when: reflecting source usecase changes, reflecting review/bootstrap findings, area transition with content changes, or closing the session. Routine updates during the interview do not increment revision.
 
 Session history is stored in `<topic-slug>.arch.history.md`. See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
 

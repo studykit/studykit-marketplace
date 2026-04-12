@@ -94,14 +94,14 @@ Use the task list as a live workflow map. The user should be able to check the t
 - `"Domain model: State transitions"` → `pending`
 - `"Wrap Up: Explorer review"` → `pending`
 - `"Wrap Up: Reviewer validation"` → `pending`
-- `"Wrap Up: Record open items & commit"` → `pending`
+- `"Wrap Up: Record open items"` → `pending`
 
 **Iteration** — adjust based on the work backlog:
 - `"Review open items and backlog"` → `in_progress`
 - One task per selected item (e.g., `"Revise UC-3: Update error handling"`)
 - `"Wrap Up: Explorer review"` → `pending`
 - `"Wrap Up: Reviewer validation"` → `pending`
-- `"Wrap Up: Record open items & commit"` → `pending`
+- `"Wrap Up: Record open items"` → `pending`
 
 **Conditional tasks** — add when they become relevant:
 - `"Discovery: Relationship analysis"` — when 5+ UCs are confirmed

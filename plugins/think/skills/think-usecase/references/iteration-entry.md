@@ -62,5 +62,5 @@ Possible activities:
 - Preserve all previously confirmed use cases — never remove or reorder them unless the user explicitly requests it.
 - New use cases get the next available UC-N ID (continue numbering from where the previous session left off).
 - When modifying an existing UC, show the before/after and confirm with the user before updating.
-- Increment `revision` in frontmatter and update `revised` timestamp when: before launching a reviewer/explorer subagent (stamps the reviewed snapshot), reflecting external input (source file changes, review findings, exploration results) that changes the working file content, or closing the session. Routine updates during the interview (UC confirmation, actor discovery) do not increment revision.
+- Increment `revision` in frontmatter and update `revised` timestamp when: reflecting external input (source file changes, review findings, exploration results) that changes the working file content, or closing the session. Routine updates during the interview (UC confirmation, actor discovery) do not increment revision.
 - Session history (including Interview Transcript) is stored in a separate history file (`<topic-slug>.usecase.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
