@@ -1,18 +1,17 @@
 ---
 name: chub
 description: >
-  Fetch current API and library documentation using the chub CLI instead of
-  relying on training data. Use this skill whenever you need to look up API
-  docs, check library usage, find correct function signatures, or write code
-  against an external API/SDK.
-user-invocable: false
+  Use this skill when you need documentation for a third-party library, SDK, or API
+  before writing code that uses it — for example, "use the OpenAI API", "call the
+  Stripe API", "use the Anthropic SDK", "query Pinecone", or any time the user asks
+  you to write code against an external service and you need current API reference.
+  Fetch the docs with chub before answering, rather than relying on training knowledge.
 ---
 
 # Get API Docs via chub
 
 When you need documentation for a library or API, fetch it with the `chub` CLI
 rather than guessing from training data. This gives you the current, correct API.
-
 
 ## Step 1 — Find the right doc ID
 
