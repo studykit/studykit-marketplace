@@ -226,7 +226,6 @@ Reflects the state of implementation as of 2026-04-12.
 
 ```
 [Interactive]   think-usecase → think-arch → auto-bootstrap → think-plan
-[Autonomous]    auto-usecase  → think-arch → auto-bootstrap → auto-plan
 [Ideation]      spark-brainstorm → spark-decide
 [Navigation]    compass
 [Standalone]    web-design-mock

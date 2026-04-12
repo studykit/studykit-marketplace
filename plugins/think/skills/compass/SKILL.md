@@ -29,7 +29,7 @@ Glob for `A4/<slug>*` and check which files exist:
 | Use Cases | `<slug>.usecase.md` | think-usecase, auto-usecase |
 | Architecture | `<slug>.arch.md` | think-arch |
 | Bootstrap | `<slug>.bootstrap.md` | auto-bootstrap |
-| Plan | `<slug>.plan.md` | think-plan, auto-plan |
+| Plan | `<slug>.plan.md` | think-plan |
 | Test Report | `<slug>.test-report.c*.md` | think-plan |
 
 Also check for review reports and archived bootstrap reports (e.g., `<slug>.usecase.review-*.md`, `<slug>.arch.review-*.md`, `<slug>.plan.review-*.md`, `<slug>.bootstrap.r*.md`).
@@ -64,7 +64,6 @@ Ask: **"What are you trying to do?"** and show the options:
 |-------|-------------|
 | `auto-usecase` | Auto-generate use cases without interview |
 | `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
-| `auto-plan` | Auto-generate impl plan without interview |
 
 ### Standalone
 | Skill | What it does |
