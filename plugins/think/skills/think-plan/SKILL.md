@@ -136,6 +136,8 @@ Execute IUs following the dependency graph:
 Each subagent receives:
 - The specific IU details (description, file mappings, acceptance criteria)
 - Relevant interface contracts from the plan (contracts the IU consumes or provides)
+- Unit test strategy (scenarios and isolation strategy from the IU's test section)
+- Build command and unit test runner command from Launch & Verify
 
 ```
 Agent(subagent_type: "think:iu-implementer", prompt: """
@@ -145,6 +147,9 @@ Source files: <list of source files to create/modify>
 Test files: <list of unit test file paths>
 Acceptance criteria: <from plan>
 Interface contracts: <relevant contracts this IU consumes or provides>
+Unit test strategy: <scenarios + isolation strategy from plan>
+Build command: <from Launch & Verify>
+Test command: <unit test runner command>
 
 Implement this IU and write unit tests. All unit tests must pass.
 Commit code + unit tests.
@@ -277,7 +282,7 @@ Append-only event log in `A4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/r
 Always spawn fresh agents — context is passed via file paths or inline details, not agent memory.
 
 - **`plan-reviewer`** — launch via `Agent(subagent_type: "think:plan-reviewer")`. Pass plan file path, arch file path, usecase file path, and report output path.
-- **`iu-implementer`** — launch via `Agent(subagent_type: "think:iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts). Implements one IU + unit tests. Has chub skill preloaded for API lookups. Independent IUs can be spawned in parallel.
+- **`iu-implementer`** — launch via `Agent(subagent_type: "think:iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts), unit test strategy (scenarios, isolation), build command, and unit test runner command. Implements one IU + unit tests. Has chub skill preloaded for API lookups. Independent IUs can be spawned in parallel.
 - **`test-runner`** — launch via `Agent(subagent_type: "think:test-runner")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Has chub skill preloaded. Does not classify failures.
 
 ## Output Format
