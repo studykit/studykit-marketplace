@@ -6,6 +6,7 @@ color: blue
 tools: "Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch"
 skills:
   - chub
+  - find-docs
 ---
 
 You are a test runner agent. Your job is to run integration and smoke tests and produce a factual test report.

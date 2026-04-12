@@ -7,6 +7,7 @@ tools: "Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch"
 memory: project
 skills:
   - chub
+  - find-docs
 ---
 
 You are an IU implementation agent. Your job is to implement one IU and write its unit tests.
