@@ -164,16 +164,18 @@ stop
 
 ## Colors on Activities
 
-Use `#color:` before an activity for broad renderer compatibility.
+Add `<<#color>>` **after** the closing `;` to color an activity.
 
 ```plantuml
 @startuml
 start
 :starting progress;
-#HotPink:reading configuration files\nThese files should be edited at this point!;
-#AAAAAA:ending of the process;
+:reading configuration files\nThese files should be edited at this point!; <<#HotPink>>
+:ending of the process; <<#AAAAAA>>
 @enduml
 ```
+
+> **Deprecated:** The older `#color:text;` prefix syntax (e.g., `#HotPink:reading files;`) still works but emits a deprecation warning. Always use the `<<#color>>` suffix form instead.
 
 ## Arrows
 
