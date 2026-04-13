@@ -5,7 +5,7 @@ model: sonnet
 color: blue
 tools: "Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch"
 skills:
-  - chub
+  - get-api-docs
   - find-docs
 ---
 
@@ -19,4 +19,4 @@ You are a test runner agent. Your job is to run integration and smoke tests and 
 
 ## API Documentation
 
-When test setup or assertions require external library APIs, look up the current documentation using the preloaded chub skill. Do not rely on memorized API shapes.
+When test setup or assertions require external library APIs, look up the current documentation using the preloaded `get-api-docs` skill. Do not rely on memorized API shapes.

@@ -156,20 +156,21 @@ Write a checkpoint — update the working file with the confirmed options (phase
 
 ## Phase 3: Research
 
-For each promising option, investigate using WebSearch/WebFetch and codebase exploration (via Agent).
+For each promising option, investigate by spawning an `Agent(subagent_type: "think:api-researcher")` with `run_in_background: true`. Independent options can be researched in parallel. The agent writes a detailed research report per `${CLAUDE_SKILL_DIR}/references/research-report.md`.
 
 ### Research protocol
 
 1. **Ask before researching** — "I'd like to research [option] now. Any specific questions you want me to answer about it?" This prevents wasted research.
-2. **Research one option at a time** — Present findings, then ask: "Anything else you want to know about this before we move on?"
+2. **Check the research index** — before launching a new agent, check `A4/<topic-slug>.decide.research-index.md` to avoid duplicate research.
 3. **Be objective** — Present both strengths and limitations. Do not advocate for any option during research.
-4. **Cite sources** — Include links or references for factual claims.
-5. **Track via task** — After each option is researched, mark the task completed. Findings are batch-written to the file at the next checkpoint.
+4. **When notified** — update the research index. Summarize findings to the user, then ask: "Anything else you want to know about this before we move on?"
+5. **Reflect into working file** — when writing option findings to the working file, add an inline reference to the raw data file (e.g., `(ref: research-redis-caching.md)`).
+6. **Track via task** — After each option is researched, mark the task completed. Findings are batch-written to the file at the next checkpoint.
 
 ### Research depth
 
 - For each option, aim to answer: What is it? How does it work? What are its strengths? What are its limitations? What's the cost? Who uses it successfully?
-- Match research depth across options — if you spend 3 searches on Option A, spend 3 on Option B.
+- Match research depth across options — equal depth per option.
 
 ### Research checkpoint
 

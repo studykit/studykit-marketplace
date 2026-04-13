@@ -282,8 +282,8 @@ Append-only event log in `A4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/r
 Always spawn fresh agents — context is passed via file paths or inline details, not agent memory.
 
 - **`plan-reviewer`** — launch via `Agent(subagent_type: "think:plan-reviewer")`. Pass plan file path, arch file path, usecase file path, and report output path.
-- **`iu-implementer`** — launch via `Agent(subagent_type: "think:iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts), unit test strategy (scenarios, isolation), build command, and unit test runner command. Implements one IU + unit tests. Has chub skill preloaded for API lookups. Independent IUs can be spawned in parallel.
-- **`test-runner`** — launch via `Agent(subagent_type: "think:test-runner")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Has chub skill preloaded. Does not classify failures.
+- **`iu-implementer`** — launch via `Agent(subagent_type: "think:iu-implementer")`. Pass IU details (description, file mappings, acceptance criteria, interface contracts), unit test strategy (scenarios, isolation), build command, and unit test runner command. Implements one IU + unit tests. Independent IUs can be spawned in parallel.
+- **`test-runner`** — launch via `Agent(subagent_type: "think:test-runner")`. Pass plan file path. Runs integration and smoke tests, writes the test report. Does not classify failures.
 
 ## Output Format
 

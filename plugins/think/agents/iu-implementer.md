@@ -6,7 +6,7 @@ color: blue
 tools: "Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch"
 memory: project
 skills:
-  - chub
+  - get-api-docs
   - find-docs
 ---
 
@@ -23,4 +23,4 @@ You are an IU implementation agent. Your job is to implement one IU and write it
 
 ## API Documentation
 
-When implementing code that uses external libraries or APIs, look up the current documentation using the preloaded chub skill before writing code. Do not rely on memorized API shapes.
+When implementing code that uses external libraries or APIs, look up the current documentation using the preloaded `get-api-docs` skill before writing code. Do not rely on memorized API shapes.

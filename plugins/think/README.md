@@ -10,6 +10,8 @@ The `find-docs` skill must be installed. Set it up via [ctx7 CLI](https://contex
 ctx7 setup --cli --claude       # Claude Code (~/.claude/skills)
 ```
 
+The shared `get-api-docs` skill must also be available in the global skills set. Think agents use this shared skill for current third-party API and SDK documentation lookup.
+
 ## Components
 
 ### Skills
@@ -25,7 +27,7 @@ ctx7 setup --cli --claude       # Claude Code (~/.claude/skills)
 | `spark-decide` | Decision-making with ADR output |
 | `compass` | Project direction and next-step guidance |
 | `web-design-mock` | Web design mock generation |
-| `chub` | Documentation hub — search and fetch docs via CLI |
+| `get-api-docs` | Shared global skill for current API/SDK documentation lookup |
 
 ### Agents
 

@@ -21,11 +21,12 @@ researched: <YYYY-MM-DD HH:mm>
 
 ## Content
 
-Write the research worker's full output as-is below the frontmatter — do not summarize or truncate. This includes:
-- Similar systems found and their key features
-- High-value UC candidates (common across 3+ systems)
-- Niche UC candidates (unique to 1 system)
-- User-requested features (from reviews/forums)
+This file is a raw data archive. Record all collected materials in detail so the file is self-contained — reviewable without revisiting the original sources. Do not summarize or truncate.
+
+### Required sections
+
+- **Sources consulted** — list every URL, doc page, file path, and search query used. Include sources that yielded no useful results (to prevent re-searching).
+- **Raw findings** — paste relevant excerpts, feature lists, user reviews, and comparison data verbatim. Quote directly rather than paraphrasing.
 
 ## Research Index
 

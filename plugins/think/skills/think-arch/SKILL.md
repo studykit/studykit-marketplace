@@ -287,7 +287,7 @@ When writing or confirming any technical statement (API support, library capabil
 ### Procedure
 
 1. **Check the codebase first** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
-2. **Launch an api-researcher agent** — if the claim requires external verification, spawn a background `Agent(subagent_type: "think:api-researcher")` with `run_in_background: true`. Prompt it with the specific claim and ask it to verify against official documentation. The agent uses `chub` first, then falls back to `WebSearch`/`WebFetch`.
+2. **Launch an api-researcher agent** — if the claim requires external verification, spawn a background `Agent(subagent_type: "think:api-researcher")` with `run_in_background: true`. Prompt it with the specific claim and ask it to verify against official documentation.
 3. **Continue the interview** — keep working while waiting. **Do not transition to the next phase** until all pending research results have been received and reflected.
 4. **When notified** — the subagent writes results to `A4/<topic-slug>.arch.research-<label>.md` per `${CLAUDE_SKILL_DIR}/references/research-report.md`. Update the research index (`A4/<topic-slug>.arch.research-index.md`).
 5. **Reflect the result** — apply the verification outcome. Add an inline reference where the claim is recorded (e.g., `(ref: research-webdriverio-vscode.md)`).
