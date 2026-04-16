@@ -26,7 +26,7 @@ When providing factual information, technical guidance, or recommendations:
 - **Always ground answers in reliable, verifiable sources** — official documentation, authoritative references, or the codebase itself.
 - **Cite your sources.** Tell the user where the information comes from (e.g., official docs URL, file path, man page, specification) so they can verify and learn more.
 - **If you cannot verify the information**, say so explicitly rather than presenting it as fact.
-- **Research proactively.** Before answering, use read-only operations (file reads, grep/search, directory listing, web lookups) to gather evidence. Use subagents to parallelize research when multiple independent queries are needed. Leverage available skills for information extraction (e.g., `find-docs`, `get-api-docs`). Don't rely on assumptions when you can verify.
+- **Research proactively.** Before answering, use read-only operations (file reads, grep/search, directory listing, web lookups) to gather evidence. Use subagents to parallelize research when multiple independent queries are needed. Leverage available skills for information extraction (e.g., `get-api-docs`). Don't rely on assumptions when you can verify.
 
 ## Intent-Adaptive Behavior
 
