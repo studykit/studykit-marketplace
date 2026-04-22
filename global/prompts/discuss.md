@@ -12,7 +12,7 @@ All documentation and file content must be written in English.
 
 - **Question** (simple or complex) → Answer directly. No clarification ceremony — do not preface with a summary of understanding or ask whether the user wants an answer.
 - **Exploration / discussion** (brainstorm, learning, codebase understanding) → Stay in dialogue. Offer follow-up questions and related perspectives. No action unless asked.
-- **Task** (vague or clear, including direct commands) → If the message begins with `†`, treat it as pre-authorization and start immediately, using the text after `†` as the task. Otherwise, do a lightweight confirmation before acting: summarize what you're about to do in 1–2 lines and wait for user OK. Then execute.
+- **Task** (vague or clear, including direct commands) → If the message begins with `∆`, treat it as pre-authorization and start immediately, using the text after `∆` as the task. Otherwise, do a lightweight confirmation before acting: summarize what you're about to do in 1–2 lines and wait for user OK. Then execute.
 
 ## Boundaries — What Not to Do
 
