@@ -15,11 +15,10 @@ Write a handoff file that captures everything a fresh Claude Code session needs 
 
 ## Task
 
-1. Ensure the directory `.handoff/` exists (already created at skill load).
-2. Create a new file at `.handoff/<TIMESTAMP>.md` where `<TIMESTAMP>` is the value from Context above (format `YYYY-MM-DD_HHmm`).
-3. Write the handoff content **in English**, drawing from the current conversation and any open plans or tasks.
-4. **Never overwrite or modify an existing handoff file.** If a file with the same timestamp already exists, append a short suffix (e.g., `_2`) and create a new one.
-5. Commit the handoff file together with any pending working-tree changes (see **Commit** below).
+1. **Update project docs.** Identify anything from this session that belongs in long-lived documentation — architectural decisions, design rationale, new conventions, decision records, CLAUDE.md rules, README changes — and update those docs. This runs in parallel with the handoff, not instead of it: the handoff remains self-contained even if the same knowledge also lives in the proper doc.
+2. Create a new file at `.handoff/<TIMESTAMP>.md` using the value from Context. **Never overwrite an existing handoff file** — if one exists at the same timestamp, append a short suffix (e.g., `_2`).
+3. Write the handoff **in English**. Make it self-contained: the next session should be able to resume from this file alone, without reconstructing prior conversation or broadly exploring the codebase.
+4. Commit the handoff together with the doc updates and any other pending working-tree changes.
 
 ## Additional Requirements
 
@@ -35,27 +34,7 @@ Every handoff file must begin with this banner so future sessions know not to ed
 > **DO NOT UPDATE THIS FILE.** This handoff is a point-in-time snapshot of the session at <TIMESTAMP>. To record a later state, create a new handoff file via `/handoff` — never edit this one.
 ```
 
-Below the banner, write whatever the next session actually needs — structure and sections are up to you. Let the session shape the document, not a template.
-
-Prioritize context that cannot be recovered by looking at the current repo state. In particular, capture:
-
-- **Intent** — what the user is ultimately trying to accomplish, beyond the immediate task.
-- **Decisions and their rationale** — what was chosen, and *why* that option beat the alternatives.
-- **Reversals** — decisions that were made and later changed, with the reason for the change. A new session that only sees the latest state will otherwise repeat the discarded path.
-- **Approaches tried and rejected** — so the next session doesn't redo dead ends.
-- **Blockers and open questions** — what is stuck, and what information would unblock it.
-- **Next concrete actions** — specific enough to act on without guessing.
-- **User statements worth preserving** — preferences, constraints, or context the user gave verbally that would otherwise be lost when the conversation ends.
-
-## Commit
-
-After the handoff file is written, commit it together with any other pending working-tree changes:
-
-- Run `git status` to review what will be included. If untracked files appear unrelated or look sensitive (e.g., `.env`, credentials, large binaries), pause and ask the user before staging them.
-- Stage the handoff file and the relevant changes explicitly by path (avoid blanket `git add -A` / `git add .`).
-- Create a single commit whose message summarizes both the handoff and the in-flight work (e.g., `chore(handoff): <TIMESTAMP> — <short summary of current work>`). Follow the repository's existing commit-message style.
-- If a pre-commit hook fails, fix the root cause and create a **new** commit — do not amend or use `--no-verify`.
-- Do **not** push. Leave publishing to the user.
+Below the banner, let the session shape the document. Structure and sections are your judgment call.
 
 ## Output
 
