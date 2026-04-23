@@ -43,8 +43,8 @@ Ranked by importance:
 
 | GitHub concept | Our implementation | Location |
 |----------------|--------------------|----------|
-| **Wiki page** — "this is how the project is shaped" | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md` | `a4/` root |
-| **Issue** — "this needs to be addressed" | UC, IU, review item | `a4/usecase/`, `a4/plan/`, `a4/review/` |
+| **Wiki page** — "this is how the project is shaped" | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `plan.md` | `a4/` root |
+| **Issue** — "this needs to be addressed" | UC, task, review item | `a4/usecase/`, `a4/task/`, `a4/review/` |
 | **Closed issue archive / ADR** — "this is how we decided" | decision records | `a4/decision/` |
 | **Issue tracker dashboard** | `INDEX.md` (+ dataview queries) | `a4/INDEX.md` |
 | **Labels, milestones, relations** | frontmatter fields | per-issue |
@@ -62,13 +62,14 @@ a4/
   architecture.md                       # Wiki: stack, components, interfaces, test strategy
   actors.md                             # Wiki: actor metadata (type, role, description)
   nfr.md                                # Wiki: non-functional requirements (omit if none)
+  plan.md                               # Wiki: implementation strategy, milestones, sequencing rationale
   bootstrap.md                          # Wiki: bootstrap report (latest snapshot; TBD per-run archiving)
 
   usecase/
     1-share-summary.md                  # Issue: Use Case
     2-search-history.md
-  plan/
-    3-render-markdown.md                # Issue: Implementation Unit
+  task/
+    3-render-markdown.md                # Issue: Task (Jira sense — unit of executable work)
     4-parse-config.md
   review/
     5-missing-error-handling.md         # Issue: review item (finding | gap | question)
@@ -87,12 +88,13 @@ a4/
 
 Conventions:
 
-- **Items go in folders.** Whenever an artifact type can have multiple instances (UC, IU, review item, decision), it lives in its own folder.
-- **Wiki pages are flat.** Each cross-cutting concern (context / domain / architecture / actors / nfr / bootstrap) is a single file at `a4/` root.
+- **Items go in folders.** Whenever an artifact type can have multiple instances (UC, task, review item, decision), it lives in its own folder.
+- **Wiki pages are flat.** Each cross-cutting concern (context / domain / architecture / actors / nfr / plan / bootstrap) is a single file at `a4/` root.
+- **Plan is a wiki page, not a folder.** `plan.md` holds the cross-cutting implementation narrative (strategy, milestones, sequencing). Executable work units are tasks in `task/`. The earlier folder name `plan/` for per-item files was renamed to `task/` because each file corresponds to a Jira "task" — a unit of work, not the plan itself.
 - **All reviews consolidated in `review/`.** No stage-scoped review subfolders. Stage association is expressed via the `target:` frontmatter field (e.g., `target: usecase/3-search-history`). Cross-cutting gaps/questions omit `target:` or set it to a wiki page.
-- **File naming: `<id>-<slug>.md`.** Folder indicates type (no `uc-`/`iu-`/`rev-`/`d-` prefix). **Id is a monotonically increasing integer global to the workspace** — unique across all issue types in a given `a4/` (same semantics as GitHub issue numbers). Next id is `max(existing ids in a4/) + 1`. Cross-folder references use full path (e.g., `[[usecase/3-search-history]]`) for readability; basename alone (`[[3-search-history]]`) is also unambiguous because ids are unique.
+- **File naming: `<id>-<slug>.md`.** Folder indicates type (no `uc-`/`task-`/`rev-`/`d-` prefix). **Id is a monotonically increasing integer global to the workspace** — unique across all issue types in a given `a4/` (same semantics as GitHub issue numbers). Next id is `max(existing ids in a4/) + 1`. Cross-folder references use full path (e.g., `[[task/3-render-markdown]]`) for readability; basename alone (`[[3-render-markdown]]`) is also unambiguous because ids are unique.
 - **No topic prefix.** Filenames do not encode topic (e.g., just `1-share-summary.md`, not `my-app.1-share-summary.md`).
-- **Obsidian markdown throughout.** Body uses Obsidian wikilinks (`[[usecase/3-search-history]]`) and embeds (`![[usecase/3-search-history]]`). Frontmatter paths are plain strings (no brackets) for dataview compatibility.
+- **Obsidian markdown throughout.** Body uses Obsidian wikilinks (`[[task/3-render-markdown]]`) and embeds (`![[task/3-render-markdown]]`). Frontmatter paths are plain strings (no brackets) for dataview compatibility.
 
 ### Unification of open items, questions, and review findings
 
@@ -152,10 +154,12 @@ Omit fields that are empty; `[]` is also fine.
 
 **Wiki page (`context.md`, `domain.md`, etc.)** — minimal, no lifecycle:
 ```yaml
-kind: context | domain | architecture | actors | nfr | bootstrap
+kind: context | domain | architecture | actors | nfr | plan | bootstrap
 updated: 2026-04-24
 ```
 Wiki pages do not declare outbound relationships in frontmatter; their cross-references live as Obsidian wikilinks in body prose + the `## Changes` footnote section (see Wiki update protocol below).
+
+**`plan.md` structure.** Holds: Overview (one paragraph), Implementation Strategy (approach, constraints), and a `## Milestones` section with one `###` subsection per milestone (goal, scope as task wikilinks, success criteria, risks). Milestone scope is declared by the `milestone:` field on each task — `plan.md` narrates; dataview or wikilinks surface the membership. A single file scales to most projects; per-milestone splits are out of scope (see Rejected Alternatives).
 
 **Use Case (`usecase/<n>-<slug>.md`):**
 ```yaml
@@ -165,20 +169,20 @@ status: draft | implementing | done | blocked
 actors: [user, admin]
 depends_on: [usecase/1-share-summary]
 justified_by: [decision/2-caching-strategy]
-related: [plan/5-render-markdown]
+related: [task/5-render-markdown]
 labels: [search, ui]
 milestone: v1.0
 created: 2026-04-20
 updated: 2026-04-24
 ```
 
-**Implementation Unit (`plan/<n>-<slug>.md`):**
+**Task (`task/<n>-<slug>.md`)** — Jira "task" semantics: a unit of executable work that implements one or more UCs. Plan-level narrative (strategy, milestone sequencing) lives in `plan.md`, not here.
 ```yaml
 id: 5
 title: Render markdown
 status: pending | implementing | complete | failing
 implements: [usecase/3-search-history, usecase/4-render-preview]
-depends_on: [plan/4-parse-config]
+depends_on: [task/4-parse-config]
 justified_by: [decision/2-caching-strategy]
 files: [src/render.ts, src/render.test.ts]
 cycle: 1
@@ -283,8 +287,8 @@ Output is always **review items** (with `wiki_impact` set and `source: drift-det
 | "Next action" column in INDEX | Previously rejected; INDEX is an alert board, per-topic narrative stays in compass Step 3. Reaffirmed. |
 | GitHub `assignee` field | Single-user workflow; no meaning. |
 | Issue templates as files | Skills generate files programmatically; skill code is the template. |
-| Type prefix in filenames (`uc-`, `iu-`, `rev-`, `d-`) | Folder already indicates type; prefix is redundant noise. Filenames become `<id>-<slug>.md`. |
-| Folder-scoped ids (`usecase/1`, `plan/1`, `review/1` coexisting) | Ambiguity when ids are referenced by number alone; conflates type with identity. Global monotonic ids (GitHub-issue semantics) are unique across the workspace, so basename references are unambiguous and filename collisions cannot happen. |
+| Type prefix in filenames (`uc-`, `task-`, `rev-`, `d-`) | Folder already indicates type; prefix is redundant noise. Filenames become `<id>-<slug>.md`. |
+| Folder-scoped ids (`usecase/1`, `task/1`, `review/1` coexisting) | Ambiguity when ids are referenced by number alone; conflates type with identity. Global monotonic ids (GitHub-issue semantics) are unique across the workspace, so basename references are unambiguous and filename collisions cannot happen. |
 | Active wiki updates (skill auto-edits wiki on every issue change) | Too invasive; risks clobbering human edits and makes the skill responsible for far-reaching content decisions. Nudge-based flow preserves human judgment. |
 | Drift-detection-only (no in-situ nudge) | Forces the detector to reload wiki context in a separate run; wasteful because the skill that just edited the issue already had wiki context loaded. Nudge leverages that loaded context at near-zero cost. |
 | Date-based staleness trigger for wiki updates | Misaligned — wiki freshness depends on whether related issues have changed, not calendar time. A wiki page untouched for 180 days may be perfectly current if no related issues moved. |
@@ -292,6 +296,10 @@ Output is always **review items** (with `wiki_impact` set and `source: drift-det
 | Explicit bidirectional relationship fields (`blocks` stored alongside `depends_on`, `implemented_by` alongside `implements`) | Doubles maintenance and risks drift between forward/reverse. Store only forward direction; dataview computes reverse on demand. |
 | Generic `related: [{kind, ref}]` as the only relationship mechanism | Loses per-field semantic clarity; dataview queries become awkward (`WHERE contains(related, {kind: 'implements', ...})`). Hybrid approach (typed fields for structural relationships + generic `related` catchall + body wikilinks for soft references) is cleaner. |
 | Systematic migration tool for existing aggregated files | Legacy content in `visual-claude/A4/` and this plugin's prior `a4/` stays as-is; the new model applies only to new workspaces and new items going forward. Building a one-shot splitter + id reassigner is not worth the engineering cost given that legacy material is bounded and stable. |
+| `plan/` folder for per-item work files | The folder name `plan/` was misleading: each file corresponds to a Jira **task** (unit of executable work), not to the plan itself. The plan is a cross-cutting narrative (strategy, milestones, sequencing) that belongs in a single `plan.md` wiki page at root. Folder renamed to `task/`; narrative lives in `plan.md`. |
+| Separate `design.md` wiki page alongside `architecture.md` | `architecture.md` already covers stack, components, interfaces, and test strategy — traditional "design" content. Adding `design.md` creates a boundary that is impossible to maintain cleanly (tech stack choice, component decomposition, interface definition all become ambiguous). If `architecture.md` ever grows unwieldy, the right move is a focused split by concern via a new ADR, not a generic `design.md`. |
+| Per-milestone plan files (`milestone/v1.md`, `milestone/v2.md`, …) | After tasks are split out to `task/*.md`, the remaining plan narrative (overview + strategy + per-milestone scope + sequencing) is thin — typically 150–250 lines for a medium project. Cross-milestone sequencing rationale (e.g., "phase 3 builds on phase 1 foundation") is the core value of the plan document and flows naturally in one file. Splitting fragments that rationale. Revisit only if a project grows past ~10 milestones or a specific milestone accumulates substantial standalone narrative — handle that via a follow-up ADR, not preemptively. |
+| Separate `phase:` frontmatter field on tasks | `milestone:` already serves this role — a phase is a kind of milestone (a named deliverable set with a completion criterion). Introducing a second field doubles the grouping axis and forces every dataview query and every skill to choose one. Phase = milestone. |
 
 ## Next Steps
 
@@ -305,7 +313,7 @@ Sequenced by prerequisite dependency:
 - [ ] **Obsidian markdown conventions doc** — wikilink vs embed usage (`[[x]]` for reference, `![[x]]` for embed), frontmatter path format (plain string, no brackets, no extension), footnote numbering convention. Placed under plugin `references/`.
 - [ ] **INDEX.md redesign for single-workspace** — the current topic × stage grid becomes meaningless. Replace with open-issue counts, stage progress, milestone progress, recent activity, wiki-drift alert count. Dataview block + static markdown fallback.
 - [ ] **Compass redesign** — Step 1.2 (artifact scan), Step 3 (gap diagnosis with drift detection) rewritten for the new layout. Step 0 (INDEX refresh) updated to regenerate the new dashboard.
-- [ ] **Skill rewrites** — `think-usecase`, `think-arch`, `think-plan`, `auto-usecase`, `auto-bootstrap` all change output format from aggregated stage file to per-item files + wiki pages, emit Obsidian markdown, use the id allocator, emit nudges. Reviewer agents (`usecase-reviewer`, `arch-reviewer`, `plan-reviewer`) emit per-finding review items with `wiki_impact` set where applicable, rather than a single review report.
+- [ ] **Skill rewrites** — `think-usecase`, `think-arch`, `think-plan`, `auto-usecase`, `auto-bootstrap` all change output format from aggregated stage file to per-item files + wiki pages, emit Obsidian markdown, use the id allocator, emit nudges. In particular, `think-plan` now produces **`plan.md` (wiki narrative, milestones as `##` sections) + `task/<id>-<slug>.md` per unit of work** — not a single aggregated plan file. Reviewer agents (`usecase-reviewer`, `arch-reviewer`, `plan-reviewer`) emit per-finding review items with `wiki_impact` set where applicable, rather than a single review report.
 - [ ] **Spark skill alignment** — `spark-brainstorm` and `spark-decide` get their own lifecycle frontmatter; the status-field conflict that originally surfaced (candidate 1 from the handoff) is resolved in passing because the new schema distinguishes document-kind lifecycle from spark-lifecycle explicitly.
 - [ ] **Obsidian dataview examples** — a canonical set of dataview blocks (open issues by milestone, reverse-derived `blocks`/`implemented_by`/`superseded_by` views, UC diagram source, drift alert count) placed as reference snippets in the plugin docs.
 
@@ -360,5 +368,28 @@ Sequenced by prerequisite dependency:
 **Legacy.** Existing aggregated files (`visual-claude/A4/`, this plugin's prior `a4/`) stay as-is; no migration tooling. New model applies only to new workspaces and new items going forward.
 
 **Decisions deferred.** YAML grammar for path references (plain string vs bracketed), issue comment/log section format, and exact per-type lifecycle vocabularies (though sketched) remain for follow-up rounds.
+
+</details>
+
+<details>
+<summary>Continuation: plan vs task distinction, plan.md as wiki, milestone as phase (2026-04-24, second round)</summary>
+
+**Why continue.** While beginning implementation (id allocator), the user flagged that the ADR conflated "plan" (the implementation roadmap document) with "task" (a unit of executable work, Jira sense). The previous structure had `plan/<id>-<slug>.md` per-item files, but the file kind was actually Jira-task-shaped (Implementation Unit with `implements`, `files`, `cycle`, acceptance criteria), not plan-shaped.
+
+**Reference case.** `visual-claude/a4/terminal-markdown-renderer.plan.md` — a 1214-line aggregated plan file with 16 IUs. After extracting IUs to per-file tasks, the remaining narrative (Overview, Technology Stack, Implementation Strategy, Phase sequencing) is ~150–250 lines. That narrative is the real "plan" artifact and has no home in the prior ADR.
+
+**Folder rename.** `plan/` → `task/`. The files in that folder are Jira tasks — units of executable work with lifecycle. Nothing else about them changes (frontmatter, relationships, `cycle` field all stay).
+
+**New wiki page: `plan.md`.** Single flat file at `a4/` root (same tier as `context.md`, `architecture.md`, etc.). Contains Overview, Implementation Strategy, and a `## Milestones` section with one `###` subsection per milestone. Milestone scope is declared by the `milestone:` field on each task; `plan.md` narrates sequencing and rationale, dataview or wikilinks surface the membership.
+
+**Why not `design.md`.** Already rejected — `architecture.md` covers traditional design content (stack, components, interfaces, test strategy). A separate `design.md` would force a boundary that cannot be maintained cleanly.
+
+**Why not per-milestone plan files.** After task extraction, plan narrative is thin (150–250 lines). Cross-milestone sequencing ("phase 3 builds on phase 1 foundation") is the plan's core value and flows naturally in one file. Splitting fragments that rationale. Revisit only if a project exceeds ~10 milestones or a milestone accumulates substantial standalone narrative.
+
+**Phase vs milestone.** `milestone:` field already carries phase semantics — a phase is a named deliverable set with a completion criterion, which is exactly what a milestone is. No separate `phase:` field.
+
+**Wiki pages now total 7.** `context`, `domain`, `architecture`, `actors`, `nfr`, `plan`, `bootstrap`. Wiki page `kind:` enum updated accordingly. `plan.md` participates in the wiki update protocol: task state changes or milestone re-sequencing trigger footnote additions and `## Changes` entries, resolved through review items like any other wiki edit.
+
+**Id allocator impact.** `ISSUE_FOLDERS` tuple in `scripts/allocate_id.py` updated from `("usecase", "plan", "review", "decision")` to `("usecase", "task", "review", "decision")`. One-line change, verified with sample data.
 
 </details>

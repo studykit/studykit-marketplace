@@ -64,7 +64,7 @@
       "name": "think",
       "source": "./plugins/think",
       "description": "Co-thinking plugin — usecase/spec/implementation-plan design, autonomous code execution, brainstorming, decision-making, and GitHub automation",
-      "version": "0.15.0",
+      "version": "0.16.0",
       "author": {
         "name": "studykit"
       },
