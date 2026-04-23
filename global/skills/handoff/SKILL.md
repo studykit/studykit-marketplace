@@ -19,6 +19,7 @@ Write a handoff file that captures everything a fresh Claude Code session needs 
 2. Create a new file at `.handoff/<TIMESTAMP>.md` where `<TIMESTAMP>` is the value from Context above (format `YYYY-MM-DD_HHmm`).
 3. Write the handoff content **in English**, drawing from the current conversation and any open plans or tasks.
 4. **Never overwrite or modify an existing handoff file.** If a file with the same timestamp already exists, append a short suffix (e.g., `_2`) and create a new one.
+5. Commit the handoff file together with any pending working-tree changes (see **Commit** below).
 
 ## Additional Requirements
 
@@ -46,6 +47,16 @@ Prioritize context that cannot be recovered by looking at the current repo state
 - **Next concrete actions** — specific enough to act on without guessing.
 - **User statements worth preserving** — preferences, constraints, or context the user gave verbally that would otherwise be lost when the conversation ends.
 
+## Commit
+
+After the handoff file is written, commit it together with any other pending working-tree changes:
+
+- Run `git status` to review what will be included. If untracked files appear unrelated or look sensitive (e.g., `.env`, credentials, large binaries), pause and ask the user before staging them.
+- Stage the handoff file and the relevant changes explicitly by path (avoid blanket `git add -A` / `git add .`).
+- Create a single commit whose message summarizes both the handoff and the in-flight work (e.g., `chore(handoff): <TIMESTAMP> — <short summary of current work>`). Follow the repository's existing commit-message style.
+- If a pre-commit hook fails, fix the root cause and create a **new** commit — do not amend or use `--no-verify`.
+- Do **not** push. Leave publishing to the user.
+
 ## Output
 
-After writing the file, tell the user the file path in one short sentence. Do not restate the contents.
+After writing the file and creating the commit, tell the user the handoff file path and the commit SHA. Do not restate the contents.
