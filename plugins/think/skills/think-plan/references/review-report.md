@@ -4,7 +4,7 @@ After each `plan-reviewer` invocation, the reviewer agent writes the report dire
 
 ## File Path
 
-`A4/<topic-slug>.plan.review-r<N>.md`
+`a4/<topic-slug>.plan.review-r<N>.md`
 
 Where `<N>` is the review round number (1, 2, 3).
 

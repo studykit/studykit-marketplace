@@ -31,8 +31,8 @@ If no argument is provided, ask the user for a slug, filename, or path.
 ### File Resolution
 
 1. **Full path** — use directly if the file exists
-2. **Partial match** — glob for `A4/*<argument>*.arch.md`
-3. **Fallback** — if `A4/` does not exist, glob from project root
+2. **Partial match** — glob for `a4/*<argument>*.arch.md`
+3. **Fallback** — if `a4/` does not exist, glob from project root
 4. **Multiple matches** — present candidates and ask the user to pick
 5. **No match** — inform the user and ask for a different term
 
@@ -147,7 +147,7 @@ If any verification step fails:
    a. **Spawn an api-researcher agent** — launch an `Agent(subagent_type: "think:api-researcher")` with the error message, relevant config files, and the technology stack. The agent should:
       - Read library source code when documentation is insufficient (e.g., checking default config, supported options, version-specific behavior)
       - Check version-specific notes, known issues, and migration guides
-      - Write findings to `A4/<topic-slug>.bootstrap.research-<label>.md` per the format below. `<label>` is a short slug describing the issue (e.g., `jest-esm-flags`, `esbuild-target-mismatch`)
+      - Write findings to `a4/<topic-slug>.bootstrap.research-<label>.md` per the format below. `<label>` is a short slug describing the issue (e.g., `jest-esm-flags`, `esbuild-target-mismatch`)
    b. **Apply the fix** based on the research agent's findings, not assumptions.
    c. **Re-verify** after fix.
    d. If the fix fails, spawn a new api-researcher agent with the updated error — do not retry the same fix.
@@ -160,13 +160,13 @@ Research reports use the format in `${CLAUDE_SKILL_DIR}/references/research-repo
 
 When re-run on an existing bootstrap (e.g., after arch changes):
 
-1. **Archive the current report** — rename `A4/<slug>.bootstrap.md` to `A4/<slug>.bootstrap.r<current-revision>.md` before writing the new report. This preserves the previous result as-is.
+1. **Archive the current report** — rename `a4/<slug>.bootstrap.md` to `a4/<slug>.bootstrap.r<current-revision>.md` before writing the new report. This preserves the previous result as-is.
 2. Read the archived report's frontmatter `sources`
 3. Diff the current `.arch.md` against the archived report's source SHA
 4. Identify what changed (new test tier, different tool, new dependency)
 5. Apply only the incremental changes
 6. Re-verify all checks
-7. Write the new report to `A4/<slug>.bootstrap.md` with incremented revision
+7. Write the new report to `a4/<slug>.bootstrap.md` with incremented revision
 
 ## Session Management
 

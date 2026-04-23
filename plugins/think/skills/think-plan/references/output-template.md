@@ -2,7 +2,7 @@
 
 ## File Path
 
-`A4/<topic-slug>.plan.md`
+`a4/<topic-slug>.plan.md`
 
 ## Frontmatter
 

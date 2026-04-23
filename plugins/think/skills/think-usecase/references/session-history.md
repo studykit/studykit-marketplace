@@ -4,7 +4,7 @@ Session history is stored in a separate file from the working usecase file to ke
 
 ## File Path
 
-`A4/<topic-slug>.usecase.history.md`
+`a4/<topic-slug>.usecase.history.md`
 
 ## Format
 

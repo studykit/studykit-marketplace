@@ -4,7 +4,7 @@ After each `usecase-explorer` invocation, the explorer agent writes the report d
 
 ## File Path
 
-`A4/<topic-slug>.usecase.exploration-<label>.md`
+`a4/<topic-slug>.usecase.exploration-<label>.md`
 
 Where `<label>` identifies the exploration context:
 - **auto-usecase:** use the growth iteration number — one report per growth iteration (e.g., `exploration-1`, `exploration-2`, `exploration-3`)

@@ -4,7 +4,7 @@ After running integration and smoke tests in Phase 2, write a test report captur
 
 ## File Path
 
-`A4/<topic-slug>.test-report.c<N>.md`
+`a4/<topic-slug>.test-report.c<N>.md`
 
 Where `<N>` is the test cycle number (1, 2, 3).
 

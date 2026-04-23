@@ -4,7 +4,7 @@ After each option research, the research agent writes detailed findings to a fil
 
 ## File Path
 
-`A4/<topic-slug>.decide.research-<label>.md`
+`a4/<topic-slug>.decide.research-<label>.md`
 
 Where `<label>` is a short descriptive slug of the option being researched (e.g., `redis-caching`, `graphql-vs-rest`).
 
@@ -30,7 +30,7 @@ This file is a raw data archive. Record all collected materials in detail so the
 
 ## Research Index
 
-Maintain `A4/<topic-slug>.decide.research-index.md` as a lookup table. Update the index each time a new research report is created:
+Maintain `a4/<topic-slug>.decide.research-index.md` as a lookup table. Update the index each time a new research report is created:
 
 ```markdown
 | # | File | Option | Summary | Date |

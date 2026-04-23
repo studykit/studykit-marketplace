@@ -36,19 +36,19 @@ Every Use Case follows the structure defined in `output-template.md`. In autonom
 
 ## Resume Detection
 
-Before starting, check for existing progress. If the output file (`A4/<topic-slug>.usecase.md`) exists, extract its `reflected_files` list via:
+Before starting, check for existing progress. If the output file (`a4/<topic-slug>.usecase.md`) exists, extract its `reflected_files` list via:
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py A4/<topic-slug>.usecase.md reflected_files
+uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py a4/<topic-slug>.usecase.md reflected_files
 ```
 
 Do not read the output file itself. A file listed in `reflected_files` has already been reflected — do not read it and do not pass it to agents.
 
-1. **Research report:** Check for `A4/<topic-slug>.usecase.research-initial.md`:
+1. **Research report:** Check for `a4/<topic-slug>.usecase.research-initial.md`:
    - File exists and listed in `reflected_files` → already reflected, skip Step 2a.
    - File exists but not in `reflected_files` → completed but not yet reflected, pass to composer in Step 3.
    - File does not exist → run Step 2a.
-2. **Code analysis report:** Check for `A4/<topic-slug>.usecase.code-analysis.md`:
+2. **Code analysis report:** Check for `a4/<topic-slug>.usecase.code-analysis.md`:
    - File exists and listed in `reflected_files` → already reflected, skip Step 2b.
    - File exists but not in `reflected_files` → completed but not yet reflected, pass to composer in Step 3.
    - File does not exist and input references source code → run Step 2b.
@@ -56,8 +56,8 @@ Do not read the output file itself. A file listed in `reflected_files` has alrea
 3. **Last completed step:** Extract `last_step` from frontmatter via `read_frontmatter.py`:
    - If set → **resume from the next step** — do not repeat completed work.
    - If empty or absent → no prior progress, start from Step 1.
-4. **Review reports:** Check existing `A4/<topic-slug>.usecase.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
-5. **Exploration reports:** Check existing `A4/<topic-slug>.usecase.exploration-*.md` files against `reflected_files`. Only pass unreflected exploration reports to agents.
+4. **Review reports:** Check existing `a4/<topic-slug>.usecase.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
+5. **Exploration reports:** Check existing `a4/<topic-slug>.usecase.exploration-*.md` files against `reflected_files`. Only pass unreflected exploration reports to agents.
    - File exists but not in `reflected_files` → exploration done but not yet reflected, use existing results in next compose iteration.
 
 This allows recovery from API limits, context window exhaustion, or other interruptions without starting over.
@@ -71,7 +71,7 @@ The input has two components:
 1. **New idea** (required) — the feature, idea, or brainstorm to turn into use cases. Can be a file path, inline content, or a vague description.
 2. **Target system** (optional) — an existing `.usecase.md` file, topic slug, or partial name. If absent, create from scratch.
 
-Determine the **topic slug** (lowercase, hyphen-separated, 2–5 words). Output path: `A4/<topic-slug>.usecase.md`.
+Determine the **topic slug** (lowercase, hyphen-separated, 2–5 words). Output path: `a4/<topic-slug>.usecase.md`.
 
 **Do not read any input files, source code, or target system files in the main session.** Only identify paths and pass them to agents in subsequent steps.
 
@@ -115,7 +115,7 @@ Launch a code analysis subagent via `Agent` (general-purpose). The subagent must
 > 4. Note any partially implemented or stubbed features.
 > 5. Identify data entities and their CRUD operations.
 >
-> Write the results to `A4/<topic-slug>.usecase.code-analysis.md` with frontmatter `label: code-analysis`, `topic: <topic-slug>`.
+> Write the results to `a4/<topic-slug>.usecase.code-analysis.md` with frontmatter `label: code-analysis`, `topic: <topic-slug>`.
 
 ### Step 3: Compose and Refine Loop
 
@@ -135,7 +135,7 @@ Include the shared reference file paths in each subagent prompt.
 #### Step 3a: Compose
 
 Launch a `usecase-composer` subagent with:
-- **Output path** — `A4/<topic-slug>.usecase.md`
+- **Output path** — `a4/<topic-slug>.usecase.md`
 - **User idea** — the input from Step 1 (first iteration) or UC Candidates from reviewer/explorer (subsequent iterations)
 - **Research results** — file path to research report from Step 2a (first iteration only)
 - **Code analysis** — file path to code analysis report from Step 2b (first iteration only, if exists)
@@ -204,7 +204,7 @@ Completeness gaps are addressed first. Perspective exploration only runs when th
 
 ### Commit
 
-All commits stage files under `A4/<topic-slug>.*`. Commit timing:
+All commits stage files under `a4/<topic-slug>.*`. Commit timing:
 - **After compose** (Step 3b) — UC document created/updated
 - **After each quality round** (Step 3c) — review report (+ revised document if NEEDS REVISION)
 - **After exploration** (Step 3d) — exploration report

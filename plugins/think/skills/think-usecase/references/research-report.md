@@ -4,7 +4,7 @@ After each similar systems research, the research agent writes the results direc
 
 ## File Path
 
-`A4/<topic-slug>.usecase.research-<label>.md`
+`a4/<topic-slug>.usecase.research-<label>.md`
 
 Where `<label>` is a short descriptive slug of the research context (e.g., `competitor-task-management`, `collaboration-features`).
 
@@ -30,7 +30,7 @@ This file is a raw data archive. Record all collected materials in detail so the
 
 ## Research Index
 
-Maintain `A4/<topic-slug>.usecase.research-index.md` as a lookup table. Update the index each time a new research report is created. Use the index as the primary lookup — do not read research report files unless you need the full details.
+Maintain `a4/<topic-slug>.usecase.research-index.md` as a lookup table. Update the index each time a new research report is created. Use the index as the primary lookup — do not read research report files unless you need the full details.
 
 ## Purpose
 

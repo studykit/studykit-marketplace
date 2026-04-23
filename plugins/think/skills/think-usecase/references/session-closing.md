@@ -21,13 +21,13 @@ If the user confirms, create a task list so they can track progress:
 
 Then proceed:
 
-1. **Pre-checkpoint** — write all pending confirmed content to the working file. If content was written, **increment `revision`**, update `revised` timestamp, and **commit** (`A4/<topic-slug>.*`). Mark "Save progress" as `completed`.
+1. **Pre-checkpoint** — write all pending confirmed content to the working file. If content was written, **increment `revision`**, update `revised` timestamp, and **commit** (`a4/<topic-slug>.*`). Mark "Save progress" as `completed`.
 2. Mark "Explore" as `in_progress`. **Launch explorer subagent** — spawn a fresh `Agent(subagent_type: "think:usecase-explorer")` with the current working file and report path per `references/exploration-report.md` (label: revision number). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. The explorer writes the report and returns results.
 3. **Present exploration results** — show each perspective explored and UC candidates found:
    - Ask: "The explorer found these additional angles. Which ones should we add?"
    - If the user picks any, enter the Discovery Loop for those topics (full precision: validation, error handling, etc.)
    - If the user defers any, record as Open Items for next iteration
-   - If changes were made, add the exploration file name to `reflected_files`, **increment `revision`**, update `revised` timestamp, and **commit** (`A4/<topic-slug>.*`).
+   - If changes were made, add the exploration file name to `reflected_files`, **increment `revision`**, update `revised` timestamp, and **commit** (`a4/<topic-slug>.*`).
 4. Mark "Explore" as `completed`. Mark "Review" as `in_progress`. **Launch reviewer subagent** — spawn a fresh `Agent(subagent_type: "think:usecase-reviewer")` with the **updated** working file (now including any newly added UCs from exploration) and report path per `references/review-report.md` (label: revision number). If a previous review report exists, include its path. The reviewer writes the report and returns results.
 5. **Present the review results** — walk through issues in this order:
 
@@ -61,7 +61,7 @@ Then proceed:
    - If the user defers, record as Open Items for next iteration
 
    The user can accept, modify, or dismiss each suggestion. They can also defer items to the next iteration.
-6. **Update the working file with review revisions** — apply all accepted review changes. If changes were made, add the review report file name to `reflected_files`, **increment `revision`**, update `revised` timestamp, and **commit** (`A4/<topic-slug>.*`).
+6. **Update the working file with review revisions** — apply all accepted review changes. If changes were made, add the review report file name to `reflected_files`, **increment `revision`**, update `revised` timestamp, and **commit** (`a4/<topic-slug>.*`).
 7. **Re-review check** — if significant changes were made during the review walk-through (e.g., UCs split, new UCs from completeness gaps), ask: "Significant changes were made. Run the reviewer again?" If yes, go back to step 4. If no, proceed.
 8. Mark "Review" as `completed`. Mark "Record open items" as `in_progress`. **Scan for Open Items** — review all sections for incomplete or unclear items:
    - Use cases flagged by the reviewer but deferred by the user
@@ -72,7 +72,7 @@ Then proceed:
    - Unresolved Open Questions
    - Relationships not yet analyzed (if < 5 UCs)
 9. **Append a Session Close entry to the history file** (`<topic-slug>.usecase.history.md`) per `references/session-history.md`. Include: Revisions This Session, Last Completed, Decisions Made, Change Log (interview-driven changes only), Open Items, Next Steps, and Interview Transcript.
-10. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Set `last_step` to `revision N`. Keep `status: draft`. Write using the Write tool. **Commit** (`A4/<topic-slug>.*`):
+10. **Update the working file** — update the Open Items and Next Steps sections with the current state. **Increment `revision`** and update `revised` timestamp. Set `last_step` to `revision N`. Keep `status: draft`. Write using the Write tool. **Commit** (`a4/<topic-slug>.*`):
     ```
     usecase(<topic-slug>): revision N
 

@@ -4,7 +4,7 @@ After each technical claim verification, the research subagent writes the result
 
 ## File Path
 
-`A4/<topic-slug>.arch.research-<label>.md`
+`a4/<topic-slug>.arch.research-<label>.md`
 
 Where `<label>` is a short descriptive slug of the claim being verified (e.g., `webdriverio-vscode`, `agent-sdk-session-events`).
 
@@ -31,7 +31,7 @@ This file is a raw data archive. Record all collected materials in detail so the
 
 ## Research Index
 
-Maintain `A4/<topic-slug>.arch.research-index.md` as a lookup table. Update the index each time a new research report is created:
+Maintain `a4/<topic-slug>.arch.research-index.md` as a lookup table. Update the index each time a new research report is created:
 
 ```markdown
 | # | File | Tags | Summary | Date |

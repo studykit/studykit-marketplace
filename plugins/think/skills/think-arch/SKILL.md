@@ -31,10 +31,10 @@ If no argument is provided, ask the user for a slug, filename, or path.
 
 ### File Resolution
 
-Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `A4/`:
+Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `a4/`:
 
-1. **Full path** — extract the slug from the filename (e.g., `A4/chat-app.usecase.md` → `chat-app`), then scan for related files: `A4/*<slug>*.usecase.md` and `A4/*<slug>*.arch.md`
-2. **Partial match** — glob for `A4/*<argument>*.usecase.md` and `A4/*<argument>*.arch.md`
+1. **Full path** — extract the slug from the filename (e.g., `a4/chat-app.usecase.md` → `chat-app`), then scan for related files: `a4/*<slug>*.usecase.md` and `a4/*<slug>*.arch.md`
+2. **Partial match** — glob for `a4/*<argument>*.usecase.md` and `a4/*<argument>*.arch.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
@@ -61,11 +61,11 @@ Compare the stored `sha` in arch frontmatter against the current file:
 
 Check for report files not listed in `reflected_files`:
 
-- `A4/<topic-slug>.arch.review-*.md` (review reports)
-- `A4/<topic-slug>.bootstrap.md` (bootstrap reports — issues where `Stage: arch`)
-- `A4/<topic-slug>.integration-report.r*.md` (integration reports — issues where `Stage: arch`)
-- `A4/<topic-slug>.plan.md` (check for blocked status with arch-level issues)
-- `A4/<topic-slug>.test-report.c*.md` (check for failures diagnosed as arch-level)
+- `a4/<topic-slug>.arch.review-*.md` (review reports)
+- `a4/<topic-slug>.bootstrap.md` (bootstrap reports — issues where `Stage: arch`)
+- `a4/<topic-slug>.integration-report.r*.md` (integration reports — issues where `Stage: arch`)
+- `a4/<topic-slug>.plan.md` (check for blocked status with arch-level issues)
+- `a4/<topic-slug>.test-report.c*.md` (check for failures diagnosed as arch-level)
 
 For integration reports, prioritize issues where the diagnosis stage is **arch**. For plan deviations, read the Deviation Note to determine if the root cause is an architecture assumption that doesn't hold.
 
@@ -289,19 +289,19 @@ When writing or confirming any technical statement (API support, library capabil
 1. **Check the codebase first** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
 2. **Launch an api-researcher agent** — if the claim requires external verification, spawn a background `Agent(subagent_type: "think:api-researcher")` with `run_in_background: true`. Prompt it with the specific claim and ask it to verify against official documentation.
 3. **Continue the interview** — keep working while waiting. **Do not transition to the next phase** until all pending research results have been received and reflected.
-4. **When notified** — the subagent writes results to `A4/<topic-slug>.arch.research-<label>.md` per `${CLAUDE_SKILL_DIR}/references/research-report.md`. Update the research index (`A4/<topic-slug>.arch.research-index.md`).
+4. **When notified** — the subagent writes results to `a4/<topic-slug>.arch.research-<label>.md` per `${CLAUDE_SKILL_DIR}/references/research-report.md`. Update the research index (`a4/<topic-slug>.arch.research-index.md`).
 5. **Reflect the result** — apply the verification outcome. Add an inline reference where the claim is recorded (e.g., `(ref: research-webdriverio-vscode.md)`).
 6. **Flag uncertainty** — if official documentation is ambiguous, tell the user and ask whether to proceed as assumption or investigate further.
 
 ### Research Index
 
-Maintain `A4/<topic-slug>.arch.research-index.md` as a lookup table. Check it before launching new research to avoid duplicates.
+Maintain `a4/<topic-slug>.arch.research-index.md` as a lookup table. Check it before launching new research to avoid duplicates.
 
 ## Progressive File Writing
 
 ### Working File Path
 
-- Default: `A4/<topic-slug>.arch.md`
+- Default: `a4/<topic-slug>.arch.md`
 - If the file already exists → **Iteration** mode
 - Tell the user the file path
 

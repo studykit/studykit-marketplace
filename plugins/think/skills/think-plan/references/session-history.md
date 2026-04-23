@@ -4,7 +4,7 @@ Append-only event log tracking all state changes across the plan lifecycle.
 
 ## File Path
 
-`A4/<topic-slug>.plan.history.md`
+`a4/<topic-slug>.plan.history.md`
 
 ## Frontmatter
 

@@ -4,7 +4,7 @@ Use this format when writing research reports for bootstrap issues.
 
 ## File Path
 
-`A4/<topic-slug>.bootstrap.research-<label>.md`
+`a4/<topic-slug>.bootstrap.research-<label>.md`
 
 Where `<label>` is a short slug describing the issue (e.g., `jest-esm-flags`, `esbuild-target-mismatch`).
 

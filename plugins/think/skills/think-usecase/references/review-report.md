@@ -4,7 +4,7 @@ After each `usecase-reviewer` invocation, the reviewer agent writes the report d
 
 ## File Path
 
-`A4/<topic-slug>.usecase.review-<label>.md`
+`a4/<topic-slug>.usecase.review-<label>.md`
 
 Where `<label>` identifies the review context:
 - **think-usecase:** use the revision number (e.g., `review-1`, `review-2`) or `review-final` for finalization

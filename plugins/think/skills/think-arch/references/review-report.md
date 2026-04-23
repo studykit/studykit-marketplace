@@ -4,7 +4,7 @@ After each `arch-reviewer` invocation, the reviewer agent writes the report dire
 
 ## File Path
 
-`A4/<topic-slug>.arch.review-<label>.md`
+`a4/<topic-slug>.arch.review-<label>.md`
 
 Where `<label>` identifies the review context:
 - **Area review:** use the scope and revision number (e.g., `review-components-1`, `review-teststrategy-2`)

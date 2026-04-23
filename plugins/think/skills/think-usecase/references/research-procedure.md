@@ -17,7 +17,7 @@ If the user agrees:
 3. **Continue the interview** — do not wait for research results. Notification arrives automatically when the agent completes.
 4. When notified, save the full results per `research-report.md` (in this references directory) with a descriptive label (e.g., `research-competitor-task-management.md`). Summarize findings at the next natural break:
    > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
-5. **Update the research index** — append an entry to `A4/<topic-slug>.usecase.research-index.md`:
+5. **Update the research index** — append an entry to `a4/<topic-slug>.usecase.research-index.md`:
    ```markdown
    | # | File | Tags | Summary | Date |
    |---|------|------|---------|------|

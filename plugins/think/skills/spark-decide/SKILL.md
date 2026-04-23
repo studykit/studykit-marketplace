@@ -15,7 +15,7 @@ Facilitate a solution discovery session on: **$ARGUMENTS**
 
 Determine how to start based on the input:
 
-1. **File path provided** (e.g., `A4/spark/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
+1. **File path provided** (e.g., `a4/spark/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
 2. **Topic/problem provided**: Start from Phase 1 (Problem Framing).
 
 If the input is ambiguous, ask the user to clarify.
@@ -39,7 +39,7 @@ The file grows through **checkpoint writes** rather than after every confirmed i
 ### Working File Path
 
 At the start of the session, determine the file path:
-- Default: `A4/spark/<YYYY-MM-DD-HHmm>-<topic-slug>.decide.md` relative to working directory
+- Default: `a4/spark/<YYYY-MM-DD-HHmm>-<topic-slug>.decide.md` relative to working directory
 - Ask the user only if they want a different location
 - Create the directory if needed
 
@@ -161,7 +161,7 @@ For each promising option, investigate by spawning an `Agent(subagent_type: "thi
 ### Research protocol
 
 1. **Ask before researching** — "I'd like to research [option] now. Any specific questions you want me to answer about it?" This prevents wasted research.
-2. **Check the research index** — before launching a new agent, check `A4/<topic-slug>.decide.research-index.md` to avoid duplicate research.
+2. **Check the research index** — before launching a new agent, check `a4/<topic-slug>.decide.research-index.md` to avoid duplicate research.
 3. **Be objective** — Present both strengths and limitations. Do not advocate for any option during research.
 4. **When notified** — update the research index. Summarize findings to the user, then ask: "Anything else you want to know about this before we move on?"
 5. **Reflect into working file** — when writing option findings to the working file, add an inline reference to the raw data file (e.g., `(ref: research-redis-caching.md)`).

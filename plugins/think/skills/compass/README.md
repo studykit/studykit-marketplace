@@ -5,7 +5,7 @@ Pipeline navigator that helps users find the right skill or diagnose the next st
 ## Current Notes
 
 - **Primary file:** `plugins/think/skills/compass/SKILL.md`
-- **Current behavior:** Acts as the navigation entry point for the think pipeline. It inspects existing `A4/` artifacts first and then recommends or invokes the next skill.
+- **Current behavior:** Acts as the navigation entry point for the think pipeline. It inspects existing `a4/` artifacts first and then recommends or invokes the next skill.
 
 ## Workflow
 
@@ -19,7 +19,7 @@ partition "Step 1: Detect Context" {
   if ($ARGUMENTS is file path\nor topic slug?) then (yes)
     :Extract topic slug;
     :Scan for artifacts
-    in A4/<slug>*;
+    in a4/<slug>*;
     if (Artifacts found?) then (yes)
       -> Pipeline Diagnosis;
     else (no)

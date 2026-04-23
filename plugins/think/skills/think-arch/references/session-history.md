@@ -4,7 +4,7 @@ Session history is stored in a separate file from the working arch file to keep 
 
 ## File Path
 
-`A4/<topic-slug>.arch.history.md`
+`a4/<topic-slug>.arch.history.md`
 
 ## Format
 

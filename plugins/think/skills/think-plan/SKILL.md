@@ -17,10 +17,10 @@ If no argument is provided, ask the user for a slug, filename, or path.
 
 ### File Resolution
 
-Arguments can be full paths, partial filenames, or slugs. Resolve by searching `A4/`:
+Arguments can be full paths, partial filenames, or slugs. Resolve by searching `a4/`:
 
-1. **Full path** — extract the slug from the filename (e.g., `A4/chat-app.arch.md` → `chat-app`), then scan for related files: `A4/*<slug>*.arch.md` and `A4/*<slug>*.plan.md`
-2. **Partial match** — glob for `A4/*<argument>*.arch.md` and `A4/*<argument>*.plan.md`
+1. **Full path** — extract the slug from the filename (e.g., `a4/chat-app.arch.md` → `chat-app`), then scan for related files: `a4/*<slug>*.arch.md` and `a4/*<slug>*.plan.md`
+2. **Partial match** — glob for `a4/*<argument>*.arch.md` and `a4/*<argument>*.plan.md`
 3. **Multiple matches per type** — present the candidates and ask the user to pick
 4. **No match** — inform the user and ask for a different term
 
@@ -52,7 +52,7 @@ Read the `.arch.md` and `.usecase.md` thoroughly. Extract:
 - Domain model, external dependencies
 - Test strategy tiers
 
-Check for a bootstrap report (`A4/<slug>.bootstrap.md`):
+Check for a bootstrap report (`a4/<slug>.bootstrap.md`):
 - If present → read it. Extract verified build, run, and test commands. These are used directly in Launch & Verify (Step 3) instead of auto-detection. Also note any issues with `Stage: arch` — these may indicate architecture assumptions that don't hold.
 - If absent → proceed without it. Suggest running `auto-bootstrap` first, but continue if the user chooses not to.
 
@@ -74,7 +74,7 @@ Enter plan mode. Generate the implementation plan covering:
 - IU file mappings must include both source files and unit test file paths (following the test file convention)
 - Launch & Verify configuration — if a bootstrap report exists, use its verified commands directly for build, launch, and test runner commands; otherwise, auto-detect per planning guide
 
-Exit plan mode. Write the plan to `A4/<slug>.plan.md` per `${CLAUDE_SKILL_DIR}/references/output-template.md`.
+Exit plan mode. Write the plan to `a4/<slug>.plan.md` per `${CLAUDE_SKILL_DIR}/references/output-template.md`.
 
 Record source file SHAs in frontmatter. Set `phase: plan-review`, `revision: 1`.
 
@@ -95,7 +95,7 @@ For each round:
    - File mapping specificity
    - Acceptance criteria quality
 
-2. Agent writes report to `A4/<slug>.plan.review-r<N>.md`.
+2. Agent writes report to `a4/<slug>.plan.review-r<N>.md`.
 
 3. Read the report. Analyze each issue:
    - **Plan issues** → auto-reflect into plan. Add report to `reflected_files`. Increment `revision`. Continue to next round.
@@ -168,7 +168,7 @@ Return: result (pass/fail), summary of changes, issues encountered.
 After all IUs are `done` (or after handling failures), run integration and smoke tests:
 
 1. **Spawn a test-runner agent** via `Agent(subagent_type: "think:test-runner")` with the plan's test plan section and Launch & Verify config.
-2. The agent runs integration and smoke tests, writes results to `A4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
+2. The agent runs integration and smoke tests, writes results to `a4/<slug>.test-report.c<N>.md` per `${CLAUDE_SKILL_DIR}/references/test-report.md`.
 3. The agent records **factual results only** — no diagnosis classification.
 4. **Commit:** test report
 
@@ -177,7 +177,7 @@ Agent(subagent_type: "think:test-runner", prompt: """
 Plan file: <absolute path to .plan.md>
 
 Run integration and smoke tests as defined in the plan's test plan section.
-Write the test report to A4/<slug>.test-report.c<N>.md per the template
+Write the test report to a4/<slug>.test-report.c<N>.md per the template
 in references/test-report.md.
 """)
 ```
@@ -220,12 +220,12 @@ Read the test report and IU failure summaries.
 ## File Structure
 
 ```
-A4/<slug>.plan.md              — plan
-A4/<slug>.plan.history.md      — event log (append-only)
-A4/<slug>.plan.review-r1.md    — Phase 1 verification report (round 1)
-A4/<slug>.plan.review-r2.md    — Phase 1 verification report (round 2)
-A4/<slug>.test-report.c1.md    — Phase 2 test report (cycle 1)
-A4/<slug>.test-report.c2.md    — Phase 2 test report (cycle 2)
+a4/<slug>.plan.md              — plan
+a4/<slug>.plan.history.md      — event log (append-only)
+a4/<slug>.plan.review-r1.md    — Phase 1 verification report (round 1)
+a4/<slug>.plan.review-r2.md    — Phase 1 verification report (round 2)
+a4/<slug>.test-report.c1.md    — Phase 2 test report (cycle 1)
+a4/<slug>.test-report.c2.md    — Phase 2 test report (cycle 2)
 ```
 
 ## Frontmatter
@@ -261,7 +261,7 @@ Increment `revision` and update `revised` when:
 
 ## History
 
-Append-only event log in `A4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/references/session-history.md` for format.
+Append-only event log in `a4/<slug>.plan.history.md`. See `${CLAUDE_SKILL_DIR}/references/session-history.md` for format.
 
 ## Commit Points
 

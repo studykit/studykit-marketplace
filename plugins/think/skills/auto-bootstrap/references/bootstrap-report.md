@@ -2,8 +2,8 @@
 
 ## File Path
 
-- **Current report:** `A4/<topic-slug>.bootstrap.md`
-- **Archived reports:** `A4/<topic-slug>.bootstrap.r<N>.md` (e.g., `.bootstrap.r0.md`, `.bootstrap.r1.md`)
+- **Current report:** `a4/<topic-slug>.bootstrap.md`
+- **Archived reports:** `a4/<topic-slug>.bootstrap.r<N>.md` (e.g., `.bootstrap.r0.md`, `.bootstrap.r1.md`)
 
 On iteration, the existing report is renamed to `.bootstrap.r<current-revision>.md` before the new report is written. The `.bootstrap.md` file always contains the latest result.
 

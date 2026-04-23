@@ -5,7 +5,7 @@ Autonomously generates a complete Use Case document from an idea or brainstorm i
 ## Current Notes
 
 - **Primary file:** `plugins/think/skills/auto-usecase/SKILL.md`
-- **Current behavior:** Runs autonomously from an idea or source file, writes `A4/<slug>.usecase.md`, and coordinates research / review / exploration reports for incremental resume support.
+- **Current behavior:** Runs autonomously from an idea or source file, writes `a4/<slug>.usecase.md`, and coordinates research / review / exploration reports for incremental resume support.
 
 ## Workflow
 

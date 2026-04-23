@@ -43,8 +43,8 @@ The working file grows through **checkpoint writes** rather than after every con
 At the start of the interview, determine the file path from **$ARGUMENTS**:
 
 1. **Full path or filename** — if the argument matches an existing `.usecase.md` file, use it directly → Iteration Mode
-2. **Partial match** — glob for `A4/*<argument>*.usecase.md`. If multiple matches, present candidates and ask the user to pick
-3. **No existing file** — treat the argument as an idea. Derive a topic slug (lowercase, hyphen-separated, 2–5 words). File path: `A4/<topic-slug>.usecase.md`
+2. **Partial match** — glob for `a4/*<argument>*.usecase.md`. If multiple matches, present candidates and ask the user to pick
+3. **No existing file** — treat the argument as an idea. Derive a topic slug (lowercase, hyphen-separated, 2–5 words). File path: `a4/<topic-slug>.usecase.md`
    - If this path already exists → Iteration Mode
    - Otherwise → New Session
 
@@ -236,7 +236,7 @@ After all UCs (including platform capabilities) are confirmed, group UI-related 
 
 For each confirmed screen group, optionally create an HTML mock:
 
-1. Invoke the `mock-html-generator` agent to create an HTML mock in `A4/mock/<topic-slug>/`.
+1. Invoke the `mock-html-generator` agent to create an HTML mock in `a4/mock/<topic-slug>/`.
 2. Present the mock and gather feedback.
 3. Refine UCs from mock feedback — fill gaps, clarify interactions.
 4. Record mock file paths in the output file.

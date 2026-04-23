@@ -2,7 +2,7 @@
 
 ## File Path
 
-`A4/<topic-slug>.arch.md`
+`a4/<topic-slug>.arch.md`
 
 ## Frontmatter
 
