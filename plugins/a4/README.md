@@ -1,6 +1,6 @@
 # a4
 
-Co-thinking plugin — usecase/spec/implementation-plan design, autonomous code execution, brainstorming, decision-making, and GitHub automation.
+Manages `a4/` as a git-native wiki + issue tracker — usecase, architecture, and implementation-plan authoring, plus autonomous execution, brainstorming, and decision records.
 
 ## Prerequisites
 
@@ -10,7 +10,7 @@ The `find-docs` skill must be installed. Set it up via [ctx7 CLI](https://contex
 ctx7 setup --cli --claude       # Claude Code (~/.claude/skills)
 ```
 
-The shared `get-api-docs` skill must also be available in the global skills set. Think agents use this shared skill for current third-party API and SDK documentation lookup.
+The shared `get-api-docs` skill must also be available in the global skills set. a4 agents use this shared skill for current third-party API and SDK documentation lookup.
 
 ## Components
 
@@ -26,6 +26,9 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `spark-brainstorm` | Structured brainstorming sessions |
 | `spark-decide` | Decision-making with ADR output |
 | `compass` | Project direction and next-step guidance |
+| `handoff` | Point-in-time session snapshot for cross-session continuity |
+| `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
+| `index` | Regenerates `a4/INDEX.md` dashboard |
 | `web-design-mock` | Web design mock generation |
 | `get-api-docs` | Shared global skill for current API/SDK documentation lookup |
 
@@ -48,49 +51,52 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 
 ## Document Layout (`a4/`)
 
-All a4-pipeline artifacts live under `a4/` (lowercase) at the workspace root. The layout follows a few conventions:
-
-### Pipeline stage files (flat, topic-keyed)
+`a4/` is a git-native **wiki + issue tracker** for the workspace — flat wiki pages describe the project shape; type-scoped folders hold lifecycle-tracked issues. Full model: `plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md`.
 
 ```
-a4/<topic-slug>.usecase.md       # usecase / auto-usecase
-a4/<topic-slug>.arch.md          # arch
-a4/<topic-slug>.bootstrap.md     # auto-bootstrap
-a4/<topic-slug>.plan.md          # plan
-a4/<topic-slug>.spec.md          # (spec-producing flows)
+a4/
+  context.md architecture.md domain.md     # Wiki pages (flat):
+  actors.md nfr.md plan.md bootstrap.md    # one file per cross-cutting concern
+
+  usecase/<id>-<slug>.md                    # Use Cases
+  task/<id>-<slug>.md                       # Executable work units (Jira sense)
+  review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
+  decision/<id>-<slug>.md                   # ADRs
+
+  spark/<YYYY-MM-DD-HHmm>-<slug>.{brainstorm,decide}.md
+  archive/                                  # Closed items; folder = archived flag
+  INDEX.md                                  # Regenerated dashboard
 ```
 
-Each stage file owns frontmatter with `topic`, `revision`, `status`, `revised`, and `reflected_files`. The `reflected_files` list is the canonical record of which derivative reports (reviews, research, explorations, test reports) have already been incorporated — so a stage file plus the glob of `a4/<topic>.*.md` is sufficient to compute "what is pending" without reading derivative bodies.
+### Wiki vs. issues
 
-### Spark sessions (session-scoped)
+- **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, plan, bootstrap) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
+- **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels`, `milestone` in frontmatter — "what's open?" is answerable without reading prose.
+- **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 
-```
-a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md
-a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md
-```
+### Conventions
 
-Spark and pipeline are **parallel tools**, not a funnel. Spark files may opt in to a lightweight lifecycle via optional frontmatter:
+- **Ids are globally monotonic integers** (GitHub issue semantics) — unique across all folders. Allocator: `scripts/allocate_id.py` computes `max(existing ids) + 1`.
+- **Filenames are `<id>-<slug>.md`.** Folder indicates type; no `uc-`/`task-`/`rev-`/`d-` prefix.
+- **Obsidian markdown throughout.** Body uses `[[wikilinks]]` and `![[embeds]]`; frontmatter paths are plain strings (no brackets, no extension) for dataview compatibility.
+- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `wiki_impact`, `justified_by`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `implemented_by`, `children`, …) are computed by dataview.
 
-- `status: open | promoted | discarded` (default: `open`)
-- `graduated_to: <topic-slug>` (when promoted to a pipeline topic)
-- `discarded_reason: <short reason>` (when discarded)
+### Wiki update protocol
 
-A pipeline `usecase.md` can optionally record its spark origin with `origin: spark/<filename>`. These fields are **read when present, never required** — skill flows do not fail if they are absent.
+Wiki pages carry no lifecycle but are continuously updated. All edits flow through **review items** as the unified conduit:
 
-### Archive
+1. Modified sections carry sequential footnote markers (`[^1]`, `[^2]`, …) inline; a `## Changes` section at page bottom resolves each to `YYYY-MM-DD — [[causing-issue]]`.
+2. Three entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items with `wiki_impact` set; bulk-generation skills invoke `/a4:drift` as a final step.
+3. **Close guard** — a review item with non-empty `wiki_impact` warns on close if any referenced wiki page lacks a footnote pointing back to the causing issue (warning + override; user retains final say).
 
-```
-a4/archive/<topic>.<stage>.md
-```
+### Derived views
 
-A topic is archived simply by moving all of its files into `a4/archive/` (via `git mv`). There is no `archived:` frontmatter field — folder location is the flag. Compass offers to perform the move when a topic reaches `status: complete` or `status: final`; the move itself is always user-confirmed.
+Use Case Diagram, authorization matrix, open-issue lists, milestone progress — all **rendered from source on demand**, never hand-maintained. Obsidian dataview powers interactive rendering; `INDEX.md` carries static markdown fallbacks (wrapped in `<!-- static-fallback-start/end -->` markers) for plain-text viewers.
 
 ### Workspace dashboard
 
-```
-a4/INDEX.md
-```
+`a4/INDEX.md` is regenerated by compass (Step 0) or on-demand via `/a4:index`. Sections: Wiki pages, Stage progress, Open issues, Drift alerts, Milestones, Recent activity, Spark. Each pairs a dataview block with a static fallback. INDEX is a **view** (source of truth = wiki pages and issue files), so regenerating is always safe.
 
-Regenerated on every `compass` invocation from stage-file frontmatter and directory globs. The table uses a five-state icon vocabulary — `✗` blocked, `!` unreflected derivatives, `⟳` in progress, `✓` complete, `—` absent — with priority `✗ > ! > ⟳ > ✓ > —`. INDEX is a **view** (source of truth = stage files), so regenerating it is always safe. It is committed to git by whichever session-closing runs next; compass does not auto-commit it.
+### Archive
 
-INDEX answers "which topic needs attention?" The per-topic narrative ("what should I do next?") stays in compass's on-demand diagnosis (Step 3) — INDEX deliberately has no "next action" column to avoid duplicating that role.
+Closed items are archived by `git mv`-ing them into `a4/archive/`. Folder location is the flag — there is no `archived:` frontmatter field. The move is always user-confirmed.
