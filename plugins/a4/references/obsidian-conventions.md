@@ -12,8 +12,6 @@ Applies to files written into the `a4/` workspace:
 - **Issue bodies** — `usecase/*.md`, `task/*.md`, `review/*.md`, `decision/*.md`. Use wikilinks for body cross-references; the update protocol applies only to wiki pages, not to issue bodies.
 - **Spark files** — `spark/*.brainstorm.md`, `spark/*.decide.md`. Use wikilinks in body prose. Spark files are append-only session artifacts and do **not** follow the wiki update protocol.
 
-Legacy files under `plugins/a4/a4/*.decide.md` and `visual-claude/a4/` are out of scope, consistent with [frontmatter-schema.md](./frontmatter-schema.md).
-
 ## Link syntax (body)
 
 In body prose, use Obsidian wikilinks and embeds. These are the canonical forms:
@@ -124,4 +122,4 @@ Before a session ends, for each review item that transitioned to `status: resolv
 - `plugins/a4/scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved footnote + close-guard violations.
 - `plugins/a4/scripts/validate_frontmatter.py` — enforces the frontmatter-side of path references.
 - `plugins/a4/scripts/validate_body.py` — enforces the body-side rules on this page: footnote definition format, label monotonicity, payload-not-a-review-item, and body-wikilink resolution.
-- `plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the authoritative rationale source.
+- `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the authoritative rationale source.

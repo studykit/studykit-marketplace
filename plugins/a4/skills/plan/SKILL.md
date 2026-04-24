@@ -1,6 +1,6 @@
 ---
 name: plan
-description: "This skill should be used when the user needs to generate and execute an implementation plan from an architecture — autonomously planning, implementing, testing, and iterating until tests pass. Common triggers include: 'plan', 'implement', 'build from arch', 'execute the architecture', 'plan and implement', 'make this work', 'plan and build'. Writes a4/plan.md (wiki page) plus per-task files in a4/task/, orchestrates iu-implementer + test-runner subagents, and emits review items on findings or failures."
+description: "This skill should be used when the user needs to generate and execute an implementation plan from an architecture — autonomously planning, implementing, testing, and iterating until tests pass. Common triggers include: 'plan', 'implement', 'build from arch', 'execute the architecture', 'plan and implement', 'make this work', 'plan and build'. Writes a4/plan.md (wiki page) plus per-task files in a4/task/, orchestrates task-implementer + test-runner subagents, and emits review items on findings or failures."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
@@ -61,9 +61,9 @@ Body sections: `## Description`, `## Files` (action/path/change table), `## Unit
 
 `status` semantics:
 - `pending` — not yet assigned.
-- `implementing` — an `iu-implementer` agent is working or crashed mid-work (reset to `pending` on session resume).
+- `implementing` — an `task-implementer` agent is working or crashed mid-work (reset to `pending` on session resume).
 - `complete` — implemented; unit tests pass.
-- `failing` — implementation or unit tests failed after an iu-implementer attempt.
+- `failing` — implementation or unit tests failed after an task-implementer attempt.
 
 `cycle:` starts at 1 and increments each retry. `updated:` bumps on every status change.
 
@@ -233,12 +233,12 @@ A task is **ready** when `status ∈ {pending, failing}` AND every `depends_on` 
 
 Independent ready tasks run in parallel. Tasks with mutual dependencies run sequentially.
 
-### Step 2.2: Spawn iu-implementer
+### Step 2.2: Spawn task-implementer
 
 For each ready task, spawn one agent:
 
 ```
-Agent(subagent_type: "a4:iu-implementer", prompt: """
+Agent(subagent_type: "a4:task-implementer", prompt: """
 Task file: <absolute path to a4/task/<id>-<slug>.md>
 Plan file: <absolute path to a4/plan.md>
 Architecture file: <absolute path to a4/architecture.md>
@@ -303,7 +303,7 @@ If 3 cycles complete and failures remain: halt. Mark affected tasks `status: fai
 
 - **Plan generation** — commit `a4/plan.md` + all new `a4/task/*.md` files together once the user confirms the initial plan.
 - **Plan revision during verification** — commit revised plan / task files + resolved review items as one commit per review round.
-- **Per-task implementation** — iu-implementer commits its own code + unit tests per task; the orchestrating skill does **not** also commit those files.
+- **Per-task implementation** — task-implementer commits its own code + unit tests per task; the orchestrating skill does **not** also commit those files.
 - **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 2.3.
 - **Plan revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 2.1.
 - **Final state** — commit the final plan / tasks / review items when the user wraps up.
@@ -326,7 +326,7 @@ When the user ends the session, or when all tasks are `complete` and all tests p
 Context is passed via file paths, not agent memory.
 
 - **`plan-reviewer`** — `Agent(subagent_type: "a4:plan-reviewer")`. Reviews the plan + tasks against architecture / UCs; emits per-finding review items.
-- **`iu-implementer`** — `Agent(subagent_type: "a4:iu-implementer")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
+- **`task-implementer`** — `Agent(subagent_type: "a4:task-implementer")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
 
 ## Non-Goals

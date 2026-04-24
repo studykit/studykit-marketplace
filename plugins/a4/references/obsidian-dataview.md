@@ -13,8 +13,6 @@ Two families of blocks are documented here:
 
 Vault-layout assumption: the Obsidian vault root is the repo root, so `FROM "a4/usecase"` resolves correctly. If you open `a4/` itself as the vault root instead, strip the `a4/` prefix from every `FROM` clause.
 
-Legacy directories (`plugins/a4/a4/*.decide.md`, `visual-claude/a4/`) are out of scope.
-
 ## Keeping the INDEX.md blocks in sync
 
 `plugins/a4/scripts/index_refresh.py` is the authoritative source for the blocks in the first family. If you change a block here, change the matching string literal in `index_refresh.py` (and vice versa). The validator does not police dataview drift; keep the two in step manually.
@@ -189,4 +187,4 @@ Pure-mermaid rendering from frontmatter requires a dataviewjs block (JavaScript 
 - [obsidian-conventions.md](./obsidian-conventions.md) — body-level wikilink syntax and footnote audit trail.
 - `plugins/a4/scripts/index_refresh.py` — authoritative source for the INDEX.md canonical blocks. Must stay in sync with the first section of this document.
 - `plugins/a4/scripts/drift_detector.py` — produces the review items surfaced by the Drift alerts block.
-- `plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the rationale source.
+- `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the rationale source.
