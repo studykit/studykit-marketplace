@@ -55,7 +55,8 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-import yaml
+from common import normalize_ref
+from markdown import parse
 
 
 # ---------------------------------------------------------------------------
@@ -126,35 +127,18 @@ def detect_family(rel_path: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def split_frontmatter(path: Path) -> tuple[dict | None, str, str]:
-    """Return (parsed-frontmatter, raw-frontmatter-string, body).
+def _parse(path: Path) -> tuple[dict | None, str, str]:
+    """Preserves the pre-shared-module `_parse(path)` 3-tuple
+    contract: (fm | None, raw_fm, body_content).
 
-    Preserves the raw frontmatter string so line-by-line edits keep
-    surrounding formatting intact.
+    `body_content` retains the leading newline from the closing-fence
+    line (unlike the old local `split_frontmatter`, which stripped it);
+    `write_file` applies `body.lstrip()` before emitting so output stays
+    byte-identical. Substring-probing call sites (validation) are
+    insensitive to the leading newline.
     """
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n") and not text.startswith("---\r\n"):
-        return None, "", text
-    after_open = text[4:] if text.startswith("---\n") else text[5:]
-    end_marker_idx = after_open.find("\n---")
-    if end_marker_idx == -1:
-        return None, "", text
-    raw_fm = after_open[:end_marker_idx]
-    rest_start = end_marker_idx + len("\n---")
-    remaining = after_open[rest_start:]
-    if remaining.startswith("\r\n"):
-        remaining = remaining[2:]
-    elif remaining.startswith("\n"):
-        remaining = remaining[1:]
-    try:
-        fm = yaml.safe_load(raw_fm) if raw_fm.strip() else {}
-    except yaml.YAMLError:
-        return None, raw_fm, remaining
-    if fm is None:
-        fm = {}
-    if not isinstance(fm, dict):
-        return None, raw_fm, remaining
-    return fm, raw_fm, remaining
+    parsed = parse(path)
+    return parsed.preamble.fm, parsed.preamble.raw, parsed.body.content
 
 
 def rewrite_frontmatter_scalar(raw_fm: str, field_name: str, new_value: str) -> str:
@@ -197,17 +181,6 @@ def write_file(path: Path, raw_fm: str, body: str) -> None:
     path.write_text(content, encoding="utf-8")
 
 
-def normalize_ref(ref: Any) -> str | None:
-    if not isinstance(ref, str):
-        return None
-    cleaned = ref.strip()
-    if not cleaned:
-        return None
-    if cleaned.endswith(".md"):
-        cleaned = cleaned[:-3]
-    return cleaned
-
-
 # ---------------------------------------------------------------------------
 # Scanning helpers for cascade discovery
 # ---------------------------------------------------------------------------
@@ -220,7 +193,7 @@ def find_tasks_implementing(a4_dir: Path, uc_ref: str) -> list[Path]:
         return []
     matching: list[Path] = []
     for p in sorted(task_dir.glob("*.md")):
-        fm, _, _ = split_frontmatter(p)
+        fm, _, _ = _parse(p)
         if fm is None:
             continue
         implements = fm.get("implements")
@@ -240,7 +213,7 @@ def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
         return []
     matching: list[Path] = []
     for p in sorted(review_dir.glob("*.md")):
-        fm, _, _ = split_frontmatter(p)
+        fm, _, _ = _parse(p)
         if fm is None:
             continue
         target = fm.get("target")
@@ -256,7 +229,7 @@ def find_usecases_superseded_by(a4_dir: Path, ref: str) -> list[Path]:
         return []
     matching: list[Path] = []
     for p in sorted(uc_dir.glob("*.md")):
-        fm, _, _ = split_frontmatter(p)
+        fm, _, _ = _parse(p)
         if fm is None:
             continue
         supersedes = fm.get("supersedes")
@@ -406,7 +379,7 @@ def _validate_implementing_to_shipped(
         return
     incomplete: list[str] = []
     for t in tasks:
-        fmt, _, _ = split_frontmatter(t)
+        fmt, _, _ = _parse(t)
         if fmt is None:
             incomplete.append(
                 f"task/{t.stem} (unreadable frontmatter)"
@@ -450,7 +423,7 @@ def _apply_status_change(
 ) -> None:
     if dry_run:
         return
-    fm, raw_fm, body = split_frontmatter(path)
+    fm, raw_fm, body = _parse(path)
     if fm is None:
         raise RuntimeError(f"{path}: unreadable frontmatter")
     new_fm = rewrite_frontmatter_scalar(raw_fm, "status", to_status)
@@ -479,7 +452,7 @@ def _cascade_uc_revising(
     """UC implementing → revising: reset related tasks to pending."""
     uc_ref = uc_rel.removesuffix(".md")
     for task_path in find_tasks_implementing(a4_dir, uc_ref):
-        fm, _, _ = split_frontmatter(task_path)
+        fm, _, _ = _parse(task_path)
         if fm is None:
             report.errors.append(f"{task_path}: unreadable frontmatter")
             continue
@@ -522,7 +495,7 @@ def _cascade_uc_discarded(
     """UC → discarded: discard related tasks and open review items."""
     uc_ref = uc_rel.removesuffix(".md")
     for task_path in find_tasks_implementing(a4_dir, uc_ref):
-        fm, _, _ = split_frontmatter(task_path)
+        fm, _, _ = _parse(task_path)
         if fm is None:
             report.errors.append(f"{task_path}: unreadable frontmatter")
             continue
@@ -553,7 +526,7 @@ def _cascade_uc_discarded(
             )
         )
     for review_path in find_reviews_targeting(a4_dir, uc_ref):
-        fm, _, _ = split_frontmatter(review_path)
+        fm, _, _ = _parse(review_path)
         if fm is None:
             report.errors.append(f"{review_path}: unreadable frontmatter")
             continue
@@ -598,7 +571,7 @@ def _cascade_uc_shipped(
     if from_status != "implementing":
         return
     uc_path = a4_dir / uc_rel
-    fm, _, _ = split_frontmatter(uc_path)
+    fm, _, _ = _parse(uc_path)
     if fm is None:
         return
     supersedes = fm.get("supersedes")
@@ -623,7 +596,7 @@ def _cascade_uc_shipped(
         if not target_path.is_file():
             report.errors.append(f"supersedes target missing: {norm}.md")
             continue
-        tfm, _, _ = split_frontmatter(target_path)
+        tfm, _, _ = _parse(target_path)
         if tfm is None:
             report.errors.append(
                 f"{target_path}: unreadable frontmatter (supersedes target)"
@@ -674,7 +647,7 @@ def _cascade_decision_final(
     if from_status != "draft":
         return
     decision_path = a4_dir / decision_rel
-    fm, _, _ = split_frontmatter(decision_path)
+    fm, _, _ = _parse(decision_path)
     if fm is None:
         return
     supersedes = fm.get("supersedes")
@@ -698,7 +671,7 @@ def _cascade_decision_final(
         if not target_path.is_file():
             report.errors.append(f"supersedes target missing: {norm}.md")
             continue
-        tfm, _, _ = split_frontmatter(target_path)
+        tfm, _, _ = _parse(target_path)
         if tfm is None:
             report.errors.append(
                 f"{target_path}: unreadable frontmatter (supersedes target)"
@@ -774,7 +747,7 @@ def transition(
         report.errors.append(f"file not found: {target_path}")
         return report
 
-    fm, _, body = split_frontmatter(target_path)
+    fm, _, body = _parse(target_path)
     if fm is None:
         report.errors.append(f"{target_path}: unreadable frontmatter")
         return report
@@ -881,7 +854,7 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     uc_dir = a4_dir / "usecase"
     if uc_dir.is_dir():
         for p in sorted(uc_dir.glob("*.md")):
-            fm, _, _ = split_frontmatter(p)
+            fm, _, _ = _parse(p)
             if fm is None:
                 continue
             if fm.get("status") != "shipped":
@@ -908,7 +881,7 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     decision_dir = a4_dir / "decision"
     if decision_dir.is_dir():
         for p in sorted(decision_dir.glob("*.md")):
-            fm, _, _ = split_frontmatter(p)
+            fm, _, _ = _parse(p)
             if fm is None:
                 continue
             if fm.get("status") != "final":
@@ -1086,7 +1059,7 @@ def main() -> None:
                 errors=[f"cannot validate: file {rel!r} missing or unsupported family"],
             )
         else:
-            fm, _, body = split_frontmatter(target_path)
+            fm, _, body = _parse(target_path)
             if fm is None:
                 report = Report(
                     a4_dir=str(a4_dir), file=rel, family=family,
