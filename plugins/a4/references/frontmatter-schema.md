@@ -64,7 +64,7 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 
 ### Status writers
 
-`a4/` files are always written by an LLM via a skill or agent — never hand-edited by the user. Every status change on `usecase`, `task`, and `review` files flows through the single writer at [`scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition, writes `status:` + `updated:` + a `## Log` entry, and runs any cascade (task reset on UC `revising`, task/review discard cascade on UC `discarded`, supersedes-chain flip on UC `shipped`). Decisions still use [`scripts/propagate_superseded.py`](../scripts/propagate_superseded.py) for the `final → superseded` cascade.
+`a4/` files are always written by an LLM via a skill or agent — never hand-edited by the user. Every status change on `usecase`, `task`, `review`, and `decision` files flows through the single writer at [`scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition, writes `status:` + `updated:` + a `## Log` entry, and runs any cascade (task reset on UC `revising`, task/review discard cascade on UC `discarded`, supersedes-chain flip on UC `shipped`, supersedes-chain flip on decision `final`).
 
 Listing who calls the writer for each value makes the invariant auditable.
 
@@ -87,9 +87,9 @@ Listing who calls the writer for each value makes the invariant auditable.
 | review | `in-progress` | iterate flows (`/a4:usecase`, `/a4:arch`, `/a4:plan` iterate) |
 | review | `resolved` | iterate flows + `usecase-reviser` (after fix lands) |
 | review | `discarded` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect); `transition_status.py` cascade when a target UC is `discarded` |
-| decision | `draft` | `/a4:decision` (from natural-language signals) |
-| decision | `final` | `/a4:decision` (from natural-language signals) |
-| decision | `superseded` | `propagate_superseded.py` PostToolUse hook — triggered when a newer decision with `supersedes: [decision/X]` reaches `final` |
+| decision | `draft` | `/a4:decision` (file is always born at `draft` when `/a4:decision` writes a new record) |
+| decision | `final` | `/a4:decision` Step 6 — flips `draft → final` via `transition_status.py` once the user signals commitment. Cascade: `supersedes:` targets flip `final → superseded` inside the same script invocation |
+| decision | `superseded` | `transition_status.py` cascade — flipped automatically when a newer decision with `supersedes: [decision/X]` reaches `final` |
 | idea | `open` | `/a4:idea` (capture mode) |
 | idea | `promoted` | user-driven; `/a4:decision` / `/a4:usecase` / other consuming skills may write the pipeline target and this status together when the user confirms graduation |
 | idea | `discarded` | `/a4:idea discard <id>` |
@@ -97,7 +97,7 @@ Listing who calls the writer for each value makes the invariant auditable.
 | brainstorm | `promoted` | user-driven; set by hand when an idea from the brainstorm is graduated |
 | brainstorm | `discarded` | `/a4:spark-brainstorm` (wrap-up status decision, from natural-language signals) |
 
-Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `decision`, and for `discarded` on tasks/reviews cascaded from a discarded UC, the active writer (`transition_status.py` for usecase/task/review, `propagate_superseded.py` for decision) writes the status so the file alone tells you whether the item is current.
+Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `decision`, and for `discarded` on tasks/reviews cascaded from a discarded UC, the active writer `transition_status.py` writes the status so the file alone tells you whether the item is current.
 
 ## Structural relationship fields
 
@@ -266,7 +266,9 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 
 ## Decision (`a4/decision/<id>-<slug>.md`)
 
-ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are recorded by `/a4:decision` into `a4/decision/<id>-<slug>.md` after the user and LLM converge on a choice through conversation. Supporting research, when needed, is produced separately by `/a4:research` as a portable artifact at project-root `./research/<slug>.md` and cited in the decision's **body prose** as `[[research/<slug>]]` Obsidian wikilinks (not in `related:` frontmatter — research lives outside the `a4/` workspace and is not an issue-family artifact). The wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with footnote markers, or opening a review-item fallback) is performed by `/a4:decision` at record time. The body may carry any of `## Context`, `## Options Considered`, `## Decision`, `## Rejected Alternatives`, `## Next Steps` as the decision's scope warrants; none are enforced by frontmatter validation.
+ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are recorded by `/a4:decision` into `a4/decision/<id>-<slug>.md` after the user and LLM converge on a choice through conversation. Supporting research, when needed, is produced separately by `/a4:research` as a portable artifact at project-root `./research/<slug>.md` and cited in the decision's **body prose** as `[[research/<slug>]]` Obsidian wikilinks (not in `related:` frontmatter — research lives outside the `a4/` workspace and is not an issue-family artifact). The wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with footnote markers, or opening a review-item fallback) is performed by `/a4:decision` at record time.
+
+**Body structure.** Two sections are required: `## Context` (why this decision was needed) and `## Decision` (the chosen option with rationale). Both are mechanically enforced by `transition_status.py` on the `draft → final` flip. Beyond those two, additional sections may be added when the session content warrants them — common examples include `## Options Considered`, `## Rejected Alternatives`, `## Next Steps`, `## Consequences`, `## Migration Plan`, `## Open Questions`. Use headed sections (`##` or `###`) only; no free-form prose outside a section.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -281,7 +283,7 @@ ADR stored as an issue — the canonical decision slot from the wiki+issues dual
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | no | date | `YYYY-MM-DD` (bump when the decision is revised) |
 
-Decisions enter at `draft` while the rationale is still being written, move to `final` once committed, and later to `superseded` only when a newer decision declares `supersedes: [decision/<this-id>-<slug>]`.
+Decisions enter at `draft` while the rationale is still being written, move to `final` via `transition_status.py` once the user signals commitment, and later to `superseded` automatically via `transition_status.py` cascade when a newer decision with `supersedes: [decision/<this-id>-<slug>]` reaches `final`. There is no direct `draft → superseded` path — supersession presumes the predecessor was live (`final`).
 
 ## Idea (`a4/idea/<id>-<slug>.md`)
 
@@ -362,7 +364,7 @@ Several enum values are semantically derived from cross-file state rather than b
 | `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
 | `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
-| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` and has `status: final` | `propagate_superseded.py` (actively writes, decision-only) |
+| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` and has `status: final` | `transition_status.py` cascade (fires during successor's `→ final` transition) |
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 | `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 
@@ -389,9 +391,8 @@ When these land, update this document **and** the validator simultaneously — t
 - **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
 - **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
-- **Status transition writer:** `plugins/a4/scripts/transition_status.py` — single writer for usecase / task / review status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain).
+- **Status transition writer:** `plugins/a4/scripts/transition_status.py` — single writer for usecase / task / review / decision status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, decision final → superseded chain).
 - **Implemented-by back-link refresher:** `plugins/a4/scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
-- **Decision supersedes propagator:** `plugins/a4/scripts/propagate_superseded.py` — decision-only `final → superseded` cascade (usecase version absorbed into `transition_status.py`).
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
 - **Cross-file status consistency validator:** `plugins/a4/scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).
 - **Read-only parser:** `plugins/a4/scripts/read_frontmatter.py`.
