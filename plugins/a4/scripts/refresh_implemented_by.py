@@ -38,9 +38,7 @@ import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-import yaml
-
-from common import normalize_ref
+from common import normalize_ref, split_frontmatter as _split_frontmatter
 
 
 @dataclass
@@ -60,29 +58,15 @@ class Report:
 
 
 def split_frontmatter(path: Path) -> tuple[dict | None, str, str]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n") and not text.startswith("---\r\n"):
-        return None, "", text
-    after_open = text[4:] if text.startswith("---\n") else text[5:]
-    end_marker_idx = after_open.find("\n---")
-    if end_marker_idx == -1:
-        return None, "", text
-    raw_fm = after_open[:end_marker_idx]
-    rest_start = end_marker_idx + len("\n---")
-    remaining = after_open[rest_start:]
-    if remaining.startswith("\r\n"):
-        remaining = remaining[2:]
-    elif remaining.startswith("\n"):
-        remaining = remaining[1:]
-    try:
-        fm = yaml.safe_load(raw_fm) if raw_fm.strip() else {}
-    except yaml.YAMLError:
-        return None, raw_fm, remaining
-    if fm is None:
-        fm = {}
-    if not isinstance(fm, dict):
-        return None, raw_fm, remaining
-    return fm, raw_fm, remaining
+    """Return (fm, raw_fm, body).
+
+    Back-compat wrapper around `common.split_frontmatter`. `body` here is
+    the canonical body text with any leading newline retained. The
+    write-path (`_write_file`) applies `body.lstrip()` before emitting,
+    so the retained newline does not surface in output.
+    """
+    parsed = _split_frontmatter(path)
+    return parsed.fm, parsed.raw_fm, parsed.body
 
 
 def collect_implements(a4_dir: Path) -> dict[str, list[str]]:

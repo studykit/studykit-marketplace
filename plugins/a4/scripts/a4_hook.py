@@ -246,13 +246,13 @@ def _stop() -> int:
     try:
         for f in edited:
             path = Path(f)
-            fm, _ = vfm.split_frontmatter(path)
-            if fm is None:
+            parsed = vfm.split_frontmatter(path)
+            if parsed.fm is None:
                 missing = vfm.check_missing_frontmatter(path, a4_dir)
                 if missing is not None:
                     fm_violations.append(missing)
             else:
-                fm_violations.extend(vfm.validate_file(path, a4_dir, fm))
+                fm_violations.extend(vfm.validate_file(path, a4_dir, parsed.fm))
             body_violations.extend(
                 vbody.validate_file(path, a4_dir, wikis, issues, sparks)
             )

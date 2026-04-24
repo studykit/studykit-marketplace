@@ -65,11 +65,10 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-import yaml
-
 from common import (
     is_non_empty_list as _is_non_empty_list,
     normalize_ref as _normalize_ref,
+    split_frontmatter as _split_frontmatter,
 )
 
 
@@ -81,17 +80,7 @@ class Mismatch:
 
 
 def split_frontmatter(path: Path) -> dict | None:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return None
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return None
-    try:
-        fm = yaml.safe_load(parts[1])
-    except yaml.YAMLError:
-        return None
-    return fm if isinstance(fm, dict) else None
+    return _split_frontmatter(path).fm
 
 
 # Families for which a `superseded` status is actively materialized by
