@@ -4,9 +4,9 @@
 # ///
 """Compute the next globally-unique id for an a4/ workspace.
 
-Scans all issue files (usecase/, task/, review/, decision/) for their
-`id:` frontmatter field and returns max(id) + 1. No state file, always
-computed fresh — this is the semantic guarantee that ids remain
+Scans all issue files (usecase/, task/, review/, decision/, idea/) for
+their `id:` frontmatter field and returns max(id) + 1. No state file,
+always computed fresh — this is the semantic guarantee that ids remain
 monotonically increasing and globally unique across the workspace.
 
 Usage:
@@ -20,7 +20,7 @@ from pathlib import Path
 
 import yaml
 
-ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
+ISSUE_FOLDERS = ("usecase", "task", "review", "decision", "idea")
 
 
 def extract_id(path: Path) -> int | None:

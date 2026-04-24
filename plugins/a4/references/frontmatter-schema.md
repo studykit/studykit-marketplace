@@ -11,7 +11,7 @@ Every markdown file created by an a4 skill carries YAML frontmatter. Files split
 | Family | Examples | Location |
 |--------|----------|----------|
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `plan.md`, `bootstrap.md` | `a4/` root |
-| **Issue** | use case, task, review item, decision | `a4/usecase/`, `a4/task/`, `a4/review/`, `a4/decision/` |
+| **Issue** | use case, task, review item, decision, idea | `a4/usecase/`, `a4/task/`, `a4/review/`, `a4/decision/`, `a4/idea/` |
 | **Spark** | brainstorm output, decide output | `a4/spark/` |
 
 ## Universal rules
@@ -74,7 +74,7 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 | `wiki_impact` | review, issue | wiki basename(s) | Wiki pages requiring update when this item resolves |
 | `justified_by` | any issue | decision | Decisions that justify this item |
 | `supersedes` | decision, spark/decide | prior decision(s) | This decision replaces the referenced decision(s) |
-| `promoted` | spark/brainstorm | decision, usecase, spark/decide | Where this brainstorm's ideas graduated to |
+| `promoted` | spark/brainstorm, idea | decision, usecase, task, spark/decide, spark/brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
 | `parent` | any issue | same-type issue | Parent in a decomposition hierarchy |
 | `related` | any | any | Generic catchall for ties that don't fit other fields but warrant frontmatter-level searchability |
 
@@ -173,6 +173,35 @@ Lightweight ADR stored as an issue — the archived "resolved issue" from the wi
 | `updated` | no | date | `YYYY-MM-DD` (bump when the decision is revised) |
 
 Decisions enter at `draft` while the rationale is still being written, move to `final` once committed, and later to `superseded` only when a newer decision declares `supersedes: [decision/<this-id>-<slug>]`.
+
+## Idea (`a4/idea/<id>-<slug>.md`)
+
+Pre-pipeline quick-capture slot — Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family.
+
+Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea. See `plugins/a4/spec/2026-04-24-idea-slot.decide.md` for the full rationale.
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable one-liner (becomes H1) |
+| `status` | yes | enum | `open` \| `promoted` \| `discarded` |
+| `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[usecase/5-search, spark/2026-04-24-1730-idea-x.brainstorm]`) |
+| `related` | no | list of paths | soft links to other artifacts |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
+**Deliberately excluded fields** (see ADR Rejected Alternatives for full rationale):
+
+- `priority` — ideas are pre-prioritization; prioritization attaches to the graduation target.
+- `source` — ideas are effectively always `self`; no information content.
+- `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
+- `kind` — only one kind of idea (unlike `review/` which unifies finding/gap/question).
+- `milestone` — ideas are not scheduled.
+
+Body is free-form; no required sections. Captured via `/a4:idea <line>` the body is typically just the H1; longer ideas may add `## Why this matters` or `## Notes` sections.
+
+Source: `plugins/a4/skills/idea/SKILL.md` and `plugins/a4/spec/2026-04-24-idea-slot.decide.md`.
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 

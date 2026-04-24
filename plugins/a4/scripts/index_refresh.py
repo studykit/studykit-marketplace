@@ -51,20 +51,23 @@ WIKI_KINDS: tuple[str, ...] = (
     "plan",
     "bootstrap",
 )
-ISSUE_FOLDERS: tuple[str, ...] = ("usecase", "task", "review", "decision")
+ISSUE_FOLDERS: tuple[str, ...] = ("usecase", "task", "review", "decision", "idea")
 
-# Status vocabularies per the ADR (2026-04-23-spec-as-wiki-and-issues.decide.md).
+# Status vocabularies per the ADR (2026-04-23-spec-as-wiki-and-issues.decide.md
+# and 2026-04-24-idea-slot.decide.md for `idea`).
 TERMINAL_STATUSES: dict[str, set[str]] = {
     "usecase": {"done"},
     "task": {"complete"},
     "review": {"resolved", "dismissed"},
     "decision": {"final"},
+    "idea": {"promoted", "discarded"},
 }
 IN_PROGRESS_STATUSES: dict[str, set[str]] = {
     "usecase": {"implementing"},
     "task": {"implementing"},
     "review": {"in-progress"},
     "decision": set(),
+    "idea": set(),
 }
 BLOCKED_STATUSES: set[str] = {"blocked"}
 
@@ -308,7 +311,7 @@ def section_open_issues(issues: dict[str, list[IssueItem]]) -> tuple[str, str, s
     dataview = (
         "```dataview\n"
         'TABLE WITHOUT ID file.folder AS "Folder", status AS "Status", length(rows) AS "Count"\n'
-        'FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision"\n'
+        'FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision" OR "a4/idea"\n'
         "WHERE status\n"
         "GROUP BY file.folder + \" · \" + status\n"
         "SORT file.folder ASC\n"
@@ -342,6 +345,7 @@ def section_open_issues(issues: dict[str, list[IssueItem]]) -> tuple[str, str, s
         lines.append(row("review (other)", review_other, "review"))
 
     lines.append(row("decision", issues["decision"], "decision"))
+    lines.append(row("idea", issues["idea"], "idea"))
 
     return heading, dataview, "\n".join(lines)
 
@@ -441,7 +445,7 @@ def section_recent_activity(
     dataview = (
         "```dataview\n"
         'TABLE WITHOUT ID file.link AS "Item", file.folder AS "Type", status AS "Status", updated AS "Updated"\n'
-        'FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision"\n'
+        'FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision" OR "a4/idea"\n'
         "WHERE updated\n"
         "SORT updated DESC\n"
         f"LIMIT {RECENT_ACTIVITY_LIMIT}\n"
@@ -469,6 +473,37 @@ def section_recent_activity(
             f"| {i.wikilink} | {i.folder} | {i.status or '—'} | {i.updated} |"
         )
     return heading, dataview, "\n".join(lines)
+
+
+def section_open_ideas(ideas: list[IssueItem]) -> tuple[str, str, str, int]:
+    open_ideas = [
+        i for i in ideas
+        if i.status not in TERMINAL_STATUSES["idea"]
+    ]
+    heading = f"## Open ideas ({len(open_ideas)})"
+    dataview = (
+        "```dataview\n"
+        'TABLE WITHOUT ID file.link AS "Idea", status AS "Status", updated AS "Updated"\n'
+        'FROM "a4/idea"\n'
+        'WHERE status = "open"\n'
+        "SORT updated DESC\n"
+        "```"
+    )
+
+    if not open_ideas:
+        static = "*No open ideas.*"
+        return heading, dataview, static, 0
+
+    ideas_sorted = sorted(
+        open_ideas,
+        key=lambda i: (i.updated or "", i.id_ or 0),
+        reverse=True,
+    )
+    lines = []
+    for i in ideas_sorted:
+        updated = f" · updated {i.updated}" if i.updated else ""
+        lines.append(f"- {i.wikilink} — {i.title}{updated}")
+    return heading, dataview, "\n".join(lines), len(open_ideas)
 
 
 def section_spark(sparks: list[SparkItem]) -> tuple[str, str, str, int]:
@@ -540,6 +575,9 @@ def render_index(a4_dir: Path, generated_at: datetime) -> str:
 
     heading, dv, static = section_recent_activity(issues)
     sections.append(render_section(heading, dv, static, "recent-activity"))
+
+    heading, dv, static, _ = section_open_ideas(issues["idea"])
+    sections.append(render_section(heading, dv, static, "open-ideas"))
 
     heading, dv, static, _ = section_spark(sparks)
     sections.append(render_section(heading, dv, static, "spark"))

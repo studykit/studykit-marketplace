@@ -19,7 +19,7 @@ Vault-layout assumption: the Obsidian vault root is the repo root, so `FROM "a4/
 
 ## INDEX.md canonical blocks
 
-Seven INDEX sections; six carry a dataview block. **Stage progress** is static-only because it mixes wiki-page presence with cross-folder issue aggregates in a way dataview cannot express in a single block.
+Eight INDEX sections; seven carry a dataview block. **Stage progress** is static-only because it mixes wiki-page presence with cross-folder issue aggregates in a way dataview cannot express in a single block.
 
 ### Wiki pages
 
@@ -42,7 +42,7 @@ Groups active issues by folder and status. The static fallback additionally pivo
 
 ```dataview
 TABLE WITHOUT ID file.folder AS "Folder", status AS "Status", length(rows) AS "Count"
-FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision"
+FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision" OR "a4/idea"
 WHERE status
 GROUP BY file.folder + " · " + status
 SORT file.folder ASC
@@ -77,10 +77,21 @@ Top ten items by `updated` date across every issue folder. The `LIMIT 10` matche
 
 ```dataview
 TABLE WITHOUT ID file.link AS "Item", file.folder AS "Type", status AS "Status", updated AS "Updated"
-FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision"
+FROM "a4/usecase" OR "a4/task" OR "a4/review" OR "a4/decision" OR "a4/idea"
 WHERE updated
 SORT updated DESC
 LIMIT 10
+```
+
+### Open ideas
+
+Pre-pipeline quick-capture items (see [frontmatter-schema.md §Idea](./frontmatter-schema.md) and `plugins/a4/spec/2026-04-24-idea-slot.decide.md`). Filter is `status = "open"`; `promoted`/`discarded` are terminal.
+
+```dataview
+TABLE WITHOUT ID file.link AS "Idea", status AS "Status", updated AS "Updated"
+FROM "a4/idea"
+WHERE status = "open"
+SORT updated DESC
 ```
 
 ### Spark (open)
