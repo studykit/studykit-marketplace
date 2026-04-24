@@ -4,9 +4,9 @@
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
-All status changes on usecase, task, and review files flow through this
-script. Skills and agents call it with the target file and the desired
-new status. The script:
+All status changes on usecase, task, review, and decision files flow
+through this script. Skills and agents call it with the target file and
+the desired new status. The script:
 
   1. Detects the family from the file path.
   2. Checks the current → new transition is legal per the family's
@@ -26,6 +26,9 @@ new status. The script:
         usecase → shipped                      → supersedes chain: each same-
                                                   family target currently
                                                   `shipped` flips to `superseded`
+        decision → final                       → supersedes chain: each same-
+                                                  family target currently
+                                                  `final` flips to `superseded`
 
 All cascades happen in the same invocation so the caller only needs to
 commit the unstaged working-tree delta once.
@@ -84,10 +87,16 @@ REVIEW_TRANSITIONS: dict[str, set[str]] = {
     "resolved": {"open"},
 }
 
+DECISION_TRANSITIONS: dict[str, set[str]] = {
+    "draft": {"final"},
+    "final": {"superseded"},
+}
+
 FAMILY_TRANSITIONS: dict[str, dict[str, set[str]]] = {
     "usecase": UC_TRANSITIONS,
     "task": TASK_TRANSITIONS,
     "review": REVIEW_TRANSITIONS,
+    "decision": DECISION_TRANSITIONS,
 }
 
 # Complete set of valid states per family (includes terminal states).
@@ -98,6 +107,7 @@ FAMILY_STATES: dict[str, set[str]] = {
     },
     "task": {"pending", "implementing", "complete", "failing", "discarded"},
     "review": {"open", "in-progress", "resolved", "discarded"},
+    "decision": {"draft", "final", "superseded"},
 }
 
 
@@ -327,17 +337,21 @@ def validate_transition(
     bypasses these checks.
     """
     issues: list[str] = []
-    if family != "usecase":
+    if family == "usecase":
+        if from_status == "ready" and to_status == "implementing":
+            _validate_ready_to_implementing(fm, body, issues)
+            return issues
+        if from_status == "revising" and to_status == "ready":
+            _validate_revising_to_ready(fm, body, issues)
+            return issues
+        if from_status == "implementing" and to_status == "shipped":
+            _validate_implementing_to_shipped(a4_dir, rel_path, fm, issues)
+            return issues
         return issues
-
-    if from_status == "ready" and to_status == "implementing":
-        _validate_ready_to_implementing(fm, body, issues)
-        return issues
-    if from_status == "revising" and to_status == "ready":
-        _validate_revising_to_ready(fm, body, issues)
-        return issues
-    if from_status == "implementing" and to_status == "shipped":
-        _validate_implementing_to_shipped(a4_dir, rel_path, fm, issues)
+    if family == "decision":
+        if from_status == "draft" and to_status == "final":
+            _validate_draft_to_final(fm, body, issues)
+            return issues
         return issues
     return issues
 
@@ -405,6 +419,20 @@ def _validate_implementing_to_shipped(
         issues.append(
             "not all tasks are `complete`: " + ", ".join(incomplete)
         )
+
+
+def _validate_draft_to_final(fm: dict, body: str, issues: list[str]) -> None:
+    """Decision draft → final: title placeholder + required body sections."""
+    for field_name in ("title",):
+        placeholder = _placeholder_in(fm.get(field_name))
+        if placeholder:
+            issues.append(
+                f"`{field_name}:` contains placeholder `{placeholder}`."
+            )
+    if "## Context" not in body:
+        issues.append("body is missing `## Context` section.")
+    if "## Decision" not in body:
+        issues.append("body is missing `## Decision` section.")
 
 
 # ---------------------------------------------------------------------------
@@ -634,6 +662,81 @@ def _cascade_uc_shipped(
         )
 
 
+def _cascade_decision_final(
+    a4_dir: Path,
+    decision_rel: str,
+    today: str,
+    dry_run: bool,
+    report: Report,
+    from_status: str,
+) -> None:
+    """Decision → final: flip supersedes targets (final → superseded)."""
+    if from_status != "draft":
+        return
+    decision_path = a4_dir / decision_rel
+    fm, _, _ = split_frontmatter(decision_path)
+    if fm is None:
+        return
+    supersedes = fm.get("supersedes")
+    if not isinstance(supersedes, list):
+        return
+    decision_ref = decision_rel.removesuffix(".md")
+    for entry in supersedes:
+        norm = normalize_ref(entry)
+        if norm is None:
+            continue
+        if not norm.startswith("decision/"):
+            report.skipped.append(
+                {
+                    "path": norm,
+                    "reason": "cross-family-supersedes",
+                    "detail": f"ignored non-decision target in {decision_ref}",
+                }
+            )
+            continue
+        target_path = a4_dir / f"{norm}.md"
+        if not target_path.is_file():
+            report.errors.append(f"supersedes target missing: {norm}.md")
+            continue
+        tfm, _, _ = split_frontmatter(target_path)
+        if tfm is None:
+            report.errors.append(
+                f"{target_path}: unreadable frontmatter (supersedes target)"
+            )
+            continue
+        tstatus = tfm.get("status")
+        if tstatus == "superseded":
+            report.skipped.append(
+                {"path": f"{norm}.md", "reason": "already-superseded"}
+            )
+            continue
+        if tstatus != "final":
+            report.skipped.append(
+                {
+                    "path": f"{norm}.md",
+                    "reason": "not-terminal-active",
+                    "detail": f"status={tstatus!r}, expected 'final'",
+                }
+            )
+            continue
+        _apply_status_change(
+            target_path,
+            "final",
+            "superseded",
+            f"superseded by {decision_ref}",
+            dry_run,
+            today,
+        )
+        report.cascades.append(
+            Change(
+                path=f"{norm}.md",
+                from_status="final",
+                to_status="superseded",
+                reason=f"superseded by {decision_ref}",
+            )
+        )
+
+
 def transition(
     a4_dir: Path,
     rel_path: str,
@@ -746,6 +849,11 @@ def transition(
             _cascade_uc_shipped(
                 a4_dir, rel_path, today, dry_run, report, current
             )
+    elif family == "decision":
+        if new_status == "final":
+            _cascade_decision_final(
+                a4_dir, rel_path, today, dry_run, report, current
+            )
 
     report.ok = not report.errors
     return report
@@ -757,40 +865,73 @@ def transition(
 
 
 def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
-    """Walk all shipped UCs and run the shipped → superseded cascade.
+    """Walk all live-successor files and run the supersedes cascade.
+
+    Covers both families that carry `supersedes:`:
+
+      - usecase @ `shipped` → flip same-family targets `shipped → superseded`.
+      - decision @ `final` → flip same-family targets `final → superseded`.
 
     Used when edits bypassed the script (e.g., manual git checkout) and
     `## Log` back-pointers may have been lost. Idempotent.
     """
     reports: list[Report] = []
-    uc_dir = a4_dir / "usecase"
-    if not uc_dir.is_dir():
-        return reports
     today = date.today().isoformat()
-    for p in sorted(uc_dir.glob("*.md")):
-        fm, _, _ = split_frontmatter(p)
-        if fm is None:
-            continue
-        if fm.get("status") != "shipped":
-            continue
-        supersedes = fm.get("supersedes")
-        if not isinstance(supersedes, list) or not supersedes:
-            continue
-        rel = f"usecase/{p.name}"
-        report = Report(
-            a4_dir=str(a4_dir),
-            file=rel,
-            family="usecase",
-            current_status="shipped",
-            target_status="shipped",
-            dry_run=dry_run,
-        )
-        _cascade_uc_shipped(
-            a4_dir, rel, today, dry_run, report, from_status="implementing"
-        )
-        report.ok = not report.errors
-        if report.cascades or report.errors:
-            reports.append(report)
+
+    uc_dir = a4_dir / "usecase"
+    if uc_dir.is_dir():
+        for p in sorted(uc_dir.glob("*.md")):
+            fm, _, _ = split_frontmatter(p)
+            if fm is None:
+                continue
+            if fm.get("status") != "shipped":
+                continue
+            supersedes = fm.get("supersedes")
+            if not isinstance(supersedes, list) or not supersedes:
+                continue
+            rel = f"usecase/{p.name}"
+            report = Report(
+                a4_dir=str(a4_dir),
+                file=rel,
+                family="usecase",
+                current_status="shipped",
+                target_status="shipped",
+                dry_run=dry_run,
+            )
+            _cascade_uc_shipped(
+                a4_dir, rel, today, dry_run, report, from_status="implementing"
+            )
+            report.ok = not report.errors
+            if report.cascades or report.errors:
+                reports.append(report)
+
+    decision_dir = a4_dir / "decision"
+    if decision_dir.is_dir():
+        for p in sorted(decision_dir.glob("*.md")):
+            fm, _, _ = split_frontmatter(p)
+            if fm is None:
+                continue
+            if fm.get("status") != "final":
+                continue
+            supersedes = fm.get("supersedes")
+            if not isinstance(supersedes, list) or not supersedes:
+                continue
+            rel = f"decision/{p.name}"
+            report = Report(
+                a4_dir=str(a4_dir),
+                file=rel,
+                family="decision",
+                current_status="final",
+                target_status="final",
+                dry_run=dry_run,
+            )
+            _cascade_decision_final(
+                a4_dir, rel, today, dry_run, report, from_status="draft"
+            )
+            report.ok = not report.errors
+            if report.cascades or report.errors:
+                reports.append(report)
+
     return reports
 
 

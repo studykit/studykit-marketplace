@@ -21,9 +21,10 @@ Some status enum values are semantically derived from cross-file state:
 
 These are normally materialized by active writers:
   - `scripts/transition_status.py` cascades UC `shipped → superseded`
-    (on successor ship), UC `discarded` → task/review discard, and
-    UC `revising` → task reset. Decision `final → superseded` runs via
-    `scripts/propagate_superseded.py` PostToolUse hook.
+    (on successor ship), UC `discarded` → task/review discard,
+    UC `revising` → task reset, and decision `final → superseded`
+    (on successor finalization). It is the single writer across
+    usecase / task / review / decision.
 
 This validator is the safety net — it catches drift left behind if a
 writer was skipped, bypassed, or ran before the successor reached its
@@ -112,7 +113,7 @@ def _is_non_empty_list(value: Any) -> bool:
 
 
 # Families for which a `superseded` status is actively materialized by
-# propagate_superseded.py when a successor reaches its terminal-active
+# transition_status.py when a successor reaches its terminal-active
 # state. Both sides must be same-family — a decision does not supersede
 # a usecase and vice versa.
 SUPERSEDES_FAMILIES: dict[str, str] = {
@@ -207,11 +208,6 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
             )
         elif status != "superseded" and is_targeted:
             superseders = sorted(superseded_by[key])
-            writer = (
-                "transition_status.py"
-                if family == "usecase"
-                else "propagate_superseded.py"
-            )
             mismatches.append(
                 Mismatch(
                     path=f"{key}.md",
@@ -219,8 +215,8 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
                     message=(
                         f"status={status!r} but superseded by {superseders} "
                         f"(each at {terminal_active!r}). Expected "
-                        f"status=superseded — {writer} should have flipped "
-                        "this; re-run it against the successor."
+                        "status=superseded — transition_status.py should "
+                        "have flipped this; re-run it against the successor."
                     ),
                 )
             )
