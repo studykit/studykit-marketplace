@@ -191,7 +191,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 
 ## Decision (`a4/decision/<id>-<slug>.md`)
 
-ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions arrive here via two paths: (a) direct authoring for straightforward rules, and (b) `/a4:spark-decide` finalization for option-comparison / research-driven decisions. Both paths produce the same frontmatter shape; the body may carry optional `## Options Considered`, `## Research Findings`, `## Evaluation`, and `<details><summary>Discussion Log</summary>` sections when spark-decide wrote it.
+ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are **hand-authored** into `a4/decision/<id>-<slug>.md`. Supporting research, when needed, is produced by `/a4:research` as a separate portable artifact at project-root `./research/<slug>.md` and cited via `related:`. Finalization (reviewer pass + wiki nudge + `status: final`) is performed by `/a4:decision-review`. The body may carry any of `## Context`, `## Options Considered`, `## Research Findings`, `## Evaluation`, `## Decision`, `## Rejected Alternatives`, `## Next Steps` as the decision's scope warrants; none are enforced by frontmatter validation.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -254,7 +254,7 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 
 Source: `plugins/a4/skills/spark-brainstorm/SKILL.md` lines 91–100.
 
-**Note on spark-decide.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It has been retired: the `/a4:spark-decide` skill now writes directly into `a4/decision/<id>-<slug>.md` as a first-class decision issue. The decision-issue schema above covers all spark-decide output.
+**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/decision/<id>-<slug>.md` authoring. The `/a4:spark-decide` skill was subsequently split into `/a4:research` (investigation — output at project-root `./research/<slug>.md`, outside the a4/ workspace) and `/a4:decision-review` (reviewer pass + wiki nudge + finalize on a hand-authored decision file). No spark-family file carries `type: decide` anymore.
 
 ## Validator behavior
 
@@ -294,4 +294,4 @@ When these land, update this document **and** the validator simultaneously — t
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
 - **Read-only parser:** `plugins/a4/scripts/read_frontmatter.py`.
-- **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (spark-decide writes into the `decision` issue schema — no separate spark-decide frontmatter).
+- **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).

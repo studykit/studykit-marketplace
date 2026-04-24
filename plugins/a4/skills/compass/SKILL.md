@@ -69,7 +69,8 @@ Ask: **"What are you trying to do?"** and show the options:
 | Skill | What it does |
 |-------|-------------|
 | `spark-brainstorm` | Generate ideas with structured creative techniques |
-| `spark-decide` | Evaluate options and make a documented decision (ADR) |
+| `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
+| `decision-review` | Review and finalize a hand-authored decision record at `a4/decision/<id>-<slug>.md` |
 
 ### Pipeline (interactive)
 | Skill | What it does |

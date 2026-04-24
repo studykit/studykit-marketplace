@@ -10,7 +10,7 @@ Applies to files written into the `a4/` workspace:
 
 - **Wiki pages** — `context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `plan.md`, `bootstrap.md`. Continuously updated. Follow the Wiki Update Protocol below.
 - **Issue bodies** — `usecase/*.md`, `task/*.md`, `review/*.md`, `decision/*.md`, `idea/*.md`. Use wikilinks for body cross-references; the update protocol applies only to wiki pages, not to issue bodies.
-- **Spark files** — `spark/*.brainstorm.md`. Use wikilinks in body prose. Spark files are append-only session artifacts and do **not** follow the wiki update protocol. (Historical note: `spark/*.decide.md` has been retired — spark-decide now writes directly to `decision/<id>-<slug>.md`.)
+- **Spark files** — `spark/*.brainstorm.md`. Use wikilinks in body prose. Spark files are append-only session artifacts and do **not** follow the wiki update protocol. (Historical note: `spark/*.decide.md` was retired; decisions now live at `a4/decision/<id>-<slug>.md` as hand-authored issues, with supporting research at project-root `./research/<slug>.md` produced by `/a4:research`.)
 
 ## Link syntax (body)
 

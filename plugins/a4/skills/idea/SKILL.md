@@ -112,7 +112,7 @@ Do not propose auto-promotion or auto-commit.
 
 - Do not commit the new file. Leave it in the working tree.
 - Do not propose a target artifact at capture time. Ideas are independent by definition; graduation is a separate, later decision.
-- Do not launch a brainstorm or decide session off the back of a capture. If the user wants that, they invoke `/a4:spark-brainstorm` or `/a4:spark-decide` with the idea path as input themselves.
+- Do not launch a brainstorm or research session off the back of a capture. If the user wants that, they invoke `/a4:spark-brainstorm` or `/a4:research` with the idea path as input themselves.
 - Do not surface existing `a4/idea/` open count or nudge the user about prior ideas. Capture is capture; review is separate (`/a4:compass` or `/a4:index` shows the open-idea count).
 - Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; a race with a concurrent session is extremely unlikely in single-user workflows, and the Stop-hook validator catches any collision on next stop.
 

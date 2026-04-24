@@ -47,7 +47,7 @@ partition "Phase 1: Technology Stack" {
   :Select language, framework,
   platform, key libraries;
   if (Heavy decision\nwith trade-offs?) then (yes)
-    :Suggest spark-decide
+    :Suggest /a4:research
     for deep evaluation;
   else (lightweight)
     :Discuss inline,

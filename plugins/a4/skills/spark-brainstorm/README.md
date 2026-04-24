@@ -81,7 +81,8 @@ partition "Wrapping Up" {
 }
 
 :Suggest handoff to
-spark-decide (optional);
+research + decision-review
+(optional);
 
 stop
 
