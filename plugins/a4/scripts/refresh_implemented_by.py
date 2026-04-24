@@ -37,9 +37,10 @@ import json
 import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any
 
 import yaml
+
+from common import normalize_ref
 
 
 @dataclass
@@ -82,17 +83,6 @@ def split_frontmatter(path: Path) -> tuple[dict | None, str, str]:
     if not isinstance(fm, dict):
         return None, raw_fm, remaining
     return fm, raw_fm, remaining
-
-
-def normalize_ref(ref: Any) -> str | None:
-    if not isinstance(ref, str):
-        return None
-    cleaned = ref.strip()
-    if not cleaned:
-        return None
-    if cleaned.endswith(".md"):
-        cleaned = cleaned[:-3]
-    return cleaned
 
 
 def collect_implements(a4_dir: Path) -> dict[str, list[str]]:

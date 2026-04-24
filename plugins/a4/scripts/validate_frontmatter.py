@@ -37,9 +37,8 @@ from typing import Any
 
 import yaml
 
-WIKI_KINDS = frozenset(
-    {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
-)
+from common import WIKI_KINDS, is_empty as _is_empty, is_int as _is_int
+
 ISSUE_FOLDERS = ("usecase", "task", "review", "decision", "idea")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -176,18 +175,6 @@ def detect_type(rel: Path, fm: dict) -> str | None:
         if t == "brainstorm":
             return "spark_brainstorm"
     return None
-
-
-def _is_int(value: Any) -> bool:
-    return isinstance(value, int) and not isinstance(value, bool)
-
-
-def _is_empty(value: Any) -> bool:
-    if value is None:
-        return True
-    if isinstance(value, str) and value.strip() == "":
-        return True
-    return False
 
 
 def _validate_path_ref(value: Any) -> str | None:
