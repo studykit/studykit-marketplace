@@ -1,5 +1,5 @@
 {
-  "description": "Accumulate a4/ .md edits during a session (PostToolUse), validate them at Stop, and sweep records at SessionStart/SessionEnd. Session-scoped record at .claude/tmp/a4-edited/a4-edited-<session_id>.txt avoids re-reporting pre-existing violations in files the user did not touch. Separately, report cross-file status consistency mismatches on SessionStart and after any a4/ .md edit (non-blocking, informational). Status transitions and their supersedes/discarded/revising cascades run synchronously from `scripts/transition_status.py` inside the invoking skill/agent — there are no status-writer hooks.",
+  "description": "Accumulate a4/ .md edits during a session (PostToolUse), validate them at Stop, and sweep records at SessionStart/SessionEnd. Session-scoped record at .claude/tmp/a4-edited/a4-edited-<session_id>.txt avoids re-reporting pre-existing violations in files the user did not touch. On SessionStart, also refresh UC `implemented_by:` reverse-links via `scripts/refresh_implemented_by.py` so drift from cross-branch edits or manual task edits is reconciled before work begins. Separately, report cross-file status consistency mismatches on SessionStart and after any a4/ .md edit (non-blocking, informational). Status transitions and their supersedes/discarded/revising cascades run synchronously from `scripts/transition_status.py` inside the invoking skill/agent — there are no status-writer hooks.",
   "hooks": {
     "PostToolUse": [
       {
@@ -52,6 +52,12 @@
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/sweep-old-edited-a4.sh\"",
             "timeout": 5,
             "description": "Sweep orphan a4-edited record files older than 1 day"
+          },
+          {
+            "type": "command",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/hooks/refresh-implemented-by-session-start.py\"",
+            "timeout": 15,
+            "description": "Refresh UC implemented_by reverse-links before the session begins"
           },
           {
             "type": "command",
