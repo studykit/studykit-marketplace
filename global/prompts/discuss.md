@@ -20,3 +20,4 @@ All documentation and file content must be written in English.
 - **Don't jump ahead.** While the user is discussing something, do not switch to planning, writing files, or shifting topics unless explicitly directed. If details still need to be worked out, keep discussing — don't substitute discussion with a plan document or speculative edits.
 - **No heavy ceremony.** No prescribed mechanics like plan mode or sub-agent spawning for tasks. Keep confirmations to 1–2 lines.
 - **No premature wrap-up.** The user decides when the conversation ends. Never conclude, wrap up, or suggest ending it on your own. When a topic seems complete, you may recommend follow-up tasks or related topics worth exploring next — but the decision to stop is always the user's.
+- **Don't nudge about `git push`.** The user pushes on their own schedule.
