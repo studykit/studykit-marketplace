@@ -19,6 +19,11 @@ workspace state. Static blocks are wrapped with
 `<!-- static-fallback-start: <id> -->` / `<!-- static-fallback-end: <id> -->`
 markers so future surgical edits are possible if needed.
 
+The canonical dataview query blocks are also documented in
+`plugins/a4/references/obsidian-dataview.md` as reference snippets. When
+changing a block here, update the reference doc too — the two must stay
+in sync.
+
 Usage:
     uv run index_refresh.py <a4-dir>              # write INDEX.md
     uv run index_refresh.py <a4-dir> --dry-run    # render to stdout, do not write
