@@ -110,7 +110,7 @@ Before reading state, surface accumulated wiki↔issue drift from since the last
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$ROOT/a4"
 ```
 
-The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / dismissed `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift.
+The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / discarded `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift.
 
 If the detector wrote new items, regenerate `a4/INDEX.md` so the Drift alerts section reflects them:
 

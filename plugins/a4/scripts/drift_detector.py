@@ -24,7 +24,7 @@ Detection rules:
 
 Detected drifts are deduplicated against existing review items with the
 same (kind, target, cause) fingerprint when those items are still open,
-in-progress, or dismissed. Resolved items are not blockers — if drift is
+in-progress, or discarded. Resolved items are not blockers — if drift is
 re-detected after a resolution, that resolution did not actually fix it.
 
 Usage:
@@ -47,7 +47,7 @@ import yaml
 
 WIKI_KINDS = {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
 ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
-DEDUP_BLOCKING_STATUSES = {"open", "in-progress", "dismissed"}
+DEDUP_BLOCKING_STATUSES = {"open", "in-progress", "discarded"}
 
 INLINE_FOOTNOTE_RE = re.compile(r"\[\^([^\]\s]+)\](?!:)")
 DEFINITION_FOOTNOTE_RE = re.compile(r"^\[\^([^\]\s]+)\]:\s*(.*)$", re.MULTILINE)
@@ -357,7 +357,7 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
             f"Add a footnote in the relevant section of `{drift.wiki}.md` whose",
             f"`## Changes` payload wikilinks `[[{drift.cause}]]`. If the wiki page",
             "actually does not need updating for this resolution, switch the",
-            "originating review item to `dismissed` and document why in its `## Log`.",
+            "originating review item to `discarded` and document why in its `## Log`.",
         ]
     elif drift.kind == "missing-wiki-page":
         body_lines += [

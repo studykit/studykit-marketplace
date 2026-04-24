@@ -43,7 +43,7 @@ No lifecycle, revision, or source SHA fields. Cross-references, footnote markers
 ---
 id: 5
 title: Render markdown
-status: pending | implementing | complete | failing
+status: pending | implementing | complete | failing | discarded
 implements: [usecase/3-search-history, usecase/4-render-preview]
 depends_on: [task/4-parse-config]
 justified_by: []
@@ -64,8 +64,11 @@ Body sections: `## Description`, `## Files` (action/path/change table), `## Unit
 - `implementing` — an `task-implementer` agent is working or crashed mid-work (reset to `pending` on session resume).
 - `complete` — implemented; unit tests pass.
 - `failing` — implementation or unit tests failed after an task-implementer attempt.
+- `discarded` — UC this task implements was discarded; cascade-flipped by `transition_status.py`.
 
-`cycle:` starts at 1 and increments each retry. `updated:` bumps on every status change.
+All task status changes flow through `scripts/transition_status.py`. Cascades: when a UC goes `implementing → revising`, this script flips related `implementing`/`failing` tasks back to `pending` (spec is being rewritten; re-implementation is required). When a UC goes to `discarded`, related tasks cascade to `discarded`.
+
+`cycle:` starts at 1 and increments each retry. `updated:` bumps on every status change (written by the status writer).
 
 ## Id Allocation
 
@@ -94,7 +97,7 @@ ls a4/review/*.md | xargs grep -l 'status: open\|target: plan\|target: task/' # 
 
 ## Resume Hygiene
 
-At session start, for every task with `status: implementing`, reset to `pending` (an `implementing` status at session-start means the prior session crashed mid-work). Record a `## Log` entry: `YYYY-MM-DD — reset from implementing → pending (previous session terminated)`.
+At session start, for every task with `status: implementing`, reset to `pending` via `scripts/transition_status.py` (an `implementing` status at session-start means the prior session crashed mid-work). The writer records the `## Log` entry. See "Session-start resume hygiene" below Step 2.5 for the exact invocation.
 
 ---
 
@@ -204,6 +207,15 @@ T3 --> T1
 
 **Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` using the schema above. The plan.md's Milestones section references them via wikilinks.
 
+After all task files are written, refresh the reverse link on each UC so `ready → implementing` will pass mechanical validation:
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/refresh_implemented_by.py" \
+  "$(git rev-parse --show-toplevel)/a4"
+```
+
+This back-scans every task's `implements:` list and writes `implemented_by: [...]` onto each referenced UC. The script is idempotent; run it again after any task file is created, renamed, or has its `implements:` list edited.
+
 Commit plan generation together when the user confirms (see Commit Points).
 
 ### Step 1.4: Plan Verification
@@ -229,7 +241,12 @@ Implementation is delegated to subagents on a per-task basis. Each agent runs in
 
 ### Step 2.1: Pick Ready Tasks
 
-A task is **ready** when `status ∈ {pending, failing}` AND every `depends_on` entry resolves to a task with `status: complete`. Build the ready set by reading task frontmatter.
+A task is **ready** when all of:
+- `status ∈ {pending, failing}`
+- every `depends_on` entry resolves to a task with `status: complete`
+- every UC in `implements:` has `status ∈ {ready, implementing}` (so `revising`/`discarded`/`blocked`/`superseded`/`shipped` UCs' tasks are skipped)
+
+Build the ready set by reading task + UC frontmatter.
 
 Independent ready tasks run in parallel. Tasks with mutual dependencies run sequentially.
 
@@ -253,7 +270,16 @@ Return: result (pass/fail), summary of changes, any issues encountered.
 """)
 ```
 
-Before spawning, set the task's `status: implementing`, bump `updated:`. After the agent returns, append a `## Log` entry and update `status: complete` or `status: failing` based on the return value.
+Before spawning, flip the task via the writer:
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+  "$(git rev-parse --show-toplevel)/a4" \
+  --file "task/<id>-<slug>.md" --to implementing \
+  --reason "/a4:plan Step 2.2 spawning task-implementer"
+```
+
+After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` / `## Log` — the writer owns them.
 
 ### Step 2.3: Run Integration + Smoke Tests
 
@@ -299,12 +325,12 @@ If 3 cycles complete and failures remain: halt. Mark affected tasks `status: fai
 
 ### Step 2.5: UC ship-review (user-confirmed)
 
-Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tasks `complete`). The goal: for each UC whose implementation is now complete, let the user confirm that the running system reflects it, then flip `status: implementing → shipped`.
+Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tasks `complete`). The goal: for each UC whose implementation is now complete, let the user confirm that the running system reflects it, then flip `status: implementing → shipped` via the writer.
 
 1. **Collect candidates.** A UC X is a candidate when:
    - X.status is `implementing` (flipped by `task-implementer` at work-start per its protocol).
    - Every task with `implements: [usecase/X]` in its frontmatter now has `status: complete`.
-   - No review item with `target: usecase/X` is `open` or `in-progress` (all resolved or dismissed).
+   - No review item with `target: usecase/X` is `open` or `in-progress` (all resolved or discarded).
 
    If the candidate set is empty, skip to wrap-up.
 
@@ -323,17 +349,35 @@ Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tas
    - `"not yet"`, `"아직"`, `"let me verify"`, `"hold"` → defer (leave `implementing`).
    - `"no — X is incomplete because..."` → defer with reason; fold the reason into a fresh review item `target: usecase/X`, `kind: gap`, `source: self`.
 
-4. **Apply confirmations.** For every UC the user confirmed:
-   - Edit the UC file: `status: implementing → shipped`, bump `updated:` to today.
-   - Append a `## Log` entry: `<YYYY-MM-DD> — marked shipped after Phase 2 (cycle <N>); tests <list>; user confirmed.`
+4. **Apply confirmations via the writer.** For every UC the user confirmed:
 
-   If the newly-shipped UC has a non-empty `supersedes:` list, **do not** hand-edit the targets here — the `propagate_superseded.py` PostToolUse hook will flip each target from `shipped` to `superseded` and append the back-pointer log entry automatically when the Edit lands.
+   ```bash
+   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+     "$(git rev-parse --show-toplevel)/a4" \
+     --file "usecase/<id>-<slug>.md" --to shipped \
+     --reason "Phase 2 cycle <N>; tests <list>; user confirmed"
+   ```
 
-5. **Commit** all UC ship-transitions together as one commit (see Commit Points). The hook-driven `superseded` flips on predecessor UCs land in the same working-tree change as the ship edit, so they naturally belong in the same commit.
+   The script validates that every task in `implemented_by:` is `complete` (refuses otherwise), writes `status: shipped`, bumps `updated:`, and appends the `## Log` entry. If the UC has a non-empty `supersedes:` list, the same invocation cascades each supersedes target from `shipped` to `superseded` with a back-pointer log entry. Do **not** hand-edit the UC frontmatter or the supersedes targets.
+
+5. **Commit** all UC ship-transitions together as one commit (see Commit Points). The cascade-flipped predecessor UCs land in the same working-tree change as the ship edit and belong in the same commit.
 
 After Step 2.5, declare the plan complete and proceed to wrap-up. Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:plan iterate` session will re-offer them.
 
-**`shipped` is terminal.** If a UC needs revision later, the right move is to create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`; when that new UC eventually ships, the hook flips the old one to `superseded`. Never try to move a UC back from `shipped` to `implementing` or `draft`.
+**`shipped` is forward-path terminal.** If a UC needs revision later, either (a) create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`; when that new UC eventually ships, the writer flips the old one to `superseded`. Or (b) flip `shipped → discarded` via the writer when the code is being removed. Never try to move a UC back from `shipped` to `implementing` or `draft`.
+
+### Session-start resume hygiene revisited
+
+The "reset `implementing` tasks to `pending`" rule at session start is still correct, but route it through the writer:
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+  "$(git rev-parse --show-toplevel)/a4" \
+  --file "task/<id>-<slug>.md" --to pending \
+  --reason "session-start hygiene: previous session terminated"
+```
+
+Run `scripts/refresh_implemented_by.py` at session start too to catch any task-file changes that happened on other branches.
 
 ---
 
@@ -344,7 +388,7 @@ After Step 2.5, declare the plan complete and proceed to wrap-up. Leftover `impl
 - **Per-task implementation** — task-implementer commits its own code + unit tests per task; the orchestrating skill does **not** also commit those files.
 - **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 2.3.
 - **Plan revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 2.1.
-- **UC ship-transitions (Step 2.5)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by the `propagate_superseded.py` hook are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
+- **UC ship-transitions (Step 2.5)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
 - **Final state** — commit the final plan / tasks / review items when the user wraps up.
 
 Never skip hooks, amend, or force-push without explicit user instruction.

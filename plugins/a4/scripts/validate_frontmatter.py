@@ -68,13 +68,16 @@ SCHEMAS: dict[str, Schema] = {
         required=frozenset({"id", "title", "status", "created", "updated"}),
         enums={
             "status": frozenset(
-                {"draft", "ready", "implementing", "shipped", "superseded", "blocked"}
+                {
+                    "draft", "ready", "implementing", "revising",
+                    "shipped", "superseded", "discarded", "blocked",
+                }
             )
         },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset(
-            {"depends_on", "justified_by", "related", "supersedes"}
+            {"depends_on", "justified_by", "related", "supersedes", "implemented_by"}
         ),
     ),
     "task": Schema(
@@ -82,7 +85,9 @@ SCHEMAS: dict[str, Schema] = {
         required=frozenset({"id", "title", "kind", "status", "created", "updated"}),
         enums={
             "kind": frozenset({"feature", "spike", "bug"}),
-            "status": frozenset({"pending", "implementing", "complete", "failing"}),
+            "status": frozenset(
+                {"pending", "implementing", "complete", "failing", "discarded"}
+            ),
         },
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
@@ -93,7 +98,7 @@ SCHEMAS: dict[str, Schema] = {
         required=frozenset({"id", "kind", "status", "source", "created", "updated"}),
         enums={
             "kind": frozenset({"finding", "gap", "question"}),
-            "status": frozenset({"open", "in-progress", "resolved", "dismissed"}),
+            "status": frozenset({"open", "in-progress", "resolved", "discarded"}),
             "priority": frozenset({"high", "medium", "low"}),
         },
         int_fields=frozenset({"id"}),

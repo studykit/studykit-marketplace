@@ -2,61 +2,53 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6.0"]
 # ///
-"""Materialize `superseded` status onto predecessor files.
+"""Materialize `decision.superseded` onto predecessor decision files.
 
-The a4 workspace treats `supersedes:` as forward-only: a newer artifact
-declares which older artifact(s) it replaces. The matching reverse status
-(`superseded` on the older artifact) is "derived" in the sense that its
-truth comes from that relationship — but leaving it *only* derived means
-the old file's own status never changes, so greps, dataview queries, and
-file-open inspection all fail to tell you whether it is still current.
+**Scope: decision family only.** The usecase version of this cascade was
+absorbed into `scripts/transition_status.py` in plugin version 1.10.0 —
+UC `shipped → superseded` now fires during the successor's
+`→ shipped` transition inside the single-writer flow, not via a
+PostToolUse hook. This script handles only `decision/*.md`.
 
-This script closes that gap. Given a recently edited `usecase/*.md` or
-`decision/*.md`, it checks whether:
+The a4 workspace treats `supersedes:` as forward-only: a newer decision
+declares which older decision(s) it replaces. The matching reverse
+status (`superseded` on the older decision) is "derived" in the sense
+that its truth comes from that relationship — but leaving it *only*
+derived means the old file's own status never changes, so greps,
+dataview queries, and file-open inspection all fail to tell you whether
+it is still current.
 
-  (a) the file is in a "terminal-active" state:
-        usecase.status == "shipped"
-        decision.status == "final"
+Given a recently edited `decision/*.md`, this script checks whether:
+
+  (a) the file is at `status: final`;
   (b) the file's `supersedes:` list is non-empty.
 
 If both hold, for each target listed in `supersedes:` it:
 
-  1. Flips the target's `status:` from its own terminal-active value to
-     `superseded`.
+  1. Flips the target's `status:` from `final` to `superseded`.
   2. Bumps the target's `updated:` to today.
   3. Appends a `## Log` entry on the target:
-       YYYY-MM-DD — superseded by <family>/<stem>
+       YYYY-MM-DD — superseded by decision/<stem>
 
-Idempotent: already-`superseded` targets are skipped. Targets not in a
-terminal-active state are reported but left alone (the propagation is
-only meaningful once the successor has actually landed).
+Idempotent: already-`superseded` targets are skipped. Targets not at
+`final` are reported but left alone (the propagation is only meaningful
+once the successor has actually landed).
 
 Cross-family supersedes (e.g., decision → usecase) are ignored — the
 relationship is always same-family in a4.
 
-Design notes:
-
-- Exits 0 on success (even when no propagation happens). Exits 2 only on
-  hard errors (malformed YAML in the successor file, missing a4 dir,
-  etc.) so the PostToolUse hook driving this can treat a clean run and a
-  no-op run identically.
-- Emits a structured JSON summary to stdout so hooks or CI can surface
-  what was changed.
-- Writes files with `Edit`-equivalent in-place rewrites; preserves
-  surrounding content byte-for-byte outside the frontmatter block and
-  the `## Log` section.
-
 Usage:
 
-    uv run propagate_superseded.py <a4-dir> --file <path>
-    uv run propagate_superseded.py <a4-dir> --file <path> --dry-run
-    uv run propagate_superseded.py <a4-dir> --file <path> --json
+    uv run propagate_superseded.py <a4-dir> --file <decision-path>
+    uv run propagate_superseded.py <a4-dir> --file <decision-path> --dry-run
+    uv run propagate_superseded.py <a4-dir> --file <decision-path> --json
 
-    # Sweep all files in a4/usecase/ and a4/decision/ (idempotent):
+    # Sweep all files in a4/decision/ (idempotent):
     uv run propagate_superseded.py <a4-dir> --sweep
 
 `--file` accepts either an absolute path or a workspace-relative path
-(e.g. `usecase/5-foo.md`).
+(e.g. `decision/5-foo.md`). UC paths are silently ignored — the UC
+cascade runs from `transition_status.py`.
 """
 
 from __future__ import annotations
@@ -74,9 +66,9 @@ import yaml
 
 # Per-family mapping: folder name -> status value that denotes
 # "this successor is now live, so its predecessors should flip to
-# superseded". Decision's live state is `final`; usecase's is `shipped`.
+# superseded". The usecase entry was removed in plugin 1.10.0 — UC
+# cascades run from transition_status.py.
 TERMINAL_ACTIVE: dict[str, str] = {
-    "usecase": "shipped",
     "decision": "final",
 }
 

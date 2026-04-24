@@ -42,7 +42,7 @@ For each review item id in the input list:
 
 Read `a4/review/<id>-<slug>.md`. Extract `target`, `kind`, `wiki_impact`, and the Evidence + Suggestion sections.
 
-If the item is already `status: resolved` or `status: dismissed`, skip it.
+If the item is already `status: resolved` or `status: discarded`, skip it.
 
 ### 2. Apply the Fix
 
@@ -62,16 +62,15 @@ Follow the item's Suggestion. Typical patterns:
 
 ### 3. Close the Review Item
 
-On successful fix:
+On successful fix, flip the review item to `resolved` via the status writer:
 
-1. Update the review item's frontmatter:
-   - `status: resolved`
-   - `updated: <today>`
-   - optionally add `resolved_by: <short description>` (custom field; harmless).
-2. Append a `## Log` entry to the review item body:
-   ```
-   <today> — resolved by editing [[<target path>]]; <one-line description of the change>
-   ```
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+  "<workspace path>" --file "review/<id>-<slug>.md" --to resolved \
+  --reason "resolved by editing [[<target path>]]; <one-line description>"
+```
+
+The script writes `status: resolved`, bumps `updated:`, and appends the `## Log` entry. Do not hand-edit the frontmatter.
 
 ### 4. Defer When Ambiguous
 
@@ -83,9 +82,17 @@ If applying the Suggestion requires information you don't have (e.g., reviewer s
 
 Do not guess. Do not close the item without a substantive fix.
 
-### 5. Dismiss When Wrong
+### 5. Discard When Wrong
 
-If the reviewer's finding is clearly incorrect (e.g., cites an implementation leak that isn't one; asserts a duplicate that isn't), set the review item to `status: dismissed` and append a `## Log` entry with the rationale.
+If the reviewer's finding is clearly incorrect (e.g., cites an implementation leak that isn't one; asserts a duplicate that isn't), flip the review item to `status: discarded` via:
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+  "<workspace path>" --file "review/<id>-<slug>.md" --to discarded \
+  --reason "finding incorrect: <rationale>"
+```
+
+The script writes `status:`, bumps `updated:`, and appends the `## Log` entry.
 
 ## Return Summary
 
@@ -95,7 +102,7 @@ After walking all items:
 total_items: <N>
 resolved: [<ids>]
 deferred: [<ids>]
-dismissed: [<ids>]
+discarded: [<ids>]
 revised_ucs: [<UC ids>]
 new_ucs:    [<UC ids>]          # when SPLIT or gap-driven creation occurred
 wiki_pages_touched: [context, actors, domain, nfr]

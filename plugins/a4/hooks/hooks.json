@@ -1,5 +1,5 @@
 {
-  "description": "Accumulate a4/ .md edits during a session (PostToolUse), validate them at Stop, and sweep records at SessionStart/SessionEnd. Session-scoped record at .claude/tmp/a4-edited/a4-edited-<session_id>.txt avoids re-reporting pre-existing violations in files the user did not touch. Separately, (a) report cross-file status consistency mismatches on SessionStart and after any a4/ .md edit (non-blocking, informational) and (b) propagate `superseded` status to predecessor usecase/decision files when a successor reaches its terminal-active status (non-blocking, actively writes).",
+  "description": "Accumulate a4/ .md edits during a session (PostToolUse), validate them at Stop, and sweep records at SessionStart/SessionEnd. Session-scoped record at .claude/tmp/a4-edited/a4-edited-<session_id>.txt avoids re-reporting pre-existing violations in files the user did not touch. Separately, (a) report cross-file status consistency mismatches on SessionStart and after any a4/ .md edit (non-blocking, informational) and (b) propagate `superseded` status to predecessor decision files when a successor reaches `final` (non-blocking, actively writes). Usecase status transitions and their cascades run synchronously from `scripts/transition_status.py` inside the invoking skill/agent — there is no UC-specific hook.",
   "hooks": {
     "PostToolUse": [
       {
@@ -15,7 +15,7 @@
             "type": "command",
             "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/propagate-superseded.sh\"",
             "timeout": 15,
-            "description": "Propagate `superseded` status to predecessor usecase/decision files via supersedes: (idempotent, in-place writes)"
+            "description": "Propagate `superseded` status to predecessor decision files via supersedes: (idempotent, in-place writes). UC cascade runs from transition_status.py, not this hook."
           },
           {
             "type": "command",

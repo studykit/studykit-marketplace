@@ -273,7 +273,7 @@ The architecture ends only when the user says so. When the user indicates they'r
 3. **Walk findings** — for each emitted review item (ordered by priority then id), present to the user and resolve or defer:
    - **Fix now** — edit `architecture.md` (and any cross-referenced file). Set the review item `status: resolved`, append a `## Log` entry, and add a footnote marker on each modified wiki page per the Wiki Update Protocol.
    - **Defer** — leave `status: open`; add a `## Log` entry noting the deferral reason.
-   - **Dismiss** — set `status: dismissed`; record the reason in `## Log`.
+   - **Discard** — set `status: discarded` via `scripts/transition_status.py`; the writer records the reason in `## Log`.
 
 4. **Wiki close guard** — for each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
 

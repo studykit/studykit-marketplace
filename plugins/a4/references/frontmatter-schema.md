@@ -64,27 +64,32 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 
 ### Status writers
 
-`a4/` files are always written by an LLM via a skill or agent — never hand-edited by the user. Every `status` enum value therefore has a defined writer. Listing who transitions each value makes the invariant auditable.
+`a4/` files are always written by an LLM via a skill or agent — never hand-edited by the user. Every status change on `usecase`, `task`, and `review` files flows through the single writer at [`scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition, writes `status:` + `updated:` + a `## Log` entry, and runs any cascade (task reset on UC `revising`, task/review discard cascade on UC `discarded`, supersedes-chain flip on UC `shipped`). Decisions still use [`scripts/propagate_superseded.py`](../scripts/propagate_superseded.py) for the `final → superseded` cascade.
 
-| Family | Value | Writer |
+Listing who calls the writer for each value makes the invariant auditable.
+
+| Family | Value | Caller |
 |--------|-------|--------|
 | usecase | `draft` | `/a4:usecase`, `/a4:auto-usecase`, `usecase-composer` (on create) |
-| usecase | `ready` | `/a4:usecase` at end of capture/iterate session (user-confirmed "mark as ready") |
-| usecase | `implementing` | `task-implementer` step 1 (flips any `implements: [usecase/X]` from `ready` before work; refuses to start on `draft`) |
-| usecase | `shipped` | `/a4:plan` Step 2.5 (UC done-review, user-confirmed after Phase 2) |
-| usecase | `superseded` | `propagate_superseded.py` PostToolUse hook — when a newer UC with `supersedes: [usecase/X]` flips to `shipped`, the script flips X from `shipped` to `superseded` and appends a back-pointer `## Log` entry |
-| usecase | `blocked` | `usecase-reviser` (on SPLIT), `/a4:plan` (on upstream blocker detection) |
+| usecase | `ready` | `/a4:usecase` Step 6 ready-gate (user-confirmed "mark as ready"); also `revising → ready` at the end of a revising-edit session |
+| usecase | `implementing` | `task-implementer` Step 1 (flips `ready → implementing` after pre-flight validation; refuses `draft`) |
+| usecase | `revising` | `/a4:usecase` (user-triggered in-place spec edit), `task-implementer` (when semantic ambiguity surfaces mid-implementation and a review item is emitted) |
+| usecase | `shipped` | `/a4:plan` Step 2.5 (UC ship-review, user-confirmed after Phase 2). Cascade: `supersedes:` targets flip `shipped → superseded` inside the same script invocation |
+| usecase | `superseded` | `transition_status.py` cascade — flipped automatically when a newer UC with `supersedes: [usecase/X]` reaches `shipped` |
+| usecase | `discarded` | user-triggered via `/a4:usecase` (spec abandoned) or `/a4:plan` (direction rejected). Cascade: related tasks → `discarded`, open review items with `target: usecase/X` → `discarded` |
+| usecase | `blocked` | `usecase-reviser` (on SPLIT), `task-implementer` (on implementation-time blocker detection) |
 | task | `pending` | `/a4:plan` (on create + on revision reset) |
 | task | `implementing` | `/a4:plan` Step 2.2 (before `task-implementer` spawn) |
 | task | `complete` | `/a4:plan` Step 2.2 (after agent returns success) |
 | task | `failing` | `/a4:plan` Step 2.2 / 2.3 (after agent or test-runner failure) |
-| review | `open` | reviewer agents, `drift_detector.py`, defer paths in single-edit skills |
+| task | `discarded` | `transition_status.py` cascade — when the UC this task implements flips to `discarded`. Direct calls are also permitted for explicit one-off task discards |
+| review | `open` | reviewer agents, `drift_detector.py`, `task-implementer` (revising-trigger review items), defer paths in single-edit skills |
 | review | `in-progress` | iterate flows (`/a4:usecase`, `/a4:arch`, `/a4:plan` iterate) |
 | review | `resolved` | iterate flows + `usecase-reviser` (after fix lands) |
-| review | `dismissed` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect) |
+| review | `discarded` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect); `transition_status.py` cascade when a target UC is `discarded` |
 | decision | `draft` | `/a4:decision` (from natural-language signals) |
 | decision | `final` | `/a4:decision` (from natural-language signals) |
-| decision | `superseded` | `propagate_superseded.py` PostToolUse hook — same mechanism as `usecase.superseded`, triggered when a newer decision with `supersedes: [decision/X]` lands at `status: final` |
+| decision | `superseded` | `propagate_superseded.py` PostToolUse hook — triggered when a newer decision with `supersedes: [decision/X]` reaches `final` |
 | idea | `open` | `/a4:idea` (capture mode) |
 | idea | `promoted` | user-driven; `/a4:decision` / `/a4:usecase` / other consuming skills may write the pipeline target and this status together when the user confirms graduation |
 | idea | `discarded` | `/a4:idea discard <id>` |
@@ -92,7 +97,7 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 | brainstorm | `promoted` | user-driven; set by hand when an idea from the brainstorm is graduated |
 | brainstorm | `discarded` | `/a4:spark-brainstorm` (wrap-up status decision, from natural-language signals) |
 
-Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `decision`, `propagate_superseded.py` actively writes the status so the file alone tells you whether the item is current. See [`scripts/propagate_superseded.py`](../scripts/propagate_superseded.py) for the full rule set.
+Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `decision`, and for `discarded` on tasks/reviews cascaded from a discarded UC, the active writer (`transition_status.py` for usecase/task/review, `propagate_superseded.py` for decision) writes the status so the file alone tells you whether the item is current.
 
 ## Structural relationship fields
 
@@ -138,11 +143,12 @@ The `kind` value must match the file basename (e.g., `kind: architecture` requir
 |-------|----------|------|-----------------|
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `shipped` \| `superseded` \| `blocked` |
+| `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `revising` \| `shipped` \| `superseded` \| `discarded` \| `blocked` |
 | `actors` | no | list of strings | actor names as defined in `actors.md` |
 | `depends_on` | no | list of paths | other use cases this UC needs first |
 | `justified_by` | no | list of paths | decisions justifying this UC |
 | `supersedes` | no | list of paths | prior use cases this UC replaces (see §Status writers) |
+| `implemented_by` | no | list of paths | reverse link to tasks that implement this UC. **Auto-maintained** by `scripts/refresh_implemented_by.py` — never hand-write |
 | `related` | no | list of paths | catchall |
 | `labels` | no | list of strings | free-form tags |
 | `milestone` | no | string | milestone name (e.g., `v1.0`) |
@@ -151,18 +157,39 @@ The `kind` value must match the file basename (e.g., `kind: architecture` requir
 
 ### UC lifecycle
 
-Forward progression is intentionally split into five states:
+Forward progression runs `draft → ready → implementing → shipped`, with `revising` as an in-place pause for spec edit, `blocked` as an off-path crosscutting state, and terminal sinks `superseded` and `discarded`.
 
-| Value | Meaning | Writer |
-|-------|---------|--------|
-| `draft` | Spec is still being shaped; not ready for implementation. | `/a4:usecase`, `/a4:auto-usecase`, `usecase-composer` on create |
-| `ready` | Spec is closed; ready to be picked up by an implementer. | `/a4:usecase` at end of session (user confirms) |
-| `implementing` | Coding agent is actively working on the UC. | `task-implementer` step 1 (refuses `draft`, accepts only `ready`) |
-| `shipped` | The running system reflects this use case. | `/a4:plan` Step 2.5 (user-confirmed after tests pass) |
-| `superseded` | A newer UC declares `supersedes: [<this>]` and has shipped; historical record. | `propagate_superseded.py` (PostToolUse hook) |
-| `blocked` | Implementation-time blocker surfaced; crosscutting. | `usecase-reviser` (on SPLIT), `/a4:plan` (on upstream blocker) |
+| Value | Meaning |
+|-------|---------|
+| `draft` | Spec is still being shaped; not ready for implementation. |
+| `ready` | Spec is closed; ready to be picked up by an implementer. |
+| `implementing` | Coding agent is actively working on the UC. |
+| `revising` | Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Task `implementing`/`failing` entries reset to `pending`; `complete` tasks stay. |
+| `shipped` | The running system reflects this use case. Forward-path terminal. |
+| `superseded` | A newer UC declares `supersedes: [<this>]` and has shipped. Terminal. |
+| `discarded` | Abandoned; direction was wrong or UC no longer needed. Terminal. Related tasks and open review items cascade to `discarded`. |
+| `blocked` | Implementation-time blocker surfaced; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`. |
 
-`shipped` is semantically terminal. Revision is modeled by creating a **new** UC with `supersedes: [usecase/<old-id>-<slug>]`; the old UC flips to `superseded` when the new one ships. There is no `shipped → draft` / `shipped → implementing` path.
+Allowed transitions (forward path + escape paths):
+
+```
+draft → ready | discarded
+ready → draft | implementing | discarded
+implementing → shipped | revising | discarded | blocked
+revising → ready | discarded
+blocked → ready | discarded
+shipped → superseded | discarded
+superseded → (terminal)
+discarded → (terminal)
+```
+
+Notable rules:
+
+- **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
+- **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
+- **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited through `/a4:usecase`, and Step 6 ready-gate re-approves `revising → ready`.
+- **`ready → implementing` requires `implemented_by:` non-empty.** The UC must have at least one task declaring `implements: [usecase/<this>]`.
+- **`implementing → shipped` requires every task in `implemented_by:` to be `complete`.** `transition_status.py` enforces this.
 
 ## Task (`a4/task/<id>-<slug>.md`)
 
@@ -173,7 +200,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
 | `kind` | yes | enum | `feature` \| `spike` \| `bug` |
-| `status` | yes | enum | `pending` \| `implementing` \| `complete` \| `failing` |
+| `status` | yes | enum | `pending` \| `implementing` \| `complete` \| `failing` \| `discarded` |
 | `implements` | no | list of paths | use cases delivered (typically empty for `spike`) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `justified_by` | no | list of paths | decisions justifying this task |
@@ -225,7 +252,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 |-------|----------|------|-----------------|
 | `id` | yes | int | monotonic global integer |
 | `kind` | yes | enum | `finding` \| `gap` \| `question` |
-| `status` | yes | enum | `open` \| `in-progress` \| `resolved` \| `dismissed` |
+| `status` | yes | enum | `open` \| `in-progress` \| `resolved` \| `discarded` |
 | `target` | no | path | what this review is about (omit for cross-cutting) |
 | `source` | yes | enum \| string | `self` \| `drift-detector` \| `<reviewer-agent-name>` (e.g., `usecase-reviewer-r2`) |
 | `wiki_impact` | no | list of wiki basenames | wiki pages needing update when this resolves |
@@ -326,12 +353,16 @@ Hook scope is a separate concern — the validator reports; the caller (hook, sk
 
 ### Cross-file status consistency
 
-Four enum values are semantically derived from cross-file state rather than being chosen in isolation:
+Several enum values are semantically derived from cross-file state rather than being chosen in isolation:
 
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
-| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `propagate_superseded.py` (actively writes) |
-| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` and has `status: final` | `propagate_superseded.py` (actively writes) |
+| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
+| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*.md` carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; called at end of `/a4:plan` Phase 1 and on session-start sweep) |
+| `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
+| `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
+| `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
+| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` and has `status: final` | `propagate_superseded.py` (actively writes, decision-only) |
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 | `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 
@@ -358,7 +389,10 @@ When these land, update this document **and** the validator simultaneously — t
 - **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
 - **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
+- **Status transition writer:** `plugins/a4/scripts/transition_status.py` — single writer for usecase / task / review status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain).
+- **Implemented-by back-link refresher:** `plugins/a4/scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
+- **Decision supersedes propagator:** `plugins/a4/scripts/propagate_superseded.py` — decision-only `final → superseded` cascade (usecase version absorbed into `transition_status.py`).
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
-- **Cross-file status consistency validator:** `plugins/a4/scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted).
+- **Cross-file status consistency validator:** `plugins/a4/scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).
 - **Read-only parser:** `plugins/a4/scripts/read_frontmatter.py`.
 - **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).

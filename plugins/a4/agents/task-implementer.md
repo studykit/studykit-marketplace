@@ -25,23 +25,55 @@ Read the task file first, then the plan's Launch & Verify section, then the rele
 
 ## What You Do
 
-1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, read the UC file and branch on `status:`:
-   - `ready` → flip to `implementing` and bump `updated:` to today (`YYYY-MM-DD`). This is the only UC-file edit you are permitted to make (see Rules).
-   - `implementing`, `shipped`, `superseded`, or `blocked` → leave alone.
-   - `draft` → **refuse to start.** Return failure with a concrete message naming the UC and instructing the user to finalize the spec via `/a4:usecase` (which ends with a ready-gate confirmation). Do not touch any files, do not flip status — the spec is not closed yet. Surface the blocking UC(s) in `issues:` of your return value.
+1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, run the status writer to flip `ready → implementing`:
+
+   ```bash
+   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+     "$(git rev-parse --show-toplevel)/a4" \
+     --file "<uc-relative-path>" \
+     --to implementing \
+     --reason "task-implementer starting task/<id>-<slug>" \
+     --json
+   ```
+
+   The script enforces:
+   - Current status must be `ready`. If it is `draft`, **refuse to start** — return failure with the UC reference and instruct the user to finalize via `/a4:usecase` (ready-gate). The script reports this as an illegal-transition error; surface it in `issues:`.
+   - `implementing`, `shipped`, `superseded`, `revising`, `discarded`, `blocked` → the script reports already-at-target or illegal. Do not force, do not continue on that UC.
+   - Mechanical validation (`implemented_by:` non-empty, `actors:` non-empty, body has `## Flow`, no placeholders in `title:`). If validation fails, return failure surfacing the reported issues. Do **not** pass `--force`.
 
    Do this **before** beginning implementation so the workspace reflects active work.
+
 2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
 3. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `plan.md`'s Launch & Verify. All unit tests must pass before returning success.
 6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Title prefix: `feat(<task-slug>): ...` or `fix(<task-slug>): ...` as appropriate. Never skip hooks, amend, or force-push.
 
+### Spec-ambiguity exit — `implementing → revising`
+
+If, during implementation, you discover spec ambiguity that cannot be resolved from the UC body / domain / architecture alone (missing Flow branch, undefined error-display, actor referenced but not declared in `actors:`, etc.):
+
+1. **Stop coding.** Do not guess at the missing spec.
+2. **Open a review item** for the ambiguity. Allocate an id via `scripts/allocate_id.py` and write `a4/review/<id>-<slug>.md` with `kind: finding`, `status: open`, `target: usecase/<X>`, `source: task-implementer`, and a body describing exactly what is ambiguous and what clarification is needed.
+3. **Flip the UC** via the status writer:
+
+   ```bash
+   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+     "$(git rev-parse --show-toplevel)/a4" \
+     --file "usecase/<X>.md" \
+     --to revising \
+     --reason "task-implementer: see review/<id>-<slug>"
+   ```
+
+   The script cascades `implementing`/`failing` tasks back to `pending` and logs the back-pointer.
+4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
+
 ## Rules
 
 - Implement only the assigned task.
-- Do not modify other task files, `plan.md`, `architecture.md`, domain files, or review items. State findings in your return value; the invoking skill decides how to reflect them.
-- **UC files**: you may flip `status: ready → implementing` and bump `updated:` per step 1 above. You may not edit any other UC field (title, Flow, actors, depends_on, etc.) — those belong to `/a4:usecase` and its reviser agent. A UC at `status: draft` is not implementable; return failure instead of starting.
+- Do not modify other task files, `plan.md`, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
+- **UC files**: every status change goes through `scripts/transition_status.py`. You never hand-edit UC frontmatter or body — the writer owns `status:`, `updated:`, and `## Log`. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message.
+- A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable; the writer will reject the flip. Return failure instead of starting.
 - Record **factual results only** — do not classify issues as plan / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.
 - All unit tests must pass before declaring success.

@@ -33,7 +33,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" \
     "<project-root>/a4" $ARGUMENTS
 ```
 
-The script exits 0 when it succeeds (regardless of how many findings it emits) and writes one review item per new finding into `a4/review/<id>-<slug>.md`, allocating ids monotonically across the workspace. Findings already represented by an open / in-progress / dismissed `source: drift-detector` review item are deduplicated and not re-emitted.
+The script exits 0 when it succeeds (regardless of how many findings it emits) and writes one review item per new finding into `a4/review/<id>-<slug>.md`, allocating ids monotonically across the workspace. Findings already represented by an open / in-progress / discarded `source: drift-detector` review item are deduplicated and not re-emitted.
 
 ### 3. Surface the result
 
