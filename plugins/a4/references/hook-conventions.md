@@ -120,6 +120,17 @@ what it needs locally. The `post-edit` subcommand (fires on every
 Write/Edit/MultiEdit) benefits most; other subcommands benefit marginally
 but follow the same pattern for consistency.
 
+### In-process module imports for sibling scripts
+
+Sibling `scripts/*.py` validators and reconcilers are called **in-process
+via `import`**, not via nested `uv run` subprocesses. The dispatcher
+prepends its own directory to `sys.path` and declares the combined
+dependency set (currently `pyyaml>=6.0`) in its own PEP-723 header, so a
+single `uv run` pays the interpreter/venv startup once per hook event
+instead of once per script call. Standalone CLI use of those scripts
+(`uv run validate_frontmatter.py ...`) remains supported and unchanged —
+each keeps its own PEP-723 header for that path.
+
 ---
 
 ## 4. In-event ordering
