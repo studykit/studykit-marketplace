@@ -65,10 +65,10 @@
       "category": "Coding"
     },
     {
-      "name": "think",
+      "name": "a4",
       "source": {
         "source": "local",
-        "path": "./plugins/think"
+        "path": "./plugins/a4"
       },
       "policy": {
         "installation": "AVAILABLE",

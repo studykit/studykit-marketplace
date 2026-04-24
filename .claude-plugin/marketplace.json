@@ -61,17 +61,17 @@
       "keywords": ["html", "xml", "dom", "css-selector", "web-scraping", "structure-analysis"]
     },
     {
-      "name": "think",
-      "source": "./plugins/think",
-      "description": "Co-thinking plugin — usecase/spec/implementation-plan design, autonomous code execution, brainstorming, decision-making, and GitHub automation",
-      "version": "0.20.0",
+      "name": "a4",
+      "source": "./plugins/a4",
+      "description": "a4/ workspace management — wiki + issues spec authoring, usecase/architecture/implementation-plan design, autonomous code execution, brainstorming, and decision-making",
+      "version": "1.0.0",
       "author": {
         "name": "studykit"
       },
       "repository": "https://github.com/studykit/studykit-plugins",
       "license": "MIT",
       "category": "development",
-      "keywords": ["workflow", "github", "issue", "commit", "automation", "code-study", "architecture"]
+      "keywords": ["a4", "spec", "wiki", "issues", "usecase", "architecture", "planning", "workflow"]
     },
     {
       "name": "obsidian",
