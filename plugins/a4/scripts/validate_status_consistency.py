@@ -414,6 +414,18 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
     return []
 
 
+def run(a4_dir: Path, file: str | None = None) -> list[Mismatch]:
+    """Library API: workspace or file-scoped consistency check.
+
+    When `file` is given, restrict to the connected component of that
+    workspace-relative path (same semantics as the `--file` CLI flag).
+    Pure — no stdout/stderr/exit.
+    """
+    if file:
+        return collect_file_mismatches(a4_dir, file)
+    return collect_workspace_mismatches(a4_dir)
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Validate cross-file status consistency in an a4/ workspace."
@@ -439,20 +451,20 @@ def main() -> None:
         print(f"Error: {a4_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
+    file_rel: str | None = None
     if args.file:
         raw = Path(args.file)
         abs_path = raw if raw.is_absolute() else (a4_dir / raw)
         try:
-            rel = abs_path.resolve().relative_to(a4_dir)
+            file_rel = str(abs_path.resolve().relative_to(a4_dir))
         except ValueError:
             print(
                 f"Error: --file {args.file} is not inside {a4_dir}",
                 file=sys.stderr,
             )
             sys.exit(1)
-        mismatches = collect_file_mismatches(a4_dir, str(rel))
-    else:
-        mismatches = collect_workspace_mismatches(a4_dir)
+
+    mismatches = run(a4_dir, file_rel)
 
     if args.json:
         out = {
