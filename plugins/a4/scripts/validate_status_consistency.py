@@ -68,8 +68,8 @@ from pathlib import Path
 from common import (
     is_non_empty_list as _is_non_empty_list,
     normalize_ref as _normalize_ref,
-    split_frontmatter as _split_frontmatter,
 )
+from markdown import extract_preamble
 
 
 @dataclass(frozen=True)
@@ -79,8 +79,8 @@ class Mismatch:
     message: str
 
 
-def split_frontmatter(path: Path) -> dict | None:
-    return _split_frontmatter(path).fm
+def _fm(path: Path) -> dict | None:
+    return extract_preamble(path).fm
 
 
 # Families for which a `superseded` status is actively materialized by
@@ -100,7 +100,7 @@ def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
     if not folder.is_dir():
         return out
     for p in sorted(folder.glob("*.md")):
-        fm = split_frontmatter(p)
+        fm = _fm(p)
         if fm is None:
             continue
         key = f"{family}/{p.stem}"
@@ -125,7 +125,7 @@ def collect_with_promoted(
     if not folder.is_dir():
         return out
     for p in sorted(folder.glob(file_glob)):
-        fm = split_frontmatter(p)
+        fm = _fm(p)
         if fm is None:
             continue
         out.append((f"{subfolder}/{p.stem}", fm))
@@ -237,7 +237,7 @@ def check_discarded_cascade(
     task_dir = a4_dir / "task"
     if task_dir.is_dir():
         for p in sorted(task_dir.glob("*.md")):
-            fm = split_frontmatter(p)
+            fm = _fm(p)
             if fm is None:
                 continue
             implements = fm.get("implements") or []
@@ -268,7 +268,7 @@ def check_discarded_cascade(
     review_dir = a4_dir / "review"
     if review_dir.is_dir():
         for p in sorted(review_dir.glob("*.md")):
-            fm = split_frontmatter(p)
+            fm = _fm(p)
             if fm is None:
                 continue
             target = _normalize_ref(fm.get("target"))
@@ -381,7 +381,7 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
         abs_path = a4_dir / rel_file
         if not abs_path.is_file():
             return []
-        fm = split_frontmatter(abs_path)
+        fm = _fm(abs_path)
         if fm is None:
             return []
         return check_promoted([(f"idea/{abs_path.stem}", fm)], "idea")
@@ -392,7 +392,7 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
         abs_path = a4_dir / rel_file
         if not abs_path.is_file():
             return []
-        fm = split_frontmatter(abs_path)
+        fm = _fm(abs_path)
         if fm is None:
             return []
         return check_promoted([(f"spark/{abs_path.stem}", fm)], "brainstorm")

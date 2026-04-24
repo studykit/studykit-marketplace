@@ -42,7 +42,8 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from common import ISSUE_FOLDERS, WIKI_KINDS, discover_files, split_frontmatter
+from common import ISSUE_FOLDERS, WIKI_KINDS, discover_files
+from markdown import extract_preamble, parse
 
 FOOTNOTE_DEF_LINE_RE = re.compile(r"^\[\^([^\]\s]+)\]:\s*(.*)$")
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
@@ -64,8 +65,8 @@ class Violation:
 def discover_wiki_pages(a4_dir: Path) -> dict[str, Path]:
     out: dict[str, Path] = {}
     for md in sorted(a4_dir.glob("*.md")):
-        parsed = split_frontmatter(md)
-        if parsed.fm and parsed.fm.get("kind") in WIKI_KINDS:
+        preamble = extract_preamble(md)
+        if preamble.fm and preamble.fm.get("kind") in WIKI_KINDS:
             out[md.stem] = md
     return out
 
@@ -268,14 +269,14 @@ def validate_file(
     issues: dict[str, Path],
     sparks: dict[str, Path],
 ) -> list[Violation]:
-    parsed = split_frontmatter(path)
-    ftype = classify_file(path, a4_dir, parsed.fm)
+    parsed = parse(path)
+    ftype = classify_file(path, a4_dir, parsed.preamble.fm)
     if ftype is None:
         return []
 
     rel_str = str(path.relative_to(a4_dir))
-    body = parsed.body
-    body_start = parsed.body_start_line
+    body = parsed.body.content
+    body_start = parsed.body.line_start
     violations: list[Violation] = []
     skip_lines: set[int] = set()
 
