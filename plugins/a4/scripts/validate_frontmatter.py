@@ -41,8 +41,8 @@ from common import (
     discover_files,
     is_empty as _is_empty,
     is_int as _is_int,
-    split_frontmatter,
 )
+from markdown import extract_preamble
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -325,10 +325,10 @@ def validate_id_uniqueness(a4_dir: Path) -> list[Violation]:
         if not sub.is_dir():
             continue
         for p in sorted(sub.glob("*.md")):
-            parsed = split_frontmatter(p)
-            if not parsed.fm:
+            preamble = extract_preamble(p)
+            if not preamble.fm:
                 continue
-            raw = parsed.fm.get("id")
+            raw = preamble.fm.get("id")
             if _is_int(raw):
                 seen.setdefault(raw, []).append(p)
 
@@ -397,13 +397,13 @@ def main() -> None:
 
     violations: list[Violation] = []
     for path in files:
-        parsed = split_frontmatter(path)
-        if parsed.fm is None:
+        preamble = extract_preamble(path)
+        if preamble.fm is None:
             missing = check_missing_frontmatter(path, a4_dir)
             if missing:
                 violations.append(missing)
             continue
-        violations.extend(validate_file(path, a4_dir, parsed.fm))
+        violations.extend(validate_file(path, a4_dir, preamble.fm))
 
     if not args.file:
         violations.extend(validate_id_uniqueness(a4_dir))

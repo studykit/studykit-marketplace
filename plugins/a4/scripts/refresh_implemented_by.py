@@ -38,7 +38,8 @@ import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from common import normalize_ref, split_frontmatter as _split_frontmatter
+from common import normalize_ref
+from markdown import extract_preamble, parse
 
 
 @dataclass
@@ -57,16 +58,15 @@ class Report:
     dry_run: bool = False
 
 
-def split_frontmatter(path: Path) -> tuple[dict | None, str, str]:
-    """Return (fm, raw_fm, body).
+def _parse(path: Path) -> tuple[dict | None, str, str]:
+    """Return (fm, raw, body_content) — thin adapter over `markdown.parse`.
 
-    Back-compat wrapper around `common.split_frontmatter`. `body` here is
-    the canonical body text with any leading newline retained. The
-    write-path (`_write_file`) applies `body.lstrip()` before emitting,
-    so the retained newline does not surface in output.
+    `body_content` retains any leading newline from the closing fence;
+    `_write_file` applies `lstrip()` before emitting so the retained
+    newline does not surface in output.
     """
-    parsed = _split_frontmatter(path)
-    return parsed.fm, parsed.raw_fm, parsed.body
+    parsed = parse(path)
+    return parsed.preamble.fm, parsed.preamble.raw, parsed.body.content
 
 
 def collect_implements(a4_dir: Path) -> dict[str, list[str]]:
@@ -76,7 +76,7 @@ def collect_implements(a4_dir: Path) -> dict[str, list[str]]:
     if not task_dir.is_dir():
         return {}
     for p in sorted(task_dir.glob("*.md")):
-        fm, _, _ = split_frontmatter(p)
+        fm = extract_preamble(p).fm
         if fm is None:
             continue
         implements = fm.get("implements")
@@ -157,7 +157,7 @@ def _refresh_uc(
     dry_run: bool,
     report: Report,
 ) -> None:
-    fm, raw_fm, body = split_frontmatter(uc_path)
+    fm, raw, body = _parse(uc_path)
     if fm is None:
         report.errors.append(f"{uc_path}: unreadable frontmatter")
         return
@@ -167,7 +167,7 @@ def _refresh_uc(
         report.unchanged.append(uc_ref)
         return
     if not dry_run:
-        new_fm = _rewrite_list_field(raw_fm, "implemented_by", target_list)
+        new_fm = _rewrite_list_field(raw, "implemented_by", target_list)
         _write_file(uc_path, new_fm, body)
     report.changes.append(
         Change(uc=uc_ref, previous=current, new=target_list)

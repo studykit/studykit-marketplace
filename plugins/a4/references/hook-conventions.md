@@ -131,6 +131,27 @@ instead of once per script call. Standalone CLI use of those scripts
 (`uv run validate_frontmatter.py ...`) remains supported and unchanged —
 each keeps its own PEP-723 header for that path.
 
+### Shared modules
+
+Cross-script helpers live in two plain (non-runnable) modules next to the
+scripts:
+
+- `scripts/markdown.py` — canonical markdown parser. Exports `parse(path)
+  -> Markdown`, `extract_preamble(path) -> Preamble`, `extract_body(path)
+  -> Body`, and the dataclasses `Preamble(fm, raw)` / `Body(line_start,
+  content)` / `Markdown(preamble, body)` / `Heading(level, text, line)`.
+  `Body.extract_headings()` returns ATX headings, skipping fenced code
+  blocks. All frontmatter/body parsing in a4 scripts routes through this
+  module — do not reintroduce per-script `split_frontmatter` copies.
+- `scripts/common.py` — workspace-level helpers that do not touch
+  markdown: `ISSUE_FOLDERS`, `WIKI_KINDS`, `discover_files(a4_dir)`,
+  `is_int`, `is_empty`, `is_non_empty_list`, `normalize_ref`.
+
+Neither module carries a PEP-723 header (they are imported, never
+executed). Any script that imports `markdown` must declare `pyyaml>=6.0`
+in its own PEP-723 header so `uv run` provisions yaml into that script's
+venv.
+
 ---
 
 ## 4. In-event ordering

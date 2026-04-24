@@ -18,23 +18,13 @@ Usage:
 import sys
 from pathlib import Path
 
-import yaml
-
-ISSUE_FOLDERS = ("usecase", "task", "review", "decision", "idea")
+from common import ISSUE_FOLDERS
+from markdown import extract_preamble
 
 
 def extract_id(path: Path) -> int | None:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return None
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return None
-    try:
-        fm = yaml.safe_load(parts[1])
-    except yaml.YAMLError:
-        return None
-    if not isinstance(fm, dict):
+    fm = extract_preamble(path).fm
+    if fm is None:
         return None
     raw = fm.get("id")
     return raw if isinstance(raw, int) else None
