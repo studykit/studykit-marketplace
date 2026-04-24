@@ -1,0 +1,32 @@
+{
+  "name": "a4",
+  "version": "0.9.1",
+  "description": "a4/ workspace management — wiki + issues spec authoring, usecase/architecture/implementation-plan design, brainstorming, decision-making",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": [
+    "workflow",
+    "a4",
+    "spec",
+    "wiki",
+    "issues",
+    "usecase",
+    "architecture",
+    "planning"
+  ],
+  "interface": {
+    "displayName": "a4",
+    "shortDescription": "a4/ workspace management — wiki + issues spec authoring and design",
+    "developerName": "studykit",
+    "category": "Coding",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ]
+  },
+  "skills": "./skills/",
+  "mcpServers": "./.mcp.json"
+}
