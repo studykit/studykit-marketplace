@@ -18,6 +18,32 @@ WIKI_KINDS = frozenset(
     {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
 )
 
+ISSUE_FOLDERS: tuple[str, ...] = (
+    "usecase",
+    "task",
+    "review",
+    "decision",
+    "idea",
+)
+
+
+def discover_files(a4_dir: Path) -> list[Path]:
+    """All a4/*.md files the validators should scan.
+
+    Top-level wiki pages + every file in each issue folder + every file in
+    `spark/`. Order is deterministic: wiki pages first, then issue folders
+    in ISSUE_FOLDERS order, then sparks.
+    """
+    out: list[Path] = list(sorted(a4_dir.glob("*.md")))
+    for folder in ISSUE_FOLDERS:
+        sub = a4_dir / folder
+        if sub.is_dir():
+            out.extend(sorted(sub.glob("*.md")))
+    spark = a4_dir / "spark"
+    if spark.is_dir():
+        out.extend(sorted(spark.glob("*.md")))
+    return out
+
 
 @dataclass(frozen=True)
 class ParsedMarkdown:

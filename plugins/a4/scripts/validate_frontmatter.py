@@ -36,13 +36,14 @@ from pathlib import Path
 from typing import Any
 
 from common import (
+    ISSUE_FOLDERS,
     WIKI_KINDS,
+    discover_files,
     is_empty as _is_empty,
     is_int as _is_int,
     split_frontmatter,
 )
 
-ISSUE_FOLDERS = ("usecase", "task", "review", "decision", "idea")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -315,18 +316,6 @@ def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
             )
 
     return violations
-
-
-def discover_files(a4_dir: Path) -> list[Path]:
-    out: list[Path] = list(sorted(a4_dir.glob("*.md")))
-    for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if sub.is_dir():
-            out.extend(sorted(sub.glob("*.md")))
-    spark = a4_dir / "spark"
-    if spark.is_dir():
-        out.extend(sorted(spark.glob("*.md")))
-    return out
 
 
 def validate_id_uniqueness(a4_dir: Path) -> list[Violation]:
