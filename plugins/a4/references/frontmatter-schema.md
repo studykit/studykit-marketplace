@@ -276,6 +276,23 @@ Body-side conventions (wiki-page footnote format, body wikilink resolution) are 
 
 Hook scope is a separate concern — the validator reports; the caller (hook, skill, manual invocation) decides whether to block, notify, or ignore.
 
+### Cross-file status consistency
+
+Three enum values are semantically derived from cross-file state rather than hand-authored:
+
+| Field | Derived value | Condition |
+|-------|--------------|-----------|
+| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` |
+| `idea.status` | `promoted` | Own `promoted:` list is non-empty |
+| `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty |
+
+`plugins/a4/scripts/validate_status_consistency.py` reports either direction of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference). It is report-only — no file is mutated.
+
+Two modes:
+
+- **Workspace mode** (`<a4-dir>`) — scans all decisions/ideas/brainstorms. Used by the SessionStart hook and `/a4:validate`.
+- **File-scoped mode** (`<a4-dir> --file <path>`) — reports only mismatches in the connected component of the given file (idea/brainstorm: self-contained; decision: supersedes chain). Used by the PostToolUse hook so ordinary edits do not re-surface unrelated legacy mismatches.
+
 ## Known deferred items
 
 These are ADR items that this schema deliberately leaves softened until a follow-up round.
@@ -293,5 +310,6 @@ When these land, update this document **and** the validator simultaneously — t
 - **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
+- **Cross-file status consistency validator:** `plugins/a4/scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted).
 - **Read-only parser:** `plugins/a4/scripts/read_frontmatter.py`.
 - **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).
