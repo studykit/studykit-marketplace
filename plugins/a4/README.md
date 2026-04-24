@@ -29,6 +29,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
 | `index` | Regenerates `a4/INDEX.md` dashboard |
+| `validate` | Runs frontmatter-schema and body-convention validators over `a4/` |
 | `web-design-mock` | Web design mock generation |
 | `get-api-docs` | Shared global skill for current API/SDK documentation lookup |
 
