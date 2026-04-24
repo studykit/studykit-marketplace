@@ -1,7 +1,7 @@
 ---
 name: compass
 description: "This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, or needs help deciding the next step. Also maintains `a4/INDEX.md` as a workspace dashboard, refreshed on every invocation. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'compass', or when the user invokes the a4 plugin without a specific skill name."
-argument-hint: <topic slug, file path, or description of what you need>
+argument-hint: <issue id, path (e.g. usecase/3-search-history), wiki basename, or free-text description>
 allowed-tools: Read, Write, Glob, Grep, Bash, Skill
 ---
 
@@ -37,46 +37,31 @@ compass does **not** commit INDEX.md automatically — it is left in the working
 
 ### 0.3 Continue
 
-If the user invoked compass with no argument, read `a4/INDEX.md` and show the **Stage progress** and **Drift alerts** sections to the user before entering Step 2 — these two answer "where is the workspace at" faster than any other section. Otherwise proceed silently to Step 1.
+If the user invoked compass with no argument, read `a4/INDEX.md` and show the **Stage progress** and **Drift alerts** sections to the user before entering Step 1 — these two answer "where is the workspace at" faster than any other section. Otherwise proceed silently to Step 1.
 
 ---
 
-> **Note on Steps 1–3 below.** The artifact-scan and diagnosis logic below still references the **legacy aggregated-file layout** (`<slug>.usecase.md`, `<slug>.arch.md`, etc.) that predates the spec-as-wiki+issues ADR. These steps are scheduled for rewrite in the Compass redesign (ADR Next Step 6). Until then, if the user invokes compass with a topic argument against a new-layout `a4/`, Steps 1.2 and 3 will find nothing to diagnose — fall back to Step 2 (Fresh Start) or the Stage progress / Drift alerts sections of the INDEX regenerated in Step 0.
-
 ## Step 1: Detect Context
 
-Determine the user's situation by checking for existing pipeline artifacts.
+Determine the user's situation and route to Step 2 (Fresh Start) or Step 3 (Gap Diagnosis).
 
-### 1.1 Resolve topic
+### 1.1 Resolve the argument
 
-- If `$ARGUMENTS` is a file path or topic slug: extract the topic slug (e.g., `my-app` from `a4/my-app.usecase.md` or from the literal `my-app`).
-- If `$ARGUMENTS` is empty or a free-text description: skip to **Step 2** (Fresh Start).
+- **Specific target** — integer id (`3`, `#3`), folder-qualified path (`usecase/3-search-history`, `review/6-...`), wiki basename (`context`, `domain`, `architecture`, `actors`, `nfr`, `plan`, `bootstrap`), or a full `a4/…` path. Resolve to the underlying `a4/` file via `Glob`. If the id or path resolves uniquely, carry the target into Step 3. If the target lives under `a4/archive/`, inform the user it is archived and ask whether to restore (`git mv` back into its original folder) before continuing.
+- **Free-text description** (e.g., "I want to build a chat app") → Step 2 (Fresh Start). The user is starting something new.
+- **Empty argument** — route by workspace state:
+  - `a4/` absent or empty → Step 2 (Fresh Start).
+  - `a4/` has wiki pages or issues → Step 3 (workspace-wide diagnosis; no targeted item).
 
-### 1.2 Scan artifacts
+### 1.2 Note on workspace state
 
-Glob for `a4/<slug>*` **and** `a4/archive/<slug>*`. If the topic exists only under `a4/archive/`, inform the user it is archived and ask whether to restore (move back to `a4/`) before continuing — otherwise proceed with the active files.
-
-Check which files exist:
-
-| Artifact | File pattern | Produced by |
-|----------|-------------|-------------|
-| Use Cases | `<slug>.usecase.md` | usecase, auto-usecase |
-| Architecture | `<slug>.arch.md` | arch |
-| Bootstrap | `<slug>.bootstrap.md` | auto-bootstrap |
-| Plan | `<slug>.plan.md` | plan |
-| Test Report | `<slug>.test-report.c*.md` | plan |
-
-Also check for review reports and archived bootstrap reports (e.g., `<slug>.usecase.review-*.md`, `<slug>.arch.review-*.md`, `<slug>.plan.review-*.md`, `<slug>.bootstrap.r*.md`).
-
-If **no artifacts found** for the slug: skip to **Step 2** (Fresh Start), treating the argument as a topic description.
-
-If **artifacts found**: proceed to **Step 3** (Pipeline Diagnosis).
+Workspace state — wiki page presence, per-folder issue counts, open drift alerts, milestone progress — was already gathered by `index_refresh.py` in Step 0. Step 3 reads from the regenerated `a4/INDEX.md` and supplements with targeted frontmatter reads. Do not re-scan here.
 
 ---
 
 ## Step 2: Fresh Start
 
-The user has no existing artifacts or described a vague intent. Present the skill catalog and help them pick.
+The workspace is empty or the user described a vague intent. Present the skill catalog and help them pick an entry point.
 
 Ask: **"What are you trying to do?"** and show the options:
 
@@ -111,100 +96,111 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 
 ---
 
-## Step 3: Pipeline Diagnosis
+## Step 3: Gap Diagnosis
 
-The user has existing artifacts. Diagnose where they are and what to do next.
+The workspace has existing wiki pages or issues. Detect drift, locate the gap, and recommend the next skill.
 
-### 3.1 Read artifact state
+### 3.1 Detect drift
 
-Read each existing artifact file's **frontmatter and status sections only** (not the full content). Extract:
+Before reading state, surface accumulated wiki↔issue drift from since the last session:
 
-- **Status** field (draft, in-review, final, etc.)
-- **Open Items** section — unresolved issues from reviews
-- **Source SHA** fields — whether upstream changes have propagated
-- **Plan status** (from plan) — draft, verified, implementing, complete, blocked
-- **Plan phase** — plan-review, implement, test
-- **Plan cycle** — current test cycle (1-3)
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$ROOT/a4"
+```
 
-If test reports exist (`<slug>.test-report.c*.md`), read the **summary table** and **failure analysis**.
+The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / dismissed `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift.
 
-If review reports exist (e.g., `<slug>.plan.review-r*.md`), read their verdict (ACTIONABLE / NEEDS_REVISION).
+If the detector wrote new items, regenerate `a4/INDEX.md` so the Drift alerts section reflects them:
 
-### 3.2 Read implementation state
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/index_refresh.py" "$ROOT/a4"
+```
 
-If a plan exists with `status: implementing` or `status: complete`:
+### 3.2 Read workspace state
 
-1. Read the plan's **file mappings** for IUs.
-2. Check whether the mapped files actually exist (Glob).
-3. For files that exist, do a lightweight check — read the first 30 lines to confirm the file's purpose matches the IU's description (e.g., component name, exports, main function).
+Pull state from the regenerated `a4/INDEX.md` (Step 0 + possible Step 3.1 rerun):
 
-This is a **paper review**, not a runtime test. The goal is to detect obvious mismatches, not verify behavior.
+- **Wiki pages present** and their `updated:` dates (from INDEX's Wiki pages section).
+- **Issue counts** per folder × status (from INDEX's Open issues and Stage progress sections).
+- **Drift alerts** — open / in-progress `review/*.md` with `source: drift-detector`, grouped by priority.
+- **Milestone progress** — resolved / open per active milestone.
+
+If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the Step 3.3 recommendation more than aggregate state does.
 
 ### 3.3 Diagnose the gap layer
 
-Use a simplified waterfall trace to locate where the issue is:
+Trace from foundation to execution. Stop at the first layer that has actionable work. For a targeted Step 1.1 argument, focus the trace on layers upstream of the target (e.g., a blocked task points back to its `depends_on` predecessor).
 
-**Layer 1 — Use Cases**: Are there open items or unreflected review feedback in the usecase file?
-- If yes → recommend `usecase` to iterate.
+**Layer 0 — Workspace foundation.** Does the workspace have any use cases yet?
+- No UCs → recommend `/a4:usecase` (interactive) or `/a4:auto-usecase` (autonomous).
 
-**Layer 2 — Architecture**: Is there an arch file? Does it have open items, unresolved review feedback, or a source SHA mismatch with the usecase file?
-- If no arch exists → recommend `arch` to create one.
-- If arch has issues → recommend `arch` to iterate.
+**Layer 1 — Wiki foundation.** Is each wiki page that has dependent issues present?
+- UCs exist, `domain.md` missing → recommend `/a4:usecase iterate` (domain is articulated during UC work).
+- UCs exist, `architecture.md` missing → recommend `/a4:arch`.
+- `architecture.md` exists, `plan.md` missing, tasks expected → recommend `/a4:plan`.
+- Any issue's `wiki_impact:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
 
-**Layer 2.5 — Bootstrap**: Is there a bootstrap report? Does it show all checks passing? Is it current with the arch file?
-- If no bootstrap exists → recommend `auto-bootstrap` to set up the dev environment.
-- If bootstrap has failures → check if arch issues (recommend `arch`) or environment issues (report to user).
+**Layer 2 — Drift alerts.** Any open `review/*.md` with `source: drift-detector`?
+- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` or `wiki_impact:` tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:plan iterate`.
 
-**Layer 3 — Plan + Implementation + Testing**: Is there a plan? What is its status?
-- If no plan exists → recommend `plan` to create and execute one.
-- If `status: blocked` → read the latest review or test report to understand why. Trace back to the responsible layer (arch/usecase).
-- If `status: draft` or `status: verified` → recommend `plan` to continue (implementation not started or not complete).
-- If `status: implementing` → check `phase` and `cycle` to determine progress. Recommend `plan` to resume.
-- If `status: complete` → check whether file mappings match actual files. If mismatches, recommend `plan` to re-run.
+**Layer 3 — Open review items (non-drift).** Any other open review items?
+- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: wiki-scoped → `/a4:arch iterate` or `/a4:usecase iterate` depending on which wiki; `task/*` → `/a4:plan iterate`.
+
+**Layer 4 — Active tasks.** Any `task/*.md` with `status: pending | implementing | failing`?
+- Yes → recommend `/a4:plan iterate` (resume implementation).
+
+**Layer 5 — Blocked items.** Any item with `status: blocked`?
+- Read its `depends_on` chain to find the nearest unblocked predecessor; recommend the skill that owns that predecessor.
+
+**Layer 6 — Completion.** Everything `done` / `complete` / `resolved` / `final`?
+- Suggest either a new iteration (fresh UCs for the next milestone) or per-item archive of any targeted closed item (see Step 3.5).
 
 ### 3.4 Present diagnosis
 
-Report to the user in this format:
+Report in this format:
 
 ```
-## Pipeline Status: <topic>
+## Workspace Status
 
-| Stage | Artifact | Status |
-|-------|----------|--------|
-| Use Cases | <slug>.usecase.md | <status summary> |
-| Architecture | <slug>.arch.md | <status summary or "not yet created"> |
-| Bootstrap | <slug>.bootstrap.md | <status summary or "not yet run"> |
-| Plan | <slug>.plan.md | <status, phase, cycle — or "not yet created"> |
+| Layer | State |
+|-------|-------|
+| Wiki pages | <N of 7 present, list missing> |
+| Open issues | <usecase: N draft / M implementing / …; task: …; review: …> |
+| Drift alerts | <N open (H high, M medium, L low)> |
+| Milestones | <milestone-name: X/Y complete> (only for active milestones) |
 
 ## Diagnosis
 
-<1-3 sentences explaining where the gap is and why>
+<1-3 sentences on where the gap is and why>
 
 ## Recommendation
 
-→ **<skill-name>**: <what to do and why>
+→ **/a4:<skill> [iterate]**: <what to do and why>
 ```
 
 Wait for the user's confirmation, then invoke the recommended skill:
+
 ```
-Skill({ skill: "a4:<skill-name>", args: "<file path>" })
+Skill({ skill: "a4:<skill-name>", args: "<target ref or 'iterate'>" })
 ```
+
+`<target ref>` is the specific issue or wiki page the iteration should open (e.g., `review/6-missing-validation`, `usecase/3-search-history`, `architecture`). Iteration skills accept path-like arguments and resolve them internally. For generic resumes, `iterate` alone is sufficient.
 
 If the user disagrees with the recommendation, discuss alternatives and let them choose.
 
 ---
 
-### 3.5 Archive suggestion
+### 3.5 Archive suggestion (targeted items only)
 
-If the topic's latest stage has `status: complete` or `status: final`, after presenting the diagnosis offer to archive:
+If Step 1.1 resolved a specific target **and** that item's `status` is a terminal state (`done` / `complete` / `resolved` / `final`), after presenting the diagnosis offer to archive it:
 
-> "This topic looks complete. Move all `a4/<topic>.*.md` into `a4/archive/`?"
+> "Item `<folder>/<id>-<slug>` is closed. Move to `a4/archive/`?"
 
-Do **not** move automatically. On user confirmation, run:
+Do **not** move automatically. On user confirmation:
 
 ```bash
-git mv a4/<topic>.*.md a4/archive/
-git commit -m "docs(a4): archive <topic>"
+git mv a4/<folder>/<id>-<slug>.md a4/archive/
+git commit -m "docs(a4): archive <folder>/<id>-<slug>"
 ```
 
-If the user declines, leave the files in place. The topic stays in the Pipeline table on next INDEX regeneration.
+Workspace-wide completion is rare and user-driven — compass does not auto-suggest batch archive. Folder location is the archived flag; no frontmatter change is needed.
