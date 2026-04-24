@@ -35,7 +35,7 @@ updated: 2026-04-24
 ---
 ```
 
-No lifecycle, revision, or source SHA fields. Cross-references are Obsidian wikilinks in body prose. Changes are tracked via footnotes + `## Changes`.
+No lifecycle, revision, or source SHA fields. Cross-references, footnote markers, and the Wiki Update Protocol follow the shared conventions at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`.
 
 ## Task File Schema
 

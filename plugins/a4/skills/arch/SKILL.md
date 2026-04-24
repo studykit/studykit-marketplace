@@ -36,7 +36,7 @@ updated: 2026-04-24
 ---
 ```
 
-No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol (shared across the a4 plugin — mirror of SKILL.md in `usecase`).
+No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` (shared across `usecase`, `arch`, and `plan`).
 
 ## Id Allocation
 
@@ -201,7 +201,7 @@ UC references in Information Flow sections use Obsidian wikilinks — they resol
 
 - **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter above, Overview stub, and the confirmed Technology Stack.
 - **Update** the file at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Footnote markers** — when a change is driven by a specific UC / decision / review item (new UC added, component split after review, etc.), add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See the Wiki Update Protocol reference below.
+- **Footnote markers** — when a change is driven by a specific UC / decision / review item (new UC added, component split after review, etc.), add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the full protocol (when to update, how to defer via a review item, close guard).
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Interview Phases

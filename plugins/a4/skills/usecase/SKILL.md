@@ -85,31 +85,15 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Run this **immediately before** writing a new UC, review item, etc. Ids are monotonic across the whole workspace (GitHub-issue semantics); do not reuse or renumber.
 
-## Obsidian Markdown Conventions
+## Obsidian Conventions
 
-- `[[usecase/3-search-history]]` — reference link; Obsidian surfaces it as a backlink on the target.
-- `![[usecase/3-search-history]]` — embed; Obsidian inlines the target file or section.
-- `![[usecase/3-search-history#Flow]]` — embed a specific heading section.
-- Footnote markers (`[^1]`, `[^2]`) tag wiki sections that were modified; a `## Changes` section at the bottom of each wiki page resolves each marker to `YYYY-MM-DD — [[causing-issue]]`.
+Wikilink / embed syntax, the footnote audit trail, and the Wiki Update Protocol (when a wiki page needs an update, how to apply one, how to defer via a review item, and the close guard) are documented in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`. That reference is shared by `usecase`, `arch`, and `plan`. Read it once.
 
-## Wiki Update Protocol
+Key rules this skill invokes below:
 
-Wiki pages have no lifecycle but are continuously updated as issues land. Updates are driven by **issue state changes** (create / status transition / resolve) — not by time.
-
-When a confirmed UC or new actor or domain concept would affect a wiki page, add a footnote marker inline in the modified wiki section, and append a line to the `## Changes` section:
-
-```markdown
-## Actors
-
-Meeting Organizer[^2] — drives the share-summary flow; initiates UC-3.
-
-## Changes
-
-[^1]: 2026-04-23 — [[usecase/1-share-summary]]
-[^2]: 2026-04-24 — [[usecase/3-search-history]]
-```
-
-Footnote labels are file-local sequential numbers; payloads point at the causing issue, not at a review item. When running the final reviewer, findings that touch wiki pages become review items with `wiki_impact` set.
+- Body prose uses wikilinks (`[[usecase/3-search-history]]`) and embeds (`![[usecase/3-search-history]]`). Frontmatter paths stay bracket-free per [frontmatter-schema.md](../../references/frontmatter-schema.md).
+- When a confirmed UC / actor / concept change affects a wiki page, update the wiki page in place: leave a `[^N]` footnote in the modified section, append a `## Changes` line pointing at the causing issue, and bump the wiki page's `updated:`.
+- If the user defers a wiki update, open a review item with `wiki_impact:` set; the close guard re-surfaces it at session close.
 
 ## Modes
 
