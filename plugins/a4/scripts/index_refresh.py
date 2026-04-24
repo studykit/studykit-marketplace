@@ -539,6 +539,7 @@ def render_section(heading: str, dataview: str | None, static: str, marker_id: s
         parts.append(dataview)
         parts.append("")
     parts.append(f"<!-- static-fallback-start: {marker_id} -->")
+    parts.append("")
     parts.append(static)
     parts.append(f"<!-- static-fallback-end: {marker_id} -->")
     return "\n".join(parts)
