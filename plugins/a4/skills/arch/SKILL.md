@@ -210,7 +210,7 @@ The architecture covers four areas. In **First Design**, start with Technology S
 
 ### Phase 1: Technology Stack
 
-Select language, framework, platform, and key libraries. For each choice, record the rationale. For lightweight choices — discuss inline and record with a brief rationale. For heavy choices (multiple viable options with significant trade-offs), ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/a4:spark-decide` to evaluate options?"
+Select language, framework, platform, and key libraries. For each choice, record the rationale. For lightweight choices — discuss inline and record with a brief rationale. For heavy choices (multiple viable options with significant trade-offs), ask the user: "This seems like a decision worth investigating more deeply. Would you like to run `/a4:research` on the candidates first, then draft a decision in `a4/decision/<id>-<slug>.md` and finalize with `/a4:decision-review`?"
 
 If a codebase already exists, detect the stack from project files and confirm. Write the initial `architecture.md` at the end of Phase 1.
 

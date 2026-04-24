@@ -24,7 +24,8 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Autonomous usecase generation |
 | `spark-brainstorm` | Structured brainstorming sessions |
-| `spark-decide` | Solution discovery facilitator; writes an ADR as `a4/decision/<id>-<slug>.md` |
+| `research` | Standalone research facilitator; writes a portable artifact at `./research/<slug>.md` (outside `a4/`) referenced by decision files |
+| `decision-review` | Reviews and finalizes a hand-authored decision record; runs `decision-reviewer` agent + wiki nudge |
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
@@ -87,6 +88,9 @@ Session-scoped accumulate-then-validate pattern. Edits to `a4/*.md` are recorded
   spike/                                    # PoC code for kind: spike tasks (sibling of a4/)
     <task-id>-<slug>/                       # Active spike (parallel to a4/task/<id>-<slug>.md)
     archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
+
+  research/                                 # Portable research artifacts from /a4:research
+    <slug>.md                               # Cited from a4/decision/ via `related: [research/<slug>]`
 ```
 
 ### Wiki vs. issues

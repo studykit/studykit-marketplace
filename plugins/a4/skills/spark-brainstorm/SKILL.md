@@ -122,8 +122,8 @@ tags: []
 
 Additional sections may be added when the session content warrants them (e.g., Constraints, Open Questions), but always use headed sections (`##` or `###`) — never free-form prose outside a section.
 
-## Handoff to Solution Discovery
+## Handoff to Research and Decision
 
-If the brainstorming produced options that need to be evaluated and decided upon, suggest:
+If the brainstorming produced options that warrant further investigation or a documented decision, suggest the two-step path:
 
-> "If you'd like to evaluate these options and make a decision, you can run `/a4:spark-decide <file_path>` to start a solution discovery session with these ideas as input."
+> "If you'd like to investigate these options, run `/a4:research <file_path>` to produce a portable research artifact at `./research/<slug>.md`. Once research is in hand, hand-author `a4/decision/<id>-<slug>.md` referencing the research, then run `/a4:decision-review <decision_path>` to review and finalize the decision."

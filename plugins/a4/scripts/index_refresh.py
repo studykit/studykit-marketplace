@@ -120,8 +120,9 @@ class SparkItem:
 
     @property
     def flavor(self) -> str:
-        # Only `.brainstorm` is supported in spark/ today; spark-decide writes
-        # directly to `a4/decision/<id>-<slug>.md`.
+        # Only `.brainstorm` is supported in spark/ today. Decisions are hand-
+        # authored at `a4/decision/<id>-<slug>.md`; research lives at project-
+        # root `./research/<slug>.md` via `/a4:research`.
         stem = self.path.stem
         if stem.endswith(".brainstorm"):
             return "brainstorm"
