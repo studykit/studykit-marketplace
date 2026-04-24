@@ -1,0 +1,54 @@
+{
+  "description": "Accumulate a4/ .md edits during a session (PostToolUse), validate them at Stop, and sweep records at SessionStart/SessionEnd. Session-scoped record at .claude/tmp/a4-edited/a4-edited-<session_id>.txt avoids re-reporting pre-existing violations in files the user did not touch.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/record-edited-a4.sh\"",
+            "timeout": 5,
+            "description": "Record edited a4/*.md files to a session-scoped list"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-edited-a4.sh\"",
+            "timeout": 30,
+            "description": "Validate all a4/ files edited this session; exit 2 on violations to force fix"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/cleanup-edited-a4.sh\"",
+            "timeout": 5,
+            "description": "Delete this session's a4-edited record file"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/sweep-old-edited-a4.sh\"",
+            "timeout": 5,
+            "description": "Sweep orphan a4-edited record files older than 1 day"
+          }
+        ]
+      }
+    ]
+  }
+}
