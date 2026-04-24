@@ -63,7 +63,10 @@ IN_PROGRESS_STATUSES: dict[str, set[str]] = {
 }
 BLOCKED_STATUSES: set[str] = {"blocked"}
 
-SPARK_TERMINAL = {"promoted", "discarded"}
+SPARK_TERMINAL: dict[str, set[str]] = {
+    "brainstorm": {"promoted", "discarded"},
+    "decide": {"final", "superseded"},
+}
 
 RECENT_ACTIVITY_LIMIT = 10
 
@@ -464,13 +467,16 @@ def section_recent_activity(
 
 
 def section_spark(sparks: list[SparkItem]) -> tuple[str, str, str, int]:
-    open_sparks = [s for s in sparks if s.status not in SPARK_TERMINAL]
+    open_sparks = [
+        s for s in sparks
+        if s.status not in SPARK_TERMINAL.get(s.flavor, set())
+    ]
     heading = f"## Spark (open {len(open_sparks)})"
     dataview = (
         "```dataview\n"
         "LIST\n"
         'FROM "a4/spark"\n'
-        'WHERE !status OR status = "open"\n'
+        'WHERE !status OR status = "open" OR status = "draft"\n'
         "SORT file.name ASC\n"
         "```"
     )
