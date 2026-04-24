@@ -1,5 +1,5 @@
 ---
-name: iu-implementer
+name: task-implementer
 description: Internal agent used by a4 plugin skills. Do not invoke directly.
 model: sonnet
 color: blue

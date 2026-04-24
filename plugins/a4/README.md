@@ -40,7 +40,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `arch-reviewer` | Review architecture designs |
 | `decision-reviewer` | Review decision records |
 | `domain-updater` | Update domain models |
-| `iu-implementer` | Implement IUs and write unit tests |
+| `task-implementer` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
 | `plan-reviewer` | Review implementation plans |
 | `test-runner` | Run tests and produce reports |
@@ -51,7 +51,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 
 ## Document Layout (`a4/`)
 
-`a4/` is a git-native **wiki + issue tracker** for the workspace — flat wiki pages describe the project shape; type-scoped folders hold lifecycle-tracked issues. Full model: `plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md`.
+`a4/` is a git-native **wiki + issue tracker** for the workspace — flat wiki pages describe the project shape; type-scoped folders hold lifecycle-tracked issues. Full model: `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md`.
 
 ```
 a4/

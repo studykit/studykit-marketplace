@@ -1,11 +1,11 @@
 # plan
 
-Takes an architecture document and autonomously plans, implements, and tests the project — iterating until integration and smoke tests pass. Delegates IU implementation to per-IU subagents and orchestrates the execution order, progress tracking, and cycle loop.
+Takes an architecture document and autonomously plans, implements, and tests the project — iterating until integration and smoke tests pass. Delegates task implementation to per-task subagents and orchestrates the execution order, progress tracking, and cycle loop.
 
 ## Current Notes
 
 - **Primary file:** `plugins/a4/skills/plan/SKILL.md`
-- **Current behavior:** Autonomous planning-and-execution orchestrator. It writes `.plan.md`, uses `plan-reviewer`, delegates IUs to `iu-implementer`, and uses `test-runner` for integration/smoke verification.
+- **Current behavior:** Autonomous planning-and-execution orchestrator. It writes `.plan.md`, uses `plan-reviewer`, delegates tasks to `task-implementer`, and uses `test-runner` for integration/smoke verification.
 
 ## Workflow
 
@@ -15,7 +15,7 @@ title plan Workflow
 skinparam conditionStyle inside
 
 |#WhiteSmoke|tp| plan (orchestrator)
-|#AliceBlue|iu| IU subagent (sonnet)
+|#AliceBlue|ti| task-implementer subagent (sonnet)
 |#Lavender|ts| test subagent (sonnet)
 |#MistyRose|rv| plan-reviewer agent
 
@@ -59,7 +59,7 @@ partition "Phase 1 — Plan Generation + Verification" #LightCyan {
   (enter plan mode);
   note right
     Strategy (component / feature / hybrid)
-    IUs with file mappings + unit test paths
+    Tasks with file mappings + unit test paths
     Dependency graph + implementation order
     Test plan: integration + smoke cases
     Test file convention
@@ -108,46 +108,46 @@ partition "Phase 2 — Implement + Test Loop" #Honeydew {
 
   repeat
 
-    partition "Step 5: IU Implementation" {
+    partition "Step 5: Task Implementation" {
       |tp|
       repeat
-        :Identify ready IUs
+        :Identify ready tasks
         (deps all ""done"", status ""pending"");
 
-        |iu|
+        |ti|
         fork
           :Implement code
-          per IU file mappings;
+          per task file mappings;
           :Write unit tests;
           :Run unit tests until pass;
           :Commit: code + tests;
           :Return: result + summary;
         fork again
           :Implement code
-          per IU file mappings;
+          per task file mappings;
           :Write unit tests;
           :Run unit tests until pass;
           :Commit: code + tests;
           :Return: result + summary;
         end fork
         note right
-          Independent IUs
+          Independent tasks
           run in parallel
         end note
 
         |tp|
-        :Track IU results;
+        :Track task results;
         :pass -> status: **done**
         fail -> status: **failed**
         + record failure summary;
 
-        if (Every 3 IUs?) then (checkpoint)
+        if (Every 3 tasks?) then (checkpoint)
           :Update .plan.md statuses;
           :Commit;
         else (continue)
         endif
 
-      repeat while (More ready IUs?) is (yes) ->all dispatched;
+      repeat while (More ready tasks?) is (yes) ->all dispatched;
     }
 
     partition "Step 6: Integration + Smoke Test" {
@@ -164,9 +164,9 @@ partition "Phase 2 — Implement + Test Loop" #Honeydew {
     partition "Step 7: Analyze Results" {
       |tp|
       :Read test report
-      + IU failure summaries;
+      + task failure summaries;
 
-      if (All IUs done +\nall tests pass?) then (yes)
+      if (All tasks done +\nall tests pass?) then (yes)
         :Set status: complete; <<#LightGreen>>
         :Commit: plan + history;
         :Report success to user;
@@ -187,11 +187,11 @@ partition "Phase 2 — Implement + Test Loop" #Honeydew {
 
       :Autonomous plan revision;
       note right
-        Identify affected IUs
+        Identify affected tasks
         Revise descriptions / file mappings /
         deps / acceptance criteria
         Check ripple effects on dependents
-        Reset affected IUs to ""pending""
+        Reset affected tasks to ""pending""
       end note
       :Add test report to reflected_files;
       :Increment revision;
@@ -220,7 +220,7 @@ partition "Phase 2 — Implement + Test Loop" #Honeydew {
 
   :Set status: blocked; <<#Pink>>
   :Report remaining failures
-  (IU statuses, all test reports);
+  (task statuses, all test reports);
 }
 
 stop

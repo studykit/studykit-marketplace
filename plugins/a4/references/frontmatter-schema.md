@@ -1,6 +1,6 @@
 # a4 Frontmatter Schema
 
-Consolidated frontmatter reference for the `a4/` workspace. Extracted from the spec-as-wiki+issues ADR (`plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md`) and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**; the ADR remains the rationale source.
+Consolidated frontmatter reference for the `a4/` workspace. Extracted from the spec-as-wiki+issues ADR (`plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md`) and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**; the ADR remains the rationale source.
 
 When the ADR and this document disagree, the ADR wins and this document should be updated to match.
 
@@ -13,8 +13,6 @@ Every markdown file created by an a4 skill carries YAML frontmatter. Files split
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `plan.md`, `bootstrap.md` | `a4/` root |
 | **Issue** | use case, task, review item, decision | `a4/usecase/`, `a4/task/`, `a4/review/`, `a4/decision/` |
 | **Spark** | brainstorm output, decide output | `a4/spark/` |
-
-Legacy files (`visual-claude/a4/`, this plugin's own `plugins/a4/a4/*.decide.md`) are **not covered** by this schema — they predate the model and are intentionally left as-is.
 
 ## Universal rules
 
@@ -246,7 +244,7 @@ When these land, update this document **and** the validator simultaneously — t
 
 ## Cross-references
 
-- **ADR (authority):** `plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md` §Frontmatter schema (lines ~132–225).
+- **ADR (authority):** `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md` §Frontmatter schema (lines ~132–225).
 - **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
 - **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
