@@ -46,9 +46,10 @@ updated: 2026-04-24
 ---
 id: 3
 title: Search history
-status: draft | implementing | done | blocked
+status: draft | ready | implementing | shipped | superseded | blocked
 actors: [meeting-organizer, team-member]
 depends_on: [usecase/1-share-summary]
+supersedes: []
 related: []
 labels: [search, ui]
 milestone: v1.0
@@ -58,6 +59,17 @@ updated: 2026-04-24
 ```
 
 Omit empty fields or leave `[]`. `milestone` is optional until the plan phase assigns one. Paths are plain strings (no brackets, `.md` omitted) for dataview compatibility. Body uses Obsidian wikilinks (`[[...]]`) and embeds (`![[...]]`).
+
+UC lifecycle is five forward states plus `blocked`:
+
+- `draft` — spec still being shaped (initial state).
+- `ready` — spec closed; waiting for an implementer to pick it up.
+- `implementing` — a `task-implementer` agent is working on it.
+- `shipped` — the running system reflects this UC.
+- `superseded` — replaced by a newer UC that declared `supersedes: [<this>]` and shipped. Set automatically by `propagate_superseded.py` — do not hand-write.
+- `blocked` — implementation-time blocker; crosscutting.
+
+**`shipped` is terminal.** If requirements change after ship, create a **new** UC with `supersedes: [usecase/<old-id>-<slug>]`; when the new UC ships, the hook flips the old one to `superseded`. There is no path back to `draft` / `implementing` from `shipped`.
 
 **Review item** — `review/<id>-<slug>.md` (used by wrap-up and the in-situ nudge):
 ```yaml
@@ -303,7 +315,12 @@ When the user indicates they're done, proceed to **End Iteration** in `${CLAUDE_
 3. Launch `Agent(subagent_type: "a4:usecase-reviewer")`. The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md`.
 4. Walk the user through each emitted review item. Resolve in place (edit the target UC / wiki page, set `status: resolved` in the review item, add `## Log` entries) or defer (leave `status: open`).
 5. **Wiki close guard** — for each resolved review item with non-empty `wiki_impact`, verify each referenced wiki page has a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
-6. Report a summary: UCs confirmed, wiki pages written, review items opened, review items resolved. Suggest `/a4:arch` as the next step.
+6. **Ready-gate.** Before the final summary, per-UC ask the user whether each UC still at `status: draft` is ready to hand off to implementation. Accept natural-language answers:
+   - yes / ok / 확정 / `"mark ready"` → flip frontmatter `status: draft → ready`, bump `updated:` to today, append `## Log` entry `<YYYY-MM-DD> — marked ready for implementation; user confirmed.`
+   - no / `"아직"` / `"still iterating"` / silence → leave at `draft`.
+
+   Only `draft` UCs are offered. UCs already at `ready`, `implementing`, `shipped`, `superseded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC still at `draft`, so this gate is the hand-off point between spec work and coding.
+7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:arch` (or `/a4:plan` if architecture already exists) as the next step.
 
 ### Agent Usage
 

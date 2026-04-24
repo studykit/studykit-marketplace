@@ -25,7 +25,12 @@ Read the task file first, then the plan's Launch & Verify section, then the rele
 
 ## What You Do
 
-1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, read the UC file. If its `status:` is `draft`, flip it to `implementing` and bump `updated:` to today (`YYYY-MM-DD`). If already `implementing`, `done`, or `blocked`, leave it alone. This is the only UC-file edit you are permitted to make (see Rules). Do this **before** beginning implementation so the workspace reflects active work.
+1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, read the UC file and branch on `status:`:
+   - `ready` → flip to `implementing` and bump `updated:` to today (`YYYY-MM-DD`). This is the only UC-file edit you are permitted to make (see Rules).
+   - `implementing`, `shipped`, `superseded`, or `blocked` → leave alone.
+   - `draft` → **refuse to start.** Return failure with a concrete message naming the UC and instructing the user to finalize the spec via `/a4:usecase` (which ends with a ready-gate confirmation). Do not touch any files, do not flip status — the spec is not closed yet. Surface the blocking UC(s) in `issues:` of your return value.
+
+   Do this **before** beginning implementation so the workspace reflects active work.
 2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
 3. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
@@ -36,7 +41,7 @@ Read the task file first, then the plan's Launch & Verify section, then the rele
 
 - Implement only the assigned task.
 - Do not modify other task files, `plan.md`, `architecture.md`, domain files, or review items. State findings in your return value; the invoking skill decides how to reflect them.
-- **UC files**: you may flip `status: draft → implementing` and bump `updated:` per step 1 above. You may not edit any other UC field (title, Flow, actors, depends_on, etc.) — those belong to `/a4:usecase` and its reviser agent.
+- **UC files**: you may flip `status: ready → implementing` and bump `updated:` per step 1 above. You may not edit any other UC field (title, Flow, actors, depends_on, etc.) — those belong to `/a4:usecase` and its reviser agent. A UC at `status: draft` is not implementable; return failure instead of starting.
 - Record **factual results only** — do not classify issues as plan / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.
 - All unit tests must pass before declaring success.

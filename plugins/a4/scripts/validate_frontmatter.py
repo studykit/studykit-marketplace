@@ -66,10 +66,16 @@ SCHEMAS: dict[str, Schema] = {
     "usecase": Schema(
         name="usecase",
         required=frozenset({"id", "title", "status", "created", "updated"}),
-        enums={"status": frozenset({"draft", "implementing", "done", "blocked"})},
+        enums={
+            "status": frozenset(
+                {"draft", "ready", "implementing", "shipped", "superseded", "blocked"}
+            )
+        },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
-        path_list_fields=frozenset({"depends_on", "justified_by", "related"}),
+        path_list_fields=frozenset(
+            {"depends_on", "justified_by", "related", "supersedes"}
+        ),
     ),
     "task": Schema(
         name="task",

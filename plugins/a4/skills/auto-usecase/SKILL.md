@@ -234,7 +234,7 @@ Produce a short report to the user:
 - Review items: total / open / resolved / dismissed
 - Open questions (review items with `kind: question`) remaining
 
-Do **not** set any UC to `status: done` — autonomous generation only produces drafts.
+Do **not** advance any UC past `status: draft` — autonomous generation only produces drafts. Promotion to `ready` / `implementing` / `shipped` is always user-driven.
 
 ## Commit Points
 

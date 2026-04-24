@@ -297,9 +297,9 @@ If failures exist, classify each test-runner review item:
 
 If 3 cycles complete and failures remain: halt. Mark affected tasks `status: failing`, append `## Log` per failure, leave all test-runner review items `open`. Report the state to the user.
 
-### Step 2.5: UC done-review (user-confirmed)
+### Step 2.5: UC ship-review (user-confirmed)
 
-Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tasks `complete`). The goal: for each UC whose implementation is now complete, let the user confirm that the feature behaves as specified, then flip `status: implementing → done`.
+Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tasks `complete`). The goal: for each UC whose implementation is now complete, let the user confirm that the running system reflects it, then flip `status: implementing → shipped`.
 
 1. **Collect candidates.** A UC X is a candidate when:
    - X.status is `implementing` (flipped by `task-implementer` at work-start per its protocol).
@@ -316,20 +316,24 @@ Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tas
    Compose a short per-UC verdict — **two to four sentences** — covering: (a) which task(s) implemented it, (b) which tests exercise its flow / validation / error handling, (c) any Expected Outcome point not yet visibly covered by the tests. No new files, no review items emitted here.
 
 3. **Present to the user.** For each candidate X, show the verdict and ask:
-   > UC X is ready to mark done based on completed tasks and passing tests. [verdict]. Mark done?
+   > UC X is ready to mark shipped based on completed tasks and passing tests. [verdict]. Mark shipped?
 
    Accept natural-language answers:
-   - `"yes"`, `"ok"`, `"맞아요"`, `"확정"`, `"mark done"` → confirm.
+   - `"yes"`, `"ok"`, `"맞아요"`, `"확정"`, `"mark shipped"`, `"ship it"` → confirm.
    - `"not yet"`, `"아직"`, `"let me verify"`, `"hold"` → defer (leave `implementing`).
    - `"no — X is incomplete because..."` → defer with reason; fold the reason into a fresh review item `target: usecase/X`, `kind: gap`, `source: self`.
 
 4. **Apply confirmations.** For every UC the user confirmed:
-   - Edit the UC file: `status: implementing → done`, bump `updated:` to today.
-   - Append a `## Log` entry: `<YYYY-MM-DD> — marked done after Phase 2 (cycle <N>); tests <list>; user confirmed.`
+   - Edit the UC file: `status: implementing → shipped`, bump `updated:` to today.
+   - Append a `## Log` entry: `<YYYY-MM-DD> — marked shipped after Phase 2 (cycle <N>); tests <list>; user confirmed.`
 
-5. **Commit** all UC done-transitions together as one commit (see Commit Points).
+   If the newly-shipped UC has a non-empty `supersedes:` list, **do not** hand-edit the targets here — the `propagate_superseded.py` PostToolUse hook will flip each target from `shipped` to `superseded` and append the back-pointer log entry automatically when the Edit lands.
+
+5. **Commit** all UC ship-transitions together as one commit (see Commit Points). The hook-driven `superseded` flips on predecessor UCs land in the same working-tree change as the ship edit, so they naturally belong in the same commit.
 
 After Step 2.5, declare the plan complete and proceed to wrap-up. Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:plan iterate` session will re-offer them.
+
+**`shipped` is terminal.** If a UC needs revision later, the right move is to create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`; when that new UC eventually ships, the hook flips the old one to `superseded`. Never try to move a UC back from `shipped` to `implementing` or `draft`.
 
 ---
 
@@ -340,7 +344,7 @@ After Step 2.5, declare the plan complete and proceed to wrap-up. Leftover `impl
 - **Per-task implementation** — task-implementer commits its own code + unit tests per task; the orchestrating skill does **not** also commit those files.
 - **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 2.3.
 - **Plan revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 2.1.
-- **UC done-transitions (Step 2.5)** — commit the UC files confirmed `done` together in one commit, separate from task commits. Message prefix: `docs(a4): mark UC <ids> done`.
+- **UC ship-transitions (Step 2.5)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by the `propagate_superseded.py` hook are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
 - **Final state** — commit the final plan / tasks / review items when the user wraps up.
 
 Never skip hooks, amend, or force-push without explicit user instruction.
