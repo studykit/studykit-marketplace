@@ -16,7 +16,10 @@ Write a handoff file that captures everything a fresh Claude Code session needs 
 ## Task
 
 1. **Update project docs.** Identify anything from this session that belongs in long-lived documentation — architectural decisions, design rationale, new conventions, decision records, CLAUDE.md rules, README changes — and update those docs. This runs in parallel with the handoff, not instead of it: the handoff remains self-contained even if the same knowledge also lives in the proper doc.
-2. Create a new file at `.handoff/<TIMESTAMP>.md` using the value from Context. **Never overwrite an existing handoff file** — if one exists at the same timestamp, append a short suffix (e.g., `_2`).
+2. Decide the handoff path:
+   - **Filename**: `<TIMESTAMP>_<topic-slug>.md`, where `<topic-slug>` is a short kebab-case summary of the session's focus (e.g., `a4-wiki-issue-model-locked`).
+   - **Directory**: scope to the area of work. If the session centered on a specific plugin or subtree, use that subtree's `.handoff/` (e.g., `plugins/think/.handoff/`). If the work spans multiple areas or the scope is unclear, fall back to the repo-root `.handoff/`.
+   - **Never overwrite** an existing handoff file — if one exists at the same path, append a short suffix (e.g., `_2`).
 3. Write the handoff **in English**. Make it self-contained: the next session should be able to resume from this file alone, without reconstructing prior conversation or broadly exploring the codebase.
 4. Commit the handoff together with the doc updates and any other pending working-tree changes.
 
