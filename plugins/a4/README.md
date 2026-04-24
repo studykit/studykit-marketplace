@@ -33,6 +33,19 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `web-design-mock` | Web design mock generation |
 | `get-api-docs` | Shared global skill for current API/SDK documentation lookup |
 
+### Hooks
+
+Session-scoped accumulate-then-validate pattern. Edits to `a4/*.md` are recorded as they happen; the record is drained and validated at Stop, cleaned up at SessionEnd, and orphan records swept at SessionStart.
+
+| Event | Script | Purpose |
+|-------|--------|---------|
+| `PostToolUse` (`Write\|Edit\|MultiEdit`) | `hooks/record-edited-a4.sh` | Append absolute path of any edited `$project/a4/**/*.md` to `$project/.claude/tmp/a4-edited/a4-edited-<session_id>.txt`. Always exits 0. |
+| `Stop` | `hooks/validate-edited-a4.sh` | Run `validate_frontmatter.py` + `validate_body.py` on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries with the feedback. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors (missing scripts, unexpected rc) → exit 0 with stderr warning; never block on hook bugs. |
+| `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record file. Always exits 0. |
+| `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan records from crashed sessions where SessionEnd never fired. Always exits 0. |
+
+**Scope.** Only files under `$project/a4/` are recorded. Pre-existing violations in files the user did not touch this session are not re-reported — keeps the hook quiet on legacy workspaces. Run `/a4:validate` manually for a full workspace sweep.
+
 ### Agents
 
 | Name | Purpose |
