@@ -45,7 +45,13 @@ from pathlib import Path
 
 import yaml
 
-WIKI_KINDS = {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
+from common import WIKI_KINDS
+from markdown import extract_body, extract_preamble
+
+# Local ISSUE_FOLDERS diverges from `common.ISSUE_FOLDERS` (which includes
+# `"idea"`). Preserved verbatim from pre-shared-module behavior — widening
+# to include `idea/` changes wikilink-resolution and next-id semantics and
+# belongs in a separate loud commit, not in this refactor.
 ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
 DEDUP_BLOCKING_STATUSES = {"open", "in-progress", "discarded"}
 
@@ -87,25 +93,19 @@ class Drift:
     cause: str | None  # path-like reference to the causing issue or wiki, when known
 
 
-def split_frontmatter(path: Path) -> tuple[dict, str]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return {}, text
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return {}, text
-    try:
-        fm = yaml.safe_load(parts[1])
-    except yaml.YAMLError:
-        return {}, parts[2]
-    return (fm if isinstance(fm, dict) else {}), parts[2]
+def _fm(path: Path) -> dict:
+    """Return `path`'s preamble as a dict, or `{}` on absence / parse error.
+
+    Preserves the pre-shared-module `split_frontmatter(path)[0]` contract:
+    every caller `.get()`s fields and tolerates an empty mapping.
+    """
+    return extract_preamble(path).fm or {}
 
 
 def discover_wiki_pages(a4_dir: Path) -> dict[str, Path]:
     out: dict[str, Path] = {}
     for md in sorted(a4_dir.glob("*.md")):
-        fm, _ = split_frontmatter(md)
-        if fm.get("kind") in WIKI_KINDS:
+        if _fm(md).get("kind") in WIKI_KINDS:
             out[md.stem] = md
     return out
 
@@ -161,7 +161,7 @@ def detect_wiki_drift(
     wikis: dict[str, Path],
 ) -> list[Drift]:
     drifts: list[Drift] = []
-    _, body = split_frontmatter(path)
+    body = extract_body(path).content
 
     inline, definitions = parse_footnotes(body)
 
@@ -204,7 +204,7 @@ def detect_close_guard_drift(a4_dir: Path, wikis: dict[str, Path]) -> list[Drift
         return drifts
 
     for path in sorted(review_dir.glob("*.md")):
-        fm, _ = split_frontmatter(path)
+        fm = _fm(path)
         if fm.get("status") != "resolved":
             continue
         wiki_impact = fm.get("wiki_impact") or []
@@ -233,7 +233,7 @@ def detect_close_guard_drift(a4_dir: Path, wikis: dict[str, Path]) -> list[Drift
                 ))
                 continue
 
-            _, body = split_frontmatter(wiki_path)
+            body = extract_body(wiki_path).content
             _, definitions = parse_footnotes(body)
             cited = False
             for fbody in definitions.values():
@@ -274,7 +274,7 @@ def existing_fingerprints(a4_dir: Path) -> set[tuple[str, str, str | None]]:
     if not review_dir.is_dir():
         return out
     for path in review_dir.glob("*.md"):
-        fm, _ = split_frontmatter(path)
+        fm = _fm(path)
         if fm.get("source") != "drift-detector":
             continue
         if fm.get("status") not in DEDUP_BLOCKING_STATUSES:
@@ -304,8 +304,7 @@ def compute_next_id(a4_dir: Path) -> int:
         if not sub.is_dir():
             continue
         for md in sub.glob("*.md"):
-            fm, _ = split_frontmatter(md)
-            raw = fm.get("id")
+            raw = _fm(md).get("id")
             if isinstance(raw, int):
                 max_id = max(max_id, raw)
     return max_id + 1
