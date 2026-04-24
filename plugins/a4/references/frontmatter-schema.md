@@ -118,22 +118,56 @@ The `kind` value must match the file basename (e.g., `kind: architecture` requir
 
 ## Task (`a4/task/<id>-<slug>.md`)
 
-Jira "task" semantics — a unit of executable work that implements one or more use cases.
+Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, and defect work; lifecycle is identical across kinds.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
+| `kind` | yes | enum | `feature` \| `spike` \| `bug` |
 | `status` | yes | enum | `pending` \| `implementing` \| `complete` \| `failing` |
-| `implements` | no | list of paths | use cases delivered |
+| `implements` | no | list of paths | use cases delivered (typically empty for `spike`) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `justified_by` | no | list of paths | decisions justifying this task |
-| `files` | no | list of strings | source paths the task writes or modifies |
+| `files` | no | list of strings | source paths the task writes or modifies. For `kind: spike`, points at `spike/<id>-<slug>/...` (or `spike/archive/<id>-<slug>/...` after archive); for `feature`/`bug`, points at the project's production source tree |
 | `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
 | `milestone` | no | string | milestone name |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
+
+### Kind semantics
+
+| Value | Meaning |
+|-------|---------|
+| `feature` | Regular implementation — new functionality, extension, refactor. The default case. |
+| `spike` | Time-boxed exploration to unblock a decision (XP sense). Throwaway code expected. PoC, investigation, benchmark. PoC code lives at project-root `spike/<id>-<slug>/`, **outside the `a4/` workspace**. |
+| `bug` | Defect fix. Production code change, not throwaway. |
+
+`kind` is **required** — every task must declare one. There is no implicit default. Existing task files predating this schema will fail validation until backfilled with an explicit `kind:` value.
+
+### Spike sidecar convention
+
+For tasks with `kind: spike`, accompanying PoC code lives at project-root `spike/<id>-<slug>/`, parallel to (not inside) `a4/`:
+
+```
+<project-root>/
+  a4/task/<id>-<slug>.md       # task markdown — kind: spike
+  spike/<id>-<slug>/           # PoC code, data, scratch notes
+    *.py *.json ...
+```
+
+When a spike completes (or fails), the user manually `git mv`s the directory to `spike/archive/<id>-<slug>/` and updates the task's `files:` paths to match. `spike/archive/` is a sibling of active spike directories — self-contained under the `spike/` umbrella. The move is **never automated**; same-precedent reasoning as `idea/` promotion (deferred until manual cost surfaces as pain).
+
+`feature` and `bug` tasks have no `spike/` sidecar; their `files:` paths point at the project's production source tree (outside both `a4/` and `spike/`).
+
+The `spike/` directory:
+
+- Is part of the project repo, not a temporary scratch area.
+- Is not validated by any a4 script — the markdown-only contract of `a4/` is preserved.
+- Is opt-in — projects without spike tasks have no `spike/` directory.
+
+Source: `plugins/a4/spec/2026-04-24-experiments-slot.decide.md`.
 
 ## Review item (`a4/review/<id>-<slug>.md`)
 

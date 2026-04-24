@@ -73,9 +73,10 @@ SCHEMAS: dict[str, Schema] = {
     ),
     "task": Schema(
         name="task",
-        required=frozenset({"id", "title", "status", "created", "updated"}),
+        required=frozenset({"id", "title", "kind", "status", "created", "updated"}),
         enums={
-            "status": frozenset({"pending", "implementing", "complete", "failing"})
+            "kind": frozenset({"feature", "spike", "bug"}),
+            "status": frozenset({"pending", "implementing", "complete", "failing"}),
         },
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
