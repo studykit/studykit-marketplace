@@ -287,7 +287,7 @@ Return: counts (passed, failed), list of review item ids written.
 
 ### Step 2.4: Analyze Results
 
-Read the returned summary. If all passed AND all tasks `complete`: declare the plan complete, report to the user, proceed to wrap-up.
+Read the returned summary. If all passed AND all tasks `complete`: proceed to Step 2.5 (UC done-review). Do **not** declare the plan complete until Step 2.5 finishes.
 
 If failures exist, classify each test-runner review item:
 
@@ -296,6 +296,40 @@ If failures exist, classify each test-runner review item:
 - **Use-case issue** — the failure exposes ambiguous flow / validation / error handling. Retarget to `usecase/<id>-<slug>`. **Stop Phase 2.** Recommend `/a4:usecase iterate`.
 
 If 3 cycles complete and failures remain: halt. Mark affected tasks `status: failing`, append `## Log` per failure, leave all test-runner review items `open`. Report the state to the user.
+
+### Step 2.5: UC done-review (user-confirmed)
+
+Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tasks `complete`). The goal: for each UC whose implementation is now complete, let the user confirm that the feature behaves as specified, then flip `status: implementing → done`.
+
+1. **Collect candidates.** A UC X is a candidate when:
+   - X.status is `implementing` (flipped by `task-implementer` at work-start per its protocol).
+   - Every task with `implements: [usecase/X]` in its frontmatter now has `status: complete`.
+   - No review item with `target: usecase/X` is `open` or `in-progress` (all resolved or dismissed).
+
+   If the candidate set is empty, skip to wrap-up.
+
+2. **Review each candidate.** For every candidate X, read:
+   - The UC file (Flow, Validation, Error handling, Expected Outcome).
+   - The `## Log` entries of its implementing tasks.
+   - The test-runner return summary from Step 2.3 (passed-test names relevant to X).
+
+   Compose a short per-UC verdict — **two to four sentences** — covering: (a) which task(s) implemented it, (b) which tests exercise its flow / validation / error handling, (c) any Expected Outcome point not yet visibly covered by the tests. No new files, no review items emitted here.
+
+3. **Present to the user.** For each candidate X, show the verdict and ask:
+   > UC X is ready to mark done based on completed tasks and passing tests. [verdict]. Mark done?
+
+   Accept natural-language answers:
+   - `"yes"`, `"ok"`, `"맞아요"`, `"확정"`, `"mark done"` → confirm.
+   - `"not yet"`, `"아직"`, `"let me verify"`, `"hold"` → defer (leave `implementing`).
+   - `"no — X is incomplete because..."` → defer with reason; fold the reason into a fresh review item `target: usecase/X`, `kind: gap`, `source: self`.
+
+4. **Apply confirmations.** For every UC the user confirmed:
+   - Edit the UC file: `status: implementing → done`, bump `updated:` to today.
+   - Append a `## Log` entry: `<YYYY-MM-DD> — marked done after Phase 2 (cycle <N>); tests <list>; user confirmed.`
+
+5. **Commit** all UC done-transitions together as one commit (see Commit Points).
+
+After Step 2.5, declare the plan complete and proceed to wrap-up. Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:plan iterate` session will re-offer them.
 
 ---
 
@@ -306,6 +340,7 @@ If 3 cycles complete and failures remain: halt. Mark affected tasks `status: fai
 - **Per-task implementation** — task-implementer commits its own code + unit tests per task; the orchestrating skill does **not** also commit those files.
 - **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 2.3.
 - **Plan revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 2.1.
+- **UC done-transitions (Step 2.5)** — commit the UC files confirmed `done` together in one commit, separate from task commits. Message prefix: `docs(a4): mark UC <ids> done`.
 - **Final state** — commit the final plan / tasks / review items when the user wraps up.
 
 Never skip hooks, amend, or force-push without explicit user instruction.

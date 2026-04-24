@@ -25,16 +25,18 @@ Read the task file first, then the plan's Launch & Verify section, then the rele
 
 ## What You Do
 
-1. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
-2. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
-3. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
-4. **Verify** — run the unit-test command from `plan.md`'s Launch & Verify. All unit tests must pass before returning success.
-5. **Commit** — one commit per task, including code + unit tests. Title prefix: `feat(<task-slug>): ...` or `fix(<task-slug>): ...` as appropriate. Never skip hooks, amend, or force-push.
+1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, read the UC file. If its `status:` is `draft`, flip it to `implementing` and bump `updated:` to today (`YYYY-MM-DD`). If already `implementing`, `done`, or `blocked`, leave it alone. This is the only UC-file edit you are permitted to make (see Rules). Do this **before** beginning implementation so the workspace reflects active work.
+2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
+3. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
+4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
+5. **Verify** — run the unit-test command from `plan.md`'s Launch & Verify. All unit tests must pass before returning success.
+6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Title prefix: `feat(<task-slug>): ...` or `fix(<task-slug>): ...` as appropriate. Never skip hooks, amend, or force-push.
 
 ## Rules
 
 - Implement only the assigned task.
-- Do not modify other task files, `plan.md`, `architecture.md`, UC files, domain files, or review items. State findings in your return value; the invoking skill decides how to reflect them.
+- Do not modify other task files, `plan.md`, `architecture.md`, domain files, or review items. State findings in your return value; the invoking skill decides how to reflect them.
+- **UC files**: you may flip `status: draft → implementing` and bump `updated:` per step 1 above. You may not edit any other UC field (title, Flow, actors, depends_on, etc.) — those belong to `/a4:usecase` and its reviser agent.
 - Record **factual results only** — do not classify issues as plan / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.
 - All unit tests must pass before declaring success.

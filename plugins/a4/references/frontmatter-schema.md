@@ -62,6 +62,36 @@ The ADR fixes **one direction per relationship**. Reverse directions are derived
 
 Unknown fields are **not errors**. The validator in lenient mode reports them as informational only. Skills may carry additional fields (e.g., `tags`, `labels`, `milestone`) per the per-type tables below; anything outside the known set is treated as extension metadata.
 
+### Status writers
+
+`a4/` files are always written by an LLM via a skill or agent — never hand-edited by the user. Every `status` enum value therefore has a defined writer. Listing who transitions each value makes the invariant auditable.
+
+| Family | Value | Writer |
+|--------|-------|--------|
+| usecase | `draft` | `/a4:usecase`, `/a4:auto-usecase`, `usecase-composer` (on create) |
+| usecase | `implementing` | `task-implementer` agent (per `agents/task-implementer.md` step 1, flips any `implements: [usecase/X]` from `draft` before work) |
+| usecase | `done` | `/a4:plan` Step 2.5 (UC done-review, user-confirmed after Phase 2) |
+| usecase | `blocked` | `usecase-reviser` (on SPLIT), `/a4:plan` (on upstream blocker detection) |
+| task | `pending` | `/a4:plan` (on create + on revision reset) |
+| task | `implementing` | `/a4:plan` Step 2.2 (before `task-implementer` spawn) |
+| task | `complete` | `/a4:plan` Step 2.2 (after agent returns success) |
+| task | `failing` | `/a4:plan` Step 2.2 / 2.3 (after agent or test-runner failure) |
+| review | `open` | reviewer agents, `drift_detector.py`, defer paths in single-edit skills |
+| review | `in-progress` | iterate flows (`/a4:usecase`, `/a4:arch`, `/a4:plan` iterate) |
+| review | `resolved` | iterate flows + `usecase-reviser` (after fix lands) |
+| review | `dismissed` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect) |
+| decision | `draft` | `/a4:decision` (from natural-language signals) |
+| decision | `final` | `/a4:decision` (from natural-language signals) |
+| decision | `superseded` | **derived** — no writer; surfaced by `validate_status_consistency.py` when another decision declares `supersedes: [<this>]` |
+| idea | `open` | `/a4:idea` (capture mode) |
+| idea | `promoted` | user-driven; `/a4:decision` / `/a4:usecase` / other consuming skills may write the pipeline target and this status together when the user confirms graduation |
+| idea | `discarded` | `/a4:idea discard <id>` |
+| brainstorm | `open` | `/a4:spark-brainstorm` (default wrap-up) |
+| brainstorm | `promoted` | user-driven; set by hand when an idea from the brainstorm is graduated |
+| brainstorm | `discarded` | `/a4:spark-brainstorm` (wrap-up status decision, from natural-language signals) |
+
+The `decision.superseded` and the `promoted` values on `idea`/`brainstorm` are the cases without a mechanical writer. `validate_status_consistency.py` flags inconsistencies between these and their paired fields (`supersedes:`, `promoted:`) so the drift is visible even without automation.
+
 ## Structural relationship fields
 
 Shared across all issue types. Omit fields that are empty, or use `[]`.
