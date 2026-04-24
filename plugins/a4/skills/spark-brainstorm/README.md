@@ -81,7 +81,7 @@ partition "Wrapping Up" {
 }
 
 :Suggest handoff to
-research + decision-review
+research + decision
 (optional);
 
 stop

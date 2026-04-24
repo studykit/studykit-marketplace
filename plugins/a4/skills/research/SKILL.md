@@ -125,14 +125,14 @@ When the user indicates completion:
 2. **Flip `status: draft → final`** in frontmatter.
 3. **Bump `updated:`** to today.
 4. **Report the path** and how to reference it:
-   - From an `a4/decision/<id>-<slug>.md` frontmatter: `related: [research/<slug>]` (workspace-root-relative plain string; no `.md` suffix per the a4 path-reference grammar).
-   - From body prose in an Obsidian vault that sees both `a4/` and `./research/`: `[[research/<slug>]]` wikilink.
+   - From body prose inside an `a4/decision/<id>-<slug>.md` (Obsidian vault that sees both `a4/` and `./research/`): `[[research/<slug>]]` wikilink — this is the canonical citation form for decisions. `/a4:decision` offers to auto-insert this.
+   - Optional review pass: `/a4:research-review ./research/<slug>.md` before relying on it for a decision.
 
 ## Non-goals
 
-- **No decisions.** Research is objective investigation. The decision belongs elsewhere (hand-authored `a4/decision/<id>-<slug>.md`, optionally reviewed via `/a4:decision-review`).
+- **No decisions.** Research is objective investigation. The decision is recorded elsewhere via `/a4:decision`, which writes `a4/decision/<id>-<slug>.md` and performs the wiki nudge.
 - **No evaluation / scoring.** Weighted scoring, Pugh matrices, SWOT — that's for the decision step.
-- **No wiki updates.** Research is workspace-agnostic. Nudges to `a4/architecture.md` etc. happen during `/a4:decision-review`, not here.
+- **No wiki updates.** Research is workspace-agnostic. Nudges to `a4/architecture.md` etc. happen during `/a4:decision`, not here.
 - **No commit.** Leave the file in the working tree.
 
 ## Output format

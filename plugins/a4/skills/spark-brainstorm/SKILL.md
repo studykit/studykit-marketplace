@@ -126,4 +126,4 @@ Additional sections may be added when the session content warrants them (e.g., C
 
 If the brainstorming produced options that warrant further investigation or a documented decision, suggest the two-step path:
 
-> "If you'd like to investigate these options, run `/a4:research <file_path>` to produce a portable research artifact at `./research/<slug>.md`. Once research is in hand, hand-author `a4/decision/<id>-<slug>.md` referencing the research, then run `/a4:decision-review <decision_path>` to review and finalize the decision."
+> "If you'd like to investigate these options, run `/a4:research <file_path>` to produce a portable research artifact at `./research/<slug>.md`; optionally review it with `/a4:research-review`. Once you've converged on a choice through conversation, run `/a4:decision` to record it as `a4/decision/<id>-<slug>.md` and nudge any affected wiki pages."
