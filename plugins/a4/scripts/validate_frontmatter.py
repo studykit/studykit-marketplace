@@ -363,6 +363,35 @@ def check_missing_frontmatter(path: Path, a4_dir: Path) -> Violation | None:
     return None
 
 
+def run(
+    a4_dir: Path, file: Path | None = None
+) -> tuple[list[Violation], list[Path]]:
+    """Library API: scan the workspace (or a single file) and return
+    violations plus the files scanned.
+
+    Pure — no stdout/stderr/exit. Callers (main, validate.py aggregator)
+    own presentation and exit codes. `a4_dir` must be a resolved
+    directory; `file`, if given, must be a resolved path inside `a4_dir`
+    (caller-enforced).
+    """
+    files = [file] if file else discover_files(a4_dir)
+
+    violations: list[Violation] = []
+    for path in files:
+        preamble = extract_preamble(path)
+        if preamble.fm is None:
+            missing = check_missing_frontmatter(path, a4_dir)
+            if missing:
+                violations.append(missing)
+            continue
+        violations.extend(validate_file(path, a4_dir, preamble.fm))
+
+    if file is None:
+        violations.extend(validate_id_uniqueness(a4_dir))
+
+    return violations, files
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(
         description="Validate frontmatter across an a4/ workspace."
@@ -381,32 +410,20 @@ def main() -> None:
         print(f"Error: {a4_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
+    target: Path | None = None
     if args.file:
-        target = args.file.resolve()
+        resolved = args.file.resolve()
         try:
-            target.relative_to(a4_dir)
+            resolved.relative_to(a4_dir)
         except ValueError:
             print(
-                f"Error: {target} is not inside {a4_dir}",
+                f"Error: {resolved} is not inside {a4_dir}",
                 file=sys.stderr,
             )
             sys.exit(1)
-        files = [target]
-    else:
-        files = discover_files(a4_dir)
+        target = resolved
 
-    violations: list[Violation] = []
-    for path in files:
-        preamble = extract_preamble(path)
-        if preamble.fm is None:
-            missing = check_missing_frontmatter(path, a4_dir)
-            if missing:
-                violations.append(missing)
-            continue
-        violations.extend(validate_file(path, a4_dir, preamble.fm))
-
-    if not args.file:
-        violations.extend(validate_id_uniqueness(a4_dir))
+    violations, files = run(a4_dir, target)
 
     if args.json:
         out = {
