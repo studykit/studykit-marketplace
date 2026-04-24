@@ -1,9 +1,12 @@
 #!/bin/bash
-# PostToolUse hook: when a usecase/*.md or decision/*.md is edited and
-# the file just landed at its terminal-active status (usecase=shipped,
-# decision=final) with a non-empty supersedes: list, flip each target
-# from its terminal-active status to superseded and append a back-
-# pointer `## Log` entry.
+# PostToolUse hook: when a decision/*.md is edited and the file just
+# landed at status: final with a non-empty supersedes: list, flip each
+# target from final to superseded and append a back-pointer `## Log`
+# entry.
+#
+# Scope: decision family only. The usecase cascade was absorbed into
+# scripts/transition_status.py in plugin 1.10.0 — UC shipped→superseded
+# now fires inside the status writer, not via this hook.
 #
 # Non-blocking: always exits 0. Hard errors are reported via
 # additionalContext so Claude can surface them, but never block the
@@ -30,9 +33,10 @@ esac
 project_dir="${CLAUDE_PROJECT_DIR:-}"
 [[ -z "$project_dir" ]] && exit 0
 
-# Scope: only files under a4/usecase/ or a4/decision/ in this project.
+# Scope: decision files only. UC edits are handled inline by
+# transition_status.py invocations in skills/agents.
 case "$file_path" in
-  "$project_dir/a4/usecase/"*|"$project_dir/a4/decision/"*) ;;
+  "$project_dir/a4/decision/"*) ;;
   *) exit 0 ;;
 esac
 

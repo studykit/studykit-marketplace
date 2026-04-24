@@ -46,10 +46,11 @@ updated: 2026-04-24
 ---
 id: 3
 title: Search history
-status: draft | ready | implementing | shipped | superseded | blocked
+status: draft | ready | implementing | revising | shipped | superseded | discarded | blocked
 actors: [meeting-organizer, team-member]
 depends_on: [usecase/1-share-summary]
 supersedes: []
+implemented_by: []   # auto-maintained by refresh_implemented_by.py
 related: []
 labels: [search, ui]
 milestone: v1.0
@@ -60,25 +61,29 @@ updated: 2026-04-24
 
 Omit empty fields or leave `[]`. `milestone` is optional until the plan phase assigns one. Paths are plain strings (no brackets, `.md` omitted) for dataview compatibility. Body uses Obsidian wikilinks (`[[...]]`) and embeds (`![[...]]`).
 
-UC lifecycle is five forward states plus `blocked`:
+UC lifecycle has eight states:
 
 - `draft` — spec still being shaped (initial state).
 - `ready` — spec closed; waiting for an implementer to pick it up.
 - `implementing` — a `task-implementer` agent is working on it.
-- `shipped` — the running system reflects this UC.
-- `superseded` — replaced by a newer UC that declared `supersedes: [<this>]` and shipped. Set automatically by `propagate_superseded.py` — do not hand-write.
-- `blocked` — implementation-time blocker; crosscutting.
+- `revising` — implementation paused for in-place spec edit. Re-enters `ready` on re-approval.
+- `shipped` — the running system reflects this UC. Forward-path terminal.
+- `superseded` — replaced by a newer UC that declared `supersedes: [<this>]` and shipped. Terminal.
+- `discarded` — direction abandoned. Terminal. Related tasks and open review items cascade to `discarded`.
+- `blocked` — implementation-time blocker; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`.
 
-**`shipped` is terminal.** If requirements change after ship, create a **new** UC with `supersedes: [usecase/<old-id>-<slug>]`; when the new UC ships, the hook flips the old one to `superseded`. There is no path back to `draft` / `implementing` from `shipped`.
+**All status changes flow through `scripts/transition_status.py`.** Do not hand-edit `status:` / `updated:` / `## Log` entries — the writer owns them.
+
+**`implementing → draft` is disallowed.** Once code has started, use `implementing → revising` for in-place spec edit, or `implementing → discarded` to abandon the direction. `shipped` never returns to `implementing` or `draft` — post-ship changes are either a new UC with `supersedes:` or `shipped → discarded` when removing the feature.
 
 **Review item** — `review/<id>-<slug>.md` (used by wrap-up and the in-situ nudge):
 ```yaml
 ---
 id: 6
 kind: finding | gap | question
-status: open
+status: open | in-progress | resolved | discarded
 target: usecase/3-search-history       # omit for cross-cutting
-source: self | usecase-reviewer | drift-detector
+source: self | usecase-reviewer | drift-detector | task-implementer
 wiki_impact: [domain, actors]          # basenames of wiki pages needing updates; [] when none
 priority: high | medium | low
 labels: []
@@ -86,6 +91,8 @@ created: 2026-04-24
 updated: 2026-04-24
 ---
 ```
+
+Review status transitions flow through `transition_status.py` too (`open → in-progress → resolved` / `discarded`). A review item with `target: usecase/<X>` automatically cascades to `discarded` when its target UC is discarded.
 
 ## Id Allocation
 
@@ -315,12 +322,35 @@ When the user indicates they're done, proceed to **End Iteration** in `${CLAUDE_
 3. Launch `Agent(subagent_type: "a4:usecase-reviewer")`. The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md`.
 4. Walk the user through each emitted review item. Resolve in place (edit the target UC / wiki page, set `status: resolved` in the review item, add `## Log` entries) or defer (leave `status: open`).
 5. **Wiki close guard** — for each resolved review item with non-empty `wiki_impact`, verify each referenced wiki page has a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
-6. **Ready-gate.** Before the final summary, per-UC ask the user whether each UC still at `status: draft` is ready to hand off to implementation. Accept natural-language answers:
-   - yes / ok / 확정 / `"mark ready"` → flip frontmatter `status: draft → ready`, bump `updated:` to today, append `## Log` entry `<YYYY-MM-DD> — marked ready for implementation; user confirmed.`
-   - no / `"아직"` / `"still iterating"` / silence → leave at `draft`.
+6. **Ready-gate.** Before the final summary, per-UC ask the user whether each UC still at `status: draft` or `status: revising` is ready to hand off (or re-hand-off) to implementation. Accept natural-language answers:
+   - yes / ok / 확정 / `"mark ready"` → call the writer:
+     ```bash
+     uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+       "$(git rev-parse --show-toplevel)/a4" \
+       --file "usecase/<id>-<slug>.md" --to ready \
+       --reason "user confirmed ready-gate"
+     ```
+   - no / `"아직"` / `"still iterating"` / silence → leave at current status.
 
-   Only `draft` UCs are offered. UCs already at `ready`, `implementing`, `shipped`, `superseded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC still at `draft`, so this gate is the hand-off point between spec work and coding.
+   Only `draft` and `revising` UCs are offered. UCs at `ready`, `implementing`, `shipped`, `superseded`, `discarded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC at any status other than `ready`, so this gate is the hand-off point between spec work and coding.
 7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:arch` (or `/a4:plan` if architecture already exists) as the next step.
+
+## Revising an `implementing` UC
+
+When the user asks to edit a UC that is currently `status: implementing` (e.g., "UC 5 Flow 수정해줘", "fix the spec for UC-7"), do not silently edit the body. Instead:
+
+1. **Confirm** the transition: "UC X is currently `implementing`. Edit in-place means flipping to `revising` (pauses code work; resets `implementing`/`failing` tasks to `pending`; `complete` tasks stay). OK?"
+2. On user confirmation, call the writer:
+   ```bash
+   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+     "$(git rev-parse --show-toplevel)/a4" \
+     --file "usecase/<id>-<slug>.md" --to revising \
+     --reason "user-triggered spec edit"
+   ```
+   The script cascades task status automatically.
+3. Walk through the edit with the user (Flow, actors, Validation, Error handling) — same protocol as iteration on a `draft` UC. When the user indicates the spec is done, Step 6 ready-gate flips `revising → ready`.
+
+If `task-implementer` previously triggered the flip (a review item with `source: task-implementer` exists for this UC), walk those review items first — they describe exactly what ambiguity blocked implementation.
 
 ### Agent Usage
 

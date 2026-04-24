@@ -10,20 +10,24 @@ Some status enum values are semantically derived from cross-file state:
     `status: final` declares `supersedes: [<this-path>]`.
   - usecase.status = "superseded" iff another usecase/*.md at
     `status: shipped` declares `supersedes: [<this-path>]`.
+  - task.status = "discarded" iff every UC in the task's `implements:`
+    is at `status: discarded`.
+  - review.status = "discarded" iff the review's `target:` points at a
+    usecase with `status: discarded`.
   - idea.status = "promoted" iff the idea's own `promoted:` list is
     non-empty.
   - spark/*.brainstorm.md status = "promoted" iff own `promoted:` is
     non-empty.
 
-For the two `superseded` rules, the hook-driven writer at
-`plugins/a4/scripts/propagate_superseded.py` normally materializes the
-flip at edit time. This validator is the safety net — it catches any
-drift left behind if the hook was skipped, bypassed, or ran before the
-successor reached its terminal-active state.
+These are normally materialized by active writers:
+  - `scripts/transition_status.py` cascades UC `shipped → superseded`
+    (on successor ship), UC `discarded` → task/review discard, and
+    UC `revising` → task reset. Decision `final → superseded` runs via
+    `scripts/propagate_superseded.py` PostToolUse hook.
 
-This validator flags either direction of mismatch. The other validators
-(validate_frontmatter.py, validate_body.py, drift_detector.py) do not
-look across files for these semantic rules — this script closes the gap.
+This validator is the safety net — it catches drift left behind if a
+writer was skipped, bypassed, or ran before the successor reached its
+terminal-active state. Report-only; no file is mutated.
 
 Two modes:
 
@@ -203,6 +207,11 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
             )
         elif status != "superseded" and is_targeted:
             superseders = sorted(superseded_by[key])
+            writer = (
+                "transition_status.py"
+                if family == "usecase"
+                else "propagate_superseded.py"
+            )
             mismatches.append(
                 Mismatch(
                     path=f"{key}.md",
@@ -210,8 +219,8 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
                     message=(
                         f"status={status!r} but superseded by {superseders} "
                         f"(each at {terminal_active!r}). Expected "
-                        "status=superseded — propagate_superseded.py should "
-                        "have flipped this; re-run it against the successor."
+                        f"status=superseded — {writer} should have flipped "
+                        "this; re-run it against the successor."
                     ),
                 )
             )
@@ -235,6 +244,83 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
                         ),
                     )
                 )
+
+    return mismatches
+
+
+def check_discarded_cascade(
+    a4_dir: Path,
+    usecases: dict[str, dict],
+) -> list[Mismatch]:
+    """Flag drift when a UC is `discarded` but its cascades did not run.
+
+    - task: each task with `implements: [usecase/<discarded>]` where all
+      implemented UCs are discarded is expected at `discarded` too.
+    - review: each review with `target: usecase/<discarded>` at `open`
+      or `in-progress` is expected at `discarded`.
+    """
+    mismatches: list[Mismatch] = []
+    discarded_uc_keys = {
+        key for key, fm in usecases.items()
+        if fm.get("status") == "discarded"
+    }
+    if not discarded_uc_keys:
+        return mismatches
+
+    task_dir = a4_dir / "task"
+    if task_dir.is_dir():
+        for p in sorted(task_dir.glob("*.md")):
+            fm = split_frontmatter(p)
+            if fm is None:
+                continue
+            implements = fm.get("implements") or []
+            if not isinstance(implements, list) or not implements:
+                continue
+            implemented_keys = {
+                _normalize_ref(x) for x in implements
+            }
+            implemented_keys.discard(None)
+            if not implemented_keys or not implemented_keys.issubset(discarded_uc_keys):
+                continue
+            status = fm.get("status")
+            if status == "discarded":
+                continue
+            mismatches.append(
+                Mismatch(
+                    path=f"task/{p.stem}.md",
+                    rule="missing-discarded-status-task",
+                    message=(
+                        f"status={status!r} but every UC this task "
+                        f"implements is discarded. Expected "
+                        "status=discarded — transition_status.py should "
+                        "have cascaded from the UC discard."
+                    ),
+                )
+            )
+
+    review_dir = a4_dir / "review"
+    if review_dir.is_dir():
+        for p in sorted(review_dir.glob("*.md")):
+            fm = split_frontmatter(p)
+            if fm is None:
+                continue
+            target = _normalize_ref(fm.get("target"))
+            if target is None or target not in discarded_uc_keys:
+                continue
+            status = fm.get("status")
+            if status in {"discarded", "resolved"}:
+                continue
+            mismatches.append(
+                Mismatch(
+                    path=f"review/{p.stem}.md",
+                    rule="missing-discarded-status-review",
+                    message=(
+                        f"status={status!r} but target {target!r} is "
+                        f"discarded. Expected status=discarded — "
+                        "transition_status.py should have cascaded."
+                    ),
+                )
+            )
 
     return mismatches
 
@@ -276,9 +362,14 @@ def collect_workspace_mismatches(a4_dir: Path) -> list[Mismatch]:
     brainstorms = collect_with_promoted(a4_dir, "spark", "*.brainstorm.md")
 
     mismatches: list[Mismatch] = []
+    usecases: dict[str, dict] = {}
     for family in SUPERSEDES_FAMILIES:
         items = collect_family(a4_dir, family)
         mismatches.extend(check_superseded(items, family))
+        if family == "usecase":
+            usecases = items
+    if usecases:
+        mismatches.extend(check_discarded_cascade(a4_dir, usecases))
     mismatches.extend(check_promoted(ideas, "idea"))
     mismatches.extend(check_promoted(brainstorms, "brainstorm"))
     return mismatches
