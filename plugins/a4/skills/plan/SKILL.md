@@ -377,7 +377,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --reason "session-start hygiene: previous session terminated"
 ```
 
-`scripts/refresh_implemented_by.py` also runs automatically via the `refresh-implemented-by-session-start.py` SessionStart hook (see `hooks/hooks.json`) to catch any task-file changes that happened on other branches.
+`scripts/refresh_implemented_by.py` also runs automatically via the `scripts/a4_hook.py session-start` SessionStart hook (see `hooks/hooks.json`) to catch any task-file changes that happened on other branches.
 
 ---
 

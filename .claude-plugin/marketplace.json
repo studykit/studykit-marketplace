@@ -64,7 +64,7 @@
       "name": "a4",
       "source": "./plugins/a4",
       "description": "a4/ workspace management — wiki + issues spec authoring, usecase/architecture/implementation-plan design, autonomous code execution, brainstorming, and decision-making",
-      "version": "1.12.0",
+      "version": "1.13.0",
       "author": {
         "name": "studykit"
       },
