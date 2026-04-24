@@ -44,9 +44,8 @@ from pathlib import Path
 
 import yaml
 
-WIKI_KINDS = frozenset(
-    {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
-)
+from common import WIKI_KINDS
+
 ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
 
 FOOTNOTE_DEF_LINE_RE = re.compile(r"^\[\^([^\]\s]+)\]:\s*(.*)$")

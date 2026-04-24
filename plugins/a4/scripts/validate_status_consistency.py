@@ -64,9 +64,13 @@ import json
 import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any
 
 import yaml
+
+from common import (
+    is_non_empty_list as _is_non_empty_list,
+    normalize_ref as _normalize_ref,
+)
 
 
 @dataclass(frozen=True)
@@ -88,28 +92,6 @@ def split_frontmatter(path: Path) -> dict | None:
     except yaml.YAMLError:
         return None
     return fm if isinstance(fm, dict) else None
-
-
-def _normalize_ref(ref: Any) -> str | None:
-    """Normalize a frontmatter path reference for comparison.
-
-    Strips a trailing `.md` if present so file-on-disk paths can be
-    compared against frontmatter-declared references.
-    """
-    if not isinstance(ref, str):
-        return None
-    cleaned = ref.strip()
-    if not cleaned:
-        return None
-    if cleaned.endswith(".md"):
-        cleaned = cleaned[:-3]
-    return cleaned
-
-
-def _is_non_empty_list(value: Any) -> bool:
-    return isinstance(value, list) and any(
-        isinstance(x, str) and x.strip() for x in value
-    )
 
 
 # Families for which a `superseded` status is actively materialized by
