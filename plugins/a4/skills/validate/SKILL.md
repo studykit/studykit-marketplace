@@ -8,20 +8,22 @@ allowed-tools: Bash, Read
 
 # Workspace Validation (a4 plugin)
 
-Runs two validators against `<project-root>/a4/`:
+Runs three validators against `<project-root>/a4/`:
 
 - `validate_frontmatter.py` — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), wiki-kind basename match, `wiki_impact` names a known wiki kind, global id uniqueness across issue folders. Canonical schema: `plugins/a4/references/frontmatter-schema.md`.
 - `validate_body.py` — footnote definition shape (`[^N]: YYYY-MM-DD — [[target]]`, U+2014 em dash), footnote label monotonicity starting at 1, footnote payload is never a `review/*` item, every body wikilink resolves. Canonical rules: `plugins/a4/references/obsidian-conventions.md`.
+- `validate_status_consistency.py` — cross-file status consistency. Flags decisions where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Always workspace-wide (skipped in single-file mode). Rules: `plugins/a4/references/frontmatter-schema.md §Cross-file status consistency`.
 
-The two validators cover **different** inconsistencies than `/a4:drift`:
+The three validators cover **different** inconsistencies than `/a4:drift`:
 
 | Check | Owner |
 |-------|-------|
 | close-guard / missing-wiki-page / stale-footnote / orphan-marker / orphan-definition | `/a4:drift` (cross-session wiki↔issue drift) |
 | Frontmatter schema, id uniqueness, path format | `/a4:validate` (this skill) |
 | Footnote shape, wikilink resolution, monotonicity | `/a4:validate` (this skill) |
+| Cross-file status consistency (`superseded`, `promoted`) | `/a4:validate` (this skill) |
 
-Invocation: `/a4:validate [file] [--json]`. With a file path, only that single file is validated. With `--json`, each validator emits structured JSON to stdout instead of the default human-readable output.
+Invocation: `/a4:validate [file] [--json]`. With a file path, the per-file validators check only that file; the cross-file status-consistency check is skipped because it is a global property of the workspace. With `--json`, each validator emits structured JSON to stdout instead of the default human-readable output.
 
 ## Context
 
@@ -57,18 +59,31 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
 
 Same exit-code and stream conventions as step 2.
 
-### 4. Surface the combined result
+### 4. Run the status-consistency validator
 
-Relay each validator's output verbatim, clearly labelled (e.g., `=== frontmatter ===` / `=== body ===`). Do **not** suppress one set because the other succeeded — users need the full picture in one pass.
+This validator is workspace-only — it does not support a `[file]` argument. When `$ARGUMENTS` names a specific file, skip this step and note in the aggregate report that the cross-file consistency check was skipped. Otherwise, pass only `--json` through when present:
+
+```bash
+# If $ARGUMENTS contains --json, forward it; drop any positional file arg.
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_status_consistency.py" \
+    "<project-root>/a4" [--json]
+```
+
+Same exit-code and stream conventions as step 2 (exit 2 on mismatch, 0 clean; human-readable output on stderr, JSON on stdout under `--json`).
+
+### 5. Surface the combined result
+
+Relay each validator's output verbatim, clearly labelled (e.g., `=== frontmatter ===` / `=== body ===` / `=== status consistency ===`). Do **not** suppress one set because another succeeded — users need the full picture in one pass.
 
 Report the aggregate status as one of:
 
-- **Both clean** — "OK — frontmatter and body validators report no violations."
-- **Frontmatter violations only** — list them, then: "Body validator is clean. Fix the frontmatter issues above; they block schema-dependent tooling (dataview queries, id allocator, drift detector)."
-- **Body violations only** — list them, then: "Frontmatter is clean. Fix the body issues above; most block Obsidian rendering or wikilink navigation."
-- **Both have violations** — list each set, then: "Fix frontmatter first — body checks that depend on frontmatter paths may be cleaner after schema issues are resolved."
+- **All clean** — "OK — frontmatter, body, and status-consistency validators report no violations."
+- **Only one reports violations** — list them, note the others are clean, and point at the canonical reference doc for the reported class (frontmatter-schema, obsidian-conventions, or frontmatter-schema §Cross-file status consistency).
+- **Multiple report violations** — list each labelled set, then: "Fix frontmatter first — body and consistency checks may resolve in passing once schema issues are fixed (path references and enum values are shared inputs)."
 
-### 5. Suggest a follow-up
+Single-file mode adds one nuance: the consistency check was skipped; say so explicitly so the user knows to re-run the skill workspace-wide before handoff.
+
+### 6. Suggest a follow-up
 
 - Do **not** auto-fix. Validators are read-only; the user or the relevant `/a4:*` iteration skill owns the fix.
 - If many violations cluster under a single file, suggest the iteration skill that owns that file (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:plan iterate`) to drive the fix through normal review-item flow.
