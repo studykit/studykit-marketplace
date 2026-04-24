@@ -73,7 +73,6 @@ BLOCKED_STATUSES: set[str] = {"blocked"}
 
 SPARK_TERMINAL: dict[str, set[str]] = {
     "brainstorm": {"promoted", "discarded"},
-    "decide": {"final", "superseded"},
 }
 
 RECENT_ACTIVITY_LIMIT = 10
@@ -121,10 +120,9 @@ class SparkItem:
 
     @property
     def flavor(self) -> str:
-        # `2026-04-12-1530-vscode-ext.decide` → `decide`; otherwise `brainstorm`
+        # Only `.brainstorm` is supported in spark/ today; spark-decide writes
+        # directly to `a4/decision/<id>-<slug>.md`.
         stem = self.path.stem
-        if stem.endswith(".decide"):
-            return "decide"
         if stem.endswith(".brainstorm"):
             return "brainstorm"
         return ""

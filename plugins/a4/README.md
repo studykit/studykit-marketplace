@@ -24,7 +24,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Autonomous usecase generation |
 | `spark-brainstorm` | Structured brainstorming sessions |
-| `spark-decide` | Decision-making with ADR output |
+| `spark-decide` | Solution discovery facilitator; writes an ADR as `a4/decision/<id>-<slug>.md` |
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
@@ -80,7 +80,7 @@ Session-scoped accumulate-then-validate pattern. Edits to `a4/*.md` are recorded
     decision/<id>-<slug>.md                   # ADRs
     idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
 
-    spark/<YYYY-MM-DD-HHmm>-<slug>.{brainstorm,decide}.md
+    spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md
     archive/                                  # Closed items; folder = archived flag
     INDEX.md                                  # Regenerated dashboard
 

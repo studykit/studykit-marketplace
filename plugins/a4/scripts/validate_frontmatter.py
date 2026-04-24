@@ -124,19 +124,6 @@ SCHEMAS: dict[str, Schema] = {
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted"}),
     ),
-    "spark_decide": Schema(
-        name="spark_decide",
-        required=frozenset(
-            {"type", "pipeline", "topic", "status", "created", "updated"}
-        ),
-        enums={
-            "type": frozenset({"decide"}),
-            "pipeline": frozenset({"spark"}),
-            "status": frozenset({"draft", "final", "superseded"}),
-        },
-        date_fields=frozenset({"created", "updated"}),
-        path_list_fields=frozenset({"supersedes"}),
-    ),
 }
 
 
@@ -177,8 +164,6 @@ def detect_type(rel: Path, fm: dict) -> str | None:
         t = fm.get("type")
         if t == "brainstorm":
             return "spark_brainstorm"
-        if t == "decide":
-            return "spark_decide"
     return None
 
 

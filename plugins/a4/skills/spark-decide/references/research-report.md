@@ -1,41 +1,40 @@
-# Research Report Persistence
+# Research Report Format
 
-After each option research, the research agent writes detailed findings to a file.
+spark-decide uses the B1 single-file model: the finalized decide file at `a4/decision/<id>-<slug>.md` contains the decision plus the research and session trace that produced it. No sidecar files.
 
-## File Path
+The Research agent (`a4:api-researcher`) is spawned per option and returns its findings as a markdown block in its response. spark-decide inserts that block into the main decide file's `## Research Findings` section at the next checkpoint.
 
-`a4/<topic-slug>.decide.research-<label>.md`
+## Agent output format
 
-Where `<label>` is a short descriptive slug of the option being researched (e.g., `redis-caching`, `graphql-vs-rest`).
-
-## Frontmatter
+Each research pass produces one subsection keyed by option name:
 
 ```markdown
----
-type: research-report
-source: <topic-slug>.decide.md
-option: <the option being researched>
-researched: <YYYY-MM-DD HH:mm>
----
+### Option N: <name>
+
+**Sources consulted**
+- <URL | doc path | search query>
+- <URL | doc path | search query>
+- ...
+
+**Key findings**
+<Objective summary — what it is, how it works, strengths, limitations, cost, adoption, differentiators. Cite sources inline using `([ref](<url>))` footnote style.>
+
+<details><summary>Raw excerpts</summary>
+
+<Verbatim quotes, code samples, API signatures, benchmark numbers, pricing pages, and anything else that grounds the key findings. Do not summarize or truncate; paste directly so the file is self-contained and re-verifiable.>
+
+</details>
 ```
 
-## Content
+## Why inline, not sidecar
 
-This file is a raw data archive. Record all collected materials in detail so the file is self-contained — reviewable without revisiting the original sources. Do not summarize or truncate.
+- Keeps the decision and its justifying research in one file — a reader can audit "why did we pick this?" without chasing sidecars.
+- `<details>` collapse means raw excerpts stay out of the way during normal reading but remain in the same commit / same diff / same search surface.
+- Avoids introducing a sidecar convention under `a4/decision/`, which the issue-tracker schema would have to special-case.
 
-### Required sections
+## How spark-decide incorporates agent output
 
-- **Sources consulted** — list every URL, doc page, file path, and search query used. Include sources that yielded no useful results (to prevent re-searching).
-- **Raw findings** — paste relevant excerpts, code samples, API signatures, configuration examples, benchmark data, pricing pages, and adoption case studies verbatim. Quote directly rather than paraphrasing.
-
-## Research Index
-
-Maintain `a4/<topic-slug>.decide.research-index.md` as a lookup table. Update the index each time a new research report is created:
-
-```markdown
-| # | File | Option | Summary | Date |
-|---|------|--------|---------|------|
-| 1 | research-redis-caching.md | Redis caching | In-memory store, sub-ms latency, clustering support | 2026-04-13 |
-```
-
-Before launching a new research agent, check the index to avoid duplicate research.
+1. The Research agent returns the subsection markdown as its response.
+2. spark-decide tracks each researched option via a task.
+3. At the next checkpoint (every 2 options, or phase transition), spark-decide rewrites the decide file with all received subsections appended under `## Research Findings`.
+4. In the Evaluation section, the skill references options by name, not by sidecar path.

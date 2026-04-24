@@ -95,7 +95,7 @@ topic: "<session topic>"
 status: open        # open | promoted | discarded
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
-promoted: []        # paths populated when status → promoted (e.g., [spark/<decide>, usecase/<n>-<slug>])
+promoted: []        # paths populated when status → promoted (e.g., [decision/<id>-<slug>, usecase/<id>-<slug>])
 tags: []
 ---
 # Brainstorming: <session topic>
