@@ -69,8 +69,10 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 | Family | Value | Writer |
 |--------|-------|--------|
 | usecase | `draft` | `/a4:usecase`, `/a4:auto-usecase`, `usecase-composer` (on create) |
-| usecase | `implementing` | `task-implementer` agent (per `agents/task-implementer.md` step 1, flips any `implements: [usecase/X]` from `draft` before work) |
-| usecase | `done` | `/a4:plan` Step 2.5 (UC done-review, user-confirmed after Phase 2) |
+| usecase | `ready` | `/a4:usecase` at end of capture/iterate session (user-confirmed "mark as ready") |
+| usecase | `implementing` | `task-implementer` step 1 (flips any `implements: [usecase/X]` from `ready` before work; refuses to start on `draft`) |
+| usecase | `shipped` | `/a4:plan` Step 2.5 (UC done-review, user-confirmed after Phase 2) |
+| usecase | `superseded` | `propagate_superseded.py` PostToolUse hook — when a newer UC with `supersedes: [usecase/X]` flips to `shipped`, the script flips X from `shipped` to `superseded` and appends a back-pointer `## Log` entry |
 | usecase | `blocked` | `usecase-reviser` (on SPLIT), `/a4:plan` (on upstream blocker detection) |
 | task | `pending` | `/a4:plan` (on create + on revision reset) |
 | task | `implementing` | `/a4:plan` Step 2.2 (before `task-implementer` spawn) |
@@ -82,7 +84,7 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 | review | `dismissed` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect) |
 | decision | `draft` | `/a4:decision` (from natural-language signals) |
 | decision | `final` | `/a4:decision` (from natural-language signals) |
-| decision | `superseded` | **derived** — no writer; surfaced by `validate_status_consistency.py` when another decision declares `supersedes: [<this>]` |
+| decision | `superseded` | `propagate_superseded.py` PostToolUse hook — same mechanism as `usecase.superseded`, triggered when a newer decision with `supersedes: [decision/X]` lands at `status: final` |
 | idea | `open` | `/a4:idea` (capture mode) |
 | idea | `promoted` | user-driven; `/a4:decision` / `/a4:usecase` / other consuming skills may write the pipeline target and this status together when the user confirms graduation |
 | idea | `discarded` | `/a4:idea discard <id>` |
@@ -90,7 +92,7 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 | brainstorm | `promoted` | user-driven; set by hand when an idea from the brainstorm is graduated |
 | brainstorm | `discarded` | `/a4:spark-brainstorm` (wrap-up status decision, from natural-language signals) |
 
-The `decision.superseded` and the `promoted` values on `idea`/`brainstorm` are the cases without a mechanical writer. `validate_status_consistency.py` flags inconsistencies between these and their paired fields (`supersedes:`, `promoted:`) so the drift is visible even without automation.
+Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `decision`, `propagate_superseded.py` actively writes the status so the file alone tells you whether the item is current. See [`scripts/propagate_superseded.py`](../scripts/propagate_superseded.py) for the full rule set.
 
 ## Structural relationship fields
 
@@ -103,7 +105,7 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 | `target` | review | any issue or wiki | What this review item is about |
 | `wiki_impact` | review, issue | wiki basename(s) | Wiki pages requiring update when this item resolves |
 | `justified_by` | any issue | decision | Decisions that justify this item |
-| `supersedes` | decision | prior decision(s) | This decision replaces the referenced decision(s) |
+| `supersedes` | decision, usecase | prior decision(s) / usecase(s) | This item replaces the referenced item(s) of the same family |
 | `promoted` | spark/brainstorm, idea | decision, usecase, task, spark/brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
 | `parent` | any issue | same-type issue | Parent in a decomposition hierarchy |
 | `related` | any | any | Generic catchall for ties that don't fit other fields but warrant frontmatter-level searchability |
@@ -136,15 +138,31 @@ The `kind` value must match the file basename (e.g., `kind: architecture` requir
 |-------|----------|------|-----------------|
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `draft` \| `implementing` \| `done` \| `blocked` |
+| `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `shipped` \| `superseded` \| `blocked` |
 | `actors` | no | list of strings | actor names as defined in `actors.md` |
 | `depends_on` | no | list of paths | other use cases this UC needs first |
 | `justified_by` | no | list of paths | decisions justifying this UC |
+| `supersedes` | no | list of paths | prior use cases this UC replaces (see §Status writers) |
 | `related` | no | list of paths | catchall |
 | `labels` | no | list of strings | free-form tags |
 | `milestone` | no | string | milestone name (e.g., `v1.0`) |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
+
+### UC lifecycle
+
+Forward progression is intentionally split into five states:
+
+| Value | Meaning | Writer |
+|-------|---------|--------|
+| `draft` | Spec is still being shaped; not ready for implementation. | `/a4:usecase`, `/a4:auto-usecase`, `usecase-composer` on create |
+| `ready` | Spec is closed; ready to be picked up by an implementer. | `/a4:usecase` at end of session (user confirms) |
+| `implementing` | Coding agent is actively working on the UC. | `task-implementer` step 1 (refuses `draft`, accepts only `ready`) |
+| `shipped` | The running system reflects this use case. | `/a4:plan` Step 2.5 (user-confirmed after tests pass) |
+| `superseded` | A newer UC declares `supersedes: [<this>]` and has shipped; historical record. | `propagate_superseded.py` (PostToolUse hook) |
+| `blocked` | Implementation-time blocker surfaced; crosscutting. | `usecase-reviser` (on SPLIT), `/a4:plan` (on upstream blocker) |
+
+`shipped` is semantically terminal. Revision is modeled by creating a **new** UC with `supersedes: [usecase/<old-id>-<slug>]`; the old UC flips to `superseded` when the new one ships. There is no `shipped → draft` / `shipped → implementing` path.
 
 ## Task (`a4/task/<id>-<slug>.md`)
 
@@ -308,13 +326,14 @@ Hook scope is a separate concern — the validator reports; the caller (hook, sk
 
 ### Cross-file status consistency
 
-Three enum values are semantically derived from cross-file state rather than hand-authored:
+Four enum values are semantically derived from cross-file state rather than being chosen in isolation:
 
-| Field | Derived value | Condition |
-|-------|--------------|-----------|
-| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` |
-| `idea.status` | `promoted` | Own `promoted:` list is non-empty |
-| `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty |
+| Field | Derived value | Condition | Materialized by |
+|-------|--------------|-----------|-----------------|
+| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `propagate_superseded.py` (actively writes) |
+| `decision.status` | `superseded` | Another `decision/*.md` declares `supersedes: [<this>]` and has `status: final` | `propagate_superseded.py` (actively writes) |
+| `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
+| `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 
 `plugins/a4/scripts/validate_status_consistency.py` reports either direction of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference). It is report-only — no file is mutated.
 

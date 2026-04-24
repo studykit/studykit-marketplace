@@ -33,7 +33,7 @@ Per-UC frontmatter schema (reference):
 ```yaml
 id: 3
 title: Search history
-status: draft | implementing | done | blocked
+status: draft | ready | implementing | shipped | superseded | blocked
 actors: [meeting-organizer, team-member]
 depends_on: [usecase/1-share-summary]
 related: []

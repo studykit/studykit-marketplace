@@ -56,10 +56,10 @@ ISSUE_FOLDERS: tuple[str, ...] = ("usecase", "task", "review", "decision", "idea
 # Status vocabularies per the ADR (2026-04-23-spec-as-wiki-and-issues.decide.md
 # and 2026-04-24-idea-slot.decide.md for `idea`).
 TERMINAL_STATUSES: dict[str, set[str]] = {
-    "usecase": {"done"},
+    "usecase": {"shipped", "superseded"},
     "task": {"complete"},
     "review": {"resolved", "dismissed"},
-    "decision": {"final"},
+    "decision": {"final", "superseded"},
     "idea": {"promoted", "discarded"},
 }
 IN_PROGRESS_STATUSES: dict[str, set[str]] = {

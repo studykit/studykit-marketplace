@@ -6,12 +6,20 @@
 
 Some status enum values are semantically derived from cross-file state:
 
-  - decision.status = "superseded" iff another decision/*.md declares
-    `supersedes: [<this-path>]`.
+  - decision.status = "superseded" iff another decision/*.md at
+    `status: final` declares `supersedes: [<this-path>]`.
+  - usecase.status = "superseded" iff another usecase/*.md at
+    `status: shipped` declares `supersedes: [<this-path>]`.
   - idea.status = "promoted" iff the idea's own `promoted:` list is
     non-empty.
   - spark/*.brainstorm.md status = "promoted" iff own `promoted:` is
     non-empty.
+
+For the two `superseded` rules, the hook-driven writer at
+`plugins/a4/scripts/propagate_superseded.py` normally materializes the
+flip at edit time. This validator is the safety net — it catches any
+drift left behind if the hook was skipped, bypassed, or ran before the
+successor reached its terminal-active state.
 
 This validator flags either direction of mismatch. The other validators
 (validate_frontmatter.py, validate_body.py, drift_detector.py) do not
@@ -19,8 +27,8 @@ look across files for these semantic rules — this script closes the gap.
 
 Two modes:
 
-  Workspace mode (default) — scan every decision/idea/brainstorm file
-  and report all mismatches. Used by SessionStart and `/a4:validate`.
+  Workspace mode (default) — scan every decision/usecase/idea/brainstorm
+  file and report all mismatches. Used by SessionStart and `/a4:validate`.
 
   File-scoped mode (`--file <path>`) — report only mismatches involving
   the given file's "related set":
@@ -29,6 +37,8 @@ Two modes:
     - decision/<id>-<slug>.md    → that file + files it supersedes +
                                    files that supersede it (connected
                                    component via `supersedes:`)
+    - usecase/<id>-<slug>.md     → same as decision, walked via
+                                   usecase-to-usecase `supersedes:`
     - anything else              → no output (no consistency rule applies)
   Used by the PostToolUse hook so edits do not re-surface unrelated
   legacy mismatches elsewhere in the workspace.
@@ -97,19 +107,34 @@ def _is_non_empty_list(value: Any) -> bool:
     )
 
 
-def collect_decisions(a4_dir: Path) -> dict[str, dict]:
-    """Map `decision/<id>-<slug>` → frontmatter."""
+# Families for which a `superseded` status is actively materialized by
+# propagate_superseded.py when a successor reaches its terminal-active
+# state. Both sides must be same-family — a decision does not supersede
+# a usecase and vice versa.
+SUPERSEDES_FAMILIES: dict[str, str] = {
+    "decision": "final",
+    "usecase": "shipped",
+}
+
+
+def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
+    """Map `<family>/<id>-<slug>` → frontmatter for every .md in folder."""
     out: dict[str, dict] = {}
-    folder = a4_dir / "decision"
+    folder = a4_dir / family
     if not folder.is_dir():
         return out
     for p in sorted(folder.glob("*.md")):
         fm = split_frontmatter(p)
         if fm is None:
             continue
-        key = f"decision/{p.stem}"
+        key = f"{family}/{p.stem}"
         out[key] = fm
     return out
+
+
+def collect_decisions(a4_dir: Path) -> dict[str, dict]:
+    """Back-compat alias for `collect_family(a4_dir, "decision")`."""
+    return collect_family(a4_dir, "decision")
 
 
 def collect_with_promoted(
@@ -131,13 +156,29 @@ def collect_with_promoted(
     return out
 
 
-def check_superseded(decisions: dict[str, dict]) -> list[Mismatch]:
-    mismatches: list[Mismatch] = []
+def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
+    """Check supersedes-↔-status consistency within a single family.
 
+    A target artifact is expected to be at `status: superseded` iff it is
+    named in the `supersedes:` list of another artifact in the same family
+    that is itself at its terminal-active status (decision=final,
+    usecase=shipped). Draft/implementing successors do NOT yet render
+    their targets superseded.
+    """
+    mismatches: list[Mismatch] = []
+    terminal_active = SUPERSEDES_FAMILIES.get(family)
+    if terminal_active is None:
+        return mismatches
+
+    # Build: for each target key, the list of live-successor keys
+    # that claim to supersede it.
     superseded_by: dict[str, list[str]] = {}
-    for key, fm in decisions.items():
+    for key, fm in items.items():
         supersedes = fm.get("supersedes")
         if not isinstance(supersedes, list):
+            continue
+        successor_status = fm.get("status")
+        if successor_status != terminal_active:
             continue
         for entry in supersedes:
             norm = _normalize_ref(entry)
@@ -145,7 +186,7 @@ def check_superseded(decisions: dict[str, dict]) -> list[Mismatch]:
                 continue
             superseded_by.setdefault(norm, []).append(key)
 
-    for key, fm in decisions.items():
+    for key, fm in items.items():
         status = fm.get("status")
         is_targeted = key in superseded_by
 
@@ -153,10 +194,10 @@ def check_superseded(decisions: dict[str, dict]) -> list[Mismatch]:
             mismatches.append(
                 Mismatch(
                     path=f"{key}.md",
-                    rule="stale-superseded-status",
+                    rule=f"stale-superseded-status-{family}",
                     message=(
-                        "status=superseded but no other decision declares "
-                        f"`supersedes: [{key}]`"
+                        f"status=superseded but no {terminal_active!r} "
+                        f"{family} declares `supersedes: [{key}]`"
                     ),
                 )
             )
@@ -165,15 +206,17 @@ def check_superseded(decisions: dict[str, dict]) -> list[Mismatch]:
             mismatches.append(
                 Mismatch(
                     path=f"{key}.md",
-                    rule="missing-superseded-status",
+                    rule=f"missing-superseded-status-{family}",
                     message=(
-                        f"status={status!r} but superseded by: "
-                        f"{superseders}. Expected status=superseded."
+                        f"status={status!r} but superseded by {superseders} "
+                        f"(each at {terminal_active!r}). Expected "
+                        "status=superseded — propagate_superseded.py should "
+                        "have flipped this; re-run it against the successor."
                     ),
                 )
             )
 
-    for key, fm in decisions.items():
+    for key, fm in items.items():
         supersedes = fm.get("supersedes")
         if not isinstance(supersedes, list):
             continue
@@ -181,13 +224,13 @@ def check_superseded(decisions: dict[str, dict]) -> list[Mismatch]:
             norm = _normalize_ref(entry)
             if norm is None:
                 continue
-            if norm not in decisions:
+            if norm not in items:
                 mismatches.append(
                     Mismatch(
                         path=f"{key}.md",
-                        rule="superseded-target-missing",
+                        rule=f"superseded-target-missing-{family}",
                         message=(
-                            f"`supersedes: [{norm}]` points at a decision "
+                            f"`supersedes: [{norm}]` points at a {family} "
                             "that does not exist in the workspace"
                         ),
                     )
@@ -229,31 +272,38 @@ def check_promoted(items: list[tuple[str, dict]], kind: str) -> list[Mismatch]:
 
 
 def collect_workspace_mismatches(a4_dir: Path) -> list[Mismatch]:
-    decisions = collect_decisions(a4_dir)
     ideas = collect_with_promoted(a4_dir, "idea", "*.md")
     brainstorms = collect_with_promoted(a4_dir, "spark", "*.brainstorm.md")
 
     mismatches: list[Mismatch] = []
-    mismatches.extend(check_superseded(decisions))
+    for family in SUPERSEDES_FAMILIES:
+        items = collect_family(a4_dir, family)
+        mismatches.extend(check_superseded(items, family))
     mismatches.extend(check_promoted(ideas, "idea"))
     mismatches.extend(check_promoted(brainstorms, "brainstorm"))
     return mismatches
 
 
-def _decision_component(decisions: dict[str, dict], key: str) -> set[str]:
+def _supersedes_component(items: dict[str, dict], key: str) -> set[str]:
+    """Walk the supersedes chain within a single family, both directions."""
     component = {key}
-    fm = decisions.get(key)
+    fm = items.get(key)
     if fm is not None:
         for entry in fm.get("supersedes") or []:
             norm = _normalize_ref(entry)
             if norm:
                 component.add(norm)
-    for other_key, other_fm in decisions.items():
+    for other_key, other_fm in items.items():
         for entry in other_fm.get("supersedes") or []:
             if _normalize_ref(entry) == key:
                 component.add(other_key)
                 break
     return component
+
+
+# Back-compat alias used by older callers.
+def _decision_component(decisions: dict[str, dict], key: str) -> set[str]:
+    return _supersedes_component(decisions, key)
 
 
 def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
@@ -289,15 +339,19 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
             return []
         return check_promoted([(f"spark/{abs_path.stem}", fm)], "brainstorm")
 
-    if folder == "decision":
+    if folder in SUPERSEDES_FAMILIES:
         if not basename.endswith(".md"):
             return []
-        decisions = collect_decisions(a4_dir)
+        items = collect_family(a4_dir, folder)
         stem = basename[:-3]
-        key = f"decision/{stem}"
-        component = _decision_component(decisions, key)
+        key = f"{folder}/{stem}"
+        component = _supersedes_component(items, key)
         component_paths = {f"{k}.md" for k in component}
-        return [m for m in check_superseded(decisions) if m.path in component_paths]
+        return [
+            m
+            for m in check_superseded(items, folder)
+            if m.path in component_paths
+        ]
 
     return []
 

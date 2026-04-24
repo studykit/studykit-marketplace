@@ -256,4 +256,4 @@ The invoking skill uses this summary for commit messages and to decide whether t
 - Use Obsidian wikilinks (`[[usecase/<id>-<slug>]]`) for all cross-references in body prose. Paths in frontmatter are plain strings without brackets or `.md`.
 - Bump each touched wiki page's `updated:` to today.
 - For any wiki page modified in this pass, add an inline footnote marker in the modified section + a `## Changes` line citing the causing UC — per the wiki update protocol in `usecase/SKILL.md`.
-- Never set `status: final` or `status: done` on any file. Auto-generated output is always `status: draft`.
+- Never set `status: final`, `status: ready`, `status: implementing`, `status: shipped`, or `status: superseded` on any file. Auto-generated output is always `status: draft` — promotion through the UC lifecycle is always user-driven.
