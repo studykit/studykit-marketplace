@@ -40,8 +40,12 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-import yaml
+from common import ISSUE_FOLDERS
+from markdown import extract_preamble
 
+# Local ordered tuple — iteration order drives the Wiki-pages table
+# rendering. `common.WIKI_KINDS` is a frozenset (membership-test only),
+# so we cannot reuse it here without destabilizing output.
 WIKI_KINDS: tuple[str, ...] = (
     "context",
     "domain",
@@ -51,7 +55,6 @@ WIKI_KINDS: tuple[str, ...] = (
     "plan",
     "bootstrap",
 )
-ISSUE_FOLDERS: tuple[str, ...] = ("usecase", "task", "review", "decision", "idea")
 
 # Status vocabularies per the ADR (2026-04-23-spec-as-wiki-and-issues.decide.md
 # and 2026-04-24-idea-slot.decide.md for `idea`).
@@ -129,18 +132,13 @@ class SparkItem:
         return ""
 
 
-def split_frontmatter(path: Path) -> tuple[dict, str]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return {}, text
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return {}, text
-    try:
-        fm = yaml.safe_load(parts[1])
-    except yaml.YAMLError:
-        return {}, parts[2]
-    return (fm if isinstance(fm, dict) else {}), parts[2]
+def _fm(path: Path) -> dict:
+    """Return `path`'s preamble as a dict, or `{}` on absence / parse error.
+
+    Preserves the pre-shared-module `split_frontmatter(path)[0]` contract:
+    every caller `.get()`s fields and tolerates an empty mapping.
+    """
+    return extract_preamble(path).fm or {}
 
 
 def display_date(raw: Any) -> str | None:
@@ -159,7 +157,7 @@ def discover_wikis(a4_dir: Path) -> list[WikiPage]:
         if not path.is_file():
             pages.append(WikiPage(kind=kind, path=None))
             continue
-        fm, _ = split_frontmatter(path)
+        fm = _fm(path)
         pages.append(
             WikiPage(
                 kind=kind,
@@ -177,7 +175,7 @@ def discover_issues(a4_dir: Path) -> dict[str, list[IssueItem]]:
         if not sub.is_dir():
             continue
         for md in sorted(sub.glob("*.md")):
-            fm, _ = split_frontmatter(md)
+            fm = _fm(md)
             raw_id = fm.get("id")
             item = IssueItem(
                 folder=folder,
@@ -208,7 +206,7 @@ def discover_sparks(a4_dir: Path) -> list[SparkItem]:
         return []
     items: list[SparkItem] = []
     for md in sorted(sub.glob("*.md")):
-        fm, _ = split_frontmatter(md)
+        fm = _fm(md)
         status = str(fm.get("status") or "open").strip() or "open"
         items.append(
             SparkItem(
