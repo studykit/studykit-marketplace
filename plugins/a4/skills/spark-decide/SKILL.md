@@ -15,7 +15,7 @@ Facilitate a solution discovery session on: **$ARGUMENTS**
 
 Determine how to start based on the input:
 
-1. **File path provided** (e.g., `a4/spark/...`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
+1. **File path provided** (e.g., `a4/spark/...brainstorm.md`, `a4/idea/<id>-<slug>.md`): Read the file, extract ideas/options, present them to the user, and ask which ones to evaluate. Skip to Phase 2 (Option Generation) with these as candidates.
 2. **Topic/problem provided**: Start from Phase 1 (Problem Framing).
 
 If the input is ambiguous, ask the user to clarify.
@@ -38,10 +38,13 @@ The file grows through **checkpoint writes** rather than after every confirmed i
 
 ### Working File Path
 
-At the start of the session, determine the file path:
-- Default: `a4/spark/<YYYY-MM-DD-HHmm>-<topic-slug>.decide.md` relative to working directory
-- Ask the user only if they want a different location
-- Create the directory if needed
+spark-decide writes its output directly into the issue tracker as a decision issue — there is no separate `spark/` stage. Once Problem Framing is complete, allocate an id and create the file:
+
+1. **Allocate an id** — `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace>/a4"`. This scans the workspace for the max existing id across all issue folders and returns `max + 1`. If no `a4/` workspace exists in the working directory (standalone use), fall back to a safe default like `1`.
+2. **Derive the slug** from the topic (kebab-case, trimmed to ~40 chars).
+3. **File path:** `a4/decision/<id>-<slug>.md` relative to working directory.
+4. **Ask the user only if they want a different location** (e.g., a workspace other than `./a4/`).
+5. **Create the `decision/` folder if needed.**
 
 ### Initial File Content
 
@@ -49,18 +52,18 @@ Write this after Problem Framing is complete:
 
 ```markdown
 ---
-type: decide
-pipeline: spark
-topic: "<topic>"
+id: <int>
+title: "<topic>"
 status: draft       # draft | final | superseded
 framework: ""
 decision: ""
-supersedes: []      # paths to prior decide(s) this replaces; omit or keep [] if none
+supersedes: []      # paths to prior decisions this replaces; omit or keep [] if none
+related: []         # soft links to other artifacts
+tags: []
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
-tags: []
 ---
-# Decision Record: <topic>
+# <topic>
 > Source: [<source-file-name>](./<source-file-name>)
 
 ## Context
@@ -159,16 +162,15 @@ Write a checkpoint — update the working file with the confirmed options (phase
 
 ## Phase 3: Research
 
-For each promising option, investigate by spawning an `Agent(subagent_type: "a4:api-researcher")` with `run_in_background: true`. Independent options can be researched in parallel. The agent writes a detailed research report per `${CLAUDE_SKILL_DIR}/references/research-report.md`.
+For each promising option, investigate by spawning an `Agent(subagent_type: "a4:api-researcher")` with `run_in_background: true`. Independent options can be researched in parallel. The agent returns its findings as a markdown subsection per `${CLAUDE_SKILL_DIR}/references/research-report.md`; spark-decide inserts the subsection into the main decide file's `## Research Findings` section at the next checkpoint. No sidecar files are written.
 
 ### Research protocol
 
 1. **Ask before researching** — "I'd like to research [option] now. Any specific questions you want me to answer about it?" This prevents wasted research.
-2. **Check the research index** — before launching a new agent, check `a4/<topic-slug>.decide.research-index.md` to avoid duplicate research.
+2. **Avoid duplicate research** — before launching a new agent, check the decide file's `## Research Findings` section for an already-present subsection for this option.
 3. **Be objective** — Present both strengths and limitations. Do not advocate for any option during research.
-4. **When notified** — update the research index. Summarize findings to the user, then ask: "Anything else you want to know about this before we move on?"
-5. **Reflect into working file** — when writing option findings to the working file, add an inline reference to the raw data file (e.g., `(ref: research-redis-caching.md)`).
-6. **Track via task** — After each option is researched, mark the task completed. Findings are batch-written to the file at the next checkpoint.
+4. **When notified** — summarize findings to the user, then ask: "Anything else you want to know about this before we move on?"
+5. **Track via task** — After each option is researched, mark the task completed. The agent's returned subsection is batch-inserted at the next checkpoint (raw excerpts wrapped in `<details>` so the file stays readable).
 
 ### Research depth
 
@@ -249,7 +251,7 @@ When the user indicates they're done:
    - Ensure all sections are complete
    - Append the Discussion Log
    - Remove any placeholder text
-5. **In-situ wiki nudge** — check whether the finalized decision affects existing wiki pages at the `a4/` workspace root (the directory that contains the `spark/` folder holding this decide file):
+5. **In-situ wiki nudge** — check whether the finalized decision affects existing wiki pages at the `a4/` workspace root (the parent of the `decision/` folder holding this file):
 
    | Change type | Likely wiki target |
    |-------------|--------------------|
@@ -259,17 +261,17 @@ When the user indicates they're done:
    | New domain concept | `domain.md` |
    | Non-functional requirement change | `nfr.md` |
 
-   Discover wiki pages via `Glob` on `a4/*.md`. Skip silently when no wiki pages exist — a standalone decide outside an `a4/` workspace has nothing to nudge.
+   Discover wiki pages via `Glob` on `a4/*.md`. Skip silently when no wiki pages exist — a standalone decision outside an `a4/` workspace has nothing to nudge.
 
    If any candidate applies, present the proposed updates and ask the user to confirm each. For every confirmed update:
 
-   1. Edit the wiki page — update the affected section, append a footnote marker `[^N]` inline, and append a `## Changes` line `[^N]: <YYYY-MM-DD> — [[spark/<decide-basename>]]` (where `<decide-basename>` is the decide file name without `.md`).
+   1. Edit the wiki page — update the affected section, append a footnote marker `[^N]` inline, and append a `## Changes` line `[^N]: <YYYY-MM-DD> — [[decision/<id>-<slug>]]` pointing to this decision file.
    2. Bump the wiki page's `updated:` frontmatter to today.
 
    If the user defers any update, open a review item instead:
 
    1. Allocate an id: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace>/a4"`.
-   2. Write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: self`, `target: spark/<decide-basename>`, and `wiki_impact: [<affected wiki basenames>]`. The wiki close guard and drift detector surface unresolved impact later.
+   2. Write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: self`, `target: decision/<decision-id>-<slug>`, and `wiki_impact: [<affected wiki basenames>]`. The wiki close guard and drift detector surface unresolved impact later.
 
    Use judgment — minor decisions (naming conventions, purely internal choices with no wiki-visible effect) skip the nudge.
 6. **Report the path** so the user can reference it.

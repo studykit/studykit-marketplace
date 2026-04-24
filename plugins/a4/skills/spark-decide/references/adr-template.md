@@ -2,18 +2,18 @@
 
 ```markdown
 ---
-type: decide
-pipeline: spark
-topic: "<topic>"
+id: <int>
+title: "<topic>"
 status: final       # draft | final | superseded
 framework: "<evaluation framework used>"
 decision: "<one-line summary of the decision>"
-supersedes: []      # paths to prior decide(s) this replaces; omit or keep [] if none
+supersedes: []      # paths to prior decisions this replaces; omit or keep [] if none
+related: []         # soft links to other artifacts
+tags: []
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
-tags: []
 ---
-# Decision Record: <topic>
+# <topic>
 > Source: [<source-file-name>](./<source-file-name>)
 
 ## Context

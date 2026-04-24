@@ -12,7 +12,7 @@ Every markdown file created by an a4 skill carries YAML frontmatter. Files split
 |--------|----------|----------|
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `plan.md`, `bootstrap.md` | `a4/` root |
 | **Issue** | use case, task, review item, decision, idea | `a4/usecase/`, `a4/task/`, `a4/review/`, `a4/decision/`, `a4/idea/` |
-| **Spark** | brainstorm output, decide output | `a4/spark/` |
+| **Spark** | brainstorm output | `a4/spark/` |
 
 ## Universal rules
 
@@ -29,7 +29,7 @@ These apply to every family.
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `justified_by`, `supersedes`, `related`, `parent`, `promoted`) use the following format:
 
 - **Plain strings.** No wikilink brackets — `usecase/3-search-history`, not `[[usecase/3-search-history]]`. Brackets break dataview parsing.
-- **No `.md` extension.** Obsidian basename resolution handles it. Spark files keep the `.decide` / `.brainstorm` suffix because it is part of the filename base, not the extension — e.g., `spark/2026-04-23-2119-spec-as-wiki-and-issues.decide`.
+- **No `.md` extension.** Obsidian basename resolution handles it. Spark brainstorm files keep the `.brainstorm` suffix because it is part of the filename base, not the extension — e.g., `spark/2026-04-23-2119-caching-strategy.brainstorm`.
 - **Folder-prefixed when cross-folder.** `usecase/3-search-history`, `task/5-render-markdown`, `review/6-missing-validation`, `decision/8-caching-strategy`, `spark/<base>`. Bare basename (`3-search-history`) resolves correctly because ids are globally unique, but folder-prefixed form is preferred for readability.
 - **Wiki targets use bare basename.** `wiki_impact: [architecture, domain]`, not `wiki_impact: [architecture.md]`.
 
@@ -73,8 +73,8 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 | `target` | review | any issue or wiki | What this review item is about |
 | `wiki_impact` | review, issue | wiki basename(s) | Wiki pages requiring update when this item resolves |
 | `justified_by` | any issue | decision | Decisions that justify this item |
-| `supersedes` | decision, spark/decide | prior decision(s) | This decision replaces the referenced decision(s) |
-| `promoted` | spark/brainstorm, idea | decision, usecase, task, spark/decide, spark/brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
+| `supersedes` | decision | prior decision(s) | This decision replaces the referenced decision(s) |
+| `promoted` | spark/brainstorm, idea | decision, usecase, task, spark/brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
 | `parent` | any issue | same-type issue | Parent in a decomposition hierarchy |
 | `related` | any | any | Generic catchall for ties that don't fit other fields but warrant frontmatter-level searchability |
 
@@ -191,7 +191,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 
 ## Decision (`a4/decision/<id>-<slug>.md`)
 
-Lightweight ADR stored as an issue — the archived "resolved issue" from the wiki+issues duality.
+ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions arrive here via two paths: (a) direct authoring for straightforward rules, and (b) `/a4:spark-decide` finalization for option-comparison / research-driven decisions. Both paths produce the same frontmatter shape; the body may carry optional `## Options Considered`, `## Research Findings`, `## Evaluation`, and `<details><summary>Discussion Log</summary>` sections when spark-decide wrote it.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -247,33 +247,14 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 | `pipeline` | yes | literal | `spark` |
 | `topic` | yes | string | session topic |
 | `status` | yes | enum | `open` \| `promoted` \| `discarded` |
-| `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[spark/<decide>, usecase/5-...]`) |
+| `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[decision/<id>-<slug>, usecase/<id>-<slug>]`) |
 | `tags` | no | list of strings | free-form |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
 Source: `plugins/a4/skills/spark-brainstorm/SKILL.md` lines 91–100.
 
-## Spark decide (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md`)
-
-Pre-pipeline decision record. Once finalized, ideas typically feed into a pipeline issue (use case or task); this file stays as the rationale archive.
-
-| Field | Required | Type | Values / format |
-|-------|----------|------|-----------------|
-| `type` | yes | literal | `decide` |
-| `pipeline` | yes | literal | `spark` |
-| `topic` | yes | string | session topic |
-| `status` | yes | enum | `draft` \| `final` \| `superseded` |
-| `framework` | no | string | decision framework (e.g., `weighted-scoring`, `analysis-driven`) |
-| `decision` | no | string | one-line decision summary |
-| `supersedes` | no | list of paths | prior decide(s) this replaces |
-| `tags` | no | list of strings | free-form |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
-
-Source: `plugins/a4/skills/spark-decide/SKILL.md` lines 50–62.
-
-**Asymmetry with `decision/` folder issues.** Spark decides carry `type:` and `pipeline:` because they are spark-family artifacts; `decision/` issues do not, because the folder already marks them as pipeline decisions.
+**Note on spark-decide.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It has been retired: the `/a4:spark-decide` skill now writes directly into `a4/decision/<id>-<slug>.md` as a first-class decision issue. The decision-issue schema above covers all spark-decide output.
 
 ## Validator behavior
 
@@ -313,4 +294,4 @@ When these land, update this document **and** the validator simultaneously — t
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
 - **Read-only parser:** `plugins/a4/scripts/read_frontmatter.py`.
-- **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md`, `plugins/a4/skills/spark-decide/SKILL.md`.
+- **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (spark-decide writes into the `decision` issue schema — no separate spark-decide frontmatter).
