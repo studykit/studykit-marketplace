@@ -42,9 +42,7 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-import yaml
-
-from common import WIKI_KINDS
+from common import WIKI_KINDS, split_frontmatter
 
 ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
 
@@ -65,38 +63,11 @@ class Violation:
     message: str
 
 
-def split_frontmatter(path: Path) -> tuple[dict | None, str, int]:
-    """Return (frontmatter, body, body_start_line_1_based).
-
-    body_start_line is the 1-based line number in the source file where
-    `body` begins; used to translate body-local line offsets into file-wide
-    line numbers for violation reports.
-    """
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return None, text, 1
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return None, text, 1
-    try:
-        fm = yaml.safe_load(parts[1])
-    except yaml.YAMLError:
-        return None, parts[2], 1
-    if not isinstance(fm, dict):
-        return None, parts[2], 1
-    # text = "---" + parts[1] + "---" + parts[2]
-    # Opening `---` is line 1; parts[1] starts with `\n` and ends before the
-    # closing `---` line. Body (`parts[2]`) starts the line after the closing `---`.
-    fm_newlines = parts[1].count("\n")
-    body_start = 1 + fm_newlines + 1
-    return fm, parts[2], body_start
-
-
 def discover_wiki_pages(a4_dir: Path) -> dict[str, Path]:
     out: dict[str, Path] = {}
     for md in sorted(a4_dir.glob("*.md")):
-        fm, _, _ = split_frontmatter(md)
-        if fm and fm.get("kind") in WIKI_KINDS:
+        parsed = split_frontmatter(md)
+        if parsed.fm and parsed.fm.get("kind") in WIKI_KINDS:
             out[md.stem] = md
     return out
 
@@ -299,12 +270,14 @@ def validate_file(
     issues: dict[str, Path],
     sparks: dict[str, Path],
 ) -> list[Violation]:
-    fm, body, body_start = split_frontmatter(path)
-    ftype = classify_file(path, a4_dir, fm)
+    parsed = split_frontmatter(path)
+    ftype = classify_file(path, a4_dir, parsed.fm)
     if ftype is None:
         return []
 
     rel_str = str(path.relative_to(a4_dir))
+    body = parsed.body
+    body_start = parsed.body_start_line
     violations: list[Violation] = []
     skip_lines: set[int] = set()
 

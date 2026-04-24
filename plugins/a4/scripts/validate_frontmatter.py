@@ -35,9 +35,12 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
-import yaml
-
-from common import WIKI_KINDS, is_empty as _is_empty, is_int as _is_int
+from common import (
+    WIKI_KINDS,
+    is_empty as _is_empty,
+    is_int as _is_int,
+    split_frontmatter,
+)
 
 ISSUE_FOLDERS = ("usecase", "task", "review", "decision", "idea")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
@@ -143,22 +146,6 @@ class Violation:
     rule: str
     field: str | None
     message: str
-
-
-def split_frontmatter(path: Path) -> tuple[dict | None, str]:
-    text = path.read_text(encoding="utf-8")
-    if not text.startswith("---"):
-        return None, text
-    parts = text.split("---", 2)
-    if len(parts) < 3:
-        return None, text
-    try:
-        fm = yaml.safe_load(parts[1])
-    except yaml.YAMLError:
-        return None, parts[2]
-    if not isinstance(fm, dict):
-        return None, parts[2]
-    return fm, parts[2]
 
 
 def detect_type(rel: Path, fm: dict) -> str | None:
@@ -349,10 +336,10 @@ def validate_id_uniqueness(a4_dir: Path) -> list[Violation]:
         if not sub.is_dir():
             continue
         for p in sorted(sub.glob("*.md")):
-            fm, _ = split_frontmatter(p)
-            if not fm:
+            parsed = split_frontmatter(p)
+            if not parsed.fm:
                 continue
-            raw = fm.get("id")
+            raw = parsed.fm.get("id")
             if _is_int(raw):
                 seen.setdefault(raw, []).append(p)
 
@@ -421,13 +408,13 @@ def main() -> None:
 
     violations: list[Violation] = []
     for path in files:
-        fm, _ = split_frontmatter(path)
-        if fm is None:
+        parsed = split_frontmatter(path)
+        if parsed.fm is None:
             missing = check_missing_frontmatter(path, a4_dir)
             if missing:
                 violations.append(missing)
             continue
-        violations.extend(validate_file(path, a4_dir, fm))
+        violations.extend(validate_file(path, a4_dir, parsed.fm))
 
     if not args.file:
         violations.extend(validate_id_uniqueness(a4_dir))
