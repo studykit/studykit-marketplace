@@ -218,6 +218,8 @@ Source: `plugins/a4/skills/spark-decide/SKILL.md` lines 50–62.
 
 The validator at `plugins/a4/scripts/validate_frontmatter.py` enforces this schema. Every rule violation is an error; the process exits `2` on any violation and `0` on a clean run.
 
+Body-side conventions (wiki-page footnote format, body wikilink resolution) are enforced by a sibling script `plugins/a4/scripts/validate_body.py`; see [obsidian-conventions.md](./obsidian-conventions.md) for the rules covered there.
+
 | Rule | Behavior |
 |------|----------|
 | Unknown fields | **ignored** (the one point of leniency) |
@@ -245,6 +247,8 @@ When these land, update this document **and** the validator simultaneously — t
 ## Cross-references
 
 - **ADR (authority):** `plugins/a4/a4/2026-04-23-spec-as-wiki-and-issues.decide.md` §Frontmatter schema (lines ~132–225).
+- **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
+- **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
 - **Read-only parser:** `plugins/a4/scripts/read_frontmatter.py`.
