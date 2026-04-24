@@ -2,7 +2,7 @@
 name: spark-decide
 description: "This skill should be used when the user needs to make a decision between options, evaluate trade-offs, or research alternatives before choosing a solution. Triggers: 'help me decide', 'compare alternatives', 'evaluate options', 'trade-off analysis', 'research options', 'ADR', 'architecture decision', 'solution discovery', 'pick between', 'which approach', 'weigh pros and cons', 'decision record', 'choose between', 'which option is better'. Can accept output from spark-brainstorm as input."
 argument-hint: <topic, problem, or path to brainstorming output file>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
+allowed-tools: Read, Write, Edit, Agent, Bash, Glob, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
 ---
 
 # Solution Discovery Facilitator
@@ -245,10 +245,34 @@ When the user indicates they're done:
 4. **Finalize the working file** — write the final version:
    - Change `status: draft` to `status: final` in frontmatter
    - Fill the `decision` field in frontmatter with a one-line summary
+   - Bump `updated:` in frontmatter to today
    - Ensure all sections are complete
    - Append the Discussion Log
    - Remove any placeholder text
-5. **Report the path** so the user can reference it.
+5. **In-situ wiki nudge** — check whether the finalized decision affects existing wiki pages at the `a4/` workspace root (the directory that contains the `spark/` folder holding this decide file):
+
+   | Change type | Likely wiki target |
+   |-------------|--------------------|
+   | Technology / framework / library choice | `architecture.md` (Technology Stack, External Dependencies) |
+   | Process, scope, or constraint shift | `context.md` (Problem Framing, Success Criteria) |
+   | New actor or role | `actors.md` |
+   | New domain concept | `domain.md` |
+   | Non-functional requirement change | `nfr.md` |
+
+   Discover wiki pages via `Glob` on `a4/*.md`. Skip silently when no wiki pages exist — a standalone decide outside an `a4/` workspace has nothing to nudge.
+
+   If any candidate applies, present the proposed updates and ask the user to confirm each. For every confirmed update:
+
+   1. Edit the wiki page — update the affected section, append a footnote marker `[^N]` inline, and append a `## Changes` line `[^N]: <YYYY-MM-DD> — [[spark/<decide-basename>]]` (where `<decide-basename>` is the decide file name without `.md`).
+   2. Bump the wiki page's `updated:` frontmatter to today.
+
+   If the user defers any update, open a review item instead:
+
+   1. Allocate an id: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace>/a4"`.
+   2. Write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: self`, `target: spark/<decide-basename>`, and `wiki_impact: [<affected wiki basenames>]`. The wiki close guard and drift detector surface unresolved impact later.
+
+   Use judgment — minor decisions (naming conventions, purely internal choices with no wiki-visible effect) skip the nudge.
+6. **Report the path** so the user can reference it.
 
 ### Output Format
 
