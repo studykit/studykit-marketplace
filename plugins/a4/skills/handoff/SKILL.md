@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "This skill should be used when the user explicitly invokes /handoff inside a project that uses the a4 plugin's a4/ workflow. Writes a topic-threaded session handoff at <project-root>/.handoff/ and snapshots any referenced a4/ sections in place via ![[...]] embed directives resolved at write time."
+description: "This skill should be used when the user explicitly invokes /handoff inside a project that uses the a4 plugin's a4/ workflow. Writes a topic-threaded session handoff at <project-root>/.handoff/<topic>/ and snapshots any referenced a4/ sections in place via ![[...]] embed directives resolved at write time."
 argument-hint: "<topic-slug> [additional emphasis]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -27,19 +27,15 @@ If project root resolved to `NOT_A_GIT_REPO`, abort with a clear message. The ha
 - **Topic slug** — the first whitespace-separated token in `$ARGUMENTS`. If missing, ask the user. Must match `[a-z0-9-]+` (lowercase, digits, hyphens only — used as the group key for thread resumption).
 - **Filename slug** — a short kebab-case description of this session's focus (e.g., `handoff-scripts-and-task-rename`). Derive from session context; ask the user only if genuinely ambiguous.
 
-Final file path: `<project-root>/.handoff/<TIMESTAMP>_<filename-slug>.md`. If that exact path already exists, append `_2`, `_3`, … — never overwrite an existing handoff.
+Final file path: `<project-root>/.handoff/<topic-slug>/<TIMESTAMP>_<filename-slug>.md`. If that exact path already exists, append `_2`, `_3`, … — never overwrite an existing handoff.
 
-Ensure `<project-root>/.handoff/` exists (create it if missing).
+Ensure `<project-root>/.handoff/<topic-slug>/` exists (create it if missing).
 
 ### 2. Locate the previous handoff on this topic
 
-Scan `<project-root>/.handoff/*.md`. For each file, parse the YAML frontmatter and check if `topic:` equals the current topic slug. Among matches, pick the one with the highest `<TIMESTAMP>` filename prefix (the filename is sortable as a string). That file's basename becomes `previous:` in the new frontmatter. If no prior handoff exists on this topic, use `previous: null`.
+List files in `<project-root>/.handoff/<topic-slug>/`. Pick the one with the highest `<TIMESTAMP>` filename prefix (the filename is sortable as a string). That file's basename becomes `previous:` in the new frontmatter. If the topic folder does not yet exist or is empty, use `previous: null`.
 
-You can list available topics with:
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/topic_references.py" \
-    "<project-root>/.handoff" --list-topics
-```
+You can list available topics with `ls <project-root>/.handoff/` — each subdirectory is a topic.
 
 ### 3. Update project documentation in parallel
 
@@ -88,7 +84,7 @@ previous: <prior-handoff-filename-or-null>
 <expanded body from step 5>
 ```
 
-Write to `<project-root>/.handoff/<TIMESTAMP>_<filename-slug>.md`.
+Write to `<project-root>/.handoff/<topic-slug>/<TIMESTAMP>_<filename-slug>.md`.
 
 ### 7. Commit
 
