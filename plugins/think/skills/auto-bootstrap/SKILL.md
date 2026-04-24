@@ -41,6 +41,7 @@ No lifecycle / revision / source SHA fields.
 3. Verifies build / run / test runners / edit-build-test dev loop actually work.
 4. Writes `a4/bootstrap.md` summarizing verified commands and results.
 5. Emits review items for issues (environment-level fixable ones marked resolved after fix; architecture-level ones left open with `target: architecture`).
+6. Runs the shared drift detector to surface wiki↔issue inconsistencies as additional review items.
 
 ## What This Skill Does NOT Do
 
@@ -248,9 +249,19 @@ updated: <today>
 
 On incremental bootstrap, use `Edit` to touch only the sections that changed. Add a footnote marker + `## Changes` entry citing what drove the update (typically `[[architecture]]` when architectural changes triggered re-bootstrap).
 
-## Step 7: Commit
+## Step 7: Drift Detection
 
-Stage `a4/bootstrap.md`, any emitted review items, research reports, and all bootstrap-configured project files (package.json, test config, sample tests, etc.). Single commit:
+Before committing, run the shared drift detector against `a4/`. It scans every wiki page's `## Changes` footnotes plus every issue file's frontmatter and emits one review item per detected drift (stale footnotes, orphan markers, close-guard violations, missing wiki pages):
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$(git rev-parse --show-toplevel)/a4"
+```
+
+The detector deduplicates against existing open / in-progress / dismissed `source: drift-detector` items, so re-running is safe. Findings target the affected wiki page (e.g., `target: architecture`) with `wiki_impact: [<wiki>]` set, so they enter the unified review-item flow alongside the architecture/environment items emitted in Step 5. Use `--dry-run` if you only want to inspect findings before writing.
+
+## Step 8: Commit
+
+Stage `a4/bootstrap.md`, any emitted review items (including any from Step 7's drift detection), research reports, and all bootstrap-configured project files (package.json, test config, sample tests, etc.). Single commit:
 
 ```
 bootstrap: <fresh | iterate>
@@ -262,15 +273,6 @@ bootstrap: <fresh | iterate>
 ```
 
 Never skip hooks, amend, or force-push.
-
-## Step 8: Drift Detection (placeholder)
-
-The ADR's Next Steps include a shared drift detector that bulk-generation skills invoke as a final step. Until that script lands, auto-bootstrap performs a manual cross-check:
-
-1. For every component in `architecture.md`, verify at least one code file or module was created that plausibly owns it. Missing component coverage → emit a `kind: gap` review item with `target: architecture`, `wiki_impact: [architecture]`.
-2. For every new / touched wiki page, ensure the `## Changes` footnote references the triggering issue or `[[architecture]]`.
-
-Once the shared drift detector exists, replace this step with a single invocation.
 
 ## Session Management
 
