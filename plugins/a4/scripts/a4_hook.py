@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = []
+# dependencies = ["pyyaml>=6.0"]
 # ///
 """a4 hook dispatcher.
 
@@ -22,14 +22,26 @@ in-event ordering, non-blocking policy, output channel usage) live in
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
 
+Sibling scripts (`validate_frontmatter.py`, `validate_body.py`,
+`validate_status_consistency.py`, `refresh_implemented_by.py`) are called
+in-process via `import` rather than `uv run` subprocess, so per-invocation
+interpreter startup is paid once — not once per validator call.
+
 Every subcommand exits 0 except `stop`, which may exit 2 on validation
-violations. Internal failures (missing env, missing scripts, subprocess
+violations. Internal failures (missing env, missing modules, library
 errors) never propagate — hooks must not block session/stop flows.
 """
 
 from __future__ import annotations
 
 import sys
+from pathlib import Path
+
+# Sibling scripts live next to this file. Make them importable regardless of
+# how uv invokes python (explicit — do not rely on sys.path[0] auto-insertion).
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
 
 # Keep top-level imports minimal so the `post-edit` fast path (fires on
 # every Write/Edit/MultiEdit) pays the least per-invocation import cost.
@@ -56,7 +68,6 @@ def _post_edit() -> int:
     """Record edited a4/*.md, then report status-consistency for it."""
     import json
     import os
-    from pathlib import Path
 
     raw = sys.stdin.read()
     if not raw:
@@ -88,20 +99,12 @@ def _post_edit() -> int:
     # Step 2 — status-consistency report.
     if not a4_dir.is_dir():
         return 0
-    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
-    if not plugin_root:
-        return 0
-    script = Path(plugin_root) / "scripts" / "validate_status_consistency.py"
-    if not script.is_file():
-        return 0
 
-    _report_status_consistency_post(a4_dir, script, file_path, project_dir)
+    _report_status_consistency_post(a4_dir, file_path, project_dir)
     return 0
 
 
 def _record_edited(project_dir: str, session_id: str, file_path: str) -> None:
-    from pathlib import Path
-
     record_dir = Path(project_dir) / ".claude" / "tmp" / "a4-edited"
     try:
         record_dir.mkdir(parents=True, exist_ok=True)
@@ -116,32 +119,40 @@ def _record_edited(project_dir: str, session_id: str, file_path: str) -> None:
 
 
 def _report_status_consistency_post(
-    a4_dir, script, file_path: str, project_dir: str
+    a4_dir: Path, file_path: str, project_dir: str
 ) -> None:
-    import subprocess
+    try:
+        import validate_status_consistency as vsc
+    except ImportError:
+        return
 
     try:
-        completed = subprocess.run(
-            ["uv", "run", str(script), str(a4_dir), "--file", file_path],
-            capture_output=True,
-            text=True,
-            timeout=12,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
+        abs_path = Path(file_path).resolve()
+        rel = abs_path.relative_to(a4_dir.resolve())
+    except (OSError, ValueError):
         return
 
-    if completed.returncode != 2:
+    try:
+        mismatches = vsc.collect_file_mismatches(a4_dir, str(rel))
+    except Exception:
         return
 
-    rel = (
+    if not mismatches:
+        return
+
+    body_lines = [f"{len(mismatches)} status-consistency mismatch(es):"]
+    for m in mismatches:
+        body_lines.append(f"  {m.path} ({m.rule}): {m.message}")
+    body = "\n".join(body_lines)
+
+    display_rel = (
         file_path[len(project_dir) + 1 :]
         if file_path.startswith(project_dir + "/")
         else file_path
     )
-    body = (completed.stdout + completed.stderr).strip()
     context = (
         "## a4/ status consistency (post-edit check)\n\n"
-        f"The file change to `{rel}` surfaced cross-file status "
+        f"The file change to `{display_rel}` surfaced cross-file status "
         "inconsistencies in its connected component:\n\n"
         "```\n"
         f"{body}\n"
@@ -171,8 +182,6 @@ def _stop() -> int:
     """Validate a4/*.md files edited this session. rc=2 on violations."""
     import json
     import os
-    import subprocess
-    from pathlib import Path
 
     raw = sys.stdin.read()
     if not raw:
@@ -212,74 +221,72 @@ def _stop() -> int:
         _unlink_silent(record_file)
         return 0
 
-    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
-    if not plugin_root:
+    try:
+        import validate_frontmatter as vfm
+        import validate_body as vbody
+    except ImportError as e:
         sys.stderr.write(
-            "a4_hook.py stop: CLAUDE_PLUGIN_ROOT not set — skipping validation\n"
-        )
-        return 0
-    fm_script = Path(plugin_root) / "scripts" / "validate_frontmatter.py"
-    body_script = Path(plugin_root) / "scripts" / "validate_body.py"
-    if not fm_script.is_file():
-        sys.stderr.write(
-            f"a4_hook.py stop: {fm_script} not found — skipping validation\n"
-        )
-        return 0
-    if not body_script.is_file():
-        sys.stderr.write(
-            f"a4_hook.py stop: {body_script} not found — skipping validation\n"
+            f"a4_hook.py stop: failed to import validators ({e}) — skipping validation\n"
         )
         return 0
 
-    fm_parts: list[str] = []
-    body_parts: list[str] = []
-    fm_any = False
-    body_any = False
+    try:
+        wikis = vbody.discover_wiki_pages(a4_dir)
+        issues = vbody.discover_issues(a4_dir)
+        sparks = vbody.discover_sparks(a4_dir)
+    except Exception as e:
+        sys.stderr.write(
+            f"a4_hook.py stop: body index build failed ({e}) — skipping validation\n"
+        )
+        return 0
 
-    for f in edited:
-        rc, out = _run_validator(fm_script, a4_dir, f)
-        if rc is None:
-            sys.stderr.write(
-                f"a4_hook.py stop: validate_frontmatter.py error on {f} — skipping validation\n"
-            )
-            return 0
-        if rc == 2:
-            fm_parts.append(out)
-            fm_any = True
-        elif rc != 0:
-            sys.stderr.write(
-                f"a4_hook.py stop: validate_frontmatter.py rc={rc} on {f} — skipping validation\n"
-            )
-            return 0
+    fm_violations: list = []
+    body_violations: list = []
 
-        rc, out = _run_validator(body_script, a4_dir, f)
-        if rc is None:
-            sys.stderr.write(
-                f"a4_hook.py stop: validate_body.py error on {f} — skipping validation\n"
+    try:
+        for f in edited:
+            path = Path(f)
+            fm, _ = vfm.split_frontmatter(path)
+            if fm is None:
+                missing = vfm.check_missing_frontmatter(path, a4_dir)
+                if missing is not None:
+                    fm_violations.append(missing)
+            else:
+                fm_violations.extend(vfm.validate_file(path, a4_dir, fm))
+            body_violations.extend(
+                vbody.validate_file(path, a4_dir, wikis, issues, sparks)
             )
-            return 0
-        if rc == 2:
-            body_parts.append(out)
-            body_any = True
-        elif rc != 0:
-            sys.stderr.write(
-                f"a4_hook.py stop: validate_body.py rc={rc} on {f} — skipping validation\n"
-            )
-            return 0
+    except Exception as e:
+        sys.stderr.write(
+            f"a4_hook.py stop: validator error ({e}) — skipping validation\n"
+        )
+        return 0
 
-    if not fm_any and not body_any:
+    if not fm_violations and not body_violations:
         _unlink_silent(record_file)
         return 0
 
     out_lines = ["a4/ validators found issues in files edited this session:"]
-    if fm_any:
+    if fm_violations:
+        fm_file_count = len({v.path for v in fm_violations})
         out_lines.append("")
         out_lines.append("--- validate_frontmatter.py ---")
-        out_lines.extend(fm_parts)
-    if body_any:
+        out_lines.append(
+            f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
+        )
+        for v in fm_violations:
+            loc = v.path + (f" [{v.field}]" if v.field else "")
+            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
+    if body_violations:
+        body_file_count = len({v.path for v in body_violations})
         out_lines.append("")
         out_lines.append("--- validate_body.py ---")
-        out_lines.extend(body_parts)
+        out_lines.append(
+            f"{len(body_violations)} violation(s) across {body_file_count} file(s):"
+        )
+        for v in body_violations:
+            loc = v.path + (f":{v.line}" if v.line is not None else "")
+            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
     out_lines.append("")
     out_lines.append(
         "Fix the issues above before stopping. "
@@ -292,23 +299,7 @@ def _stop() -> int:
     return 2
 
 
-def _run_validator(script, a4_dir, file_path: str):
-    """Return (rc, output) or (None, '') on subprocess error."""
-    import subprocess
-
-    try:
-        completed = subprocess.run(
-            ["uv", "run", str(script), str(a4_dir), file_path],
-            capture_output=True,
-            text=True,
-            timeout=20,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        return (None, "")
-    return (completed.returncode, completed.stdout + completed.stderr)
-
-
-def _unlink_silent(path) -> None:
+def _unlink_silent(path: Path) -> None:
     try:
         path.unlink()
     except OSError:
@@ -321,19 +312,17 @@ def _unlink_silent(path) -> None:
 def _session_start() -> int:
     """Refresh implemented_by, then report status-consistency."""
     import os
-    from pathlib import Path
 
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
-    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT", "")
-    if not project_dir or not plugin_root:
+    if not project_dir:
         return 0
     a4_dir = Path(project_dir) / "a4"
     if not a4_dir.is_dir():
         return 0
 
     # Order: write (refresh) → read (report).
-    refresh_ctx, refresh_sys = _refresh_implemented_by(a4_dir, plugin_root)
-    report_ctx = _report_status_consistency_session_start(a4_dir, plugin_root)
+    refresh_ctx, refresh_sys = _refresh_implemented_by(a4_dir)
+    report_ctx = _report_status_consistency_session_start(a4_dir)
 
     ctx_parts = [p for p in (refresh_ctx, report_ctx) if p]
     if not ctx_parts and not refresh_sys:
@@ -350,33 +339,20 @@ def _session_start() -> int:
     return 0
 
 
-def _refresh_implemented_by(a4_dir, plugin_root: str) -> tuple[str, str]:
+def _refresh_implemented_by(a4_dir: Path) -> tuple[str, str]:
     """Return (additional_context_md, system_message). Empty strings on clean/fail."""
-    import json
-    import subprocess
-    from pathlib import Path
-
-    script = Path(plugin_root) / "scripts" / "refresh_implemented_by.py"
-    if not script.is_file():
-        return ("", "")
     try:
-        completed = subprocess.run(
-            ["uv", "run", str(script), str(a4_dir), "--json"],
-            capture_output=True,
-            text=True,
-            timeout=12,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        return ("", "")
-    if completed.returncode != 0:
-        return ("", "")
-    try:
-        report = json.loads(completed.stdout or "{}")
-    except json.JSONDecodeError:
+        import refresh_implemented_by as rib
+    except ImportError:
         return ("", "")
 
-    changes = report.get("changes") or []
-    errors = report.get("errors") or []
+    try:
+        report = rib.refresh_all(a4_dir, dry_run=False)
+    except Exception:
+        return ("", "")
+
+    changes = report.changes
+    errors = report.errors
     if not changes and not errors:
         return ("", "")
 
@@ -394,10 +370,7 @@ def _refresh_implemented_by(a4_dir, plugin_root: str) -> tuple[str, str]:
         lines.append(f"Refreshed `implemented_by:` on {len(changes)} UC(s):")
         lines.append("")
         for ch in changes:
-            uc = ch.get("uc", "?")
-            prev = ch.get("previous") or []
-            new = ch.get("new") or []
-            lines.append(f"- `{uc}`: `{prev}` → `{new}`")
+            lines.append(f"- `{ch.uc}`: `{ch.previous}` → `{ch.new}`")
         lines.append("")
     if errors:
         lines.append(f"Errors ({len(errors)}):")
@@ -413,27 +386,26 @@ def _refresh_implemented_by(a4_dir, plugin_root: str) -> tuple[str, str]:
     return ("\n".join(lines), system_message)
 
 
-def _report_status_consistency_session_start(a4_dir, plugin_root: str) -> str:
+def _report_status_consistency_session_start(a4_dir: Path) -> str:
     """Return additional_context_md or empty string."""
-    import subprocess
-    from pathlib import Path
-
-    script = Path(plugin_root) / "scripts" / "validate_status_consistency.py"
-    if not script.is_file():
-        return ""
     try:
-        completed = subprocess.run(
-            ["uv", "run", str(script), str(a4_dir)],
-            capture_output=True,
-            text=True,
-            timeout=12,
-        )
-    except (subprocess.TimeoutExpired, FileNotFoundError, OSError):
-        return ""
-    if completed.returncode != 2:
+        import validate_status_consistency as vsc
+    except ImportError:
         return ""
 
-    body = (completed.stdout + completed.stderr).strip()
+    try:
+        mismatches = vsc.collect_workspace_mismatches(a4_dir)
+    except Exception:
+        return ""
+
+    if not mismatches:
+        return ""
+
+    body_lines = [f"{len(mismatches)} status-consistency mismatch(es):"]
+    for m in mismatches:
+        body_lines.append(f"  {m.path} ({m.rule}): {m.message}")
+    body = "\n".join(body_lines)
+
     return (
         "## a4/ status consistency (SessionStart check)\n\n"
         "The following cross-file status inconsistencies exist in the "
