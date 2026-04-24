@@ -69,19 +69,24 @@ Session-scoped accumulate-then-validate pattern. Edits to `a4/*.md` are recorded
 `a4/` is a git-native **wiki + issue tracker** for the workspace — flat wiki pages describe the project shape; type-scoped folders hold lifecycle-tracked issues. Full model: `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md`.
 
 ```
-a4/
-  context.md architecture.md domain.md     # Wiki pages (flat):
-  actors.md nfr.md plan.md bootstrap.md    # one file per cross-cutting concern
+<project-root>/
+  a4/                                       # Markdown-only documentation workspace
+    context.md architecture.md domain.md     # Wiki pages (flat):
+    actors.md nfr.md plan.md bootstrap.md    # one file per cross-cutting concern
 
-  usecase/<id>-<slug>.md                    # Use Cases
-  task/<id>-<slug>.md                       # Executable work units (Jira sense)
-  review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
-  decision/<id>-<slug>.md                   # ADRs
-  idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
+    usecase/<id>-<slug>.md                    # Use Cases
+    task/<id>-<slug>.md                       # Executable work units (Jira sense; kind: feature|spike|bug)
+    review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
+    decision/<id>-<slug>.md                   # ADRs
+    idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
 
-  spark/<YYYY-MM-DD-HHmm>-<slug>.{brainstorm,decide}.md
-  archive/                                  # Closed items; folder = archived flag
-  INDEX.md                                  # Regenerated dashboard
+    spark/<YYYY-MM-DD-HHmm>-<slug>.{brainstorm,decide}.md
+    archive/                                  # Closed items; folder = archived flag
+    INDEX.md                                  # Regenerated dashboard
+
+  spike/                                    # PoC code for kind: spike tasks (sibling of a4/)
+    <task-id>-<slug>/                       # Active spike (parallel to a4/task/<id>-<slug>.md)
+    archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
 ```
 
 ### Wiki vs. issues
@@ -90,6 +95,7 @@ a4/
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels`, `milestone` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | dismissed`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/2026-04-24-idea-slot.decide.md`.
+- **Spike vs. feature task** — every task carries `kind: feature | spike | bug`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix. Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/2026-04-24-experiments-slot.decide.md`.
 
 ### Conventions
 
