@@ -1,229 +1,284 @@
 ---
 name: auto-usecase
-description: "This skill should be used when the user wants to autonomously generate a complete Use Case document from an idea or brainstorm input without interactive interview. Triggers: 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'create use case doc automatically', 'no interview needed just generate', 'run auto-usecase on', or when the user provides an idea/brainstorm and wants a .usecase.md file produced without back-and-forth dialogue."
+description: "This skill should be used when the user wants to autonomously generate a complete Use Case set from an idea or brainstorm input without interactive interview. Triggers: 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'create use case doc automatically', 'no interview needed just generate', 'run auto-usecase on'. Writes the result into <project-root>/a4/ per the spec-as-wiki+issues layout (per-UC files + context.md / actors.md / domain.md / nfr.md)."
 argument-hint: <idea, brainstorm text, or file path to generate use cases from>
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Autonomous Use Case Generator
 
-Generate a complete `.usecase.md` file from raw input — an idea, brainstorm notes, a description, or a file path — without human interaction. Make all decisions independently, record assumptions in Open Questions, and refine until the document meets quality standards.
+Generate a complete spec-as-wiki+issues Use Case set from raw input — an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
 
 Generate use cases for: **$ARGUMENTS**
 
-## Shared References
+## Workspace
 
-These files define the rules and format for use case documents. **Do not read them in the main session.** Pass the paths to agents — each subagent reads them per invocation.
+All artifacts live under `<project-root>/a4/` (resolve via `git rev-parse --show-toplevel`). Shape matches `think-usecase`:
 
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/output-template.md` — exact output format (use **auto-usecase** sections)
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/usecase-splitting.md` — when and how to split oversized use cases
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/usecase-relationships.md` — dependency and reinforcement analysis
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/review-report.md` — how to persist reviewer reports
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/research-report.md` — how to persist research results
-- `${CLAUDE_SKILL_DIR}/../think-usecase/references/exploration-report.md` — how to persist exploration results
+```
+a4/
+  context.md, actors.md, domain.md, nfr.md   # wiki pages
+  usecase/<id>-<slug>.md                       # one per UC
+  review/<id>-<slug>.md                        # per-finding / per-gap / per-question
+  research/                                    # similar-systems research, code-analysis reports, exploration reports
+```
 
-If `${CLAUDE_SKILL_DIR}` is not resolved, use `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/` instead.
+Create `a4/`, `a4/usecase/`, `a4/review/`, `a4/research/` if missing.
 
-## Use Case Format
+## Id Allocation
 
-Every Use Case follows the structure defined in `output-template.md`. In autonomous mode, the **Source** field is mandatory for every UC:
+Every new UC / review item uses the shared allocator:
 
-- `input` — derived from the user's idea or brainstorm
-- `research — <which systems>` — discovered from similar systems research
-- `code — <what was found>` — discovered from code analysis of existing implementation
-- `implicit` — discovered during analysis as a prerequisite or complement
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+```
+
+Subagents (composer, reviser, reviewer, explorer) each call the allocator themselves at write time — do not batch ids in the main session.
+
+## Shared References for Subagents
+
+Subagents read these directly — don't pull their contents into the main session.
+
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/SKILL.md` — file layout, frontmatter schemas, wiki update protocol.
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/abstraction-guard.md` — banned implementation terms.
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/usecase-splitting.md` — splitting guide.
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/usecase-relationships.md` — relationship analysis.
+- `${CLAUDE_PLUGIN_ROOT}/skills/think-usecase/references/review-report.md` — review-item schema emitted by reviewers.
+
+Include these paths in each subagent prompt.
+
+## Source Attribution on UCs
+
+Each UC body includes a `## Source` section identifying where the UC came from:
+
+- `input` — from the user's idea/brainstorm directly
+- `research — <systems>` — from similar-systems research
+- `code — <path>` — from code analysis of an existing implementation
+- `implicit` — surfaced during reviewer/explorer completeness analysis
+
+The `## Source` section is mandatory for every UC in auto-usecase output.
 
 ## Resume Detection
 
-Before starting, check for existing progress. If the output file (`a4/<topic-slug>.usecase.md`) exists, extract its `reflected_files` list via:
+Before starting, check the workspace for prior progress:
 
 ```bash
-uv run ${CLAUDE_PLUGIN_ROOT}/scripts/read_frontmatter.py a4/<topic-slug>.usecase.md reflected_files
+# Existing wiki pages
+ls a4/context.md a4/actors.md a4/domain.md a4/nfr.md 2>/dev/null
+
+# Existing UCs
+ls a4/usecase/*.md 2>/dev/null | wc -l
+
+# Existing research / code analysis / exploration reports
+ls a4/research/*.md 2>/dev/null
+
+# Open review items
+grep -l 'status: open' a4/review/*.md 2>/dev/null
 ```
 
-Do not read the output file itself. A file listed in `reflected_files` has already been reflected — do not read it and do not pass it to agents.
+If UCs already exist, enter **expansion mode**: treat the existing set as the target system and extend it rather than rewrite. Preserve UC ids and content; allocate new ids for new UCs only. Open review items carry over and feed the inner quality loop.
 
-1. **Research report:** Check for `a4/<topic-slug>.usecase.research-initial.md`:
-   - File exists and listed in `reflected_files` → already reflected, skip Step 2a.
-   - File exists but not in `reflected_files` → completed but not yet reflected, pass to composer in Step 3.
-   - File does not exist → run Step 2a.
-2. **Code analysis report:** Check for `a4/<topic-slug>.usecase.code-analysis.md`:
-   - File exists and listed in `reflected_files` → already reflected, skip Step 2b.
-   - File exists but not in `reflected_files` → completed but not yet reflected, pass to composer in Step 3.
-   - File does not exist and input references source code → run Step 2b.
-   - File does not exist and no source code referenced → skip Step 2b.
-3. **Last completed step:** Extract `last_step` from frontmatter via `read_frontmatter.py`:
-   - If set → **resume from the next step** — do not repeat completed work.
-   - If empty or absent → no prior progress, start from Step 1.
-4. **Review reports:** Check existing `a4/<topic-slug>.usecase.review-*.md` files against `reflected_files`. Only pass unreflected review reports to agents.
-5. **Exploration reports:** Check existing `a4/<topic-slug>.usecase.exploration-*.md` files against `reflected_files`. Only pass unreflected exploration reports to agents.
-   - File exists but not in `reflected_files` → exploration done but not yet reflected, use existing results in next compose iteration.
+## Flow
 
-This allows recovery from API limits, context window exhaustion, or other interruptions without starting over.
+This skill runs two nested loops:
 
-## Step-by-Step Process
+- **Outer growth loop** — compose → review → expand (via explorer / completeness) — up to 3 iterations.
+- **Inner quality loop** — review → revise — up to 3 rounds per growth iteration.
 
-### Step 1: Understand the Input
+### Step 1: Classify the Input
 
-The input has two components:
+From `$ARGUMENTS`:
 
-1. **New idea** (required) — the feature, idea, or brainstorm to turn into use cases. Can be a file path, inline content, or a vague description.
-2. **Target system** (optional) — an existing `.usecase.md` file, topic slug, or partial name. If absent, create from scratch.
+- **File path reference** — if the argument looks like a path, check whether it exists. `.md` → brainstorm / idea doc; source-code directories → code analysis target.
+- **Inline content** — treat as raw idea.
+- **Mixed** — inline idea + code path is common (e.g., "generate UCs for our current message-queue module at `src/mq/`").
 
-Determine the **topic slug** (lowercase, hyphen-separated, 2–5 words). Output path: `a4/<topic-slug>.usecase.md`.
+Do **not** read input files in the main session. Pass their paths to subagents.
 
-**Do not read any input files, source code, or target system files in the main session.** Only identify paths and pass them to agents in subsequent steps.
+### Step 2: Research (parallel, optional)
 
-### Step 2: Research and Analysis
+Run Step 2a and 2b in parallel when both are needed. Wait for both to complete before composing.
 
-Run Step 2a and 2b in parallel when both are needed. Wait for all to complete before proceeding to Step 3.
+#### Step 2a: Similar Systems Research
 
-#### Step 2a: Research Similar Systems
+If no `a4/research/similar-systems-initial.md` exists, spawn a research subagent via `Agent(subagent_type: "general-purpose")`:
 
-Check for existing research results per Resume Detection. If research is needed:
-
-Launch a research subagent via `Agent`. Prompt the subagent:
-
-> Research similar systems to "$ARGUMENTS".
+> Research similar systems for the following idea:
 >
-> **Goal:** Discover features and use cases that users of this type of system commonly need.
+> <raw idea / path to brainstorm file>
 >
-> 1. Search for comparable apps/tools/services. Try 2–3 different search queries.
-> 2. For each similar product (up to 5), list name + key user-facing features as "Actor does X to achieve Y".
-> 3. Identify UC candidates common across 3+ systems (high-value signals).
-> 4. Identify UC candidates unique to 1 system (niche/innovative).
-> 5. Look for user reviews or feature requests indicating unmet needs.
+> Goal: discover features and UCs that users of this type of system commonly need. Try 2–3 search queries. For each similar product (up to 5), list key user-facing features as "Actor does X to achieve Y". Identify candidates common across 3+ systems (high-value) vs unique to one (niche). Look for user reviews or feature requests indicating unmet needs.
 >
-> Return: **Similar systems**, **High-value UC candidates**, **Niche UC candidates**, **User-requested features**.
+> Write the report to `a4/research/similar-systems-initial.md` with frontmatter `{ label: similar-systems-initial, scope: similar-systems, source-input: <idea/file>, date: <today> }`. Include sections: Similar systems, High-value UC candidates, Niche UC candidates, User-requested features.
 
-Save the full research results per `references/research-report.md` (label: `initial`).
+#### Step 2b: Code Analysis
 
-#### Step 2b: Analyze Source Code
+Skip when no source-code path is referenced. When source is referenced and no `a4/research/code-analysis-initial.md` exists, spawn a `general-purpose` subagent:
 
-Skip if the input does not reference source code. Check for existing results per Resume Detection. If analysis is needed:
-
-Launch a code analysis subagent via `Agent` (general-purpose). The subagent must both analyze the code and write the results file. Prompt the subagent:
-
-> Analyze the codebase at `<paths from Step 1>`.
+> Analyze the codebase at `<paths>`.
 >
-> **Goal:** Extract what the system currently does from the perspective of its users — features, actors, and workflows already implemented.
+> Goal: extract what the system currently does from the perspective of its users — features, actors, workflows. Identify main entry points, implemented user-facing features, visible actors (user roles, external systems, scheduled jobs), partial/stubbed features, data entities + CRUD operations.
 >
-> 1. Identify the overall architecture and main entry points.
-> 2. List implemented user-facing features as "Actor does X to achieve Y".
-> 3. Identify actors (user roles, external systems, scheduled jobs) visible in the code.
-> 4. Note any partially implemented or stubbed features.
-> 5. Identify data entities and their CRUD operations.
->
-> Write the results to `a4/<topic-slug>.usecase.code-analysis.md` with frontmatter `label: code-analysis`, `topic: <topic-slug>`.
+> Write the report to `a4/research/code-analysis-initial.md` with frontmatter `{ label: code-analysis-initial, scope: code-analysis, paths: [<input paths>], date: <today> }`.
 
-### Step 3: Compose and Refine Loop
+### Step 3: Compose + Refine Loop
 
-This step runs an outer **growth loop** (compose → review → expand) and an inner **quality loop** (review → revise).
+All work in this step happens via subagents. The main session orchestrates.
 
 #### Agents
 
-Each step launches a fresh subagent. Context is passed entirely through file paths — the working file, history file, research/code analysis reports, review/exploration reports. File-based state (`reflected_files`, history file) ensures continuity across invocations.
+- **Composer** — `Agent(subagent_type: "think:usecase-composer")`. Writes / extends the workspace wiki pages and per-UC files.
+- **Reviewer** — `Agent(subagent_type: "think:usecase-reviewer")`. Emits per-finding review items.
+- **Reviser** — `Agent(subagent_type: "think:usecase-reviser")`. Walks open review items and applies fixes.
+- **Explorer** — `Agent(subagent_type: "think:usecase-explorer")`. Surfaces new-perspective UC candidates.
 
-- **Composer:** `Agent(subagent_type: "think:usecase-composer")` — composes UC documents
-- **Reviewer:** `Agent(subagent_type: "think:usecase-reviewer")` — reviews UC quality and system completeness
-- **Reviser:** `Agent(subagent_type: "think:usecase-reviser")` — applies review fixes
-- **Explorer:** `Agent(subagent_type: "think:usecase-explorer")` — explores new perspectives for UC candidates
-
-Include the shared reference file paths in each subagent prompt.
+Pass each subagent the **absolute `a4/` path**, the shared reference paths listed above, and any iteration-specific inputs (e.g., which research reports to consume).
 
 #### Step 3a: Compose
 
-Launch a `usecase-composer` subagent with:
-- **Output path** — `a4/<topic-slug>.usecase.md`
-- **User idea** — the input from Step 1 (first iteration) or UC Candidates from reviewer/explorer (subsequent iterations)
-- **Research results** — file path to research report from Step 2a (first iteration only)
-- **Code analysis** — file path to code analysis report from Step 2b (first iteration only, if exists)
-- **Target system** — file path to existing `.usecase.md` from Step 1, or the current document (subsequent iterations)
+Spawn the composer:
 
-**Do not read research results, code analysis reports, or input files in the main session.** Pass file paths only — the subagent reads them directly. This avoids duplicating content into the main session context.
-
-#### Step 3b: Verify and Commit
-
-The composer subagent writes the document directly. Verify the file exists at the output path (do not read it). Section completeness is the composer's responsibility.
-
-The composer responds with a summary including UC count. Use that for the commit message:
 ```
-usecase(<topic-slug>): growth <iteration> — compose
+Agent(subagent_type: "think:usecase-composer", prompt: """
+Workspace: <absolute path to a4/>
+Mode: new | expansion                          # based on resume detection
+User idea: <raw input from Step 1, or file path>
+Research reports: <paths to a4/research/*.md (optional)>
+Code analysis: <path to a4/research/code-analysis-initial.md, if it exists>
+Shared refs: <list of reference file paths>
+Growth iteration: <N>
 
-- UCs: <total count> (<added> added)
+For new mode: create context.md + actors.md + per-UC files from scratch.
+For expansion mode: read existing UCs, preserve them, and write additional UC
+files / wiki entries for new candidates.
+
+Return a summary listing UC ids written, excluded candidates, and any open
+questions emitted as kind: question review items.
+""")
 ```
+
+The composer:
+- Writes `a4/context.md` with `kind: context`, `updated`, Original Idea quote, Problem Framing.
+- Writes `a4/actors.md` with `kind: actors`, `updated`, Actors table.
+- Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
+- Writes domain concepts to `a4/domain.md` when patterns emerge across UCs.
+- Writes NFRs to `a4/nfr.md` if any are surfaced.
+- Emits `kind: question` review items for unresolvable ambiguities (not merely autonomous defaults it has chosen — those are recorded in the UC body's `## Source` section).
+- Never rewrites previously confirmed UC files without cause.
+
+#### Step 3b: Verify Write
+
+The composer writes directly. Do **not** read the files back in the main session — section completeness is the composer's responsibility. Use the returned summary to confirm UC count.
 
 #### Step 3c: Quality Loop (inner)
 
-Repeat until all UCs pass and no actor issues remain, or the maximum is reached:
+Repeat up to 3 rounds. Each round:
 
-1. Launch a `usecase-reviewer` subagent with the output file and report path per `references/review-report.md` (label: `review-g<iteration>-q<round>`). If previous review reports exist from earlier rounds, include their paths so the reviewer can check whether prior findings have been addressed. The reviewer responds with a summary: verdict (`ALL_PASS` or `NEEDS_REVISION`), pass count, total count, system completeness (`INCOMPLETE` or `SUFFICIENT`), and UC candidates if any.
-2. If verdict is `ALL_PASS`:
-   a. Commit review report:
-      ```
-      usecase(<topic-slug>): growth <iteration>, review <round> — PASS
+1. Spawn the reviewer per `think-usecase/references/review-report.md`. It writes per-finding review items into `a4/review/<id>-<slug>.md` (via `allocate_id.py`) and returns a summary:
+   ```
+   verdict: ALL_PASS | NEEDS_REVISION
+   passed: M / N
+   items_written: [ids]
+   domain_model: OK | NEEDS_REVISION | NOT_YET_CREATED
+   completeness: SUFFICIENT | INCOMPLETE
+   ```
+2. If `verdict == ALL_PASS`, exit the quality loop.
+3. Otherwise, spawn the reviser:
+   ```
+   Agent(subagent_type: "think:usecase-reviser", prompt: """
+   Workspace: <a4/ path>
+   Review item ids to address: <list from reviewer summary>
+   Shared refs: <paths>
 
-      - UCs passed: <N> / <N>
-      ```
-   b. Exit quality loop.
-3. Otherwise (`NEEDS_REVISION`):
-   a. **Always** launch a `usecase-reviser` subagent — do not apply fixes directly in the main session. Pass the review report, document path, and history file path (`<topic-slug>.usecase.history.md`). The reviser responds with a summary including UC count and changes applied. The reviser appends a new entry (`Last Completed`, `Change Log`) to the history file and updates Open Items + Next Steps in the working file.
-   b. Commit review report + revised document (use counts from reviser's summary):
-      ```
-      usecase(<topic-slug>): growth <iteration>, review <round>
+   For each review item (status: open, source: usecase-reviewer): read it, apply
+   the Suggestion to the target UC / wiki page, mark the item status: resolved,
+   append a ## Log entry, and add wiki footnote markers when wiki_impact is set.
+   If a finding cannot be applied (e.g., ambiguous), leave status: open with a
+   ## Log entry explaining why.
 
-      - UCs: <total count> (<modified> revised)
-      - UCs passed: <M> / <N>
-      ```
-   c. Continue to next round.
+   Return: revised UC ids, resolved review item ids, deferred review item ids.
+   """)
+   ```
+4. Continue to the next round.
 
-**Maximum:** 3 quality rounds per growth iteration. Remaining quality issues → Open Questions with `[Unresolved after review]`.
+**Maximum:** 3 quality rounds per growth iteration. Remaining findings stay as `status: open` review items for human follow-up.
 
 #### Step 3d: Growth Check (outer)
 
-After the quality loop passes (or reaches maximum), determine whether to expand the system:
+After the quality loop settles:
 
-1. **System Completeness** — use the reviewer's returned summary (from Step 3c):
-   - **INCOMPLETE** with UC Candidates → pass the UC Candidates back to Step 3a.
-   - **SUFFICIENT** → proceed to Perspective Exploration.
+- `completeness: INCOMPLETE` → the reviewer's findings already include `kind: gap` review items with UC candidates. Feed them back into the composer for another growth iteration.
+- `completeness: SUFFICIENT` → spawn the explorer to surface fresh perspectives:
+  ```
+  Agent(subagent_type: "think:usecase-explorer", prompt: """
+  Workspace: <a4/ path>
+  Report path: a4/research/exploration-g<N>.md
+  Prior explorations: <paths to a4/research/exploration-*.md if any>
+  Shared refs: <paths>
+  """)
+  ```
+  - If the explorer returns UC candidates, feed them back into the composer.
+  - If it returns none, exit the outer loop.
 
-2. **Perspective Exploration** — launch a `usecase-explorer` subagent with the current document path and report path per `references/exploration-report.md` (label: `exploration-<iteration>`, e.g., `exploration-1`). If previous exploration reports exist, include their paths so the explorer avoids duplicating candidates. Commit after explorer:
-   ```
-   usecase(<topic-slug>): growth <iteration> — exploration
+**Maximum:** 3 growth iterations. Remaining unexplored perspectives stay as `kind: gap` review items.
 
-   - Perspectives explored: <count>
-   - UC candidates found: <count>
-   ```
-   - UC Candidates found → pass the UC Candidates and current document back to Step 3a.
-   - No candidates → exit the growth loop, proceed to Final Output.
+### Step 4: Final Summary
 
-Completeness gaps are addressed first. Perspective exploration only runs when the system is structurally sufficient.
+Produce a short report to the user:
 
-**Maximum:** 3 growth iterations. Remaining gaps or unexplored perspectives → Open Questions with `[Unresolved after growth loop]`.
+- Path to `a4/` workspace
+- UCs in the final set (count and ids)
+- UCs excluded (and why, per composer's record)
+- Similar systems researched / common features found
+- Growth iterations consumed / review rounds per iteration
+- Review items: total / open / resolved / dismissed
+- Open questions (review items with `kind: question`) remaining
 
-### Commit
+Do **not** set any UC to `status: done` — autonomous generation only produces drafts.
 
-All commits stage files under `a4/<topic-slug>.*`. Commit timing:
-- **After compose** (Step 3b) — UC document created/updated
-- **After each quality round** (Step 3c) — review report (+ revised document if NEEDS REVISION)
-- **After exploration** (Step 3d) — exploration report
+## Commit Points
+
+All commits stage files under `a4/`. Timing:
+
+- **After Step 2** — research / code-analysis reports, one commit.
+- **After Step 3a (each compose)** — UC files + wiki pages + any `kind: question` review items, one commit per compose. Suggested title:
+  ```
+  usecase(auto): growth <N> — compose
+
+  - UCs: <total> (<added> added)
+  ```
+- **After each quality round** — reviewer-emitted review items + reviser edits:
+  ```
+  usecase(auto): growth <N>, review <round>
+
+  - UCs: <total> (<revised> revised)
+  - Review items: <written>/<resolved>/<deferred>
+  ```
+- **After Step 3d exploration** — exploration report + any new `kind: gap` review items:
+  ```
+  usecase(auto): growth <N> — exploration
+
+  - UC candidates: <count>
+  ```
+- **Final** — summary commit if anything remains unstaged.
 
 ## Autonomous Decision Rules
 
-Apply these consistently — no human interaction.
+Apply these consistently — no user interaction:
 
-1. **Output file exists** → pass as target system path to the composer. The composer reads and preserves UC numbering and increments revision.
-2. **Never** create GitHub Issues or set `status: final`.
+1. Ambiguous topic → pick the most specific interpretation. Record the interpretation in `context.md`'s Problem Framing and emit a `kind: question` review item so a human can confirm later.
+2. Unclear actor role → default to `viewer`. Upgrade to `editor` when actions imply edit capability.
+3. Splitting boundary → prefer splitting. Smaller UCs are better.
+4. Vague situation → construct a plausible concrete one. Emit a `kind: question` review item.
+5. Unclear relationship → prefer `depends_on` over `related`. Note the reasoning in the UC's `## Source` section.
+6. New UC overlaps existing → exclude. Record in the exclusion log (Step 3a composer output) and do not emit a file.
+7. New UC outside context → exclude. Record in the exclusion log.
+8. Practical value borderline → prefer exclusion over inclusion.
+9. Never set `status: final` on any wiki or UC; autonomous output is always `status: draft`.
 
-## Final Output
+## Non-Goals
 
-Report to the user:
-- Path to generated file
-- Number of UCs generated (new + preserved if adding to target)
-- UCs excluded and top reasons
-- Similar systems researched and key common features
-- Growth iterations and review rounds completed
-- System completeness status
-- Unresolved issues in Open Questions
-- UCs passed (M / N)
+- Do not write an aggregated `a4/<topic>.usecase.md` file. All output is per-UC + wiki pages.
+- Do not maintain per-topic or per-slug file naming. `a4/` is a single workspace — filenames carry no topic.
+- Do not write a `history.md` file. Per-UC `## Log` sections plus git history cover audit needs.
+- Do not create GitHub Issues — `a4/` replaces that role.

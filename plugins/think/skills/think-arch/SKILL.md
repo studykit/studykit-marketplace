@@ -1,364 +1,298 @@
 ---
 name: think-arch
-description: "This skill should be used when the user needs to design or iterate on system architecture — technology stack, component design, information flows, interface contracts, and test strategy. Common triggers include: 'architecture', 'design the system', 'component design', 'tech stack', 'how should we build this', 'system design', 'interface contracts', 'test strategy', 'what tools should we use'. Also applicable when use cases from think-usecase need to be turned into a buildable architecture."
-argument-hint: <path to .usecase.md file, or existing .arch.md file for iteration>
-allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
+description: "This skill should be used when the user needs to design or iterate on system architecture — technology stack, external dependencies, component design, information flows, interface contracts, and test strategy. Common triggers include: 'architecture', 'design the system', 'component design', 'tech stack', 'how should we build this', 'system design', 'interface contracts', 'test strategy', 'what tools should we use'. Writes the result as a4/architecture.md (wiki page) following the spec-as-wiki+issues layout."
+argument-hint: <optional: \"iterate\" to resume; otherwise the skill auto-detects existing a4/architecture.md>
+allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Architecture Designer
 
-Takes use cases (from think-usecase) and designs the system architecture — technology stack, external dependencies, components, information flows, interface contracts, and test strategy — through collaborative dialogue.
+Takes the use-case set in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`, and designs the system architecture — technology stack, external dependencies, components, information flows, interface contracts, and test strategy — through collaborative dialogue. Writes the result to `a4/architecture.md` as a single wiki page.
+
+## Workspace Layout
+
+Reuse the `a4/` workspace resolved via `git rev-parse --show-toplevel`. Inputs live at:
+
+- `a4/usecase/*.md` — one Use Case per file (from `think-usecase`).
+- `a4/domain.md` — domain concepts, relationships, state transitions.
+- `a4/actors.md` — actor roster.
+- `a4/nfr.md` — non-functional requirements (optional).
+- `a4/context.md` — problem framing / success criteria.
+
+Output:
+
+- `a4/architecture.md` — single wiki page covering overview, technology stack, external dependencies, components, information flows, interface contracts, test strategy.
+- `a4/review/<id>-<slug>.md` — per-finding review items emitted by the wrap-up reviewer.
+- `a4/research/<label>.md` — research reports from `api-researcher` (if invoked).
+
+Derived views (consistency tables, UC×component coverage matrix, open-arch-findings dashboard) are **not files**; they render via Obsidian dataview on demand.
+
+## Wiki Page Schema
+
+```yaml
+---
+kind: architecture
+updated: 2026-04-24
+---
+```
+
+No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol (shared across the think plugin — mirror of SKILL.md in `think-usecase`).
+
+## Id Allocation
+
+When emitting review items, allocate ids via:
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+```
 
 ## Modes
 
-- **No existing `.arch.md`** → **First Design**. Start from Phase 1 (Technology Stack) and follow the guided sequence.
-- **Existing `.arch.md`** → run Iteration Mode entry checks (feedback, source changes, impact assessment):
-  - **Additive Feature** → new UCs fit within existing architecture. Add information flows and interface contracts only.
-  - **Iteration** → architecture changes needed. The user chooses which area to work on, or starts from Phase 1 for a fundamental rethink.
+Determine the mode from the current `a4/` state:
 
-**Impact propagation rule:** when something changes in one area, check whether it affects others:
+- **First Design** — `a4/architecture.md` does not exist. Start from Phase 1 (Technology Stack) and follow the guided sequence.
+- **Iteration** — `a4/architecture.md` exists. Run the Iteration Entry checks below.
+
+### Iteration Entry
+
+1. **Open arch review items** — list `a4/review/*.md` with `status: open` AND (`target: architecture` OR `architecture` in `wiki_impact`). Present as the priority backlog.
+2. **New or changed UCs** — compare the architecture's `## Changes` footnotes against current UC files. For UCs not yet cited in any arch footnote, flag them as "needs coverage" candidates.
+3. **UC ↔ actor / domain drift** — quick pass: for each Information Flow section in architecture.md, check that the referenced UCs and components still exist as current files / component sections.
+4. **Recommend a starting point** — the user can pick from the backlog, work on a specific new UC, or choose a phase to revisit.
+
+**Impact propagation rule:** when one area changes, check whether it affects others:
 - Technology stack change → do components need restructuring? Do test tools need changing?
 - Component change → do information flows still hold? Do interface contracts need updating?
 - Test strategy change → does this affect how components are designed for testability?
 
-Always surface these cross-area impacts to the user rather than silently assuming they're fine.
-
-## Input
-
-Resolve the input from **$ARGUMENTS** using the file resolution rules below, then read the file(s).
-
-If no argument is provided, ask the user for a slug, filename, or path.
-
-### File Resolution
-
-Arguments can be full paths, partial filenames, or slugs. Resolve them by searching `a4/`:
-
-1. **Full path** — extract the slug from the filename (e.g., `a4/chat-app.usecase.md` → `chat-app`), then scan for related files: `a4/*<slug>*.usecase.md` and `a4/*<slug>*.arch.md`
-2. **Partial match** — glob for `a4/*<argument>*.usecase.md` and `a4/*<argument>*.arch.md`
-3. **Multiple matches per type** — present the candidates and ask the user to pick
-4. **No match** — inform the user and ask for a different term
-
-After resolution, present the resolved file(s) and ask the user to confirm before reading.
-
-**Mode detection:**
-- If the target `.arch.md` already exists → read the arch file, then run the **Existing Arch Entry** checks below.
-- If only use case files are found (no existing arch) → start from Phase 1.
-
-The source reference in the output file should be placed as a blockquote under the title heading, linking to all input files (see output template for format).
-
-**Existing Arch Entry:** Perform these checks to assess the current state and determine where to start.
-
-### 1. Source Usecase Changes
-
-Compare the stored `sha` in arch frontmatter against the current file:
-- Run `git hash-object <usecase-file-path>` to get the current SHA.
-- If SHA matches → no changes, skip.
-- If SHA differs → run `git diff <stored-sha> <current-sha>` to see exactly what changed. Also read the usecase's history file for context.
-- Present the changes to the user and walk through impact on architecture.
-- After reflecting, update `sources` in frontmatter. If content changed, **increment `revision`** and update `revised` timestamp.
-
-### 2. Unreflected Reports
-
-Check for report files not listed in `reflected_files`:
-
-- `a4/<topic-slug>.arch.review-*.md` (review reports)
-- `a4/<topic-slug>.bootstrap.md` (bootstrap reports — issues where `Stage: arch`)
-- `a4/<topic-slug>.integration-report.r*.md` (integration reports — issues where `Stage: arch`)
-- `a4/<topic-slug>.plan.md` (check for blocked status with arch-level issues)
-- `a4/<topic-slug>.test-report.c*.md` (check for failures diagnosed as arch-level)
-
-For integration reports, prioritize issues where the diagnosis stage is **arch**. For plan deviations, read the Deviation Note to determine if the root cause is an architecture assumption that doesn't hold.
-
-### 3. Impact Assessment
-
-When source usecase changes include **new UCs**, assess whether the existing architecture can accommodate them:
-
-- Do the new UCs require **new components** not present in the current design?
-- Do they introduce **new external dependencies**?
-- Do they require **technology stack changes**?
-- Do they fundamentally change **information flows** between existing components?
-
-**If yes to any** → full **Iteration** path. Recommend which areas need rework.
-**If no** → **Additive Feature** path. The new UCs fit within existing components and patterns — only new information flows and interface contracts are needed.
-
-Present the assessment to the user and let them confirm the path.
-
-### 4. Recommend Starting Point
-
-Analyze the collected feedback and open items. Recommend which area to work on first, with rationale. The user can follow the recommendation or choose a different starting point.
+Surface these cross-area impacts to the user; do not silently assume they're fine.
 
 ## Session Task List
 
-Use the task list as a live workflow map. The user should be able to check the task list at any point and understand exactly where they are and what remains.
+Use the task list as a live workflow map.
 
-### Naming Convention
+**Naming:** phase-level tasks use the phase name. Sub-tasks use `<phase prefix>: <detail>` and are created dynamically when entering a phase.
 
-Tasks use a prefix to show structure. Phase-level tasks use the phase name. Sub-tasks use `<phase prefix>: <detail>` format.
-
-- Phase-level: `"Phase 1: Technology Stack"`
-- Sub-task: `"Phase 1: Select language/framework"`, `"Phase 1: Evaluate key libraries"`
-
-Sub-tasks are created **dynamically** when entering a phase — not all upfront. For example, Phase 3 sub-tasks are created per component after components are identified.
-
-### Task Lifecycle
-
-- Mark phase-level task `in_progress` when entering the phase.
-- Create sub-tasks as work items are identified within the phase.
-- Mark sub-tasks `completed` as each is confirmed.
-- Mark phase-level task `completed` when all sub-tasks are done.
-- If the user navigates back to a completed phase, set it back to `in_progress`.
-
-### Initial Task Lists
-
-Create phase-level tasks at session start. Sub-tasks are added dynamically during work.
-
-**First Design:**
+**First Design** — initial tasks at session start:
 - `"Step 0: Explore codebase"` → `in_progress`
 - `"Phase 1: Technology Stack"` → `pending`
 - `"Phase 2: External Dependencies"` → `pending`
 - `"Phase 3: Component Design"` → `pending`
 - `"Phase 4: Test Strategy"` → `pending`
-- `"Wrap Up: Save progress"` → `pending`
-- `"Wrap Up: Review (arch-reviewer)"` → `pending`
-- `"Wrap Up: Record open items"` → `pending`
+- `"Wrap Up: Reviewer validation"` → `pending`
+- `"Wrap Up: Record review items"` → `pending`
 
-**Iteration:**
+**Iteration** — adjust based on the work backlog:
 - `"Review open items and backlog"` → `in_progress`
-- One task per selected area (e.g., `"Phase 2: Revise external dependencies"`)
-- `"Wrap Up: Save progress"` → `pending`
-- `"Wrap Up: Review (arch-reviewer)"` → `pending`
-- `"Wrap Up: Record open items"` → `pending`
-
-**Additive Feature:**
-- `"Map new UCs to components"` → `in_progress`
-- One task per new UC (e.g., `"UC-5: Information flow & contracts"`) — created after mapping
-- `"Test coverage for new flows"` → `pending`
-- `"Wrap Up: Save progress"` → `pending`
-- `"Wrap Up: Review (arch-reviewer)"` → `pending`
-- `"Wrap Up: Record open items"` → `pending`
-
-### Dynamic Sub-Task Examples
-
-**Phase 2** — after identifying dependencies:
-- `"Phase 2: Clarify Auth Provider"`
-- `"Phase 2: Clarify Payment Gateway"`
-- `"Phase 2: Clarify Email Service"`
-
-**Phase 3** — after identifying components:
-- `"Phase 3: Component A — deep dive"`
-- `"Phase 3: Component B — deep dive"`
-- `"Phase 3: Component C — deep dive"`
-
-**Phase 4** — after identifying test tiers:
-- `"Phase 4: Unit test tools"`
-- `"Phase 4: Integration test tools"`
-- `"Phase 4: E2E test tools"`
+- One task per selected item / area
+- `"Wrap Up: Reviewer validation"` → `pending`
+- `"Wrap Up: Record review items"` → `pending`
 
 ## Step 0: Explore the Codebase
 
-Explore the codebase to ground the architecture in reality — existing project structure, naming conventions, dependencies, build setup, and test configuration. Reference what you find during the interview.
+Ground the architecture in reality — project structure, naming conventions, dependencies, build setup, existing test configuration. Reference what you find during the interview. If a codebase already exists, record the detected technology stack and confirm with the user.
 
-If a codebase already exists, record the detected technology stack and confirm with the user.
+Mark "Step 0" completed when the survey is done.
 
-Mark "Explore codebase" as `completed`.
+## Architecture.md Structure
 
-## Navigation
+As the interview progresses, grow `a4/architecture.md` with these sections (write on phase transitions; see File Writing Rules below):
 
-The architecture covers four areas. In **First Design** mode, start with Technology Stack and follow the guided sequence. In **Iteration** mode, start wherever the user wants.
+```markdown
+---
+kind: architecture
+updated: <today>
+---
 
-The user controls all transitions. After completing work on any topic, present a status table showing each area's progress. When an area has unreviewed content, suggest a review — but let the user decide.
+# Architecture
 
-## Additive Feature Path
+> Frames the buildable system for the use cases in [[context]], built against the actors in [[actors]] and the concepts in [[domain]].
 
-When Impact Assessment determines that new UCs fit within the existing architecture, follow this lighter path instead of the full phase sequence.
+## Overview
 
-### Step 1: Map New UCs to Components
+<One-paragraph summary of the architectural approach and key decisions.>
 
-For each new UC, identify which existing components are involved. Present the mapping as a table:
+## Technology Stack
 
-| New UC | Components | Notes |
-|--------|-----------|-------|
-| UC-N | Component A, Component B | Similar to UC-X pattern |
+| Category | Choice | Rationale |
+|----------|--------|-----------|
+| Language | TypeScript | … |
+| Framework | Next.js | … |
 
-Confirm the mapping with the user.
+## External Dependencies
 
-### Step 2: Per-UC Deep Dive
+<Omit if none.>
 
-For each new UC, add to the existing architecture:
+| External System | Used By | Purpose | Access Pattern | Fallback |
+|----------------|---------|---------|----------------|----------|
+| OAuth Provider | [[usecase/1-share-summary]], [[usecase/2-search-history]] | … | … | … |
 
-1. **Information Flow** — sequence diagram showing how the UC flows through the mapped components. Follow the same format used for existing UCs in the arch file.
-2. **Interface Contracts** — new operations or extensions to existing contracts needed to support the UC. Reference existing contracts where the pattern is reused.
+## Component Diagram
 
-If the Domain Model needs new terms or refinements, use the same **Domain Model Modifications** procedure from Phase 3.
+```plantuml
+@startuml
+component [SessionService] as session
+component [RendererService] as renderer
+session --> renderer : events
+@enduml
+```
 
-### Step 3: Test Coverage
+## Components
 
-Review the test strategy for new flows:
-- Are existing test tiers sufficient?
-- Do the new UCs require additional integration or E2E test cases?
-- Record any additions in the Test Strategy section.
+### SessionService
 
-### Step 4: Wrap Up
+**Responsibility:** …
 
-Follow the standard **Wrapping Up** procedure — increment revision, update session history, suggest next step.
+#### DB Schema *(only if data store: yes)*
 
-## Phase 1: Technology Stack
+```plantuml
+@startuml
+entity "Session" { *id : number | *userId : number | createdAt : datetime }
+@enduml
+```
 
-Select the language, framework, platform, and key libraries. For each choice, record the rationale.
+#### Information Flow
 
-When a technology choice is lightweight — discuss inline and record with brief rationale.
-When a technology choice is heavy (multiple viable options with significant trade-offs) — ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/think:spark-decide` to evaluate options?"
+##### [[usecase/3-search-history]]
 
-If a codebase already exists, detect the stack from project files and confirm with the user.
+```plantuml
+@startuml
+participant "SessionService" as S
+participant "HistoryService" as H
+S -> H : request history
+@enduml
+```
 
-## Phase 2: External Dependencies
+#### Interface Contracts
 
-Identify external systems the software depends on. For each:
+| Operation | Direction | Request | Response | Notes |
+|-----------|-----------|---------|----------|-------|
+| createSession | client → SessionService | { userId, title } | { sessionId, status } | sync |
 
-1. **Scan UCs for external interactions** — any UC that references sending notifications, authentication via third-party, file storage, external data sources, etc.
-2. **Present the list** to the user with Used By (UC references), Purpose, and ask for confirmation.
+(Repeat per component.)
+
+## Test Strategy
+
+| Tier | Tool | Purpose | Rationale |
+|------|------|---------|-----------|
+| Unit | Vitest | Component-internal logic | … |
+| Integration | @vscode/test-electron | Host environment APIs | … |
+| E2E | WebdriverIO + wdio-vscode-service | Full UI interaction | … |
+
+## Changes
+
+[^1]: 2026-04-24 — [[usecase/3-search-history]]
+[^2]: 2026-04-24 — [[decision/8-caching-strategy]]
+```
+
+UC references in Information Flow sections use Obsidian wikilinks — they resolve to `a4/usecase/<id>-<slug>.md`. Component names and schema fields should use domain terms from `a4/domain.md`.
+
+### Required vs Conditional Sections
+
+**Required** (present from First Design onwards): Overview, Technology Stack, Component Diagram, Components (at least one), Test Strategy.
+
+**Conditional:**
+- **External Dependencies** — only if the system uses external services.
+- **DB Schema** (per component) — only when the component has its own data store.
+- **Interface Contracts** (per component pair) — progressively filled as the architecture matures; required once components are stable.
+- **Information Flow** (per UC) — progressively filled; a mature architecture covers every UC in `a4/usecase/`.
+
+## File Writing Rules
+
+- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter above, Overview stub, and the confirmed Technology Stack.
+- **Update** the file at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
+- **Footnote markers** — when a change is driven by a specific UC / decision / review item (new UC added, component split after review, etc.), add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See the Wiki Update Protocol reference below.
+- **`updated:`** — bump on every phase transition or reflected resolution.
+
+## Interview Phases
+
+The architecture covers four areas. In **First Design**, start with Technology Stack and follow the guided sequence. In **Iteration**, start wherever the user wants. The user controls transitions.
+
+### Phase 1: Technology Stack
+
+Select language, framework, platform, and key libraries. For each choice, record the rationale. For lightweight choices — discuss inline and record with a brief rationale. For heavy choices (multiple viable options with significant trade-offs), ask the user: "This seems like a decision worth investigating more deeply. Would you like to use `/think:spark-decide` to evaluate options?"
+
+If a codebase already exists, detect the stack from project files and confirm. Write the initial `architecture.md` at the end of Phase 1.
+
+### Phase 2: External Dependencies
+
+1. **Scan UCs** for external interactions — any UC whose Flow or Outcome references third-party authentication, notifications, file storage, external data sources, etc.
+2. **Present the list** with `Used By` (UC wikilinks), `Purpose`, and ask for confirmation.
 3. **For each confirmed dependency**, clarify:
-   - What does the system send/receive? (Access Pattern)
-   - Are there constraints? (rate limits, pricing tiers, specific provider)
-   - What happens if the external system is unavailable? (Fallback)
-4. **Record** in the output file's External Dependencies section.
+   - What the system sends/receives (Access Pattern)
+   - Constraints (rate limits, pricing tiers, specific provider)
+   - Fallback behavior when unavailable
+4. Record in `architecture.md`'s External Dependencies section. Add a `## Changes` footnote keyed by the causing UCs.
 
-## Phase 3: Component Design
+### Phase 3: Component Design
 
-Design system architecture using the UCs and Domain Model. Read **`${CLAUDE_SKILL_DIR}/references/architecture-guide.md`** for the detailed procedure covering:
+Read `${CLAUDE_SKILL_DIR}/references/architecture-guide.md` for the detailed procedure (component identification, per-component deep dive, DB schema, information flow, interface contracts).
 
-- **Component Identification** — propose components, confirm responsibilities
-- **Per-Component Deep Dive** — DB schema (if data store), information flow (sequence diagrams per UC), interface contracts (operation name, direction, request/response schema)
+Component names, schema fields, and contract parameters must use `a4/domain.md` terminology.
 
-Use the Domain Model from the usecase file as the shared vocabulary. Component names, schema fields, and contract parameters should use Domain Model terms.
+**Domain Model modifications during arch work.** If a concept should be split, added, or renamed, do not invoke a separate agent — edit `a4/domain.md` directly:
 
-### Domain Model Modifications
+1. Discuss with the user; confirm the change.
+2. Edit `a4/domain.md`: update the glossary / diagram; add a footnote marker in the modified section; append a `## Changes` entry pointing at the causing arch discussion (use a wikilink to the architecture section heading, e.g., `[[architecture#SessionService]]`, when no specific issue id applies).
+3. Bump `a4/domain.md` frontmatter `updated: <today>`.
 
-During component design, you may discover that the Domain Model needs changes — a concept should be split, a missing state identified, a relationship refined, or a new concept added. When this happens:
+### Phase 4: Test Strategy
 
-1. **Discuss with the user** — present the finding and proposed change.
-2. **Spawn a `domain-updater` agent** with the usecase file path and the structured change request:
+Read `${CLAUDE_SKILL_DIR}/references/test-strategy-guide.md` for the detailed procedure.
 
-   ```
-   Agent(subagent_type: "think:domain-updater", prompt: """
-   Usecase file: <absolute path to .usecase.md>
-   Changes:
-   - Section: Glossary, Action: add, Content: { Concept: "Sidechain Request", Definition: "...", Key Attributes: "...", Related UCs: "UC-3, UC-9" }, Reason: "Discovered during component design — needed to distinguish sidechain SDK calls from regular session calls"
-   """)
-   ```
-
-3. **On success** — the agent returns the new revision and SHA. Update the arch frontmatter `sources` SHA with the returned value. Record the change in the arch file's Upstream Changes section:
-
-   | Source File | Section | Change | Reason |
-   |------------|---------|--------|--------|
-   | `<slug>.usecase.md` | Domain Model / Glossary | Added "Sidechain Request" concept | Discovered during component design — needed to distinguish sidechain SDK calls from regular session calls |
-
-4. **On failure** — report the error to the user and decide how to proceed.
-
-This keeps the Domain Model as the single source of truth in the usecase file while allowing architecture work to refine it without switching skills.
-
-## Phase 4: Test Strategy
-
-Select test tools for each tier based on the technology stack. Read **`${CLAUDE_SKILL_DIR}/references/test-strategy-guide.md`** for the detailed procedure.
-
-1. **Identify test tiers** needed for this architecture:
-   - **Unit** — component-internal logic
-   - **Integration** — component boundaries, host environment APIs
-   - **E2E** — full user interaction path through the UI
-
-2. **Select tools per tier** — based on app type and technology stack:
-
-   | App Type | Unit | Integration | E2E |
-   |----------|------|-------------|-----|
-   | Web app (React/Next.js) | Vitest / Jest | Playwright | Playwright |
-   | VS Code Extension | Vitest | @vscode/test-electron | WebdriverIO + wdio-vscode-service |
-   | Electron | Vitest / Jest | Playwright electron.launch() | Playwright |
-   | API service | Vitest / Jest / pytest | supertest / httpx | Playwright CLI / curl |
-   | CLI tool | Vitest / Jest / pytest | — | Bash execution |
-   | Mobile (React Native) | Jest | Detox | Detox |
-
-3. **Verify tool choices** — for each selected tool, use Technical Claim Verification to confirm compatibility with the technology stack.
-4. **Record** in the output file's Test Strategy section with rationale per tier.
+1. **Identify test tiers** — unit (required), integration (architecture-dependent), E2E (UI-dependent).
+2. **Select tools per tier** based on app type and tech stack. Use Technical Claim Verification for non-obvious compatibility.
+3. **Record** the Test Strategy table with rationale per tier.
 
 ## Technical Claim Verification
 
-When writing or confirming any technical statement (API support, library capabilities, framework constraints, compatibility), verify it before recording. Keep this lightweight — don't verify obvious facts, focus on claims that would cause implementation failures if wrong.
+When writing or confirming any technical claim (API support, library capability, framework constraint, compatibility), verify before recording. Focus on claims whose failure would break implementation.
 
 ### Procedure
 
-1. **Check the codebase first** — if the claim is about the current project's tech stack, verify by reading the actual code, configs, or dependency files.
-2. **Launch an api-researcher agent** — if the claim requires external verification, spawn a background `Agent(subagent_type: "think:api-researcher")` with `run_in_background: true`. Prompt it with the specific claim and ask it to verify against official documentation.
-3. **Continue the interview** — keep working while waiting. **Do not transition to the next phase** until all pending research results have been received and reflected.
-4. **When notified** — the subagent writes results to `a4/<topic-slug>.arch.research-<label>.md` per `${CLAUDE_SKILL_DIR}/references/research-report.md`. Update the research index (`a4/<topic-slug>.arch.research-index.md`).
-5. **Reflect the result** — apply the verification outcome. Add an inline reference where the claim is recorded (e.g., `(ref: research-webdriverio-vscode.md)`).
-6. **Flag uncertainty** — if official documentation is ambiguous, tell the user and ask whether to proceed as assumption or investigate further.
+1. **Check the codebase first** — for claims about the current project's stack, read the actual code, configs, or dependency files.
+2. **Launch an `api-researcher` agent** — for external verification, spawn a background `Agent(subagent_type: "think:api-researcher", run_in_background: true)`. Prompt it with the specific claim and ask it to verify against official documentation.
+3. **Continue the interview** — keep working while waiting. Do not transition to the next phase until all pending research results have been received and reflected.
+4. **On completion** — the agent writes results to `a4/research/<label>.md`. Read it and apply the verification outcome. Add an inline `(ref: [[research/<label>]])` where the claim is recorded.
+5. **Flag uncertainty** — when official documentation is ambiguous, tell the user and ask whether to proceed as an assumption or investigate further.
 
-### Research Index
-
-Maintain `a4/<topic-slug>.arch.research-index.md` as a lookup table. Check it before launching new research to avoid duplicates.
-
-## Progressive File Writing
-
-### Working File Path
-
-- Default: `a4/<topic-slug>.arch.md`
-- If the file already exists → **Iteration** mode
-- Tell the user the file path
-
-### Source Revision Tracking
-
-On **First Design**, record each source usecase file's current revision and SHA in frontmatter `sources`. On **Iteration Mode entry**, compare and update.
-
-### How to Update
-
-- **Track confirmed items via tasks** — after each component, dependency, or contract is confirmed, create/update a task and mark it completed.
-- **Write at checkpoints only** — when a checkpoint trigger fires, use the Write tool to update the file.
-- **Preserve all previously confirmed content.**
-
-### Checkpoint Triggers
-
-| Trigger | When |
-|---------|------|
-| Item count | Every 3 confirmed items within an area |
-| Area transition | Moving between Technology Stack → External Dependencies → Component Design → Test Strategy. **Increment `revision`** if content changed. |
-| Navigation status | When presenting the area status table |
-| Session end | End iteration or finalize |
-
-## Revision and Session History
-
-Increment `revision` and update `revised` when: reflecting source usecase changes, reflecting review/bootstrap findings, area transition with content changes, or closing the session. Routine updates during the interview do not increment revision.
-
-Session history is stored in `<topic-slug>.arch.history.md`. See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
-
-## Review
-
-Reviews are handled by launching a fresh `Agent(subagent_type: "think:arch-reviewer")`. Suggest a review when all areas are substantially complete, before finalizing, or after significant iteration changes — but let the user decide.
-
-Pass arch file path, usecase file path, report output path per `${CLAUDE_SKILL_DIR}/references/review-report.md`, and any previous review report paths.
-
-## Agent Usage
-
-Always spawn fresh subagents — context is passed via file paths, not agent memory.
-
-- **`arch-reviewer`** — launch via `Agent(subagent_type: "think:arch-reviewer")`. Context passed via file paths.
-- **`domain-updater`** — launch via `Agent(subagent_type: "think:domain-updater")`. Pass usecase file path and structured change request. Returns new revision and SHA.
+Maintain the set of research reports under `a4/research/`. Derived indexes (which claims cite which report) come from Obsidian backlinks, not a separately maintained index file.
 
 ## Wrapping Up
 
-The architecture ends only when the user says so. Never conclude on your own.
+The architecture ends only when the user says so. When the user indicates they're done:
 
-When the user indicates they're done, proceed to **End Iteration**.
+1. **Pre-flight consistency check** — read `architecture.md` end-to-end. Confirm: every Information Flow UC resolves to an existing UC file; every component's contracts align with its sequence diagrams; every schema field appears in `domain.md`. Resolve obvious gaps before launching the reviewer.
 
-For the full step-by-step checklist, read **`${CLAUDE_SKILL_DIR}/references/session-closing.md`**.
+2. **Launch `arch-reviewer`** — spawn `Agent(subagent_type: "think:arch-reviewer")`. Pass:
+   - `a4/` absolute path
+   - Prior-session open review items that target `architecture` (so the reviewer can skip duplicates)
 
-### Next Step
+   The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md` (using `allocate_id.py`) and returns a summary.
 
-After the architecture is finalized, suggest the next pipeline step:
+3. **Walk findings** — for each emitted review item (ordered by priority then id), present to the user and resolve or defer:
+   - **Fix now** — edit `architecture.md` (and any cross-referenced file). Set the review item `status: resolved`, append a `## Log` entry, and add a footnote marker on each modified wiki page per the Wiki Update Protocol.
+   - **Defer** — leave `status: open`; add a `## Log` entry noting the deferral reason.
+   - **Dismiss** — set `status: dismissed`; record the reason in `## Log`.
 
-> The architecture is ready. The next step is `auto-bootstrap` to set up the dev environment (project structure, dependencies, test infrastructure) and verify everything builds and runs before planning implementation.
->
-> Run: `/think:auto-bootstrap <slug>`
+4. **Wiki close guard** — for each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
 
-### Output Format
+5. **Report** — summarize to the user:
+   - Phases completed this session
+   - Components added / revised
+   - Review items opened / resolved / still open
+   - Suggested next step: `/think:auto-bootstrap` to set up dev environment, or `/think:think-plan` if bootstrap is already done
 
-Follow the Architecture template in `${CLAUDE_SKILL_DIR}/references/output-template.md` for the final file structure.
+### Agent Usage
+
+Context is passed via file paths, not agent memory.
+
+- **`arch-reviewer`** — `Agent(subagent_type: "think:arch-reviewer")`. Reads `a4/` workspace; writes per-finding review items.
+- **`api-researcher`** — `Agent(subagent_type: "think:api-researcher", run_in_background: true)`. Verifies a single technical claim against official docs; writes `a4/research/<label>.md`.
+
+## Non-Goals
+
+- Do not write a separate `design.md` wiki page. The ADR explicitly rejects it — `architecture.md` covers design content (stack, components, interfaces, test strategy).
+- Do not track per-UC / per-source SHAs in `architecture.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency without SHA bookkeeping.
+- Do not create a research-index file. Use Obsidian backlinks.
+- Do not emit aggregated review reports. All findings are per-review-item files.

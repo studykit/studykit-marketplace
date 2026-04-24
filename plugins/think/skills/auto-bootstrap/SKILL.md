@@ -1,185 +1,294 @@
 ---
 name: auto-bootstrap
-description: "This skill should be used when the user needs to set up a development base from an architecture document — project structure, dependencies, build configuration, and test infrastructure for each tier. Common triggers include: 'bootstrap', 'set up the project', 'bootstrap the project', 'create the dev environment', 'set up testing'. Also applicable after think-arch finalizes and before think-plan starts."
-argument-hint: <path to .arch.md file>
+description: "This skill should be used when the user needs to set up a development base from an architecture document — project structure, dependencies, build configuration, and test infrastructure for each tier. Common triggers include: 'bootstrap', 'set up the project', 'bootstrap the project', 'create the dev environment', 'set up testing'. Applicable after think-arch finalizes and before think-plan starts. Writes a4/bootstrap.md (wiki page) with the verified environment and commands."
+argument-hint: <optional: pass no argument to use a4/architecture.md; passing a label archives the current bootstrap.md before writing a new one>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Project Bootstrap
 
-Takes an architecture document (from think-arch) and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure for each tier. This skill runs autonomously with no user interaction during execution. It produces a bootstrap report that think-plan reads as verified input.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that `think-plan` reads for Launch & Verify.
+
+## Workspace
+
+Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
+
+- `a4/architecture.md` — technology stack, components, external dependencies, test strategy (required).
+- `a4/usecase/*.md`, `a4/domain.md`, `a4/context.md` — reference-only context.
+
+Outputs:
+
+- `a4/bootstrap.md` — wiki page (`kind: bootstrap`).
+- `a4/archive/bootstrap-<YYYY-MM-DD>.md` — archived copy of the prior bootstrap.md before iteration (only when iterating).
+- `a4/review/<id>-<slug>.md` — per-issue review items for unresolved environment or architecture problems.
+- `a4/research/bootstrap-<label>.md` — research reports produced by the `api-researcher` agent when diagnosing issues.
+
+## Bootstrap Wiki Schema
+
+```yaml
+---
+kind: bootstrap
+updated: 2026-04-24
+---
+```
+
+No lifecycle / revision / source SHA fields.
 
 ## What This Skill Does
 
-1. Sets up project structure, installs dependencies, configures build
-2. Sets up test infrastructure for each tier defined in the architecture's Test Strategy
-3. Verifies everything works: build, run, test runners, dev loop
-4. Reports results with verified commands that downstream skills use as-is
+1. Sets up project structure; installs dependencies; configures build.
+2. Sets up test infrastructure per tier defined in `architecture.md` Test Strategy.
+3. Verifies build / run / test runners / edit-build-test dev loop actually work.
+4. Writes `a4/bootstrap.md` summarizing verified commands and results.
+5. Emits review items for issues (environment-level fixable ones marked resolved after fix; architecture-level ones left open with `target: architecture`).
 
 ## What This Skill Does NOT Do
 
-- Implement any use case or feature logic
-- Create feature tests
-- Make architecture decisions — all decisions come from the `.arch.md`
+- Implement any UC or feature logic.
+- Write feature tests.
+- Make architectural decisions — all decisions come from `architecture.md`.
 
-## Step 0: Input
+## Step 0: Read Sources
 
-Resolve the input from **$ARGUMENTS**.
+Read `a4/architecture.md`. Extract:
 
-If no argument is provided, ask the user for a slug, filename, or path.
+- **Technology Stack** — language, framework, platform.
+- **Component structure** — component names + which need data stores.
+- **Test Strategy** — per-tier tool selections with setup notes.
+- **External Dependencies** — what needs to be installed or configured.
 
-### File Resolution
+Optionally read `a4/context.md` and a small sample of `a4/usecase/*.md` to verify scope assumptions.
 
-1. **Full path** — use directly if the file exists
-2. **Partial match** — glob for `a4/*<argument>*.arch.md`
-3. **Fallback** — if `a4/` does not exist, glob from project root
-4. **Multiple matches** — present candidates and ask the user to pick
-5. **No match** — inform the user and ask for a different term
-
-After resolution, read the `.arch.md` file. Extract:
-- **Technology Stack** — language, framework, platform
-- **Component structure** — component names, data stores
-- **Test Strategy** — tier-by-tier tool selections with setup notes
-- **External Dependencies** — what needs to be installed or configured
-
-Also read the source `.usecase.md` (from arch frontmatter `sources`) for project context.
+If `a4/bootstrap.md` already exists, archive it before proceeding: copy to `a4/archive/bootstrap-<YYYY-MM-DD-HHMM>.md`, then treat this run as **incremental**. Otherwise **fresh**.
 
 ## Step 1: Codebase Assessment
 
-Check whether a codebase already exists:
-
-- **No existing code** → fresh bootstrap (Step 2)
-- **Existing code** → incremental bootstrap. Identify what's already in place (project structure, dependencies, build config, test setup) and what's missing. Only set up what's needed.
+- **No existing code** → fresh bootstrap (Step 2 onwards).
+- **Existing code** → incremental. Identify what's already present (project structure, dependencies, build config, test setup). Only set up what's missing. Do not overwrite existing working configuration without cause.
 
 ## Step 2: Project Structure
 
 Based on the Technology Stack and Component structure:
 
-1. **Create directory structure** following framework conventions
-2. **Initialize project files** — package.json / pyproject.toml / Cargo.toml / etc.
-3. **Install dependencies** from the Technology Stack and External Dependencies
-4. **Configure build** — tsconfig, esbuild, webpack, vite, etc.
-5. **Create entry point** — minimal app that starts without error
-
-**Minimal app criteria:** The entry point must produce a running application, not just compile. For a web app, the dev server starts and serves a page. For a VS Code extension, the extension activates and opens a panel. For a CLI, the command runs and exits cleanly. For an API, the server starts and responds to a health check.
+1. Create directory structure following framework conventions.
+2. Initialize project files (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.).
+3. Install dependencies from Technology Stack + External Dependencies.
+4. Configure build (`tsconfig`, `vite.config`, `esbuild`, etc.).
+5. Create a minimal entry point: a **running** application, not just a compile target. Web app → dev server serves a page. VS Code extension → extension activates + panel opens. CLI → `--help` prints usage. API → health check returns 200.
 
 ## Step 3: Test Infrastructure
 
-For each tier in the architecture's Test Strategy:
+For each tier in Test Strategy:
 
-1. **Install test dependencies** — test runner, assertion library, any plugins
-2. **Create configuration** — test runner config file (vitest.config.ts, .vscode-test.js, wdio.conf.ts, etc.)
-3. **Write a minimal passing test** — one test per tier that proves the runner works:
-   - **Unit:** import a module, assert true
-   - **Integration:** if host environment (e.g., VS Code Extension Host), verify the app activates
-   - **E2E:** if UI exists, launch the app and verify the main view loads
-4. **Add npm scripts** (or equivalent) for each tier — `test`, `test:integration`, `test:e2e`
-5. **Verify isolation** — test tiers don't interfere with each other
+1. Install test dependencies (runner + assertion lib + plugins).
+2. Create test configuration file (`vitest.config.ts`, `.vscode-test.js`, `wdio.conf.ts`, etc.).
+3. Write one minimal passing test per tier (unit: import + assert true; integration: verify host environment reachable; E2E: launch app + verify main view loads).
+4. Add package scripts (`test`, `test:integration`, `test:e2e`) or equivalent.
+5. Verify tier isolation — tests in one tier do not interfere with others.
 
-Use the Test Strategy's **special setup notes** from the arch. If a tool requires specific configuration (e.g., `--disable-extensions` for VS Code, temp user data dir), apply it.
+Use Test Strategy's **setup notes** from `architecture.md`. Apply specific flags — e.g., `--disable-extensions` for VS Code, temp user-data-dir for Electron.
 
 ## Step 4: Verification
 
-Run all checks and record results:
+Run each check and record the outcome:
 
-### 4.1: Build
+- **Build** — build command exits 0.
+- **Run** — launch command starts the app without error; clean up.
+- **Unit tests** — unit runner exits 0 with at least one passing test.
+- **Integration tests** — integration runner exits 0 with at least one passing test.
+- **E2E tests** *(if applicable)* — E2E runner exits 0 with at least one passing test.
+- **Dev loop** — trivial source edit → rebuild → tests re-run successfully.
+
+## Step 5: Handle Issues
+
+For each failure:
+
+### Diagnose the Issue
+
+- **Architecture issue** — the choice in `architecture.md` is incompatible or incorrect (e.g., stated tool version doesn't support the required runtime, two chosen tiers conflict).
+- **Environment issue** — local machine / tooling issue (e.g., missing Java for PlantUML, no display server for E2E on CI).
+
+### Do Not Guess Environment Fixes
+
+Before attempting any environment fix:
+
+1. Spawn `Agent(subagent_type: "think:api-researcher")`. Pass the error message, the failing command, relevant config files, and the technology stack.
+2. The agent reads library source / docs as needed and writes findings to `a4/research/bootstrap-<label>.md` (frontmatter `{ label: bootstrap-<label>, scope: bootstrap-troubleshoot, date: <today> }`).
+3. Apply the fix based on findings.
+4. Re-verify.
+
+If the same fix fails twice, stop and emit a review item rather than retrying further.
+
+### Emit Review Items
+
+**Architecture issue**:
+
+```yaml
+---
+id: <allocated via allocate_id.py>
+kind: finding
+status: open
+target: architecture
+source: auto-bootstrap
+wiki_impact: [architecture]
+priority: high | medium
+labels: [bootstrap]
+created: <today>
+updated: <today>
+---
+
+# <short title>
+
+## Summary
+<What was attempted; what failed.>
+
+## Evidence
+<Build / run / test output, truncated.>
+
+## Suggestion
+Re-evaluate <component / test-tier / dependency> choice in architecture.md. Concrete alternative: <proposed fix>. Run /think:think-arch iterate to address.
+```
+
+**Environment issue (auto-fixed)**:
+
+```yaml
+---
+id: <allocated>
+kind: finding
+status: resolved
+target: bootstrap
+source: auto-bootstrap
+wiki_impact: []
+priority: low
+labels: [bootstrap, environment]
+created: <today>
+updated: <today>
+---
+
+# <short title>
+
+## Summary
+<What went wrong.>
+
+## Fix applied
+<What was done, citing [[research/bootstrap-<label>]] if a research report informed the fix.>
+
+## Log
+<today> — resolved at bootstrap time
+```
+
+**Environment issue (unresolved)**: same as above but `status: open` and no Fix applied section; add a Suggestion section with concrete next-step guidance for the user.
+
+Allocate ids via `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
+
+## Step 6: Write bootstrap.md
+
+```markdown
+---
+kind: bootstrap
+updated: <today>
+---
+
+# Bootstrap
+
+> Verifies the dev environment for the architecture in [[architecture]].
+
+## Environment
+
+| Item | Value |
+|------|-------|
+| Language | <e.g., TypeScript 5.3> |
+| Framework | <e.g., Next.js 15> |
+| Platform | <e.g., node 20> |
+| Package manager | <npm / pnpm / pip / …> |
+| Project root | <path relative to git root> |
+
+## Verified Commands
+
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `npm run build` | Build | PASS |
+| `npm run dev` | Launch app | PASS |
+| `npm test` | Unit tests | PASS |
+| `npm run test:integration` | Integration tests | PASS |
+| `npm run test:e2e` | E2E tests | PASS |
+| edit → build → test | Dev loop | PASS |
+
+## Test Infrastructure
+
+| Tier | Tool | Version | Config | Minimal Test | Status |
+|------|------|---------|--------|--------------|--------|
+| Unit | Vitest | 1.6 | `vitest.config.ts` | `tests/smoke.test.ts` | PASS |
+| Integration | @vscode/test-electron | 2.5 | `.vscode-test.js` | `tests/integration/activate.test.ts` | PASS |
+| E2E | WebdriverIO + wdio-vscode-service | 8.x | `wdio.conf.ts` | `tests/e2e/panel.test.ts` | PASS |
+
+## Test Isolation Flags
+
+| Tier | Flags |
+|------|-------|
+| Integration | `--disable-extensions`, `--extensions-dir=<tmpdir>` |
+| E2E | `--user-data-dir=<tmpdir>`, `--no-sandbox` (CI) |
+
+## Smoke Scenario
+
+<Single minimal user-observable interaction — e.g., "VS Code launches with only the dev extension active; running command `hello.world` shows a toast." This becomes think-plan's Launch & Verify smoke scenario.>
+
+## Issues
+
+<Only when issues were encountered. Link to the review items emitted above.>
+
+- Architecture issues (`status: open`): [[review/<id>-<slug>]] × N
+- Environment issues (`status: resolved`): [[review/<id>-<slug>]] × M
+- Environment issues (`status: open`): [[review/<id>-<slug>]] × K
+
+## Changes
+
+[^1]: <today> — [[architecture]]
+```
+
+On incremental bootstrap, use `Edit` to touch only the sections that changed. Add a footnote marker + `## Changes` entry citing what drove the update (typically `[[architecture]]` when architectural changes triggered re-bootstrap).
+
+## Step 7: Commit
+
+Stage `a4/bootstrap.md`, any emitted review items, research reports, and all bootstrap-configured project files (package.json, test config, sample tests, etc.). Single commit:
 
 ```
-Run build command → SUCCESS / FAIL (with error)
-```
+bootstrap: <fresh | iterate>
 
-### 4.2: Run
-
-```
-Launch app → starts without error → SUCCESS / FAIL (with error)
-```
-
-For apps that stay running (dev servers, extensions), verify startup then clean up.
-
-### 4.3: Test Runners
-
-For each tier:
-```
-Run test command → minimal test passes → SUCCESS / FAIL (with error)
-```
-
-### 4.4: Dev Loop
-
-```
-Make a trivial code change → rebuild → run tests → SUCCESS / FAIL
-```
-
-This verifies the edit → build → test cycle works end-to-end.
-
-## Step 5: Bootstrap Report
-
-Generate the bootstrap report. Read `${CLAUDE_SKILL_DIR}/references/bootstrap-report.md` for the exact template.
-
-The report includes:
-- **Environment** — technology stack, project structure summary
-- **Verified Commands** — build, run, and test commands that actually work (think-plan reads these directly for Launch & Verify)
-- **Test Infrastructure** — per-tier setup status with tool versions
-- **Verification Results** — pass/fail for each check
-- **Issues** — any problems found, with stage attribution (arch / environment)
-
-### Commit
-
-Stage and commit all bootstrap files:
-```
-bootstrap(<topic-slug>): initial project setup
-
-- Build: PASS/FAIL
+- Build: PASS | FAIL
 - Test tiers: N/M passing
-- Dev loop: PASS/FAIL
+- Dev loop: PASS | FAIL
+- Issues: <open-archive-count> open
 ```
 
-## Step 6: Feedback
+Never skip hooks, amend, or force-push.
 
-If any verification step fails:
+## Step 8: Drift Detection (placeholder)
 
-1. **Diagnose** — determine whether the issue is:
-   - **arch** — architecture's technology choice or test tool selection is incompatible (e.g., WebdriverIO doesn't support the VS Code version)
-   - **environment** — local environment issue (e.g., missing Java for PlantUML, no display server for E2E)
+The ADR's Next Steps include a shared drift detector that bulk-generation skills invoke as a final step. Until that script lands, auto-bootstrap performs a manual cross-check:
 
-2. **Do not attempt to fix arch issues** — these require architecture decisions. Record and move on.
+1. For every component in `architecture.md`, verify at least one code file or module was created that plausibly owns it. Missing component coverage → emit a `kind: gap` review item with `target: architecture`, `wiki_impact: [architecture]`.
+2. For every new / touched wiki page, ensure the `## Changes` footnote references the triggering issue or `[[architecture]]`.
 
-3. **Research before fixing environment issues** — do not guess from error messages alone. Before attempting a fix:
-   a. **Spawn an api-researcher agent** — launch an `Agent(subagent_type: "think:api-researcher")` with the error message, relevant config files, and the technology stack. The agent should:
-      - Read library source code when documentation is insufficient (e.g., checking default config, supported options, version-specific behavior)
-      - Check version-specific notes, known issues, and migration guides
-      - Write findings to `a4/<topic-slug>.bootstrap.research-<label>.md` per the format below. `<label>` is a short slug describing the issue (e.g., `jest-esm-flags`, `esbuild-target-mismatch`)
-   b. **Apply the fix** based on the research agent's findings, not assumptions.
-   c. **Re-verify** after fix.
-   d. If the fix fails, spawn a new api-researcher agent with the updated error — do not retry the same fix.
-
-4. **Record in report** — issues with `Stage: arch` become upstream feedback for think-arch. Issues with `Stage: environment` are recorded with a reference to the research report that informed the fix.
-
-Research reports use the format in `${CLAUDE_SKILL_DIR}/references/research-report-format.md`.
-
-## Iteration
-
-When re-run on an existing bootstrap (e.g., after arch changes):
-
-1. **Archive the current report** — rename `a4/<slug>.bootstrap.md` to `a4/<slug>.bootstrap.r<current-revision>.md` before writing the new report. This preserves the previous result as-is.
-2. Read the archived report's frontmatter `sources`
-3. Diff the current `.arch.md` against the archived report's source SHA
-4. Identify what changed (new test tier, different tool, new dependency)
-5. Apply only the incremental changes
-6. Re-verify all checks
-7. Write the new report to `a4/<slug>.bootstrap.md` with incremented revision
+Once the shared drift detector exists, replace this step with a single invocation.
 
 ## Session Management
 
-This skill runs autonomously. No user interaction during execution. The user invokes it and receives the bootstrap report when done.
-
-If a verification step fails and cannot be auto-fixed, the report documents the failure. The user decides next steps based on the report.
+Runs autonomously. No user interaction during execution. On any verification failure that cannot be auto-fixed, the review items and `bootstrap.md` document the state — the user decides next steps after reading them.
 
 ## Next Step
 
-After reporting results, suggest the next pipeline step:
+After the commit lands, suggest:
 
-> The dev environment is ready. The next step is `think-plan` to generate an implementation plan and build from the architecture.
->
-> Run: `/think:think-plan <slug>`
+> The dev environment is ready. Run `/think:think-plan` to generate an implementation plan from the architecture and this bootstrap.
 
-If the bootstrap has unresolved `Stage: arch` issues, suggest `think-arch` first to address architecture-level problems before planning.
+If any `target: architecture` review items are `status: open`:
+
+> Architecture issues were flagged during bootstrap — run `/think:think-arch iterate` first to address them, then re-run `/think:auto-bootstrap`.
+
+## Non-Goals
+
+- Do not write per-topic / per-slug bootstrap files. `a4/bootstrap.md` is the single wiki page.
+- Do not maintain `.bootstrap.r<N>.md` revision files. Archives go to `a4/archive/bootstrap-<date>.md`.
+- Do not emit aggregated bootstrap reports separate from `bootstrap.md`. Issues are review items; the wiki page summarizes.
+- Do not attempt to fix architecture issues. Flag them via review items with `target: architecture`.

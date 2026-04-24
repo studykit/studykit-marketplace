@@ -1,66 +1,63 @@
 # Iteration Entry Procedure
 
-When entering **Iteration** mode (an existing `.usecase.md` file is found), perform these checks before starting work.
+When entering **Iteration** mode (an existing `a4/` workspace with UC files is found), perform these checks before starting work. The goal is to surface unresolved review items, unreflected research/exploration reports, and any wiki drift so the session picks up coherently.
 
-## 1. Read and Check for Unreflected Reports
+## 1. Scan the Workspace
 
-Read the existing file completely. Check the frontmatter `reflected_files` list, then check for companion reports not listed in `reflected_files`:
+List the current state:
 
-- Review reports (`<topic-slug>.usecase.review-*.md`) — read each unreflected review and extract NEEDS REVISION items and Cross-UC findings
-- Exploration reports (`<topic-slug>.usecase.exploration-*.md`) — summarize UC candidates found
-- For reports already in `reflected_files`, cross-check the Change Log to confirm their findings were recorded. Do not re-present resolved findings.
+- Wiki pages present: `a4/{context,actors,domain,nfr}.md` (each optional except `context.md`).
+- UC count: `ls a4/usecase/*.md | wc -l`.
+- Open review items: `grep -l 'status: open' a4/review/*.md` (if any).
+- Research reports: `ls a4/research/*.md` (if the folder exists).
 
-## 2. Check Source File Changes
+Do **not** read every UC up front. Read on demand as the user chooses what to work on.
 
-If `sources` exists in frontmatter, compare the stored `sha` against the current file for each source:
+## 2. Open Review Items Take Priority
 
-1. Run `git hash-object <source-file-path>` to get the current SHA.
-2. If SHA matches → no changes, skip.
-3. If SHA differs → run `git diff <stored-sha> <current-sha>` to see what changed.
-4. Present the changes to the user: "The source file has been updated. Changes: [list]. Review these changes before continuing?"
-5. Walk through each change with the user to determine impact on existing use cases (new UCs needed, existing UCs to update, actors to add/modify).
-6. After reflecting, update `sources` in frontmatter (`sha` and any other tracked fields). If the working file content changed, **increment `revision`** and update `revised` timestamp.
+Read each open review item file (`a4/review/<id>-<slug>.md` with `status: open`). Present them as a selectable backlog:
 
-## 3. Present Status Summary
-
-Present a brief status summary:
-
-- Number of confirmed use cases
-- Actors identified so far
-- Open Items from previous session (if any)
-- Open Questions (if any)
-- Unreflected review findings (if any) — list NEEDS REVISION items with UC ID, field, and issue
-- Unreflected exploration results (if any) — summarize the UC candidates found
-
-## 4. Present Work Backlog
-
-Present the Open Items table (if it exists) as a selectable work backlog:
-
-> **Open Items from last session:**
-> | # | Section | Item | What's Missing | Priority |
-> |---|---------|------|---------------|----------|
-> | 1 | UC-3 | Situation | Too vague — needs concrete trigger | High |
-> | 2 | Actors | — | Implicit approver actor not declared | Medium |
+> **Open review items:**
 >
-> Which items would you like to work on? Or would you prefer to add new use cases?
+> | # | Id | Kind | Target | Summary | Priority |
+> |---|----|------|--------|---------|----------|
+> | 1 | 6  | gap  | UC-3   | Missing validation on empty input | High |
+> | 2 | 9  | question | — | How should concurrency be handled? | Medium |
+> | 3 | 12 | finding | UC-7 | Implementation leak in Flow step 4 | Medium |
+>
+> Which items would you like to address, or would you prefer to add new use cases?
+
+For each item the user picks, mark its review file `status: in-progress`, update `updated:`, and open a task like `"Resolve review/<id>: <short summary>"`.
+
+## 3. Unreflected Research / Exploration Reports
+
+Check `a4/research/` for reports that were written but never reflected into UCs. A report is unreflected when no UC cites it in body prose and no review item references it. Present these to the user and decide whether to reflect.
+
+## 4. Work Surface Summary
+
+Present a brief status:
+
+- UCs confirmed: `<count>`, of which `done`: `<count>`, `implementing`: `<count>`, `blocked`: `<count>`
+- Actors in `actors.md`: `<count>` (if the file exists)
+- Domain concepts in `domain.md`: `<count>` (if the file exists)
+- Open review items: `<count>` (listed above)
+- Research reports pending review: `<count>`
 
 ## 5. User Chooses What to Work On
 
 Possible activities:
 
-- **Add new use cases** — resume the Discovery Loop (step 2) as normal
-- **Address review findings** — walk through NEEDS REVISION items from unreflected review reports one by one. After all findings are addressed (or explicitly deferred), add the review file name to `reflected_files` and record each change in the Change Log with the review file as Source. If the working file content changed, **increment `revision`** and update `revised` timestamp.
-- **Explore UC candidates from explorer** — review and flesh out UC candidates from unreflected exploration reports. After reflecting, add the exploration file name to the frontmatter `reflected_files` list. If the working file content changed, **increment `revision`** and update `revised` timestamp.
-- **Clarify existing UCs** — revisit flagged use cases one by one, asking targeted questions to fill gaps
-- **Refine actors** — add missing actors, split actors with privilege differences, add system actors
-- **Split oversized UCs** — process previously deferred SPLIT suggestions
-- **Re-analyze relationships** — update dependencies, reinforcements, and groups after changes
-- **Resolve Open Questions** — address unresolved topics from previous sessions
+- **Resolve review items** — the user picks from the backlog; for each, read the target UC and wiki pages and walk through the resolution with the user.
+- **Add new use cases** — resume the Discovery Loop. Each new UC gets a fresh id from the allocator.
+- **Refine actors** — edit `actors.md`; add footnote markers for changes.
+- **Split oversized UCs** — allocate new ids per child, write new UC files, adjust `depends_on`/`related` in other UCs that referenced the parent.
+- **Extend the domain model** — edit `domain.md` via the Domain Model Extraction flow.
+- **Re-analyze relationships** — update `depends_on`/`related`/`labels` across UC files.
 
 ## Iteration Rules
 
-- Preserve all previously confirmed use cases — never remove or reorder them unless the user explicitly requests it.
-- New use cases get the next available UC-N ID (continue numbering from where the previous session left off).
-- When modifying an existing UC, show the before/after and confirm with the user before updating.
-- Increment `revision` in frontmatter and update `revised` timestamp when: reflecting external input (source file changes, review findings, exploration results) that changes the working file content, or closing the session. Routine updates during the interview (UC confirmation, actor discovery) do not increment revision.
-- Session history (including Interview Transcript) is stored in a separate history file (`<topic-slug>.usecase.history.md`). See `${CLAUDE_SKILL_DIR}/references/session-history.md` for the format.
+- Preserve previously confirmed UC content. Never delete or renumber UC files; renumber is especially forbidden because ids are globally monotonic.
+- New UCs get the next allocator-provided id (see SKILL.md → Id Allocation). Continue regardless of gaps — gaps are allowed.
+- When modifying an existing UC, show the before/after and confirm with the user before writing.
+- When a resolution edits a wiki page, add a footnote marker and `## Changes` entry per the Wiki Update Protocol in SKILL.md.
+- When a review item is resolved, set its frontmatter to `status: resolved` and append a `## Log` entry (`YYYY-MM-DD — resolved by editing [[usecase/<id>-<slug>]]`). Do not delete review item files.
