@@ -40,7 +40,7 @@ import yaml
 WIKI_KINDS = frozenset(
     {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
 )
-ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
+ISSUE_FOLDERS = ("usecase", "task", "review", "decision", "idea")
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
 
@@ -101,6 +101,14 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"supersedes", "related"}),
+    ),
+    "idea": Schema(
+        name="idea",
+        required=frozenset({"id", "title", "status", "created", "updated"}),
+        enums={"status": frozenset({"open", "promoted", "discarded"})},
+        int_fields=frozenset({"id"}),
+        date_fields=frozenset({"created", "updated"}),
+        path_list_fields=frozenset({"promoted", "related"}),
     ),
     "spark_brainstorm": Schema(
         name="spark_brainstorm",

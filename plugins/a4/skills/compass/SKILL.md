@@ -31,7 +31,7 @@ If `$ROOT/a4/` does not exist (no workspace yet), skip INDEX regeneration and pr
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/index_refresh.py" "$ROOT/a4"
 ```
 
-The script reads frontmatter from `a4/{context,domain,architecture,actors,nfr,plan,bootstrap}.md` (wiki pages) and `a4/{usecase,task,review,decision}/*.md` (issues) plus `a4/spark/*.md`, then fully overwrites `a4/INDEX.md`. Each section contains an Obsidian dataview query block (fixed literal text) and a static markdown fallback computed from current state, wrapped in `<!-- static-fallback-start: <id> -->` / `<!-- static-fallback-end: <id> -->` markers. Stage progress is static-only because it mixes wiki-page presence with cross-folder issue aggregates.
+The script reads frontmatter from `a4/{context,domain,architecture,actors,nfr,plan,bootstrap}.md` (wiki pages) and `a4/{usecase,task,review,decision,idea}/*.md` (issues) plus `a4/spark/*.md`, then fully overwrites `a4/INDEX.md`. Each section contains an Obsidian dataview query block (fixed literal text) and a static markdown fallback computed from current state, wrapped in `<!-- static-fallback-start: <id> -->` / `<!-- static-fallback-end: <id> -->` markers. Stage progress is static-only because it mixes wiki-page presence with cross-folder issue aggregates.
 
 compass does **not** commit INDEX.md automatically — it is left in the working tree for the user or the next session-closing to pick up.
 
