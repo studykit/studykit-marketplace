@@ -42,9 +42,7 @@ import sys
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from common import WIKI_KINDS, split_frontmatter
-
-ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
+from common import ISSUE_FOLDERS, WIKI_KINDS, discover_files, split_frontmatter
 
 FOOTNOTE_DEF_LINE_RE = re.compile(r"^\[\^([^\]\s]+)\]:\s*(.*)$")
 WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
@@ -293,18 +291,6 @@ def validate_file(
         )
     )
     return violations
-
-
-def discover_files(a4_dir: Path) -> list[Path]:
-    out: list[Path] = list(sorted(a4_dir.glob("*.md")))
-    for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if sub.is_dir():
-            out.extend(sorted(sub.glob("*.md")))
-    spark = a4_dir / "spark"
-    if spark.is_dir():
-        out.extend(sorted(spark.glob("*.md")))
-    return out
 
 
 def main() -> None:
