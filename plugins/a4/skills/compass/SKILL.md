@@ -70,7 +70,8 @@ Ask: **"What are you trying to do?"** and show the options:
 |-------|-------------|
 | `spark-brainstorm` | Generate ideas with structured creative techniques |
 | `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
-| `decision-review` | Review and finalize a hand-authored decision record at `a4/decision/<id>-<slug>.md` |
+| `research-review` | Review a research artifact at `./research/<slug>.md` for source quality, option balance, bias, and neutrality |
+| `decision` | Record a decision reached through conversation as `a4/decision/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
 
 ### Pipeline (interactive)
 | Skill | What it does |

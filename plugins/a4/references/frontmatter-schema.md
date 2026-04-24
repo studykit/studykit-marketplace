@@ -191,7 +191,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 
 ## Decision (`a4/decision/<id>-<slug>.md`)
 
-ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are **hand-authored** into `a4/decision/<id>-<slug>.md`. Supporting research, when needed, is produced by `/a4:research` as a separate portable artifact at project-root `./research/<slug>.md` and cited via `related:`. Finalization (reviewer pass + wiki nudge + `status: final`) is performed by `/a4:decision-review`. The body may carry any of `## Context`, `## Options Considered`, `## Research Findings`, `## Evaluation`, `## Decision`, `## Rejected Alternatives`, `## Next Steps` as the decision's scope warrants; none are enforced by frontmatter validation.
+ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are recorded by `/a4:decision` into `a4/decision/<id>-<slug>.md` after the user and LLM converge on a choice through conversation. Supporting research, when needed, is produced separately by `/a4:research` as a portable artifact at project-root `./research/<slug>.md` and cited in the decision's **body prose** as `[[research/<slug>]]` Obsidian wikilinks (not in `related:` frontmatter — research lives outside the `a4/` workspace and is not an issue-family artifact). The wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with footnote markers, or opening a review-item fallback) is performed by `/a4:decision` at record time. The body may carry any of `## Context`, `## Options Considered`, `## Decision`, `## Rejected Alternatives`, `## Next Steps` as the decision's scope warrants; none are enforced by frontmatter validation.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -254,7 +254,7 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 
 Source: `plugins/a4/skills/spark-brainstorm/SKILL.md` lines 91–100.
 
-**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/decision/<id>-<slug>.md` authoring. The `/a4:spark-decide` skill was subsequently split into `/a4:research` (investigation — output at project-root `./research/<slug>.md`, outside the a4/ workspace) and `/a4:decision-review` (reviewer pass + wiki nudge + finalize on a hand-authored decision file). No spark-family file carries `type: decide` anymore.
+**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/decision/<id>-<slug>.md` records. The `/a4:spark-decide` skill was first split into `/a4:research` (investigation at project-root `./research/<slug>.md`) and `/a4:decision-review` (reviewer pass + wiki nudge on a hand-authored decision file); the latter was subsequently retired when it emerged that the review agent assumed a research-grounded decision shape and did not serve simpler, conversation-derived decisions. The current shape is: `/a4:research` (optional) → `/a4:research-review` (optional) → conversation → `/a4:decision` (records the decision + performs the wiki nudge). No spark-family file carries `type: decide` anymore.
 
 ## Validator behavior
 

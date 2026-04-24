@@ -25,7 +25,8 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `auto-usecase` | Autonomous usecase generation |
 | `spark-brainstorm` | Structured brainstorming sessions |
 | `research` | Standalone research facilitator; writes a portable artifact at `./research/<slug>.md` (outside `a4/`) referenced by decision files |
-| `decision-review` | Reviews and finalizes a hand-authored decision record; runs `decision-reviewer` agent + wiki nudge |
+| `research-review` | Reviews a research artifact at `./research/<slug>.md` via the `research-reviewer` agent; applies accepted revisions |
+| `decision` | Records a decision reached through conversation as `a4/decision/<id>-<slug>.md`; cites related research via `[[research/<slug>]]` wikilinks in body; nudges affected wiki pages |
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
@@ -54,7 +55,7 @@ Session-scoped accumulate-then-validate pattern. Edits to `a4/*.md` are recorded
 |------|---------|
 | `api-researcher` | Find and return current API documentation |
 | `arch-reviewer` | Review architecture designs |
-| `decision-reviewer` | Review decision records |
+| `research-reviewer` | Review research artifacts for source quality, option balance, bias, and decision neutrality |
 | `domain-updater` | Update domain models |
 | `task-implementer` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
@@ -90,7 +91,7 @@ Session-scoped accumulate-then-validate pattern. Edits to `a4/*.md` are recorded
     archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
 
   research/                                 # Portable research artifacts from /a4:research
-    <slug>.md                               # Cited from a4/decision/ via `related: [research/<slug>]`
+    <slug>.md                               # Cited from a4/decision/ body via [[research/<slug>]] wikilinks
 ```
 
 ### Wiki vs. issues
