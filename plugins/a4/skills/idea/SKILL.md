@@ -1,16 +1,17 @@
 ---
 name: idea
-description: "This skill should be used when the user explicitly invokes /a4:idea inside a project that uses the a4 plugin's a4/ workflow. Captures a one-line pre-pipeline idea as a new issue file at a4/idea/<id>-<slug>.md. The skill allocates the next global id, slugifies the provided text, and writes the frontmatter + body so the user only has to type the idea itself."
-argument-hint: "<one-line idea>"
+description: "This skill should be used when the user explicitly invokes /a4:idea inside a project that uses the a4 plugin's a4/ workflow. Captures a one-line pre-pipeline idea as a new issue file at a4/idea/<id>-<slug>.md, or discards an existing one. The skill allocates the next global id, slugifies the provided text, and writes the frontmatter + body so the user only has to type the idea itself."
+argument-hint: "<one-line idea> | discard <id-or-slug> [reason]"
 disable-model-invocation: true
-allowed-tools: Bash, Write, Read
+allowed-tools: Bash, Write, Read, Edit, Glob
 ---
 
-# Idea Quick Capture (a4 plugin)
+# Idea Quick Capture + Discard (a4 plugin)
 
-Creates a new `a4/idea/<id>-<slug>.md` file in the current project's `a4/` workspace from a single-line argument. Designed for 30-second capture — the user types the idea, the skill handles id + slug + frontmatter.
+Two modes:
 
-Invocation: `/a4:idea <한 줄 아이디어>` or `/a4:idea "여러 단어 아이디어"`.
+- **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for pre-pipeline possibilities.
+- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `## Why discarded` section with the reason.
 
 See `plugins/a4/spec/2026-04-24-idea-slot.decide.md` for the full design rationale, especially the boundary drawn between `idea/` (independent possibilities, captured raw) and `review/` (gaps in current spec, bound to progress).
 
@@ -23,11 +24,15 @@ If the project root resolved to `NOT_A_GIT_REPO`, abort with a clear message. Th
 
 ## Task
 
-### 1. Validate argument
+### 1. Parse argument and dispatch
 
-If `$ARGUMENTS` is empty or contains only whitespace, abort and tell the user: "Please provide the idea as a one-line argument — e.g., `/a4:idea 콜그래프에 주석 렌더링 넣기`."
+Read the first whitespace-delimited token of `$ARGUMENTS`.
 
-The argument's trimmed text becomes the `title` and the H1 of the new file.
+- If the first token is `discard` (lowercase, exact match), this is the **discard** path — jump to "Discard mode" below.
+- Otherwise, this is the **capture** path — continue with steps 2–6.
+- If `$ARGUMENTS` is empty or contains only whitespace, abort and tell the user: "Please provide an idea as a one-line argument — e.g., `/a4:idea 콜그래프에 주석 렌더링 넣기` — or discard one via `/a4:idea discard <id>`."
+
+In capture mode, the argument's trimmed text becomes the `title` and the H1 of the new file.
 
 ### 2. Verify the workspace
 
@@ -108,6 +113,55 @@ If the idea warrants expansion, mention one-line follow-up options:
 
 Do not propose auto-promotion or auto-commit.
 
+## Discard mode
+
+Triggered when `$ARGUMENTS` starts with the token `discard`. The remainder after the first whitespace is parsed as: `<id-or-slug> [reason]`.
+
+### D1. Resolve the idea file
+
+The second token is the **target**. Accept three forms and resolve in this order:
+
+1. **Numeric id** (e.g., `12`) — glob `<project-root>/a4/idea/<id>-*.md`. Exactly one match expected; error if zero or multiple.
+2. **Folder-prefixed path** (e.g., `idea/12-foo`) — glob `<project-root>/a4/<path>.md`. Exactly one match expected.
+3. **Slug fragment** (any other non-empty token) — glob `<project-root>/a4/idea/*-<fragment>*.md`. If exactly one matches, use it; if multiple match, list them to the user and ask which.
+
+If no file resolves, abort with: "No idea file found for `<target>`. List candidates with `ls a4/idea/`."
+
+### D2. Check current status
+
+Read the resolved file's frontmatter. If `status` is:
+
+- `open` → proceed to D3.
+- `promoted` → abort: "Idea `<path>` is already `promoted`. Discarding a promoted idea is ambiguous; edit by hand if you truly want to reverse that."
+- `discarded` → report "`<path>` is already `discarded`. No change." and exit.
+
+### D3. Apply the discard
+
+Edit the file in-place via the `Edit` tool:
+
+1. Change the frontmatter `status:` value from `open` to `discarded`.
+2. Update the frontmatter `updated:` to today's date.
+3. If a reason was provided (any tokens after `<id-or-slug>`), append a body section (or add one if not already present):
+
+   ```markdown
+   ## Why discarded
+
+   <reason text>
+   ```
+
+   Use the reason verbatim — no re-wording. If the section already exists, append a new line under it prefixed with today's date.
+
+### D4. Report
+
+Tell the user:
+
+```
+Discarded idea #<id> → /abs/path/to/a4/idea/<id>-<slug>.md
+Reason recorded: <reason or "none">
+```
+
+Do not commit. Leave in the working tree.
+
 ## Non-Goals
 
 - Do not commit the new file. Leave it in the working tree.
@@ -121,5 +175,7 @@ Do not propose auto-promotion or auto-commit.
 - `NOT_A_GIT_REPO` — abort with a short message.
 - `a4/` missing — abort; ideas require a workspace.
 - Empty `$ARGUMENTS` — abort with a one-line usage hint.
-- `allocate_id.py` non-zero exit — relay stderr and abort.
+- `allocate_id.py` non-zero exit — relay stderr and abort (capture mode).
 - Write fails (disk full, permission) — relay the error; do not retry silently.
+- Discard target unresolvable or ambiguous — list candidates or report "no match" per D1.
+- Discard target already `promoted` — refuse per D2.
