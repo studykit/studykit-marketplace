@@ -55,7 +55,7 @@ The script always fully regenerates `a4/INDEX.md` — both dataview query blocks
 | Drift alerts (N) | query over `review/*.md` where `source: drift-detector` and status open/in-progress | table listing each alert's wiki target, priority, status |
 | Milestones | group tasks by `milestone:` field | tasks complete / total, open reviews per milestone |
 | Recent activity | top 10 by `updated` descending across all issue folders | same list as static table |
-| Spark (open N) | `a4/spark/*.md` where status is missing or `open` | bullet list with flavor (brainstorm/decide) |
+| Spark (open N) | `a4/spark/*.md` excluding terminal states (brainstorm: `promoted`/`discarded`; decide: `final`/`superseded`) | bullet list with flavor (brainstorm/decide) |
 
 Stage progress is static-only because it mixes wiki-page presence (single-file checks) with cross-folder issue aggregates; a single dataview block cannot express both cleanly.
 

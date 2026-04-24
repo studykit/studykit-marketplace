@@ -50,11 +50,14 @@ Write this after Problem Framing is complete:
 ```markdown
 ---
 type: decide
+pipeline: spark
 topic: "<topic>"
-date: <YYYY-MM-DD>
-status: draft
+status: draft       # draft | final | superseded
 framework: ""
 decision: ""
+supersedes: []      # paths to prior decide(s) this replaces; omit or keep [] if none
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 tags: []
 ---
 # Decision Record: <topic>

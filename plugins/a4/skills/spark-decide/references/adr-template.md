@@ -3,11 +3,14 @@
 ```markdown
 ---
 type: decide
+pipeline: spark
 topic: "<topic>"
-date: <YYYY-MM-DD>
-status: final
+status: final       # draft | final | superseded
 framework: "<evaluation framework used>"
 decision: "<one-line summary of the decision>"
+supersedes: []      # paths to prior decide(s) this replaces; omit or keep [] if none
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
 tags: []
 ---
 # Decision Record: <topic>

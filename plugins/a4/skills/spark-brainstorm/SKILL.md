@@ -90,9 +90,12 @@ When the user indicates they're done:
 ```markdown
 ---
 type: brainstorm
+pipeline: spark
 topic: "<session topic>"
-date: <YYYY-MM-DD>
-status: draft
+status: open        # open | promoted | discarded
+created: <YYYY-MM-DD>
+updated: <YYYY-MM-DD>
+promoted: []        # paths populated when status → promoted (e.g., [spark/<decide>, usecase/<n>-<slug>])
 tags: []
 ---
 # Brainstorming: <session topic>
