@@ -47,6 +47,16 @@ The handoff still records the session's narrative and state, but durable decisio
 
 Write in **English**. Make the handoff self-contained: a fresh session should resume from this file alone without re-reading the broader codebase. Structure and sectioning are your judgment call — let the session shape the document.
 
+**Carry-forward items.** Whenever the handoff lists open work, in-progress items, or things the next session should pick up (typical sections: `## Open`, `## Carry-forward`, `## Where to start the next session`, "still open" tier tables), every item must be a wikilink to an on-disk tracker:
+
+- `[[task/<id>-<slug>]]` — execution-ready or in-progress work (`status: pending | implementing`).
+- `[[decision/<id>-<slug>]]` — open design question (`status: draft`).
+- `[[decision/<id>-<slug>#Open Questions]]` — open question inside a settled ADR.
+
+Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:decision` in draft mode for an open design question, or add an `## Open Questions` heading to the relevant final ADR. Prose around the wikilinks (one-line context, why it's still open) is fine; the wikilink itself is the carry-forward identity.
+
+For projects without a `<project-root>/a4/` workspace (e.g., handoffs about the a4 plugin itself), apply the rule analogously to the project's on-disk tracker — for plugin meta-design, that means `[[plugins/a4/spec/<filename>]]` ADR references with a `## Open Questions` heading on the relevant ADR. The principle is unchanged: every carry-forward must point to a file the next session can open and update.
+
 **Embed directives.** When the handoff needs to reproduce an `a4/` section at length (ADR excerpt, plan snippet, review report, relevant wiki section), use an Obsidian embed directive rather than copy-pasting:
 
 - `![[relative/path#Heading Text]]` — embed the named heading section.
