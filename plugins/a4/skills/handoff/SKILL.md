@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "This skill should be used when the user explicitly invokes /handoff inside a project that uses the a4 plugin's a4/ workflow. Writes a topic-threaded session handoff at <project-root>/.handoff/<topic>/ and snapshots any referenced a4/ sections in place via ![[...]] embed directives resolved at write time."
+description: "This skill should be used when the user explicitly invokes /a4:handoff inside a project that uses the a4 plugin's a4/ workflow. Writes a topic-threaded session handoff at <project-root>/.handoff/<topic>/ that references a4/ artifacts via plain Obsidian wikilinks (no transclusion) so the handoff stays a point-in-time snapshot."
 argument-hint: "<topic-slug> [additional emphasis]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -8,9 +8,9 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 # Session Handoff (a4 plugin)
 
-Writes a session handoff so a fresh Claude Code session can resume the current topic thread without reconstructing prior conversation. Complements the global `/handoff` skill — this plugin variant enforces a topic-threaded schema (`topic` / `previous` / `timestamp`) and embeds referenced `a4/` sections at write time so each handoff is a self-contained snapshot.
+Writes a session handoff so a fresh Claude Code session can resume the current topic thread without reconstructing prior conversation. Enforces a topic-threaded schema (`topic` / `previous` / `timestamp`) and keeps each handoff Obsidian-native: plain wikilinks for live pointers, verbatim excerpts only when needed.
 
-Invocation: `/a4:handoff <topic-slug> [additional emphasis]`. The plugin namespace prefix (`a4:`) disambiguates from the global `/handoff`; no prefix is needed inside the skill slug itself.
+Invocation: `/a4:handoff <topic-slug> [additional emphasis]`.
 
 ## Context
 
@@ -43,6 +43,17 @@ Before writing the handoff body, identify anything from this session that belong
 
 The handoff still records the session's narrative and state, but durable decisions live in durable docs. The handoff remains self-contained even if the same knowledge is also in the proper doc.
 
+When updating wiki pages under `<project-root>/a4/`, follow the footnote protocol in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md §Wiki Update Protocol` (inline `[^N]` marker + `## Changes` definition). Any `## Changes` entry on `architecture.md` must include a `[[decision/<id>-<slug>]]` wikilink — `drift_detector` raises a `missing-adr-cite` gap otherwise.
+
+When an ADR newly cites a research artifact, never hand-edit the `decision`/`research` frontmatter or body. Run the registrar to write all four places atomically:
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
+    "<project-root>/a4" \
+    "research/<slug>" \
+    "decision/<id>-<slug>"
+```
+
 ### 4. Draft the handoff body
 
 Write in **English**. Make the handoff self-contained: a fresh session should resume from this file alone without re-reading the broader codebase. Structure and sectioning are your judgment call — let the session shape the document.
@@ -52,33 +63,17 @@ Write in **English**. Make the handoff self-contained: a fresh session should re
 - `[[task/<id>-<slug>]]` — execution-ready or in-progress work (`status: pending | implementing`).
 - `[[decision/<id>-<slug>]]` — open design question (`status: draft`).
 - `[[decision/<id>-<slug>#Open Questions]]` — open question inside a settled ADR.
+- `[[research/<slug>]]` — investigation still in flight (`status: draft`); `final` / `standalone` / `archived` artifacts are not carry-forward.
 
-Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:decision` in draft mode for an open design question, or add an `## Open Questions` heading to the relevant final ADR. Prose around the wikilinks (one-line context, why it's still open) is fine; the wikilink itself is the carry-forward identity.
+Before listing carry-forwards, sweep the session against `${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md` (B1–B6 + content-aware upward propagation) to surface any ADR-worthy moment that was discussed but never authored. If a new decision is warranted, run `/a4:decision` to create the draft first, then list its wikilink as carry-forward — never leave the trigger as free-text.
 
-For projects without a `<project-root>/a4/` workspace (e.g., handoffs about the a4 plugin itself), apply the rule analogously to the project's on-disk tracker — for plugin meta-design, that means `[[plugins/a4/spec/<filename>]]` ADR references with a `## Open Questions` heading on the relevant ADR. The principle is unchanged: every carry-forward must point to a file the next session can open and update.
+Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:decision` in draft mode for an open design question, `/a4:research` for an open investigation, or add an `## Open Questions` heading to the relevant final ADR. Prose around the wikilinks (one-line context, why it's still open) is fine; the wikilink itself is the carry-forward identity.
 
-**Embed directives.** When the handoff needs to reproduce an `a4/` section at length (ADR excerpt, plan snippet, review report, relevant wiki section), use an Obsidian embed directive rather than copy-pasting:
+For projects without a `<project-root>/a4/` workspace, apply the rule analogously: every carry-forward must be a wikilink to an on-disk file the next session can open and update. The file's shape (a draft document, an `## Open Questions` heading on a settled doc, a SKILL/CLAUDE/README path) is the project's call. Free-text without a wikilink target is forbidden in either context.
 
-- `![[relative/path#Heading Text]]` — embed the named heading section.
-- `![[relative/path]]` — embed the whole file.
+**References vs. excerpts.** Use `[[relative/path#Heading]]` for pointers the next session should follow live. Do **not** use transclusion (`![[…]]`) — transclusion renders the *current* source, which would let a past handoff silently mutate as the source drifts. When a section genuinely needs a frozen excerpt, paste the text verbatim with a plain attribution to source path and date; the rendering format is the writer's call.
 
-Paths are relative to the project root. The `.md` extension may be omitted (Obsidian convention). Plain wikilinks `[[...]]` (no leading `!`) remain as references and are not expanded.
-
-Embeds are resolved at **write time** — the directive is replaced inline with the referenced content, wrapped in `<!-- injected: path#heading @ YYYY-MM-DD -->` / `<!-- /injected -->` markers for audit trail. This preserves handoff immutability: future changes to the embedded file will not retroactively alter past handoffs.
-
-### 5. Expand embed directives
-
-Write the draft body to a temp file, then run:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/inject_includes.py" <temp-draft> \
-    --base-dir "<project-root>" \
-    --date "<today>"
-```
-
-The command prints the expanded body to stdout — capture it. Non-zero exit means a referenced file or heading was not found. Fix the directive (or the referenced document) and retry; do not write a partially-expanded handoff.
-
-### 6. Write the handoff file
+### 5. Write the handoff file
 
 Compose the final file as:
 
@@ -91,12 +86,12 @@ previous: <prior-handoff-filename-or-null>
 
 > **DO NOT UPDATE THIS FILE.** This handoff is a point-in-time snapshot of the session at <TIMESTAMP>. To record a later state, create a new handoff file via `/a4:handoff` — never edit this one.
 
-<expanded body from step 5>
+<draft body from step 4>
 ```
 
 Write to `<project-root>/.handoff/<topic-slug>/<TIMESTAMP>_<filename-slug>.md`.
 
-### 7. Commit
+### 6. Commit
 
 Stage the handoff together with the doc updates from step 3 and any other working-tree changes that belong to this session's scope. Create a single commit whose message describes the primary work of the session (not merely "add handoff"). Include a short reference to the handoff filename in the commit body if helpful.
 
