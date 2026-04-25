@@ -1,13 +1,20 @@
 ---
 name: run
-description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/task/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'task-implementer', 'agent loop'. Picks ready tasks, spawns task-implementer agents (parallel where independent), runs the test-runner, classifies failures, and conditionally performs UC ship-review. Up to 3 cycles. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
+description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/task/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'task-implementer', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
 argument-hint: <optional: 'iterate' to resume after a halt; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Implementation Run Loop
 
-Drives the agent-based implement + test loop over the tasks already authored in `a4/task/`. Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md); `roadmap.md` only embeds those bootstrap sections for human readers). Spawns `task-implementer` per ready task, runs `test-runner` after each cycle, classifies failures, and conditionally ship-reviews UCs. Bounded to 3 cycles per invocation.
+Two stages over the tasks already authored in `a4/task/`:
+
+1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents (parallel where independent), run the `test-runner`. Bounded to 3 cycles per invocation.
+2. **Post-loop review (Step 4, user-driven)** — depending on the loop's outcome:
+   - **Failure path** — user classifies each failing test-runner finding into task / arch / UC and routes accordingly.
+   - **Ship path** — user confirms which UCs go `implementing → shipped`.
+
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md); `roadmap.md` only embeds those bootstrap sections for human readers).
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task` writes single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -19,7 +26,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 - `a4/bootstrap.md` — required. Single source of truth for Launch & Verify (build / launch / test / smoke / isolation).
 - `a4/roadmap.md` — optional. Provides milestone narrative + dependency-graph snapshot. Embeds bootstrap's L&V sections; this skill does not parse the embed.
 - `a4/architecture.md` — passed to agents for contract context.
-- `a4/usecase/*.md` — read for UC ship-review candidates (Step 5). Absent in UC-less projects; that's fine.
+- `a4/usecase/*.md` — read for UC ship-review candidates (Step 4b). Absent in UC-less projects; that's fine.
 - `a4/review/*.md` — open review items influence ready-set selection and resume behavior.
 
 Outputs:
@@ -45,7 +52,7 @@ Outputs:
 
 Determined by the workspace state, not by frontmatter flags:
 
-- **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Step 1 → 5 in order.
+- **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order.
 - **Iterate mode** — open review items target a task or `roadmap` (typically from the prior cycle's test-runner). Walk them before re-running Step 1.
 
 Mode detection at session start:
@@ -150,66 +157,32 @@ Return: counts (passed, failed), list of review item ids written.
 """)
 ```
 
-## Step 4: Analyze Results
+## Step 4: Post-loop Review (user-driven)
 
-Read the returned summary. If all passed AND all tasks `complete`: proceed to Step 5 (UC ship-review). Do **not** declare the run complete until Step 5 finishes (or its candidate set is empty).
+Once the loop body settles, **transition to `conversational`** and branch on outcome. There are exactly two branches and they are mutually exclusive on a single run:
 
-If failures exist, classify each test-runner review item. **Transition to `conversational`** before classifying — failure classification is a decision point that belongs to the user.
+- **4a. Failure path** — at least one test-runner review item from Step 3 is open. The user classifies each finding and the run routes accordingly.
+- **4b. Ship path** — all tests passed AND all in-scope tasks reached `status: complete`. The user confirms `implementing → shipped` per candidate UC.
+
+Both branches are user-driven. No agent classifies failures or auto-ships UCs. The loop body's autonomy ends at the seam into Step 4.
 
 This skill follows the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding halts the run rather than retrying against stale assumptions.
 
-- **Task / roadmap issue** — coding error, missing logic, or roadmap-level oversight. Revise the affected task file(s): update Description, Files, Acceptance Criteria, or `depends_on` as needed; reset the task's `status: pending`; increment `cycle:`; append a `## Log` entry citing the review item that triggered the revision. Any transitively affected downstream tasks also reset to `pending`. Re-run roadmap-reviewer on the revised tasks (single scoped round). If it passes, return to Step 1.
-- **Architecture issue** — wrong contract, missing component, or test-strategy gap. Update the test-runner review item `target: architecture` if not already so (create a new arch-targeted review item if needed). **Stop the run.** Recommend `/a4:arch iterate`. On resume, the new review items from `arch iterate` drive the fix.
-- **Use-case issue** — ambiguous flow / validation / error handling. Retarget to `usecase/<id>-<slug>`. **Stop the run.** Recommend `/a4:usecase iterate`. (Only meaningful for UC-driven tasks; UC-less tasks cannot produce a UC-targeted finding.)
+### 4a. Failure path — classify findings
 
-If 3 cycles complete and failures remain: halt. Mark affected tasks `status: failing`, append `## Log` per failure, leave all test-runner review items `open`. Report the state to the user. Transition to `conversational`.
+For each open test-runner review item, the user picks one of three categories: **task / roadmap**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and `transition_status.py` calls — is in [`references/failure-classification.md`](./references/failure-classification.md).
 
-## Step 5: UC ship-review (conditional, user-confirmed)
+Cycle bound: if 3 cycles complete and failures remain, halt as described in that reference.
 
-Runs only when Step 4 reached the happy-path branch (all tests passed, all tasks `complete`). The goal: for each UC whose implementation is now complete, let the user confirm that the running system reflects it, then flip `status: implementing → shipped` via the writer.
+### 4b. Ship path — confirm UCs to ship
 
-**Conditional on UC presence.** If no task in this run has a non-empty `implements:` (the project is UC-less, or every task in scope is a spike / bug / ADR-justified feature), the candidate set is empty by construction — skip directly to wrap-up. This is not an error; it's the UC-less normal case.
+For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and writer call are in [`references/uc-ship-review.md`](./references/uc-ship-review.md).
 
-When `implements:` is populated on at least one task:
+The ship branch is **conditional on UC presence** — projects with no UC-implementing tasks (UC-less, or all spike / bug / ADR-justified) skip 4b entirely and go to wrap-up. That is the normal case for those shapes, not an error.
 
-1. **Collect candidates.** A UC X is a candidate when:
-   - X.status is `implementing` (flipped by `task-implementer` at work-start per its protocol).
-   - Every task with `implements: [usecase/X]` in its frontmatter now has `status: complete`.
-   - No review item with `target: usecase/X` is `open` or `in-progress` (all resolved or discarded).
+Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:run iterate` session will re-offer them.
 
-   If the candidate set is empty, skip to wrap-up.
-
-2. **Review each candidate.** For every candidate X, read:
-   - The UC file (Flow, Validation, Error handling, Expected Outcome).
-   - The `## Log` entries of its implementing tasks.
-   - The test-runner return summary from Step 3 (passed-test names relevant to X).
-
-   Compose a short per-UC verdict — **two to four sentences** — covering: (a) which task(s) implemented it, (b) which tests exercise its flow / validation / error handling, (c) any Expected Outcome point not yet visibly covered by the tests. No new files, no review items emitted here.
-
-3. **Present to the user.** Transition to `conversational`. For each candidate X, show the verdict and ask:
-   > UC X is ready to mark shipped based on completed tasks and passing tests. [verdict]. Mark shipped?
-
-   Accept natural-language answers:
-   - `"yes"`, `"ok"`, `"맞아요"`, `"확정"`, `"mark shipped"`, `"ship it"` → confirm.
-   - `"not yet"`, `"아직"`, `"let me verify"`, `"hold"` → defer (leave `implementing`).
-   - `"no — X is incomplete because..."` → defer with reason; fold the reason into a fresh review item `target: usecase/X`, `kind: gap`, `source: self`.
-
-4. **Apply confirmations via the writer.** For every UC the user confirmed:
-
-   ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-     "$(git rev-parse --show-toplevel)/a4" \
-     --file "usecase/<id>-<slug>.md" --to shipped \
-     --reason "/a4:run cycle <N>; tests <list>; user confirmed"
-   ```
-
-   The script validates that every task in `implemented_by:` is `complete` (refuses otherwise), writes `status: shipped`, bumps `updated:`, and appends the `## Log` entry. If the UC has a non-empty `supersedes:` list, the same invocation cascades each supersedes target from `shipped` to `superseded` with a back-pointer log entry. Do **not** hand-edit the UC frontmatter or the supersedes targets.
-
-5. **Commit** all UC ship-transitions together as one commit (see Commit Points). The cascade-flipped predecessor UCs land in the same working-tree change as the ship edit and belong in the same commit.
-
-After Step 5, declare the run complete and proceed to wrap-up. Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:run iterate` session will re-offer them.
-
-**`shipped` is forward-path terminal.** If a UC needs revision later, either (a) create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`; when that new UC eventually ships, the writer flips the old one to `superseded`. Or (b) flip `shipped → discarded` via the writer when the code is being removed. Never try to move a UC back from `shipped` to `implementing` or `draft`.
+After 4b finishes (or 4a routes the run elsewhere), proceed to wrap-up.
 
 ---
 
@@ -231,7 +204,7 @@ When a task-implementer reads a task's `## Acceptance Criteria` section, the sou
 - **Per-task implementation** — `task-implementer` commits its own code + unit tests per task; `/a4:run` does **not** also commit those files.
 - **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 3.
 - **Roadmap revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 1.
-- **UC ship-transitions (Step 5)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
+- **UC ship-transitions (Step 4b)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
 - **Final state** — commit any residual review items / log updates when the user wraps up.
 
 Never skip hooks, amend, or force-push without explicit user instruction.
@@ -255,18 +228,19 @@ Context is passed via file paths, not agent memory.
 - **`task-implementer`** — `Agent(subagent_type: "a4:task-implementer")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
 
-`roadmap-reviewer` is **not** invoked from `/a4:run` directly — Step 4 may recommend a scoped re-review of revised tasks, but spawning that agent is `/a4:roadmap iterate`'s responsibility.
+`roadmap-reviewer` is **not** invoked from `/a4:run` directly — Step 4a may recommend a scoped re-review of revised tasks, but spawning that agent is `/a4:roadmap iterate`'s responsibility.
 
 ## Out of Scope
 
 - **Authoring** — task files, roadmap.md, ADRs, UCs are written elsewhere. `/a4:run` only reads them.
 - **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** When `bootstrap.md` is absent, `/a4:run` delegates to `/a4:compass` per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]] — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope. Note: `roadmap.md`'s presence is irrelevant for L&V resolution — bootstrap is the single source of truth.
-- **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4 currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline. Inline scoped re-review is a possible future addition.
+- **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline. Inline scoped re-review is a possible future addition.
 - **Per-cycle parallelism beyond independent ready tasks** — task-implementer parallelism is bounded by the dependency graph; no further parallelization is attempted.
 
 ## Non-Goals
 
 - Do not rebuild Phase 1. `/a4:roadmap` owns roadmap authoring; `/a4:task` owns single-task authoring. If `/a4:run` notices a missing task or roadmap gap, it emits a review item targeting `roadmap` and stops — it does not re-author.
 - Do not split task-implementer / test-runner into sub-skills. The agent loop is intentionally one skill with cycle semantics and cascade rules.
+- Do not split post-loop review (Step 4) into a separate skill, and do not delegate failure classification or UC ship to an agent. The seam is loop body (autonomous) ↔ post-loop review (user-driven); ship is forward-path terminal and stays user-authorized. Verdict / classification details live in `references/failure-classification.md` and `references/uc-ship-review.md` to keep this SKILL.md tight.
 - Do not emit aggregated test reports. All findings are per-review-item files.
 - Do not flip UC status without going through `transition_status.py`. The script enforces the cascade and log invariants.
