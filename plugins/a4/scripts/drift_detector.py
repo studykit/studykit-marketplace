@@ -25,6 +25,10 @@ Detection rules:
                       `[^N]` marker.
   - missing-wiki-page A `wiki_impact` entry names a wiki page that does
                       not exist at the workspace root.
+  - missing-adr-cite  Architecture-only. A live `## Changes` footnote
+                      records a change without citing any `decision/*`
+                      ADR. Resolution: cite the ADR, author one, or
+                      discard with rationale.
 
 Detected drifts are deduplicated against existing review items with the
 same (kind, target, cause) fingerprint when those items are still open,
@@ -70,6 +74,7 @@ KIND_TO_REVIEW_KIND = {
     "orphan-definition": "finding",
     "close-guard": "gap",
     "missing-wiki-page": "gap",
+    "missing-adr-cite": "gap",
 }
 
 KIND_TO_PRIORITY = {
@@ -78,6 +83,7 @@ KIND_TO_PRIORITY = {
     "orphan-definition": "low",
     "close-guard": "high",
     "missing-wiki-page": "high",
+    "missing-adr-cite": "medium",
 }
 
 KIND_TO_TITLE = {
@@ -86,6 +92,7 @@ KIND_TO_TITLE = {
     "orphan-definition": "Orphan footnote definition",
     "close-guard": "Wiki close-guard violation",
     "missing-wiki-page": "Missing wiki page",
+    "missing-adr-cite": "Missing ADR citation",
 }
 
 
@@ -202,8 +209,11 @@ def detect_wiki_drift(
         ))
 
     for label in sorted(definitions.keys() & inline):
-        for link in parse_wikilinks(definitions[label]):
-            if resolve_wikilink(link, issues, wikis) is None:
+        links = parse_wikilinks(definitions[label])
+        has_adr_cite = False
+        for link in links:
+            resolved = resolve_wikilink(link, issues, wikis)
+            if resolved is None:
                 drifts.append(Drift(
                     kind="stale-footnote",
                     wiki=name,
@@ -213,6 +223,19 @@ def detect_wiki_drift(
                     ),
                     cause=link,
                 ))
+            elif resolved.startswith("decision/"):
+                has_adr_cite = True
+
+        if name == "architecture" and not has_adr_cite:
+            drifts.append(Drift(
+                kind="missing-adr-cite",
+                wiki=name,
+                detail=(
+                    f"`## Changes [^{label}]` records a change without citing a "
+                    "`decision/*` ADR."
+                ),
+                cause=f"footnote-{label}",
+            ))
 
     return drifts
 
@@ -390,6 +413,23 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
             "re-point the footnote to the renamed/moved issue, replace the citation",
             "with the current canonical issue, or remove the footnote (and its inline",
             "marker) if the underlying claim is no longer relevant.",
+        ]
+    elif drift.kind == "missing-adr-cite":
+        body_lines += [
+            "Three resolution paths — pick one:",
+            "",
+            "1. **ADR already exists.** If an ADR in `decision/` already records this",
+            f"   change, add `[[decision/<id>-<slug>]]` to the relevant footnote in",
+            f"   `{drift.wiki}.md`'s `## Changes` section, then set this review's",
+            "   status to `resolved`.",
+            "",
+            "2. **ADR needed.** Run `/a4:decision` to author one, then cite it from",
+            "   the footnote and set status to `resolved`.",
+            "",
+            "3. **No ADR warranted.** If this change is routine (framework-mandated,",
+            "   library swap with no architectural choice, post-hoc description, etc.),",
+            "   set status to `discarded` and record the rationale in `## Log`. The",
+            "   detector will not re-emit for the same footnote once discarded.",
         ]
     else:  # orphan-marker / orphan-definition
         body_lines += [
