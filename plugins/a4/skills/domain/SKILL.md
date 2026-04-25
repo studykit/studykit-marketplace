@@ -249,9 +249,11 @@ Domain extraction ends only when the user says so. When the user indicates they'
 
 ## Domain Edits Originating Outside This Skill
 
-`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill — those edits are committed inline with the arch session, and the footnote/`## Changes` entry cites the architecture section as the cause. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. See `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3 for the decision table.
+`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill — those edits are committed inline with the arch session, and the footnote/`## Changes` entry cites the architecture section as the cause. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. See `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3 for the decision table; the workspace-wide authorship policy is at [`references/wiki-authorship.md`](../../references/wiki-authorship.md).
 
 When iterating after arch has run, expect to see `## Changes` entries citing `[[architecture#<section>]]`. Treat them as authoritative — do not undo them; they reflect work already accepted by the user.
+
+**Findings about other wiki pages.** If domain work surfaces an issue in another wiki (e.g., a rename invalidates a `architecture.md` component name), do not edit that wiki — emit a review item with the appropriate `target:`. Per the cross-stage feedback policy, this skill is **continue + review item** for upstream findings: finish domain wrap-up, leave the review item open for the owning skill's `iterate` mode.
 
 ## Agent Usage
 

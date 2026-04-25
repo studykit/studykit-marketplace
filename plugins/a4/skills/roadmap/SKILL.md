@@ -234,7 +234,8 @@ Spawn `Agent(subagent_type: "a4:roadmap-reviewer")`. Pass:
 
 The reviewer emits per-finding review items to `a4/review/<id>-<slug>.md` and returns a summary.
 
-Walk each new review item:
+Walk each new review item per the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback — roadmap depends directly on architecture (component → task split) and UCs (UC → AC source), so upstream findings halt this skill rather than continuing with stale assumptions.
+
 - **Roadmap-level fix** — edit `roadmap.md` or the affected task file; resolve the review item (`status: resolved`, append `## Log`, add wiki footnote if roadmap.md changed).
 - **Arch / usecase finding** — **stop**. Leave the review item `status: open` with its existing `target:` pointing at `architecture` or `usecase/...`. Tell the user to run `/a4:arch` or `/a4:usecase iterate` and resume `/a4:roadmap iterate` afterwards.
 - **Defer** — leave `status: open` with a `## Log` reason.

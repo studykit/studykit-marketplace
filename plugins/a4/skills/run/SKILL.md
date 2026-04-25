@@ -156,6 +156,8 @@ Read the returned summary. If all passed AND all tasks `complete`: proceed to St
 
 If failures exist, classify each test-runner review item. **Transition to `conversational`** before classifying — failure classification is a decision point that belongs to the user.
 
+This skill follows the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding halts the run rather than retrying against stale assumptions.
+
 - **Task / roadmap issue** — coding error, missing logic, or roadmap-level oversight. Revise the affected task file(s): update Description, Files, Acceptance Criteria, or `depends_on` as needed; reset the task's `status: pending`; increment `cycle:`; append a `## Log` entry citing the review item that triggered the revision. Any transitively affected downstream tasks also reset to `pending`. Re-run roadmap-reviewer on the revised tasks (single scoped round). If it passes, return to Step 1.
 - **Architecture issue** — wrong contract, missing component, or test-strategy gap. Update the test-runner review item `target: architecture` if not already so (create a new arch-targeted review item if needed). **Stop the run.** Recommend `/a4:arch iterate`. On resume, the new review items from `arch iterate` drive the fix.
 - **Use-case issue** — ambiguous flow / validation / error handling. Retarget to `usecase/<id>-<slug>`. **Stop the run.** Recommend `/a4:usecase iterate`. (Only meaningful for UC-driven tasks; UC-less tasks cannot produce a UC-targeted finding.)

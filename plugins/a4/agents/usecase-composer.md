@@ -3,8 +3,8 @@ name: usecase-composer
 description: >
   Compose a spec-as-wiki+issues Use Case workspace from raw input (idea,
   brainstorm, research, code analysis): context.md, actors.md, per-UC files,
-  domain.md (when patterns emerge), nfr.md (when provided), and kind: question
-  review items for unresolvable ambiguities.
+  nfr.md (when provided), and kind: question review items for unresolvable
+  ambiguities. Does NOT write domain.md — domain authorship lives in /a4:domain.
 
   Invoked by auto-usecase and usecase skills. Do not invoke directly.
 model: opus
@@ -159,27 +159,9 @@ After composing the UC set, analyze:
 
 Do **not** write a separate "Use Case Relationships" document. Views render via Obsidian dataview.
 
-### 5. Domain Model (domain.md)
+### 5. Domain Model — Out of Scope
 
-When 3+ UCs reference the same noun, extract it as a domain concept. Create `a4/domain.md` on first extraction with `kind: domain`, `updated`, and sections:
-
-```markdown
-# Domain
-
-## Glossary
-
-| Concept | Definition | Key Attributes | Related UCs |
-|---------|-----------|----------------|-------------|
-| Session | A conversation instance | id, startedAt | [[usecase/3-search-history]], [[usecase/5-recall]] |
-
-## Relationships
-<PlantUML class diagram + explanation, when patterns warrant>
-
-## State Transitions
-<PlantUML state diagram per stateful concept, when patterns warrant>
-```
-
-Abstraction rule for domain.md: "what exists and how it connects." No implementation types, no API endpoints, no storage strategies.
+Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` per the workspace authorship policy at [`references/wiki-authorship.md`](../references/wiki-authorship.md). The invoking skill (`/a4:auto-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted in `## Source` sections of UC bodies, but never lifted into a glossary here.
 
 ### 6. Non-Functional Requirements (nfr.md)
 
@@ -242,7 +224,7 @@ added_ucs: <M>
 excluded_candidates:
   - { title: "<candidate>", reason: "<why>" }
 questions_raised: [<review item ids>]
-wiki_pages_touched: [context, actors, domain, nfr]
+wiki_pages_touched: [context, actors, nfr]
 research_consumed: [<research report paths>]
 ```
 

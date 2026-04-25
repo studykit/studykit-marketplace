@@ -161,8 +161,8 @@ The composer:
 - Writes `a4/context.md` with `kind: context`, `updated`, Original Idea quote, Problem Framing.
 - Writes `a4/actors.md` with `kind: actors`, `updated`, Actors table.
 - Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
-- Writes domain concepts to `a4/domain.md` when patterns emerge across UCs.
 - Writes NFRs to `a4/nfr.md` if any are surfaced.
+- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (workspace authorship policy: [`references/wiki-authorship.md`](../../../references/wiki-authorship.md)). The final summary recommends running `/a4:domain` after auto-usecase finishes.
 - Emits `kind: question` review items for unresolvable ambiguities (not merely autonomous defaults it has chosen — those are recorded in the UC body's `## Source` section).
 - Never rewrites previously confirmed UC files without cause.
 
@@ -261,6 +261,10 @@ All commits stage files under `a4/`. Timing:
   - UC candidates: <count>
   ```
 - **Final** — summary commit if anything remains unstaged.
+
+## Cross-Stage Findings
+
+This skill is **continue + review item** for any architecture / domain / NFR concern that surfaces during composition or review — UC drafts are independently meaningful, so emit review items targeting the upstream wiki and finish the autonomous run. See [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback for the workspace policy. Domain Model itself is **out of scope** for this skill — domain extraction lives in `/a4:domain` and is recommended in the final summary when UCs are settled.
 
 ## Autonomous Decision Rules
 

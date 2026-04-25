@@ -102,6 +102,8 @@ Run each check and record the outcome:
 
 ## Step 5: Handle Issues
 
+This skill follows the **continue + review item** policy for upstream (architecture) findings — see [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback. Verified bootstrap state is independently meaningful even when an architecture choice turns out to be wrong; record what was checked, emit review items, and let the user run `/a4:arch iterate` separately.
+
 For each failure:
 
 ### Diagnose the Issue

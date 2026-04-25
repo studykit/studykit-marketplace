@@ -301,6 +301,8 @@ If yes, write `a4/nfr.md` with frontmatter `kind: nfr`, `updated: <today>`, and 
 
 The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper.
 
+This skill primary-authors `context.md`, `actors.md`, and `nfr.md` (per the workspace-wide policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md)). When iteration uncovers an issue in `domain.md` or `architecture.md`, **continue** with usecase work and emit a review item targeting the upstream wiki — do not edit it inline.
+
 When the user indicates they're done, mark `"Platform capabilities audit"` (or whichever phase task is currently `in_progress`) as `completed`, then proceed to **End Iteration** in `${CLAUDE_SKILL_DIR}/references/session-closing.md`. The short version:
 
 1. Launch `Agent(subagent_type: "a4:usecase-explorer")` to surface additional perspectives.
