@@ -20,7 +20,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
 Outputs:
 
-- `a4/roadmap.md` — single wiki page: Overview, Implementation Strategy, Milestones, Launch & Verify, Shared Integration Points.
+- `a4/roadmap.md` — single wiki page: Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Shared Integration Points. The Launch & Verify section is an Obsidian embed of bootstrap.md, not authored content.
 - `a4/task/<id>-<slug>.md` — one per executable unit of work (Jira-task semantics).
 - `a4/review/<id>-<slug>.md` — findings from roadmap-reviewer.
 
@@ -117,7 +117,7 @@ Read these files up front:
 - `a4/architecture.md` — technology stack, components, information flows, interface contracts, test strategy.
 - `a4/usecase/*.md` — every UC (ids, actors, flows, acceptance criteria). Use `grep -l` to enumerate.
 - `a4/domain.md`, `a4/actors.md`, `a4/nfr.md`, `a4/context.md` — supporting wiki pages.
-- `a4/bootstrap.md` — if present. Extract verified build/launch/test commands; use them directly instead of auto-detection.
+- `a4/bootstrap.md` — **required**. Single source of truth for Launch & Verify (build / launch / test / smoke / isolation). The roadmap embeds this content rather than copying it; do not duplicate the verified commands into roadmap.md.
 
 If `bootstrap.md` is absent, suggest `/a4:auto-bootstrap` first. Continue only if the user opts to proceed without it.
 
@@ -141,7 +141,7 @@ Enter plan mode (the `EnterPlanMode` Claude Code primitive). Design:
    - Milestone assignment (`milestone:` field).
    - `kind: feature` (the batch generator emits feature for UC-derived work).
 4. **Shared Integration Points** — identify any file appearing in 3+ tasks' file lists. Define the integration pattern.
-5. **Launch & Verify** — build command, launch command, smoke scenario, test isolation flags. Pull directly from `bootstrap.md` when available. `/a4:run` reads this section verbatim.
+5. **Launch & Verify** — *do not author content here*. `bootstrap.md` is the single source of truth (per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md)); roadmap.md embeds it via Obsidian transclusion so readers see the commands inline without duplicating them. `/a4:run` reads `bootstrap.md` directly — it does not parse the roadmap embed.
 
 Exit plan mode. Write artifacts:
 
@@ -191,14 +191,13 @@ T3 --> T1
 
 ## Launch & Verify
 
-| Item | Value |
-|------|-------|
-| App type | <web app / VS Code extension / CLI / API / …> |
-| Build command | <e.g., `npm run build`> |
-| Launch command | <e.g., `npm run dev`> |
-| Launch URL / view | <e.g., `http://localhost:3000`> |
-| Smoke scenario | <minimal end-to-end interaction> |
-| Test isolation | <flags — e.g., `--disable-extensions`, `--user-data-dir=<tmpdir>`> |
+> Single source of truth: [[bootstrap]]. Re-run `/a4:auto-bootstrap` to update.
+
+![[bootstrap#Verified Commands]]
+
+![[bootstrap#Smoke Scenario]]
+
+![[bootstrap#Test Isolation Flags]]
 
 ## Shared Integration Points
 
@@ -250,7 +249,7 @@ After Step 4 closes, this skill's job is done. The implement + test loop, status
 
 > Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks (spike / bug / ADR-justified feature) can be added at any time via `/a4:task`.
 
-`/a4:run` reads `a4/roadmap.md` § "Launch & Verify" verbatim — make sure that section is correct and complete before handing off.
+`/a4:run` reads `a4/bootstrap.md` (single source of truth for Launch & Verify). Make sure `bootstrap.md` exists and its `## Verified Commands`, `## Smoke Scenario`, and `## Test Isolation Flags` sections are correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
 
 ## Commit Points
 
@@ -287,3 +286,4 @@ Context is passed via file paths, not agent memory.
 - Do not emit aggregated roadmap-review reports. All findings are per-review-item files.
 - Do not track per-source SHAs on `roadmap.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency.
 - Do not run the implement loop here. That is `/a4:run`'s exclusive role; merging the two back together is explicitly out of scope per the plan-restructure ADR.
+- Do not author Launch & Verify content in `roadmap.md`. `bootstrap.md` is the single source of truth; roadmap embeds those sections via Obsidian transclusion. If the verified commands need updating, re-run `/a4:auto-bootstrap`.

@@ -15,15 +15,15 @@ You are a test runner agent. Your job is to run integration + smoke tests agains
 
 From the invoking `roadmap` / `run` skill:
 
-- **Roadmap file path** — absolute path to `a4/roadmap.md` (use its Launch & Verify section for build / run / test commands and test isolation flags).
+- **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify: `## Verified Commands`, `## Smoke Scenario`, `## Test Isolation Flags`).
 - **`a4/` path** — absolute path to the workspace, so you can enumerate tasks (`a4/task/*.md`), identify task-to-test mappings, and write review items into `a4/review/`.
 - **Cycle** — integer identifying this test cycle (1, 2, 3…). Used as a `labels:` entry on emitted review items (`cycle-<N>`).
 
 ## What You Do
 
-1. **Build** — run the build command from Launch & Verify. On build failure, emit one review item with `target: roadmap` (unless the error is clearly isolated to one task's files, in which case target that task).
-2. **Run integration tests** — per the roadmap's Test Plan → Integration Tests section, using the configured test runner.
-3. **Run smoke tests** — per the roadmap's Smoke Tests section.
+1. **Build** — run the build command from `bootstrap.md`'s `## Verified Commands`. On build failure, emit one review item with `target: bootstrap` (unless the error is clearly isolated to one task's files, in which case target that task).
+2. **Run integration tests** — using the integration-test command from `## Verified Commands` and the flags from `## Test Isolation Flags`.
+3. **Run smoke tests** — execute the scenario described in `## Smoke Scenario`.
 4. **For each failure**, emit one review item (see Output below).
 5. **Return** a concise summary.
 
@@ -92,8 +92,8 @@ updated: <YYYY-MM-DD>
 
 ## Rules
 
-- Use Launch & Verify config for build/run/test commands — do not auto-detect.
-- Apply test isolation flags from Launch & Verify (e.g., `--disable-extensions`, clean profile dir).
+- Use bootstrap.md's `## Verified Commands` for build/run/test commands — do not auto-detect.
+- Apply test isolation flags from bootstrap.md's `## Test Isolation Flags` (e.g., `--disable-extensions`, clean profile dir).
 - Record factual results only.
 - Do not commit the review items; the invoking skill commits them as part of its cycle commit.
 - Never edit roadmap, tasks, architecture, or UCs. Findings go into review items only.
