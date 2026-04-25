@@ -117,7 +117,6 @@ updated: <YYYY-MM-DD>
 - **Commonly used examples (not prescribed):** `## Options Considered`, `## Rejected Alternatives`, `## Next Steps`, `## Consequences`, `## Migration Plan`, `## Open Questions`.
 - **Free-form principle:** additional sections may be added when the session content warrants them. All prose must live under a headed section (`##` or `###`); never leave free-form prose outside a section.
 - **`## Next Steps` is implications prose, not a task list.** When the section is present, write it as prose paragraphs (or bullets) that name the decision's implications and cite follow-on work via `[[task/<id>-<slug>]]` wikilinks — e.g., "This decision implies the API gateway must absorb retry logic, see `[[task/47-gateway-retry-budget]]`." A bullet that describes executable work without pointing to a task is forbidden; create the task first (`/a4:task`) and link it. Omit the section entirely when there is no follow-on work — never write empty or placeholder `## Next Steps`.
-- **Plugin meta-ADR fallback.** ADRs in `plugins/a4/spec/` (plugin meta-design) have no `<project-root>/a4/task/` workspace. Their `## Next Steps` references plugin-internal artifacts: a sibling draft ADR (`[[plugins/a4/spec/<filename>]]`), an `## Open Questions` heading on a settled sibling ADR, or a SKILL.md edit named by file path. The principle — every implication points at a file the next session can open — is unchanged.
 
 Frontmatter fields follow `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Decision`:
 
