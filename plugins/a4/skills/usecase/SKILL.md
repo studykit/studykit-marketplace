@@ -106,7 +106,7 @@ Run this **immediately before** writing a new UC, review item, etc. Ids are mono
 
 ## Obsidian Conventions
 
-Wikilink / embed syntax, the footnote audit trail, and the Wiki Update Protocol (when a wiki page needs an update, how to apply one, how to defer via a review item, and the close guard) are documented in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`. That reference is shared by `usecase`, `arch`, and `plan`. Read it once.
+Wikilink / embed syntax, the footnote audit trail, and the Wiki Update Protocol (when a wiki page needs an update, how to apply one, how to defer via a review item, and the close guard) are documented in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`. That reference is shared by `usecase`, `arch`, and `roadmap`. Read it once.
 
 Key rules this skill invokes below:
 
@@ -333,7 +333,7 @@ When the user indicates they're done, proceed to **End Iteration** in `${CLAUDE_
    - no / `"아직"` / `"still iterating"` / silence → leave at current status.
 
    Only `draft` and `revising` UCs are offered. UCs at `ready`, `implementing`, `shipped`, `superseded`, `discarded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC at any status other than `ready`, so this gate is the hand-off point between spec work and coding.
-7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:arch` (or `/a4:plan` if architecture already exists) as the next step.
+7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:arch` (or `/a4:roadmap` if architecture already exists) as the next step.
 
 ## Revising an `implementing` UC
 

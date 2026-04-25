@@ -43,7 +43,7 @@ The script always fully regenerates `a4/INDEX.md` — both dataview query blocks
 ### 4. Suggest a follow-up
 
 - The skill does **not** commit. INDEX.md lands in the working tree; the user (or the next session-closing of a a4 skill) sweeps it up.
-- If the dashboard shows open drift alerts, mention that `/a4:drift` will not help (drift alerts are already emitted review items) — the next applicable `/a4:usecase`, `/a4:arch`, or `/a4:plan` iteration resolves them.
+- If the dashboard shows open drift alerts, mention that `/a4:drift` will not help (drift alerts are already emitted review items) — the next applicable `/a4:usecase`, `/a4:arch`, or `/a4:roadmap` iteration resolves them.
 
 ## Sections produced
 

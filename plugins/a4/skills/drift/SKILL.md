@@ -47,7 +47,7 @@ Relay the detector's stdout to the user verbatim. When new review items were wri
 Pick the suggestion that matches the result:
 
 - **No new drift, none pre-existing** — "Wiki and issues are in sync. Nothing to do."
-- **No new drift, some pre-existing open items** — "Drift detector found nothing new. There are still N open `source: drift-detector` review items from earlier runs; resolve them via the next applicable iteration skill (e.g., `/a4:usecase iterate`, `/a4:arch iterate`, `/a4:plan iterate`)."
+- **No new drift, some pre-existing open items** — "Drift detector found nothing new. There are still N open `source: drift-detector` review items from earlier runs; resolve them via the next applicable iteration skill (e.g., `/a4:usecase iterate`, `/a4:arch iterate`, `/a4:roadmap iterate`)."
 - **New drift written** — "Drift detector emitted N new review items in `a4/review/`. They will be picked up by the next iteration of the relevant `/a4:*` iteration skill, or you can walk them now."
 
 Do not edit wiki pages or issue files yourself; the iteration skills are responsible for resolution.

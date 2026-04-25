@@ -47,7 +47,7 @@ Determine the user's situation and route to Step 2 (Fresh Start) or Step 3 (Gap 
 
 ### 1.1 Resolve the argument
 
-- **Specific target** — integer id (`3`, `#3`), folder-qualified path (`usecase/3-search-history`, `review/6-...`), wiki basename (`context`, `domain`, `architecture`, `actors`, `nfr`, `plan`, `bootstrap`), or a full `a4/…` path. Resolve to the underlying `a4/` file via `Glob`. If the id or path resolves uniquely, carry the target into Step 3. If the target lives under `a4/archive/`, inform the user it is archived and ask whether to restore (`git mv` back into its original folder) before continuing.
+- **Specific target** — integer id (`3`, `#3`), folder-qualified path (`usecase/3-search-history`, `review/6-...`), wiki basename (`context`, `domain`, `architecture`, `actors`, `nfr`, `roadmap`, `bootstrap`), or a full `a4/…` path. Resolve to the underlying `a4/` file via `Glob`. If the id or path resolves uniquely, carry the target into Step 3. If the target lives under `a4/archive/`, inform the user it is archived and ask whether to restore (`git mv` back into its original folder) before continuing.
 - **Free-text description** (e.g., "I want to build a chat app") → Step 2 (Fresh Start). The user is starting something new.
 - **Empty argument** — route by workspace state:
   - `a4/` absent or empty → Step 2 (Fresh Start).
@@ -78,7 +78,9 @@ Ask: **"What are you trying to do?"** and show the options:
 |-------|-------------|
 | `usecase` | Shape a vague idea into concrete Use Cases + Domain Model through dialogue |
 | `arch` | Design architecture — tech stack, components, interfaces, test strategy |
-| `plan` | Plan, implement, and test — autonomously iterate until tests pass |
+| `roadmap` | Author the implementation roadmap and per-task files |
+| `task` | Author a single task (feature / spike / bug) — UC-derived or ADR-justified |
+| `run` | Run the agent loop — implement and test until all pass |
 
 ### Pipeline (autonomous)
 | Skill | What it does |
@@ -139,17 +141,17 @@ Trace from foundation to execution. Stop at the first layer that has actionable 
 **Layer 1 — Wiki foundation.** Is each wiki page that has dependent issues present?
 - UCs exist, `domain.md` missing → recommend `/a4:usecase iterate` (domain is articulated during UC work).
 - UCs exist, `architecture.md` missing → recommend `/a4:arch`.
-- `architecture.md` exists, `plan.md` missing, tasks expected → recommend `/a4:plan`.
+- `architecture.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
 - Any issue's `wiki_impact:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
 
 **Layer 2 — Drift alerts.** Any open `review/*.md` with `source: drift-detector`?
-- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` or `wiki_impact:` tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:plan iterate`.
+- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` or `wiki_impact:` tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
 **Layer 3 — Open review items (non-drift).** Any other open review items?
-- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: wiki-scoped → `/a4:arch iterate` or `/a4:usecase iterate` depending on which wiki; `task/*` → `/a4:plan iterate`.
+- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: wiki-scoped → `/a4:arch iterate` or `/a4:usecase iterate` depending on which wiki; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
 **Layer 4 — Active tasks.** Any `task/*.md` with `status: pending | implementing | failing`?
-- Yes → recommend `/a4:plan iterate` (resume implementation).
+- Yes → recommend `/a4:run iterate` (resume implementation).
 
 **Layer 5 — Blocked items.** Any item with `status: blocked`?
 - Read its `depends_on` chain to find the nearest unblocked predecessor; recommend the skill that owns that predecessor.

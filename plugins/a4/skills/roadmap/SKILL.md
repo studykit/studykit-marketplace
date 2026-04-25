@@ -1,13 +1,13 @@
 ---
-name: plan
-description: "This skill should be used when the user needs to generate and execute an implementation plan from an architecture — autonomously planning, implementing, testing, and iterating until tests pass. Common triggers include: 'plan', 'implement', 'build from arch', 'execute the architecture', 'plan and implement', 'make this work', 'plan and build'. Writes a4/plan.md (wiki page) plus per-task files in a4/task/, orchestrates task-implementer + test-runner subagents, and emits review items on findings or failures."
+name: roadmap
+description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files in a4/task/. The agent-driven implement + test loop (formerly Phase 2) is being moved to /a4:run; until that split lands this SKILL.md still describes both phases. Single ad-hoc tasks (spike, bug, ADR-justified) live in /a4:task."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
-# Implementation Plan Builder & Executor
+# Implementation Roadmap Builder & Executor
 
-Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and autonomously plans, implements, and tests the project — iterating until integration and smoke tests pass.
+Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and authors the implementation roadmap plus per-task files. The legacy Phase 2 (agent loop, integration tests, ship-review) still lives in this file pending the `/a4:run` split.
 
 ## Workspace Layout
 
@@ -20,17 +20,17 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
 Outputs:
 
-- `a4/plan.md` — single wiki page: Overview, Implementation Strategy, Milestones, Launch & Verify, Shared Integration Points.
+- `a4/roadmap.md` — single wiki page: Overview, Implementation Strategy, Milestones, Launch & Verify, Shared Integration Points.
 - `a4/task/<id>-<slug>.md` — one per executable unit of work (Jira-task semantics).
-- `a4/review/<id>-<slug>.md` — findings from plan-reviewer and failures from test-runner.
+- `a4/review/<id>-<slug>.md` — findings from roadmap-reviewer and failures from test-runner.
 
 Derived views (dependency graph, open-task dashboard, milestone progress, test-failure summary) render via Obsidian dataview; no separate files.
 
-## Plan Wiki Schema
+## Roadmap Wiki Schema
 
 ```yaml
 ---
-kind: plan
+kind: roadmap
 updated: 2026-04-24
 ---
 ```
@@ -82,9 +82,9 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Determined by the workspace state, not by frontmatter flags:
 
-- **Plan mode** — `a4/plan.md` absent OR `a4/task/` is empty. Run Phase 1.
+- **Roadmap mode** — `a4/roadmap.md` absent OR `a4/task/` is empty. Run Phase 1.
 - **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Phase 2.
-- **Iterate mode** — open review items target `plan` or a task (typically from the prior cycle's test-runner). Walk them before re-running Phase 2.
+- **Iterate mode** — open review items target `roadmap` or a task (typically from the prior cycle's test-runner). Walk them before re-running Phase 2.
 
 Mode detection runs at session start via:
 
@@ -92,7 +92,7 @@ Mode detection runs at session start via:
 ls a4/task/*.md                                  # any tasks?
 grep -l '^status: pending'   a4/task/*.md       # pending tasks
 grep -l '^status: failing'   a4/task/*.md       # failing tasks
-ls a4/review/*.md | xargs grep -l 'status: open\|target: plan\|target: task/' # open review items
+ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/' # open review items
 ```
 
 ## Resume Hygiene
@@ -101,7 +101,7 @@ At session start, for every task with `status: implementing`, reset to `pending`
 
 ---
 
-## Phase 1 — Plan Generation + Verification
+## Phase 1 — Roadmap Generation + Verification
 
 ### Step 1.1: Read Sources
 
@@ -118,12 +118,12 @@ If `bootstrap.md` is absent, suggest `/a4:auto-bootstrap` first. Continue only i
 
 Check project structure, conventions, test setup, build configuration. File paths in task frontmatter must be specific to this codebase (`src/render.ts`, not "a renderer file").
 
-### Step 1.3: Generate Plan + Tasks
+### Step 1.3: Generate Roadmap + Tasks
 
-Enter plan mode. Design:
+Enter plan mode (the `EnterPlanMode` Claude Code primitive — distinct from the workflow-mode axis). Design:
 
 1. **Implementation strategy** (component-first / feature-first / hybrid) — read `${CLAUDE_SKILL_DIR}/references/planning-guide.md` for guidance.
-2. **Milestones** — group tasks into named deliverable sets (`v1.0`, `beta`, `phase-1`). Milestones drive plan narrative sequencing.
+2. **Milestones** — group tasks into named deliverable sets (`v1.0`, `beta`, `phase-1`). Milestones drive roadmap narrative sequencing.
 3. **Tasks** (one per executable unit):
    - Derive from architecture components + UC flows.
    - Size: covers 1–5 related UCs, touches 1–3 components, independently testable, ≤ ~500 lines.
@@ -137,10 +137,10 @@ Enter plan mode. Design:
 
 Exit plan mode. Write artifacts:
 
-**`a4/plan.md` body** (with the wiki frontmatter above):
+**`a4/roadmap.md` body** (with the wiki frontmatter above):
 
 ```markdown
-# Plan
+# Roadmap
 
 > Implements the architecture in [[architecture]] to deliver the use cases in [[context]].
 
@@ -205,7 +205,7 @@ T3 --> T1
 [^1]: 2026-04-24 — [[architecture]]
 ```
 
-**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` using the schema above. The plan.md's Milestones section references them via wikilinks.
+**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` using the schema above. The roadmap.md's Milestones section references them via wikilinks. Tasks must include `kind: feature | spike | bug` (required); the batch generator emits `kind: feature` for every UC-derived task — single ad-hoc spike / bug entries are authored via `/a4:task`.
 
 After all task files are written, refresh the reverse link on each UC so `ready → implementing` will pass mechanical validation:
 
@@ -216,22 +216,22 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/refresh_implemented_by.py" \
 
 This back-scans every task's `implements:` list and writes `implemented_by: [...]` onto each referenced UC. The script is idempotent; run it again after any task file is created, renamed, or has its `implements:` list edited.
 
-Commit plan generation together when the user confirms (see Commit Points).
+Commit roadmap generation together when the user confirms (see Commit Points).
 
-### Step 1.4: Plan Verification
+### Step 1.4: Roadmap Verification
 
-Spawn `Agent(subagent_type: "a4:plan-reviewer")`. Pass:
+Spawn `Agent(subagent_type: "a4:roadmap-reviewer")`. Pass:
 - `a4/` absolute path
-- Prior open plan-targeted review item ids (to deduplicate)
+- Prior open roadmap-targeted review item ids (to deduplicate)
 
 The reviewer emits per-finding review items to `a4/review/<id>-<slug>.md` and returns a summary.
 
 Walk each new review item:
-- **Plan-level fix** — edit `plan.md` or the affected task file; resolve the review item (`status: resolved`, append `## Log`, add wiki footnote if plan.md changed).
-- **Arch / usecase finding** — **stop Phase 1**. Leave the review item `status: open` with its existing `target:` pointing at `architecture` or `usecase/...`. Tell the user to run `/a4:arch` or `/a4:usecase iterate` and resume `/a4:plan iterate` afterwards.
+- **Roadmap-level fix** — edit `roadmap.md` or the affected task file; resolve the review item (`status: resolved`, append `## Log`, add wiki footnote if roadmap.md changed).
+- **Arch / usecase finding** — **stop Phase 1**. Leave the review item `status: open` with its existing `target:` pointing at `architecture` or `usecase/...`. Tell the user to run `/a4:arch` or `/a4:usecase iterate` and resume `/a4:roadmap iterate` afterwards.
 - **Defer** — leave `status: open` with a `## Log` reason.
 
-Loop up to 3 review rounds if plan-level revisions are substantial. Once the reviewer returns `ACTIONABLE` (or the user explicitly approves moving on with deferred findings), proceed to Phase 2.
+Loop up to 3 review rounds if roadmap-level revisions are substantial. Once the reviewer returns `ACTIONABLE` (or the user explicitly approves moving on with deferred findings), proceed to Phase 2.
 
 ---
 
@@ -257,12 +257,12 @@ For each ready task, spawn one agent:
 ```
 Agent(subagent_type: "a4:task-implementer", prompt: """
 Task file: <absolute path to a4/task/<id>-<slug>.md>
-Plan file: <absolute path to a4/plan.md>
+Roadmap file: <absolute path to a4/roadmap.md>
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:>
 
 Read the task file for Description, Files, Unit Test Strategy, Acceptance Criteria.
-Pull build + unit-test commands from the plan's Launch & Verify section.
+Pull build + unit-test commands from the roadmap's Launch & Verify section.
 
 Implement the task and write its unit tests. All unit tests must pass.
 Commit code + unit tests (one commit per task).
@@ -276,7 +276,7 @@ Before spawning, flip the task via the writer:
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
   --file "task/<id>-<slug>.md" --to implementing \
-  --reason "/a4:plan Step 2.2 spawning task-implementer"
+  --reason "/a4:roadmap Step 2.2 spawning task-implementer"
 ```
 
 After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` / `## Log` — the writer owns them.
@@ -287,24 +287,24 @@ After all tasks reach `complete` (or after a cycle ends with failures still outs
 
 ```
 Agent(subagent_type: "a4:test-runner", prompt: """
-Plan file: <absolute path to a4/plan.md>
+Roadmap file: <absolute path to a4/roadmap.md>
 a4/ path: <absolute path>
 Cycle: <current integer>
 
 Use the Launch & Verify config for build/run/test commands. Run integration and
-smoke tests as defined in the plan. For each failing test, emit one review item
+smoke tests as defined in the roadmap. For each failing test, emit one review item
 at a4/review/<id>-<slug>.md via allocate_id.py with:
 
   kind: finding
   status: open
-  target: <task/<id>-<slug> if the failure is traceable to a task; otherwise plan>
+  target: <task/<id>-<slug> if the failure is traceable to a task; otherwise roadmap>
   source: test-runner
   wiki_impact: []
   priority: high | medium
   labels: [test-failure, cycle-<N>]
 
 Body includes: test name, expected vs actual, full stack/log snippet, and best-guess
-root cause pointer (without classifying as plan/arch/usecase — the calling skill does
+root cause pointer (without classifying as roadmap/arch/usecase — the calling skill does
 that classification).
 
 Return: counts (passed, failed), list of review item ids written.
@@ -313,11 +313,11 @@ Return: counts (passed, failed), list of review item ids written.
 
 ### Step 2.4: Analyze Results
 
-Read the returned summary. If all passed AND all tasks `complete`: proceed to Step 2.5 (UC done-review). Do **not** declare the plan complete until Step 2.5 finishes.
+Read the returned summary. If all passed AND all tasks `complete`: proceed to Step 2.5 (UC done-review). Do **not** declare the roadmap complete until Step 2.5 finishes.
 
 If failures exist, classify each test-runner review item:
 
-- **Task / plan issue** — the failure is a coding error, missing logic, or plan-level oversight. Revise the affected task file(s): update Description, Files, Acceptance Criteria, or `depends_on` as needed; reset the task's `status: pending`; increment `cycle:`; append a `## Log` entry citing the review item that triggered the revision. Any transitively affected downstream tasks also reset to `pending`. Re-run plan-reviewer on the revised tasks (single scoped round). If it passes, return to Step 2.1.
+- **Task / roadmap issue** — the failure is a coding error, missing logic, or roadmap-level oversight. Revise the affected task file(s): update Description, Files, Acceptance Criteria, or `depends_on` as needed; reset the task's `status: pending`; increment `cycle:`; append a `## Log` entry citing the review item that triggered the revision. Any transitively affected downstream tasks also reset to `pending`. Re-run roadmap-reviewer on the revised tasks (single scoped round). If it passes, return to Step 2.1.
 - **Architecture issue** — the failure exposes a wrong contract, missing component, or test-strategy gap. Update the test-runner review item `target: architecture` if not already so (create a new arch-targeted review item if needed). **Stop Phase 2.** Recommend `/a4:arch iterate`. On resume, the new review items from `arch iterate` drive the fix.
 - **Use-case issue** — the failure exposes ambiguous flow / validation / error handling. Retarget to `usecase/<id>-<slug>`. **Stop Phase 2.** Recommend `/a4:usecase iterate`.
 
@@ -362,7 +362,7 @@ Runs only when Step 2.4 reached the happy-path branch (all tests passed, all tas
 
 5. **Commit** all UC ship-transitions together as one commit (see Commit Points). The cascade-flipped predecessor UCs land in the same working-tree change as the ship edit and belong in the same commit.
 
-After Step 2.5, declare the plan complete and proceed to wrap-up. Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:plan iterate` session will re-offer them.
+After Step 2.5, declare the roadmap complete and proceed to wrap-up. Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:roadmap iterate` session will re-offer them.
 
 **`shipped` is forward-path terminal.** If a UC needs revision later, either (a) create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`; when that new UC eventually ships, the writer flips the old one to `superseded`. Or (b) flip `shipped → discarded` via the writer when the code is being removed. Never try to move a UC back from `shipped` to `implementing` or `draft`.
 
@@ -383,13 +383,13 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
 
 ## Commit Points
 
-- **Plan generation** — commit `a4/plan.md` + all new `a4/task/*.md` files together once the user confirms the initial plan.
-- **Plan revision during verification** — commit revised plan / task files + resolved review items as one commit per review round.
+- **Roadmap generation** — commit `a4/roadmap.md` + all new `a4/task/*.md` files together once the user confirms the initial roadmap.
+- **Roadmap revision during verification** — commit revised roadmap / task files + resolved review items as one commit per review round.
 - **Per-task implementation** — task-implementer commits its own code + unit tests per task; the orchestrating skill does **not** also commit those files.
 - **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 2.3.
-- **Plan revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 2.1.
+- **Roadmap revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 2.1.
 - **UC ship-transitions (Step 2.5)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
-- **Final state** — commit the final plan / tasks / review items when the user wraps up.
+- **Final state** — commit the final roadmap / tasks / review items when the user wraps up.
 
 Never skip hooks, amend, or force-push without explicit user instruction.
 
@@ -401,21 +401,22 @@ When the user ends the session, or when all tasks are `complete` and all tests p
    - Tasks completed / revised / still failing.
    - Review items opened / resolved / still open.
    - Cycles consumed.
-2. If any tasks remain `pending` / `failing` or any review items are `open`, suggest `/a4:plan iterate` as the resumption path.
+2. If any tasks remain `pending` / `failing` or any review items are `open`, suggest `/a4:roadmap iterate` as the resumption path.
 3. Suggest `/a4:handoff` to snapshot the session.
 
 ## Agent Usage
 
 Context is passed via file paths, not agent memory.
 
-- **`plan-reviewer`** — `Agent(subagent_type: "a4:plan-reviewer")`. Reviews the plan + tasks against architecture / UCs; emits per-finding review items.
+- **`roadmap-reviewer`** — `Agent(subagent_type: "a4:roadmap-reviewer")`. Reviews the roadmap + tasks against architecture / UCs; emits per-finding review items.
 - **`task-implementer`** — `Agent(subagent_type: "a4:task-implementer")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
 
 ## Non-Goals
 
-- Do not split the plan into per-milestone files. `plan.md` holds all milestone narrative in one file per the ADR.
+- Do not split the roadmap into per-milestone files. `roadmap.md` holds all milestone narrative in one file per the ADR.
 - Do not add a `phase:` frontmatter field to tasks. `milestone:` covers phase semantics.
-- Do not maintain a separate `plan.history.md`. Each task's `## Log` section records per-task history; the workspace's git history covers the rest.
-- Do not emit aggregated test reports or aggregated plan-review reports. All findings are per-review-item files.
-- Do not track per-source SHAs on `plan.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency.
+- Do not maintain a separate `roadmap.history.md`. Each task's `## Log` section records per-task history; the workspace's git history covers the rest.
+- Do not emit aggregated test reports or aggregated roadmap-review reports. All findings are per-review-item files.
+- Do not track per-source SHAs on `roadmap.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency.
+

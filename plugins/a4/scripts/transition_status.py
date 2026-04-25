@@ -334,7 +334,7 @@ def _validate_ready_to_implementing(fm: dict, body: str, issues: list[str]) -> N
     if not _is_non_empty_list(implemented_by):
         issues.append(
             "`implemented_by:` is empty — no task file declares "
-            "`implements: [usecase/<this>]`. Run `/a4:plan` to create tasks "
+            "`implements: [usecase/<this>]`. Run `/a4:roadmap` to create tasks "
             "before flipping to `implementing`."
         )
     actors = fm.get("actors")

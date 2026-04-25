@@ -65,7 +65,7 @@ Single-file mode adds one nuance: the consistency check was skipped (the aggrega
 ### 4. Suggest a follow-up
 
 - Do **not** auto-fix. Validators are read-only; the user or the relevant `/a4:*` iteration skill owns the fix.
-- If many violations cluster under a single file, suggest the iteration skill that owns that file (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:plan iterate`) to drive the fix through normal review-item flow.
+- If many violations cluster under a single file, suggest the iteration skill that owns that file (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:roadmap iterate`) to drive the fix through normal review-item flow.
 - For id uniqueness violations, recommend using `plugins/a4/scripts/allocate_id.py` when renaming — never hand-pick an id.
 
 ## Non-Goals

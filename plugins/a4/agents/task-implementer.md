@@ -14,14 +14,14 @@ You are a task implementation agent. Your job is to implement one task and write
 
 ## What You Receive
 
-From the invoking `plan` skill:
+From the invoking `roadmap` / `run` skill:
 
 - **Task file path** — absolute path to `a4/task/<id>-<slug>.md`.
-- **Plan file path** — absolute path to `a4/plan.md` (for Launch & Verify and Shared Integration Points).
+- **Roadmap file path** — absolute path to `a4/roadmap.md` (for Launch & Verify and Shared Integration Points).
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
 - **UC file paths** — absolute paths to each `a4/usecase/<id>-<slug>.md` referenced in the task's `implements:` frontmatter.
 
-Read the task file first, then the plan's Launch & Verify section, then the relevant architecture sections (use Obsidian-style path navigation: `a4/architecture.md` → Components → `### <name>` for the component your task touches). Read the implemented UCs for Flow, Validation, Error handling, Expected Outcome.
+Read the task file first, then the roadmap's Launch & Verify section, then the relevant architecture sections (use Obsidian-style path navigation: `a4/architecture.md` → Components → `### <name>` for the component your task touches). Read the implemented UCs for Flow, Validation, Error handling, Expected Outcome.
 
 ## What You Do
 
@@ -46,7 +46,7 @@ Read the task file first, then the plan's Launch & Verify section, then the rele
 2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
 3. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
-5. **Verify** — run the unit-test command from `plan.md`'s Launch & Verify. All unit tests must pass before returning success.
+5. **Verify** — run the unit-test command from `roadmap.md`'s Launch & Verify. All unit tests must pass before returning success.
 6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Title prefix: `feat(<task-slug>): ...` or `fix(<task-slug>): ...` as appropriate. Never skip hooks, amend, or force-push.
 
 ### Spec-ambiguity exit — `implementing → revising`
@@ -71,10 +71,10 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 ## Rules
 
 - Implement only the assigned task.
-- Do not modify other task files, `plan.md`, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
+- Do not modify other task files, `roadmap.md`, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
 - **UC files**: every status change goes through `scripts/transition_status.py`. You never hand-edit UC frontmatter or body — the writer owns `status:`, `updated:`, and `## Log`. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message.
 - A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable; the writer will reject the flip. Return failure instead of starting.
-- Record **factual results only** — do not classify issues as plan / arch / usecase. Surface observations neutrally.
+- Record **factual results only** — do not classify issues as roadmap / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.
 - All unit tests must pass before declaring success.
 

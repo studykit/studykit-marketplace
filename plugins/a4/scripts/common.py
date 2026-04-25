@@ -13,7 +13,7 @@ from pathlib import Path
 from typing import Any
 
 WIKI_KINDS = frozenset(
-    {"context", "domain", "architecture", "actors", "nfr", "plan", "bootstrap"}
+    {"context", "domain", "architecture", "actors", "nfr", "roadmap", "bootstrap"}
 )
 
 ISSUE_FOLDERS: tuple[str, ...] = (

@@ -36,7 +36,7 @@ updated: 2026-04-24
 ---
 ```
 
-No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` (shared across `usecase`, `arch`, and `plan`).
+No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` (shared across `usecase`, `arch`, and `roadmap`).
 
 ## Id Allocation
 
@@ -281,7 +281,7 @@ The architecture ends only when the user says so. When the user indicates they'r
    - Phases completed this session
    - Components added / revised
    - Review items opened / resolved / still open
-   - Suggested next step: `/a4:auto-bootstrap` to set up dev environment, or `/a4:plan` if bootstrap is already done
+   - Suggested next step: `/a4:auto-bootstrap` to set up dev environment, or `/a4:roadmap` if bootstrap is already done
 
 ### Agent Usage
 
