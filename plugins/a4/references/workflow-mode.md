@@ -54,10 +54,10 @@ Per-session files prevent races between concurrent Claude Code sessions in the s
 
 | Event | Action |
 |-------|--------|
-| `SessionStart` (hook) | `workflow_mode.py init` — create the session file with default mode (driven by the first invoked skill's `default_mode`, or `conversational` if mode-less). |
-| `SessionStart` (hook, sweep) | `find a4/.workflow-state -mtime +1 -delete` to remove orphan files left by crashed sessions where `SessionEnd` did not fire. Same precedent as `cleanup-edited-a4.sh`. |
+| `SessionStart` (hook) | `workflow_mode.py init` — create the session file with default mode (driven by the first invoked skill's `default_mode`, or `conversational` if mode-less). The plugin's `scripts/a4_hook.py session-start` calls this in-process via import; `init` is idempotent (already-existing state is left untouched) so multiple SessionStart firings on the same session do not race. |
+| `SessionStart` (hook, sweep) | `workflow_mode.py sweep` — delete orphan state files older than 1 day (left by crashed sessions where `SessionEnd` did not fire). Sweep runs before `init` so a fresh init does not collide with a stale orphan. Same precedent as `cleanup-edited-a4.sh`. |
 | Skill / agent transitions | `workflow_mode.py set <mode> --trigger <reason> --by <skill>` — append to `history`, overwrite top-level fields. |
-| `SessionEnd` (hook) | `workflow_mode.py cleanup` — delete this session's file. Always exit 0. |
+| `SessionEnd` (hook) | `workflow_mode.py cleanup` — delete this session's file. Always exit 0. The plugin's `scripts/a4_hook.py session-end` calls this in-process via import. |
 
 ## Skill Mode Declaration
 
@@ -139,5 +139,6 @@ workflow_mode.py sweep                                 # called by SessionStart 
 ## References
 
 - `references/hook-conventions.md` — hook lifecycle and exit-code conventions, including SessionStart sweep precedent.
-- `references/frontmatter-schema.md` — skill frontmatter fields (`default_mode`, `mode_transitions` to be added).
-- `spec/2026-04-25-workflow-mode-axis.decide.md` (forthcoming) — design rationale for this axis.
+- `references/frontmatter-schema.md` — skill frontmatter fields (`default_mode`, `mode_transitions` to be formalized in a future revision).
+- `spec/2026-04-25-workflow-mode-axis.decide.md` — design rationale for this axis.
+- `spec/2026-04-25-plan-restructure.decide.md` — companion ADR landing the `roadmap` / `task` / `run` skill split where `default_mode` first applies.
