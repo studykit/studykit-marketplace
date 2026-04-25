@@ -9,6 +9,10 @@ wiki page footnotes track every substantive issue change. It scans a4/ wiki
 pages and a4/{usecase,task,review,decision}/ issue files, then emits review
 items with `source: drift-detector` for each detected drift.
 
+Wiki normalization (runs before detection):
+  - missing `## Changes` heading on a wiki page is auto-appended; the
+    section is left empty for subsequent edits to populate.
+
 Detection rules:
   - close-guard       Resolved review item declares a `wiki_impact` page,
                       but the named wiki page has no footnote citing the
@@ -152,6 +156,22 @@ def resolve_wikilink(link: str, issues: dict[str, Path], wikis: dict[str, Path])
         path = issues[link]
         return f"{path.parent.name}/{path.stem}"
     return None
+
+
+def ensure_changes_section(path: Path, dry_run: bool = False) -> bool:
+    """Append a `## Changes` heading to `path` when it is missing.
+
+    Returns True when the heading was missing (i.e., the page was — or, in
+    `dry_run`, would have been — auto-fixed). The appended section is left
+    empty so subsequent edits can populate it via the standard footnote
+    protocol.
+    """
+    text = path.read_text(encoding="utf-8")
+    if re.search(r"^##\s+Changes\s*$", text, re.MULTILINE):
+        return False
+    if not dry_run:
+        path.write_text(text.rstrip() + "\n\n## Changes\n", encoding="utf-8")
+    return True
 
 
 def detect_wiki_drift(
@@ -416,6 +436,11 @@ def main() -> None:
     issues = discover_issues(a4_dir)
     issue_files = {p for p in issues.values()}
 
+    auto_fixed: list[str] = []
+    for name, path in sorted(wikis.items()):
+        if ensure_changes_section(path, dry_run=args.dry_run):
+            auto_fixed.append(name)
+
     drifts: list[Drift] = []
     for name, path in sorted(wikis.items()):
         drifts.extend(detect_wiki_drift(name, path, issues, wikis))
@@ -452,6 +477,7 @@ def main() -> None:
             "a4_dir": str(a4_dir),
             "scanned_wikis": sorted(wikis.keys()),
             "scanned_issues": len(issue_files),
+            "auto_fixed_wikis": auto_fixed,
             "all_detected": len(unique),
             "deduped_existing": len(unique) - len(new_drifts),
             "new_drifts": [asdict(d) for d in new_drifts],
@@ -464,6 +490,12 @@ def main() -> None:
     print(
         f"Scanned {len(wikis)} wiki page(s) and {len(issue_files)} issue file(s)."
     )
+    if auto_fixed:
+        verb = "would auto-fix" if args.dry_run else "auto-fixed"
+        print(
+            f"{verb} {len(auto_fixed)} wiki page(s) "
+            f"(appended missing `## Changes` heading): {', '.join(auto_fixed)}"
+        )
     print(
         f"Detected {len(unique)} drift(s); "
         f"{len(unique) - len(new_drifts)} already tracked by an existing review item."
