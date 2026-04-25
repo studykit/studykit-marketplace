@@ -23,7 +23,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `arch` | Architecture design and review |
 | `roadmap` | Implementation roadmap creation and review |
 | `auto-bootstrap` | Autonomous project bootstrap with research |
-| `auto-usecase` | Autonomous usecase generation |
+| `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
 | `spark-brainstorm` | Structured brainstorming sessions |
 | `research` | Standalone research facilitator; writes a portable artifact at `./research/<slug>.md` (outside `a4/`) referenced by decision files |
 | `research-review` | Reviews a research artifact at `./research/<slug>.md` via the `research-reviewer` agent; applies accepted revisions |
