@@ -29,7 +29,6 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
 
 - **Global monotonic ids.** `id` is unique across the entire workspace (GitHub-issue semantics). Allocated by `scripts/allocate_id.py`.
 - **Filenames.** `<id>-<slug>.md`. Folder indicates type — no `uc-` / `task-` prefix.
-- **Forward-only relationships.** Frontmatter stores forward links (`implements`, `depends_on`, `justified_by`, `supersedes`, `target`, `wiki_impact`). Reverse links are either auto-maintained by scripts (`usecase.implemented_by:` ← `refresh_implemented_by.py`) or derived on demand (Obsidian dataview, grep).
 - **Wiki updates flow through review items.** Wiki pages have no lifecycle but change continuously; edits are nudged by single-edit skills, deferred via `kind: gap` review items, and reconciled by the drift detector. Footnote markers (`[^N]`) + `## Changes` section record causes.
 - **Obsidian markdown throughout.** Body uses `[[wikilinks]]` and `![[embeds]]`. Frontmatter paths are plain strings (no brackets, no `.md`).
 
