@@ -20,7 +20,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 |------|---------|
 | `usecase` | Collaborative usecase specification design |
 | `arch` | Architecture design and review |
-| `plan` | Implementation plan creation and review |
+| `roadmap` | Implementation roadmap creation and review |
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Autonomous usecase generation |
 | `spark-brainstorm` | Structured brainstorming sessions |
@@ -66,7 +66,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 | `domain-updater` | Update domain models |
 | `task-implementer` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
-| `plan-reviewer` | Review implementation plans |
+| `roadmap-reviewer` | Review implementation roadmaps |
 | `test-runner` | Run tests and produce reports |
 | `usecase-composer` | Compose usecase specifications |
 | `usecase-explorer` | Explore and discover usecases |
@@ -81,7 +81,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 <project-root>/
   a4/                                       # Markdown-only documentation workspace
     context.md architecture.md domain.md     # Wiki pages (flat):
-    actors.md nfr.md plan.md bootstrap.md    # one file per cross-cutting concern
+    actors.md nfr.md roadmap.md bootstrap.md # one file per cross-cutting concern
 
     usecase/<id>-<slug>.md                    # Use Cases
     task/<id>-<slug>.md                       # Executable work units (Jira sense; kind: feature|spike|bug)

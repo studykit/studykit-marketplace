@@ -1,11 +1,11 @@
-# plan
+# roadmap
 
-Takes an architecture document and autonomously plans, implements, and tests the project — iterating until integration and smoke tests pass. Delegates task implementation to per-task subagents and orchestrates the execution order, progress tracking, and cycle loop.
+Takes an architecture document and authors the implementation roadmap and per-task files. Pairs with `/a4:run` for the agent-driven implement + test loop and with `/a4:task` for single-task authoring outside the batch.
 
 ## Current Notes
 
-- **Primary file:** `plugins/a4/skills/plan/SKILL.md`
-- **Current behavior:** Autonomous planning-and-execution orchestrator. It writes `.plan.md`, uses `plan-reviewer`, delegates tasks to `task-implementer`, and uses `test-runner` for integration/smoke verification.
+- **Primary file:** `plugins/a4/skills/roadmap/SKILL.md`
+- **Current behavior:** Roadmap authoring (Phase 1 of the legacy `plan` skill). Phase 2 — agent loop, integration tests, ship-review — is being moved to `/a4:run`. Until that split lands the SKILL.md still bundles both phases; treat the diagram below as historical.
 
 ## Workflow
 
@@ -17,7 +17,7 @@ skinparam conditionStyle inside
 |#WhiteSmoke|tp| plan (orchestrator)
 |#AliceBlue|ti| task-implementer subagent (sonnet)
 |#Lavender|ts| test subagent (sonnet)
-|#MistyRose|rv| plan-reviewer agent
+|#MistyRose|rv| roadmap-reviewer agent
 
 |tp|
 start
@@ -25,7 +25,7 @@ start
 partition "Input Resolution" {
   :Resolve $ARGUMENTS
   (full path / partial / slug);
-  if (Existing .plan.md?) then (yes)
+  if (Existing .roadmap.md?) then (yes)
     :Resume Mode;
     note right
       Extract phase, cycle, status
@@ -65,7 +65,7 @@ partition "Phase 1 — Plan Generation + Verification" #LightCyan {
     Test file convention
     Launch & Verify config
   end note
-  :Write .plan.md
+  :Write .roadmap.md
   (phase: plan-review, revision: 1);
   :Commit: plan + history;
 
@@ -142,7 +142,7 @@ partition "Phase 2 — Implement + Test Loop" #Honeydew {
         + record failure summary;
 
         if (Every 3 tasks?) then (checkpoint)
-          :Update .plan.md statuses;
+          :Update .roadmap.md statuses;
           :Commit;
         else (continue)
         endif

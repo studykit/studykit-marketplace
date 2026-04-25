@@ -10,7 +10,7 @@ Every markdown file created by an a4 skill carries YAML frontmatter. Files split
 
 | Family | Examples | Location |
 |--------|----------|----------|
-| **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `plan.md`, `bootstrap.md` | `a4/` root |
+| **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `roadmap.md`, `bootstrap.md` | `a4/` root |
 | **Issue** | use case, task, review item, decision, idea | `a4/usecase/`, `a4/task/`, `a4/review/`, `a4/decision/`, `a4/idea/` |
 | **Spark** | brainstorm output | `a4/spark/` |
 
@@ -74,17 +74,17 @@ Listing who calls the writer for each value makes the invariant auditable.
 | usecase | `ready` | `/a4:usecase` Step 6 ready-gate (user-confirmed "mark as ready"); also `revising → ready` at the end of a revising-edit session |
 | usecase | `implementing` | `task-implementer` Step 1 (flips `ready → implementing` after pre-flight validation; refuses `draft`) |
 | usecase | `revising` | `/a4:usecase` (user-triggered in-place spec edit), `task-implementer` (when semantic ambiguity surfaces mid-implementation and a review item is emitted) |
-| usecase | `shipped` | `/a4:plan` Step 2.5 (UC ship-review, user-confirmed after Phase 2). Cascade: `supersedes:` targets flip `shipped → superseded` inside the same script invocation |
+| usecase | `shipped` | `/a4:run` Step 2.5 (UC ship-review, user-confirmed after Phase 2). Cascade: `supersedes:` targets flip `shipped → superseded` inside the same script invocation |
 | usecase | `superseded` | `transition_status.py` cascade — flipped automatically when a newer UC with `supersedes: [usecase/X]` reaches `shipped` |
-| usecase | `discarded` | user-triggered via `/a4:usecase` (spec abandoned) or `/a4:plan` (direction rejected). Cascade: related tasks → `discarded`, open review items with `target: usecase/X` → `discarded` |
+| usecase | `discarded` | user-triggered via `/a4:usecase` (spec abandoned) or `/a4:roadmap` (direction rejected). Cascade: related tasks → `discarded`, open review items with `target: usecase/X` → `discarded` |
 | usecase | `blocked` | `usecase-reviser` (on SPLIT), `task-implementer` (on implementation-time blocker detection) |
-| task | `pending` | `/a4:plan` (on create + on revision reset) |
-| task | `implementing` | `/a4:plan` Step 2.2 (before `task-implementer` spawn) |
-| task | `complete` | `/a4:plan` Step 2.2 (after agent returns success) |
-| task | `failing` | `/a4:plan` Step 2.2 / 2.3 (after agent or test-runner failure) |
+| task | `pending` | `/a4:roadmap` / `/a4:task` (on create), `/a4:run` (on revision reset) |
+| task | `implementing` | `/a4:run` Step 2.2 (before `task-implementer` spawn) |
+| task | `complete` | `/a4:run` Step 2.2 (after agent returns success) |
+| task | `failing` | `/a4:run` Step 2.2 / 2.3 (after agent or test-runner failure) |
 | task | `discarded` | `transition_status.py` cascade — when the UC this task implements flips to `discarded`. Direct calls are also permitted for explicit one-off task discards |
 | review | `open` | reviewer agents, `drift_detector.py`, `task-implementer` (revising-trigger review items), defer paths in single-edit skills |
-| review | `in-progress` | iterate flows (`/a4:usecase`, `/a4:arch`, `/a4:plan` iterate) |
+| review | `in-progress` | iterate flows (`/a4:usecase`, `/a4:arch`, `/a4:roadmap` iterate) |
 | review | `resolved` | iterate flows + `usecase-reviser` (after fix lands) |
 | review | `discarded` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect); `transition_status.py` cascade when a target UC is `discarded` |
 | decision | `draft` | `/a4:decision` (file is always born at `draft` when `/a4:decision` writes a new record) |
@@ -123,7 +123,7 @@ Minimal schema — no lifecycle, no id.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
-| `kind` | yes | enum | `context` \| `domain` \| `architecture` \| `actors` \| `nfr` \| `plan` \| `bootstrap` |
+| `kind` | yes | enum | `context` \| `domain` \| `architecture` \| `actors` \| `nfr` \| `roadmap` \| `bootstrap` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
 Example:
@@ -360,7 +360,7 @@ Several enum values are semantically derived from cross-file state rather than b
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
 | `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
-| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*.md` carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; called at end of `/a4:plan` Phase 1 and from the `scripts/a4_hook.py session-start` SessionStart hook) |
+| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*.md` carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; called at end of `/a4:roadmap` Phase 1 and from the `scripts/a4_hook.py session-start` SessionStart hook) |
 | `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
 | `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |

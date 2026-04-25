@@ -13,10 +13,10 @@ this script by back-scanning the task directory.
 
   - `task-implementer`: `ready → implementing` is allowed only if the
     target UC has `implemented_by:` non-empty (there is work to do).
-  - `/a4:plan` Step 2.5: ship-check confirms every listed task is
+  - `/a4:run` Step 2.5: ship-check confirms every listed task is
     `complete` before flipping the UC to `shipped`.
 
-Normal invocation happens at the end of `/a4:plan` Phase 1 after task
+Normal invocation happens at the end of `/a4:roadmap` Phase 1 after task
 files are generated. A SessionStart sweep is also useful after a `git
 checkout` or branch rebase.
 

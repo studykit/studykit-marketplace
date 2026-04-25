@@ -52,7 +52,7 @@ WIKI_KINDS: tuple[str, ...] = (
     "architecture",
     "actors",
     "nfr",
-    "plan",
+    "roadmap",
     "bootstrap",
 )
 
@@ -284,11 +284,11 @@ def section_stage_progress(
         return f"present · updated {page.updated or '—'}"
 
     milestones = sorted({t.milestone for t in tasks if t.milestone})
-    plan_page = pages_by_kind.get("plan")
-    plan_row = (
+    roadmap_page = pages_by_kind.get("roadmap")
+    roadmap_row = (
         f"not created"
-        if plan_page is None or plan_page.path is None
-        else f"present · updated {plan_page.updated or '—'} · {len(milestones)} milestone(s)"
+        if roadmap_page is None or roadmap_page.path is None
+        else f"present · updated {roadmap_page.updated or '—'} · {len(milestones)} milestone(s)"
     )
 
     lines = [
@@ -297,7 +297,7 @@ def section_stage_progress(
         f"| Usecase | {stage_row_for_issues('usecase', usecases)} |",
         f"| Arch | {wiki_row('architecture')} |",
         f"| Bootstrap | {wiki_row('bootstrap')} |",
-        f"| Plan | {plan_row} |",
+        f"| Roadmap | {roadmap_row} |",
         f"| Impl | {stage_row_for_issues('task', tasks)} |",
     ]
     return heading, None, "\n".join(lines)

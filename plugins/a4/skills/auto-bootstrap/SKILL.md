@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 # Project Bootstrap
 
-Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that `plan` reads for Launch & Verify.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that `roadmap` reads for Launch & Verify.
 
 ## Workspace
 
@@ -282,7 +282,7 @@ Runs autonomously. No user interaction during execution. On any verification fai
 
 After the commit lands, suggest:
 
-> The dev environment is ready. Run `/a4:plan` to generate an implementation plan from the architecture and this bootstrap.
+> The dev environment is ready. Run `/a4:roadmap` to generate an implementation roadmap from the architecture and this bootstrap.
 
 If any `target: architecture` review items are `status: open`:
 
