@@ -2,14 +2,14 @@
 
 Canonical dataview query blocks for the `a4/` workspace. Primary audience: skill authors and end users writing dataview blocks into wiki pages, issue bodies, or the INDEX dashboard.
 
-Frontmatter-side rules (which fields are queryable, enum values, path format) live in [frontmatter-schema.md](./frontmatter-schema.md). Body-level wikilink and footnote conventions live in [obsidian-conventions.md](./obsidian-conventions.md). These three documents should be read together.
+Frontmatter-side rules (which fields are queryable, enum values, path format) live in [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). Body-level wikilink and footnote conventions live in [obsidian-conventions.md](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md). These three documents should be read together.
 
 ## Scope
 
 Two families of blocks are documented here:
 
 1. **INDEX.md canonical blocks** — verbatim from `plugins/a4/scripts/index_refresh.py`. The script regenerates `a4/INDEX.md` with these blocks on every compass/index run; each block is paired with a static markdown fallback for non-Obsidian viewers.
-2. **Derived views** — dataview blocks for pasting onto individual wiki or issue pages. They compute the reverse direction of the ADR's forward-only relationship model (see [frontmatter-schema.md §Relationships are forward-only](./frontmatter-schema.md)), plus a use-case-diagram source listing.
+2. **Derived views** — dataview blocks for pasting onto individual wiki or issue pages. They compute the reverse direction of the ADR's forward-only relationship model (see [frontmatter-schema.md §Relationships are forward-only](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md)), plus a use-case-diagram source listing.
 
 Vault-layout assumption: the Obsidian vault root is the repo root, so `FROM "a4/usecase"` resolves correctly. If you open `a4/` itself as the vault root instead, strip the `a4/` prefix from every `FROM` clause.
 
@@ -85,7 +85,7 @@ LIMIT 10
 
 ### Open ideas
 
-Pre-pipeline quick-capture items (see [frontmatter-schema.md §Idea](./frontmatter-schema.md) and `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`). Filter is `status = "open"`; `promoted`/`discarded` are terminal.
+Pre-pipeline quick-capture items (see [frontmatter-schema.md §Idea](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) and `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`). Filter is `status = "open"`; `promoted`/`discarded` are terminal.
 
 ```dataview
 TABLE WITHOUT ID file.link AS "Idea", status AS "Status", updated AS "Updated"
@@ -107,7 +107,7 @@ SORT file.name ASC
 
 ## Derived views
 
-Per [frontmatter-schema.md §Relationships are forward-only](./frontmatter-schema.md), the schema stores only forward relationships. Reverse directions are computed by dataview on demand. Paste one of the blocks below onto the target page (a use case, task, decision, wiki page, etc.) to surface items pointing at it.
+Per [frontmatter-schema.md §Relationships are forward-only](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md), the schema stores only forward relationships. Reverse directions are computed by dataview on demand. Paste one of the blocks below onto the target page (a use case, task, decision, wiki page, etc.) to surface items pointing at it.
 
 **Path-format placeholder.** Each query uses a literal folder-prefixed path like `"usecase/3-search-history"` as a placeholder; replace it with the current page's path (folder-prefixed, no `.md` extension) when pasting. Using a literal keeps the query self-contained and avoids dataview's path-normalization pitfalls when the vault root and frontmatter path format differ.
 
@@ -194,8 +194,8 @@ Pure-mermaid rendering from frontmatter requires a dataviewjs block (JavaScript 
 
 ## Cross-references
 
-- [frontmatter-schema.md](./frontmatter-schema.md) — queryable frontmatter fields (enums, types, forward-only relationships).
-- [obsidian-conventions.md](./obsidian-conventions.md) — body-level wikilink syntax and footnote audit trail.
+- [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — queryable frontmatter fields (enums, types, forward-only relationships).
+- [obsidian-conventions.md](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) — body-level wikilink syntax and footnote audit trail.
 - `plugins/a4/scripts/index_refresh.py` — authoritative source for the INDEX.md canonical blocks. Must stay in sync with the first section of this document.
 - `plugins/a4/scripts/drift_detector.py` — produces the review items surfaced by the Drift alerts block.
 - `plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the rationale source.

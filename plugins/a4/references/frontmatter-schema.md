@@ -341,7 +341,7 @@ Source: `plugins/a4/skills/spark-brainstorm/SKILL.md` lines 91–100.
 
 The validator at `plugins/a4/scripts/validate_frontmatter.py` enforces this schema. Every rule violation is an error; the process exits `2` on any violation and `0` on a clean run.
 
-Body-side conventions (wiki-page footnote format, body wikilink resolution) are enforced by a sibling script `plugins/a4/scripts/validate_body.py`; see [obsidian-conventions.md](./obsidian-conventions.md) for the rules covered there.
+Body-side conventions (wiki-page footnote format, body wikilink resolution) are enforced by a sibling script `plugins/a4/scripts/validate_body.py`; see [obsidian-conventions.md](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) for the rules covered there.
 
 | Rule | Behavior |
 |------|----------|

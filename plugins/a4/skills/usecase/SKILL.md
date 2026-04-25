@@ -110,7 +110,7 @@ Wikilink / embed syntax, the footnote audit trail, and the Wiki Update Protocol 
 
 Key rules this skill invokes below:
 
-- Body prose uses wikilinks (`[[usecase/3-search-history]]`) and embeds (`![[usecase/3-search-history]]`). Frontmatter paths stay bracket-free per [frontmatter-schema.md](../../references/frontmatter-schema.md).
+- Body prose uses wikilinks (`[[usecase/3-search-history]]`) and embeds (`![[usecase/3-search-history]]`). Frontmatter paths stay bracket-free per [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 - When a confirmed UC / actor / concept change affects a wiki page, update the wiki page in place: leave a `[^N]` footnote in the modified section, append a `## Changes` line pointing at the causing issue, and bump the wiki page's `updated:`.
 - If the user defers a wiki update, open a review item with `wiki_impact:` set; the close guard re-surfaces it at session close.
 
@@ -119,7 +119,7 @@ Key rules this skill invokes below:
 Determine the mode from `$ARGUMENTS` and the current `a4/` state:
 
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run the iteration entry procedure in [`references/iteration-entry.md`](./references/iteration-entry.md). Mechanics shared across all a4 iterate flows are in [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md); the per-skill procedure is the usecase-specific addendum on top.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run the iteration entry procedure in [`references/iteration-entry.md`](${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/iteration-entry.md). Mechanics shared across all a4 iterate flows are in [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md); the per-skill procedure is the usecase-specific addendum on top.
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 
@@ -301,7 +301,7 @@ If yes, write `a4/nfr.md` with frontmatter `kind: nfr`, `updated: <today>`, and 
 
 The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper.
 
-This skill primary-authors `context.md`, `actors.md`, and `nfr.md` (per the workspace-wide policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md)). When iteration uncovers an issue in `domain.md` or `architecture.md`, **continue** with usecase work and emit a review item targeting the upstream wiki — do not edit it inline.
+This skill primary-authors `context.md`, `actors.md`, and `nfr.md` (per the workspace-wide policy at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)). When iteration uncovers an issue in `domain.md` or `architecture.md`, **continue** with usecase work and emit a review item targeting the upstream wiki — do not edit it inline.
 
 When the user indicates they're done, mark `"Platform capabilities audit"` (or whichever phase task is currently `in_progress`) as `completed`, then proceed to **End Iteration** in `${CLAUDE_SKILL_DIR}/references/session-closing.md`. The short version:
 

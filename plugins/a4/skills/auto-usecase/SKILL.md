@@ -9,7 +9,7 @@ allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCr
 
 Extract or batch-shape a complete spec-as-wiki+issues Use Case set from raw input — an existing codebase, an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
 
-This skill is **not** the autonomous twin of `/a4:usecase`. `/a4:usecase` is a Socratic interview that draws UCs out of a user who knows the problem; this skill is a reverse / batch entry for cases where the input is raw material rather than a person to interview against. See [`references/skill-modes.md`](../../../references/skill-modes.md) for the full mode taxonomy.
+This skill is **not** the autonomous twin of `/a4:usecase`. `/a4:usecase` is a Socratic interview that draws UCs out of a user who knows the problem; this skill is a reverse / batch entry for cases where the input is raw material rather than a person to interview against. See [`references/skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) for the full mode taxonomy.
 
 Generate use cases for: **$ARGUMENTS**
 
@@ -164,7 +164,7 @@ The composer:
 - Writes `a4/actors.md` with `kind: actors`, `updated`, Actors table.
 - Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
 - Writes NFRs to `a4/nfr.md` if any are surfaced.
-- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (workspace authorship policy: [`references/wiki-authorship.md`](../../../references/wiki-authorship.md)). The final summary recommends running `/a4:domain` after auto-usecase finishes.
+- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (workspace authorship policy: [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)). The final summary recommends running `/a4:domain` after auto-usecase finishes.
 - Emits `kind: question` review items for unresolvable ambiguities (not merely autonomous defaults it has chosen — those are recorded in the UC body's `## Source` section).
 - Never rewrites previously confirmed UC files without cause.
 
@@ -266,7 +266,7 @@ All commits stage files under `a4/`. Timing:
 
 ## Cross-Stage Findings
 
-This skill is **continue + review item** for any architecture / domain / NFR concern that surfaces during composition or review — UC drafts are independently meaningful, so emit review items targeting the upstream wiki and finish the autonomous run. See [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback for the workspace policy. Domain Model itself is **out of scope** for this skill — domain extraction lives in `/a4:domain` and is recommended in the final summary when UCs are settled.
+This skill is **continue + review item** for any architecture / domain / NFR concern that surfaces during composition or review — UC drafts are independently meaningful, so emit review items targeting the upstream wiki and finish the autonomous run. See [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback for the workspace policy. Domain Model itself is **out of scope** for this skill — domain extraction lives in `/a4:domain` and is recommended in the final summary when UCs are settled.
 
 ## Autonomous Decision Rules
 

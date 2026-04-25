@@ -58,7 +58,7 @@ Determined by the workspace state:
 
 ### Iteration Entry
 
-Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the domain-specific work.
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md). This section adds only the domain-specific work.
 
 **Backlog filter:** `target: domain` OR `domain` in `wiki_impact`.
 
@@ -252,7 +252,7 @@ Domain extraction ends only when the user says so. When the user indicates they'
 
 ## Domain Edits Originating Outside This Skill
 
-`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill — those edits are committed inline with the arch session, and the footnote/`## Changes` entry cites the architecture section as the cause. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. See `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3 for the decision table; the workspace-wide authorship policy is at [`references/wiki-authorship.md`](../../references/wiki-authorship.md).
+`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill — those edits are committed inline with the arch session, and the footnote/`## Changes` entry cites the architecture section as the cause. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. See `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3 for the decision table; the workspace-wide authorship policy is at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md).
 
 When iterating after arch has run, expect to see `## Changes` entries citing `[[architecture#<section>]]`. Treat them as authoritative — do not undo them; they reflect work already accepted by the user.
 

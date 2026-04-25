@@ -110,7 +110,7 @@ If `a4/task/` already has the full set and the user's intent is to run the imple
 
 ### Iteration Entry
 
-Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the roadmap-specific work.
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md). This section adds only the roadmap-specific work.
 
 **Backlog filter:** `target: roadmap` OR `target: task/*` OR same in `wiki_impact`.
 
@@ -152,7 +152,7 @@ Enter plan mode (the `EnterPlanMode` Claude Code primitive). Design:
    - Milestone assignment (`milestone:` field).
    - `kind: feature` (the batch generator emits feature for UC-derived work).
 4. **Shared Integration Points** — identify any file appearing in 3+ tasks' file lists. Define the integration pattern.
-5. **Launch & Verify** — *do not author content here*. `bootstrap.md` is the single source of truth (per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md)); roadmap.md embeds it via Obsidian transclusion so readers see the commands inline without duplicating them. `/a4:run` reads `bootstrap.md` directly — it does not parse the roadmap embed.
+5. **Launch & Verify** — *do not author content here*. `bootstrap.md` is the single source of truth (per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)); roadmap.md embeds it via Obsidian transclusion so readers see the commands inline without duplicating them. `/a4:run` reads `bootstrap.md` directly — it does not parse the roadmap embed.
 
 Exit plan mode. Write artifacts:
 
@@ -244,7 +244,7 @@ Spawn `Agent(subagent_type: "a4:roadmap-reviewer")`. Pass:
 
 The reviewer emits per-finding review items to `a4/review/<id>-<slug>.md` and returns a summary.
 
-Walk each new review item per the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback — roadmap depends directly on architecture (component → task split) and UCs (UC → AC source), so upstream findings halt this skill rather than continuing with stale assumptions.
+Walk each new review item per the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback — roadmap depends directly on architecture (component → task split) and UCs (UC → AC source), so upstream findings halt this skill rather than continuing with stale assumptions.
 
 - **Roadmap-level fix** — edit `roadmap.md` or the affected task file; resolve the review item (`status: resolved`, append `## Log`, add wiki footnote if roadmap.md changed).
 - **Arch / usecase finding** — **stop**. Leave the review item `status: open` with its existing `target:` pointing at `architecture` or `usecase/...`. Tell the user to run `/a4:arch` or `/a4:usecase iterate` and resume `/a4:roadmap iterate` afterwards.

@@ -14,7 +14,7 @@ Two stages over the tasks already authored in `a4/task/`:
    - **Failure path** — user classifies each failing test-runner finding into task / arch / UC and routes accordingly.
    - **Ship path** — user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md); `roadmap.md` only embeds those bootstrap sections for human readers).
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md); `roadmap.md` only embeds those bootstrap sections for human readers).
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task` writes single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -68,7 +68,7 @@ If no tasks exist at all: halt and tell the user to run `/a4:roadmap` (UC-driven
 
 ### Iteration Entry
 
-Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the run-specific work.
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md). This section adds only the run-specific work.
 
 **Backlog filter:** `target: task/*` OR `target: roadmap` (typically `source: test-runner` from the prior cycle).
 
@@ -76,7 +76,7 @@ Mechanics (filter, backlog presentation, writer calls, footnote rules, disciplin
 - **Cycle counter** — task `cycle:` increments at every revise → re-run pass; the `## Log` entry cites the cycle number.
 - **Cascade reset** — when a task is reset to `pending` for re-implementation, every downstream task whose `depends_on` traces back to it also resets to `pending` and gets a `## Log` entry.
 - **Crash hygiene at session start** — see Resume Hygiene below.
-- **Stop on strong upstream** — `target: architecture` and `target: usecase/*` findings halt the run and route to `/a4:arch iterate` or `/a4:usecase iterate` per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback. The full classification table is at [`references/failure-classification.md`](./references/failure-classification.md).
+- **Stop on strong upstream** — `target: architecture` and `target: usecase/*` findings halt the run and route to `/a4:arch iterate` or `/a4:usecase iterate` per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback. The full classification table is at [`references/failure-classification.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/failure-classification.md).
 
 ## Resume Hygiene
 
@@ -178,17 +178,17 @@ Once the loop body settles, **transition to `conversational`** and branch on out
 
 Both branches are user-driven. No agent classifies failures or auto-ships UCs. The loop body's autonomy ends at the seam into Step 4.
 
-This skill follows the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding halts the run rather than retrying against stale assumptions.
+This skill follows the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding halts the run rather than retrying against stale assumptions.
 
 ### 4a. Failure path — classify findings
 
-For each open test-runner review item, the user picks one of three categories: **task / roadmap**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and `transition_status.py` calls — is in [`references/failure-classification.md`](./references/failure-classification.md).
+For each open test-runner review item, the user picks one of three categories: **task / roadmap**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and `transition_status.py` calls — is in [`references/failure-classification.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/failure-classification.md).
 
 Cycle bound: if 3 cycles complete and failures remain, halt as described in that reference.
 
 ### 4b. Ship path — confirm UCs to ship
 
-For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and writer call are in [`references/uc-ship-review.md`](./references/uc-ship-review.md).
+For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and writer call are in [`references/uc-ship-review.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/uc-ship-review.md).
 
 The ship branch is **conditional on UC presence** — projects with no UC-implementing tasks (UC-less, or all spike / bug / ADR-justified) skip 4b entirely and go to wrap-up. That is the normal case for those shapes, not an error.
 

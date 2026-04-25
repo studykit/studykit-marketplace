@@ -55,7 +55,7 @@ Determine the mode from the current `a4/` state:
 
 ### Iteration Entry
 
-Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the architecture-specific work.
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md). This section adds only the architecture-specific work.
 
 **Backlog filter:** `target: architecture` OR `architecture` in `wiki_impact`.
 
@@ -233,7 +233,7 @@ Read `${CLAUDE_SKILL_DIR}/references/architecture-guide.md` for the detailed pro
 
 Component names, schema fields, and contract parameters must use `a4/domain.md` terminology.
 
-**Domain Model modifications during arch work.** Cross-cutting domain authorship is `/a4:domain`'s job; arch's role is to flag mismatches and apply *simple* edits inline. The full workspace-wide authorship + cross-stage feedback policy is at [`references/wiki-authorship.md`](../../references/wiki-authorship.md); the table below is the arch-specific b3 instance:
+**Domain Model modifications during arch work.** Cross-cutting domain authorship is `/a4:domain`'s job; arch's role is to flag mismatches and apply *simple* edits inline. The full workspace-wide authorship + cross-stage feedback policy is at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md); the table below is the arch-specific b3 instance:
 
 | Change shape | Owner | What arch does |
 |---|---|---|
