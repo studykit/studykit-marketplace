@@ -44,6 +44,7 @@ Draft the following in a scratch summary (do not write to disk yet):
 - **Decision** — the chosen option as a one-liner (becomes `decision:` frontmatter). Example: "Adopt Postgres 16; defer MySQL and SQLite."
 - **Context** — why the decision was needed, constraints, stakeholders.
 - **Body outline** — the set of `##` headings that best fit this decision's shape. `## Context` and `## Decision` are **required**; beyond those, include only sections the conversation actually produced content for (e.g., `## Options Considered`, `## Rejected Alternatives`, `## Next Steps`, `## Consequences`, `## Migration Plan`, `## Open Questions`). Do not emit placeholder sections.
+- **Supersedes** — when the conversation references a prior decision being replaced (B4 in [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md)), search `a4/decision/*.md` for the prior ADR and propose `supersedes: [decision/<prior-id>-<slug>]`. The `transition_status.py` cascade flips the prior ADR to `superseded` on `→ final`.
 - **Related research** — candidate `./research/<slug>.md` files (see Step 3).
 
 Present this draft to the user before proceeding. Iterate until the user confirms the substance is right.

@@ -5,6 +5,7 @@ The a4 pipeline is not one shape. Three named shapes describe how a workspace fl
 Companion to:
 - [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) — interactive vs autonomous, forward vs reverse axes for individual skills.
 - [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
+- [`adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md) — when an ADR is warranted; signal catalog complementing this doc's ADR cross-cutting section.
 - [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — field-level rules.
 
 ## Why name the shapes
