@@ -6,6 +6,7 @@ Single source of truth for the **formal procedure** every a4 iterate flow follow
 
 Companion to:
 - [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; cross-stage stop/continue policy.
+- [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; iterate flows run identically across shapes but the available stages depend on shape.
 - [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) — footnote markers, `## Changes` section, wikilink/embed rules.
 - [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — review-item frontmatter contract.
 
