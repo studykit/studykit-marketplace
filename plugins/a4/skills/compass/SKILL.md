@@ -37,7 +37,7 @@ If `$ROOT/a4/` does not exist (no workspace yet), skip INDEX regeneration and pr
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/index_refresh.py" "$ROOT/a4"
 ```
 
-The script reads frontmatter from `a4/{context,domain,architecture,actors,nfr,plan,bootstrap}.md` (wiki pages) and `a4/{usecase,task,review,decision,idea}/*.md` (issues) plus `a4/spark/*.md`, then fully overwrites `a4/INDEX.md`. Each section contains an Obsidian dataview query block (fixed literal text) and a static markdown fallback computed from current state, wrapped in `<!-- static-fallback-start: <id> -->` / `<!-- static-fallback-end: <id> -->` markers. Stage progress is static-only because it mixes wiki-page presence with cross-folder issue aggregates.
+The script reads frontmatter from `a4/{context,domain,architecture,actors,nfr,roadmap,bootstrap}.md` (wiki pages) and `a4/{usecase,task,review,decision,idea}/*.md` (issues) plus `a4/spark/*.md`, then fully overwrites `a4/INDEX.md`. Each section contains an Obsidian dataview query block (fixed literal text) and a static markdown fallback computed from current state, wrapped in `<!-- static-fallback-start: <id> -->` / `<!-- static-fallback-end: <id> -->` markers. Stage progress is static-only because it mixes wiki-page presence with cross-folder issue aggregates.
 
 compass does **not** commit INDEX.md automatically — it is left in the working tree for the user or the next session-closing to pick up.
 
@@ -86,18 +86,18 @@ If either signal fires and `a4/` is empty (or absent), this is a **brownfield** 
 > This project has existing code but no a4 workspace. What are you trying to do?
 > - **(a) Reverse-engineer** (Reverse shape) — extract use cases and supporting wiki pages (`context.md`, `actors.md`, `domain.md`) from the existing code.
 > - **(b) Single change** (Minimal shape) — make one small change without the full pipeline (`bootstrap.md` only, then `/a4:task` → `/a4:run`).
-> - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
+> - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:domain` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
 
 A user with no implementation goal yet (just recording an ADR via `/a4:decision`, capturing research, or sketching ideas) is in a **No-shape** state — none of (a)/(b)/(c) applies. Compass does not prompt for that explicitly; the catalog's Ideation and Standalone sections cover those cases as fall-throughs.
 
 Route based on the answer:
 
-- **(a) Reverse-engineer** → invoke `/a4:auto-usecase` with the project root as the default argument (or a user-specified subdirectory if they name one). The skill autonomously runs code analysis (its Step 2b) and produces `context.md` / `actors.md` / `domain.md` / per-UC files at `status: draft`. Suggest `/a4:usecase iterate` as the next step for the user to review.
+- **(a) Reverse-engineer** → invoke `/a4:auto-usecase` with the project root as the default argument (or a user-specified subdirectory if they name one). The skill autonomously runs code analysis (its Step 2b) and produces `context.md` / `actors.md` / `nfr.md` / per-UC files at `status: draft`; `domain.md` is **not** authored by `auto-usecase` (per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md), `domain` owns it). Suggest `/a4:usecase iterate` to review the drafts and `/a4:domain` to extract concepts as the Reverse-then-forward continuation.
   ```
   Skill({ skill: "a4:auto-usecase", args: "<project-root or subdirectory>" })
   ```
 - **(b) Single change** → invoke `/a4:auto-bootstrap` (which already supports incremental mode against an existing codebase per its Step 1 "Codebase Assessment"; in this entry path it runs in Minimal-shape scope, producing `bootstrap.md` without requiring `architecture.md`); follow with `/a4:task` for the change itself.
-- **(c) New feature** — full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run`. Fall through to the catalog below; the user typically picks `/a4:usecase` first.
+- **(c) New feature** — full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run` (per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) Shape 1 Full forward). Fall through to the catalog below; the user typically picks `/a4:usecase` first.
 
 When no implementation code is detected, skip 2.0 and go straight to the catalog.
 
@@ -178,10 +178,24 @@ If Step 1.1 resolved a **specific target**, additionally read that file's full b
 
 Trace from foundation to execution. Stop at the first layer that has actionable work. For a targeted Step 1.1 argument, focus the trace on layers upstream of the target (e.g., a blocked task points back to its `depends_on` predecessor).
 
-**Layer 0 — Workspace foundation.** Does the workspace have any use cases yet?
+#### 3.3.0 Detect shape
+
+Layer 0 and Layer 1 below are **Full / Reverse-then-forward only** — they assume a UC-driven pipeline with the canonical wiki chain. Minimal-shape and Reverse-only workspaces have legitimately empty UC sets or upstream wikis and would be mis-diagnosed by those layers. Detect shape from current state per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) §"Shape detection" before tracing:
+
+| State | Shape | Layer 0/1 behavior |
+|---|---|---|
+| `bootstrap.md` absent, `usecase/*.md` absent | No shape | Skip Layer 0/1; route via Step 2 catalog instead — gap diagnosis does not apply |
+| `bootstrap.md` present, `usecase/*.md` absent | Minimal | **Skip Layer 0 and Layer 1.** No-UC is by design; jump to Layer 2 |
+| `usecase/*.md` present, all with `source: auto-usecase`, `bootstrap.md` absent | Reverse-only | Skip Layer 0; run Layer 1 only for `domain.md` (the natural Reverse-then-forward continuation step). If user signals "documentation only," skip Layer 1 too |
+| `bootstrap.md` present + `usecase/*.md` present (Full / Reverse-then-forward) | Full | Run Layer 0 and Layer 1 normally |
+| `bootstrap.md` absent + `usecase/*.md` present (mixed `source:`) | Full in progress | Run Layer 0 and Layer 1 normally |
+
+Carry the detected shape into the diagnosis report (Step 3.4) so the user sees the assumption.
+
+**Layer 0 — Workspace foundation** *(Full / Reverse-then-forward only)*. Does the workspace have any use cases yet?
 - No UCs → recommend `/a4:usecase` (interactive) or `/a4:auto-usecase` (autonomous).
 
-**Layer 1 — Wiki foundation.** Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap → roadmap`); stop at the first missing layer.
+**Layer 1 — Wiki foundation** *(Full / Reverse-then-forward only; Reverse-only runs `domain.md` check only)*. Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap → roadmap`); stop at the first missing layer.
 - UCs exist, `domain.md` missing → recommend `/a4:domain` (cross-cutting concept extraction is its own skill, not part of `/a4:usecase`).
 - `domain.md` exists, `architecture.md` missing → recommend `/a4:arch`.
 - `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
@@ -209,6 +223,8 @@ Report in this format:
 
 ```
 ## Workspace Status
+
+Shape: <Full | Reverse-then-forward | Reverse-only | Minimal | No shape>
 
 | Layer | State |
 |-------|-------|
