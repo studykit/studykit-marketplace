@@ -4,7 +4,7 @@
 
 When an a4 skill runs in a user project, it reads and writes a single workspace at `<project-root>/a4/` — a git-native **wiki + issue tracker** in plain markdown.
 
-**Layout** (per `plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md`):
+**Layout** :
 
 ```
 <project-root>/
@@ -37,12 +37,7 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
 
 `plugins/a4/spec/` records ADRs about the **a4 plugin itself** — design decisions made while building a4 (skill split, schema choices, hook architecture, etc.). It is *not* the output of running an a4 skill.
 
-**Layout.** Active ADRs live directly in `plugins/a4/spec/`. Once an ADR is fully superseded (or its content folded into a successor), it is moved to `plugins/a4/spec/archive/` to keep the active set small. Archived ADRs remain immutable point-in-time records and are referenced by `archive/<filename>` paths.
-
-- Edits to active ADRs are allowed, but every change must be tracked. Use commits with clear messages, supersession ADRs (`*-retirement.decide.md`, `*-revision.decide.md`), or in-file `## Log` entries — never silent rewrites.
-- Archived ADRs (`spec/archive/`) are frozen — do not edit their content. Supersession is recorded by writing a new ADR in `spec/`, not by amending an archived one.
-- New ADRs in `spec/` follow the body structure of `plugins/a4/skills/decision/SKILL.md` Step 5 (`## Context`, `## Decision`, plus optional `## Options Considered` / `## Rejected Alternatives` / `## Next Steps` / `## Consequences` / `## Open Questions` as the content warrants). Filename uses date prefix `YYYY-MM-DD-<slug>.decide.md`; no numeric `id:` (the user-project decision schema uses ids; plugin meta-ADRs use date-slugs).
-- Do not confuse with user-project ADRs. When an a4 skill (`/a4:decision`) runs in a user project, it writes to `<project-root>/a4/decision/<id>-<slug>.md`, which is a different namespace.
+**Layout.** Active ADRs live directly in `plugins/a4/spec/`. 
 
 ## Skill-generated frontmatter is script-managed
 
