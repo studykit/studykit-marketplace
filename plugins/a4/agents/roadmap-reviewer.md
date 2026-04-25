@@ -120,7 +120,7 @@ Verdicts: `OK` | `NO CRITERIA` | `UNMEASURABLE` | `MISALIGNED`.
 - **Domain terms** — any roadmap/task content using terms that conflict with `a4/domain.md` glossary.
 - **Architecture components** — do tasks reference components that actually exist in `architecture.md`?
 - **Behavior** — do task Descriptions contradict UC Flow / Outcome?
-- **Launch & Verify** — does the roadmap's Launch & Verify match `bootstrap.md` (if present)?
+- **Launch & Verify** — bootstrap.md is the single source of truth; verify the roadmap's Launch & Verify section uses Obsidian embeds (`![[bootstrap#...]]`) rather than authored content. Authored L&V tables on `roadmap.md` are a `CONFLICT` against the workspace authorship policy.
 
 Verdicts: `OK` | `CONFLICT`.
 
@@ -191,7 +191,8 @@ Concrete direction for the fix. For coverage gaps, name the missing UC / compone
 
 | Finding category | `target` | `wiki_impact` |
 |------------------|----------|----------------|
-| Roadmap-level strategy, milestones, Launch & Verify | `roadmap` | `[roadmap]` |
+| Roadmap-level strategy, milestones, dependency graph, integration points | `roadmap` | `[roadmap]` |
+| Roadmap authored Launch & Verify content (should be an embed) | `roadmap` | `[roadmap]` (also flag for `bootstrap` review if commands diverge) |
 | Task-level scope, files, tests, acceptance | `task/<id>-<slug>` | `[]` |
 | Architecture gap surfaced during roadmap review | `architecture` | `[architecture]` |
 | UC gap surfaced during roadmap review | `usecase/<id>-<slug>` | `[]` |

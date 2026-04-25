@@ -17,11 +17,12 @@ You are a task implementation agent. Your job is to implement one task and write
 From the invoking `roadmap` / `run` skill:
 
 - **Task file path** — absolute path to `a4/task/<id>-<slug>.md`.
-- **Roadmap file path** — absolute path to `a4/roadmap.md` (for Launch & Verify and Shared Integration Points).
+- **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify).
+- **Roadmap file path** *(optional)* — absolute path to `a4/roadmap.md`. Read for Shared Integration Points only; L&V content there is an embed of bootstrap, not authoritative.
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
 - **UC file paths** — absolute paths to each `a4/usecase/<id>-<slug>.md` referenced in the task's `implements:` frontmatter.
 
-Read the task file first, then the roadmap's Launch & Verify section, then the relevant architecture sections (use Obsidian-style path navigation: `a4/architecture.md` → Components → `### <name>` for the component your task touches). Read the implemented UCs for Flow, Validation, Error handling, Expected Outcome.
+Read the task file first, then bootstrap.md's `## Verified Commands`, then the relevant architecture sections (use Obsidian-style path navigation: `a4/architecture.md` → Components → `### <name>` for the component your task touches). Read the implemented UCs for Flow, Validation, Error handling, Expected Outcome. If a `roadmap.md` was provided and Shared Integration Points apply to your files, read that section.
 
 ## What You Do
 
@@ -46,7 +47,7 @@ Read the task file first, then the roadmap's Launch & Verify section, then the r
 2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
 3. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
-5. **Verify** — run the unit-test command from `roadmap.md`'s Launch & Verify. All unit tests must pass before returning success.
+5. **Verify** — run the unit-test command from `bootstrap.md`'s `## Verified Commands` section. All unit tests must pass before returning success.
 6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Title prefix: `feat(<task-slug>): ...` or `fix(<task-slug>): ...` as appropriate. Never skip hooks, amend, or force-push.
 
 ### Spec-ambiguity exit — `implementing → revising`

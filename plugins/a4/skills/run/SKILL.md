@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Run Loop
 
-Drives the agent-based implement + test loop over the tasks already authored in `a4/task/`. Reads `a4/roadmap.md`'s Launch & Verify (or `a4/bootstrap.md` for UC-less projects without a roadmap) for build / launch / test commands. Spawns `task-implementer` per ready task, runs `test-runner` after each cycle, classifies failures, and conditionally ship-reviews UCs. Bounded to 3 cycles per invocation.
+Drives the agent-based implement + test loop over the tasks already authored in `a4/task/`. Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md); `roadmap.md` only embeds those bootstrap sections for human readers). Spawns `task-implementer` per ready task, runs `test-runner` after each cycle, classifies failures, and conditionally ship-reviews UCs. Bounded to 3 cycles per invocation.
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task` writes single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -16,8 +16,8 @@ Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/
 Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
 - `a4/task/<id>-<slug>.md` — required. The set of executable units this run consumes.
-- `a4/roadmap.md` — preferred. Provides Launch & Verify (build / launch / test commands) and milestone narrative.
-- `a4/bootstrap.md` — fallback for UC-less projects with no roadmap. Same Launch & Verify shape.
+- `a4/bootstrap.md` — required. Single source of truth for Launch & Verify (build / launch / test / smoke / isolation).
+- `a4/roadmap.md` — optional. Provides milestone narrative + dependency-graph snapshot. Embeds bootstrap's L&V sections; this skill does not parse the embed.
 - `a4/architecture.md` — passed to agents for contract context.
 - `a4/usecase/*.md` — read for UC ship-review candidates (Step 5). Absent in UC-less projects; that's fine.
 - `a4/review/*.md` — open review items influence ready-set selection and resume behavior.
@@ -30,17 +30,16 @@ Outputs:
 
 ## Launch & Verify Source
 
-`/a4:run` does not auto-detect commands. Resolution order:
+`/a4:run` does not auto-detect commands. Resolution:
 
-1. `a4/roadmap.md` § "Launch & Verify" — the normal path.
-2. `a4/bootstrap.md` § "Launch & Verify" — fallback when no `roadmap.md` exists (UC-less single-task or ADR-justified workspaces). Both `/a4:auto-bootstrap` and the manual bootstrap flow write this section.
-3. **Halt and delegate to `/a4:compass`** when neither exists, per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]]. Invoke compass with the structured diagnosis argument so its Step 3 Gap Diagnosis (with the bootstrap-aware Layer 1 walk) recommends the correct upstream skill:
+1. `a4/bootstrap.md` — single source of truth. Read `## Verified Commands` (build / launch / test), `## Smoke Scenario`, `## Test Isolation Flags`. Both `/a4:auto-bootstrap` and the manual bootstrap flow write these sections; the roadmap (when present) embeds them via Obsidian transclusion but does **not** own them.
+2. **Halt and delegate to `/a4:compass`** when `bootstrap.md` is absent, per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]]. Invoke compass with the structured diagnosis argument so its Step 3 Gap Diagnosis recommends the correct upstream skill:
 
    ```
-   Skill({ skill: "a4:compass", args: "from=run; missing=roadmap.md,bootstrap.md" })
+   Skill({ skill: "a4:compass", args: "from=run; missing=bootstrap.md" })
    ```
 
-   `/a4:run` does not pre-judge which upstream skill applies, does not auto-chain into the recommendation, and does not look upstream of `roadmap.md` / `bootstrap.md` itself — compass's pipeline walk owns those decisions.
+   `/a4:run` does not pre-judge which upstream skill applies, does not auto-chain into the recommendation, and does not look upstream of `bootstrap.md` itself — compass's pipeline walk owns those decisions. `roadmap.md`'s presence or absence is irrelevant to `/a4:run`'s L&V resolution.
 
 ## Mode Detection
 
@@ -96,12 +95,12 @@ For each ready task, spawn one agent:
 ```
 Agent(subagent_type: "a4:task-implementer", prompt: """
 Task file: <absolute path to a4/task/<id>-<slug>.md>
-Roadmap file: <absolute path to a4/roadmap.md, or a4/bootstrap.md when no roadmap.md exists>
+Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>
 
 Read the task file for Description, Files, Unit Test Strategy, Acceptance Criteria.
-Pull build + unit-test commands from the Launch & Verify section of the roadmap (or bootstrap).
+Pull build + unit-test commands from bootstrap.md's ## Verified Commands section.
 
 Implement the task and write its unit tests. All unit tests must pass.
 Commit code + unit tests (one commit per task).
@@ -126,12 +125,13 @@ After all tasks reach `complete` (or after a cycle ends with failures still outs
 
 ```
 Agent(subagent_type: "a4:test-runner", prompt: """
-Roadmap file: <absolute path to a4/roadmap.md, or a4/bootstrap.md when no roadmap.md exists>
+Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
 a4/ path: <absolute path>
 Cycle: <current integer>
 
-Use the Launch & Verify config for build / run / test commands. Run integration and
-smoke tests as defined there. For each failing test, emit one review item at
+Use bootstrap.md's ## Verified Commands, ## Smoke Scenario, and ## Test Isolation Flags
+sections for build / run / test commands. Run integration and smoke tests as defined
+there. For each failing test, emit one review item at
 a4/review/<id>-<slug>.md via allocate_id.py with:
 
   kind: finding
@@ -260,7 +260,7 @@ Context is passed via file paths, not agent memory.
 ## Out of Scope
 
 - **Authoring** — task files, roadmap.md, ADRs, UCs are written elsewhere. `/a4:run` only reads them.
-- **"Best-effort auto-detect" of build / test commands without `roadmap.md` or `bootstrap.md`.** When neither exists, `/a4:run` delegates to `/a4:compass` per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]] — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope.
+- **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** When `bootstrap.md` is absent, `/a4:run` delegates to `/a4:compass` per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]] — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope. Note: `roadmap.md`'s presence is irrelevant for L&V resolution — bootstrap is the single source of truth.
 - **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4 currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline. Inline scoped re-review is a possible future addition.
 - **Per-cycle parallelism beyond independent ready tasks** — task-implementer parallelism is bounded by the dependency graph; no further parallelization is attempted.
 

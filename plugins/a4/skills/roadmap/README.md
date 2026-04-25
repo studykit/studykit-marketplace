@@ -61,9 +61,8 @@ partition "Phase 1 — Plan Generation + Verification" #LightCyan {
     Strategy (component / feature / hybrid)
     Tasks with file mappings + unit test paths
     Dependency graph + implementation order
-    Test plan: integration + smoke cases
     Test file convention
-    Launch & Verify config
+    (L&V is owned by bootstrap.md; embed only)
   end note
   :Write .roadmap.md
   (phase: plan-review, revision: 1);

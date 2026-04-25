@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 # Project Bootstrap
 
-Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that `roadmap` reads for Launch & Verify.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** (build / launch / test / smoke / isolation) per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md). Both `/a4:run` and the `task-implementer` / `test-runner` agents read this file directly; `/a4:roadmap` only embeds its sections via Obsidian transclusion.
 
 ## Workspace
 

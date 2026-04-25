@@ -56,68 +56,11 @@ Merge when a unit:
 - Is a trivial setup step always done alongside another unit
 - Has no independent test value
 
-## Launch & Verify Derivation
+## Launch & Verify
 
-After codebase exploration, fill the **Launch & Verify** section. This information is used during Phase 2 for build verification and integration/smoke testing.
+`bootstrap.md` is the single source of truth for Launch & Verify (build / launch / test commands, smoke scenario, test isolation flags). Per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md), `roadmap.md` does not author L&V content — it embeds bootstrap's sections via Obsidian transclusion (`![[bootstrap#Verified Commands]]` etc.). Roadmap planning therefore does **not** auto-detect app type, build commands, smoke scenarios, or test isolation; that work happened in `/a4:auto-bootstrap` and was already verified there.
 
-### Auto-detection procedure
-
-1. **App type** — derive from arch's Technology Stack and codebase structure:
-
-   | Detection Signal | App Type |
-   |-----------------|----------|
-   | `engines.vscode` in package.json | VS Code Extension |
-   | `next`, `vite`, `react-scripts` in dependencies | Web app |
-   | `electron` in dependencies | Electron app |
-   | `express`, `fastify`, `koa`, `hono` in dependencies | API service |
-   | `bin` field in package.json | CLI tool |
-   | `flask`, `django`, `fastapi` in requirements | Python web app |
-   | `main.go` with `http.ListenAndServe` | Go API service |
-
-2. **Build command** — check `package.json` scripts (`build`, `compile`), `Makefile`, `pyproject.toml`, `Cargo.toml`, `build.gradle`.
-
-3. **Launch command** — check `package.json` scripts (`dev`, `start`, `serve`), `.vscode/launch.json`, framework conventions:
-
-   | App Type | Typical Launch |
-   |----------|---------------|
-   | VS Code Extension | `code --extensionDevelopmentPath=${workspaceFolder}` (from launch.json) |
-   | Next.js / Vite | `npm run dev` |
-   | Express / Fastify | `npm start` or `node dist/index.js` |
-   | Electron | `npm start` or `electron .` |
-   | CLI | `node dist/cli.js` or `./target/release/<name>` |
-   | Django | `python manage.py runserver` |
-   | FastAPI | `uvicorn main:app --reload` |
-
-4. **Launch URL/view** — derive from app type (web → `http://localhost:<port>`, extension → panel/view name, CLI → N/A).
-
-5. **Verify tool** — select based on app type:
-
-   | App Type | Primary Tool | Fallback |
-   |----------|-------------|----------|
-   | Web app | Playwright CLI (`@playwright/cli`) | chrome MCP |
-   | VS Code Extension | WebdriverIO + wdio-vscode-service | computer-use MCP |
-   | Electron | Playwright `electron.launch()` | computer-use MCP |
-   | API service | Playwright CLI or curl | direct HTTP requests |
-   | CLI | Bash execution | — |
-   | Native desktop | computer-use MCP | — |
-
-6. **Smoke scenario** — identify the single most basic user interaction from the source UCs. This is the minimum bar for "the app works":
-   - Chat app → "type a message and see a response"
-   - CRUD app → "create an item and see it in the list"
-   - API → "call the health endpoint and get 200"
-   - CLI → "run `<tool> --help` and see usage info"
-
-7. **Test isolation** — determine flags or configuration to run the app in a clean environment, free from interference by other installed plugins, extensions, or user state. Start from the defaults below, then **spawn an `Agent(subagent_type: "a4:api-researcher")` to search the platform's official documentation** (e.g., VS Code CLI reference, Electron command-line switches) for the current project's exact flags:
-
-   | App Type | Default Isolation | Docs to Search |
-   |----------|------------------|----------------|
-   | VS Code Extension | `--disable-extensions` (loads only the dev extension) | VS Code CLI reference |
-   | Electron | `--user-data-dir=<tmpdir>` (clean profile, no leftover state) | Electron command-line switches |
-   | Web app | Browser incognito / clean profile (no browser extensions) | Verify tool docs (Playwright, etc.) |
-   | API service | Dedicated test port + `NODE_ENV=test` (or equivalent) | Framework docs |
-   | CLI | Already isolated per invocation | — |
-
-   The defaults above are starting points. Use the api-researcher agent to confirm the flags are current and to discover project-specific options (e.g., `--extensions-dir` for VS Code, `--no-sandbox` for Electron on CI). Record the final isolation value in the plan.
+If `bootstrap.md` is absent or out of date, stop and re-run `/a4:auto-bootstrap` rather than authoring or auto-detecting commands here. The drift detector and `roadmap-reviewer` flag authored L&V content on `roadmap.md` as a `CONFLICT` against the workspace authorship policy.
 
 ## Foundation Unit Validation
 

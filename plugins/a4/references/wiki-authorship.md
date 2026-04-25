@@ -15,8 +15,8 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 | `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: domain`, `wiki_impact: [domain]` |
 | `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: nfr`, `wiki_impact: [nfr]` |
 | `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: architecture`, `wiki_impact: [architecture]` |
-| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy) | review item, `target: bootstrap` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
-| `roadmap.md` | `roadmap` | `roadmap`: any | review item, `target: roadmap`, `wiki_impact: [roadmap]` |
+| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — `## Verified Commands`, `## Smoke Scenario`, `## Test Isolation Flags` are read directly by `/a4:run`, `task-implementer`, and `test-runner`; never duplicated into other wikis | review item, `target: bootstrap` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
+| `roadmap.md` | `roadmap` | `roadmap`: milestone narrative, dependency graph, Shared Integration Points. **Must not author Launch & Verify content** — that section is an Obsidian embed (`![[bootstrap#...]]`) of bootstrap.md | review item, `target: roadmap`, `wiki_impact: [roadmap]` |
 
 ### Why architecture is more restrictive than domain
 
