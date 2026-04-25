@@ -69,6 +69,8 @@ Discovery: `Glob a4/decision/*.md`. Confirm matches with the user.
 
 If the kind is `feature` and **both** `implements:` and `justified_by:` end up empty, ask the user where the AC will be drawn from. A `feature` task with no AC source is a smell — either point it at a UC, point it at an ADR, or downgrade to `spike` if the work is genuinely exploratory.
 
+Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing ADR records, this is content-aware upward propagation per [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md). Surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: decision/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing. The user can author the upstream artifact and re-link the task, or close the review with `discarded` + rationale ("genuinely small, no upstream needed").
+
 ## Step 3: Compose the task body
 
 Required body sections (mirrors `/a4:roadmap`'s task schema):

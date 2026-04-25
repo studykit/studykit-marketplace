@@ -2,7 +2,7 @@
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
-Companion to [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (field-level rules), [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) (footnote / `## Changes` / wikilink rules), [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), and [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
+Companion to [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (field-level rules), [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) (footnote / `## Changes` / wikilink rules), [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape), and [`adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md) (when an ADR is warranted; signals during dialogue and content-aware upward propagation).
 
 ## Wiki page authorship
 

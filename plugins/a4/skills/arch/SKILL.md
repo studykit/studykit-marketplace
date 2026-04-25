@@ -215,6 +215,8 @@ The architecture covers four areas. In **First Design**, start with Technology S
 
 Select language, framework, platform, and key libraries. For each choice, record the rationale. For lightweight choices — discuss inline and record with a brief rationale. For heavy choices (multiple viable options with significant trade-offs), ask the user: "This seems like a decision worth investigating more deeply. Would you like to run `/a4:research` on the candidates first, then record the conclusion via `/a4:decision` once we've converged?"
 
+ADR-trigger signals to watch for during the interview (multi-option enumeration, trade-off language, user uncertainty, prior-decision references) and the anti-patterns that suppress nudges are catalogued at [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md).
+
 If a codebase already exists, detect the stack from project files and confirm. Write the initial `architecture.md` at the end of Phase 1.
 
 ### Phase 2: External Dependencies

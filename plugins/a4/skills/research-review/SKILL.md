@@ -79,6 +79,8 @@ Once the user confirms the review pass is done:
    - Final status (`draft` or `final`).
    - Reminder: the file is left in the working tree.
 
+If the review surfaces unresolved trade-offs or user uncertainty about the conclusion, those are ADR-trigger signals (B2 / B3 in [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md)). Surface them as candidates for `/a4:decision` rather than asking the reviewer to resolve them — research review is about evidence quality, not about making the decision.
+
 ## Non-goals
 
 - Do not write a decision. If the research is meant to feed a decision, tell the user to invoke `/a4:decision` next.
