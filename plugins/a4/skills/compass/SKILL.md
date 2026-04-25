@@ -11,6 +11,12 @@ Helps users find the right skill or diagnose the next step in an ongoing pipelin
 
 Argument: **$ARGUMENTS**
 
+## Inter-skill entry
+
+Compass is also callable as a fallback router from other a4 skills. When another skill's preconditions are unmet (e.g., `/a4:run` invoked without `roadmap.md` or `bootstrap.md` present), it halts and invokes compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md,roadmap.md`).
+
+Compass treats this as a regular Step 1 entry — the diagnosis text routes to Step 3 (Gap Diagnosis), not Step 2 (Fresh Start), since the workspace already has some state by definition. If the calling skill provided enough context to determine the intent, compass skips the catalog presentation in Step 2 and the brownfield "What are you trying to do?" prompt described there.
+
 ## Step 0: Refresh INDEX
 
 Before any other step, regenerate `a4/INDEX.md`. This is the workspace dashboard — a **view** of wiki-page state, stage progress, open issues, drift alerts, milestone progress, recent activity, and open sparks. The per-item frontmatter under `a4/` is the source of truth; INDEX is derived.
@@ -61,7 +67,39 @@ Workspace state — wiki page presence, per-folder issue counts, open drift aler
 
 ## Step 2: Fresh Start
 
-The workspace is empty or the user described a vague intent. Present the skill catalog and help them pick an entry point.
+The workspace is empty or the user described a vague intent.
+
+### 2.0 Brownfield detection
+
+Before showing the catalog, detect whether the project has implementation code outside `a4/`:
+
+```bash
+# Build/manifest signature at project root
+ls "$ROOT"/{package.json,pyproject.toml,Cargo.toml,go.mod,pom.xml,build.gradle,build.gradle.kts} 2>/dev/null
+
+# Tracked source files outside a4/, plugins/, .claude*/, research/
+git -C "$ROOT" ls-files | grep -Ev '^(a4/|plugins/|\.claude|research/)' | grep -E '\.(ts|tsx|js|jsx|py|rs|go|java|kt|rb|php|cpp|c|swift|m|md)$' | head -1
+```
+
+If either signal fires and `a4/` is empty (or absent), this is a **brownfield** project — existing code with no a4 workspace. Ask **one** question before showing the catalog:
+
+> This project has existing code but no a4 workspace. What are you trying to do?
+> - **(a) Reverse-engineer** — extract use cases and supporting wiki pages (`context.md`, `actors.md`, `domain.md`) from the existing code.
+> - **(b) Single change** — make one small change without the full pipeline (`bootstrap.md` minimally, then `/a4:task` → `/a4:run`).
+> - **(c) New feature** — start the formal pipeline (`/a4:usecase` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
+
+Route based on the answer:
+
+- **(a) Reverse-engineer** → invoke `/a4:auto-usecase` with the project root as the default argument (or a user-specified subdirectory if they name one). The skill autonomously runs code analysis (its Step 2b) and produces `context.md` / `actors.md` / `domain.md` / per-UC files at `status: draft`. Suggest `/a4:usecase iterate` as the next step for the user to review.
+  ```
+  Skill({ skill: "a4:auto-usecase", args: "<project-root or subdirectory>" })
+  ```
+- **(b) Single change** → invoke `/a4:auto-bootstrap` (which already supports incremental mode against an existing codebase per its Step 1 "Codebase Assessment"); follow with `/a4:task` for the change itself.
+- **(c) New feature** → fall through to the catalog below; the user typically picks `/a4:usecase` first.
+
+When no implementation code is detected, skip 2.0 and go straight to the catalog.
+
+### 2.1 Catalog
 
 Ask: **"What are you trying to do?"** and show the options:
 
@@ -138,10 +176,11 @@ Trace from foundation to execution. Stop at the first layer that has actionable 
 **Layer 0 — Workspace foundation.** Does the workspace have any use cases yet?
 - No UCs → recommend `/a4:usecase` (interactive) or `/a4:auto-usecase` (autonomous).
 
-**Layer 1 — Wiki foundation.** Is each wiki page that has dependent issues present?
+**Layer 1 — Wiki foundation.** Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap → roadmap`); stop at the first missing layer.
 - UCs exist, `domain.md` missing → recommend `/a4:usecase iterate` (domain is articulated during UC work).
 - UCs exist, `architecture.md` missing → recommend `/a4:arch`.
-- `architecture.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
+- `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
+- `bootstrap.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
 - Any issue's `wiki_impact:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
 
 **Layer 2 — Drift alerts.** Any open `review/*.md` with `source: drift-detector`?
