@@ -97,7 +97,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 Determined by the workspace state, not by frontmatter flags:
 
 - **Roadmap mode** — `a4/roadmap.md` absent OR `a4/task/` is empty. Run Step 1 onward.
-- **Iterate mode** — open review items target `roadmap` or a task. Walk them; re-emit revised roadmap / task files; loop the reviewer one scoped round.
+- **Iterate mode** — open review items target `roadmap` or a task. See **Iteration Entry** below.
 
 Mode detection at session start:
 
@@ -107,6 +107,17 @@ ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/'
 ```
 
 If `a4/task/` already has the full set and the user's intent is to run the implement loop, redirect them to `/a4:run`.
+
+### Iteration Entry
+
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the roadmap-specific work.
+
+**Backlog filter:** `target: roadmap` OR `target: task/*` OR same in `wiki_impact`.
+
+**Roadmap-specific work** between writer calls:
+- **Re-emit revised roadmap / task files** in place of hand-edits when the resolution restructures milestones, dependency graph, or task split.
+- **Scoped roadmap-reviewer rerun** — after revising tasks for a finding, run `roadmap-reviewer` once over the revised subset (not the full roadmap) and only proceed if the scoped review passes. This is the inline review loop unique to roadmap.
+- **Cascade awareness** — if a task's `depends_on` changes, downstream tasks may also need adjustments; surface those to the user before resolving.
 
 ---
 

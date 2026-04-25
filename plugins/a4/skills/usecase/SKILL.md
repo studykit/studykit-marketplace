@@ -119,7 +119,7 @@ Key rules this skill invokes below:
 Determine the mode from `$ARGUMENTS` and the current `a4/` state:
 
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run the iteration entry procedure in `${CLAUDE_SKILL_DIR}/references/iteration-entry.md`.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run the iteration entry procedure in [`references/iteration-entry.md`](./references/iteration-entry.md). Mechanics shared across all a4 iterate flows are in [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md); the per-skill procedure is the usecase-specific addendum on top.
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 

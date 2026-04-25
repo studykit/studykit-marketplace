@@ -58,17 +58,20 @@ Determined by the workspace state:
 
 ### Iteration Entry
 
-1. **Open domain review items** — list `a4/review/*.md` with `status: open` AND (`target: domain` OR `domain` in `wiki_impact`). Present as the priority backlog.
-2. **New or changed UCs since last update** — compare the domain page's `## Changes` footnotes against current UC files. UCs not yet reflected in any domain footnote are flagged as "needs concept review" candidates. The drift detector emits `kind: gap` review items for staleness; treat them as Layer-2 priority.
-3. **Stale concept staleness signal** — if `a4/domain.md`'s `updated:` is older than the most recent UC file's `updated:` by ≥ 3 UC additions, surface this as a likely review trigger even when no review item exists.
-4. **Recommend a starting point** — the user can pick from the backlog, work on a specific concept, or re-run a phase end-to-end.
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the domain-specific work.
 
-**Impact propagation rule:** when one area changes, check whether it affects others:
+**Backlog filter:** `target: domain` OR `domain` in `wiki_impact`.
+
+**Domain-specific staleness signals (alongside the backlog):**
+1. **New or changed UCs since last update** — compare `domain.md`'s `## Changes` footnotes against current UC files. UCs not yet reflected in any domain footnote are "needs concept review" candidates. The drift detector emits `kind: gap` review items for staleness.
+2. **Stale concept signal** — if `a4/domain.md`'s `updated:` is older than the most recent UC file's `updated:` by ≥ 3 UC additions, surface this as a likely review trigger even when no review item exists.
+
+**Domain impact propagation rule** — when one area changes, check whether it affects others:
 - Concept added/renamed → do relationships still hold? Do any state diagrams use the old name?
 - Relationship change → does the class diagram + body text still agree?
 - State transition added → is the underlying concept's glossary entry still accurate?
 
-Surface these cross-area impacts to the user; do not silently assume they're fine.
+Surface these cross-area impacts to the user; do not silently assume they're fine. Then recommend a starting point — backlog item, specific concept, or end-to-end phase rerun.
 
 ## Session Task List
 
