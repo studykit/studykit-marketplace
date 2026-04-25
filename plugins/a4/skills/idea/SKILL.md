@@ -4,13 +4,6 @@ description: "This skill should be used when the user explicitly invokes /a4:ide
 argument-hint: "<one-line idea> | discard <id-or-slug> [reason]"
 disable-model-invocation: true
 allowed-tools: Bash, Write, Read, Edit, Glob
-default_mode: conversational
-mode_transitions:
-  to_conversational:
-    - capture invoked with no idea text
-    - discard target `<id-or-slug>` matches zero or multiple files
-  to_autonomous:
-    - user emits an explicit handoff token after the idea / discard target is settled and only the mechanical write remains
 ---
 
 # Idea Quick Capture + Discard (a4 plugin)
