@@ -12,8 +12,13 @@ Subcommands:
   stop           Stop. Validate all a4/*.md edited in this session against
                  frontmatter and body schemas. rc=2 on violations (forces
                  Claude retry); rc=0 on clean or any internal failure.
-  session-start  SessionStart. Refresh UC `implemented_by:` reverse-links,
-                 then report workspace-wide status-consistency mismatches.
+  session-start  SessionStart. Initialize workflow-mode state (default
+                 `conversational`), sweep stale workflow-mode state files,
+                 refresh UC `implemented_by:` reverse-links, then report
+                 workspace-wide status-consistency mismatches.
+  session-end    SessionEnd. Clean up this session's workflow-mode state
+                 file. The parallel edited-record cleanup runs from a
+                 separate bash hook (`cleanup-edited-a4.sh`).
 
 Conventions (state classification, lifecycle symmetry, language/invocation,
 in-event ordering, non-blocking policy, output channel usage) live in
@@ -58,6 +63,8 @@ def main() -> int:
         return _stop()
     if sub == "session-start":
         return _session_start()
+    if sub == "session-end":
+        return _session_end()
     return 0
 
 
@@ -311,7 +318,7 @@ def _unlink_silent(path: Path) -> None:
 
 
 def _session_start() -> int:
-    """Refresh implemented_by, then report status-consistency."""
+    """Init workflow-mode state, sweep stale state, refresh implemented_by, report consistency."""
     import os
 
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
@@ -320,6 +327,11 @@ def _session_start() -> int:
     a4_dir = Path(project_dir) / "a4"
     if not a4_dir.is_dir():
         return 0
+
+    # Workflow-mode lifecycle (silent — no additional context emitted).
+    # Sweep first so the new init does not collide with a stale orphan.
+    _workflow_mode_sweep()
+    _workflow_mode_init()
 
     # Order: write (refresh) → read (report).
     refresh_ctx, refresh_sys = _refresh_implemented_by(a4_dir)
@@ -425,6 +437,69 @@ def _report_status_consistency_session_start(a4_dir: Path) -> str:
         "See `plugins/a4/references/frontmatter-schema.md` for the "
         "underlying schema."
     )
+
+
+# --------------------------- session-end ----------------------------------
+
+
+def _session_end() -> int:
+    """Clean up this session's workflow-mode state file. Always rc=0."""
+    _workflow_mode_cleanup()
+    return 0
+
+
+# ----------------------- workflow-mode helpers ----------------------------
+
+
+def _workflow_mode_init() -> None:
+    """Create session state at `conversational` if absent. Silent on failure."""
+    try:
+        import workflow_mode as wm
+    except ImportError:
+        return
+    try:
+        session_id = wm.resolve_session_id(None)
+        if wm.load_state(session_id) is not None:
+            return
+        state = wm.State(
+            session_id=session_id,
+            current_mode="conversational",
+            entered_at=wm.now(),
+            entered_by="session-start",
+            trigger="session-start init",
+            history=[],
+        )
+        wm.save_state(state)
+    except Exception:
+        return
+
+
+def _workflow_mode_sweep() -> None:
+    """Delete workflow-mode state files older than the sweep age. Silent on failure."""
+    try:
+        import workflow_mode as wm
+    except ImportError:
+        return
+    try:
+        import argparse
+
+        wm.cmd_sweep(argparse.Namespace())
+    except Exception:
+        return
+
+
+def _workflow_mode_cleanup() -> None:
+    """Delete this session's workflow-mode state file. Silent on failure."""
+    try:
+        import workflow_mode as wm
+    except ImportError:
+        return
+    try:
+        import argparse
+
+        wm.cmd_cleanup(argparse.Namespace(session=None))
+    except Exception:
+        return
 
 
 # -------------------------- shared helpers --------------------------------
