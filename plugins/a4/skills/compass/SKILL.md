@@ -95,7 +95,7 @@ Route based on the answer:
   Skill({ skill: "a4:auto-usecase", args: "<project-root or subdirectory>" })
   ```
 - **(b) Single change** → invoke `/a4:auto-bootstrap` (which already supports incremental mode against an existing codebase per its Step 1 "Codebase Assessment"); follow with `/a4:task` for the change itself.
-- **(c) New feature** → fall through to the catalog below; the user typically picks `/a4:usecase` first.
+- **(c) New feature** — full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run`. Fall through to the catalog below; the user typically picks `/a4:usecase` first.
 
 When no implementation code is detected, skip 2.0 and go straight to the catalog.
 
@@ -114,7 +114,8 @@ Ask: **"What are you trying to do?"** and show the options:
 ### Pipeline (interactive)
 | Skill | What it does |
 |-------|-------------|
-| `usecase` | Shape a vague idea into concrete Use Cases + Domain Model through dialogue |
+| `usecase` | Shape a vague idea into concrete Use Cases through dialogue (writes `context.md`, `actors.md`, `nfr.md`, per-UC files) |
+| `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
 | `arch` | Design architecture — tech stack, components, interfaces, test strategy |
 | `roadmap` | Author the implementation roadmap and per-task files |
 | `task` | Author a single task (feature / spike / bug) — UC-derived or ADR-justified |
@@ -177,8 +178,8 @@ Trace from foundation to execution. Stop at the first layer that has actionable 
 - No UCs → recommend `/a4:usecase` (interactive) or `/a4:auto-usecase` (autonomous).
 
 **Layer 1 — Wiki foundation.** Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap → roadmap`); stop at the first missing layer.
-- UCs exist, `domain.md` missing → recommend `/a4:usecase iterate` (domain is articulated during UC work).
-- UCs exist, `architecture.md` missing → recommend `/a4:arch`.
+- UCs exist, `domain.md` missing → recommend `/a4:domain` (cross-cutting concept extraction is its own skill, not part of `/a4:usecase`).
+- `domain.md` exists, `architecture.md` missing → recommend `/a4:arch`.
 - `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
 - `bootstrap.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
 - Any issue's `wiki_impact:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
@@ -187,7 +188,7 @@ Trace from foundation to execution. Stop at the first layer that has actionable 
 - High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` or `wiki_impact:` tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
 **Layer 3 — Open review items (non-drift).** Any other open review items?
-- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: wiki-scoped → `/a4:arch iterate` or `/a4:usecase iterate` depending on which wiki; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
+- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: `architecture` / `architecture` `wiki_impact` → `/a4:arch iterate`; `domain` / `domain` `wiki_impact` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
 **Layer 4 — Active tasks.** Any `task/*.md` with `status: pending | implementing | failing`?
 - Yes → recommend `/a4:run iterate` (resume implementation).

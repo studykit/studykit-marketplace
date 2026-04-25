@@ -19,6 +19,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | Name | Purpose |
 |------|---------|
 | `usecase` | Collaborative usecase specification design |
+| `domain` | Cross-cutting Domain Model extraction (concepts, relationships, state transitions) |
 | `arch` | Architecture design and review |
 | `roadmap` | Implementation roadmap creation and review |
 | `auto-bootstrap` | Autonomous project bootstrap with research |
@@ -63,7 +64,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 | `api-researcher` | Find and return current API documentation |
 | `arch-reviewer` | Review architecture designs |
 | `research-reviewer` | Review research artifacts for source quality, option balance, bias, and decision neutrality |
-| `domain-updater` | Update domain models |
+| `domain-reviewer` | Review `domain.md` against UCs and architecture; emit per-finding review items |
 | `task-implementer` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
 | `roadmap-reviewer` | Review implementation roadmaps |

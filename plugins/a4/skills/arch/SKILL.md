@@ -230,11 +230,20 @@ Read `${CLAUDE_SKILL_DIR}/references/architecture-guide.md` for the detailed pro
 
 Component names, schema fields, and contract parameters must use `a4/domain.md` terminology.
 
-**Domain Model modifications during arch work.** If a concept should be split, added, or renamed, do not invoke a separate agent — edit `a4/domain.md` directly:
+**Domain Model modifications during arch work.** Cross-cutting domain authorship is `/a4:domain`'s job; arch's role is to flag mismatches and apply *simple* edits inline. Use this decision table:
 
-1. Discuss with the user; confirm the change.
-2. Edit `a4/domain.md`: update the glossary / diagram; add a footnote marker in the modified section; append a `## Changes` entry pointing at the causing arch discussion (use a wikilink to the architecture section heading, e.g., `[[architecture#SessionService]]`, when no specific issue id applies).
-3. Bump `a4/domain.md` frontmatter `updated: <today>`.
+| Change shape | Owner | What arch does |
+|---|---|---|
+| New concept / new attribute on existing concept | arch | Edit `a4/domain.md` directly. Footnote + `## Changes` entry pointing at `[[architecture#<section>]]`. Bump `updated:`. |
+| 1:1 rename of an existing concept | arch | Edit `a4/domain.md` directly. Update every existing reference in the same file. Footnote + `## Changes`. Bump `updated:`. |
+| Definition wording / clarification on an existing concept | arch | Edit `a4/domain.md` directly. Footnote + `## Changes`. Bump `updated:`. |
+| Concept split / merge | `/a4:domain` | Allocate a review item: `kind: gap`, `target: domain`, `wiki_impact: [domain]`, `source: self`, body summarizes the proposed split/merge with arch's rationale. **Do not edit `domain.md`.** Continue arch using a placeholder term; the user will run `/a4:domain iterate` later to land the structural change. |
+| Relationship add / remove / cardinality change | `/a4:domain` | Same as split/merge — emit a review item targeting `domain`; do not edit. |
+| State or transition added / removed | `/a4:domain` | Same — emit a review item; do not edit. |
+
+When emitting a review item under this table, allocate via `allocate_id.py` and write `a4/review/<id>-<slug>.md`. Place a wikilink to the new review item inline in the architecture section that surfaced the issue, so the user can find it during `/a4:domain iterate`.
+
+The boundary is: *content changes* (add a concept, rename, clarify) are inline; *structural changes* (split, merge, relationship topology, state topology) require a focused cross-cutting pass that arch does not attempt mid-component-design.
 
 ### Phase 4: Test Strategy
 
