@@ -57,7 +57,7 @@ Offer two sources for `[[research/<slug>]]` body citations:
 
 Confirm the final list with the user. The list may be empty — decisions do not require prior research.
 
-Research is cited in **body prose only**, as Obsidian wikilinks (e.g., `See [[research/grpc-streaming]] for the comparison.`). Do **not** put research references in frontmatter — research lives outside the `a4/` workspace and is not an issue-family artifact.
+Research citations are recorded by `register_research_citation.py` (Step 5b below), which atomically writes them in four places: the decision's `research:` frontmatter list and `## Research` body section, plus the research file's `cited_by:` frontmatter list and `## Cited By` body section. Do **not** hand-edit any of those four — always invoke the registrar so forward and reverse stay in sync.
 
 ## Step 4: Decide on status via dialogue
 
@@ -91,6 +91,7 @@ title: "<title>"
 status: draft
 decision: "<one-line decision>"
 supersedes: []
+research: []
 related: []
 tags: []
 created: <YYYY-MM-DD>
@@ -124,11 +125,27 @@ Frontmatter fields follow `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.m
 - `status` — always `draft` at first write; Step 6 flips to `final` if the user signaled commitment.
 - `decision` — the one-liner from Step 2.
 - `supersedes` — if this replaces prior decisions, list their workspace-root-relative paths (`decision/<id>-<slug>`). Usually empty. Non-empty here triggers the `transition_status.py` cascade on `→ final`, which flips each listed target from `final → superseded`.
-- `related` — soft cross-references to other issues inside `a4/` (other decisions, UCs, tasks). **Not** for research — research lives outside `a4/` and is cited in body only.
+- `research` — research artifacts informing this decision (`research/<slug>` paths). Initially empty at first write; populated by `scripts/register_research_citation.py` in Step 5b. Never hand-edit.
+- `related` — soft cross-references to other issues inside `a4/` (other decisions, UCs, tasks). For research, use the dedicated `research:` field via the registrar; do **not** use `related:`.
 - `tags` — free-form labels.
 - `created` / `updated` — today (`YYYY-MM-DD`).
 
 Report the full file path: "Decision recorded at `<path>` as `draft`."
+
+## Step 5b: Register research citations
+
+For each research artifact confirmed in Step 3, invoke the registrar to atomically record the citation in four places (decision frontmatter `research:`, decision body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`):
+
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
+  "<project-root>/a4" \
+  "research/<slug>" \
+  "decision/<id>-<slug>"
+```
+
+Idempotent — if a side already records the citation, that side is left alone. Skip the step entirely when Step 3's research list is empty. Run once per (research, decision) pair when there are multiple research artifacts.
+
+The registrar bumps the research file's `updated:` field and never touches its `status:` — research lifecycle (`draft | final | standalone | archived`) stays the user's call.
 
 ## Step 6: Finalize via writer (if signal was `final`)
 

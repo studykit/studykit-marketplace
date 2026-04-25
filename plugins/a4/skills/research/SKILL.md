@@ -50,9 +50,10 @@ Write immediately after mode and candidates are confirmed.
 ```markdown
 ---
 topic: "<topic>"
-status: draft       # draft | final
+status: draft       # draft | final | standalone | archived
 mode: comparative
 options: [name-a, name-b, name-c]
+cited_by: []
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 tags: []
@@ -71,8 +72,9 @@ tags: []
 ```markdown
 ---
 topic: "<topic>"
-status: draft
+status: draft       # draft | final | standalone | archived
 mode: single
+cited_by: []
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 tags: []
@@ -85,6 +87,8 @@ tags: []
 ## Findings
 *Findings will appear here as research progresses.*
 ```
+
+`cited_by:` is a stored reverse-link auto-maintained by `scripts/register_research_citation.py` when a decision cites this research. Never hand-edit.
 
 ## Update discipline
 
@@ -122,10 +126,14 @@ End only when the user says the research is done. Never conclude unilaterally.
 When the user indicates completion:
 
 1. **Final checkpoint write** — ensure every confirmed finding is in the file.
-2. **Flip `status: draft → final`** in frontmatter.
+2. **Flip `status:`** from `draft` to the terminal value that fits:
+   - `final` — research is complete and may feed a decision (default).
+   - `standalone` — research is complete and intentionally won't feed any decision (terminal; the SessionStart staleness courtesy never nudges `standalone` files).
+
+   Leave `status: draft` if more iterations are expected; flip to `archived` later when the research becomes irrelevant.
 3. **Bump `updated:`** to today.
 4. **Report the path** and how to reference it:
-   - From body prose inside an `a4/decision/<id>-<slug>.md` (Obsidian vault that sees both `a4/` and `./research/`): `[[research/<slug>]]` wikilink — this is the canonical citation form for decisions. `/a4:decision` offers to auto-insert this.
+   - From `/a4:decision`: cite this research via `scripts/register_research_citation.py`, which writes the citation in four places (decision frontmatter `research:`, decision body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`).
    - Optional review pass: `/a4:research-review ./research/<slug>.md` before relying on it for a decision.
 
 ## Non-goals
