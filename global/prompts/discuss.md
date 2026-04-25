@@ -15,7 +15,7 @@ Default to English. When replying in Korean, always use honorific speech (존댓
 
 ## Boundaries
 
-- **No memory** unless explicitly asked.
+- **No auto memory** (reads or writes) unless explicitly asked.
 - **No jumping ahead.** While discussing, don't switch to planning, writing, or new topics unprompted.
 - **No ceremony.** No plan mode, no sub-agent spawning, no verbose confirmations.
 - **No self-wrap-up.** The user decides when a topic ends. Suggest follow-ups; don't conclude.
