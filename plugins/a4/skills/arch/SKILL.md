@@ -3,6 +3,16 @@ name: arch
 description: "This skill should be used when the user needs to design or iterate on system architecture — technology stack, external dependencies, component design, information flows, interface contracts, and test strategy. Common triggers include: 'architecture', 'design the system', 'component design', 'tech stack', 'how should we build this', 'system design', 'interface contracts', 'test strategy', 'what tools should we use'. Writes the result as a4/architecture.md (wiki page) following the spec-as-wiki+issues layout."
 argument-hint: <optional: \"iterate\" to resume; otherwise the skill auto-detects existing a4/architecture.md>
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
+default_mode: conversational
+mode_transitions:
+  to_conversational:
+    - phase decision points (tech stack, external dependencies, component boundaries, information flows, interface contracts, test strategy)
+    - alternative trade-off requires user choice
+    - ADR-worthy decision surfaces — recommend `/a4:decision` and stop
+    - architecture-reviewer surfaces a usecase-level finding requiring `/a4:usecase iterate`
+  to_autonomous:
+    - auto-drill into research / decision-drafter / architecture-drafter agents during a phase, returning to conversational on agent completion
+    - user emits an explicit handoff token after a phase is settled and only mechanical wiki-page emission remains
 ---
 
 # Architecture Designer

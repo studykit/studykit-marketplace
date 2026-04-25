@@ -3,6 +3,14 @@ name: spark-brainstorm
 description: "This skill should be used when the user wants to brainstorm, generate ideas, explore possibilities, or think through options. Triggers: 'brainstorm', 'generate ideas', 'think of options', 'explore possibilities', 'creative thinking', 'what are some ideas for', 'help me think about'. Assesses the situation and selects the appropriate technique — SCAMPER, Free Brainstorming, Mind Mapping, Reverse Brainstorming, Random Stimulus, and more."
 argument-hint: <topic or problem to brainstorm>
 allowed-tools: Read, Write, Agent, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode
+default_mode: conversational
+mode_transitions:
+  to_conversational:
+    - technique selection requires user choice (SCAMPER vs Free vs Mind Mapping vs Reverse vs Random Stimulus, etc.)
+    - idea ranking, pruning, or convergence requires user judgment
+    - follow-up topic ambiguity after a brainstorm pass
+  to_autonomous:
+    - user emits an explicit handoff token to run the selected technique mechanically (e.g., generate N more ideas via the chosen prompt) with no further input expected
 ---
 
 # Brainstorming Facilitator
