@@ -64,8 +64,19 @@ If `a4/bootstrap.md` already exists, archive it before proceeding: copy to `a4/a
 
 ## Step 1: Codebase Assessment
 
+Two orthogonal axes determine the work scope here — both must be resolved.
+
+**Axis 1 — project state (fresh vs incremental).**
+
 - **No existing code** → fresh bootstrap (Step 2 onwards).
 - **Existing code** → incremental. Identify what's already present (project structure, dependencies, build config, test setup). Only set up what's missing. Do not overwrite existing working configuration without cause.
+
+**Axis 2 — pipeline shape (Full vs Minimal).** See [`references/pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) for shape definitions.
+
+- **Full shape** (`architecture.md` is the input) — extract Technology Stack, Component structure, Test Strategy, External Dependencies from `architecture.md` per Step 0 and execute against that. This is the canonical case.
+- **Minimal shape** (`architecture.md` may be absent) — when invoked directly without architecture authoring (e.g., a brownfield single-change project entering through `/a4:task`), derive build / launch / test commands from the observed project state plus minimal user input. Produce a `bootstrap.md` that captures the verified L&V commands; do not back-fill an `architecture.md`. The bootstrap wiki page itself is the only required anchor in Minimal shape.
+
+The two axes combine: greenfield + Full is the canonical greenfield bootstrap; brownfield + Full is the incremental case after `/a4:arch` has run; brownfield + Minimal is the single-change case where `architecture.md` does not exist.
 
 ## Step 2: Project Structure
 
