@@ -2,7 +2,7 @@
 
 Body-level markdown conventions for every file written by an a4 skill. Covers wikilink / embed syntax, the footnote audit trail, and the wiki update protocol.
 
-Frontmatter-side rules (path format inside YAML, required fields, enums) live in [frontmatter-schema.md](./frontmatter-schema.md). This document is the body-side counterpart — the two should be read together.
+Frontmatter-side rules (path format inside YAML, required fields, enums) live in [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). This document is the body-side counterpart — the two should be read together.
 
 ## Scope
 
@@ -25,7 +25,7 @@ In body prose, use Obsidian wikilinks and embeds. These are the canonical forms:
 
 Aliases — `[[path\|display text]]` — work when the default basename reads poorly. Use sparingly; plain wikilinks read cleaner in diffs.
 
-**Frontmatter paths are different.** Frontmatter fields (`depends_on`, `implements`, `target`, etc.) use plain strings with no brackets and no `.md` suffix, per [frontmatter-schema.md](./frontmatter-schema.md). Do not mix the two forms:
+**Frontmatter paths are different.** Frontmatter fields (`depends_on`, `implements`, `target`, etc.) use plain strings with no brackets and no `.md` suffix, per [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). Do not mix the two forms:
 
 | Context | Example |
 |---------|---------|
@@ -116,8 +116,8 @@ Before a session ends, for each review item that transitioned to `status: resolv
 
 ## Cross-references
 
-- [frontmatter-schema.md](./frontmatter-schema.md) — frontmatter field rules (required fields, enums, frontmatter-path format).
-- [obsidian-dataview.md](./obsidian-dataview.md) — dataview query patterns for the INDEX.md blocks and reverse-derived relationship views.
+- [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — frontmatter field rules (required fields, enums, frontmatter-path format).
+- [obsidian-dataview.md](${CLAUDE_PLUGIN_ROOT}/references/obsidian-dataview.md) — dataview query patterns for the INDEX.md blocks and reverse-derived relationship views.
 - `plugins/a4/scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - `plugins/a4/scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved footnote + close-guard violations.
 - `plugins/a4/scripts/validate_frontmatter.py` — enforces the frontmatter-side of path references.

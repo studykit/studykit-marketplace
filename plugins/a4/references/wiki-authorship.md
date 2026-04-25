@@ -2,7 +2,7 @@
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
-Companion to [`frontmatter-schema.md`](./frontmatter-schema.md) (field-level rules), [`obsidian-conventions.md`](./obsidian-conventions.md) (footnote / `## Changes` / wikilink rules), and [`skill-modes.md`](./skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode).
+Companion to [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (field-level rules), [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) (footnote / `## Changes` / wikilink rules), and [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode).
 
 ## Wiki page authorship
 
@@ -12,7 +12,7 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 |---|---|---|---|
 | `context.md` | `usecase` | `usecase`: any | review item, `target: context`, `wiki_impact: [context]` |
 | `actors.md` | `usecase` | `usecase`: any. `arch`: add a `system` actor that surfaces during component design (privilege/description text only); never modify a `person` actor | review item, `target: actors`, `wiki_impact: [actors]` |
-| `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: domain`, `wiki_impact: [domain]` |
+| `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: domain`, `wiki_impact: [domain]` |
 | `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: nfr`, `wiki_impact: [nfr]` |
 | `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: architecture`, `wiki_impact: [architecture]` |
 | `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — `## Verified Commands`, `## Smoke Scenario`, `## Test Isolation Flags` are read directly by `/a4:run`, `task-implementer`, and `test-runner`; never duplicated into other wikis | review item, `target: bootstrap` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |

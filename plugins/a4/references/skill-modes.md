@@ -3,8 +3,8 @@
 Why each a4 pipeline stage has the mode it has, and why the missing interactive/autonomous pairs are intentional rather than gaps.
 
 Companion to:
-- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
-- [`frontmatter-schema.md`](./frontmatter-schema.md) — field-level rules.
+- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
+- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — field-level rules.
 
 ## Two axes, not one
 
@@ -32,7 +32,7 @@ The `/a4:auto-*` prefix is *not* a guarantee that the skill is the autonomous tw
 The pipeline deliberately does **not** include:
 
 - `/a4:auto-domain`, `/a4:auto-arch`, `/a4:auto-roadmap` — these stages are decision-collaboration. An autonomous variant would commit decisions the user has to re-litigate, multiplying review-item load without saving work.
-- `/a4:bootstrap` (interactive) — bootstrap's work is verification, not decision. Environment or arch issues that need user input become review items (`auto-bootstrap` is **continue + review item** per [`wiki-authorship.md`](./wiki-authorship.md) §Stage-by-stage policy), not interactive prompts.
+- `/a4:bootstrap` (interactive) — bootstrap's work is verification, not decision. Environment or arch issues that need user input become review items (`auto-bootstrap` is **continue + review item** per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Stage-by-stage policy), not interactive prompts.
 - `/a4:run` interactive variant — `run` is loop execution. Pause / resume / iteration entry are already supported via the `iterate` argument and review-item routing.
 
 Adding these would inflate the namespace and prompt surface without serving real demand. Each stage's mode reflects the nature of the work, not symmetry-for-symmetry's-sake.

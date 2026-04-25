@@ -5,9 +5,9 @@ Single source of truth for the **formal procedure** every a4 iterate flow follow
 **Mental model.** Treat each skill's iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when you start, archive (resolve / discard) when done. The mechanics here are the mailbox protocol; per-stage SKILL.md sections describe what each *kind* of message actually requires you to do when you read it.
 
 Companion to:
-- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage stop/continue policy.
-- [`obsidian-conventions.md`](./obsidian-conventions.md) — footnote markers, `## Changes` section, wikilink/embed rules.
-- [`frontmatter-schema.md`](./frontmatter-schema.md) — review-item frontmatter contract.
+- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; cross-stage stop/continue policy.
+- [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) — footnote markers, `## Changes` section, wikilink/embed rules.
+- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — review-item frontmatter contract.
 
 ## Scope
 
@@ -98,14 +98,14 @@ When resolving an item involves editing a wiki page (`context.md`, `actors.md`, 
 
 - Append a footnote marker (`[^N]`) at the modified spot.
 - Add a corresponding `## Changes` entry at the page bottom: `[^N]: YYYY-MM-DD — [[review/<id>-<slug>]]`.
-- Honor the wiki page's authorship rule per [`wiki-authorship.md`](./wiki-authorship.md). If the change is out of in-situ scope, do not edit; instead emit a fresh review item targeting the upstream wiki.
+- Honor the wiki page's authorship rule per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md). If the change is out of in-situ scope, do not edit; instead emit a fresh review item targeting the upstream wiki.
 - The wiki close guard warns at resolve-time when `wiki_impact:` is non-empty but the referenced page lacks a back-pointer footnote.
 
-Full footnote / `## Changes` formatting rules: [`obsidian-conventions.md`](./obsidian-conventions.md).
+Full footnote / `## Changes` formatting rules: [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md).
 
 ## 5. Discipline (always-hold rules)
 
-- **Never hand-edit** `status:` / `updated:` / `## Log` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](./frontmatter-schema.md).
+- **Never hand-edit** `status:` / `updated:` / `## Log` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.
