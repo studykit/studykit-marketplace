@@ -3,6 +3,15 @@ name: research-review
 description: "This skill should be used when the user has a research artifact at `./research/<slug>.md` (produced by `/a4:research` or hand-authored in the same format) and wants to review its quality before relying on it for a decision. Runs the `research-reviewer` agent, walks the flagged issues with the user one at a time, applies accepted revisions, and bumps `updated:`. Triggers: 'review this research', 'check the research report', 'is this research sound', 'research review', or after finishing a `/a4:research` session. Runs workspace-agnostic — no `a4/` required."
 argument-hint: <path to ./research/<slug>.md>
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob
+default_mode: autonomous
+mode_transitions:
+  to_conversational:
+    - research-reviewer flags an issue requiring user disposition (apply / dismiss / defer)
+    - destructive revision proposed (rewriting whole sections, deleting prior conclusions)
+    - target path ambiguous or missing
+  to_autonomous:
+    - skill invoked directly (`/a4:research-review`) — autonomous is the declared default, name reflects mode
+    - resume after the user resolves a flagged issue and confirms the next disposition
 ---
 
 # Research Review & Revise

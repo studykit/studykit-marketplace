@@ -3,6 +3,15 @@ name: decision
 description: "This skill should be used when the user has reached a decision through conversation with the LLM and wants to document it as an ADR. Writes the decision to `a4/decision/<id>-<slug>.md` with proper frontmatter and body, cites any related `./research/<slug>.md` artifacts as Obsidian wikilinks in body prose, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'record this decision', 'document our decision', 'capture the decision', 'write this up as an ADR', 'let's make this a decision', or after the user and LLM converge on a choice. Accepts either no argument (extract decision from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft decision to finalize it. Requires an `a4/` workspace."
 argument-hint: <optional: short decision summary or title>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+default_mode: conversational
+mode_transitions:
+  to_conversational:
+    - decision text or alternatives could not be unambiguously extracted from recent conversation
+    - related research artifact pointer ambiguous (multiple `./research/<slug>.md` candidates, or none when expected)
+    - affected wiki pages selection requires user choice (which of architecture / context / domain / actors / nfr to nudge)
+    - finalization of an existing draft decision requires user ratification
+  to_autonomous:
+    - user emits an explicit handoff token after the decision body is settled and only mechanical id allocation, file write, and wiki-page nudges remain
 ---
 
 # Decision Recorder

@@ -3,6 +3,16 @@ name: usecase
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'use cases', 'gather requirements', 'what do users need', 'break this down', or when a rough idea needs to be shaped into concrete Use Cases through a Socratic interview. Writes per-UC issue files plus wiki pages into <project-root>/a4/ following the spec-as-wiki+issues layout."
 argument-hint: <idea or vague concept to turn into use cases, or "iterate" to resume>
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
+default_mode: conversational
+mode_transitions:
+  to_conversational:
+    - every Socratic interview question — one decision per turn
+    - actor / domain-term disambiguation
+    - UC scope or boundary ambiguity (split vs merge)
+    - review-item triage requires user disposition
+  to_autonomous:
+    - user invokes /a4:auto-usecase mid-flight to hand the rest of the discovery to the autonomous generator
+    - user emits an explicit handoff token after the UC set is settled and only mechanical wiki + per-UC file writes remain
 ---
 
 # Use Case Discovery Facilitator

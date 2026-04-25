@@ -3,6 +3,16 @@ name: auto-usecase
 description: "This skill should be used when the user wants to autonomously generate a complete Use Case set from an idea or brainstorm input without interactive interview. Triggers: 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'create use case doc automatically', 'no interview needed just generate', 'run auto-usecase on'. Writes the result into <project-root>/a4/ per the spec-as-wiki+issues layout (per-UC files + context.md / actors.md / domain.md / nfr.md)."
 argument-hint: <idea, brainstorm text, or file path to generate use cases from>
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
+default_mode: autonomous
+mode_transitions:
+  to_conversational:
+    - input is too thin to generate a UC set without user clarification
+    - generator agent returns clarification_needed or low-confidence on a UC set
+    - review items surface a fundamental gap (missing actor, contradictory NFR, scope overlap with existing UCs)
+    - destructive operation proposed (overwriting an existing populated a4/usecase/ set without label)
+  to_autonomous:
+    - skill invoked directly (`/a4:auto-usecase`) — autonomous is the declared default, name reflects mode
+    - resume after the user resolves a clarification request and confirms the next pass
 ---
 
 # Autonomous Use Case Generator
