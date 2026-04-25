@@ -53,7 +53,7 @@ Outputs:
 Determined by the workspace state, not by frontmatter flags:
 
 - **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order.
-- **Iterate mode** — open review items target a task or `roadmap` (typically from the prior cycle's test-runner). Walk them before re-running Step 1.
+- **Iterate mode** — open review items target a task or `roadmap` (typically from the prior cycle's test-runner). See **Iteration Entry** below before re-running Step 1.
 
 Mode detection at session start:
 
@@ -65,6 +65,18 @@ ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/'
 ```
 
 If no tasks exist at all: halt and tell the user to run `/a4:roadmap` (UC-driven batch) or `/a4:task` (single ad-hoc) first.
+
+### Iteration Entry
+
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the run-specific work.
+
+**Backlog filter:** `target: task/*` OR `target: roadmap` (typically `source: test-runner` from the prior cycle).
+
+**Run-specific work** between writer calls:
+- **Cycle counter** — task `cycle:` increments at every revise → re-run pass; the `## Log` entry cites the cycle number.
+- **Cascade reset** — when a task is reset to `pending` for re-implementation, every downstream task whose `depends_on` traces back to it also resets to `pending` and gets a `## Log` entry.
+- **Crash hygiene at session start** — see Resume Hygiene below.
+- **Stop on strong upstream** — `target: architecture` and `target: usecase/*` findings halt the run and route to `/a4:arch iterate` or `/a4:usecase iterate` per [`references/wiki-authorship.md`](../../../references/wiki-authorship.md) §Cross-stage feedback. The full classification table is at [`references/failure-classification.md`](./references/failure-classification.md).
 
 ## Resume Hygiene
 

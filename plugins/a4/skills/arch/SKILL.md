@@ -55,17 +55,20 @@ Determine the mode from the current `a4/` state:
 
 ### Iteration Entry
 
-1. **Open arch review items** — list `a4/review/*.md` with `status: open` AND (`target: architecture` OR `architecture` in `wiki_impact`). Present as the priority backlog.
-2. **New or changed UCs** — compare the architecture's `## Changes` footnotes against current UC files. For UCs not yet cited in any arch footnote, flag them as "needs coverage" candidates.
-3. **UC ↔ actor / domain drift** — quick pass: for each Information Flow section in architecture.md, check that the referenced UCs and components still exist as current files / component sections.
-4. **Recommend a starting point** — the user can pick from the backlog, work on a specific new UC, or choose a phase to revisit.
+Mechanics (filter, backlog presentation, writer calls, footnote rules, discipline) follow [`references/iterate-mechanics.md`](../../../references/iterate-mechanics.md). This section adds only the architecture-specific work.
 
-**Impact propagation rule:** when one area changes, check whether it affects others:
+**Backlog filter:** `target: architecture` OR `architecture` in `wiki_impact`.
+
+**Architecture-specific staleness signals (alongside the backlog):**
+1. **New or changed UCs** — compare `architecture.md`'s `## Changes` footnotes against current UC files. UCs not yet cited in any arch footnote are "needs coverage" candidates.
+2. **UC ↔ actor / domain drift** — quick pass: for each Information Flow section in `architecture.md`, check that the referenced UCs and components still exist as current files / component sections.
+
+**Architecture impact propagation rule** — when one area changes, check whether it affects others:
 - Technology stack change → do components need restructuring? Do test tools need changing?
 - Component change → do information flows still hold? Do interface contracts need updating?
 - Test strategy change → does this affect how components are designed for testability?
 
-Surface these cross-area impacts to the user; do not silently assume they're fine.
+Surface these cross-area impacts to the user; do not silently assume they're fine. Then recommend a starting point — backlog item, specific new UC, or phase to revisit.
 
 ## Session Task List
 
