@@ -30,7 +30,7 @@ Frontmatter fields that reference other files (`depends_on`, `implements`, `targ
 
 - **Plain strings.** No wikilink brackets — `usecase/3-search-history`, not `[[usecase/3-search-history]]`. Brackets break dataview parsing.
 - **No `.md` extension.** Obsidian basename resolution handles it. Spark brainstorm files keep the `.brainstorm` suffix because it is part of the filename base, not the extension — e.g., `spark/2026-04-23-2119-caching-strategy.brainstorm`.
-- **Folder-prefixed when cross-folder.** `usecase/3-search-history`, `task/5-render-markdown`, `review/6-missing-validation`, `decision/8-caching-strategy`, `spark/<base>`. Bare basename (`3-search-history`) resolves correctly because ids are globally unique, but folder-prefixed form is preferred for readability.
+- **Folder-prefixed when cross-folder.** `usecase/3-search-history`, `task/5-render-markdown`, `review/6-missing-validation`, `decision/8-caching-strategy`, `spark/<base>`, `research/<slug>` (project-root `research/`, sibling of `a4/`). Bare basename (`3-search-history`) resolves correctly because ids are globally unique, but folder-prefixed form is preferred for readability.
 - **Wiki targets use bare basename.** `wiki_impact: [architecture, domain]`, not `wiki_impact: [architecture.md]`.
 
 ### Dates
@@ -46,7 +46,12 @@ Empty lists may be written as `[]` or omitted entirely. Both are semantically eq
 
 The ADR fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are normally **derived on demand** (Obsidian dataview, grep, script back-scan) rather than stored.
 
-**Stored-reverse exception.** A reverse direction may be stored as a frontmatter field when a script owns writes for it and a concrete consumer benefits from frontmatter-direct access. The one current case is `usecase.implemented_by`: stored, auto-maintained by `scripts/refresh_implemented_by.py` (back-scan of `task.implements:`), and consumed by the `usecase.ready → implementing` status gate in `transition_status.py` (the gate requires `implemented_by:` non-empty). Hand-editing stored-reverse fields is forbidden.
+**Stored-reverse exception.** A reverse direction may be stored as a frontmatter field when a script owns writes for it and a concrete consumer benefits from frontmatter-direct access. Two current cases:
+
+- `usecase.implemented_by` — stored, auto-maintained by `scripts/refresh_implemented_by.py` (back-scan of `task.implements:`), consumed by the `usecase.ready → implementing` status gate in `transition_status.py` (which requires `implemented_by:` non-empty).
+- `research.cited_by` — stored on the project-root research artifact, written atomically by `scripts/register_research_citation.py` alongside the forward `decision.research:` field. Consumed by the SessionStart staleness courtesy that reminds the user about uncited `status: final` research older than the configured threshold.
+
+Hand-editing stored-reverse fields is forbidden.
 
 Adding a new stored reverse link follows the same bar: a script must own writes, and there must be a concrete consumer (status gate, validator, hot query) that justifies bypassing derive-on-demand. Otherwise prefer derived.
 
@@ -60,6 +65,7 @@ Adding a new stored reverse link follows the same bar: a script must own writes,
 | `target` | (review backlinks) | derived |
 | `wiki_impact` | (wiki backlinks) | derived |
 | `promoted` | (spark → pipeline backlinks) | derived |
+| `decision.research` | `research.cited_by` | **stored — auto-maintained by `register_research_citation.py`** |
 | `related` | (symmetric; no reverse) | — |
 
 ### Unknown fields
@@ -270,7 +276,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 
 ## Decision (`a4/decision/<id>-<slug>.md`)
 
-ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are recorded by `/a4:decision` into `a4/decision/<id>-<slug>.md` after the user and LLM converge on a choice through conversation. Supporting research, when needed, is produced separately by `/a4:research` as a portable artifact at project-root `./research/<slug>.md` and cited in the decision's **body prose** as `[[research/<slug>]]` Obsidian wikilinks (not in `related:` frontmatter — research lives outside the `a4/` workspace and is not an issue-family artifact). The wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with footnote markers, or opening a review-item fallback) is performed by `/a4:decision` at record time.
+ADR stored as an issue — the canonical decision slot from the wiki+issues duality. Decisions are recorded by `/a4:decision` into `a4/decision/<id>-<slug>.md` after the user and LLM converge on a choice through conversation. Supporting research, when needed, is produced separately by `/a4:research` as a portable artifact at project-root `./research/<slug>.md` and registered atomically via `scripts/register_research_citation.py`. Each citation is recorded in four places — the decision's `research:` frontmatter list and `## Research` body section, plus the research file's `cited_by:` frontmatter list and `## Cited By` body section. Frontmatter representations are queryable via dataview; body prose preserves the in-context citation. The `related:` frontmatter field on a decision is **not** the right slot for research — `research` is the dedicated forward field; `related:` remains for cross-references between issue-family artifacts. The wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with footnote markers, or opening a review-item fallback) is performed by `/a4:decision` at record time.
 
 **Body structure.** Two sections are required: `## Context` (why this decision was needed) and `## Decision` (the chosen option with rationale). Both are mechanically enforced by `transition_status.py` on the `draft → final` flip. Beyond those two, additional sections may be added when the session content warrants them — common examples include `## Options Considered`, `## Rejected Alternatives`, `## Next Steps`, `## Consequences`, `## Migration Plan`, `## Open Questions`. Use headed sections (`##` or `###`) only; no free-form prose outside a section.
 
@@ -282,6 +288,7 @@ ADR stored as an issue — the canonical decision slot from the wiki+issues dual
 | `framework` | no | string | decision framework used (e.g., `weighted-scoring`, `analysis-driven`) |
 | `decision` | no | string | one-line decision summary |
 | `supersedes` | no | list of paths | prior decisions replaced |
+| `research` | no | list of paths | research artifacts informing this decision (`research/<slug>`); auto-maintained by `register_research_citation.py` together with the body `## Research` section |
 | `related` | no | list of paths | catchall |
 | `tags` | no | list of strings | free-form |
 | `created` | yes | date | `YYYY-MM-DD` |
@@ -336,6 +343,30 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 Source: `plugins/a4/skills/spark-brainstorm/SKILL.md` lines 91–100.
 
 **Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/decision/<id>-<slug>.md` records. The `/a4:spark-decide` skill was first split into `/a4:research` (investigation at project-root `./research/<slug>.md`) and `/a4:decision-review` (reviewer pass + wiki nudge on a hand-authored decision file); the latter was subsequently retired when it emerged that the review agent assumed a research-grounded decision shape and did not serve simpler, conversation-derived decisions. The current shape is: `/a4:research` (optional) → `/a4:research-review` (optional) → conversation → `/a4:decision` (records the decision + performs the wiki nudge). No spark-family file carries `type: decide` anymore.
+
+## Research artifact (project-root `research/<slug>.md`)
+
+Research files live **outside** `a4/` — at project-root `research/` (sibling of `a4/`). They are portable, workspace-agnostic, and are **not** validated by `validate_frontmatter.py`. The convention below is documented here because `decision.research:` cites these files and `register_research_citation.py` writes their reverse-link.
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `topic` | yes | string | research topic |
+| `status` | yes | enum | `draft` \| `final` \| `standalone` \| `archived` |
+| `mode` | yes | literal | `comparative` \| `single` |
+| `options` | conditional | list of strings | required when `mode: comparative` |
+| `cited_by` | no | list of paths | reverse link to citing decisions; auto-maintained by `register_research_citation.py` |
+| `tags` | no | list of strings | free-form |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` (bumped by `register_research_citation.py` whenever it touches the file) |
+
+Status semantics:
+
+- `draft` — research is being authored.
+- `final` — research is complete; may or may not have been cited yet.
+- `standalone` — research is complete and intentionally not feeding any decision (terminal). The SessionStart staleness courtesy never nudges `standalone` files.
+- `archived` — research is no longer relevant (terminal).
+
+The staleness courtesy nudges only files at `status: final` with empty `cited_by:` and `updated:` older than a threshold; everything else is silent.
 
 ## Validator behavior
 
@@ -397,6 +428,7 @@ When these land, update this document **and** the validator simultaneously — t
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
 - **Status transition writer:** `plugins/a4/scripts/transition_status.py` — single writer for usecase / task / review / decision status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, decision final → superseded chain).
 - **Implemented-by back-link refresher:** `plugins/a4/scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
+- **Research citation registrar:** `plugins/a4/scripts/register_research_citation.py` — atomically records a research → decision citation in four places (decision frontmatter `research:`, decision body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`) and bumps the research file's `updated:`.
 - **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
 - **Cross-file status consistency validator:** `plugins/a4/scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).
 - **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).
