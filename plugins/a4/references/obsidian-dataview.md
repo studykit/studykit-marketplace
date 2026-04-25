@@ -85,7 +85,7 @@ LIMIT 10
 
 ### Open ideas
 
-Pre-pipeline quick-capture items (see [frontmatter-schema.md §Idea](./frontmatter-schema.md) and `plugins/a4/spec/2026-04-24-idea-slot.decide.md`). Filter is `status = "open"`; `promoted`/`discarded` are terminal.
+Pre-pipeline quick-capture items (see [frontmatter-schema.md §Idea](./frontmatter-schema.md) and `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`). Filter is `status = "open"`; `promoted`/`discarded` are terminal.
 
 ```dataview
 TABLE WITHOUT ID file.link AS "Idea", status AS "Status", updated AS "Updated"
@@ -198,4 +198,4 @@ Pure-mermaid rendering from frontmatter requires a dataviewjs block (JavaScript 
 - [obsidian-conventions.md](./obsidian-conventions.md) — body-level wikilink syntax and footnote audit trail.
 - `plugins/a4/scripts/index_refresh.py` — authoritative source for the INDEX.md canonical blocks. Must stay in sync with the first section of this document.
 - `plugins/a4/scripts/drift_detector.py` — produces the review items surfaced by the Drift alerts block.
-- `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the rationale source.
+- `plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md` — ADR, the rationale source.
