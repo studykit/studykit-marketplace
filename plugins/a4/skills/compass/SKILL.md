@@ -69,7 +69,7 @@ Workspace state — wiki page presence, per-folder issue counts, open drift aler
 
 The workspace is empty or the user described a vague intent.
 
-### 2.0 Brownfield detection
+### 2.0 Brownfield detection and pipeline-shape choice
 
 Before showing the catalog, detect whether the project has implementation code outside `a4/`:
 
@@ -81,12 +81,14 @@ ls "$ROOT"/{package.json,pyproject.toml,Cargo.toml,go.mod,pom.xml,build.gradle,b
 git -C "$ROOT" ls-files | grep -Ev '^(a4/|plugins/|\.claude|research/)' | grep -E '\.(ts|tsx|js|jsx|py|rs|go|java|kt|rb|php|cpp|c|swift|m|md)$' | head -1
 ```
 
-If either signal fires and `a4/` is empty (or absent), this is a **brownfield** project — existing code with no a4 workspace. Ask **one** question before showing the catalog:
+If either signal fires and `a4/` is empty (or absent), this is a **brownfield** project — existing code with no a4 workspace. The user must pick one of three pipeline shapes (see [`references/pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) for the full taxonomy). Ask **one** question before showing the catalog:
 
 > This project has existing code but no a4 workspace. What are you trying to do?
-> - **(a) Reverse-engineer** — extract use cases and supporting wiki pages (`context.md`, `actors.md`, `domain.md`) from the existing code.
-> - **(b) Single change** — make one small change without the full pipeline (`bootstrap.md` minimally, then `/a4:task` → `/a4:run`).
-> - **(c) New feature** — start the formal pipeline (`/a4:usecase` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
+> - **(a) Reverse-engineer** (Reverse shape) — extract use cases and supporting wiki pages (`context.md`, `actors.md`, `domain.md`) from the existing code.
+> - **(b) Single change** (Minimal shape) — make one small change without the full pipeline (`bootstrap.md` only, then `/a4:task` → `/a4:run`).
+> - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
+
+A user with no implementation goal yet (just recording an ADR via `/a4:decision`, capturing research, or sketching ideas) is in a **No-shape** state — none of (a)/(b)/(c) applies. Compass does not prompt for that explicitly; the catalog's Ideation and Standalone sections cover those cases as fall-throughs.
 
 Route based on the answer:
 
@@ -94,7 +96,7 @@ Route based on the answer:
   ```
   Skill({ skill: "a4:auto-usecase", args: "<project-root or subdirectory>" })
   ```
-- **(b) Single change** → invoke `/a4:auto-bootstrap` (which already supports incremental mode against an existing codebase per its Step 1 "Codebase Assessment"); follow with `/a4:task` for the change itself.
+- **(b) Single change** → invoke `/a4:auto-bootstrap` (which already supports incremental mode against an existing codebase per its Step 1 "Codebase Assessment"; in this entry path it runs in Minimal-shape scope, producing `bootstrap.md` without requiring `architecture.md`); follow with `/a4:task` for the change itself.
 - **(c) New feature** — full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run`. Fall through to the catalog below; the user typically picks `/a4:usecase` first.
 
 When no implementation code is detected, skip 2.0 and go straight to the catalog.

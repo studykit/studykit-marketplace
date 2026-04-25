@@ -190,7 +190,12 @@ Cycle bound: if 3 cycles complete and failures remain, halt as described in that
 
 For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and writer call are in [`references/uc-ship-review.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/uc-ship-review.md).
 
-The ship branch is **conditional on UC presence** — projects with no UC-implementing tasks (UC-less, or all spike / bug / ADR-justified) skip 4b entirely and go to wrap-up. That is the normal case for those shapes, not an error.
+The ship unit varies by **pipeline shape** (see [`references/pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md)). Per-task vs per-UC ship is `task.implements:`-driven, not invocation-driven:
+
+- **Per-UC ship** — when `task.implements:` is non-empty (Full shape, or Minimal-feature-with-UC). Multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
+- **Per-task ship** — when `task.implements:` is empty (Minimal shape's bug / spike / ADR-justified feature). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely. That is the normal case for those shapes, not an error.
+
+A run can mix both unit types in one invocation (e.g., a UC-driven task and an ADR-justified bug fix shipping in the same cycle); each task's `implements:` field decides which branch its ship verdict takes.
 
 Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:run iterate` session will re-offer them.
 
