@@ -16,3 +16,7 @@ The `global/` directory manages rules, subagents, skills, hooks, and MCP configu
 
 **All documentation must be written in English.** When creating or editing markdown files, README files, CLAUDE.md files, or any other documentation, always use English.
 
+## a4 plugin frontmatter schema
+
+When modifying anything under `plugins/a4/` or anything that reads/writes `<project-root>/a4/` workspace files, always read [`plugins/a4/references/frontmatter-schema.md`](plugins/a4/references/frontmatter-schema.md) first. It is the single source of truth for the a4 frontmatter contract — required fields, enum values, path-reference format, status writers, auto-maintained reverse links, and validator behavior. Do not edit a4 frontmatter, write new a4 skills/scripts, or change validators without consulting it.
+

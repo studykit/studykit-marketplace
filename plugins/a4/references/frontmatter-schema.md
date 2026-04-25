@@ -1,6 +1,6 @@
 # a4 Frontmatter Schema
 
-Consolidated frontmatter reference for the `a4/` workspace. Extracted from the spec-as-wiki+issues ADR (`plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md`) and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**; the ADR remains the rationale source.
+Consolidated frontmatter reference for the `a4/` workspace. Extracted from the spec-as-wiki+issues ADR (`plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md`) and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**; the ADR remains the rationale source.
 
 When the ADR and this document disagree, the ADR wins and this document should be updated to match.
 
@@ -42,21 +42,25 @@ Frontmatter fields that reference other files (`depends_on`, `implements`, `targ
 
 Empty lists may be written as `[]` or omitted entirely. Both are semantically equivalent. Prefer omission when the field is not expected to populate; prefer `[]` when the field is part of the type's shape and emptiness is noteworthy (e.g., `promoted: []` on a fresh brainstorm).
 
-### Relationships are forward-only
+### Relationships
 
-The ADR fixes **one direction per relationship**. Reverse directions are derived by dataview queries, never stored.
+The ADR fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are normally **derived on demand** (Obsidian dataview, grep, script back-scan) rather than stored.
 
-| Forward (stored) | Reverse (derived) |
-|------------------|-------------------|
-| `depends_on` | `blocks` |
-| `implements` | `implemented_by` |
-| `justified_by` | `justifies` |
-| `supersedes` | `superseded_by` |
-| `parent` | `children` |
-| `target` | (review backlinks) |
-| `wiki_impact` | (wiki backlinks) |
-| `promoted` | (spark → pipeline backlinks) |
-| `related` | (symmetric; no reverse) |
+**Stored-reverse exception.** A reverse direction may be stored as a frontmatter field when a script owns writes for it and a concrete consumer benefits from frontmatter-direct access. The one current case is `usecase.implemented_by`: stored, auto-maintained by `scripts/refresh_implemented_by.py` (back-scan of `task.implements:`), and consumed by the `usecase.ready → implementing` status gate in `transition_status.py` (the gate requires `implemented_by:` non-empty). Hand-editing stored-reverse fields is forbidden.
+
+Adding a new stored reverse link follows the same bar: a script must own writes, and there must be a concrete consumer (status gate, validator, hot query) that justifies bypassing derive-on-demand. Otherwise prefer derived.
+
+| Forward (stored) | Reverse | Storage |
+|------------------|---------|---------|
+| `depends_on` | `blocks` | derived |
+| `implements` | `implemented_by` | **stored — auto-maintained by `refresh_implemented_by.py`** |
+| `justified_by` | `justifies` | derived |
+| `supersedes` | `superseded_by` | derived |
+| `parent` | `children` | derived |
+| `target` | (review backlinks) | derived |
+| `wiki_impact` | (wiki backlinks) | derived |
+| `promoted` | (spark → pipeline backlinks) | derived |
+| `related` | (symmetric; no reverse) | — |
 
 ### Unknown fields
 
@@ -242,7 +246,7 @@ The `spike/` directory:
 - Is not validated by any a4 script — the markdown-only contract of `a4/` is preserved.
 - Is opt-in — projects without spike tasks have no `spike/` directory.
 
-Source: `plugins/a4/spec/2026-04-24-experiments-slot.decide.md`.
+Source: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
 
 ## Review item (`a4/review/<id>-<slug>.md`)
 
@@ -289,7 +293,7 @@ Decisions enter at `draft` while the rationale is still being written, move to `
 
 Pre-pipeline quick-capture slot — Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family.
 
-Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea. See `plugins/a4/spec/2026-04-24-idea-slot.decide.md` for the full rationale.
+Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea. See `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md` for the full rationale.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -312,7 +316,7 @@ Boundary with `review/`: **idea = independent possibility, captured raw; review 
 
 Body is free-form; no required sections. Captured via `/a4:idea <line>` the body is typically just the H1; longer ideas may add `## Why this matters` or `## Notes` sections.
 
-Source: `plugins/a4/skills/idea/SKILL.md` and `plugins/a4/spec/2026-04-24-idea-slot.decide.md`.
+Source: `plugins/a4/skills/idea/SKILL.md` and `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 
@@ -387,7 +391,7 @@ When these land, update this document **and** the validator simultaneously — t
 
 ## Cross-references
 
-- **ADR (authority):** `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md` §Frontmatter schema (lines ~132–225).
+- **ADR (authority):** `plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md` §Frontmatter schema (lines ~132–225).
 - **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
 - **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.

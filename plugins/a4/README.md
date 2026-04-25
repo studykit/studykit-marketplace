@@ -75,7 +75,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 ## Document Layout (`a4/`)
 
-`a4/` is a git-native **wiki + issue tracker** for the workspace — flat wiki pages describe the project shape; type-scoped folders hold lifecycle-tracked issues. Full model: `plugins/a4/spec/2026-04-23-spec-as-wiki-and-issues.decide.md`.
+`a4/` is a git-native **wiki + issue tracker** for the workspace — flat wiki pages describe the project shape; type-scoped folders hold lifecycle-tracked issues. Full model: `plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md`.
 
 ```
 <project-root>/
@@ -106,8 +106,8 @@ Three hook flows share the same events, dispatched through a single Python entry
 - **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, plan, bootstrap) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels`, `milestone` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
-- **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/2026-04-24-idea-slot.decide.md`.
-- **Spike vs. feature task** — every task carries `kind: feature | spike | bug`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix. Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/2026-04-24-experiments-slot.decide.md`.
+- **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
+- **Spike vs. feature task** — every task carries `kind: feature | spike | bug`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix. Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
 
 ### Conventions
 
