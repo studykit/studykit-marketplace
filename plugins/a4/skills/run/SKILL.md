@@ -34,7 +34,13 @@ Outputs:
 
 1. `a4/roadmap.md` § "Launch & Verify" — the normal path.
 2. `a4/bootstrap.md` § "Launch & Verify" — fallback when no `roadmap.md` exists (UC-less single-task or ADR-justified workspaces). Both `/a4:auto-bootstrap` and the manual bootstrap flow write this section.
-3. **Halt** if neither exists. Tell the user to run `/a4:auto-bootstrap` (or write `roadmap.md` via `/a4:roadmap`) first. The final fallback policy for projects that decline both is unresolved (see Out of Scope).
+3. **Halt and delegate to `/a4:compass`** when neither exists, per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]]. Invoke compass with the structured diagnosis argument so its Step 3 Gap Diagnosis (with the bootstrap-aware Layer 1 walk) recommends the correct upstream skill:
+
+   ```
+   Skill({ skill: "a4:compass", args: "from=run; missing=roadmap.md,bootstrap.md" })
+   ```
+
+   `/a4:run` does not pre-judge which upstream skill applies, does not auto-chain into the recommendation, and does not look upstream of `roadmap.md` / `bootstrap.md` itself — compass's pipeline walk owns those decisions.
 
 ## Mode Detection
 
@@ -252,7 +258,7 @@ Context is passed via file paths, not agent memory.
 ## Out of Scope
 
 - **Authoring** — task files, roadmap.md, ADRs, UCs are written elsewhere. `/a4:run` only reads them.
-- **Final fallback when neither roadmap.md nor bootstrap.md exists** — currently halts with a recommendation. A "best-effort auto-detect" or "read AGENTS.md / package.json scripts" fallback is unresolved and not implemented.
+- **"Best-effort auto-detect" of build / test commands without `roadmap.md` or `bootstrap.md`.** When neither exists, `/a4:run` delegates to `/a4:compass` per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]] — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope.
 - **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4 currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline. Inline scoped re-review is a possible future addition.
 - **Per-cycle parallelism beyond independent ready tasks** — task-implementer parallelism is bounded by the dependency graph; no further parallelization is attempted.
 
