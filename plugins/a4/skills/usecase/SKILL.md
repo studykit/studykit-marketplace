@@ -140,12 +140,11 @@ Use the task list as a live workflow map. The user should be able to check the t
 - `"Step 1: Receive idea and write context.md"` → `in_progress`
 - `"Discovery: Use cases"` → `pending`
 - `"Platform capabilities audit"` → `pending`
-- `"Domain model: Concept extraction"` → `pending`
-- `"Domain model: Relationship mapping"` → `pending`
-- `"Domain model: State transitions"` → `pending`
 - `"Wrap Up: Explorer review"` → `pending`
 - `"Wrap Up: Reviewer validation"` → `pending`
 - `"Wrap Up: Record review items"` → `pending`
+
+Domain Model extraction is **out of scope** for this skill — it lives in `/a4:domain`. The Discovery loop captures actors and per-UC bodies; cross-cutting concept/relationship/state work happens after the UC set settles, in a separate skill invocation.
 
 **Iteration** — adjust based on the work backlog:
 - `"Review open items and backlog"` → `in_progress`
@@ -298,24 +297,11 @@ Ask the user once:
 
 If yes, write `a4/nfr.md` with frontmatter `kind: nfr`, `updated: <today>`, and a table of requirements (Description | Affected UCs via wikilinks | Measurable criteria). Skip creating the file when there are no NFRs.
 
-### 12. Domain Model Extraction
-
-Mark "Platform capabilities audit" `completed`. Mark "Domain model: Concept extraction" `in_progress`.
-
-After UCs are substantially complete, extract domain concepts through cross-cutting analysis. Read `${CLAUDE_SKILL_DIR}/references/domain-model-guide.md` for the detailed procedure.
-
-Domain Model has three topics — each becomes a section of `a4/domain.md`:
-1. **Concept Extraction** — identify entities appearing across multiple UCs; record as a glossary with name, definition, key attributes, and wikilinks to related UCs.
-2. **Relationship Mapping** — PlantUML class diagram + text explanation.
-3. **State Transition Analysis** — PlantUML state diagram + text explanation per stateful concept.
-
-Create `a4/domain.md` (frontmatter `kind: domain`, `updated: <today>`) on first concept confirmation and grow it across the three topics. Follow the abstraction rule: "what exists and how it connects" only — no implementation types, no API endpoints.
-
 ## Wrapping Up
 
 The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper.
 
-When the user indicates they're done, proceed to **End Iteration** in `${CLAUDE_SKILL_DIR}/references/session-closing.md`. The short version:
+When the user indicates they're done, mark `"Platform capabilities audit"` (or whichever phase task is currently `in_progress`) as `completed`, then proceed to **End Iteration** in `${CLAUDE_SKILL_DIR}/references/session-closing.md`. The short version:
 
 1. Launch `Agent(subagent_type: "a4:usecase-explorer")` to surface additional perspectives.
 2. Reflect accepted candidates (new UC files as above).
@@ -333,7 +319,7 @@ When the user indicates they're done, proceed to **End Iteration** in `${CLAUDE_
    - no / `"아직"` / `"still iterating"` / silence → leave at current status.
 
    Only `draft` and `revising` UCs are offered. UCs at `ready`, `implementing`, `shipped`, `superseded`, `discarded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC at any status other than `ready`, so this gate is the hand-off point between spec work and coding.
-7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:arch` (or `/a4:roadmap` if architecture already exists) as the next step.
+7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:domain` as the next step (cross-cutting concept extraction). If `a4/domain.md` already exists and looks current, suggest `/a4:arch` instead.
 
 ## Revising an `implementing` UC
 

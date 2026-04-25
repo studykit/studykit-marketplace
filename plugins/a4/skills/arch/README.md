@@ -5,7 +5,7 @@ Designs system architecture through collaborative dialogue — technology stack,
 ## Current Notes
 
 - **Primary file:** `plugins/a4/skills/arch/SKILL.md`
-- **Current behavior:** Collaborative architecture design skill. It supports both first-pass design and iteration on an existing `.arch.md`, with reviewer feedback when the user wants it.
+- **Current behavior:** Collaborative architecture design skill. It supports both first-pass design and iteration on an existing `a4/architecture.md`, with `arch-reviewer` feedback at wrap-up.
 
 ## Workflow
 
@@ -18,13 +18,13 @@ start
 partition "Input Resolution" {
   :Resolve $ARGUMENTS
   (file path, slug, or partial name);
-  if (Existing .arch.md?) then (yes)
+  if (Existing a4/architecture.md?) then (yes)
     :Iteration Mode;
-    :Check source usecase changes
-    (compare SHA);
-    :Check unreflected reports
-    (review, bootstrap, integration,
-    plan, test);
+    :List open arch review items
+    (target: architecture or
+    architecture in wiki_impact);
+    :Check new/changed UCs
+    against architecture footnotes;
   else (no)
     :First Design Mode;
   endif
@@ -70,9 +70,14 @@ partition "Phase 3: Component Design" {
     :Per-component deep dive
     (DB schema, information flow,
     interface contracts);
-    if (Domain Model change needed?) then (yes)
-      :Spawn domain-updater agent;
-      :Update arch source SHA;
+    if (Domain change needed?) then (yes)
+      if (Simple — add/rename/clarify?) then (yes)
+        :Edit a4/domain.md inline;
+        :Footnote + ## Changes;
+      else (structural — split/merge/relation/state)
+        :Emit review item
+        target: domain;
+      endif
     else (no)
     endif
   repeat while (More components?) is (yes) ->done;
@@ -121,9 +126,14 @@ partition "Additive Feature" {
     :Per-UC deep dive
     (information flow,
     interface contracts);
-    if (Domain Model change needed?) then (yes)
-      :Spawn domain-updater agent;
-      :Update arch source SHA;
+    if (Domain change needed?) then (yes)
+      if (Simple — add/rename/clarify?) then (yes)
+        :Edit a4/domain.md inline;
+        :Footnote + ## Changes;
+      else (structural)
+        :Emit review item
+        target: domain;
+      endif
     else (no)
     endif
   repeat while (More new UCs?) is (yes) ->done;
@@ -148,9 +158,10 @@ partition "Review" {
 }
 
 partition "Wrap Up" {
-  :End iteration checklist;
-  :Increment revision;
-  :Append session close to history;
+  :Bump architecture.md
+  updated: <today>;
+  :Resolve / defer review items
+  emitted by arch-reviewer;
   :Suggest next step:
   auto-bootstrap;
 }
