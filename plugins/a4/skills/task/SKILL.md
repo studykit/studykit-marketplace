@@ -3,16 +3,6 @@ name: task
 description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes. Common triggers include: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Required argument: kind (feature | spike | bug). Optional: implements: (UC paths) and/or justified_by: (ADR paths). Writes a4/task/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
 argument-hint: "kind=<feature|spike|bug> [title or short description]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList
-default_mode: conversational
-mode_transitions:
-  to_conversational:
-    - kind argument missing or invalid
-    - implements: / justified_by: paths ambiguous (multiple candidates)
-    - acceptance criteria source unclear (e.g., feature with neither UC nor ADR pointer)
-    - kind: spike sidecar creation requires user confirmation
-  to_autonomous:
-    - user emits an explicit handoff token after task body is settled and remaining steps are mechanical (id allocation, file write, refresh_implemented_by)
-    - user invokes /a4:run after task creation (mode flips at the skill boundary)
 ---
 
 # Single Task Author

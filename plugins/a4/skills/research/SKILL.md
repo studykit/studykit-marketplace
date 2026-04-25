@@ -3,15 +3,6 @@ name: research
 description: "This skill should be used when the user wants to investigate a technical topic or compare alternatives before making a decision. Produces a portable research artifact at `./research/<slug>.md` (project root, outside any a4/ workspace) that decision files or other artifacts can reference. Triggers: 'research', 'investigate', 'look into', 'dig into', 'compare alternatives', 'evaluate options', 'what are the options for', 'how does X work', 'pros and cons of'. Accepts a topic, a comma-separated option list, or a path to a spark-brainstorm / idea file as input. Runs standalone — does not require an a4/ workspace."
 argument-hint: <topic, comma-separated options, or path to brainstorm/idea file>
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob, WebSearch, WebFetch
-default_mode: conversational
-mode_transitions:
-  to_conversational:
-    - research scope or option list ambiguous (no comma-separated alternatives, brainstorm/idea file path resolves to multiple candidates)
-    - sub-topic prioritization requires user judgment
-    - conflicting sources require user-driven adjudication
-  to_autonomous:
-    - user emits an explicit handoff token to run agent-driven investigation (web search + draft) with no further input expected
-    - user invokes /a4:research-review after the artifact is written (mode flips at the skill boundary)
 ---
 
 # Research Facilitator

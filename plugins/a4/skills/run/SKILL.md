@@ -3,18 +3,6 @@ name: run
 description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/task/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'task-implementer', 'agent loop'. Picks ready tasks, spawns task-implementer agents (parallel where independent), runs the test-runner, classifies failures, and conditionally performs UC ship-review. Up to 3 cycles. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
 argument-hint: <optional: 'iterate' to resume after a halt; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
-default_mode: autonomous
-mode_transitions:
-  to_conversational:
-    - task-implementer returns clarification_needed or ambiguous decision
-    - test-runner failure requires task / roadmap / arch / UC classification
-    - UC ship-review (Step 5) — explicit user confirmation per UC
-    - 3-cycle cap reached with failures still outstanding
-    - destructive operation proposed (file deletion outside agent scope, force-push, schema migration)
-  to_autonomous:
-    - skill invoked directly (`/a4:run`) — autonomous is the declared default
-    - resume after Step 4 classification once user confirms the corrective edit
-    - resume after Step 5 ship-review once user has confirmed every candidate UC
 ---
 
 # Implementation Run Loop

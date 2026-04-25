@@ -3,15 +3,6 @@ name: roadmap
 description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files in a4/task/. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks (spike, bug, ADR-justified) are in /a4:task."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
-default_mode: conversational
-mode_transitions:
-  to_conversational:
-    - roadmap-reviewer surfaces an arch / usecase finding requiring user-driven /a4:arch or /a4:usecase iterate
-    - milestone or task-set design requires the user to choose between alternatives
-    - acceptance-criteria source ambiguity for a task (UC vs ADR vs spike body)
-  to_autonomous:
-    - user emits an explicit handoff token after roadmap design is settled and only mechanical task-file emission remains
-    - user invokes /a4:run directly for the implement loop (mode flips at the skill boundary)
 ---
 
 # Implementation Roadmap Builder
@@ -136,7 +127,7 @@ Check project structure, conventions, test setup, build configuration. File path
 
 ## Step 3: Generate Roadmap + Tasks
 
-Enter plan mode (the `EnterPlanMode` Claude Code primitive — distinct from the workflow-mode axis). Design:
+Enter plan mode (the `EnterPlanMode` Claude Code primitive). Design:
 
 1. **Implementation strategy** (component-first / feature-first / hybrid) — read `${CLAUDE_SKILL_DIR}/references/planning-guide.md` for guidance.
 2. **Milestones** — group tasks into named deliverable sets (`v1.0`, `beta`, `phase-1`). Milestones drive roadmap narrative sequencing.
