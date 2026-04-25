@@ -124,8 +124,10 @@ Ask: **"What are you trying to do?"** and show the options:
 ### Pipeline (autonomous)
 | Skill | What it does |
 |-------|-------------|
-| `auto-usecase` | Auto-generate use cases without interview |
+| `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase, idea, or brainstorm input (no interview) |
 | `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
+
+Mode rationale (why some stages have only an interactive or only an autonomous form, and why `auto-usecase` is not a twin of `usecase`): see [`references/skill-modes.md`](../../references/skill-modes.md).
 
 ### Standalone
 | Skill | What it does |
