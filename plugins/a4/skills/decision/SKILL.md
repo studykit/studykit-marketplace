@@ -43,7 +43,7 @@ Draft the following in a scratch summary (do not write to disk yet):
 - **Title** — a short, human-readable phrase (becomes `title:` and the H1). Example: "Use Postgres for primary store".
 - **Decision** — the chosen option as a one-liner (becomes `decision:` frontmatter). Example: "Adopt Postgres 16; defer MySQL and SQLite."
 - **Context** — why the decision was needed, constraints, stakeholders.
-- **Body outline** — the set of `##` headings that best fit this decision's shape. `## Context` and `## Decision` are **required**; beyond those, include only sections the conversation actually produced content for (e.g., `## Options Considered`, `## Rejected Alternatives`, `## Next Steps`, `## Consequences`, `## Migration Plan`, `## Open Questions`). Do not emit placeholder sections.
+- **Body outline** — the set of `##` headings that best fit this decision's shape. `## Context` and `## Decision` are **required**; beyond those, include only sections the conversation actually produced content for (e.g., `## Options Considered`, `## Rejected Alternatives`, `## Consequences`, `## Open Questions`). Do not emit placeholder sections.
 - **Supersedes** — when the conversation references a prior decision being replaced (B4 in [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md)), search `a4/decision/*.md` for the prior ADR and propose `supersedes: [decision/<prior-id>-<slug>]`. The `transition_status.py` cascade flips the prior ADR to `superseded` on `→ final`.
 - **Related research** — candidate `./research/<slug>.md` files (see Step 3).
 
@@ -108,15 +108,17 @@ updated: <YYYY-MM-DD>
 
 <The chosen option and the rationale. Connect to any cited research.>
 
-<Additional `##` sections as the conversation produced them — e.g., Options Considered, Rejected Alternatives, Next Steps, Consequences, Migration Plan, Open Questions.>
+<Additional `##` sections as the conversation produced them — e.g., Options Considered, Rejected Alternatives, Consequences, Open Questions.>
 ```
 
 **Body structure rules:**
 
 - **Required (enforced by `transition_status.py` on `draft → final`):** `## Context`, `## Decision`.
-- **Commonly used examples (not prescribed):** `## Options Considered`, `## Rejected Alternatives`, `## Next Steps`, `## Consequences`, `## Migration Plan`, `## Open Questions`.
+- **Commonly used examples (not prescribed):** `## Options Considered`, `## Rejected Alternatives`, `## Consequences`, `## Open Questions`.
 - **Free-form principle:** additional sections may be added when the session content warrants them. All prose must live under a headed section (`##` or `###`); never leave free-form prose outside a section.
-- **`## Next Steps` is implications prose, not a task list.** When the section is present, write it as prose paragraphs (or bullets) that name the decision's implications and cite follow-on work via `[[task/<id>-<slug>]]` wikilinks — e.g., "This decision implies the API gateway must absorb retry logic, see `[[task/47-gateway-retry-budget]]`." A bullet that describes executable work without pointing to a task is forbidden; create the task first (`/a4:task`) and link it. Omit the section entirely when there is no follow-on work — never write empty or placeholder `## Next Steps`.
+- **`## Consequences` is descriptive prose, not a work list.** Describe the resulting state after the decision is applied — how the system, team, or downstream choices are shaped (positive, negative, neutral effects, accepted trade-offs). Do **not** embed `[[task/<id>-<slug>]]` wikilinks; task→decision linkage flows the other direction via `task.justified_by:` (forward, user-input) and is queried derive-on-demand. A reader should understand the decision's downstream impact without opening any task file.
+- **No `## Next Steps` or `## Migration Plan` sections.** ADR is a frozen descriptive record, not a project plan. Implications belong in `## Consequences` as prose; executable work belongs in `task/<id>-<slug>.md` (with `task.justified_by: [decision/<this>]` providing the forward link). If the conversation produced procedural detail, mirror it into a task before recording the decision.
+- **Decision content, not implementation.** An ADR captures *what* was chosen and *why* — context, options, rationale, trade-offs, consequences. *How* to build it (code samples, function signatures, schema definitions, file layouts, command sequences, step-by-step procedures, sample diffs) belongs in `task/<id>-<slug>.md` or `spike/<task-id>-<slug>/`. If `## Consequences` drifts into a how-to guide, lift it back to implication-level prose or extract the procedural content into a task. A reader should be able to validate the decision without reading any code.
 
 Frontmatter fields follow `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Decision`:
 
@@ -217,3 +219,5 @@ Summarize to the user:
 - **Do not commit.** Leave files in the working tree.
 - **Do not hand-edit `status:`.** All status changes on decision files flow through `transition_status.py`; this skill never writes `status: final` directly nor uses `Edit`/`Write` to change an existing decision's status.
 - **Do not auto-populate `supersedes:`.** The user sets it explicitly in Step 2 if this decision replaces prior ones.
+- **Do not write implementation.** See "Decision content, not implementation" under Step 5 body rules. If the conversation has been heavy on implementation detail, mirror that content into a task (`/a4:task`) before recording the decision; the ADR body must not contain procedural how-to.
+- **Do not render reverse views.** This skill never writes a `## Justifies` body section or a `justifies:` frontmatter field on a decision. Task→decision linkage is captured exclusively as a forward link in `task.justified_by:`; the reverse view is derived on demand (see `references/frontmatter-schema.md §Relationships`). Do not list downstream tasks in `## Consequences` or anywhere else in the ADR body.
