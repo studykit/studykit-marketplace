@@ -1,8 +1,7 @@
 # a4 Frontmatter Schema
 
-Consolidated frontmatter reference for the `a4/` workspace. Extracted from the spec-as-wiki+issues ADR (`plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md`) and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**; the ADR remains the rationale source.
+Consolidated frontmatter reference for the `a4/` workspace and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**
 
-When the ADR and this document disagree, the ADR wins and this document should be updated to match.
 
 ## Scope
 
@@ -424,7 +423,6 @@ When these land, update this document **and** the validator simultaneously — t
 
 ## Cross-references
 
-- **ADR (authority):** `plugins/a4/spec/archive/2026-04-23-spec-as-wiki-and-issues.decide.md` §Frontmatter schema (lines ~132–225).
 - **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
 - **Dataview patterns:** `plugins/a4/references/obsidian-dataview.md` — canonical INDEX.md blocks and reverse-derived relationship views.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
