@@ -2,7 +2,7 @@
 name: decision
 description: "This skill should be used when the user has reached a decision through conversation with the LLM and wants to document it as an ADR. Writes the decision to `a4/decision/<id>-<slug>.md` with proper frontmatter and body, cites any related `./research/<slug>.md` artifacts as Obsidian wikilinks in body prose, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'record this decision', 'document our decision', 'capture the decision', 'write this up as an ADR', 'let's make this a decision', or after the user and LLM converge on a choice. Accepts either no argument (extract decision from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft decision to finalize it. Requires an `a4/` workspace."
 argument-hint: <optional: short decision summary or title>
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 ---
 
 # Decision Recorder
@@ -13,8 +13,8 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** writing the decision file at `status: draft`, finalizing an existing draft via `transition_status.py`, citing research from `./research/<slug>.md` (Obsidian wikilink style in body prose), performing the in-situ wiki nudge, setting `status` via dialogue.
-- **Out:** no research (that's `/a4:research`). No automated reviewer (research review is `/a4:research-review`; decision authorship is the user's own thinking, not machine-critiqued). No commit.
+- **In:** writing the decision file at `status: draft`, finalizing an existing draft via `transition_status.py`, citing research from `./research/<slug>.md` (Obsidian wikilink style in body prose), running the `decision-content-guard` agent immediately before finalization to flag prescriptive / implementation leakage, performing the in-situ wiki nudge, setting `status` via dialogue.
+- **Out:** no research (that's `/a4:research`). No reviewer for the decision *content itself* — whether the chosen option is correct is the user's own thinking, not machine-critiqued. The content guard checks body shape (descriptive-not-prescriptive), not option choice. No commit.
 
 ## Pre-flight
 
@@ -134,6 +134,24 @@ The registrar bumps the research file's `updated:` field and never touches its `
 
 Invoke only when the user signaled `final` in Step 4 (new-record mode) **or** the whole invocation is in finalize-existing mode from Step 1.
 
+### Step 6a: Run the content guard
+
+Before calling the writer, invoke the `decision-content-guard` agent (via the Task tool) on the decision file. The guard reads the body and reports prescriptive / implementation leakage per [`references/content-guard.md`](references/content-guard.md). Pass it:
+
+- the workspace path (`<project-root>/a4`)
+- the decision file's relative path (`decision/<id>-<slug>`)
+
+Surface the agent's report to the user:
+
+- If verdict is `CLEAN`, proceed to Step 6b silently with a one-line note ("Content guard: clean.").
+- If verdict is `LEAKAGE DETECTED`, print the report verbatim and ask the user to choose:
+  - **Revise** — pause finalization; the user (with the LLM's help) edits the body to address the cited leaks, then re-runs `/a4:decision` in finalize-existing mode (Step 1 (a)). The guard re-runs.
+  - **Override** — proceed to Step 6b as-is. Record the override reason verbatim from the user; the writer's `--reason` flag in Step 6b prepends `[guard override: <reason>]` so the `## Log` entry preserves the trace.
+
+Never auto-edit the file based on the guard's suggestions. The user retains final authorship.
+
+### Step 6b: Call the writer
+
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "<project-root>/a4" \
   --file decision/<id>-<slug>.md \
@@ -160,6 +178,7 @@ Summarize to the user:
 
 - Decision path and id.
 - Final status (`draft` or `final`), and if finalized this invocation, any supersedes cascades the writer performed.
+- Content guard outcome (only when finalization ran in this invocation): `clean`, `leakage detected — revised`, or `leakage detected — overridden by user`. For the override case, surface the override reason recorded in the `## Log` entry.
 - Research cited in body (list of wikilinks, if any).
 - Wiki pages updated or deferred review items opened (with ids).
 - Reminder: the file (and any cascaded supersedes-target edits) is left in the working tree — commit at the user's convenience.
@@ -167,7 +186,8 @@ Summarize to the user:
 ## Non-goals
 
 - **Do not research.** If the decision needs more investigation, stop and tell the user to run `/a4:research` first.
-- **Do not review the decision.** Decision authorship is the user's own thinking; no machine critique pass exists (unlike `/a4:research-review` for research artifacts).
+- **Do not review whether the decision is correct.** Whether the chosen option is the right one is the user's own thinking; no machine critique pass exists for that (unlike `/a4:research-review` for research artifacts). The `decision-content-guard` agent in Step 6a checks body shape (prescriptive / implementation leakage) only, not option correctness.
+- **Do not auto-edit based on guard output.** The guard returns suggestions; only the user (or the user-directed LLM in a follow-up turn) modifies the file. Override always remains available.
 - **Do not commit.** Leave files in the working tree.
 - **Do not hand-edit `status:`.** All status changes on decision files flow through `transition_status.py`; this skill never writes `status: final` directly nor uses `Edit`/`Write` to change an existing decision's status.
 - **Do not auto-populate `supersedes:`.** The user sets it explicitly in Step 2 if this decision replaces prior ones.

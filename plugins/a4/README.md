@@ -60,6 +60,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 | `api-researcher` | Find and return current API documentation |
 | `arch-reviewer` | Review architecture designs |
 | `research-reviewer` | Review research artifacts for source quality, option balance, bias, and decision neutrality |
+| `decision-content-guard` | Pre-finalize content guard for ADR bodies; flags prescriptive / implementation leakage (warning + override) |
 | `domain-reviewer` | Review `domain.md` against UCs and architecture; emit per-finding review items |
 | `task-implementer` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
