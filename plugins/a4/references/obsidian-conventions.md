@@ -25,6 +25,8 @@ In body prose, use Obsidian wikilinks and embeds. These are the canonical forms:
 
 Aliases — `[[path\|display text]]` — work when the default basename reads poorly. Use sparingly; plain wikilinks read cleaner in diffs.
 
+**Internal references must use wikilinks.** Markdown link form `[text](target)` is reserved for external URLs (`https://...`, `mailto:...`, etc.) and same-page anchors (`#section`). Pointing at a wiki page, issue, or spark file with `[text](usecase/3-search-history.md)` is rejected by `validate_body.py:internal-link-format` — use `[[usecase/3-search-history]]` (or `![[...]]` for an embed) instead. The `(?<!!)` regex guard means image/embed `![alt](path)` is not affected.
+
 **Frontmatter paths are different.** Frontmatter fields (`depends_on`, `implements`, `target`, etc.) use plain strings with no brackets and no `.md` suffix, per [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). Do not mix the two forms:
 
 | Context | Example |
@@ -121,4 +123,4 @@ Before a session ends, for each review item that transitioned to `status: resolv
 - `plugins/a4/scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - `plugins/a4/scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved footnote + close-guard violations.
 - `plugins/a4/scripts/validate_frontmatter.py` — enforces the frontmatter-side of path references.
-- `plugins/a4/scripts/validate_body.py` — enforces the body-side rules on this page: footnote definition format, label monotonicity, payload-not-a-review-item, and body-wikilink resolution.
+- `plugins/a4/scripts/validate_body.py` — enforces the body-side rules on this page: footnote definition format, label monotonicity, payload-not-a-review-item, body-wikilink resolution, and internal-link-format (markdown link form rejected for internal refs).

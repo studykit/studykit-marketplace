@@ -16,6 +16,11 @@ Enforces the body-side rules defined in plugins/a4/references/obsidian-conventio
                             never a `review/*` item.
   - wikilink-broken         Every body wikilink (wiki pages, issue bodies,
                             spark files) resolves to a file in the workspace.
+  - internal-link-format    Internal references in body must use Obsidian
+                            wikilinks `[[...]]` or embeds `![[...]]`.
+                            Markdown link form `[text](target)` is reserved
+                            for external URLs (`https://`, `mailto:`, ...)
+                            and same-page anchors (`#section`).
 
 Narrowly scoped on purpose. `drift_detector.py` already covers close-guard,
 orphan-marker, orphan-definition, and missing-wiki-page rules at the
@@ -52,6 +57,12 @@ WIKILINK_RE = re.compile(r"\[\[([^\]|#]+)(?:#[^\]|]+)?(?:\|[^\]]+)?\]\]")
 FOOTNOTE_DEF_CANONICAL_RE = re.compile(
     r"^\[\^([^\]\s]+)\]:\s+(\d{4}-\d{2}-\d{2})\s+—\s+\[\[([^\]]+)\]\]\s*$"
 )
+
+# Inline markdown link `[text](target)`. `(?<!!)` excludes image/embed
+# `![alt](src)` — those are non-internal asset references and out of scope.
+MARKDOWN_LINK_RE = re.compile(r"(?<!!)\[([^\]\n]+)\]\(([^)\n]+)\)")
+URL_SCHEME_RE = re.compile(r"^[a-z][a-z0-9+.\-]*:", re.IGNORECASE)
+FENCE_RE = re.compile(r"^\s*(```|~~~)")
 
 
 @dataclass(frozen=True)
@@ -234,6 +245,78 @@ def validate_wiki_footnotes(
     return violations, def_lines
 
 
+def _strip_inline_code(line: str) -> str:
+    """Replace inline-code spans `...` with spaces so link regex won't match inside.
+
+    Length is preserved so column positions remain meaningful for any future
+    column-aware reporting.
+    """
+    out: list[str] = []
+    in_code = False
+    for ch in line:
+        if ch == "`":
+            in_code = not in_code
+            out.append(" ")
+        elif in_code:
+            out.append(" ")
+        else:
+            out.append(ch)
+    return "".join(out)
+
+
+def validate_body_markdown_links(
+    rel_str: str,
+    body: str,
+    body_start_line: int,
+    wikis: dict[str, Path],
+    issues: dict[str, Path],
+    sparks: dict[str, Path],
+    skip_lines: set[int],
+) -> list[Violation]:
+    """Reject `[text](target)` for internal references; require wikilinks.
+
+    "Internal" = target resolves to a wiki page, issue, or spark file in the
+    workspace. External URLs (`https://...`, `mailto:...`) and same-page
+    anchors (`#section`) are unaffected. Image/embed `![alt](src)` is skipped
+    via the regex's `(?<!!)` guard. Fenced code blocks and inline backticks
+    are excluded.
+    """
+    violations: list[Violation] = []
+    in_fence = False
+    for i, line in enumerate(body.splitlines()):
+        abs_line = body_start_line + i
+        if FENCE_RE.match(line):
+            in_fence = not in_fence
+            continue
+        if in_fence or abs_line in skip_lines:
+            continue
+        scrubbed = _strip_inline_code(line)
+        for m in MARKDOWN_LINK_RE.finditer(scrubbed):
+            text = m.group(1)
+            target = m.group(2).strip()
+            if not target or URL_SCHEME_RE.match(target) or target.startswith("#"):
+                continue
+            bare = target.split("#", 1)[0].split("?", 1)[0].strip()
+            if not bare:
+                continue
+            if bare.startswith("./"):
+                bare = bare[2:]
+            if bare.endswith(".md"):
+                bare = bare[:-3]
+            if resolve_link(bare, wikis, issues, sparks) is None:
+                continue
+            violations.append(Violation(
+                rel_str,
+                "internal-link-format",
+                abs_line,
+                f"internal reference `[{text}]({target})` uses markdown link "
+                "form; use Obsidian wikilink `[[...]]` (or embed `![[...]]`) "
+                "instead — markdown link form is reserved for external URLs "
+                "and same-page anchors",
+            ))
+    return violations
+
+
 def validate_body_wikilinks(
     rel_str: str,
     body: str,
@@ -288,6 +371,11 @@ def validate_file(
 
     violations.extend(
         validate_body_wikilinks(
+            rel_str, body, body_start, wikis, issues, sparks, skip_lines
+        )
+    )
+    violations.extend(
+        validate_body_markdown_links(
             rel_str, body, body_start, wikis, issues, sparks, skip_lines
         )
     )
