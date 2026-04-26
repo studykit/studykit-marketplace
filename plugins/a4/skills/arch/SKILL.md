@@ -183,7 +183,7 @@ S -> H : request history
 | E2E | WebdriverIO + wdio-vscode-service | Full UI interaction | … |
 
 ## Changes
-
+```
 [^1]: 2026-04-24 — [[usecase/3-search-history]]
 [^2]: 2026-04-24 — [[decision/8-caching-strategy]]
 ```
