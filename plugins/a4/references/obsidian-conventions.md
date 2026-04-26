@@ -119,7 +119,6 @@ Before a session ends, for each review item that transitioned to `status: resolv
 ## Cross-references
 
 - [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — frontmatter field rules (required fields, enums, frontmatter-path format).
-- [obsidian-dataview.md](${CLAUDE_PLUGIN_ROOT}/references/obsidian-dataview.md) — dataview query patterns for the INDEX.md blocks and reverse-derived relationship views.
 - `plugins/a4/scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - `plugins/a4/scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved footnote + close-guard violations.
 - `plugins/a4/scripts/validate_frontmatter.py` — enforces the frontmatter-side of path references.

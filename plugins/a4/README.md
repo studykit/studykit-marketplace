@@ -25,7 +25,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
-| `index` | Regenerates `a4/INDEX.md` dashboard |
+| `dashboard` | Renders the workspace dashboard (wiki/issue/drift/milestone summary) to stdout — no file written |
 | `validate` | Runs frontmatter-schema, body-convention, and cross-file status-consistency validators over `a4/` |
 | `idea` | Quick-capture a one-line idea as `a4/idea/<id>-<slug>.md` |
 | `web-design-mock` | Web design mock generation |
@@ -88,7 +88,6 @@ Four hook flows share the same events, dispatched through a single Python entry 
 
     spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md
     archive/                                  # Closed items; folder = archived flag
-    INDEX.md                                  # Regenerated dashboard
 
   spike/                                    # PoC code for kind: spike tasks (sibling of a4/)
     <task-id>-<slug>/                       # Active spike (parallel to a4/task/<id>-<slug>.md)
@@ -123,11 +122,11 @@ Wiki pages carry no lifecycle but are continuously updated. All edits flow throu
 
 ### Derived views
 
-Use Case Diagram, authorization matrix, open-issue lists, milestone progress — all **rendered from source on demand**, never hand-maintained. Obsidian dataview powers interactive rendering; `INDEX.md` carries static markdown fallbacks (wrapped in `<!-- static-fallback-start/end -->` markers) for plain-text viewers.
+Use Case Diagram, authorization matrix, open-issue lists, milestone progress — all **rendered from source on demand**, never hand-maintained. Obsidian dataview can render these directly inside the vault; the plugin's `/a4:dashboard` skill renders a parallel plain-markdown view to stdout for sessions that aren't using Obsidian.
 
 ### Workspace dashboard
 
-`a4/INDEX.md` is regenerated on-demand via `/a4:index`. Sections: Wiki pages, Stage progress, Open issues, Drift alerts, Milestones, Recent activity, Open ideas, Spark. Each pairs a dataview block with a static fallback. INDEX is a **view** (source of truth = wiki pages and issue files), so regenerating is always safe.
+`/a4:dashboard` renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Drift alerts, Open reviews, Active tasks, Blocked items, Milestones, Recent activity, Open ideas, Open sparks. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
 
 ### Archive
 

@@ -11,8 +11,6 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
   a4/
     context.md domain.md architecture.md         # Wiki pages (flat, no lifecycle):
     actors.md  nfr.md    roadmap.md  bootstrap.md  # one file per cross-cutting concern
-    INDEX.md                                       # regenerated dashboard
-
     usecase/<id>-<slug>.md     # Use Cases
     task/<id>-<slug>.md        # Executable work units (kind: feature | spike | bug)
     decision/<id>-<slug>.md    # ADRs (status: draft | final | superseded)

@@ -19,8 +19,6 @@ Compass treats this as a regular Step 1 entry — the diagnosis text routes to S
 
 ## Step 0: Detect project root
 
-### 0.1 Resolve workspace location
-
 ```bash
 ROOT=$(git rev-parse --show-toplevel)
 ```
@@ -28,10 +26,6 @@ ROOT=$(git rev-parse --show-toplevel)
 If not inside a git repo, abort this step with a clear message and skip to Step 1.
 
 If `$ROOT/a4/` does not exist (no workspace yet), proceed to Step 1.
-
-### 0.2 Optional: surface existing INDEX dashboard
-
-`a4/INDEX.md` is a precomputed dashboard regenerated only by `/a4:index` — compass does **not** refresh it. If the user invoked compass with no argument and `a4/INDEX.md` exists, read it and show the **Stage progress** and **Drift alerts** sections before entering Step 1 — these two answer "where is the workspace at" faster than any other section. Note to the user that the dashboard may be stale relative to recent edits and that `/a4:index` regenerates it. Otherwise proceed silently to Step 1.
 
 ---
 
@@ -49,7 +43,7 @@ Determine the user's situation and route to Step 2 (Fresh Start) or Step 3 (Gap 
 
 ### 1.2 Note on workspace state
 
-Compass reads workspace state directly from per-item frontmatter under `a4/` in Step 3 (Glob + targeted reads). `a4/INDEX.md`, if present, is a precomputed dashboard regenerated only by `/a4:index`; treat it as a stale view, not source of truth. Do not aggregate state here — defer the scan to Step 3.
+Compass reads a fresh workspace-state snapshot via `scripts/workspace_state.py` in Step 3.2 — same script `/a4:dashboard` uses. Do not pre-scan or aggregate state here; defer to Step 3.
 
 ---
 
@@ -86,18 +80,21 @@ Before reading state, surface accumulated wiki↔issue drift from since the last
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$ROOT/a4"
 ```
 
-The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / discarded `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift. `a4/INDEX.md` is **not** refreshed here — the new review items are visible via Step 3.2's frontmatter scans, and the dashboard updates next time `/a4:index` runs.
+The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / discarded `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift.
 
 ### 3.2 Read workspace state
 
-Scan per-item frontmatter directly under `a4/` (Glob + Read). The frontmatter is the source of truth; do not rely on `a4/INDEX.md` since it may be stale.
+Render the workspace-state report once, then read the markdown sections it returns:
 
-- **Wiki pages present** and their `updated:` dates — read frontmatter from `a4/{context,domain,architecture,actors,nfr,roadmap,bootstrap}.md`.
-- **Issue counts** per folder × status — glob `a4/{usecase,task,review,decision,idea}/*.md` and aggregate by `status:`.
-- **Drift alerts** — open / in-progress `review/*.md` with `source: drift-detector`, grouped by `priority:`.
-- **Milestone progress** — group tasks by `milestone:`, count resolved vs open.
+```bash
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4"
+```
 
-Keep the scan to a single pass and budget for it accordingly. If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the Step 3.3 recommendation more than aggregate state does.
+The script prints a markdown report to stdout — same output `/a4:dashboard` produces. No file is written. The report's section schema (Wiki pages, Stage progress, Issue counts, Use cases by source, Drift alerts, Open reviews, Active tasks, Blocked items, Milestones, Recent activity, Open ideas, Open sparks) is documented in `plugins/a4/scripts/workspace_state.py`'s module docstring — that is the single source of truth.
+
+The Step 3.3 layered trace consumes it as follows: shape detection from **Wiki pages** + **Use cases by source**; Layer 0/1 from **Wiki pages** + usecase counts in **Issue counts**; Layer 2 from **Drift alerts**; Layer 3 from **Open reviews**; Layer 4 from **Active tasks**; Layer 5 from **Blocked items**.
+
+If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the Step 3.3 recommendation more than aggregate state does.
 
 ### 3.3 Diagnose the gap layer
 
