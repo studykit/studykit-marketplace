@@ -4,12 +4,6 @@ Manages `a4/` as a git-native wiki + issue tracker — usecase, architecture, an
 
 ## Prerequisites
 
-The `find-docs` skill must be installed. Set it up via [ctx7 CLI](https://context7.com/docs/clients/cli):
-
-```bash
-ctx7 setup --cli --claude       # Claude Code (~/.claude/skills)
-```
-
 The shared `get-api-docs` skill must also be available in the global skills set. a4 agents use this shared skill for current third-party API and SDK documentation lookup.
 
 ## Components
@@ -39,19 +33,21 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 
 ### Hooks
 
-Three hook flows share the same events, dispatched through a single Python entry point:
+Four hook flows share the same events, dispatched through a single Python entry point:
 
 1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; exit 2 on frontmatter/body violations so Claude retries.
 2. **Cross-file status consistency** (non-blocking) — scan `a4/` on SessionStart and after each edit; inject findings as `additionalContext` so the LLM sees mismatches on the next turn without a retry loop.
 3. **`implemented_by` reconciliation** (non-blocking) — refresh UC `implemented_by:` reverse-links on SessionStart so drift from cross-branch edits or manual task edits is healed before work begins.
+4. **Issue-id resolution** (non-blocking) — scan UserPromptSubmit for `#<id>` references; inject the resolved `a4/<type>/<id>-<slug>.md` path so Claude reads the file directly instead of searching. Per-session dedupe — once an id has been announced, repeats stay silent.
 
 | Event | Script | Purpose |
 |-------|--------|---------|
 | `PostToolUse` (`Write\|Edit\|MultiEdit`) | `scripts/a4_hook.py post-edit` | Record the edited `$project/a4/**/*.md` path to a session-scoped file, then run `validate_status_consistency.py --file <edited>` and inject mismatches in that file's connected component as `additionalContext`. Non-blocking. |
 | `Stop` | `scripts/a4_hook.py stop` | Run `validate_frontmatter.py` + `validate_body.py` on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
-| `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record file. Always exits 0. |
-| `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan records from crashed sessions where SessionEnd never fired. Always exits 0. |
+| `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record files (`a4-edited-<sid>.txt`, `a4-resolved-ids-<sid>.txt`). Always exits 0. |
+| `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan record files from crashed sessions where SessionEnd never fired. Always exits 0. |
 | `SessionStart` | `scripts/a4_hook.py session-start` | Refresh UC `implemented_by:` reverse-links (write; emits `systemMessage` + `additionalContext` when UCs change), then run `validate_status_consistency.py` and inject workspace-wide mismatches as `additionalContext`. Non-blocking; silent on clean. |
+| `UserPromptSubmit` | `scripts/a4_hook.py user-prompt` | Match `#<id>` tokens in the prompt (`(?<![\w#])#(\d+)\b`); for each, glob `a4/{usecase,task,review,decision,idea}/<id>-*.md` and `a4/archive/**/<id>-*.md`; inject resolved paths as `additionalContext`. Skips ids already resolved this session via `a4-resolved-ids-<sid>.txt`. Non-blocking; silent on no match. |
 
 **Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` manually for a full workspace sweep. Status consistency, by contrast, always scans workspace-wide — cross-file by definition.
 
