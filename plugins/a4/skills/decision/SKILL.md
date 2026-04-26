@@ -111,26 +111,7 @@ updated: <YYYY-MM-DD>
 <Additional `##` sections as the conversation produced them — e.g., Options Considered, Rejected Alternatives, Consequences, Open Questions.>
 ```
 
-**Body structure rules:**
-
-- **Required (enforced by `transition_status.py` on `draft → final`):** `## Context`, `## Decision`.
-- **Commonly used examples (not prescribed):** `## Options Considered`, `## Rejected Alternatives`, `## Consequences`, `## Open Questions`.
-- **Free-form principle:** additional sections may be added when the session content warrants them. All prose must live under a headed section (`##` or `###`); never leave free-form prose outside a section.
-- **`## Consequences` is descriptive prose, not a work list.** Describe the resulting state after the decision is applied — how the system, team, or downstream choices are shaped (positive, negative, neutral effects, accepted trade-offs). Do **not** embed `[[task/<id>-<slug>]]` wikilinks; task→decision linkage flows the other direction via `task.justified_by:` (forward, user-input) and is queried derive-on-demand. A reader should understand the decision's downstream impact without opening any task file.
-- **No `## Next Steps` or `## Migration Plan` sections.** ADR is a frozen descriptive record, not a project plan. Implications belong in `## Consequences` as prose; executable work belongs in `task/<id>-<slug>.md` (with `task.justified_by: [decision/<this>]` providing the forward link). If the conversation produced procedural detail, mirror it into a task before recording the decision.
-- **Decision content, not implementation.** An ADR captures *what* was chosen and *why* — context, options, rationale, trade-offs, consequences. *How* to build it (code samples, function signatures, schema definitions, file layouts, command sequences, step-by-step procedures, sample diffs) belongs in `task/<id>-<slug>.md` or `spike/<task-id>-<slug>/`. If `## Consequences` drifts into a how-to guide, lift it back to implication-level prose or extract the procedural content into a task. A reader should be able to validate the decision without reading any code.
-
-Frontmatter fields follow `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Decision`:
-
-- `id` — integer from `allocate_id.py`.
-- `title` — the title from Step 2.
-- `status` — always `draft` at first write; Step 6 flips to `final` if the user signaled commitment.
-- `decision` — the one-liner from Step 2.
-- `supersedes` — if this replaces prior decisions, list their workspace-root-relative paths (`decision/<id>-<slug>`). Usually empty. Non-empty here triggers the `transition_status.py` cascade on `→ final`, which flips each listed target from `final → superseded`.
-- `research` — research artifacts informing this decision (`research/<slug>` paths). Initially empty at first write; populated by `scripts/register_research_citation.py` in Step 5b. Never hand-edit.
-- `related` — soft cross-references to other issues inside `a4/` (other decisions, UCs, tasks). For research, use the dedicated `research:` field via the registrar; do **not** use `related:`.
-- `tags` — free-form labels.
-- `created` / `updated` — today (`YYYY-MM-DD`).
+Body structure rules and frontmatter field definitions are in [`references/adr-body-rules.md`](references/adr-body-rules.md). Read that file before drafting the body and frontmatter; it is enforced by `transition_status.py` on `draft → final` and shapes Step 2's body outline.
 
 Report the full file path: "Decision recorded at `<path>` as `draft`."
 
@@ -171,36 +152,7 @@ If the writer returns `ok: true`, report the primary flip plus any cascades. If 
 
 ## Step 7: In-situ wiki nudge
 
-After writing (or finalizing) the decision, check whether it affects existing wiki pages at `a4/` root. Discover candidates via `Glob a4/*.md`. Skip silently when no wiki pages exist (fresh workspace).
-
-| Change type | Likely wiki target |
-|-------------|--------------------|
-| Technology / framework / library choice | `architecture.md` (Technology Stack, External Dependencies) |
-| Process, scope, or constraint shift | `context.md` (Problem Framing, Success Criteria) |
-| New actor or role | `actors.md` |
-| New domain concept | `domain.md` |
-| Non-functional requirement change | `nfr.md` |
-
-For each applicable candidate, present the proposed update and ask the user to confirm. For every confirmed update:
-
-1. Edit the wiki page — update the affected section, append a footnote marker `[^N]` inline (monotonic per file), and append a `## Changes` line `[^N]: <YYYY-MM-DD> — [[decision/<id>-<slug>]]` pointing to this decision.
-2. Bump the wiki page's `updated:` frontmatter to today.
-
-See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md §Wiki Update Protocol` for footnote format.
-
-If the user defers any update, open a review item instead so the gap does not disappear:
-
-1. Allocate an id: `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<project-root>/a4"`.
-2. Write `a4/review/<id>-<slug>.md` with:
-   - `kind: gap`
-   - `status: open`
-   - `source: self`
-   - `target: decision/<decision-id>-<slug>`
-   - `wiki_impact: [<affected wiki basenames>]`
-
-The wiki close guard (at session close) and drift detector (between sessions) re-surface unresolved impact later.
-
-Use judgment — minor decisions (naming conventions, purely internal choices with no wiki-visible effect) skip the nudge.
+After writing (or finalizing) the decision, apply the in-situ wiki nudge per [`references/wiki-nudge.md`](references/wiki-nudge.md): map the change type to the affected wiki page(s), confirm with the user, edit with footnote + `## Changes` entry, and defer to a `kind: gap` review item when the user does not want to apply it now. Skip silently on a fresh workspace (no `a4/*.md` wiki pages).
 
 ## Step 8: Report
 
@@ -219,5 +171,4 @@ Summarize to the user:
 - **Do not commit.** Leave files in the working tree.
 - **Do not hand-edit `status:`.** All status changes on decision files flow through `transition_status.py`; this skill never writes `status: final` directly nor uses `Edit`/`Write` to change an existing decision's status.
 - **Do not auto-populate `supersedes:`.** The user sets it explicitly in Step 2 if this decision replaces prior ones.
-- **Do not write implementation.** See "Decision content, not implementation" under Step 5 body rules. If the conversation has been heavy on implementation detail, mirror that content into a task (`/a4:task`) before recording the decision; the ADR body must not contain procedural how-to.
-- **Do not render reverse views.** This skill never writes a `## Justifies` body section or a `justifies:` frontmatter field on a decision. Task→decision linkage is captured exclusively as a forward link in `task.justified_by:`; the reverse view is derived on demand (see `references/frontmatter-schema.md §Relationships`). Do not list downstream tasks in `## Consequences` or anywhere else in the ADR body.
+- **Do not write implementation, do not render reverse views.** See the ADR-content rules in [`references/adr-body-rules.md`](references/adr-body-rules.md) (Body structure rules → Implications for non-goals).

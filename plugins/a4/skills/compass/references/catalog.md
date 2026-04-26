@@ -1,0 +1,44 @@
+# Skill Catalog (compass routing)
+
+Reference table presented to the user in Step 2.1 (Fresh Start) when they answer "What are you trying to do?". Group order matches the typical decision flow: Ideation (pre-pipeline) → Pipeline (interactive) → Pipeline (autonomous) → Standalone.
+
+After the user picks one, invoke via the Skill tool:
+
+```
+Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
+```
+
+## Ideation
+
+| Skill | What it does |
+|-------|-------------|
+| `spark-brainstorm` | Generate ideas with structured creative techniques |
+| `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
+| `research-review` | Review a research artifact at `./research/<slug>.md` for source quality, option balance, bias, and neutrality |
+| `decision` | Record a decision reached through conversation as `a4/decision/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
+
+## Pipeline (interactive)
+
+| Skill | What it does |
+|-------|-------------|
+| `usecase` | Shape a vague idea into concrete Use Cases through dialogue (writes `context.md`, `actors.md`, `nfr.md`, per-UC files) |
+| `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
+| `arch` | Design architecture — tech stack, components, interfaces, test strategy |
+| `roadmap` | Author the implementation roadmap and per-task files |
+| `task` | Author a single task (feature / spike / bug) — UC-derived or ADR-justified |
+| `run` | Run the agent loop — implement and test until all pass |
+
+## Pipeline (autonomous)
+
+| Skill | What it does |
+|-------|-------------|
+| `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase, idea, or brainstorm input (no interview) |
+| `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
+
+Mode rationale (why some stages have only an interactive or only an autonomous form, and why `auto-usecase` is not a twin of `usecase`): see [`pipeline references/skill-modes.md`](../../../references/skill-modes.md).
+
+## Standalone
+
+| Skill | What it does |
+|-------|-------------|
+| `web-design-mock` | Create HTML/CSS mockups and prototypes |

@@ -71,70 +71,13 @@ The workspace is empty or the user described a vague intent.
 
 ### 2.0 Brownfield detection and pipeline-shape choice
 
-Before showing the catalog, detect whether the project has implementation code outside `a4/`:
-
-```bash
-# Build/manifest signature at project root
-ls "$ROOT"/{package.json,pyproject.toml,Cargo.toml,go.mod,pom.xml,build.gradle,build.gradle.kts} 2>/dev/null
-
-# Tracked source files outside a4/, plugins/, .claude*/, research/
-git -C "$ROOT" ls-files | grep -Ev '^(a4/|plugins/|\.claude|research/)' | grep -E '\.(ts|tsx|js|jsx|py|rs|go|java|kt|rb|php|cpp|c|swift|m|md)$' | head -1
-```
-
-If either signal fires and `a4/` is empty (or absent), this is a **brownfield** project — existing code with no a4 workspace. The user must pick one of three pipeline shapes (see [`references/pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) for the full taxonomy). Ask **one** question before showing the catalog:
-
-> This project has existing code but no a4 workspace. What are you trying to do?
-> - **(a) Reverse-engineer** (Reverse shape) — extract use cases and supporting wiki pages (`context.md`, `actors.md`, `domain.md`) from the existing code.
-> - **(b) Single change** (Minimal shape) — make one small change without the full pipeline (`bootstrap.md` only, then `/a4:task` → `/a4:run`).
-> - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:domain` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
-
-A user with no implementation goal yet (just recording an ADR via `/a4:decision`, capturing research, or sketching ideas) is in a **No-shape** state — none of (a)/(b)/(c) applies. Compass does not prompt for that explicitly; the catalog's Ideation and Standalone sections cover those cases as fall-throughs.
-
-Route based on the answer:
-
-- **(a) Reverse-engineer** → invoke `/a4:auto-usecase` with the project root as the default argument (or a user-specified subdirectory if they name one). The skill autonomously runs code analysis (its Step 2b) and produces `context.md` / `actors.md` / `nfr.md` / per-UC files at `status: draft`; `domain.md` is **not** authored by `auto-usecase` (per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md), `domain` owns it). Suggest `/a4:usecase iterate` to review the drafts and `/a4:domain` to extract concepts as the Reverse-then-forward continuation.
-  ```
-  Skill({ skill: "a4:auto-usecase", args: "<project-root or subdirectory>" })
-  ```
-- **(b) Single change** → invoke `/a4:auto-bootstrap` (which already supports incremental mode against an existing codebase per its Step 1 "Codebase Assessment"; in this entry path it runs in Minimal-shape scope, producing `bootstrap.md` without requiring `architecture.md`); follow with `/a4:task` for the change itself.
-- **(c) New feature** — full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run` (per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) Shape 1 Full forward). Fall through to the catalog below; the user typically picks `/a4:usecase` first.
+Before showing the catalog, detect whether the project has implementation code outside `a4/` and, if so, ask the user to pick one of three pipeline shapes (Reverse / Minimal / Full). The full detection signatures, the exact one-question prompt, the No-shape fall-through rule, and the per-choice routing (including which Skill invocation to make for (a)/(b)/(c)) are in [`references/brownfield-routing.md`](references/brownfield-routing.md). Read that file before running this step.
 
 When no implementation code is detected, skip 2.0 and go straight to the catalog.
 
 ### 2.1 Catalog
 
-Ask: **"What are you trying to do?"** and show the options:
-
-### Ideation
-| Skill | What it does |
-|-------|-------------|
-| `spark-brainstorm` | Generate ideas with structured creative techniques |
-| `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
-| `research-review` | Review a research artifact at `./research/<slug>.md` for source quality, option balance, bias, and neutrality |
-| `decision` | Record a decision reached through conversation as `a4/decision/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
-
-### Pipeline (interactive)
-| Skill | What it does |
-|-------|-------------|
-| `usecase` | Shape a vague idea into concrete Use Cases through dialogue (writes `context.md`, `actors.md`, `nfr.md`, per-UC files) |
-| `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
-| `arch` | Design architecture — tech stack, components, interfaces, test strategy |
-| `roadmap` | Author the implementation roadmap and per-task files |
-| `task` | Author a single task (feature / spike / bug) — UC-derived or ADR-justified |
-| `run` | Run the agent loop — implement and test until all pass |
-
-### Pipeline (autonomous)
-| Skill | What it does |
-|-------|-------------|
-| `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase, idea, or brainstorm input (no interview) |
-| `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
-
-Mode rationale (why some stages have only an interactive or only an autonomous form, and why `auto-usecase` is not a twin of `usecase`): see [`references/skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md).
-
-### Standalone
-| Skill | What it does |
-|-------|-------------|
-| `web-design-mock` | Create HTML/CSS mockups and prototypes |
+Ask: **"What are you trying to do?"** and present the four-group catalog (Ideation / Pipeline interactive / Pipeline autonomous / Standalone) from [`references/catalog.md`](references/catalog.md). Read that file and show its tables verbatim — it is the single source of truth for compass routing.
 
 Based on the user's answer, invoke the chosen skill via the Skill tool:
 ```
@@ -176,46 +119,7 @@ If Step 1.1 resolved a **specific target**, additionally read that file's full b
 
 ### 3.3 Diagnose the gap layer
 
-Trace from foundation to execution. Stop at the first layer that has actionable work. For a targeted Step 1.1 argument, focus the trace on layers upstream of the target (e.g., a blocked task points back to its `depends_on` predecessor).
-
-#### 3.3.0 Detect shape
-
-Layer 0 and Layer 1 below are **Full / Reverse-then-forward only** — they assume a UC-driven pipeline with the canonical wiki chain. Minimal-shape and Reverse-only workspaces have legitimately empty UC sets or upstream wikis and would be mis-diagnosed by those layers. Detect shape from current state per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) §"Shape detection" before tracing:
-
-| State | Shape | Layer 0/1 behavior |
-|---|---|---|
-| `bootstrap.md` absent, `usecase/*.md` absent | No shape | Skip Layer 0/1; route via Step 2 catalog instead — gap diagnosis does not apply |
-| `bootstrap.md` present, `usecase/*.md` absent | Minimal | **Skip Layer 0 and Layer 1.** No-UC is by design; jump to Layer 2 |
-| `usecase/*.md` present, all with `source: auto-usecase`, `bootstrap.md` absent | Reverse-only | Skip Layer 0; run Layer 1 only for `domain.md` (the natural Reverse-then-forward continuation step). If user signals "documentation only," skip Layer 1 too |
-| `bootstrap.md` present + `usecase/*.md` present (Full / Reverse-then-forward) | Full | Run Layer 0 and Layer 1 normally |
-| `bootstrap.md` absent + `usecase/*.md` present (mixed `source:`) | Full in progress | Run Layer 0 and Layer 1 normally |
-
-Carry the detected shape into the diagnosis report (Step 3.4) so the user sees the assumption.
-
-**Layer 0 — Workspace foundation** *(Full / Reverse-then-forward only)*. Does the workspace have any use cases yet?
-- No UCs → recommend `/a4:usecase` (interactive) or `/a4:auto-usecase` (autonomous).
-
-**Layer 1 — Wiki foundation** *(Full / Reverse-then-forward only; Reverse-only runs `domain.md` check only)*. Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap → roadmap`); stop at the first missing layer.
-- UCs exist, `domain.md` missing → recommend `/a4:domain` (cross-cutting concept extraction is its own skill, not part of `/a4:usecase`).
-- `domain.md` exists, `architecture.md` missing → recommend `/a4:arch`.
-- `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
-- `bootstrap.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
-- Any issue's `wiki_impact:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
-
-**Layer 2 — Drift alerts.** Any open `review/*.md` with `source: drift-detector`?
-- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` or `wiki_impact:` tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
-
-**Layer 3 — Open review items (non-drift).** Any other open review items?
-- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: `architecture` / `architecture` `wiki_impact` → `/a4:arch iterate`; `domain` / `domain` `wiki_impact` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
-
-**Layer 4 — Active tasks.** Any `task/*.md` with `status: pending | implementing | failing`?
-- Yes → recommend `/a4:run iterate` (resume implementation).
-
-**Layer 5 — Blocked items.** Any item with `status: blocked`?
-- Read its `depends_on` chain to find the nearest unblocked predecessor; recommend the skill that owns that predecessor.
-
-**Layer 6 — Completion.** Everything `done` / `complete` / `resolved` / `final`?
-- Suggest either a new iteration (fresh UCs for the next milestone) or per-item archive of any targeted closed item (see Step 3.5).
+Apply the layered trace defined in [`references/gap-diagnosis.md`](references/gap-diagnosis.md): detect the workspace shape (3.3.0), then walk Layer 0 → 6 against the state collected in 3.2 and stop at the first layer with actionable work. For a targeted Step 1.1 argument, focus the trace on layers upstream of the target (e.g., a blocked task points back to its `depends_on` predecessor). Carry the detected shape into Step 3.4 so the user sees the assumption.
 
 ### 3.4 Present diagnosis
 
