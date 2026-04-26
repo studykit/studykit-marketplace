@@ -111,7 +111,7 @@ updated: <YYYY-MM-DD>
 <Additional `##` sections as the conversation produced them — e.g., Options Considered, Rejected Alternatives, Consequences, Open Questions.>
 ```
 
-Body structure rules and frontmatter field definitions are in [`references/adr-body-rules.md`](references/adr-body-rules.md). Read that file before drafting the body and frontmatter; it is enforced by `transition_status.py` on `draft → final` and shapes Step 2's body outline.
+Body structure rules and the full frontmatter field schema (including `framework`, the `transition_status.py`-enforced `## Context` + `## Decision` requirement, the descriptive-not-prescriptive principle, and the no-`[[task/...]]`-in-`## Consequences` rule) are in [`frontmatter-schema.md §Decision`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). Read that file before drafting the body and frontmatter; it shapes Step 2's body outline.
 
 Report the full file path: "Decision recorded at `<path>` as `draft`."
 
@@ -171,4 +171,4 @@ Summarize to the user:
 - **Do not commit.** Leave files in the working tree.
 - **Do not hand-edit `status:`.** All status changes on decision files flow through `transition_status.py`; this skill never writes `status: final` directly nor uses `Edit`/`Write` to change an existing decision's status.
 - **Do not auto-populate `supersedes:`.** The user sets it explicitly in Step 2 if this decision replaces prior ones.
-- **Do not write implementation, do not render reverse views.** See the ADR-content rules in [`references/adr-body-rules.md`](references/adr-body-rules.md) (Body structure rules → Implications for non-goals).
+- **Do not write implementation, do not render reverse views.** See the ADR-content rules in [`frontmatter-schema.md §Decision`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (descriptive-not-prescriptive principle; `## Consequences` carries no task wikilinks; `justifies:` is derived on demand and never written).
