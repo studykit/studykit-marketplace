@@ -1,7 +1,8 @@
 ---
 name: compass
-description: "This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, or needs help deciding the next step. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'compass', or when the user invokes the a4 plugin without a specific skill name."
+description: "Explicit-invocation only via `/a4:compass`. This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, needs help deciding the next step, or wants a recommendation rather than a raw report. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'diagnose', 'pipeline status', 'compass'. Runs the drift detector (writes new review items to disk) and produces a layered diagnosis + a single recommended next skill to invoke (and may invoke it via the Skill tool). ROUTING: for a plain workspace snapshot or a single pre-defined section view (drift list, active tasks, milestones, etc.) without a recommendation, use `/a4:dashboard` instead. For per-item search by frontmatter (status / kind / milestone / references / labels / custom field), use `/a4:find` instead."
 argument-hint: <issue id, path (e.g. usecase/3-search-history), wiki basename, or free-text description>
+disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash, Skill
 ---
 
@@ -13,7 +14,7 @@ Argument: **$ARGUMENTS**
 
 ## Inter-skill entry
 
-Compass is also callable as a fallback router from other a4 skills. When another skill's preconditions are unmet (e.g., `/a4:run` invoked without `bootstrap.md` present — bootstrap is the single source of truth for Launch & Verify), it halts and invokes compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md`).
+Compass is registered with `disable-model-invocation: true`, so the LLM never auto-routes to it from a description match — the user must type `/a4:compass` explicitly. The Skill-tool path remains open: other a4 skills call compass as a fallback router when their preconditions are unmet (e.g., `/a4:run` invoked without `bootstrap.md` present — bootstrap is the single source of truth for Launch & Verify), halting and invoking compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md`).
 
 Compass treats this as a regular Step 1 entry — the diagnosis text routes to Step 3 (Gap Diagnosis), not Step 2 (Fresh Start), since the workspace already has some state by definition. If the calling skill provided enough context to determine the intent, compass skips the catalog presentation in Step 2 and the brownfield "What are you trying to do?" prompt described there.
 
