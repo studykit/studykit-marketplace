@@ -8,7 +8,7 @@ Frontmatter-side rules (which fields are queryable, enum values, path format) li
 
 Two families of blocks are documented here:
 
-1. **INDEX.md canonical blocks** — verbatim from `plugins/a4/scripts/index_refresh.py`. The script regenerates `a4/INDEX.md` with these blocks on every compass/index run; each block is paired with a static markdown fallback for non-Obsidian viewers.
+1. **INDEX.md canonical blocks** — verbatim from `plugins/a4/scripts/index_refresh.py`. The script regenerates `a4/INDEX.md` with these blocks on every `/a4:index` run; each block is paired with a static markdown fallback for non-Obsidian viewers.
 2. **Derived views** — dataview blocks for pasting onto individual wiki or issue pages. They compute the reverse direction of the ADR's forward-only relationship model (see [frontmatter-schema.md §Relationships are forward-only](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md)), plus a use-case-diagram source listing.
 
 Vault-layout assumption: the Obsidian vault root is the repo root, so `FROM "a4/usecase"` resolves correctly. If you open `a4/` itself as the vault root instead, strip the `a4/` prefix from every `FROM` clause.

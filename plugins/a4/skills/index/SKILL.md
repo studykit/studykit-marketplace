@@ -63,4 +63,4 @@ Stage progress is static-only because it mixes wiki-page presence (single-file c
 
 - Do not commit INDEX.md. Leave it in the working tree.
 - Do not edit `a4/` content other than `INDEX.md`. The refresher reads frontmatter only.
-- Do not merge into surgical sections. The script overwrites the whole file every run; manual edits to INDEX.md will be lost on the next `/a4:compass` or `/a4:index` invocation.
+- Do not merge into surgical sections. The script overwrites the whole file every run; manual edits to INDEX.md will be lost on the next `/a4:index` invocation.

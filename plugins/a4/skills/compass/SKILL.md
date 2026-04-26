@@ -1,13 +1,13 @@
 ---
 name: compass
-description: "This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, or needs help deciding the next step. Also maintains `a4/INDEX.md` as a workspace dashboard, refreshed on every invocation. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'compass', or when the user invokes the a4 plugin without a specific skill name."
+description: "This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, or needs help deciding the next step. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'compass', or when the user invokes the a4 plugin without a specific skill name."
 argument-hint: <issue id, path (e.g. usecase/3-search-history), wiki basename, or free-text description>
 allowed-tools: Read, Write, Glob, Grep, Bash, Skill
 ---
 
 # Pipeline Navigator
 
-Helps users find the right skill or diagnose the next step in an ongoing pipeline. Also maintains a workspace dashboard at `a4/INDEX.md`.
+Helps users find the right skill or diagnose the next step in an ongoing pipeline.
 
 Argument: **$ARGUMENTS**
 
@@ -17,11 +17,9 @@ Compass is also callable as a fallback router from other a4 skills. When another
 
 Compass treats this as a regular Step 1 entry — the diagnosis text routes to Step 3 (Gap Diagnosis), not Step 2 (Fresh Start), since the workspace already has some state by definition. If the calling skill provided enough context to determine the intent, compass skips the catalog presentation in Step 2 and the brownfield "What are you trying to do?" prompt described there.
 
-## Step 0: Refresh INDEX
+## Step 0: Detect project root
 
-Before any other step, regenerate `a4/INDEX.md`. This is the workspace dashboard — a **view** of wiki-page state, stage progress, open issues, drift alerts, milestone progress, recent activity, and open sparks. The per-item frontmatter under `a4/` is the source of truth; INDEX is derived.
-
-### 0.1 Detect project root and a4/ presence
+### 0.1 Resolve workspace location
 
 ```bash
 ROOT=$(git rev-parse --show-toplevel)
@@ -29,21 +27,11 @@ ROOT=$(git rev-parse --show-toplevel)
 
 If not inside a git repo, abort this step with a clear message and skip to Step 1.
 
-If `$ROOT/a4/` does not exist (no workspace yet), skip INDEX regeneration and proceed to Step 1.
+If `$ROOT/a4/` does not exist (no workspace yet), proceed to Step 1.
 
-### 0.2 Run the refresher script
+### 0.2 Optional: surface existing INDEX dashboard
 
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/index_refresh.py" "$ROOT/a4"
-```
-
-The script reads frontmatter from `a4/{context,domain,architecture,actors,nfr,roadmap,bootstrap}.md` (wiki pages) and `a4/{usecase,task,review,decision,idea}/*.md` (issues) plus `a4/spark/*.md`, then fully overwrites `a4/INDEX.md`. Each section contains an Obsidian dataview query block (fixed literal text) and a static markdown fallback computed from current state, wrapped in `<!-- static-fallback-start: <id> -->` / `<!-- static-fallback-end: <id> -->` markers. Stage progress is static-only because it mixes wiki-page presence with cross-folder issue aggregates.
-
-compass does **not** commit INDEX.md automatically — it is left in the working tree for the user or the next session-closing to pick up.
-
-### 0.3 Continue
-
-If the user invoked compass with no argument, read `a4/INDEX.md` and show the **Stage progress** and **Drift alerts** sections to the user before entering Step 1 — these two answer "where is the workspace at" faster than any other section. Otherwise proceed silently to Step 1.
+`a4/INDEX.md` is a precomputed dashboard regenerated only by `/a4:index` — compass does **not** refresh it. If the user invoked compass with no argument and `a4/INDEX.md` exists, read it and show the **Stage progress** and **Drift alerts** sections before entering Step 1 — these two answer "where is the workspace at" faster than any other section. Note to the user that the dashboard may be stale relative to recent edits and that `/a4:index` regenerates it. Otherwise proceed silently to Step 1.
 
 ---
 
@@ -61,7 +49,7 @@ Determine the user's situation and route to Step 2 (Fresh Start) or Step 3 (Gap 
 
 ### 1.2 Note on workspace state
 
-Workspace state — wiki page presence, per-folder issue counts, open drift alerts, milestone progress — was already gathered by `index_refresh.py` in Step 0. Step 3 reads from the regenerated `a4/INDEX.md` and supplements with targeted frontmatter reads. Do not re-scan here.
+Compass reads workspace state directly from per-item frontmatter under `a4/` in Step 3 (Glob + targeted reads). `a4/INDEX.md`, if present, is a precomputed dashboard regenerated only by `/a4:index`; treat it as a stale view, not source of truth. Do not aggregate state here — defer the scan to Step 3.
 
 ---
 
@@ -98,24 +86,18 @@ Before reading state, surface accumulated wiki↔issue drift from since the last
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$ROOT/a4"
 ```
 
-The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / discarded `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift.
-
-If the detector wrote new items, regenerate `a4/INDEX.md` so the Drift alerts section reflects them:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/index_refresh.py" "$ROOT/a4"
-```
+The detector writes one review item per new finding into `a4/review/`, deduplicated against existing open / in-progress / discarded `source: drift-detector` items. Any new items are surfaced in Step 3.3 below alongside pre-existing open drift. `a4/INDEX.md` is **not** refreshed here — the new review items are visible via Step 3.2's frontmatter scans, and the dashboard updates next time `/a4:index` runs.
 
 ### 3.2 Read workspace state
 
-Pull state from the regenerated `a4/INDEX.md` (Step 0 + possible Step 3.1 rerun):
+Scan per-item frontmatter directly under `a4/` (Glob + Read). The frontmatter is the source of truth; do not rely on `a4/INDEX.md` since it may be stale.
 
-- **Wiki pages present** and their `updated:` dates (from INDEX's Wiki pages section).
-- **Issue counts** per folder × status (from INDEX's Open issues and Stage progress sections).
-- **Drift alerts** — open / in-progress `review/*.md` with `source: drift-detector`, grouped by priority.
-- **Milestone progress** — resolved / open per active milestone.
+- **Wiki pages present** and their `updated:` dates — read frontmatter from `a4/{context,domain,architecture,actors,nfr,roadmap,bootstrap}.md`.
+- **Issue counts** per folder × status — glob `a4/{usecase,task,review,decision,idea}/*.md` and aggregate by `status:`.
+- **Drift alerts** — open / in-progress `review/*.md` with `source: drift-detector`, grouped by `priority:`.
+- **Milestone progress** — group tasks by `milestone:`, count resolved vs open.
 
-If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the Step 3.3 recommendation more than aggregate state does.
+Keep the scan to a single pass and budget for it accordingly. If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the Step 3.3 recommendation more than aggregate state does.
 
 ### 3.3 Diagnose the gap layer
 
