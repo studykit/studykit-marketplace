@@ -6,6 +6,8 @@ description: >
   Stripe API", "use the Anthropic SDK", "query Pinecone", or any time the user asks
   you to write code against an external service and you need current API reference.
   Fetch the docs with chub before answering, rather than relying on training knowledge.
+model: sonnet
+context: fork  
 ---
 
 # Get API Docs via chub

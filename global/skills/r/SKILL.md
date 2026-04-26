@@ -4,6 +4,7 @@ description: Revise English text in technical style
 argument-hint: <English text to revise>
 disable-model-invocation: true
 context: fork
+model: sonnet
 ---
 
 # Revise English Text

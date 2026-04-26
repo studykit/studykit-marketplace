@@ -4,6 +4,7 @@ description: Revise English text with user-selected style
 argument-hint: <English text to revise>
 disable-model-invocation: true
 context: fork
+model: sonnet
 ---
 
 # Revise English Text with Style Selection

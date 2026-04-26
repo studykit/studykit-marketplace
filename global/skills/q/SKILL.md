@@ -4,6 +4,7 @@ description: Translate Korean text to English
 argument-hint: <Korean text>
 disable-model-invocation: true
 context: fork
+model: sonnet
 ---
 
 # Translate Korean to English
