@@ -6,39 +6,46 @@
 
 Single source of truth for the workspace dashboard view. Two callers:
 
-  /a4:dashboard skill — surfaces this report directly to the user as the
+  /a4:dashboard skill — surfaces the full report to the user as the
                         on-demand workspace summary (no file is written).
-  /a4:compass   Step 3.2 — reads this report to drive layered gap diagnosis
-                (`skills/compass/references/gap-diagnosis.md`).
+  /a4:compass   Step 3.2 — pulls only the sections its layered gap diagnosis
+                needs (`skills/compass/references/gap-diagnosis.md`).
 
 The per-item frontmatter under `a4/` is the source of truth; this report
 is a fresh snapshot computed each run. Output is markdown so the LLM
 consumer parses it cheaply and a human reading stdout sees a tidy
 summary at the same time.
 
-Sections (in order):
+Sections (kebab-case identifier on the left):
 
-  Wiki pages              presence + last-updated for the 7 canonical wiki kinds.
-  Stage progress          mixed-axis view of usecase/arch/bootstrap/roadmap/impl.
-  Issue counts            per folder × {active, in_progress, terminal, total}
-                          plus by-kind for review/task.
-  Use cases by source     UC `source:` distribution (Reverse-only detection).
-  Drift alerts            open / in-progress reviews with `source: drift-detector`,
-                          sorted by priority then id desc.
-  Open reviews            open / in-progress non-drift reviews, sorted by
-                          priority then created then id.
-  Active tasks            tasks with status in {pending, implementing, failing}.
-  Blocked items           any issue with status: blocked, with depends_on chain.
-  Milestones              per active milestone — tasks complete/total + open reviews.
-  Recent activity         top 10 issue items by `updated:` desc.
-  Open ideas              non-terminal `idea/*.md`.
-  Open sparks             non-terminal `spark/*.md`.
+  wiki-pages          presence + last-updated for the 7 canonical wiki kinds.
+  stage-progress      mixed-axis view of usecase/arch/bootstrap/roadmap/impl.
+  issue-counts        per folder × {active, in_progress, terminal, total}
+                      plus by-kind for review/task.
+  usecases-by-source  UC `source:` distribution (Reverse-only detection).
+  drift-alerts        open / in-progress reviews with `source: drift-detector`,
+                      sorted by priority then id desc.
+  open-reviews        open / in-progress non-drift reviews, sorted by
+                      priority then created then id.
+  active-tasks        tasks with status in {pending, implementing, failing}.
+  blocked-items       any issue with status: blocked, with depends_on chain.
+  milestones          per active milestone — tasks complete/total + open reviews.
+  recent-activity     top 10 issue items by `updated:` desc.
+  open-ideas          non-terminal `idea/*.md`.
+  open-sparks         non-terminal `spark/*.md`.
 
 Status vocabularies follow the spec ADRs (terminal / in-progress sets
 documented inline below).
 
 Usage:
-    uv run workspace_state.py <a4-dir>
+    uv run workspace_state.py <a4-dir>                      # full dashboard (all sections, with header)
+    uv run workspace_state.py <a4-dir> drift-alerts         # one section, no header
+    uv run workspace_state.py <a4-dir> drift-alerts active-tasks blocked-items
+                                                            # multiple sections, in the order requested
+    uv run workspace_state.py --list-sections               # print section identifiers and exit
+
+Section names are validated; an unknown name aborts with exit code 2 and
+the available identifiers on stderr.
 """
 
 from __future__ import annotations
@@ -49,7 +56,7 @@ from collections import Counter, defaultdict
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 from common import ISSUE_FOLDERS
 from markdown import extract_preamble
@@ -515,44 +522,125 @@ def render_open_sparks(sparks: list[SparkItem]) -> str:
     return "\n".join(lines)
 
 
-def render_state(a4_dir: Path) -> str:
-    pages = discover_wikis(a4_dir)
-    pages_by_kind = {p.kind: p for p in pages}
-    issues = discover_issues(a4_dir)
-    sparks = discover_sparks(a4_dir)
-    ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+# Section registry — `dict` preserves insertion order, which doubles as the
+# canonical full-dashboard ordering when no specific sections are requested.
+# Each entry maps a kebab-case identifier to a callable that takes the
+# pre-built context dict and returns the rendered markdown for that section.
+SECTION_RENDERERS: dict[str, Callable[[dict[str, Any]], str]] = {
+    "wiki-pages": lambda ctx: render_wiki_pages(ctx["pages"]),
+    "stage-progress": lambda ctx: render_stage_progress(
+        ctx["pages_by_kind"], ctx["issues"]["usecase"], ctx["issues"]["task"]
+    ),
+    "issue-counts": lambda ctx: render_issue_counts(ctx["issues"]),
+    "usecases-by-source": lambda ctx: render_usecases_by_source(
+        ctx["issues"]["usecase"]
+    ),
+    "drift-alerts": lambda ctx: render_drift_alerts(ctx["issues"]["review"]),
+    "open-reviews": lambda ctx: render_open_reviews(ctx["issues"]["review"]),
+    "active-tasks": lambda ctx: render_active_tasks(ctx["issues"]["task"]),
+    "blocked-items": lambda ctx: render_blocked_items(ctx["issues"]),
+    "milestones": lambda ctx: render_milestones(
+        ctx["issues"]["task"], ctx["issues"]["review"]
+    ),
+    "recent-activity": lambda ctx: render_recent_activity(ctx["issues"]),
+    "open-ideas": lambda ctx: render_open_ideas(ctx["issues"]["idea"]),
+    "open-sparks": lambda ctx: render_open_sparks(ctx["sparks"]),
+}
 
-    sections = [
-        f"# Workspace state\n\n*Generated {ts} — fresh snapshot, no file written. Source of truth is per-item frontmatter under `a4/`.*",
-        render_wiki_pages(pages),
-        render_stage_progress(pages_by_kind, issues["usecase"], issues["task"]),
-        render_issue_counts(issues),
-        render_usecases_by_source(issues["usecase"]),
-        render_drift_alerts(issues["review"]),
-        render_open_reviews(issues["review"]),
-        render_active_tasks(issues["task"]),
-        render_blocked_items(issues),
-        render_milestones(issues["task"], issues["review"]),
-        render_recent_activity(issues),
-        render_open_ideas(issues["idea"]),
-        render_open_sparks(sparks),
-    ]
-    return "\n\n".join(sections) + "\n"
+SECTION_NAMES: tuple[str, ...] = tuple(SECTION_RENDERERS.keys())
+
+
+def _build_context(a4_dir: Path) -> dict[str, Any]:
+    pages = discover_wikis(a4_dir)
+    return {
+        "pages": pages,
+        "pages_by_kind": {p.kind: p for p in pages},
+        "issues": discover_issues(a4_dir),
+        "sparks": discover_sparks(a4_dir),
+    }
+
+
+def render_state(a4_dir: Path, sections: list[str] | None = None) -> str:
+    """Render the workspace state.
+
+    `sections=None` produces the full dashboard with the top-level header.
+    A non-empty list produces only those sections (in the order given) and
+    omits the header — useful for compass and other targeted callers.
+    """
+    ctx = _build_context(a4_dir)
+
+    if sections is None:
+        ts = datetime.now().strftime("%Y-%m-%d %H:%M")
+        header = (
+            f"# Workspace state\n\n"
+            f"*Generated {ts} — fresh snapshot, no file written. "
+            "Source of truth is per-item frontmatter under `a4/`.*"
+        )
+        parts = [header] + [SECTION_RENDERERS[name](ctx) for name in SECTION_NAMES]
+    else:
+        parts = [SECTION_RENDERERS[name](ctx) for name in sections]
+
+    return "\n\n".join(parts) + "\n"
 
 
 def main() -> int:
     parser = argparse.ArgumentParser(
-        description="Render a4/ workspace state as a markdown report."
+        description="Render a4/ workspace state as a markdown report.",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Section identifiers (in canonical full-dashboard order):\n  "
+            + "\n  ".join(SECTION_NAMES)
+        ),
     )
-    parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
+    parser.add_argument(
+        "--list-sections",
+        action="store_true",
+        help="print section identifiers (one per line) and exit",
+    )
+    parser.add_argument(
+        "a4_dir",
+        type=Path,
+        nargs="?",
+        help="path to the a4/ workspace",
+    )
+    parser.add_argument(
+        "sections",
+        nargs="*",
+        help=(
+            "section identifiers to render; omit for the full dashboard. "
+            "Use --list-sections to see available names."
+        ),
+    )
     args = parser.parse_args()
+
+    if args.list_sections:
+        for name in SECTION_NAMES:
+            print(name)
+        return 0
+
+    if args.a4_dir is None:
+        parser.error("a4_dir is required (unless --list-sections is given)")
 
     a4_dir = args.a4_dir.resolve()
     if not a4_dir.is_dir():
         print(f"Error: {a4_dir} is not a directory", file=sys.stderr)
         return 1
 
-    sys.stdout.write(render_state(a4_dir))
+    if args.sections:
+        unknown = [s for s in args.sections if s not in SECTION_RENDERERS]
+        if unknown:
+            print(
+                "Error: unknown section(s): " + ", ".join(unknown),
+                file=sys.stderr,
+            )
+            print(
+                "Available: " + ", ".join(SECTION_NAMES),
+                file=sys.stderr,
+            )
+            return 2
+        sys.stdout.write(render_state(a4_dir, sections=args.sections))
+    else:
+        sys.stdout.write(render_state(a4_dir))
     return 0
 
 

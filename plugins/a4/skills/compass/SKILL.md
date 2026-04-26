@@ -84,15 +84,23 @@ The detector writes one review item per new finding into `a4/review/`, deduplica
 
 ### 3.2 Read workspace state
 
-Render the workspace-state report once, then read the markdown sections it returns:
+`scripts/workspace_state.py` renders workspace state as markdown to stdout, with an optional section filter. Compass requests only the sections its layered diagnosis (Step 3.3) and presentation (Step 3.4) need — `recent-activity`, `open-ideas`, `open-sparks` are dashboard-only and skipped:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4"
+uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4" \
+    wiki-pages issue-counts usecases-by-source \
+    drift-alerts open-reviews active-tasks blocked-items milestones
 ```
 
-The script prints a markdown report to stdout — same output `/a4:dashboard` produces. No file is written. The report's section schema (Wiki pages, Stage progress, Issue counts, Use cases by source, Drift alerts, Open reviews, Active tasks, Blocked items, Milestones, Recent activity, Open ideas, Open sparks) is documented in `plugins/a4/scripts/workspace_state.py`'s module docstring — that is the single source of truth.
+Section identifiers and the full schema live in `plugins/a4/scripts/workspace_state.py`'s module docstring (run `--list-sections` to enumerate). Section → layer mapping for Step 3.3:
 
-The Step 3.3 layered trace consumes it as follows: shape detection from **Wiki pages** + **Use cases by source**; Layer 0/1 from **Wiki pages** + usecase counts in **Issue counts**; Layer 2 from **Drift alerts**; Layer 3 from **Open reviews**; Layer 4 from **Active tasks**; Layer 5 from **Blocked items**.
+- shape detection: `wiki-pages` + `usecases-by-source`
+- Layer 0 / 1: `wiki-pages` + usecase counts in `issue-counts`
+- Layer 2: `drift-alerts`
+- Layer 3: `open-reviews`
+- Layer 4: `active-tasks`
+- Layer 5: `blocked-items`
+- Step 3.4 presentation table: `wiki-pages` + `issue-counts` + `drift-alerts` + `milestones`
 
 If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the Step 3.3 recommendation more than aggregate state does.
 
