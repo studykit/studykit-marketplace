@@ -89,7 +89,7 @@ Listing who calls the writer for each value makes the invariant auditable.
 | usecase | `blocked` | `usecase-reviser` (on SPLIT), `task-implementer` (on implementation-time blocker detection) |
 | task | `open` | `/a4:task` (on create — default backlog state). Not picked up by `/a4:run`; user must transition to `pending` to enqueue |
 | task | `pending` | `/a4:roadmap` (on create — batch fill-queue intent), `/a4:task` (on create when user opts in over the default `open`), `/a4:run` (on revision reset, on `failing → pending` defer) |
-| task | `progress` | `/a4:run` Step 2 (before `task-implementer` spawn) |
+| task | `progress` | `/a4:run` Step 2 (before `task-implementer` spawn); `task-implementer` when spawned outside `/a4:run` (flips `open → progress` or `pending → progress` directly); user-driven via `transition_status.py` when an LLM-conversation session starts work on a task without going through `/a4:run` |
 | task | `complete` | `/a4:run` Step 2 (after agent returns success); `/a4:task` (on create, post-hoc documentation for already-implemented work) |
 | task | `failing` | `/a4:run` Step 2 / 3 (after agent or test-runner failure) |
 | task | `discarded` | `transition_status.py` cascade — when the UC this task implements flips to `discarded`. Direct calls are also permitted for explicit one-off task discards |
@@ -245,7 +245,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 Allowed transitions:
 
 ```
-open      → discarded | pending
+open      → discarded | pending | progress
 pending   → discarded | progress
 progress  → complete | discarded | failing | pending
 complete  → discarded | pending
@@ -253,7 +253,7 @@ failing   → discarded | pending | progress
 discarded → (terminal)
 ```
 
-`open → progress` is **not** a legal direct transition; backlog items must pass through `pending`. There is no `pending → open` reverse — once enqueued, a task cannot be returned to backlog.
+`open → progress` is allowed when work is initiated outside `/a4:run` — for example, a `task-implementer` spawned directly, or an LLM-conversation session that starts implementing a backlog task without batch enqueue. The `pending` step exists to express `/a4:run` queue intent; skip it when the queue is not the entry path. There is no `pending → open` reverse — once enqueued, a task cannot be returned to backlog.
 
 ### Initial status policy
 

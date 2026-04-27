@@ -69,7 +69,7 @@ UC_TRANSITIONS: dict[str, frozenset[str]] = {
 }
 
 TASK_TRANSITIONS: dict[str, frozenset[str]] = {
-    "open": frozenset({"pending", "discarded"}),
+    "open": frozenset({"pending", "progress", "discarded"}),
     "pending": frozenset({"progress", "discarded"}),
     "progress": frozenset({"complete", "failing", "pending", "discarded"}),
     "complete": frozenset({"pending", "discarded"}),
