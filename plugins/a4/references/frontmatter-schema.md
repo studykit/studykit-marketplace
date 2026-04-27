@@ -183,14 +183,14 @@ Forward progression runs `draft → ready → implementing → shipped`, with `r
 Allowed transitions (forward path + escape paths):
 
 ```
-draft → ready | discarded
-ready → draft | implementing | discarded
-implementing → shipped | revising | discarded | blocked
-revising → ready | discarded
-blocked → ready | discarded
-shipped → superseded | discarded
-superseded → (terminal)
-discarded → (terminal)
+draft        → discarded | ready
+ready        → discarded | draft | implementing
+implementing → blocked | discarded | revising | shipped
+revising     → discarded | ready
+blocked      → discarded | ready
+shipped      → discarded | superseded
+discarded    → (terminal)
+superseded   → (terminal)
 ```
 
 Notable rules:
@@ -245,11 +245,12 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 Allowed transitions:
 
 ```
-open      → pending | discarded
-pending   → progress | discarded
-progress  → complete | failing | pending | discarded
-complete  → pending | discarded
-failing   → pending | progress | discarded
+open      → discarded | pending
+pending   → discarded | progress
+progress  → complete | discarded | failing | pending
+complete  → discarded | pending
+failing   → discarded | pending | progress
+discarded → (terminal)
 ```
 
 `open → progress` is **not** a legal direct transition; backlog items must pass through `pending`. There is no `pending → open` reverse — once enqueued, a task cannot be returned to backlog.
