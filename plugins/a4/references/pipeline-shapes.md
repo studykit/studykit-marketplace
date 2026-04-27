@@ -5,7 +5,7 @@ The a4 pipeline is not one shape. Three named shapes describe how a workspace fl
 Companion to:
 - [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) — interactive vs autonomous, forward vs reverse axes for individual skills.
 - [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
-- [`adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md) — when an ADR is warranted; signal catalog complementing this doc's ADR cross-cutting section.
+- [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) — when a spec is warranted; signal catalog complementing this doc's spec cross-cutting section.
 - [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — field-level rules.
 
 ## Why name the shapes
@@ -22,7 +22,7 @@ Treating Full as the only shape forces brownfield and one-off work into routing 
 
 The single condition that decides whether *any* shape applies is **the presence of `a4/bootstrap.md`**.
 
-`/a4:run` requires `bootstrap.md` for Launch & Verify and halts to compass when it is absent. Every shape — Full, Reverse-then-forward, Minimal — therefore terminates in `/a4:run` and requires `bootstrap.md` somewhere in the path. If `bootstrap.md` does not exist and the user has only written ADRs, research artifacts, sparks, or hand-edited wiki pages, **no shape applies** — see "No shape" below.
+`/a4:run` requires `bootstrap.md` for Launch & Verify and halts to compass when it is absent. Every shape — Full, Reverse-then-forward, Minimal — therefore terminates in `/a4:run` and requires `bootstrap.md` somewhere in the path. If `bootstrap.md` does not exist and the user has only written specs, research artifacts, sparks, or hand-edited wiki pages, **no shape applies** — see "No shape" below.
 
 What `bootstrap.md` does **not** depend on:
 
@@ -69,71 +69,71 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 | `kind` | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC's `## Flow` / `## Validation` / `## Error handling` (this is Full-shape AC reused inside Minimal) |
-| `feature` + `adr: [adr/...]` | ADR's `## Decision` + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
+| `feature` + `spec: [spec/...]` | spec's `## Decision` + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
 | `feature` with neither | Smell — `/a4:task` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
 | `bug` | The bug description in the task body itself |
 | `spike` | The hypothesis stated in the task body itself |
 
 `/a4:run` Step 4b ships **per task** when `task.implements:` is empty (no UC to ship); when `task.implements:` is non-empty, it falls back to per-UC ship as in Full shape. The branching is `task.implements:`-driven, not invocation-driven.
 
-**When this shape fits.** Single bug fixes, ADR-justified one-off features, exploration spikes. Common in brownfield projects where the user does not want to retrofit the full wiki for a small change.
+**When this shape fits.** Single bug fixes, spec-justified one-off features, exploration spikes. Common in brownfield projects where the user does not want to retrofit the full wiki for a small change.
 
 ## Cross-cutting concerns
 
-### ADRs (`/a4:adr`)
+### specs (`/a4:spec`)
 
-ADRs are **orthogonal to shape**. They are produced and consumed across all shapes, with two production channels and two consumption channels:
+specs are **orthogonal to shape**. They are produced and consumed across all shapes, with two production channels and two consumption channels:
 
 | Channel | Where | Most common shape |
 |---|---|---|
-| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:adr` for non-trivial choices. | Full (arch is Full-only) |
-| **Production (secondary)** | `/a4:adr` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
-| **Consumption (primary)** | `architecture.md` `## Changes` footnote `[[adr/N-...]]` records why an architecture change happened. | Full |
-| **Consumption (secondary)** | `task.adr: adr/N-...` makes an ADR the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
+| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
+| **Production (secondary)** | `/a4:spec` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
+| **Consumption (primary)** | `architecture.md` `## Changes` footnote `[[spec/N-...]]` records why an architecture change happened. | Full |
+| **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
 
-**Trigger conditions** for writing an ADR (independent of shape):
+**Trigger conditions** for writing a spec (independent of shape):
 
 1. Two or more viable options with a non-trivial trade-off.
 2. The "why" of the choice is not recoverable from the resulting code.
 3. The decision could plausibly be revisited later — superseded chains preserve the path not taken.
 
-**When to cite an existing ADR.** ADRs are written once and cited many times. Each citation site falls into one of two categories:
+**When to cite an existing spec.** specs are written once and cited many times. Each citation site falls into one of two categories:
 
 *Mandatory* (the system requires the citation to function correctly):
 
-- `architecture.md` `## Changes` footnote `[[adr/N-...]]` whenever an arch section is changed by an ADR. Per [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) change-footnote rules.
-- `task.adr: [adr/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in an ADR rather than a UC. `/a4:run` Step 4b reads the ADR's `## Decision` plus the cited `architecture.md` section as AC source.
-- A successor ADR's `Status: superseded by ADR-M` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk.
-- Other wiki pages' `## Changes` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by an ADR — same footnote pattern as architecture.md.
+- `architecture.md` `## Changes` footnote `[[spec/N-...]]` whenever an arch section is changed by a spec. Per [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) change-footnote rules.
+- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `## Decision` plus the cited `architecture.md` section as AC source.
+- A successor spec's `Status: superseded by spec-M` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk.
+- Other wiki pages' `## Changes` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same footnote pattern as architecture.md.
 
 *Optional* (the citation adds clarity but is not required):
 
-- Task body prose (`## Description`, `## Open Questions`) — explain why this task takes a particular approach, even when `adr:` is not set.
+- Task body prose (`## Description`, `## Open Questions`) — explain why this task takes a particular approach, even when `spec:` is not set.
 - Review item body — clarify what decision a `kind: question` is asking about or what decision a `kind: finding` is violating.
-- Research artifacts (`research/<slug>.md`) — the artifact's conclusion can forward-point to an ADR that fixed its conclusion.
+- Research artifacts (`research/<slug>.md`) — the artifact's conclusion can forward-point to a spec that fixed its conclusion.
 
-**Common omissions** that erode ADR value:
+**Common omissions** that erode spec value:
 
-- Writing an ADR but not adding the `architecture.md` `## Changes` footnote when arch was driven by it. The drift detector may eventually catch this; preferring to add the footnote in the same session avoids the drift entry.
-- Minimal-shape `feature` task with no UC and no ADR — `/a4:task` Step 2 flags as smell. The fix is usually to write a short ADR first, then cite it via `adr:`.
-- Reversing a decision without an explicit `superseded by` chain. Both ADRs end up live and ambiguous about which is current.
+- Writing a spec but not adding the `architecture.md` `## Changes` footnote when arch was driven by it. The drift detector may eventually catch this; preferring to add the footnote in the same session avoids the drift entry.
+- Minimal-shape `feature` task with no UC and no spec — `/a4:task` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
+- Reversing a decision without an explicit `superseded by` chain. Both specs end up live and ambiguous about which is current.
 
-**Anti-patterns** (do not write an ADR for these):
+**Anti-patterns** (do not write a spec for these):
 
 - Routine implementation choices (variable naming, file layout).
 - Decisions already determined by the framework or platform.
-- Post-hoc justification — ADRs capture the trade-off at decision time, not after the fact.
+- Post-hoc justification — specs capture the trade-off at decision time, not after the fact.
 - Multiple decisions in one file — one decision per file (Nygard 1:1 rule).
 
-ADRs do not have a shape entry of their own. `/a4:adr` is shape-independent — it always writes the same ADR file regardless of which shape (if any) is in flight.
+specs do not have a shape entry of their own. `/a4:spec` is shape-independent — it always writes the same spec file regardless of which shape (if any) is in flight.
 
 ## No shape
 
-When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing ADRs, research artifacts, sparks, or hand-editing wiki pages — but `/a4:run` cannot execute and no task → ship flow is in motion.
+When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research artifacts, sparks, or hand-editing wiki pages — but `/a4:run` cannot execute and no task → ship flow is in motion.
 
 This is a normal state, not an error. Workspaces in this state typically use:
 
-- `/a4:adr` — record ADRs standalone before any implementation work.
+- `/a4:spec` — record specs standalone before any implementation work.
 - `/a4:research` — investigate options or topics, producing `research/<slug>.md` outside `a4/`.
 - `/a4:research-review` — audit a research artifact for source quality and bias.
 - `/a4:spark-brainstorm` — capture ideas before they take shape.
@@ -161,14 +161,14 @@ Shape is not stored as a workspace flag. Skills that branch on it derive shape f
 Two skills branch on shape and therefore cite this document:
 
 - **`auto-bootstrap`** — Step 1 Codebase Assessment scope is shape-aware: Full requires architecture.md as the source of truth; Minimal may have no architecture.md and works directly from the existing codebase. The fresh / incremental branch is project-state-driven; the scope-of-work branch is shape-driven.
-- **`run`** — Step 4b ship-review unit varies by shape: per-UC when tasks declare `implements:` (Full or Minimal-feature-with-UC), per-task when `task.implements:` is empty (Minimal-ADR / spike / bug). Branching is `task.implements:`-driven, which is the shape signal at task level.
+- **`run`** — Step 4b ship-review unit varies by shape: per-UC when tasks declare `implements:` (Full or Minimal-feature-with-UC), per-task when `task.implements:` is empty (Minimal-spec / spike / bug). Branching is `task.implements:`-driven, which is the shape signal at task level.
 
 Skills that **do not** cite this document, by design:
 
 - `usecase`, `domain`, `arch`, `roadmap` — Full-only stages. Shape is determined by the fact of their invocation; no internal branching needed.
 - `auto-usecase` — the Reverse entry. Shape is determined by invocation; no internal branching.
 - `task` — itself the Minimal entry. Always Jira-issue-modeled regardless of any other shape activity in the workspace.
-- `adr` — cross-cutting; shape-independent.
+- `spec` — cross-cutting; shape-independent.
 - `compass` — uses this reference at the **Step 2.0 catalog level** (entry routing) rather than as an internal branch citation.
 
 ## Reading order

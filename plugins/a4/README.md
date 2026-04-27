@@ -19,9 +19,9 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
 | `spark-brainstorm` | Structured brainstorming sessions |
-| `research` | Standalone research facilitator; writes a portable artifact at `./research/<slug>.md` (outside `a4/`) referenced by ADR files |
+| `research` | Standalone research facilitator; writes a portable artifact at `./research/<slug>.md` (outside `a4/`) referenced by spec files |
 | `research-review` | Reviews a research artifact at `./research/<slug>.md` via the `research-reviewer` agent; applies accepted revisions |
-| `adr` | Records an ADR reached through conversation as `a4/adr/<id>-<slug>.md`; cites related research via `[[research/<slug>]]` wikilinks in body; nudges affected wiki pages |
+| `spec` | Records a spec reached through conversation as `a4/spec/<id>-<slug>.md`; cites related research via `[[research/<slug>]]` wikilinks in body; nudges affected wiki pages |
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
@@ -46,7 +46,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 | `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record files (`a4-edited-<sid>.txt`, `a4-resolved-ids-<sid>.txt`). Always exits 0. |
 | `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan record files from crashed sessions where SessionEnd never fired. Always exits 0. |
 | `SessionStart` | `scripts/a4_hook.py session-start` | Refresh UC `implemented_by:` reverse-links (write; emits `systemMessage` + `additionalContext` when UCs change), then run `validate_status_consistency.py` and inject workspace-wide mismatches as `additionalContext`. Non-blocking; silent on clean. |
-| `UserPromptSubmit` | `scripts/a4_hook.py user-prompt` | Match `#<id>` tokens in the prompt (`(?<![\w#])#(\d+)\b`); for each, glob `a4/{usecase,task,review,adr,idea}/<id>-*.md` and `a4/archive/**/<id>-*.md`; inject resolved paths as `additionalContext`. Skips ids already resolved this session via `a4-resolved-ids-<sid>.txt`. Non-blocking; silent on no match. |
+| `UserPromptSubmit` | `scripts/a4_hook.py user-prompt` | Match `#<id>` tokens in the prompt (`(?<![\w#])#(\d+)\b`); for each, glob `a4/{usecase,task,review,spec,idea}/<id>-*.md` and `a4/archive/**/<id>-*.md`; inject resolved paths as `additionalContext`. Skips ids already resolved this session via `a4-resolved-ids-<sid>.txt`. Non-blocking; silent on no match. |
 
 **Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` manually for a full workspace sweep. Status consistency, by contrast, always scans workspace-wide — cross-file by definition.
 
@@ -59,7 +59,6 @@ Four hook flows share the same events, dispatched through a single Python entry 
 | `api-researcher` | Find and return current API documentation |
 | `arch-reviewer` | Review architecture designs |
 | `research-reviewer` | Review research artifacts for source quality, option balance, bias, and decision neutrality |
-| `adr-content-guard` | Pre-finalize content guard for ADR bodies; flags prescriptive / implementation leakage (warning + override) |
 | `domain-reviewer` | Review `domain.md` against UCs and architecture; emit per-finding review items |
 | `task-implementer` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
@@ -84,7 +83,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
     usecase/<id>-<slug>.md                    # Use Cases
     task/<id>-<slug>.md                       # Executable work units (Jira sense; kind: feature|spike|bug)
     review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
-    adr/<id>-<slug>.md                        # ADRs
+    spec/<id>-<slug>.md                        # specs
     idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
 
     spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md
@@ -95,7 +94,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
     archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
 
   research/                                 # Portable research artifacts from /a4:research
-    <slug>.md                               # Cited from a4/adr/ body via [[research/<slug>]] wikilinks
+    <slug>.md                               # Cited from a4/spec/ body via [[research/<slug>]] wikilinks
 ```
 
 ### Wiki vs. issues
@@ -111,7 +110,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 - **Ids are globally monotonic integers** (GitHub issue semantics) — unique across all folders. Allocator: `scripts/allocate_id.py` computes `max(existing ids) + 1`.
 - **Filenames are `<id>-<slug>.md`.** Folder indicates type; no `uc-`/`task-`/`rev-`/`d-` prefix.
 - **Obsidian markdown throughout.** Body uses `[[wikilinks]]` and `![[embeds]]`; frontmatter paths are plain strings (no brackets, no extension) for dataview compatibility.
-- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `wiki_impact`, `adr`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `implemented_by`, `children`, …) are computed by dataview.
+- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `wiki_impact`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `implemented_by`, `children`, …) are computed by dataview.
 
 ### Wiki update protocol
 

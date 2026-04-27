@@ -33,7 +33,7 @@ Subject form for every commit authored against an a4 workspace. Applies to a4 sk
 | `/a4:run` cycle results (multi-review) | `#57 #58 #59 chore(a4): cycle 2 test-runner findings` |
 | `/a4:roadmap` initial UC + tasks | `#10 #41 #42 #43 docs(a4): roadmap for payment flow` |
 | `/a4:run` UC ship-transition | `#10 #11 docs(a4): ship UC payment-checkout payment-refund` |
-| `/a4:adr` author | `#15 docs(a4): record retry strategy decision` |
+| `/a4:spec` author | `#15 docs(a4): record retry strategy decision` |
 | Wiki edit, no triggering artifact | `docs(a4): clarify architecture overview` |
 | Plugin source edit unrelated to a4 workspace | `chore(a4): bump validator pyproject deps` |
 

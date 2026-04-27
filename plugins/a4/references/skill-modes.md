@@ -5,7 +5,7 @@ Why each a4 pipeline stage has the mode it has, and why the missing interactive/
 Companion to:
 - [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
 - [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; complements this doc's per-skill mode taxonomy with which stages run in which shape.
-- [`adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md) — when an ADR is warranted; conversational signals + content-aware upward propagation.
+- [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) — when a spec is warranted; conversational signals + content-aware upward propagation.
 - [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — field-level rules.
 
 ## Two axes, not one
