@@ -72,9 +72,12 @@ WIKI_KINDS_TUPLE: tuple[str, ...] = (
     "bootstrap",
 )
 
-# Folder → set of valid `kind:` enum values. Issue-folder kinds come
-# from the canonical model; `wiki` is layered in here because its kinds
-# derive from the ordered WIKI_KINDS_TUPLE used elsewhere in this file.
+# Folder → set of valid `kind:` enum values for the `--kind` filter.
+# Issue-folder kinds come from the canonical model. Wiki pages declare
+# their identifier in the `type:` field (matching the file basename); the
+# `wiki` entry below makes `--kind <basename>` work for the wiki folder
+# by routing it through `Record.kind`, which reads `type:` for wiki
+# records.
 KIND_BY_FOLDER: dict[str, frozenset[str]] = {
     **_MODEL_KIND_BY_FOLDER,
     "wiki": frozenset(WIKI_KINDS_TUPLE),
@@ -136,6 +139,8 @@ class Record:
 
     @property
     def kind(self) -> str | None:
+        if self.folder == "wiki":
+            return _str(self.fm.get("type"))
         return _str(self.fm.get("kind"))
 
     @property

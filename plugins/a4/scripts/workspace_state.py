@@ -69,7 +69,7 @@ from status_model import (
 )
 
 # Local ordered tuple — drives the Wiki-pages table rendering.
-# `common.WIKI_KINDS` is a frozenset (membership-test only).
+# `common.WIKI_TYPES` is a frozenset (membership-test only).
 WIKI_KINDS: tuple[str, ...] = (
     "context",
     "domain",

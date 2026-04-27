@@ -129,7 +129,7 @@ ACTIVE_TASK_STATUSES: frozenset[str] = frozenset({"pending", "progress", "failin
 # Kind enums
 # ---------------------------------------------------------------------------
 #
-# Wiki kinds live in common.WIKI_KINDS — duplicating them here would
+# Wiki types live in common.WIKI_TYPES — duplicating them here would
 # fragment the wiki vocabulary across two modules.
 
 KIND_BY_FOLDER: dict[str, frozenset[str]] = {

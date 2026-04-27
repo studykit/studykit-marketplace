@@ -12,7 +12,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-WIKI_KINDS = frozenset(
+WIKI_TYPES = frozenset(
     {"context", "domain", "architecture", "actors", "nfr", "roadmap", "bootstrap"}
 )
 

@@ -53,7 +53,7 @@ from pathlib import Path
 
 import yaml
 
-from common import WIKI_KINDS
+from common import WIKI_TYPES
 from markdown import extract_body, extract_preamble
 
 # Local ISSUE_FOLDERS diverges from `common.ISSUE_FOLDERS` (which includes
@@ -116,7 +116,7 @@ def _fm(path: Path) -> dict:
 def discover_wiki_pages(a4_dir: Path) -> dict[str, Path]:
     out: dict[str, Path] = {}
     for md in sorted(a4_dir.glob("*.md")):
-        if _fm(md).get("kind") in WIKI_KINDS:
+        if _fm(md).get("type") in WIKI_TYPES:
             out[md.stem] = md
     return out
 
@@ -403,7 +403,7 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
         ]
     elif drift.kind == "missing-wiki-page":
         body_lines += [
-            f"Either create `{drift.wiki}.md` (with the proper `kind:` frontmatter)",
+            f"Either create `{drift.wiki}.md` (with the proper `type:` frontmatter)",
             f"and add a footnote citing `[[{drift.cause}]]`, or amend the originating",
             "review item's `wiki_impact` field to remove this entry.",
         ]

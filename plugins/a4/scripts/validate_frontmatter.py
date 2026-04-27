@@ -10,8 +10,8 @@ Enforces the per-type schema defined in plugins/a4/references/frontmatter-schema
   - Enum values are in their allowed set.
   - Field types are correct (int, date, list, string).
   - Path references use plain string form (no wikilink brackets, no .md extension).
-  - `kind:` on wiki pages matches the file basename.
-  - `wiki_impact` entries name a known wiki kind.
+  - `type:` on wiki pages matches the file basename.
+  - `wiki_impact` entries name a known wiki type.
   - Ids are unique across all issue folders in the workspace.
 
 Unknown frontmatter fields are ignored — validation is strict on known rules
@@ -37,7 +37,7 @@ from typing import Any
 
 from common import (
     ISSUE_FOLDERS,
-    WIKI_KINDS,
+    WIKI_TYPES,
     discover_files,
     is_empty as _is_empty,
     is_int as _is_int,
@@ -63,14 +63,17 @@ class Schema:
 SCHEMAS: dict[str, Schema] = {
     "wiki": Schema(
         name="wiki",
-        required=frozenset({"kind", "updated"}),
-        enums={"kind": WIKI_KINDS},
+        required=frozenset({"type", "updated"}),
+        enums={"type": WIKI_TYPES},
         date_fields=frozenset({"updated"}),
     ),
     "usecase": Schema(
         name="usecase",
-        required=frozenset({"id", "title", "status", "created", "updated"}),
-        enums={"status": STATUS_BY_FOLDER["usecase"]},
+        required=frozenset({"type", "id", "title", "status", "created", "updated"}),
+        enums={
+            "type": frozenset({"usecase"}),
+            "status": STATUS_BY_FOLDER["usecase"],
+        },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset(
@@ -79,8 +82,11 @@ SCHEMAS: dict[str, Schema] = {
     ),
     "task": Schema(
         name="task",
-        required=frozenset({"id", "title", "kind", "status", "created", "updated"}),
+        required=frozenset(
+            {"type", "id", "title", "kind", "status", "created", "updated"}
+        ),
         enums={
+            "type": frozenset({"task"}),
             "kind": KIND_BY_FOLDER["task"],
             "status": STATUS_BY_FOLDER["task"],
         },
@@ -90,8 +96,11 @@ SCHEMAS: dict[str, Schema] = {
     ),
     "review": Schema(
         name="review",
-        required=frozenset({"id", "kind", "status", "source", "created", "updated"}),
+        required=frozenset(
+            {"type", "id", "kind", "status", "source", "created", "updated"}
+        ),
         enums={
+            "type": frozenset({"review"}),
             "kind": KIND_BY_FOLDER["review"],
             "status": STATUS_BY_FOLDER["review"],
             "priority": frozenset({"high", "medium", "low"}),
@@ -103,16 +112,22 @@ SCHEMAS: dict[str, Schema] = {
     ),
     "spec": Schema(
         name="spec",
-        required=frozenset({"id", "title", "status", "created"}),
-        enums={"status": STATUS_BY_FOLDER["spec"]},
+        required=frozenset({"type", "id", "title", "status", "created"}),
+        enums={
+            "type": frozenset({"spec"}),
+            "status": STATUS_BY_FOLDER["spec"],
+        },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"supersedes", "research", "related"}),
     ),
     "idea": Schema(
         name="idea",
-        required=frozenset({"id", "title", "status", "created", "updated"}),
-        enums={"status": STATUS_BY_FOLDER["idea"]},
+        required=frozenset({"type", "id", "title", "status", "created", "updated"}),
+        enums={
+            "type": frozenset({"idea"}),
+            "status": STATUS_BY_FOLDER["idea"],
+        },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted", "related"}),
@@ -143,8 +158,11 @@ class Violation:
 
 def detect_type(rel: Path, fm: dict) -> str | None:
     if len(rel.parts) < 2:
-        kind = fm.get("kind")
-        if isinstance(kind, str) and kind in WIKI_KINDS:
+        # Top-level files are wiki pages iff their basename is a known
+        # wiki type. Dispatching on the basename (rather than peeking at
+        # `type:`) ensures legacy files missing `type:` still surface as
+        # missing-required rather than being silently skipped.
+        if rel.stem in WIKI_TYPES:
             return "wiki"
         return None
     folder = rel.parts[0]
@@ -283,27 +301,27 @@ def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
                         )
                     )
                     continue
-                if item not in WIKI_KINDS:
+                if item not in WIKI_TYPES:
                     violations.append(
                         Violation(
                             rel_str,
                             "wiki-ref-unknown",
                             fld,
-                            f"{fld}[{i}]: `{item}` is not a known wiki kind "
-                            f"(expected one of {sorted(WIKI_KINDS)})",
+                            f"{fld}[{i}]: `{item}` is not a known wiki type "
+                            f"(expected one of {sorted(WIKI_TYPES)})",
                         )
                     )
 
     if ftype == "wiki":
-        declared = fm.get("kind")
+        declared = fm.get("type")
         expected = path.stem
         if isinstance(declared, str) and declared != expected:
             violations.append(
                 Violation(
                     rel_str,
-                    "kind-filename-mismatch",
-                    "kind",
-                    f"kind `{declared}` does not match filename `{expected}.md`",
+                    "type-filename-mismatch",
+                    "type",
+                    f"type `{declared}` does not match filename `{expected}.md`",
                 )
             )
 

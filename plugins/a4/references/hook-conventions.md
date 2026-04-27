@@ -144,7 +144,7 @@ scripts:
   blocks. All frontmatter/body parsing in a4 scripts routes through this
   module — do not reintroduce per-script `split_frontmatter` copies.
 - `scripts/common.py` — workspace-level helpers that do not touch
-  markdown: `ISSUE_FOLDERS`, `WIKI_KINDS`, `discover_files(a4_dir)`,
+  markdown: `ISSUE_FOLDERS`, `WIKI_TYPES`, `discover_files(a4_dir)`,
   `is_int`, `is_empty`, `is_non_empty_list`, `normalize_ref`.
 
 Neither module carries a PEP-723 header (they are imported, never

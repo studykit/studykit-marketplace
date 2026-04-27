@@ -8,8 +8,9 @@ Runs the three category validators in one process and emits a combined
 report:
 
     validate_frontmatter           YAML schema, enum values, field types,
-                                    path-reference format, `kind:` match,
-                                    `wiki_impact` targets, id uniqueness.
+                                    path-reference format, wiki `type:`
+                                    matches filename, `wiki_impact`
+                                    targets, id uniqueness.
     validate_body                  footnote definition shape + sequence +
                                     payload class, body wikilink resolution.
     validate_status_consistency    cross-file derived status
