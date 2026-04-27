@@ -190,9 +190,18 @@ Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure
 
 ## Commit Points
 
-- **Author mode** — single commit covers the new task file + any UC files updated by `refresh_implemented_by.py` (when `implements:` is non-empty) + the empty `spike/<id>-<slug>/` directory (with `.gitkeep` if added). Suggest the commit when the user confirms; do not auto-commit.
-- **Discard mode** — see `references/discard.md` D6 for commit scope.
-- Implement-loop commits (per-task implementation, per-cycle test results) are owned by `/a4:run`.
+All commit subjects follow [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md).
+
+- **Author mode** — single commit covers the new task file + any UC files updated by `refresh_implemented_by.py` (when `implements:` is non-empty) + the empty `spike/<id>-<slug>/` directory (with `.gitkeep` if added). Suggest the commit when the user confirms; do not auto-commit. Subject:
+  ```
+  #<task-id> [#<uc-id> ...] docs(a4): author task <slug>
+  ```
+  (Include each UC id touched by the reverse-link refresh; the slug is the new task's slug.)
+- **Discard mode** — see `references/discard.md` D6 for commit scope. Subject:
+  ```
+  #<task-id> docs(a4): discard task <slug>
+  ```
+- Implement-loop commits (per-task implementation, per-cycle test results, merge-sweep integration, UC ship) are owned by `/a4:run`.
 
 Never skip hooks, amend, or force-push without explicit user instruction.
 

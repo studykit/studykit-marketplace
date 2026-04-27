@@ -93,7 +93,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4" \
     drift-alerts open-reviews active-tasks blocked-items milestones
 ```
 
-Section identifiers and the full schema live in `plugins/a4/scripts/workspace_state.py`'s module docstring (run `--list-sections` to enumerate). Section → layer mapping for Step 3.3:
+Section identifiers and the full schema live in `${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py`'s module docstring (run `--list-sections` to enumerate). Section → layer mapping for Step 3.3:
 
 - shape detection: `wiki-pages` + `usecases-by-source`
 - Layer 0 / 1: `wiki-pages` + usecase counts in `issue-counts`

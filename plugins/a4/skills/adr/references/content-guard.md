@@ -1,6 +1,6 @@
 # ADR content guard — examples and false-positive carve-outs
 
-Reference for the `adr-content-guard` agent. The descriptive-not-prescriptive rule lives in [`references/frontmatter-schema.md §ADR`](../../../references/frontmatter-schema.md). This file gives concrete leakage vs. clean prose so the guard does not over- or under-flag.
+Reference for the `adr-content-guard` agent. The descriptive-not-prescriptive rule lives in [`frontmatter-schema.md §ADR`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). This file gives concrete leakage vs. clean prose so the guard does not over- or under-flag.
 
 The rule, restated: an ADR body captures *what* was chosen and *why*. *How* to execute the choice lives in `task/<id>-<slug>.md` files linked via `task.adr:`. The reverse view of `task.adr:` is derived on demand and never written into the ADR body.
 

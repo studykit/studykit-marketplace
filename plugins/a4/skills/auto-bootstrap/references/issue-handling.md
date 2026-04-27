@@ -1,6 +1,6 @@
 # Issue Handling (auto-bootstrap Step 5)
 
-Verification failures from Step 4 are classified, optionally researched, and emitted as review items. The skill follows the **continue + review item** policy for upstream (architecture) findings — see [`wiki-authorship.md §Cross-stage feedback`](../../../references/wiki-authorship.md). Verified bootstrap state is independently meaningful even when an architecture choice turns out to be wrong; record what was checked, emit review items, and let the user run `/a4:arch iterate` separately.
+Verification failures from Step 4 are classified, optionally researched, and emitted as review items. The skill follows the **continue + review item** policy for upstream (architecture) findings — see [`wiki-authorship.md §Cross-stage feedback`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md). Verified bootstrap state is independently meaningful even when an architecture choice turns out to be wrong; record what was checked, emit review items, and let the user run `/a4:arch iterate` separately.
 
 ## Diagnose the issue
 

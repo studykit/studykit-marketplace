@@ -48,7 +48,11 @@ Read the task file first, then bootstrap.md's `## Verified Commands`, then the r
 3. **Implement** — follow the task's Description, consuming / providing the Interface Contracts noted. Use domain terminology from `a4/domain.md` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `bootstrap.md`'s `## Verified Commands` section. All unit tests must pass before returning success.
-6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Title prefix: `feat(<task-slug>): ...` or `fix(<task-slug>): ...` as appropriate. Never skip hooks, amend, or force-push.
+6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md):
+   ```
+   #<task-id> <type>(a4): <description>
+   ```
+   `<type>` is `feat` for `kind: feature`, `fix` for `kind: bug`, `chore` for `kind: spike` (or `feat` if the spike produces user-visible scaffolding). The task's `id:` from the file's frontmatter is the only id in the subject — the agent does not enumerate touched UCs here. Never skip hooks, amend, or force-push.
 
 ### Spec-ambiguity exit — `implementing → revising`
 

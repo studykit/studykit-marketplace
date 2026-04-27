@@ -51,14 +51,7 @@ Include these paths in each subagent prompt.
 
 ## Source Attribution on UCs
 
-Each UC body includes a `## Source` section identifying where the UC came from:
-
-- `input` — from the user's idea/brainstorm directly
-- `research — <systems>` — from similar-systems research
-- `code — <path>` — from code analysis of an existing implementation
-- `implicit` — surfaced during reviewer/explorer completeness analysis
-
-The `## Source` section is mandatory for every UC in auto-usecase output.
+Each UC body includes a mandatory `## Source` section identifying where the UC came from (`input`, `research — <systems>`, `code — <path>`, or `implicit`). See [`references/source-attribution.md`](references/source-attribution.md) for the value definitions and the rationale for the requirement.
 
 ## Resume Detection
 
@@ -240,29 +233,30 @@ Do **not** advance any UC past `status: draft` — autonomous generation only pr
 
 ## Commit Points
 
-All commits stage files under `a4/`. Timing:
+All commit subjects follow [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md). Stage files under `a4/`. Timing:
 
-- **After Step 2** — research / code-analysis reports, one commit.
-- **After Step 3a (each compose)** — UC files + wiki pages + any `kind: question` review items, one commit per compose. Suggested title:
+- **After Step 2** — research / code-analysis reports, one commit:
   ```
-  usecase(auto): growth <N> — compose
-
-  - UCs: <total> (<added> added)
+  docs(a4): research similar systems for <topic>
   ```
-- **After each quality round** — reviewer-emitted review items + reviser edits:
+  (ID-less: research reports under `a4/research/` carry no a4 workspace id.)
+- **After Step 3a (each compose)** — UC files + wiki pages + any `kind: question` review items:
   ```
-  usecase(auto): growth <N>, review <round>
-
-  - UCs: <total> (<revised> revised)
-  - Review items: <written>/<resolved>/<deferred>
+  #<uc-ids> [#<question-review-ids>] docs(a4): auto-usecase compose growth <N>
   ```
+  Body bullet: `- UCs: <total> (<added> added)`.
+- **After each quality round** — reviewer-emitted review items + reviser edits to UC files:
+  ```
+  #<revised-uc-ids> #<written-review-ids> docs(a4): auto-usecase growth <N> review <round>
+  ```
+  Body bullets: `- UCs: <total> (<revised> revised)` / `- Review items: <written>/<resolved>/<deferred>`.
 - **After Step 3d exploration** — exploration report + any new `kind: gap` review items:
   ```
-  usecase(auto): growth <N> — exploration
-
-  - UC candidates: <count>
+  #<gap-review-ids> docs(a4): auto-usecase exploration growth <N>
   ```
-- **Final** — summary commit if anything remains unstaged.
+  (ID-less subject when zero gap items were emitted; the exploration report itself is under `a4/research/` and carries no id.)
+  Body bullet: `- UC candidates: <count>`.
+- **Final** — summary commit if anything remains unstaged. Subject form depends on what's staged; default to `chore(a4): auto-usecase wrap up` when only ambient updates remain.
 
 ## Cross-Stage Findings
 
@@ -270,17 +264,7 @@ This skill is **continue + review item** for any architecture / domain / NFR con
 
 ## Autonomous Decision Rules
 
-Apply these consistently — no user interaction:
-
-1. Ambiguous topic → pick the most specific interpretation. Record the interpretation in `context.md`'s Problem Framing and emit a `kind: question` review item so a human can confirm later.
-2. Unclear actor role → default to `viewer`. Upgrade to `editor` when actions imply edit capability.
-3. Splitting boundary → prefer splitting. Smaller UCs are better.
-4. Vague situation → construct a plausible concrete one. Emit a `kind: question` review item.
-5. Unclear relationship → prefer `depends_on` over `related`. Note the reasoning in the UC's `## Source` section.
-6. New UC overlaps existing → exclude. Record in the exclusion log (Step 3a composer output) and do not emit a file.
-7. New UC outside context → exclude. Record in the exclusion log.
-8. Practical value borderline → prefer exclusion over inclusion.
-9. Never set `status: final` on any wiki or UC; autonomous output is always `status: draft`.
+Apply the rules in [`references/autonomous-decision-rules.md`](references/autonomous-decision-rules.md) consistently across composition, revision, and exclusion. No user interaction is permitted — autonomous output is always `status: draft` and promotion is user-driven.
 
 ## Non-Goals
 

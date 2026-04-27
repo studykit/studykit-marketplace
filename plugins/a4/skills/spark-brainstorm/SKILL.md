@@ -23,11 +23,11 @@ Before selecting a technique, assess the situation through brief conversation. D
 - **Flowing**: Ideas are coming naturally.
 - **Stuck**: The user feels blocked, is repeating themselves, or says they're out of ideas.
 
-Ask 1-2 focused questions to determine these dimensions if the user's initial prompt doesn't make them clear. Do not ask all three at once — infer what you can and ask only what's ambiguous.
+Ask 1-2 focused questions to determine these dimensions if the user's initial prompt doesn't make them clear. Do not ask all three at once — infer what is inferable and ask only for what's ambiguous.
 
 ## Technique Selection Matrix
 
-Based on your assessment, select the most appropriate technique:
+Based on the assessment, select the most appropriate technique:
 
 | Situation | Technique |
 |-----------|-----------|
@@ -68,13 +68,13 @@ When 8-15+ ideas have been generated, suggest organizing with Six Thinking Hats 
 
 ### When transitioning
 1. Briefly summarize what the current technique produced
-2. Explain why you recommend switching or moving forward
+2. Explain the rationale for switching or moving forward
 3. Read the new technique file and introduce it
 4. Always allow the user to override
 
 ## Wrapping Up
 
-The session ends only when the user says so. Never conclude on your own.
+The session ends only when the user says so. Never conclude unprompted.
 
 When the user indicates they're done:
 

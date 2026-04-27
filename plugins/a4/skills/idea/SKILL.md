@@ -13,8 +13,6 @@ Two modes:
 - **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for pre-pipeline possibilities.
 - **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `## Why discarded` section with the reason.
 
-See `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md` for the full design rationale, especially the boundary drawn between `idea/` (independent possibilities, captured raw) and `review/` (gaps in current spec, bound to progress).
-
 ## Context
 
 - Project root: !`git rev-parse --show-toplevel 2>/dev/null || echo NOT_A_GIT_REPO`

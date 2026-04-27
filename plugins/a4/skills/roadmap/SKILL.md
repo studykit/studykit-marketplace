@@ -265,10 +265,19 @@ After Step 4 closes, this skill's job is done. The implement + test loop, status
 
 ## Commit Points
 
-- **Roadmap generation** — commit `a4/roadmap.md` + all new `a4/task/*.md` files together once the user confirms the initial roadmap.
-- **Roadmap revision during verification** — commit revised roadmap / task files + resolved review items as one commit per review round.
+All commit subjects follow [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md).
 
-Implement-loop commit points (per-task implementation, per-cycle test results, UC ship-transitions) are owned by `/a4:run`.
+- **Roadmap generation** — commit `a4/roadmap.md` + all new `a4/task/*.md` files + UCs updated by `refresh_implemented_by.py` together once the user confirms. Subject:
+  ```
+  #<uc-ids> #<task-ids> docs(a4): roadmap for <milestone-or-scope>
+  ```
+  (List the UC ids first, then task ids; the description names the milestone or feature scope, not the file count.)
+- **Roadmap revision during verification** — commit revised roadmap / task files + resolved review items as one commit per review round. Subject:
+  ```
+  #<task-ids> #<resolved-review-ids> docs(a4): revise roadmap for review round <N>
+  ```
+
+Implement-loop commit points (per-task implementation, per-cycle test results, merge-sweep integration, UC ship-transitions) are owned by `/a4:run`.
 
 Never skip hooks, amend, or force-push without explicit user instruction.
 

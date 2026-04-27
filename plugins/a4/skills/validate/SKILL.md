@@ -10,9 +10,9 @@ allowed-tools: Bash, Read
 
 Runs three category validators against `<project-root>/a4/` through a single aggregator `validate.py`:
 
-- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), wiki-kind basename match, `wiki_impact` names a known wiki kind, global id uniqueness across issue folders. Canonical schema: `plugins/a4/references/frontmatter-schema.md`.
-- **body** — footnote definition shape (`[^N]: YYYY-MM-DD — [[target]]`, U+2014 em dash), footnote label monotonicity starting at 1, footnote payload is never a `review/*` item, every body wikilink resolves. Canonical rules: `plugins/a4/references/obsidian-conventions.md`.
-- **status consistency** — cross-file status consistency. Flags decisions where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Workspace-only — skipped in single-file mode. Rules: `plugins/a4/references/frontmatter-schema.md §Cross-file status consistency`.
+- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), wiki-kind basename match, `wiki_impact` names a known wiki kind, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
+- **body** — footnote definition shape (`[^N]: YYYY-MM-DD — [[target]]`, U+2014 em dash), footnote label monotonicity starting at 1, footnote payload is never a `review/*` item, every body wikilink resolves. Canonical rules: `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`.
+- **status consistency** — cross-file status consistency. Flags decisions where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Workspace-only — skipped in single-file mode. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
 
 The three categories cover **different** inconsistencies than `/a4:drift`:
 
@@ -66,7 +66,7 @@ Single-file mode adds one nuance: the consistency check was skipped (the aggrega
 
 - Do **not** auto-fix. Validators are read-only; the user or the relevant `/a4:*` iteration skill owns the fix.
 - If many violations cluster under a single file, suggest the iteration skill that owns that file (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:roadmap iterate`) to drive the fix through normal review-item flow.
-- For id uniqueness violations, recommend using `plugins/a4/scripts/allocate_id.py` when renaming — never hand-pick an id.
+- For id uniqueness violations, recommend using `${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py` when renaming — never hand-pick an id.
 
 ## Non-Goals
 

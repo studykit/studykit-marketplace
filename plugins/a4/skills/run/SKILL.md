@@ -1,7 +1,7 @@
 ---
 name: run
 description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/task/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'task-implementer', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
-argument-hint: <optional: 'iterate' to resume after a halt; auto-detects workspace state otherwise>
+argument-hint: <optional: 'iterate' to resume after a halt, 'serial' to opt out of parallel worktree isolation; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 
@@ -9,7 +9,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 Two stages over the tasks already authored in `a4/task/`:
 
-1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents (parallel where independent), run the `test-runner`. Bounded to 3 cycles per invocation.
+1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — depending on the loop's outcome:
    - **Failure path** — user classifies each failing test-runner finding into task / arch / UC and routes accordingly.
    - **Ship path** — user confirms which UCs go `implementing → shipped`.
@@ -40,7 +40,7 @@ Outputs:
 `/a4:run` does not auto-detect commands. Resolution:
 
 1. `a4/bootstrap.md` — single source of truth. Read `## Verified Commands` (build / launch / test), `## Smoke Scenario`, `## Test Isolation Flags`. Both `/a4:auto-bootstrap` and the manual bootstrap flow write these sections; the roadmap (when present) embeds them via Obsidian transclusion but does **not** own them.
-2. **Halt and delegate to `/a4:compass`** when `bootstrap.md` is absent, per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]]. Invoke compass with the structured diagnosis argument so its Step 3 Gap Diagnosis recommends the correct upstream skill:
+2. **Halt and delegate to `/a4:compass`** when `bootstrap.md` is absent. Invoke compass with the structured diagnosis argument so its Step 3 Gap Diagnosis recommends the correct upstream skill:
 
    ```
    Skill({ skill: "a4:compass", args: "from=run; missing=bootstrap.md" })
@@ -54,6 +54,8 @@ Determined by the workspace state, not by frontmatter flags:
 
 - **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here — the user must transition `open → pending` to enqueue them.)
 - **Iterate mode** — open review items target a task or `roadmap` (typically from the prior cycle's test-runner). See **Iteration Entry** below before re-running Step 1.
+- **Pre-flight** (applies to both modes, run at Step 1 entry) — local `HEAD` must equal `origin/HEAD` per [`references/parallel-isolation.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/parallel-isolation.md). Halt with a push instruction on mismatch.
+- **Serial fallback** (`/a4:run serial` or `/a4:run iterate serial`) — opt-in mode that skips worktree isolation and the merge sweep entirely. Use only when worktree isolation is unavailable; rules in [`references/parallel-isolation.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/parallel-isolation.md).
 
 Mode detection at session start:
 
@@ -76,6 +78,7 @@ Mechanics (filter, backlog presentation, writer calls, footnote rules, disciplin
 - **Cycle counter** — task `cycle:` increments at every revise → re-run pass; the `## Log` entry cites the cycle number.
 - **Cascade reset** — when a task is reset to `pending` for re-implementation, every downstream task whose `depends_on` traces back to it also resets to `pending` and gets a `## Log` entry.
 - **Crash hygiene at session start** — see Resume Hygiene below.
+- **Merge-sweep retry** — for tasks left at `failing` because Step 2.5 hit a conflict, the preserved worktree branch is the user's resolution surface. After the user resolves, `/a4:run iterate` re-attempts `git merge --no-ff` on that branch from local main; on success it transitions the task to `complete` and runs the standard 3-step worktree cleanup. If the user instead discards the work, the task drops back to `pending` and the next cycle re-spawns a fresh worktree.
 - **Stop on strong upstream** — `target: architecture` and `target: usecase/*` findings halt the run and route to `/a4:arch iterate` or `/a4:usecase iterate` per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback. The full classification table is at [`references/failure-classification.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/failure-classification.md).
 
 ## Resume Hygiene
@@ -91,9 +94,22 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
 
 `scripts/refresh_implemented_by.py` runs automatically via the `scripts/a4_hook.py session-start` SessionStart hook (see `hooks/hooks.json`) to catch task-file changes that happened on other branches.
 
+Orphaned worktrees under `<repo>/.claude/worktrees/agent-*/` (created by an agent that crashed or was interrupted before the merge sweep) are **not** swept by `/a4:run`. Claude Code's startup sweep removes them automatically once they are older than `cleanupPeriodDays` and have no uncommitted changes / untracked files / unpushed commits. Worktrees preserved by the merge-sweep partial-progress rule (failing-task worktrees) are exempt because they hold uncommitted resolution work.
+
 ---
 
 ## Step 1: Pick Ready Tasks
+
+**Pre-flight (parallel mode only; skipped in `serial` mode).** Before scanning the ready set:
+
+```bash
+local=$(git rev-parse HEAD)
+origin=$(git rev-parse origin/HEAD)
+test "$local" = "$origin" \
+  || halt "push local commits to origin (or run 'git remote set-head origin -a' if origin's default branch changed) before running /a4:run"
+```
+
+Rationale and recovery in [`references/parallel-isolation.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/parallel-isolation.md).
 
 A task is **ready** when all of:
 
@@ -109,10 +125,10 @@ Independent ready tasks run in parallel. Tasks with mutual dependencies run sequ
 
 ## Step 2: Spawn task-implementer
 
-For each ready task, spawn one agent:
+For each ready task, spawn one agent **with worktree isolation** (omit `isolation: "worktree"` only in `serial` mode):
 
 ```
-Agent(subagent_type: "a4:task-implementer", prompt: """
+Agent(subagent_type: "a4:task-implementer", isolation: "worktree", prompt: """
 Task file: <absolute path to a4/task/<id>-<slug>.md>
 Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
 Architecture file: <absolute path to a4/architecture.md>
@@ -122,7 +138,9 @@ Read the task file for Description, Files, Unit Test Strategy, Acceptance Criter
 Pull build + unit-test commands from bootstrap.md's ## Verified Commands section.
 
 Implement the task and write its unit tests. All unit tests must pass.
-Commit code + unit tests (one commit per task).
+Commit code + unit tests (one commit per task) using subject form
+  #<task-id> <type>(a4): <description>
+per ${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md.
 Return: result (pass/fail), summary of changes, any issues encountered.
 """)
 ```
@@ -136,11 +154,43 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --reason "/a4:run Step 2 spawning task-implementer"
 ```
 
-After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` / `## Log` — the writer owns them.
+Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` / `## Log` — the writer owns them.
+
+The agent commits in its current working tree, which is transparently the worktree — the agent does not need to know it is isolated. Worktree return-value shape, branch naming, and cleanup commands live in [`references/parallel-isolation.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/parallel-isolation.md).
+
+## Step 2.5: Merge Sweep
+
+**Skipped in `serial` mode** (serial agents commit directly to local main; nothing to integrate).
+
+For each task that returned `pass`, in **ascending `task.id` order**, integrate its worktree branch into local main with a no-fast-forward merge:
+
+```bash
+git merge --no-ff -m "#<task-id> merge(a4): integrate <task-slug>" <worktreeBranch>
+```
+
+On success, clean up immediately:
+
+```bash
+git worktree unlock  <worktreePath>
+git worktree remove --force <worktreePath>
+git branch -D <worktreeBranch>
+```
+
+**On conflict — halt + partial-progress.** Per [`references/parallel-isolation.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/parallel-isolation.md):
+
+- Sibling tasks already merged in this sweep stay on main; they retain `status: complete`.
+- The conflicting task's worktree and branch are **preserved** for user diagnosis. Transition the task to `failing` via the writer with `--reason "/a4:run merge conflict in <files>; resolve and re-run /a4:run iterate"`.
+- Subsequent siblings in the sweep are **not attempted**; they remain at `progress` until `/a4:run iterate` retries the sweep.
+- Do not emit a review item for the conflict — the halt message names the conflicting task and files directly.
+- Skip Step 3 entirely; the cycle ends in halt.
+
+Tasks that returned `fail` from Step 2 do not enter the sweep — their worktrees are preserved at the `failing` status from Step 2's writer call, and `/a4:run iterate` re-attempts after the user resolves.
 
 ## Step 3: Run Integration + Smoke Tests
 
-After all tasks reach `complete` (or after a cycle ends with failures still outstanding), spawn the test-runner:
+**Invariant:** Step 3 runs only when every cycle ready task is integrated into local main (parallel mode: every Step 2.5 merge succeeded; serial mode: every task committed without halt). Any merge sweep failure → skip Step 3 and end the cycle in halt. The test-runner runs against a fully-integrated tree so its `target:` mapping (failure → task) stays honest.
+
+Otherwise, spawn the test-runner:
 
 ```
 Agent(subagent_type: "a4:test-runner", prompt: """
@@ -218,11 +268,28 @@ When a task-implementer reads a task's `## Acceptance Criteria` section, the sou
 
 ## Commit Points
 
-- **Per-task implementation** — `task-implementer` commits its own code + unit tests per task; `/a4:run` does **not** also commit those files.
-- **Per-cycle test results** — commit the emitted test-runner review items + updated task `## Log` entries together as one commit after Step 3.
-- **Roadmap revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 1.
-- **UC ship-transitions (Step 4b)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit. Message prefix: `docs(a4): ship UC <ids>`.
-- **Final state** — commit any residual review items / log updates when the user wraps up.
+All commit subjects follow [`references/commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md).
+
+- **Per-task implementation** — `task-implementer` commits its own code + unit tests per task as `#<task-id> <type>(a4): <description>` (`feat` / `fix` per task kind). `/a4:run` does not also commit those files.
+- **Per-task integration (Step 2.5, parallel mode only)** — `git merge --no-ff -m "#<task-id> merge(a4): integrate <task-slug>" <worktreeBranch>` per successfully-implemented task. Serial mode skips this step (task-implementer commits land directly on local main).
+- **Per-cycle test results** — after Step 3, commit the emitted test-runner review items + updated task `## Log` entries as one commit:
+  ```
+  #<r1> #<r2> ... chore(a4): cycle <N> test-runner findings
+  ```
+  (Drop the id list when zero findings were emitted; commit the log updates alone as `chore(a4): cycle <N> test-runner clean`.)
+- **Roadmap revision after test failure** — commit revised task files + status resets + review item linkages as one commit before re-running Step 1:
+  ```
+  #<task-ids> #<resolved-review-ids> docs(a4): revise tasks for cycle <N> findings
+  ```
+- **UC ship-transitions (Step 4b)** — commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit:
+  ```
+  #<uc-id1> [#<uc-id2> ...] docs(a4): ship UC <slug1> [<slug2> ...]
+  ```
+- **Final state** — commit any residual review items / log updates when the user wraps up:
+  ```
+  #<id> [#<id> ...] chore(a4): wrap up cycle <N>
+  ```
+  (ID-less when only ambient log lines changed.)
 
 Never skip hooks, amend, or force-push without explicit user instruction.
 
@@ -250,9 +317,11 @@ Context is passed via file paths, not agent memory.
 ## Out of Scope
 
 - **Authoring** — task files, roadmap.md, ADRs, UCs are written elsewhere. `/a4:run` only reads them.
-- **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** When `bootstrap.md` is absent, `/a4:run` delegates to `/a4:compass` per [[plugins/a4/spec/2026-04-25-a4-run-final-fallback-policy]] — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope. Note: `roadmap.md`'s presence is irrelevant for L&V resolution — bootstrap is the single source of truth.
+- **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** When `bootstrap.md` is absent, `/a4:run` delegates to `/a4:compass` — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope. Note: `roadmap.md`'s presence is irrelevant for L&V resolution — bootstrap is the single source of truth.
 - **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline. Inline scoped re-review is a possible future addition.
 - **Per-cycle parallelism beyond independent ready tasks** — task-implementer parallelism is bounded by the dependency graph; no further parallelization is attempted.
+- **Auto-fall-back to `serial` mode** — `/a4:run` does not detect worktree-isolation availability and does not silently degrade. Serial mode is opt-in via the `serial` arg; the parallel model with worktree isolation is the default.
+- **Auto-resolution of merge conflicts** — Step 2.5 conflicts halt for the user. Trivial-conflict heuristics (`git rerere`, import-merge) and LLM-driven semantic resolution are deferred.
 
 ## Non-Goals
 

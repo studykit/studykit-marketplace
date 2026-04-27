@@ -14,7 +14,7 @@ ls "$ROOT"/{package.json,pyproject.toml,Cargo.toml,go.mod,pom.xml,build.gradle,b
 git -C "$ROOT" ls-files | grep -Ev '^(a4/|plugins/|\.claude|research/)' | grep -E '\.(ts|tsx|js|jsx|py|rs|go|java|kt|rb|php|cpp|c|swift|m|md)$' | head -1
 ```
 
-If either signal fires **and** `a4/` is empty (or absent), the project is **brownfield** — existing code with no a4 workspace. The user must pick one of three pipeline shapes (full taxonomy: [`pipeline-shapes.md`](../../../references/pipeline-shapes.md)).
+If either signal fires **and** `a4/` is empty (or absent), the project is **brownfield** — existing code with no a4 workspace. The user must pick one of three pipeline shapes (full taxonomy: [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md)).
 
 When no implementation code is detected, skip this step and proceed straight to the Step 2.1 catalog.
 
@@ -33,7 +33,7 @@ A user with no implementation goal yet (just recording an ADR via `/a4:adr`, cap
 
 ### (a) Reverse-engineer
 
-Invoke `/a4:auto-usecase` with the project root as the default argument (or a user-specified subdirectory if they name one). The skill autonomously runs code analysis (its Step 2b) and produces `context.md` / `actors.md` / `nfr.md` / per-UC files at `status: draft`; `domain.md` is **not** authored by `auto-usecase` (per [`wiki-authorship.md`](../../../references/wiki-authorship.md), `domain` owns it). Suggest `/a4:usecase iterate` to review the drafts and `/a4:domain` to extract concepts as the Reverse-then-forward continuation.
+Invoke `/a4:auto-usecase` with the project root as the default argument (or a user-specified subdirectory if they name one). The skill autonomously runs code analysis (its Step 2b) and produces `context.md` / `actors.md` / `nfr.md` / per-UC files at `status: draft`; `domain.md` is **not** authored by `auto-usecase` (per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md), `domain` owns it). Suggest `/a4:usecase iterate` to review the drafts and `/a4:domain` to extract concepts as the Reverse-then-forward continuation.
 
 ```
 Skill({ skill: "a4:auto-usecase", args: "<project-root or subdirectory>" })
@@ -45,4 +45,4 @@ Invoke `/a4:auto-bootstrap` (which already supports incremental mode against an 
 
 ### (c) New feature
 
-Full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run` (per [`pipeline-shapes.md`](../../../references/pipeline-shapes.md) Shape 1 Full forward). Fall through to the Step 2.1 catalog; the user typically picks `/a4:usecase` first.
+Full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run` (per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) Shape 1 Full forward). Fall through to the Step 2.1 catalog; the user typically picks `/a4:usecase` first.

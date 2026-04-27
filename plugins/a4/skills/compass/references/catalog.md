@@ -35,7 +35,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase, idea, or brainstorm input (no interview) |
 | `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
 
-Mode rationale (why some stages have only an interactive or only an autonomous form, and why `auto-usecase` is not a twin of `usecase`): see [`pipeline references/skill-modes.md`](../../../references/skill-modes.md).
+Mode rationale (why some stages have only an interactive or only an autonomous form, and why `auto-usecase` is not a twin of `usecase`): see [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md).
 
 ## Standalone
 

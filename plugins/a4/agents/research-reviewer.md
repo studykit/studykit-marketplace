@@ -58,7 +58,7 @@ mode: single
 </details>
 ```
 
-See `plugins/a4/skills/research/references/research-report.md` for the full format.
+See `${CLAUDE_PLUGIN_ROOT}/skills/research/references/research-report.md` for the full format.
 
 ## Review Criteria
 

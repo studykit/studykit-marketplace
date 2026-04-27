@@ -93,7 +93,7 @@ Use the task list as a live workflow map.
 
 ## Step 0: Explore the Codebase
 
-Ground the architecture in reality — project structure, naming conventions, dependencies, build setup, existing test configuration. Reference what you find during the interview. If a codebase already exists, record the detected technology stack and confirm with the user.
+Ground the architecture in reality — project structure, naming conventions, dependencies, build setup, existing test configuration. Reference findings detected during the interview. If a codebase already exists, record the detected technology stack and confirm with the user.
 
 Mark "Step 0" completed when the survey is done.
 

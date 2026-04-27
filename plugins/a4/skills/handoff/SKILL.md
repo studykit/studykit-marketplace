@@ -35,7 +35,7 @@ Ensure `<project-root>/.handoff/<topic-slug>/` exists (create it if missing).
 
 List files in `<project-root>/.handoff/<topic-slug>/`. Pick the one with the highest `<TIMESTAMP>` filename prefix (the filename is sortable as a string). That file's basename becomes `previous:` in the new frontmatter. If the topic folder does not yet exist or is empty, use `previous: null`.
 
-You can list available topics with `ls <project-root>/.handoff/` — each subdirectory is a topic.
+List available topics with `ls <project-root>/.handoff/` — each subdirectory is a topic.
 
 ### 3. Update project documentation in parallel
 
@@ -56,7 +56,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
 
 ### 4. Draft the handoff body
 
-Write in **English**. Make the handoff self-contained: a fresh session should resume from this file alone without re-reading the broader codebase. Structure and sectioning are your judgment call — let the session shape the document.
+Write in **English**. Make the handoff self-contained: a fresh session should resume from this file alone without re-reading the broader codebase. Structure and sectioning follow the session's shape.
 
 **Carry-forward items.** Whenever the handoff lists open work, in-progress items, or things the next session should pick up (typical sections: `## Open`, `## Carry-forward`, `## Where to start the next session`, "still open" tier tables), every item must be a wikilink to an on-disk tracker:
 

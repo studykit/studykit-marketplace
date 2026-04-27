@@ -43,7 +43,7 @@ The agent returns a structured review report with per-criterion verdicts across 
 5. **Completeness** — does the report answer the stated question?
 6. **Decision Neutrality** — does the report stay out of the decision?
 
-Full criteria are in `plugins/a4/agents/research-reviewer.md`.
+Full criteria are in `${CLAUDE_PLUGIN_ROOT}/agents/research-reviewer.md`.
 
 ## Step 2: Walk findings with the user
 
