@@ -108,6 +108,8 @@ Listing who calls the writer for each value makes the invariant auditable.
 
 Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `adr`, and for `discarded` on tasks/reviews cascaded from a discarded UC, the active writer `transition_status.py` writes the status so the file alone tells you whether the item is current.
 
+The `workspace-assistant` agent calls `transition_status.py` on behalf of the caller (typically the main session, when delegating to save context) and is therefore not listed as a separate caller in the table above — it executes only `(file, target_status)` pairs the caller has explicitly named, and never decides status on its own.
+
 ## Structural relationship fields
 
 Shared across all issue types. Omit fields that are empty, or use `[]`.
