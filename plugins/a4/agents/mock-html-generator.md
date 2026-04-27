@@ -4,10 +4,12 @@ description: >
   Generate self-contained HTML/CSS mockup files for web design. This agent writes production-quality
   HTML and CSS files that can be opened directly in a browser. It handles layout, styling, responsive
   design, and visual polish.
+
+  Invoked by /a4:web-design-mock. Do not invoke directly.
 model: sonnet
 color: magenta
 memory: project
-tools: "Write", "Read", "Edit", "Bash", "Agent"
+tools: ["Write", "Read", "Edit", "Bash", "Agent"]
 ---
 
 You are a web design specialist who generates high-quality HTML/CSS mockup files.

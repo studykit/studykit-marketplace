@@ -5,9 +5,12 @@ description: >
   options are investigated with equal rigor (in comparative mode), claims are grounded
   in evidence, and the report is free from confirmation / anchoring bias. Returns a
   structured review report.
+
+  Invoked by /a4:research and /a4:research-review. Do not invoke directly.
 model: opus
-color: green
-tools: "Read, WebFetch"
+color: cyan
+tools: ["Read", "WebFetch"]
+memory: project
 ---
 
 You are a research report reviewer. Your job is to evaluate whether a research artifact is objective, balanced, and well-grounded — so a reader making a downstream decision can trust the report's summary without re-doing the research.

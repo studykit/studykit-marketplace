@@ -13,9 +13,12 @@ description: >
   "what should I do next" / pipeline navigation → `/a4:compass`. Use this
   agent for body content, multi-step composition, snapshot rendering, or
   flows that mix the three modes.
+
+  Invoked by a4 plugin skills. Do not invoke directly.
 model: sonnet
 color: red
-tools: "Bash, Read, Glob, Grep"
+tools: ["Bash", "Read", "Glob", "Grep"]
+memory: project
 skills:
   - find
 ---

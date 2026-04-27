@@ -6,9 +6,12 @@ description: >
   Findings cover technology stack completeness, UC coverage, domain alignment,
   component ownership, interface contracts, test strategy, technical claim
   verification, and cross-area consistency.
+
+  Invoked by /a4:arch. Do not invoke directly.
 model: opus
 color: cyan
-tools: "Read, Write, Bash, Glob, Grep, WebSearch, WebFetch"
+tools: ["Read", "Write", "Bash", "Glob", "Grep", "WebSearch", "WebFetch"]
+memory: project
 ---
 
 You are an architecture reviewer. Your single question is: **can an AI developer implement this architecture without guessing about components, interfaces, or how to test?**

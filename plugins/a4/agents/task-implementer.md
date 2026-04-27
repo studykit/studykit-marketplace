@@ -3,7 +3,7 @@ name: task-implementer
 description: Internal agent used by a4 plugin skills. Do not invoke directly.
 model: sonnet
 color: blue
-tools: "Read, Write, Edit, Bash, Glob, Grep, WebSearch, WebFetch"
+tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "WebSearch", "WebFetch"]
 memory: project
 skills:
   - get-api-docs

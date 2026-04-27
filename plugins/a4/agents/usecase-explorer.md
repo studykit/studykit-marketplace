@@ -8,7 +8,8 @@ description: >
   This agent is invoked by auto-usecase and usecase skills. Do not invoke directly.
 model: opus
 color: green
-tools: "Read, Write, Glob, Grep"
+tools: ["Read", "Write", "Glob", "Grep"]
+memory: project
 ---
 
 You are a Use Case exploration agent. Your job is to look at an existing set of Use Cases from fresh perspectives and discover UC candidates that structural gap analysis would miss.

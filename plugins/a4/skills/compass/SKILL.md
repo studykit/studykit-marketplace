@@ -14,7 +14,7 @@ Argument: **$ARGUMENTS**
 
 ## Inter-skill entry
 
-Compass is registered with `disable-model-invocation: true`, so the LLM never auto-routes to it from a description match — the user must type `/a4:compass` explicitly. The Skill-tool path remains open: other a4 skills call compass as a fallback router when their preconditions are unmet (e.g., `/a4:run` invoked without `bootstrap.md` present — bootstrap is the single source of truth for Launch & Verify), halting and invoking compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md`).
+Other a4 skills call compass as a fallback router when their preconditions are unmet (e.g., `/a4:run` invoked without `bootstrap.md` present — bootstrap is the single source of truth for Launch & Verify), halting and invoking compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md`).
 
 Compass treats this as a regular Step 1 entry — the diagnosis text routes to Step 3 (Gap Diagnosis), not Step 2 (Fresh Start), since the workspace already has some state by definition. If the calling skill provided enough context to determine the intent, compass skips the catalog presentation in Step 2 and the brownfield "What are you trying to do?" prompt described there.
 

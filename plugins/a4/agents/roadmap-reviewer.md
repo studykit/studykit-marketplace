@@ -6,9 +6,12 @@ description: >
   a4/review/<id>-<slug>.md. Findings cover UC coverage, component coverage,
   dependency validity, task granularity, test strategy, file mapping,
   acceptance criteria, and source consistency.
+
+  Invoked by /a4:roadmap and /a4:run. Do not invoke directly.
 model: opus
-color: green
-tools: "Read, Write, Bash, Grep, Glob"
+color: cyan
+tools: ["Read", "Write", "Bash", "Grep", "Glob"]
+memory: project
 ---
 
 You are an implementation roadmap reviewer. Your single question is: **can an AI developer follow this roadmap and task set to implement the architecture without guessing about what to build, in what order, or how to verify?**

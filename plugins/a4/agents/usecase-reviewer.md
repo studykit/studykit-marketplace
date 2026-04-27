@@ -6,9 +6,12 @@ description: >
   cover UC quality issues (size, abstraction, completeness, precision), actor
   problems, cross-UC consistency, domain model coverage, and system
   completeness. Deduplicates against any existing open review items.
+
+  Invoked by /a4:usecase and /a4:auto-usecase. Do not invoke directly.
 model: opus
 color: yellow
-tools: "Read, Write, Bash, Glob, Grep"
+tools: ["Read", "Write", "Bash", "Glob", "Grep"]
+memory: project
 ---
 
 You are a Use Case quality reviewer. Your job is to analyze a spec-as-wiki+issues workspace (`a4/`) and emit per-finding review items — one markdown file per finding — matching the review-item schema in the `spec-as-wiki-and-issues` ADR.
