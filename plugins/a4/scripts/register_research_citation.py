@@ -2,13 +2,13 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6.0"]
 # ///
-"""Atomically register a research → adr citation.
+"""Atomically register a research → spec citation.
 
-An adr file may cite a research artifact at
+A spec file may cite a research artifact at
 `<project-root>/research/<slug>.md`. The citation has four representations:
 
-  - adr/<id>-<slug>.md frontmatter `research:` list
-  - adr/<id>-<slug>.md body `## Research` section
+  - spec/<id>-<slug>.md frontmatter `research:` list
+  - spec/<id>-<slug>.md body `## Research` section
   - research/<slug>.md frontmatter `cited_by:` list (stored reverse-link)
   - research/<slug>.md body `## Cited By` section
 
@@ -17,11 +17,11 @@ file's `updated:` field to today. Idempotent: when a side already records
 the citation that side is left alone.
 
 Usage:
-    uv run register_research_citation.py <a4-dir> <research-ref> <adr-ref>
+    uv run register_research_citation.py <a4-dir> <research-ref> <spec-ref>
 
   <a4-dir>        path to the a4/ workspace (research/ is a sibling of this)
   <research-ref>  research/<slug> (or a path that resolves to research/<slug>.md)
-  <adr-ref>       adr/<id>-<slug> (or a path inside a4/adr/)
+  <spec-ref>      spec/<id>-<slug> (or a path inside a4/spec/)
 """
 
 from __future__ import annotations
@@ -41,10 +41,10 @@ from markdown import parse
 @dataclass
 class Result:
     a4_dir: str = ""
-    adr_file: str = ""
+    spec_file: str = ""
     research_file: str = ""
-    adr_research_field_added: bool = False
-    adr_body_added: bool = False
+    spec_research_field_added: bool = False
+    spec_body_added: bool = False
     research_cited_by_added: bool = False
     research_body_added: bool = False
     research_updated_bumped: bool = False
@@ -185,71 +185,71 @@ def _resolve_research(a4_dir: Path, ref: str) -> Path | None:
     return fallback if fallback.is_file() else None
 
 
-def _resolve_adr(a4_dir: Path, ref: str) -> Path | None:
-    """Resolve an adr reference to a filesystem path under a4/adr/."""
-    adr_dir = a4_dir / "adr"
+def _resolve_spec(a4_dir: Path, ref: str) -> Path | None:
+    """Resolve a spec reference to a filesystem path under a4/spec/."""
+    spec_dir = a4_dir / "spec"
     if Path(ref).is_absolute():
         path = Path(ref)
         return path if path.is_file() else None
 
-    if ref.startswith("adr/"):
-        rel = ref[len("adr/") :]
+    if ref.startswith("spec/"):
+        rel = ref[len("spec/") :]
         if not rel.endswith(".md"):
             rel += ".md"
-        path = adr_dir / rel
+        path = spec_dir / rel
         return path if path.is_file() else None
 
     rel = ref if ref.endswith(".md") else f"{ref}.md"
-    path = adr_dir / rel
+    path = spec_dir / rel
     return path if path.is_file() else None
 
 
 def register(
     a4_dir: Path,
     research_path: Path,
-    adr_path: Path,
+    spec_path: Path,
     dry_run: bool,
 ) -> Result:
     today = date.today().isoformat()
     result = Result(
         a4_dir=str(a4_dir),
-        adr_file=str(adr_path),
+        spec_file=str(spec_path),
         research_file=str(research_path),
         dry_run=dry_run,
     )
 
     research_ref = f"research/{research_path.stem}"
-    adr_ref = f"adr/{adr_path.stem}"
+    spec_ref = f"spec/{spec_path.stem}"
 
-    # ADR side.
-    adr_md = parse(adr_path)
-    adr_existing = _existing_list(adr_md.preamble.fm, "research")
-    adr_fm = adr_md.preamble.raw
-    adr_body = adr_md.body.content
-    if research_ref not in adr_existing:
-        adr_fm = _rewrite_list_field(
-            adr_fm, "research", sorted(adr_existing + [research_ref])
+    # Spec side.
+    spec_md = parse(spec_path)
+    spec_existing = _existing_list(spec_md.preamble.fm, "research")
+    spec_fm = spec_md.preamble.raw
+    spec_body = spec_md.body.content
+    if research_ref not in spec_existing:
+        spec_fm = _rewrite_list_field(
+            spec_fm, "research", sorted(spec_existing + [research_ref])
         )
-        result.adr_research_field_added = True
-    new_adr_body, body_changed = _append_to_section(
-        adr_body, "Research", f"- [[{research_ref}]]"
+        result.spec_research_field_added = True
+    new_spec_body, body_changed = _append_to_section(
+        spec_body, "Research", f"- [[{research_ref}]]"
     )
     if body_changed:
-        adr_body = new_adr_body
-        result.adr_body_added = True
+        spec_body = new_spec_body
+        result.spec_body_added = True
 
     # Research side.
     research_md = parse(research_path)
     research_existing = _existing_list(research_md.preamble.fm, "cited_by")
     research_fm = research_md.preamble.raw
     research_body = research_md.body.content
-    if adr_ref not in research_existing:
+    if spec_ref not in research_existing:
         research_fm = _rewrite_list_field(
-            research_fm, "cited_by", sorted(research_existing + [adr_ref])
+            research_fm, "cited_by", sorted(research_existing + [spec_ref])
         )
         result.research_cited_by_added = True
     new_research_body, body_changed = _append_to_section(
-        research_body, "Cited By", f"- [[{adr_ref}]]"
+        research_body, "Cited By", f"- [[{spec_ref}]]"
     )
     if body_changed:
         research_body = new_research_body
@@ -259,8 +259,8 @@ def register(
         result.research_updated_bumped = True
 
     if not dry_run:
-        if result.adr_research_field_added or result.adr_body_added:
-            _write_file(adr_path, adr_fm, adr_body)
+        if result.spec_research_field_added or result.spec_body_added:
+            _write_file(spec_path, spec_fm, spec_body)
         if (
             result.research_cited_by_added
             or result.research_body_added
@@ -273,7 +273,7 @@ def register(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Atomically register a research → adr citation."
+        description="Atomically register a research → spec citation."
     )
     parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
     parser.add_argument(
@@ -281,8 +281,8 @@ def main() -> None:
         help="research/<slug> or a path resolving to research/<slug>.md",
     )
     parser.add_argument(
-        "adr_ref",
-        help="adr/<id>-<slug> or a path inside a4/adr/",
+        "spec_ref",
+        help="spec/<id>-<slug> or a path inside a4/spec/",
     )
     parser.add_argument(
         "--dry-run", action="store_true",
@@ -307,16 +307,16 @@ def main() -> None:
         )
         sys.exit(2)
 
-    adr_path = _resolve_adr(a4_dir, args.adr_ref)
-    if adr_path is None:
+    spec_path = _resolve_spec(a4_dir, args.spec_ref)
+    if spec_path is None:
         print(
-            f"Error: adr file not found for ref {args.adr_ref!r}",
+            f"Error: spec file not found for ref {args.spec_ref!r}",
             file=sys.stderr,
         )
         sys.exit(2)
 
     result = register(
-        a4_dir, research_path.resolve(), adr_path.resolve(), args.dry_run
+        a4_dir, research_path.resolve(), spec_path.resolve(), args.dry_run
     )
 
     if args.json:
@@ -324,18 +324,18 @@ def main() -> None:
     else:
         prefix = "(dry-run) " if args.dry_run else ""
         try:
-            adr_disp = adr_path.relative_to(a4_dir.parent)
+            spec_disp = spec_path.relative_to(a4_dir.parent)
         except ValueError:
-            adr_disp = adr_path
+            spec_disp = spec_path
         try:
             research_disp = research_path.relative_to(a4_dir.parent)
         except ValueError:
             research_disp = research_path
-        print(f"{prefix}adr: {adr_disp}")
+        print(f"{prefix}spec: {spec_disp}")
         print(f"{prefix}research: {research_disp}")
         flags = [
-            ("research field on adr", result.adr_research_field_added),
-            ("Research section on adr", result.adr_body_added),
+            ("research field on spec", result.spec_research_field_added),
+            ("Research section on spec", result.spec_body_added),
             ("cited_by field on research", result.research_cited_by_added),
             ("Cited By section on research", result.research_body_added),
             ("updated bumped on research", result.research_updated_bumped),

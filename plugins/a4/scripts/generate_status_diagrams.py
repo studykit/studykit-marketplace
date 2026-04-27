@@ -38,12 +38,13 @@ import status_model as sm
 
 
 # Families that have an ASCII block in the schema doc today.
-DOC_FAMILIES: tuple[str, ...] = ("usecase", "task")
+DOC_FAMILIES: tuple[str, ...] = ("usecase", "task", "spec")
 
 # Family key → heading text used in the schema doc.
 FAMILY_HEADING: dict[str, str] = {
     "usecase": "UC lifecycle",
     "task": "Task lifecycle",
+    "spec": "Spec lifecycle",
 }
 
 SCHEMA_DOC: Path = (

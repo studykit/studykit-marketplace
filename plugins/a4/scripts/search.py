@@ -84,7 +84,7 @@ KIND_BY_FOLDER: dict[str, frozenset[str]] = {
 FORWARD_FIELDS: tuple[str, ...] = (
     "depends_on",
     "implements",
-    "adr",
+    "spec",
     "target",
     "wiki_impact",
     "supersedes",
@@ -98,7 +98,7 @@ ALL_FOLDERS: tuple[str, ...] = (
     "usecase",
     "task",
     "review",
-    "adr",
+    "spec",
     "idea",
     "spark",
     "wiki",
@@ -153,7 +153,7 @@ class Record:
     @property
     def labels(self) -> list[str]:
         # Schema uses `labels:` on usecase/task/review/idea and
-        # `tags:` on adr/spark. Treat them as one logical field.
+        # `tags:` on spec/spark. Treat them as one logical field.
         return _str_list(self.fm.get("labels")) + _str_list(self.fm.get("tags"))
 
     @property

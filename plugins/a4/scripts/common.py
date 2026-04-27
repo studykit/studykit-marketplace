@@ -20,7 +20,7 @@ ISSUE_FOLDERS: tuple[str, ...] = (
     "usecase",
     "task",
     "review",
-    "adr",
+    "spec",
     "idea",
 )
 

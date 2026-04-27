@@ -4,10 +4,10 @@
 # ///
 """Detect drift between wiki pages and issue state in an a4/ workspace.
 
-The drift detector implements the spec-as-wiki+issues ADR's invariant that
-wiki page footnotes track every substantive issue change. It scans a4/ wiki
-pages and a4/{usecase,task,review,adr}/ issue files, then emits review
-items with `source: drift-detector` for each detected drift.
+The drift detector implements the wiki+issues invariant that wiki page
+footnotes track every substantive issue change. It scans a4/ wiki pages
+and a4/{usecase,task,review,spec}/ issue files, then emits review items
+with `source: drift-detector` for each detected drift.
 
 Wiki normalization (runs before detection):
   - missing `## Changes` heading on a wiki page is auto-appended; the
@@ -25,9 +25,9 @@ Detection rules:
                       `[^N]` marker.
   - missing-wiki-page A `wiki_impact` entry names a wiki page that does
                       not exist at the workspace root.
-  - missing-adr-cite  Architecture-only. A live `## Changes` footnote
-                      records a change without citing any `adr/*`
-                      ADR. Resolution: cite the ADR, author one, or
+  - missing-spec-cite Architecture-only. A live `## Changes` footnote
+                      records a change without citing any `spec/*`
+                      spec. Resolution: cite the spec, author one, or
                       discard with rationale.
 
 Detected drifts are deduplicated against existing review items with the
@@ -60,7 +60,7 @@ from markdown import extract_body, extract_preamble
 # `"idea"`). Preserved verbatim from pre-shared-module behavior — widening
 # to include `idea/` changes wikilink-resolution and next-id semantics and
 # belongs in a separate loud commit, not in this refactor.
-ISSUE_FOLDERS = ("usecase", "task", "review", "adr")
+ISSUE_FOLDERS = ("usecase", "task", "review", "spec")
 DEDUP_BLOCKING_STATUSES = {"open", "in-progress", "discarded"}
 
 INLINE_FOOTNOTE_RE = re.compile(r"\[\^([^\]\s]+)\](?!:)")
@@ -74,7 +74,7 @@ KIND_TO_REVIEW_KIND = {
     "orphan-definition": "finding",
     "close-guard": "gap",
     "missing-wiki-page": "gap",
-    "missing-adr-cite": "gap",
+    "missing-spec-cite": "gap",
 }
 
 KIND_TO_PRIORITY = {
@@ -83,7 +83,7 @@ KIND_TO_PRIORITY = {
     "orphan-definition": "low",
     "close-guard": "high",
     "missing-wiki-page": "high",
-    "missing-adr-cite": "medium",
+    "missing-spec-cite": "medium",
 }
 
 KIND_TO_TITLE = {
@@ -92,7 +92,7 @@ KIND_TO_TITLE = {
     "orphan-definition": "Orphan footnote definition",
     "close-guard": "Wiki close-guard violation",
     "missing-wiki-page": "Missing wiki page",
-    "missing-adr-cite": "Missing ADR citation",
+    "missing-spec-cite": "Missing spec citation",
 }
 
 
@@ -210,7 +210,7 @@ def detect_wiki_drift(
 
     for label in sorted(definitions.keys() & inline):
         links = parse_wikilinks(definitions[label])
-        has_adr_cite = False
+        has_spec_cite = False
         for link in links:
             resolved = resolve_wikilink(link, issues, wikis)
             if resolved is None:
@@ -223,16 +223,16 @@ def detect_wiki_drift(
                     ),
                     cause=link,
                 ))
-            elif resolved.startswith("adr/"):
-                has_adr_cite = True
+            elif resolved.startswith("spec/"):
+                has_spec_cite = True
 
-        if name == "architecture" and not has_adr_cite:
+        if name == "architecture" and not has_spec_cite:
             drifts.append(Drift(
-                kind="missing-adr-cite",
+                kind="missing-spec-cite",
                 wiki=name,
                 detail=(
-                    f"`## Changes [^{label}]` records a change without citing an "
-                    "`adr/*` ADR."
+                    f"`## Changes [^{label}]` records a change without citing a "
+                    "`spec/*` spec."
                 ),
                 cause=f"footnote-{label}",
             ))
@@ -414,19 +414,19 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
             "with the current canonical issue, or remove the footnote (and its inline",
             "marker) if the underlying claim is no longer relevant.",
         ]
-    elif drift.kind == "missing-adr-cite":
+    elif drift.kind == "missing-spec-cite":
         body_lines += [
             "Three resolution paths — pick one:",
             "",
-            "1. **ADR already exists.** If an ADR in `adr/` already records this",
-            f"   change, add `[[adr/<id>-<slug>]]` to the relevant footnote in",
+            "1. **Spec already exists.** If a spec in `spec/` already records this",
+            f"   change, add `[[spec/<id>-<slug>]]` to the relevant footnote in",
             f"   `{drift.wiki}.md`'s `## Changes` section, then set this review's",
             "   status to `resolved`.",
             "",
-            "2. **ADR needed.** Run `/a4:adr` to author one, then cite it from",
+            "2. **Spec needed.** Run `/a4:spec` to author one, then cite it from",
             "   the footnote and set status to `resolved`.",
             "",
-            "3. **No ADR warranted.** If this change is routine (framework-mandated,",
+            "3. **No spec warranted.** If this change is routine (framework-mandated,",
             "   library swap with no architectural choice, post-hoc description, etc.),",
             "   set status to `discarded` and record the rationale in `## Log`. The",
             "   detector will not re-emit for the same footnote once discarded.",

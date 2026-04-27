@@ -4,7 +4,7 @@
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
-All status changes on usecase, task, review, and adr files flow
+All status changes on usecase, task, review, and spec files flow
 through this script. Skills and agents call it with the target file and
 the desired new status. The script:
 
@@ -26,9 +26,10 @@ the desired new status. The script:
         usecase → shipped                      → supersedes chain: each same-
                                                   family target currently
                                                   `shipped` flips to `superseded`
-        adr → final                            → supersedes chain: each same-
+        spec → active                          → supersedes chain: each same-
                                                   family target currently
-                                                  `final` flips to `superseded`
+                                                  `active` or `deprecated` flips
+                                                  to `superseded`
 
 All cascades happen in the same invocation so the caller only needs to
 commit the unstaged working-tree delta once.
@@ -283,9 +284,9 @@ def validate_transition(
             _validate_implementing_to_shipped(a4_dir, rel_path, fm, issues)
             return issues
         return issues
-    if family == "adr":
-        if from_status == "draft" and to_status == "final":
-            _validate_draft_to_final(fm, body, issues)
+    if family == "spec":
+        if from_status == "draft" and to_status == "active":
+            _validate_draft_to_active(fm, body, issues)
             return issues
         return issues
     return issues
@@ -356,8 +357,8 @@ def _validate_implementing_to_shipped(
         )
 
 
-def _validate_draft_to_final(fm: dict, body: str, issues: list[str]) -> None:
-    """ADR draft → final: title placeholder + required body sections."""
+def _validate_draft_to_active(fm: dict, body: str, issues: list[str]) -> None:
+    """Spec draft → active: title placeholder + required body sections."""
     for field_name in ("title",):
         placeholder = _placeholder_in(fm.get(field_name))
         if placeholder:
@@ -366,8 +367,8 @@ def _validate_draft_to_final(fm: dict, body: str, issues: list[str]) -> None:
             )
     if "## Context" not in body:
         issues.append("body is missing `## Context` section.")
-    if "## Decision" not in body:
-        issues.append("body is missing `## Decision` section.")
+    if "## Specification" not in body:
+        issues.append("body is missing `## Specification` section.")
 
 
 # ---------------------------------------------------------------------------
@@ -597,35 +598,35 @@ def _cascade_uc_shipped(
         )
 
 
-def _cascade_adr_final(
+def _cascade_spec_active(
     a4_dir: Path,
-    adr_rel: str,
+    spec_rel: str,
     today: str,
     dry_run: bool,
     report: Report,
     from_status: str,
 ) -> None:
-    """ADR → final: flip supersedes targets (final → superseded)."""
+    """Spec → active: flip supersedes targets ({active|deprecated} → superseded)."""
     if from_status != "draft":
         return
-    adr_path = a4_dir / adr_rel
-    fm, _, _ = _parse(adr_path)
+    spec_path = a4_dir / spec_rel
+    fm, _, _ = _parse(spec_path)
     if fm is None:
         return
     supersedes = fm.get("supersedes")
     if not isinstance(supersedes, list):
         return
-    adr_ref = adr_rel.removesuffix(".md")
+    spec_ref = spec_rel.removesuffix(".md")
     for entry in supersedes:
         norm = normalize_ref(entry)
         if norm is None:
             continue
-        if not norm.startswith("adr/"):
+        if not norm.startswith("spec/"):
             report.skipped.append(
                 {
                     "path": norm,
                     "reason": "cross-family-supersedes",
-                    "detail": f"ignored non-adr target in {adr_ref}",
+                    "detail": f"ignored non-spec target in {spec_ref}",
                 }
             )
             continue
@@ -645,29 +646,31 @@ def _cascade_adr_final(
                 {"path": f"{norm}.md", "reason": "already-superseded"}
             )
             continue
-        if tstatus != "final":
+        if tstatus not in {"active", "deprecated"}:
             report.skipped.append(
                 {
                     "path": f"{norm}.md",
-                    "reason": "not-terminal-active",
-                    "detail": f"status={tstatus!r}, expected 'final'",
+                    "reason": "not-supersedable",
+                    "detail": (
+                        f"status={tstatus!r}, expected 'active' or 'deprecated'"
+                    ),
                 }
             )
             continue
         _apply_status_change(
             target_path,
-            "final",
+            str(tstatus),
             "superseded",
-            f"superseded by {adr_ref}",
+            f"superseded by {spec_ref}",
             dry_run,
             today,
         )
         report.cascades.append(
             Change(
                 path=f"{norm}.md",
-                from_status="final",
+                from_status=str(tstatus),
                 to_status="superseded",
-                reason=f"superseded by {adr_ref}",
+                reason=f"superseded by {spec_ref}",
             )
         )
 
@@ -692,7 +695,7 @@ def transition(
     if family is None:
         report.errors.append(
             f"cannot detect family from path {rel_path!r}. Expected "
-            "usecase/, task/, review/, or adr/ prefix."
+            "usecase/, task/, review/, or spec/ prefix."
         )
         return report
     report.family = family
@@ -784,9 +787,9 @@ def transition(
             _cascade_uc_shipped(
                 a4_dir, rel_path, today, dry_run, report, current
             )
-    elif family == "adr":
-        if new_status == "final":
-            _cascade_adr_final(
+    elif family == "spec":
+        if new_status == "active":
+            _cascade_spec_active(
                 a4_dir, rel_path, today, dry_run, report, current
             )
 
@@ -805,7 +808,8 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     Covers both families that carry `supersedes:`:
 
       - usecase @ `shipped` → flip same-family targets `shipped → superseded`.
-      - adr @ `final` → flip same-family targets `final → superseded`.
+      - spec @ `active` → flip same-family targets
+        `{active|deprecated} → superseded`.
 
     Used when edits bypassed the script (e.g., manual git checkout) and
     `## Log` back-pointers may have been lost. Idempotent.
@@ -840,27 +844,27 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
             if report.cascades or report.errors:
                 reports.append(report)
 
-    adr_dir = a4_dir / "adr"
-    if adr_dir.is_dir():
-        for p in sorted(adr_dir.glob("*.md")):
+    spec_dir = a4_dir / "spec"
+    if spec_dir.is_dir():
+        for p in sorted(spec_dir.glob("*.md")):
             fm, _, _ = _parse(p)
             if fm is None:
                 continue
-            if fm.get("status") != "final":
+            if fm.get("status") != "active":
                 continue
             supersedes = fm.get("supersedes")
             if not isinstance(supersedes, list) or not supersedes:
                 continue
-            rel = f"adr/{p.name}"
+            rel = f"spec/{p.name}"
             report = Report(
                 a4_dir=str(a4_dir),
                 file=rel,
-                family="adr",
-                current_status="final",
-                target_status="final",
+                family="spec",
+                current_status="active",
+                target_status="active",
                 dry_run=dry_run,
             )
-            _cascade_adr_final(
+            _cascade_spec_active(
                 a4_dir, rel, today, dry_run, report, from_status="draft"
             )
             report.ok = not report.errors
