@@ -327,7 +327,7 @@ When the user indicates they're done, mark `"Platform capabilities audit"` (or w
 
 When the user asks to edit a UC that is currently `status: implementing` (e.g., "UC 5 Flow 수정해줘", "fix the spec for UC-7"), do not silently edit the body. Instead:
 
-1. **Confirm** the transition: "UC X is currently `implementing`. Edit in-place means flipping to `revising` (pauses code work; resets `implementing`/`failing` tasks to `pending`; `complete` tasks stay). OK?"
+1. **Confirm** the transition: "UC X is currently `implementing`. Edit in-place means flipping to `revising` (pauses code work; resets `progress`/`failing` tasks to `pending`; `complete` tasks stay). OK?"
 2. On user confirmation, call the writer:
    ```bash
    uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \

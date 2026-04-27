@@ -18,9 +18,9 @@ If the target is missing entirely (no second token), abort with the usage hint: 
 
 ## D2. Check current status
 
-Read the resolved file's frontmatter. The writer (`transition_status.py:79-82`) allows `discarded` from `pending | implementing | complete | failing`:
+Read the resolved file's frontmatter. The writer (`transition_status.py` `TASK_TRANSITIONS`) allows `discarded` from `open | pending | progress | complete | failing`:
 
-- Any of those four → proceed to D3.
+- Any of those five → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.
 
 Surface the task's `kind:` and `implements:` / `justified_by:` to the user before flipping, so they can confirm they're discarding the right one. One-line summary, no separate prompt unless slug-fragment resolution returned multiple candidates in D1.

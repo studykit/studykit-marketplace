@@ -36,6 +36,19 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
 
 **Layout.** Active ADRs live directly in `plugins/a4/spec/`. 
 
+## References — read before editing
+
+Reference docs in `plugins/a4/references/` are the authoritative source for cross-cutting concerns. Read the relevant one before changing any skill/script that touches it:
+
+- `frontmatter-schema.md` — frontmatter contract (also required by root CLAUDE.md)
+- `pipeline-shapes.md` — Full / Reverse-engineer / Minimal / No-shape; read before changing shape-aware skills (`auto-bootstrap`, `run`, `compass`)
+- `skill-modes.md` — interactive vs autonomous, forward vs reverse axes
+- `wiki-authorship.md` — who can write each wiki page; cross-stage feedback policy
+- `adr-triggers.md` — when an ADR is warranted
+- `iterate-mechanics.md` — iterate-mode contract for skills
+- `obsidian-conventions.md` — wikilinks, embeds, change footnotes
+- `hook-conventions.md` — hook contract
+
 ## Skill-generated frontmatter is script-managed
 
 Frontmatter on files written by a4 skills (under `<project-root>/a4/`) is the responsibility of scripts in `plugins/a4/scripts/`, not hand edits. This keeps cross-file consistency and reverse-links intact.

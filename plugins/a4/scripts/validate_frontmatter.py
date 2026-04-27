@@ -89,7 +89,7 @@ SCHEMAS: dict[str, Schema] = {
         enums={
             "kind": frozenset({"feature", "spike", "bug"}),
             "status": frozenset(
-                {"pending", "implementing", "complete", "failing", "discarded"}
+                {"open", "pending", "progress", "complete", "failing", "discarded"}
             ),
         },
         int_fields=frozenset({"id", "cycle"}),

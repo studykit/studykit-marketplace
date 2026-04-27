@@ -52,7 +52,7 @@ Outputs:
 
 Determined by the workspace state, not by frontmatter flags:
 
-- **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order.
+- **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here — the user must transition `open → pending` to enqueue them.)
 - **Iterate mode** — open review items target a task or `roadmap` (typically from the prior cycle's test-runner). See **Iteration Entry** below before re-running Step 1.
 
 Mode detection at session start:
@@ -80,7 +80,7 @@ Mechanics (filter, backlog presentation, writer calls, footnote rules, disciplin
 
 ## Resume Hygiene
 
-At session start, for every task with `status: implementing`, reset to `pending` via the writer (an `implementing` status at session-start means the prior session crashed mid-work):
+At session start, for every task with `status: progress`, reset to `pending` via the writer (a `progress` status at session-start means the prior session crashed mid-work):
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
@@ -132,7 +132,7 @@ Before spawning, flip the task via the writer:
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
-  --file "task/<id>-<slug>.md" --to implementing \
+  --file "task/<id>-<slug>.md" --to progress \
   --reason "/a4:run Step 2 spawning task-implementer"
 ```
 

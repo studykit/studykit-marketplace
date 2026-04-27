@@ -44,7 +44,7 @@ No lifecycle, revision, or source SHA fields. Cross-references, footnote markers
 id: 5
 title: Render markdown
 kind: feature | spike | bug
-status: pending | implementing | complete | failing | discarded
+status: open | pending | progress | complete | failing | discarded
 implements: [usecase/3-search-history, usecase/4-render-preview]
 depends_on: [task/4-parse-config]
 justified_by: []
@@ -63,13 +63,14 @@ Body sections: `## Description`, `## Files` (action/path/change table), `## Unit
 `kind:` is required and must be one of `feature | spike | bug`. The roadmap batch generator emits `kind: feature` for every UC-derived task; single ad-hoc spike / bug entries are authored via `/a4:task`.
 
 `status` semantics:
-- `pending` — not yet assigned.
-- `implementing` — a `task-implementer` agent is working or crashed mid-work (reset to `pending` on session resume by `/a4:run`).
+- `open` — backlog (kanban "todo"); captured but not yet enqueued for `/a4:run`. `/a4:roadmap` does **not** emit this status — batch generation always writes `pending`. Authored by `/a4:task` when the user wants to defer scheduling.
+- `pending` — in the work queue, awaiting a `task-implementer`. Default for `/a4:roadmap`-generated tasks.
+- `progress` — a `task-implementer` agent is working or crashed mid-work (reset to `pending` on session resume by `/a4:run`).
 - `complete` — implemented; unit tests pass.
 - `failing` — implementation or unit tests failed after a task-implementer attempt.
 - `discarded` — UC this task implements was discarded; cascade-flipped by `transition_status.py`.
 
-All task status changes flow through `scripts/transition_status.py`. Cascades: when a UC goes `implementing → revising`, this script flips related `implementing` / `failing` tasks back to `pending` (spec is being rewritten; re-implementation is required). When a UC goes to `discarded`, related tasks cascade to `discarded`.
+All task status changes flow through `scripts/transition_status.py`. Cascades: when a UC goes `implementing → revising`, this script flips related `progress` / `failing` tasks back to `pending` (spec is being rewritten; re-implementation is required). When a UC goes to `discarded`, related tasks cascade to `discarded`.
 
 `cycle:` starts at 1 and increments each retry. `updated:` bumps on every status change (written by the status writer).
 

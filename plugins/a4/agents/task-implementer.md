@@ -66,7 +66,7 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
      --reason "task-implementer: see review/<id>-<slug>"
    ```
 
-   The script cascades `implementing`/`failing` tasks back to `pending` and logs the back-pointer.
+   The script cascades `progress`/`failing` tasks back to `pending` and logs the back-pointer.
 4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
 
 ### Architecture-choice exit — halt + decision-gap

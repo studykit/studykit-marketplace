@@ -27,7 +27,7 @@ Sections (kebab-case identifier on the left):
                       sorted by priority then id desc.
   open-reviews        open / in-progress non-drift reviews, sorted by
                       priority then created then id.
-  active-tasks        tasks with status in {pending, implementing, failing}.
+  active-tasks        tasks with status in {pending, progress, failing}.
   blocked-items       any issue with status: blocked, with depends_on chain.
   milestones          per active milestone — tasks complete/total + open reviews.
   recent-activity     top 10 issue items by `updated:` desc.
@@ -84,7 +84,7 @@ TERMINAL_STATUSES: dict[str, set[str]] = {
 }
 IN_PROGRESS_STATUSES: dict[str, set[str]] = {
     "usecase": {"implementing", "revising"},
-    "task": {"implementing"},
+    "task": {"progress"},
     "review": {"in-progress"},
     "decision": set(),
     "idea": set(),
@@ -96,7 +96,7 @@ SPARK_TERMINAL: dict[str, set[str]] = {
 }
 
 ACTIVE_TASK_STATUSES: frozenset[str] = frozenset(
-    {"pending", "implementing", "failing"}
+    {"pending", "progress", "failing"}
 )
 PRIORITY_ORDER: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
 RECENT_ACTIVITY_LIMIT = 10
@@ -416,7 +416,7 @@ def render_active_tasks(tasks: list[IssueItem]) -> str:
     active = [t for t in tasks if t.status in ACTIVE_TASK_STATUSES]
     heading = f"## Active tasks ({len(active)})"
     if not active:
-        return f"{heading}\n\n*No tasks pending / implementing / failing.*"
+        return f"{heading}\n\n*No tasks pending / progress / failing.*"
     active.sort(key=lambda t: (t.status, t.id_ or 0))
     lines = [heading, ""]
     for t in active:

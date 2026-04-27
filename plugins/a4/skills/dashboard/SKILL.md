@@ -33,7 +33,7 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 | `usecases-by-source` | UC `source:` distribution (Reverse-only detection) |
 | `drift-alerts` | open / in-progress reviews with `source: drift-detector`, sorted by priority then id desc |
 | `open-reviews` | open / in-progress non-drift reviews, sorted by priority then created then id |
-| `active-tasks` | tasks with status in {pending, implementing, failing} |
+| `active-tasks` | tasks with status in {pending, progress, failing} |
 | `blocked-items` | any issue with status: blocked, with depends_on chain |
 | `milestones` | per active milestone — tasks complete/total + open reviews |
 | `recent-activity` | top 10 issue items by `updated:` desc |

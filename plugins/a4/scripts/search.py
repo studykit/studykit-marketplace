@@ -80,7 +80,7 @@ STATUS_BY_FOLDER: dict[str, set[str]] = {
         "discarded",
         "blocked",
     },
-    "task": {"pending", "implementing", "complete", "failing", "discarded"},
+    "task": {"open", "pending", "progress", "complete", "failing", "discarded"},
     "review": {"open", "in-progress", "resolved", "discarded"},
     "decision": {"draft", "final", "superseded"},
     "idea": {"open", "promoted", "discarded"},

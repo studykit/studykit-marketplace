@@ -19,7 +19,7 @@ the desired new status. The script:
      implied by the primary transition:
 
         usecase implementing → revising        → related tasks reset:
-                                                  implementing/failing → pending
+                                                  progress/failing → pending
         usecase * → discarded                  → related tasks → discarded
                                                   related open reviews → discarded
         usecase shipped → discarded            → same as above
@@ -76,10 +76,11 @@ UC_TRANSITIONS: dict[str, set[str]] = {
 }
 
 TASK_TRANSITIONS: dict[str, set[str]] = {
-    "pending": {"implementing", "discarded"},
-    "implementing": {"complete", "failing", "pending", "discarded"},
+    "open": {"pending", "discarded"},
+    "pending": {"progress", "discarded"},
+    "progress": {"complete", "failing", "pending", "discarded"},
     "complete": {"pending", "discarded"},
-    "failing": {"pending", "implementing", "discarded"},
+    "failing": {"pending", "progress", "discarded"},
 }
 
 REVIEW_TRANSITIONS: dict[str, set[str]] = {
@@ -106,7 +107,7 @@ FAMILY_STATES: dict[str, set[str]] = {
         "draft", "ready", "implementing", "revising",
         "shipped", "superseded", "discarded", "blocked",
     },
-    "task": {"pending", "implementing", "complete", "failing", "discarded"},
+    "task": {"open", "pending", "progress", "complete", "failing", "discarded"},
     "review": {"open", "in-progress", "resolved", "discarded"},
     "decision": {"draft", "final", "superseded"},
 }
@@ -457,7 +458,7 @@ def _cascade_uc_revising(
             report.errors.append(f"{task_path}: unreadable frontmatter")
             continue
         current = fm.get("status")
-        if current not in {"implementing", "failing"}:
+        if current not in {"progress", "failing"}:
             report.skipped.append(
                 {
                     "path": f"task/{task_path.stem}",

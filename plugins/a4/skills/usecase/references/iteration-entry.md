@@ -28,7 +28,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --reason "iterate: in-place spec edit"
 ```
 
-`implementing` / `failing` tasks cascade to `pending` automatically. At session end, Step 6 ready-gate flips `revising → ready`.
+`progress` / `failing` tasks cascade to `pending` automatically. At session end, Step 6 ready-gate flips `revising → ready`.
 
 ## 3. Unreflected research / exploration reports
 

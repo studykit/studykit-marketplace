@@ -43,6 +43,7 @@ Draft a scratch summary (do not write to disk yet):
 
 - **Title** — short, human-readable phrase. Example: "Render markdown preview".
 - **Description** — one or two paragraphs covering goal, scope, and any non-obvious constraints.
+- **Initial status** — one of `open` (default; backlog) / `pending` (enqueue immediately) / `complete` (post-hoc documentation; code already shipped). Decide based on the user's intent. Ask once if unclear, defaulting to `open` for new ideas, `pending` when the user is mid-stream of `/a4:run`-style work, and `complete` when the user describes work that has already landed.
 - **Files** — source paths the task writes or modifies. For `feature` / `bug`, point at the project's production tree. For `spike`, paths live under `spike/<id>-<slug>/` (see Step 4).
 - **Dependencies** — `depends_on:` paths (other tasks) and any wiki-page context (architecture sections, etc.).
 - **Cycle / labels / milestone** — start `cycle: 1`; labels are free-form.
@@ -117,14 +118,14 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/task/<id>-<slug>.md`.
 
-Frontmatter:
+Frontmatter (substitute the initial status decided in Step 1):
 
 ```yaml
 ---
 id: <allocated>
 title: <human-readable title>
 kind: feature | spike | bug
-status: pending
+status: open | pending | complete
 implements: [<paths or empty>]
 depends_on: [<paths or empty>]
 justified_by: [<paths or empty>]
@@ -138,7 +139,23 @@ updated: <today>
 ---
 ```
 
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial `pending` — file creation at `status: pending` is the writer's idle state and the create is itself the log-implicit "first appearance" event. Subsequent transitions go through the writer.
+Allowed initial statuses are `open` (default — backlog), `pending` (enqueue for `/a4:run`), and `complete` (post-hoc documentation). `progress` and `failing` are writer-only; never use them as initial states.
+
+**`complete` initial-status preflight.** When the chosen initial status is `complete`, the work is asserted to already be shipped — verify before writing:
+
+1. For each path in `files:`, confirm it exists in the working tree (`test -e` on the absolute path). If any path is missing, halt and ask the user: (a) fix the path, or (b) downgrade the initial status to `pending` so the task enters the implement loop.
+2. Body sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`, `## Interface Contracts`) should still be present — `complete` does not exempt the task from documentation.
+3. After writing the file, append an explicit `## Log` entry recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
+
+   ```markdown
+   ## Log
+
+   - <YYYY-MM-DD> created at status: complete (post-hoc documentation; code shipped prior to task authorship)
+   ```
+
+   This is the only case where a skill writes into `## Log` directly — every subsequent entry must come from `transition_status.py`.
+
+Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value and the create is itself the log-implicit "first appearance" event (the post-hoc `## Log` line above is the documented exception for the `complete` case). Subsequent transitions go through the writer.
 
 ## Step 6: Refresh `implemented_by:` (if `implements:` non-empty)
 
@@ -159,15 +176,17 @@ Suggest (do not auto-create) a `README.md` inside it pointing back to the task f
 
 ## Step 8: Hand-off
 
-Tell the user:
+Branch the message by initial status:
 
-> Task `task/<id>-<slug>` written at `status: pending`. Run `/a4:run` to start the implement + test loop (it will pick up this task plus any other ready ones). For more single tasks, re-invoke `/a4:task`.
+- **`open`** — *Task `task/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` via `transition_status.py` when ready to schedule it.*
+- **`pending`** — *Task `task/<id>-<slug>` written at `status: pending`. Run `/a4:run` to start the implement + test loop (it will pick up this task plus any other ready ones).*
+- **`complete`** — *Task `task/<id>-<slug>` written at `status: complete` (post-hoc documentation). No `/a4:run` action needed. UC ship-gate will treat this task as done if it `implements:` a UC.*
 
-If the user wants the task implemented immediately and no other ready tasks are pending, they may invoke `/a4:run` directly — mode flips to `autonomous` at the skill boundary.
+For more single tasks, re-invoke `/a4:task`. If the user wants the task implemented immediately and no other ready tasks are pending, they may invoke `/a4:run` directly — mode flips to `autonomous` at the skill boundary.
 
 ## Discard mode
 
-Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure in [`references/discard.md`](references/discard.md): resolve the target task by id / `task/<id>-<slug>` / slug fragment (D1), confirm current status is `pending | implementing | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `## Why discarded` note (D3), advise on the spike sidecar without auto-deleting (D4), skip `refresh_implemented_by.py` since `implements:` did not change (D5), and report (D6). UC-cascade discards (when a UC flips to `discarded`) are handled automatically by `transition_status.py` — discard mode is for **explicit one-off task discards**.
+Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure in [`references/discard.md`](references/discard.md): resolve the target task by id / `task/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `## Why discarded` note (D3), advise on the spike sidecar without auto-deleting (D4), skip `refresh_implemented_by.py` since `implements:` did not change (D5), and report (D6). UC-cascade discards (when a UC flips to `discarded`) are handled automatically by `transition_status.py` — discard mode is for **explicit one-off task discards**.
 
 ## Commit Points
 
@@ -193,6 +212,6 @@ Never skip hooks, amend, or force-push without explicit user instruction.
 - Do not author multiple tasks in one invocation. Re-invoke `/a4:task` per task. Use `/a4:roadmap` for the batch path.
 - Do not discard multiple tasks in one invocation. Re-invoke `/a4:task discard <id>` per task. UC-cascade discards happen automatically when the parent UC is discarded — do not duplicate that path here.
 - Do not write `roadmap.md`. If the project has no roadmap and the user wants one, redirect to `/a4:roadmap`. Single tasks are valid without a roadmap (they read `bootstrap.md`'s Launch & Verify in `/a4:run`).
-- Do not flip task status beyond the initial `pending` write (author mode) or the explicit `→ discarded` flip (discard mode). `/a4:run` and `transition_status.py` own all other transitions.
+- Do not flip task status beyond the initial `open` / `pending` / `complete` write (author mode) or the explicit `→ discarded` flip (discard mode). `/a4:run` and `transition_status.py` own all other transitions, including `open → pending` (the user requests it; the writer applies it).
 - Do not auto-delete or auto-archive `spike/<id>-<slug>/` on discard. Archiving a finished spike is a manual `git mv` per the experiments-slot ADR.
 - Do not delete the task file on discard. The file stays at `status: discarded` so its `## Log` and `## Why discarded` remain part of the workspace history; `git rm` is a separate user choice.

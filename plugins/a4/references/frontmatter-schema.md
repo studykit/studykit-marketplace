@@ -87,9 +87,10 @@ Listing who calls the writer for each value makes the invariant auditable.
 | usecase | `superseded` | `transition_status.py` cascade — flipped automatically when a newer UC with `supersedes: [usecase/X]` reaches `shipped` |
 | usecase | `discarded` | user-triggered via `/a4:usecase` (spec abandoned) or `/a4:roadmap` (direction rejected). Cascade: related tasks → `discarded`, open review items with `target: usecase/X` → `discarded` |
 | usecase | `blocked` | `usecase-reviser` (on SPLIT), `task-implementer` (on implementation-time blocker detection) |
-| task | `pending` | `/a4:roadmap` / `/a4:task` (on create), `/a4:run` (on revision reset) |
-| task | `implementing` | `/a4:run` Step 2 (before `task-implementer` spawn) |
-| task | `complete` | `/a4:run` Step 2 (after agent returns success) |
+| task | `open` | `/a4:task` (on create — default backlog state). Not picked up by `/a4:run`; user must transition to `pending` to enqueue |
+| task | `pending` | `/a4:roadmap` (on create — batch fill-queue intent), `/a4:task` (on create when user opts in over the default `open`), `/a4:run` (on revision reset, on `failing → pending` defer) |
+| task | `progress` | `/a4:run` Step 2 (before `task-implementer` spawn) |
+| task | `complete` | `/a4:run` Step 2 (after agent returns success); `/a4:task` (on create, post-hoc documentation for already-implemented work) |
 | task | `failing` | `/a4:run` Step 2 / 3 (after agent or test-runner failure) |
 | task | `discarded` | `transition_status.py` cascade — when the UC this task implements flips to `discarded`. Direct calls are also permitted for explicit one-off task discards |
 | review | `open` | reviewer agents, `drift_detector.py`, `task-implementer` (revising-trigger review items), defer paths in single-edit skills |
@@ -173,7 +174,7 @@ Forward progression runs `draft → ready → implementing → shipped`, with `r
 | `draft` | Spec is still being shaped; not ready for implementation. |
 | `ready` | Spec is closed; ready to be picked up by an implementer. |
 | `implementing` | Coding agent is actively working on the UC. |
-| `revising` | Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Task `implementing`/`failing` entries reset to `pending`; `complete` tasks stay. |
+| `revising` | Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Task `progress`/`failing` entries reset to `pending`; `open`/`pending`/`complete` tasks stay. |
 | `shipped` | The running system reflects this use case. Forward-path terminal. |
 | `superseded` | A newer UC declares `supersedes: [<this>]` and has shipped. Terminal. |
 | `discarded` | Abandoned; direction was wrong or UC no longer needed. Terminal. Related tasks and open review items cascade to `discarded`. |
@@ -209,7 +210,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
 | `kind` | yes | enum | `feature` \| `spike` \| `bug` |
-| `status` | yes | enum | `pending` \| `implementing` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
 | `implements` | no | list of paths | use cases delivered (typically empty for `spike`) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `justified_by` | no | list of paths | decisions justifying this task |
@@ -229,6 +230,41 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `bug` | Defect fix. Production code change, not throwaway. |
 
 `kind` is **required** — every task must declare one. There is no implicit default. Existing task files predating this schema will fail validation until backfilled with an explicit `kind:` value.
+
+### Task lifecycle
+
+| Value | Meaning |
+|-------|---------|
+| `open` | Backlog (kanban "todo"). Captured but not yet committed to the work queue. Not picked up by `/a4:run`; user must transition `open → pending` to enqueue. |
+| `pending` | In the work queue, awaiting an implementer. Default ready-set entry for `/a4:run`. |
+| `progress` | A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume by `/a4:run`). |
+| `complete` | Unit tests passed. Not a forward-path terminal — UC `revising` cascade can return tasks to `pending` for re-implementation. |
+| `failing` | Unit tests red. Resumed via `failing → progress` (immediate retry, same cycle) or deferred via `failing → pending` (next cycle). |
+| `discarded` | Abandoned. Terminal. Reached either via UC `discarded` cascade or explicit `/a4:task discard`. |
+
+Allowed transitions:
+
+```
+open      → pending | discarded
+pending   → progress | discarded
+progress  → complete | failing | pending | discarded
+complete  → pending | discarded
+failing   → pending | progress | discarded
+```
+
+`open → progress` is **not** a legal direct transition; backlog items must pass through `pending`. There is no `pending → open` reverse — once enqueued, a task cannot be returned to backlog.
+
+### Initial status policy
+
+`/a4:task` allows three initial states on file create:
+
+- `open` (default) — backlog capture.
+- `pending` — author intends `/a4:run` to pick it up immediately.
+- `complete` — post-hoc documentation: code already shipped, task file added for traceability. Skill must verify every path in `files:` exists at create time and append an explicit `## Log` entry noting the post-hoc origin (since no `progress → complete` transition was logged by the writer).
+
+`/a4:roadmap` always writes new tasks at `pending` — batch generation reflects "fill the queue right now" intent.
+
+`progress` and `failing` are never used as initial states; only the writer (`transition_status.py`) produces them as a result of transitions.
 
 ### Spike sidecar convention
 
