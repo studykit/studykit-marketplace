@@ -73,7 +73,7 @@ Verdict per heading: `OK` | `FORBIDDEN SECTION`.
 
 ### 4. Task wikilinks in `## Consequences` — "Is the body rendering a reverse view?"
 
-`## Consequences` must be pure prose. Flag every `[[task/<id>-<slug>]]` wikilink found anywhere inside that section. The reverse view (`justifies`) is derived on demand and never rendered into the ADR body — see [`frontmatter-schema.md §ADR`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+`## Consequences` must be pure prose. Flag every `[[task/<id>-<slug>]]` wikilink found anywhere inside that section. The reverse view of `task.adr:` is derived on demand and never rendered into the ADR body — see [`frontmatter-schema.md §ADR`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 Wikilinks to other targets (`[[research/<slug>]]`, `[[adr/<id>-<slug>]]`, `[[architecture#section]]`) are allowed in `## Consequences`.
 
@@ -132,7 +132,7 @@ Return your review in exactly this format:
 #### 4. Task Wikilinks in Consequences
 - Verdict: TASK WIKILINK IN CONSEQUENCES
 - Line 65 (## Consequences): `[[task/87-add-pgbouncer-config]]`
-  → Suggest: remove the wikilink. The `justifies` reverse view renders on demand; do not hard-code it.
+  → Suggest: remove the wikilink. The reverse view of `task.adr:` renders on demand; do not hard-code it.
 
 #### 5. Option-as-Task Framing
 - Verdict: OK

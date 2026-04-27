@@ -191,4 +191,4 @@ Summarize to the user:
 - **Do not commit.** Leave files in the working tree.
 - **Do not hand-edit `status:`.** All status changes on ADR files flow through `transition_status.py`; this skill never writes `status: final` directly nor uses `Edit`/`Write` to change an existing ADR's status.
 - **Do not auto-populate `supersedes:`.** The user sets it explicitly in Step 2 if this ADR replaces prior ones.
-- **Do not write implementation, do not render reverse views.** See the ADR-content rules in [`frontmatter-schema.md §ADR`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (descriptive-not-prescriptive principle; `## Consequences` carries no task wikilinks; `justifies:` is derived on demand and never written).
+- **Do not write implementation, do not render reverse views.** See the ADR-content rules in [`frontmatter-schema.md §ADR`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (descriptive-not-prescriptive principle; `## Consequences` carries no task wikilinks; the reverse of `task.adr:` is derived on demand and never written).

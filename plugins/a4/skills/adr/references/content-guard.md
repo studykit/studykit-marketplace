@@ -2,7 +2,7 @@
 
 Reference for the `adr-content-guard` agent. The descriptive-not-prescriptive rule lives in [`references/frontmatter-schema.md §ADR`](../../../references/frontmatter-schema.md). This file gives concrete leakage vs. clean prose so the guard does not over- or under-flag.
 
-The rule, restated: an ADR body captures *what* was chosen and *why*. *How* to execute the choice lives in `task/<id>-<slug>.md` files linked via `task.adr:`. The reverse view (`justifies`) is derived on demand and never written into the ADR body.
+The rule, restated: an ADR body captures *what* was chosen and *why*. *How* to execute the choice lives in `task/<id>-<slug>.md` files linked via `task.adr:`. The reverse view of `task.adr:` is derived on demand and never written into the ADR body.
 
 ## Section-by-section policy
 
@@ -87,7 +87,7 @@ to run before the cutover. See [[task/87-add-pgbouncer-config]] and
 [[task/88-cutover-runbook]].
 ```
 
-Two leaks. The wikilinks render a reverse view (`justifies`) into the body — that view is derived on demand. The "must be tuned" / "need to run" verbs prescribe action.
+Two leaks. The wikilinks render the reverse view of `task.adr:` into the body — that view is derived on demand. The "must be tuned" / "need to run" verbs prescribe action.
 
 **Clean.**
 
@@ -101,7 +101,7 @@ existing in-process connection cache becomes redundant and is removed
 under the same change.
 ```
 
-The same content, re-cast as state-of-the-world after the decision lands. Tasks the consequences imply are tracked separately and surface via the `justifies` view, not via hand-written wikilinks.
+The same content, re-cast as state-of-the-world after the decision lands. Tasks the consequences imply are tracked separately and surface via the derived reverse of `task.adr:`, not via hand-written wikilinks.
 
 ## Worked examples — `## Context` (the exempt section)
 

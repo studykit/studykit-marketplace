@@ -58,7 +58,6 @@ Adding a new stored reverse link follows the same bar: a script must own writes,
 |------------------|---------|---------|
 | `depends_on` | `blocks` | derived |
 | `implements` | `implemented_by` | **stored — auto-maintained by `refresh_implemented_by.py`** |
-| `adr` | `justifies` | derived |
 | `supersedes` | `superseded_by` | derived |
 | `parent` | `children` | derived |
 | `target` | (review backlinks) | derived |
@@ -316,7 +315,7 @@ ADR stored as an issue — the canonical decision slot from the wiki+issues dual
 
 **Body structure.** Two sections are required: `## Context` (why this decision was needed) and `## Decision` (the chosen option with rationale). Both are mechanically enforced by `transition_status.py` on the `draft → final` flip. Beyond those two, additional sections may be added when the session content warrants them — common examples include `## Options Considered`, `## Rejected Alternatives`, `## Consequences`, `## Open Questions`. Use headed sections (`##` or `###`) only; no free-form prose outside a section.
 
-The ADR body is **descriptive, not prescriptive**: it captures *what* was chosen and *why*, not *how* to execute it. Sections such as `## Next Steps` and `## Migration Plan` are not used — implications belong in `## Consequences` as prose, and executable work lives in `task/<id>-<slug>.md` linked via the forward `task.adr:` field. `## Consequences` itself must remain pure prose: do not embed `[[task/<id>-<slug>]]` wikilinks; the reverse view (`justifies`) is derived on demand and never rendered into the ADR body.
+The ADR body is **descriptive, not prescriptive**: it captures *what* was chosen and *why*, not *how* to execute it. Sections such as `## Next Steps` and `## Migration Plan` are not used — implications belong in `## Consequences` as prose, and executable work lives in `task/<id>-<slug>.md` linked via the forward `task.adr:` field. `## Consequences` itself must remain pure prose: do not embed `[[task/<id>-<slug>]]` wikilinks; the reverse view of `task.adr:` is derived on demand and never rendered into the ADR body.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
