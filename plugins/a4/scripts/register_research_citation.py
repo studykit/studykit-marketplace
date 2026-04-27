@@ -8,13 +8,16 @@ A spec file may cite a research artifact at
 `<project-root>/research/<slug>.md`. The citation has four representations:
 
   - spec/<id>-<slug>.md frontmatter `research:` list
-  - spec/<id>-<slug>.md body `## Research` section
+  - spec/<id>-<slug>.md body `<research>` section
   - research/<slug>.md frontmatter `cited_by:` list (stored reverse-link)
-  - research/<slug>.md body `## Cited By` section
+  - research/<slug>.md body `<cited-by>` section
 
-This script writes all four in a single invocation and bumps the research
-file's `updated:` field to today. Idempotent: when a side already records
-the citation that side is left alone.
+Body sections are column-0 ``<tag>...</tag>`` blocks per the body XML
+convention; bullet entries inside the block are standard markdown links
+``[<canonical-ref>](<relative-path>)``. The script writes all four in a
+single invocation and bumps the research file's ``updated:`` field to
+today. Idempotent: when a side already records the citation, that side
+is left alone.
 
 Usage:
     uv run register_research_citation.py <a4-dir> <research-ref> <spec-ref>
@@ -28,6 +31,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import sys
 from dataclasses import asdict, dataclass, field
@@ -125,39 +129,46 @@ def _existing_list(fm: dict | None, field_name: str) -> list[str]:
     return out
 
 
-def _append_to_section(body: str, heading: str, line: str) -> tuple[str, bool]:
-    """Append `line` to a `## <heading>` section, creating the section if absent.
+def _append_to_tag_section(
+    body: str, tag_name: str, line: str
+) -> tuple[str, bool]:
+    """Append `line` to a column-0 ``<tag>...</tag>`` section.
 
-    Idempotent: if the line already appears anywhere within the named
-    section, no change is made.
+    Idempotent: if the line already appears inside the section, no
+    change. When the section is absent, it is created at the end of the
+    body. When present, the entire block is re-rendered with canonical
+    blank-line discipline (existing bullet entries preserved in order,
+    plus the new entry appended).
+
+    Non-bullet content inside an existing section is dropped — these
+    citation sections carry bullet entries only.
     """
-    pattern = re.compile(rf"^##\s+{re.escape(heading)}\s*$", re.MULTILINE)
+    pattern = re.compile(
+        rf"^<{re.escape(tag_name)}>\s*\n(.*?)\n^</{re.escape(tag_name)}>\s*$",
+        re.MULTILINE | re.DOTALL,
+    )
     m = pattern.search(body)
     if m is None:
-        prefix = body.rstrip()
-        if prefix:
-            new_body = f"{prefix}\n\n## {heading}\n\n{line}\n"
-        else:
-            new_body = f"## {heading}\n\n{line}\n"
+        prefix = body.rstrip("\n")
+        sep = "\n\n" if prefix else ""
+        new_body = (
+            f"{prefix}{sep}<{tag_name}>\n\n{line}\n\n</{tag_name}>\n"
+        )
         return new_body, True
 
-    section_start = m.end()
-    next_section = re.search(r"^##\s+", body[section_start:], re.MULTILINE)
-    section_end = section_start + next_section.start() if next_section else len(body)
-    section_text = body[section_start:section_end]
-
+    section_text = m.group(1)
     if line in section_text:
         return body, False
 
-    trimmed = section_text.rstrip("\n")
-    if trimmed:
-        appended = trimmed + "\n" + line + "\n\n"
-    else:
-        appended = "\n" + line + "\n\n"
-    new_body = body[:section_start] + appended + body[section_end:]
-    if next_section is None and not new_body.endswith("\n"):
-        new_body += "\n"
-    return new_body, True
+    existing: list[str] = []
+    for raw in section_text.splitlines():
+        stripped = raw.strip()
+        if stripped.startswith("- "):
+            existing.append(stripped[2:])
+    existing.append(line.removeprefix("- ") if line.startswith("- ") else line)
+    bullets = "\n".join(f"- {e}" for e in existing)
+    new_block = f"<{tag_name}>\n\n{bullets}\n\n</{tag_name}>"
+    return body[: m.start()] + new_block + body[m.end():], True
 
 
 def _resolve_research(a4_dir: Path, ref: str) -> Path | None:
@@ -221,6 +232,13 @@ def register(
     research_ref = f"research/{research_path.stem}"
     spec_ref = f"spec/{spec_path.stem}"
 
+    # Body links use standard markdown form with the relative path between
+    # the two files, since wiki-style `[[...]]` is no longer used.
+    spec_to_research = os.path.relpath(research_path, spec_path.parent)
+    research_to_spec = os.path.relpath(spec_path, research_path.parent)
+    spec_body_line = f"- [{research_ref}]({spec_to_research})"
+    research_body_line = f"- [{spec_ref}]({research_to_spec})"
+
     # Spec side.
     spec_md = parse(spec_path)
     spec_existing = _existing_list(spec_md.preamble.fm, "research")
@@ -231,8 +249,8 @@ def register(
             spec_fm, "research", sorted(spec_existing + [research_ref])
         )
         result.spec_research_field_added = True
-    new_spec_body, body_changed = _append_to_section(
-        spec_body, "Research", f"- [[{research_ref}]]"
+    new_spec_body, body_changed = _append_to_tag_section(
+        spec_body, "research", spec_body_line
     )
     if body_changed:
         spec_body = new_spec_body
@@ -248,8 +266,8 @@ def register(
             research_fm, "cited_by", sorted(research_existing + [spec_ref])
         )
         result.research_cited_by_added = True
-    new_research_body, body_changed = _append_to_section(
-        research_body, "Cited By", f"- [[{spec_ref}]]"
+    new_research_body, body_changed = _append_to_tag_section(
+        research_body, "cited-by", research_body_line
     )
     if body_changed:
         research_body = new_research_body
@@ -335,9 +353,9 @@ def main() -> None:
         print(f"{prefix}research: {research_disp}")
         flags = [
             ("research field on spec", result.spec_research_field_added),
-            ("Research section on spec", result.spec_body_added),
+            ("<research> section on spec", result.spec_body_added),
             ("cited_by field on research", result.research_cited_by_added),
-            ("Cited By section on research", result.research_body_added),
+            ("<cited-by> section on research", result.research_body_added),
             ("updated bumped on research", result.research_updated_bumped),
         ]
         if any(flag for _, flag in flags):

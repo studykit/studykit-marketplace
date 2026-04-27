@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  a4 body XML schema. Source of truth for files whose frontmatter declares
+  `type: <root>`. Hand-edited; consumed by validate_body.py and
+  transition_status.py via the xmlschema library.
+-->
+
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:vc="http://www.w3.org/2007/XMLSchema-versioning"
+           vc:minVersion="1.1"
+           elementFormDefault="qualified">
+
+  <xs:complexType name="markdownContent" mixed="true">
+    <xs:sequence>
+      <xs:any minOccurs="0" maxOccurs="unbounded" processContents="skip"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="architecture">
+    <xs:complexType>
+      <xs:openContent mode="interleave">
+        <xs:any notQName="change-logs component-diagram components external-dependencies overview technology-stack test-strategy" processContents="skip"/>
+      </xs:openContent>
+      <xs:all>
+        <xs:element name="components" type="markdownContent"/>
+        <xs:element name="overview" type="markdownContent"/>
+        <xs:element name="technology-stack" type="markdownContent"/>
+        <xs:element name="test-strategy" type="markdownContent"/>
+        <xs:element name="change-logs" type="markdownContent" minOccurs="0"/>
+        <xs:element name="component-diagram" type="markdownContent" minOccurs="0"/>
+        <xs:element name="external-dependencies" type="markdownContent" minOccurs="0"/>
+      </xs:all>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

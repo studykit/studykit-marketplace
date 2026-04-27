@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0"]
+# dependencies = ["pyyaml>=6.0", "xmlschema>=3.4"]
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
@@ -56,12 +56,15 @@ from datetime import date
 from pathlib import Path
 from typing import Any
 
+import re
+
 from common import normalize_ref
 from markdown import parse
 from status_model import (
     FAMILY_TRANSITIONS,
     STATUS_BY_FOLDER as FAMILY_STATES,
 )
+from validate_body import run as validate_body_run
 
 
 # ---------------------------------------------------------------------------
@@ -123,17 +126,47 @@ def rewrite_frontmatter_scalar(raw_fm: str, field_name: str, new_value: str) -> 
     return "\n".join(lines)
 
 
+_LOG_BLOCK_RE = re.compile(
+    r"^<log>\s*\n(.*?)\n^</log>\s*$",
+    re.MULTILINE | re.DOTALL,
+)
+
+
+def _format_log_block(entries: list[str]) -> str:
+    """Render the canonical `<log>` block: blank lines around bulleted entries."""
+    bullets = "\n".join(f"- {e}" for e in entries)
+    return f"<log>\n\n{bullets}\n\n</log>"
+
+
 def append_log_entry(body: str, log_line: str) -> str:
-    """Append `- <log_line>` under `## Log`; create the section if missing."""
-    log_header = "## Log"
-    normalized = body.rstrip("\n")
-    if log_header in normalized:
-        parts = normalized.rsplit(log_header, 1)
-        head, tail = parts[0], parts[1]
-        tail = tail.rstrip("\n") + f"\n- {log_line}\n"
-        return f"{head}{log_header}{tail}"
-    sep = "\n\n" if normalized else ""
-    return f"{normalized}{sep}## Log\n\n- {log_line}\n"
+    """Append a bullet entry to the body's `<log>` section.
+
+    If the section exists (as a column-0 ``<log>...</log>`` block, per
+    the body XML convention), prior bullet entries are preserved and the
+    new entry is appended. The whole block is re-rendered with the
+    canonical blank-line discipline so re-runs are idempotent.
+
+    If the section is missing, a new `<log>` block is appended at the
+    end of the body, separated from any preceding content by a blank
+    line.
+
+    Non-bullet content inside an existing ``<log>`` block (e.g.,
+    free-form prose between bullets) is dropped — the section
+    convention is bullets only.
+    """
+    match = _LOG_BLOCK_RE.search(body)
+    if match:
+        existing: list[str] = []
+        for line in match.group(1).splitlines():
+            stripped = line.strip()
+            if stripped.startswith("- "):
+                existing.append(stripped[2:])
+        existing.append(log_line)
+        new_block = _format_log_block(existing)
+        return body[: match.start()] + new_block + body[match.end():]
+    trimmed = body.rstrip("\n")
+    sep = "\n\n" if trimmed else ""
+    return f"{trimmed}{sep}{_format_log_block([log_line])}\n"
 
 
 def write_file(path: Path, raw_fm: str, body: str) -> None:
@@ -258,12 +291,27 @@ def _is_non_empty_list(value: Any) -> bool:
     )
 
 
+def _validate_body_xsd(a4_dir: Path, rel_path: str, issues: list[str]) -> None:
+    """Run validate_body's XSD pass on a single file and surface failures.
+
+    Replaces the previous heading-substring checks (e.g., looking for
+    ``"## Flow"`` in the body) — body structure is now declared by
+    ``body_schemas/<type>.xsd`` and enforced by xmlschema.
+    """
+    target = a4_dir / rel_path
+    violations, _ = validate_body_run(a4_dir, target)
+    for v in violations:
+        prefix = f"body[{v.rule}]"
+        if v.line is not None:
+            prefix += f" line {v.line}"
+        issues.append(f"{prefix}: {v.message}")
+
+
 def validate_transition(
     a4_dir: Path,
     rel_path: str,
     family: str,
     fm: dict,
-    body: str,
     from_status: str,
     to_status: str,
 ) -> list[str]:
@@ -275,10 +323,10 @@ def validate_transition(
     issues: list[str] = []
     if family == "usecase":
         if from_status == "ready" and to_status == "implementing":
-            _validate_ready_to_implementing(fm, body, issues)
+            _validate_ready_to_implementing(a4_dir, rel_path, fm, issues)
             return issues
         if from_status == "revising" and to_status == "ready":
-            _validate_revising_to_ready(fm, body, issues)
+            _validate_revising_to_ready(a4_dir, rel_path, fm, issues)
             return issues
         if from_status == "implementing" and to_status == "shipped":
             _validate_implementing_to_shipped(a4_dir, rel_path, fm, issues)
@@ -286,13 +334,15 @@ def validate_transition(
         return issues
     if family == "spec":
         if from_status == "draft" and to_status == "active":
-            _validate_draft_to_active(fm, body, issues)
+            _validate_draft_to_active(a4_dir, rel_path, fm, issues)
             return issues
         return issues
     return issues
 
 
-def _validate_ready_to_implementing(fm: dict, body: str, issues: list[str]) -> None:
+def _validate_ready_to_implementing(
+    a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
+) -> None:
     implemented_by = fm.get("implemented_by")
     if not _is_non_empty_list(implemented_by):
         issues.append(
@@ -309,11 +359,12 @@ def _validate_ready_to_implementing(fm: dict, body: str, issues: list[str]) -> N
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-    if "## Flow" not in body:
-        issues.append("body is missing `## Flow` section.")
+    _validate_body_xsd(a4_dir, rel_path, issues)
 
 
-def _validate_revising_to_ready(fm: dict, body: str, issues: list[str]) -> None:
+def _validate_revising_to_ready(
+    a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
+) -> None:
     # Same shape checks as ready→implementing, since revising→ready is a
     # re-approval after spec edit.
     actors = fm.get("actors")
@@ -325,8 +376,7 @@ def _validate_revising_to_ready(fm: dict, body: str, issues: list[str]) -> None:
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-    if "## Flow" not in body:
-        issues.append("body is missing `## Flow` section.")
+    _validate_body_xsd(a4_dir, rel_path, issues)
 
 
 def _validate_implementing_to_shipped(
@@ -357,18 +407,17 @@ def _validate_implementing_to_shipped(
         )
 
 
-def _validate_draft_to_active(fm: dict, body: str, issues: list[str]) -> None:
-    """Spec draft → active: title placeholder + required body sections."""
+def _validate_draft_to_active(
+    a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
+) -> None:
+    """Spec draft → active: title placeholder + body XSD compliance."""
     for field_name in ("title",):
         placeholder = _placeholder_in(fm.get(field_name))
         if placeholder:
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-    if "## Context" not in body:
-        issues.append("body is missing `## Context` section.")
-    if "## Specification" not in body:
-        issues.append("body is missing `## Specification` section.")
+    _validate_body_xsd(a4_dir, rel_path, issues)
 
 
 # ---------------------------------------------------------------------------
@@ -712,7 +761,7 @@ def transition(
         report.errors.append(f"file not found: {target_path}")
         return report
 
-    fm, _, body = _parse(target_path)
+    fm, _, _ = _parse(target_path)
     if fm is None:
         report.errors.append(f"{target_path}: unreadable frontmatter")
         return report
@@ -749,7 +798,7 @@ def transition(
         return report
 
     issues = validate_transition(
-        a4_dir, rel_path, family, fm, body, current, new_status
+        a4_dir, rel_path, family, fm, current, new_status
     )
     report.validation_issues = list(issues)
     if issues and not force:
@@ -1025,7 +1074,7 @@ def main() -> None:
                 errors=[f"cannot validate: file {rel!r} missing or unsupported family"],
             )
         else:
-            fm, _, body = _parse(target_path)
+            fm, _, _ = _parse(target_path)
             if fm is None:
                 report = Report(
                     a4_dir=str(a4_dir), file=rel, family=family,
@@ -1051,7 +1100,7 @@ def main() -> None:
                     )
                 else:
                     issues = validate_transition(
-                        a4_dir, rel, family, fm, body,
+                        a4_dir, rel, family, fm,
                         str(current), args.to_status,
                     )
                 report = Report(
