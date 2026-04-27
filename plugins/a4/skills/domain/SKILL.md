@@ -26,18 +26,18 @@ Output:
 - `a4/domain.md` — single wiki page covering Glossary, Relationships (PlantUML class diagram), State Transitions (PlantUML state diagrams).
 - `a4/review/<id>-<slug>.md` — per-finding review items emitted by the wrap-up reviewer.
 
-Derived views (concept-to-UC coverage matrix, open-domain-findings dashboard) are **not files**; they render via Obsidian dataview on demand.
+Derived views (concept-to-UC coverage matrix, open-domain-findings dashboard) are **not files**; they are produced on demand by `compass` or by grep over frontmatter.
 
 ## Wiki Page Schema
 
 ```yaml
 ---
-kind: domain
+type: domain
 updated: 2026-04-25
 ---
 ```
 
-No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / actors / architecture sections are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`, `[[architecture#SessionService]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` (shared across `usecase`, `domain`, `arch`, `roadmap`).
+No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / actors / architecture sections are expressed as standard markdown links (`[usecase/3-search-history](usecase/3-search-history.md)`, `[architecture#SessionService](architecture.md#sessionservice)`) in body prose. The `<change-logs>` section tracks updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` (shared across `usecase`, `domain`, `arch`, `roadmap`).
 
 ## Id Allocation
 
@@ -63,7 +63,7 @@ Mechanics (filter, backlog presentation, writer calls, footnote rules, disciplin
 **Backlog filter:** `target: domain` OR `domain` in `wiki_impact`.
 
 **Domain-specific staleness signals (alongside the backlog):**
-1. **New or changed UCs since last update** — compare `domain.md`'s `## Changes` footnotes against current UC files. UCs not yet reflected in any domain footnote are "needs concept review" candidates. The drift detector emits `kind: gap` review items for staleness.
+1. **New or changed UCs since last update** — compare `domain.md`'s `<change-logs>` entries against current UC files. UCs not yet reflected in any domain entry are "needs concept review" candidates. The drift detector emits `kind: gap` review items for staleness.
 2. **Stale concept signal** — if `a4/domain.md`'s `updated:` is older than the most recent UC file's `updated:` by ≥ 3 UC additions, surface this as a likely review trigger even when no review item exists.
 
 **Domain impact propagation rule** — when one area changes, check whether it affects others:
@@ -105,26 +105,26 @@ Mark "Step 0" completed when the read pass is done.
 
 ## Domain.md Structure
 
-As phases progress, grow `a4/domain.md` with these sections (write on phase transitions):
+As phases progress, grow `a4/domain.md` with these `<tag>` sections (per `body_schemas/domain.xsd`; write on phase transitions):
 
-```markdown
+````markdown
 ---
-kind: domain
+type: domain
 updated: <today>
 ---
 
-# Domain Model
+<concepts>
 
-> Cross-cutting vocabulary and structural relationships emerging from the use cases in [[context]], grounded in the actors of [[actors]].
-
-## Glossary
+Cross-cutting vocabulary emerging from the use cases in [context](context.md), grounded in the actors of [actors](actors.md).
 
 | Concept | Definition | Key Attributes | Referenced By |
 |---------|-----------|----------------|---------------|
-| Session | A scoped working context bound to a single user and topic. | id, owner, topic, createdAt | [[usecase/1-share-summary]], [[usecase/3-search-history]] |
-| Message | A single utterance recorded within a session. | id, sessionId, body, sentAt | [[usecase/2-render-preview]] |
+| Session | A scoped working context bound to a single user and topic. | id, owner, topic, createdAt | [usecase/1-share-summary](usecase/1-share-summary.md), [usecase/3-search-history](usecase/3-search-history.md) |
+| Message | A single utterance recorded within a session. | id, sessionId, body, sentAt | [usecase/2-render-preview](usecase/2-render-preview.md) |
 
-## Relationships
+</concepts>
+
+<relationships>
 
 ```plantuml
 @startuml
@@ -144,7 +144,9 @@ Session "1" -- "0..*" Message : contains
 
 Sessions own messages (1:N). A message cannot exist without an owning session. Message ordering within a session is by `sentAt`.
 
-## State Transitions
+</relationships>
+
+<state-transitions>
 
 ### Session
 
@@ -161,26 +163,32 @@ Discarded --> [*]
 
 `Active` is the default state on creation. Archive is reversible; discard is terminal.
 
-## Changes
+</state-transitions>
 
-[^1]: 2026-04-25 — [[usecase/3-search-history]]
-[^2]: 2026-04-25 — [[architecture#SessionService]]
-```
+<change-logs>
 
-Concept names in the Glossary become **canonical terms**. Architecture component names, schema fields, and contract parameters reuse them. UC bodies reference them via wikilinks where helpful.
+- 2026-04-25 — [usecase/3-search-history](usecase/3-search-history.md)
+- 2026-04-25 — [architecture#SessionService](architecture.md#sessionservice)
 
-### Required vs Conditional Sections
+</change-logs>
+````
 
-**Required** (present from First Extraction onwards): Glossary (at least one concept), Relationships (PlantUML diagram + text).
+Concept names in `<concepts>` become **canonical terms**. Architecture component names, schema fields, and contract parameters reuse them. UC bodies reference them via standard markdown links where helpful.
 
-**Conditional:**
-- **State Transitions** — only when at least one concept has state changes across UCs. A pure value/data model with no lifecycle has no state-transitions section.
+### Required vs Optional Sections
+
+**Required** (per the XSD): `<concepts>`.
+
+**Optional** (per the XSD): `<change-logs>`, `<relationships>`, `<state-transitions>`. Convention:
+
+- **`<relationships>`** — populate once two or more concepts interact in non-trivial ways.
+- **`<state-transitions>`** — only when at least one concept has state changes across UCs. A pure value/data model with no lifecycle skips this section.
 
 ## File Writing Rules
 
-- **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter above and the confirmed Glossary.
+- **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter above and the confirmed `<concepts>` section.
 - **Update** at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Footnote markers** — when a change is driven by a specific UC / spec / review item / arch discussion, add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the protocol (when to update, how to defer via a review item, close guard).
+- **Change-log entries** — when a change is driven by a specific UC / spec / review item / arch discussion, append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. See `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` for the protocol (when to update, how to defer via a review item, close guard).
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Phases
@@ -227,7 +235,7 @@ Stateless concepts (pure value/data) have no state diagram. Skip the section ent
 
 Domain extraction ends only when the user says so. When the user indicates they're done:
 
-1. **Pre-flight consistency check** — read `domain.md` end-to-end. Confirm: every concept in Relationships exists in the Glossary; every State Transition concept exists in the Glossary; every UC referenced from `Referenced By` is an existing UC file. Resolve obvious gaps before launching the reviewer.
+1. **Pre-flight consistency check** — read `domain.md` end-to-end. Confirm: every concept in `<relationships>` exists in `<concepts>`; every state-diagram concept in `<state-transitions>` exists in `<concepts>`; every UC referenced from `Referenced By` is an existing UC file. Resolve obvious gaps before launching the reviewer.
 
 2. **Launch `domain-reviewer`** — spawn `Agent(subagent_type: "a4:domain-reviewer")`. Pass:
    - `a4/` absolute path
@@ -236,11 +244,11 @@ Domain extraction ends only when the user says so. When the user indicates they'
    The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md` (using `allocate_id.py`) and returns a summary.
 
 3. **Walk findings** — for each emitted review item (ordered by priority then id), present to the user and resolve or defer:
-   - **Fix now** — edit `domain.md` (and any cross-referenced file). Set the review item `status: resolved` via `transition_status.py`, append a `## Log` entry, and add a footnote marker on each modified wiki page per the Wiki Update Protocol.
-   - **Defer** — leave `status: open`; add a `## Log` entry noting the deferral reason.
+   - **Fix now** — edit `domain.md` (and any cross-referenced file). Flip the review item `status: resolved` via `transition_status.py` (which appends the `<log>` entry), and append a dated `<change-logs>` bullet on each modified wiki page per the Wiki Update Protocol.
+   - **Defer** — leave `status: open`. Capture the deferral reason in conversation notes / handoff.
    - **Discard** — set `status: discarded` via `scripts/transition_status.py`.
 
-4. **Wiki close guard** — for each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
+4. **Wiki close guard** — for each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing.
 
 5. **Report** — summarize to the user:
    - Phases completed this session
@@ -252,9 +260,9 @@ Domain extraction ends only when the user says so. When the user indicates they'
 
 ## Domain Edits Originating Outside This Skill
 
-`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill — those edits are committed inline with the arch session, and the footnote/`## Changes` entry cites the architecture section as the cause. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. See `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3 for the decision table; the workspace-wide authorship policy is at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md).
+`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill — those edits are committed inline with the arch session, and the `<change-logs>` bullet cites the architecture section as the cause. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. See `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3 for the decision table; the workspace-wide authorship policy is at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md).
 
-When iterating after arch has run, expect to see `## Changes` entries citing `[[architecture#<section>]]`. Treat them as authoritative — do not undo them; they reflect work already accepted by the user.
+When iterating after arch has run, expect to see `<change-logs>` entries citing `[architecture#<section>](architecture.md#<section>)`. Treat them as authoritative — do not undo them; they reflect work already accepted by the user.
 
 **Findings about other wiki pages.** If domain work surfaces an issue in another wiki (e.g., a rename invalidates a `architecture.md` component name), do not edit that wiki — emit a review item with the appropriate `target:`. Per the cross-stage feedback policy, this skill is **continue + review item** for upstream findings: finish domain wrap-up, leave the review item open for the owning skill's `iterate` mode.
 
@@ -268,6 +276,6 @@ Context is passed via file paths, not agent memory.
 
 - Do not author UCs. UC creation is `/a4:usecase`'s exclusive role.
 - Do not edit `architecture.md`. Architectural decisions live there; this skill writes domain only.
-- Do not maintain a `domain.history.md`. Per-issue `## Log` sections plus the `## Changes` footnote section + git history cover audit needs.
-- Do not track per-source SHAs on `domain.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency.
+- Do not maintain a `domain.history.md`. Per-issue `<log>` sections plus `<change-logs>` and git history cover audit needs.
+- Do not track per-source SHAs on `domain.md`. The wiki update protocol's `<change-logs>` + drift-detector flow handles cross-reference consistency.
 - Do not emit aggregated reviewer reports. All findings are per-review-item files.

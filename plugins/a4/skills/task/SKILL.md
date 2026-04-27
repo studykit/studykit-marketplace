@@ -1,6 +1,6 @@
 ---
 name: task
-description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `## Why discarded` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
+description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `<why-discarded>` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
 argument-hint: "kind=<feature|spike|bug> [title] | discard <id-or-slug> [reason]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList
 ---
@@ -19,7 +19,7 @@ Seed: **$ARGUMENTS**
 ## Scope
 
 - **In (author mode):** writing one task file at `status: pending`, allocating its id, resolving `implements:` / `spec:` references, proposing the `spike/<id>-<slug>/` sidecar for `kind: spike`, refreshing `implemented_by:` on referenced UCs.
-- **In (discard mode):** flipping an existing task's `status: → discarded` via `transition_status.py`, appending an optional `## Why discarded` note, advising on the spike sidecar (no auto-delete).
+- **In (discard mode):** flipping an existing task's `status: → discarded` via `transition_status.py`, appending an optional `<why-discarded>` note, advising on the spike sidecar (no auto-delete).
 - **Out:** UC-batch generation (`/a4:roadmap`), implement / test loop (`/a4:run`), automated reviewer (single-task author is the user's own thinking; no machine critique is auto-spawned). No commit.
 
 ## Pre-flight
@@ -76,24 +76,23 @@ Empty anchors are not always a problem — small UI tweaks, single-property vali
 
 ## Step 3: Compose the task body
 
-Required body sections (mirrors `/a4:roadmap`'s task schema):
+Required body sections (per `body_schemas/task.xsd`):
 
-- `## Description` — what and why.
-- `## Files` — action / path / change table. For `spike`, every path is under `spike/<id>-<slug>/`.
-- `## Unit Test Strategy` — scenarios + isolation strategy + test file paths. For `spike`, this may be a one-line "validate hypothesis via <method>".
-- `## Acceptance Criteria` — checklist. Source by kind:
+- `<description>` — what and why.
+- `<files>` — action / path / change table. For `spike`, every path is under `spike/<id>-<slug>/`.
+- `<unit-test-strategy>` — scenarios + isolation strategy + test file paths. For `spike`, this may be a one-line "validate hypothesis via <method>".
+- `<acceptance-criteria>` — checklist. Source by kind:
 
   | Task kind / shape | AC source |
   |---|---|
-  | `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-  | `feature` + `spec: [spec/...]` (UC-less) | spec `## Decision` + relevant `architecture.md` section |
+  | `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
+  | `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
   | `spike` | hypothesis + expected result, the spike's own body |
   | `bug` | reproduction scenario + fixed criteria |
 
-  Validators do not enforce source-by-kind — this is a documentation convention. The `## Acceptance Criteria` section must exist regardless.
+  Validators do not enforce source-by-kind — this is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
 
-- `## Interface Contracts` — contracts this task consumes or provides, with wikilinks to `[[architecture]]` sections. For UC-less work, link to the spec (`[[spec/<id>-<slug>]]`) or the relevant `architecture.md` section. May be empty for self-contained spikes.
-- `## Log` — append-only; starts empty (`status: pending` is the implicit creation entry, written by the writer on first transition).
+Optional body sections (per the XSD): `<interface-contracts>` (contracts this task consumes or provides, with markdown links to `architecture.md` sections — e.g., `[architecture#SessionService](../architecture.md#sessionservice)`. For UC-less work, link to the spec or the relevant `architecture.md` section. May be omitted for self-contained spikes); `<log>` (append-only writer-owned trail; starts absent — `status: pending` is the implicit creation entry, written by the writer on first transition); `<change-logs>` (audit trail when the task body is materially edited post-create); `<why-discarded>` (populated by discard mode).
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -106,7 +105,7 @@ Ask the user once:
 > Spike code will live at `spike/<allocated-id>-<slug>/`. Create the directory now?
 
 - **Yes** → create after Step 5 (id is needed for the path). `mkdir -p <project-root>/spike/<id>-<slug>`. Optionally drop a `.gitkeep` so the empty directory is committable.
-- **No** → leave the path in the task's `## Files` table for the user (or task-implementer) to create later.
+- **No** → leave the path in the task's `<files>` table for the user (or task-implementer) to create later.
 
 Do not auto-create archive paths or scaffolding files. The spike directory is opt-in scratch space; only the task markdown is mandatory.
 
@@ -122,6 +121,7 @@ Frontmatter (substitute the initial status decided in Step 1):
 
 ```yaml
 ---
+type: task
 id: <allocated>
 title: <human-readable title>
 kind: feature | spike | bug
@@ -144,18 +144,20 @@ Allowed initial statuses are `open` (default — backlog), `pending` (enqueue fo
 **`complete` initial-status preflight.** When the chosen initial status is `complete`, the work is asserted to already be shipped — verify before writing:
 
 1. For each path in `files:`, confirm it exists in the working tree (`test -e` on the absolute path). If any path is missing, halt and ask the user: (a) fix the path, or (b) downgrade the initial status to `pending` so the task enters the implement loop.
-2. Body sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`, `## Interface Contracts`) should still be present — `complete` does not exempt the task from documentation.
-3. After writing the file, append an explicit `## Log` entry recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
+2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per `body_schemas/task.xsd` — `complete` does not exempt the task from documentation. `<interface-contracts>` is optional; include it when relevant.
+3. After writing the file, append an explicit `<log>` block recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
 
    ```markdown
-   ## Log
+   <log>
 
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; code shipped prior to task authorship)
+
+   </log>
    ```
 
-   This is the only case where a skill writes into `## Log` directly — every subsequent entry must come from `transition_status.py`.
+   This is the only case where a skill writes into `<log>` directly — every subsequent entry must come from `transition_status.py`.
 
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value and the create is itself the log-implicit "first appearance" event (the post-hoc `## Log` line above is the documented exception for the `complete` case). Subsequent transitions go through the writer.
+Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value and the create is itself the log-implicit "first appearance" event (the post-hoc `<log>` block above is the documented exception for the `complete` case). Subsequent transitions go through the writer.
 
 ## Step 6: Refresh `implemented_by:` (if `implements:` non-empty)
 
@@ -172,7 +174,7 @@ Idempotent. Back-scans every task's `implements:` list and writes `implemented_b
 mkdir -p "$(git rev-parse --show-toplevel)/spike/<id>-<slug>"
 ```
 
-Suggest (do not auto-create) a `README.md` inside it pointing back to the task file as `[[task/<id>-<slug>]]`. Whether to seed scaffolding files is the user's call — single spikes vary widely.
+Suggest (do not auto-create) a `README.md` inside it pointing back to the task file as `[task/<id>-<slug>](../a4/task/<id>-<slug>.md)`. Whether to seed scaffolding files is the user's call — single spikes vary widely.
 
 ## Step 8: Hand-off
 
@@ -186,7 +188,7 @@ For more single tasks, re-invoke `/a4:task`. If the user wants the task implemen
 
 ## Discard mode
 
-Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure in [`references/discard.md`](references/discard.md): resolve the target task by id / `task/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `## Why discarded` note (D3), advise on the spike sidecar without auto-deleting (D4), skip `refresh_implemented_by.py` since `implements:` did not change (D5), and report (D6). UC-cascade discards (when a UC flips to `discarded`) are handled automatically by `transition_status.py` — discard mode is for **explicit one-off task discards**.
+Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure in [`references/discard.md`](references/discard.md): resolve the target task by id / `task/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `<why-discarded>` block (D3), advise on the spike sidecar without auto-deleting (D4), skip `refresh_implemented_by.py` since `implements:` did not change (D5), and report (D6). UC-cascade discards (when a UC flips to `discarded`) are handled automatically by `transition_status.py` — discard mode is for **explicit one-off task discards**.
 
 ## Commit Points
 
@@ -223,4 +225,4 @@ Never skip hooks, amend, or force-push without explicit user instruction.
 - Do not write `roadmap.md`. If the project has no roadmap and the user wants one, redirect to `/a4:roadmap`. Single tasks are valid without a roadmap (they read `bootstrap.md`'s Launch & Verify in `/a4:run`).
 - Do not flip task status beyond the initial `open` / `pending` / `complete` write (author mode) or the explicit `→ discarded` flip (discard mode). `/a4:run` and `transition_status.py` own all other transitions, including `open → pending` (the user requests it; the writer applies it).
 - Do not auto-delete or auto-archive `spike/<id>-<slug>/` on discard. Archiving a finished spike is a manual `git mv` per the experiments-slot spec.
-- Do not delete the task file on discard. The file stays at `status: discarded` so its `## Log` and `## Why discarded` remain part of the workspace history; `git rm` is a separate user choice.
+- Do not delete the task file on discard. The file stays at `status: discarded` so its `<log>` and `<why-discarded>` remain part of the workspace history; `git rm` is a separate user choice.

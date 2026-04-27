@@ -103,29 +103,30 @@ updated: <YYYY-MM-DD>
 promoted: []        # paths populated when status → promoted (e.g., [spec/<id>-<slug>, usecase/<id>-<slug>])
 tags: []
 ---
-# Brainstorming: <session topic>
 
-## Context
-<Why this brainstorming was needed. Background, constraints, goals.>
+<ideas>
 
-## Discussion Journey
-<Key turning points, rejected directions and why, how the conversation arrived at the final ideas.>
+### Context
 
-## Ideas
+Why this brainstorming was needed. Background, constraints, goals.
 
-### Theme: <theme name>
-- **<Idea title>**: <1-2 sentence description>
-- **<Idea title>**: <1-2 sentence description>
+### Discussion Journey
+
+Key turning points, rejected directions and why, how the conversation arrived at the final ideas.
 
 ### Theme: <theme name>
+
 - **<Idea title>**: <1-2 sentence description>
+- **<Idea title>**: <1-2 sentence description>
+
+### Theme: <theme name>
+
+- **<Idea title>**: <1-2 sentence description>
+
+</ideas>
 ```
 
-**Required sections**: Context, Discussion Journey, and Ideas. Conditionally required:
-- **Research Findings** — if research was conducted during the session
-- **TODOs** — if any action items or TODOs came up during the conversation
-
-Additional sections may be added when the session content warrants them (e.g., Constraints, Open Questions), but always use headed sections (`##` or `###`) — never free-form prose outside a section.
+`body_schemas/brainstorm.xsd` requires the `<ideas>` section; `<notes>` and `<change-logs>` are optional. Research findings, TODOs, Constraints, Open Questions, etc. are H3+ headings inside `<ideas>` (or `<notes>` if you prefer to separate them). H1 (`# Title`) is forbidden in body — the topic lives in frontmatter.
 
 ## Handoff to Research and spec
 

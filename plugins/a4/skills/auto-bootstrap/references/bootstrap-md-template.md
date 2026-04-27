@@ -1,18 +1,18 @@
 # bootstrap.md Template (auto-bootstrap Step 6)
 
-Use the `Write` tool with this scaffold for fresh runs. On incremental bootstrap, use `Edit` to touch only the sections that changed and add a footnote marker + `## Changes` entry citing what drove the update (typically `[[architecture]]` when architectural changes triggered re-bootstrap).
+Use the `Write` tool with this scaffold for fresh runs. On incremental bootstrap, use `Edit` to touch only the sections that changed and append a `<change-logs>` bullet citing what drove the update (typically `[architecture](architecture.md)` when architectural changes triggered re-bootstrap).
 
-```markdown
+`body_schemas/bootstrap.xsd` requires `<environment>`, `<launch>`, `<verify>`. `<change-logs>` is optional but written whenever a change cites a causing wiki/issue.
+
+````markdown
 ---
-kind: bootstrap
+type: bootstrap
 updated: <today>
 ---
 
-# Bootstrap
+<environment>
 
-> Verifies the dev environment for the architecture in [[architecture]].
-
-## Environment
+Verifies the dev environment for the architecture in [architecture](architecture.md).
 
 | Item | Value |
 |------|-------|
@@ -22,18 +22,7 @@ updated: <today>
 | Package manager | <npm / pnpm / pip / …> |
 | Project root | <path relative to git root> |
 
-## Verified Commands
-
-| Command | Purpose | Status |
-|---------|---------|--------|
-| `npm run build` | Build | PASS |
-| `npm run dev` | Launch app | PASS |
-| `npm test` | Unit tests | PASS |
-| `npm run test:integration` | Integration tests | PASS |
-| `npm run test:e2e` | E2E tests | PASS |
-| edit → build → test | Dev loop | PASS |
-
-## Test Infrastructure
+### Test Infrastructure
 
 | Tier | Tool | Version | Config | Minimal Test | Status |
 |------|------|---------|--------|--------------|--------|
@@ -41,26 +30,52 @@ updated: <today>
 | Integration | @vscode/test-electron | 2.5 | `.vscode-test.js` | `tests/integration/activate.test.ts` | PASS |
 | E2E | WebdriverIO + wdio-vscode-service | 8.x | `wdio.conf.ts` | `tests/e2e/panel.test.ts` | PASS |
 
-## Test Isolation Flags
+</environment>
+
+<launch>
+
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `npm run build` | Build | PASS |
+| `npm run dev` | Launch app | PASS |
+
+</launch>
+
+<verify>
+
+### Verified Commands
+
+| Command | Purpose | Status |
+|---------|---------|--------|
+| `npm test` | Unit tests | PASS |
+| `npm run test:integration` | Integration tests | PASS |
+| `npm run test:e2e` | E2E tests | PASS |
+| edit → build → test | Dev loop | PASS |
+
+### Test Isolation Flags
 
 | Tier | Flags |
 |------|-------|
 | Integration | `--disable-extensions`, `--extensions-dir=<tmpdir>` |
 | E2E | `--user-data-dir=<tmpdir>`, `--no-sandbox` (CI) |
 
-## Smoke Scenario
+### Smoke Scenario
 
-<Single minimal user-observable interaction — e.g., "VS Code launches with only the dev extension active; running command `hello.world` shows a toast." This becomes plan's Launch & Verify smoke scenario.>
+<Single minimal user-observable interaction — e.g., "VS Code launches with only the dev extension active; running command `hello.world` shows a toast." This becomes the project's smoke scenario, read by `/a4:run`.>
 
-## Issues
+### Issues
 
 <Only when issues were encountered. Link to the review items emitted above.>
 
-- Architecture issues (`status: open`): [[review/<id>-<slug>]] × N
-- Environment issues (`status: resolved`): [[review/<id>-<slug>]] × M
-- Environment issues (`status: open`): [[review/<id>-<slug>]] × K
+- Architecture issues (`status: open`): [review/<id>-<slug>](review/<id>-<slug>.md) × N
+- Environment issues (`status: resolved`): [review/<id>-<slug>](review/<id>-<slug>.md) × M
+- Environment issues (`status: open`): [review/<id>-<slug>](review/<id>-<slug>.md) × K
 
-## Changes
+</verify>
 
-[^1]: <today> — [[architecture]]
-```
+<change-logs>
+
+- <today> — [architecture](architecture.md)
+
+</change-logs>
+````

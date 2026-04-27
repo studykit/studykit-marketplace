@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "This skill should be used when the user explicitly invokes /a4:handoff inside a project that uses the a4 plugin's a4/ workflow. Writes a topic-threaded session handoff at <project-root>/.handoff/<topic>/ that references a4/ artifacts via plain Obsidian wikilinks (no transclusion) so the handoff stays a point-in-time snapshot."
+description: "This skill should be used when the user explicitly invokes /a4:handoff inside a project that uses the a4 plugin's a4/ workflow. Writes a topic-threaded session handoff at <project-root>/.handoff/<topic>/ that references a4/ artifacts via standard markdown links so the handoff stays a point-in-time snapshot."
 argument-hint: "<topic-slug> [additional emphasis]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 # Session Handoff (a4 plugin)
 
-Writes a session handoff so a fresh Claude Code session can resume the current topic thread without reconstructing prior conversation. Enforces a topic-threaded schema (`topic` / `previous` / `timestamp`) and keeps each handoff Obsidian-native: plain wikilinks for live pointers, verbatim excerpts only when needed.
+Writes a session handoff so a fresh Claude Code session can resume the current topic thread without reconstructing prior conversation. Enforces a topic-threaded schema (`topic` / `previous` / `timestamp`) and keeps each handoff renderer-agnostic: standard markdown links for live pointers, verbatim excerpts only when needed.
 
 Invocation: `/a4:handoff <topic-slug> [additional emphasis]`.
 
@@ -43,7 +43,7 @@ Before writing the handoff body, identify anything from this session that belong
 
 The handoff still records the session's narrative and state, but durable decisions live in durable docs. The handoff remains self-contained even if the same knowledge is also in the proper doc.
 
-When updating wiki pages under `<project-root>/a4/`, follow the footnote protocol in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md §Wiki Update Protocol` (inline `[^N]` marker + `## Changes` definition). Any `## Changes` entry on `architecture.md` must include a `[[spec/<id>-<slug>]]` wikilink — `drift_detector` raises a `missing-spec-cite` gap otherwise.
+When updating wiki pages under `<project-root>/a4/`, follow the `<change-logs>` protocol in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md §Wiki Update Protocol` (append a dated bullet with a markdown link to the causing issue). Any `<change-logs>` entry on `architecture.md` must include a `[spec/<id>-<slug>](spec/<id>-<slug>.md)` link — `drift_detector` raises a `missing-spec-cite` gap otherwise.
 
 When a spec newly cites a research artifact, never hand-edit the `spec`/`research` frontmatter or body. Run the registrar to write all four places atomically:
 
@@ -58,20 +58,20 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
 
 Write in **English**. Make the handoff self-contained: a fresh session should resume from this file alone without re-reading the broader codebase. Structure and sectioning follow the session's shape.
 
-**Carry-forward items.** Whenever the handoff lists open work, in-progress items, or things the next session should pick up (typical sections: `## Open`, `## Carry-forward`, `## Where to start the next session`, "still open" tier tables), every item must be a wikilink to an on-disk tracker:
+**Carry-forward items.** Whenever the handoff lists open work, in-progress items, or things the next session should pick up (typical sections: `## Open`, `## Carry-forward`, `## Where to start the next session`, "still open" tier tables), every item must be a markdown link to an on-disk tracker:
 
-- `[[task/<id>-<slug>]]` — execution-ready or in-progress work (`status: pending | implementing`).
-- `[[spec/<id>-<slug>]]` — open design question (`status: draft`).
-- `[[spec/<id>-<slug>#Open Questions]]` — open question inside an active spec.
-- `[[research/<slug>]]` — investigation still in flight (`status: draft`); `final` / `standalone` / `archived` artifacts are not carry-forward.
+- `[task/<id>-<slug>](../../a4/task/<id>-<slug>.md)` — execution-ready or in-progress work (`status: pending | implementing`).
+- `[spec/<id>-<slug>](../../a4/spec/<id>-<slug>.md)` — open design question (`status: draft`).
+- `[spec/<id>-<slug> open-questions](../../a4/spec/<id>-<slug>.md#open-questions)` — open question inside an active spec's `<open-questions>` section.
+- `[research/<slug>](../../research/<slug>.md)` — investigation still in flight (`status: draft`); `final` / `standalone` / `archived` artifacts are not carry-forward.
 
-Before listing carry-forwards, sweep the session against `${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md` (B1–B6 + content-aware upward propagation) to surface any spec-worthy moment that was discussed but never authored. If a new decision is warranted, run `/a4:spec` to create the draft first, then list its wikilink as carry-forward — never leave the trigger as free-text.
+Before listing carry-forwards, sweep the session against `${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md` (B1–B6 + content-aware upward propagation) to surface any spec-worthy moment that was discussed but never authored. If a new decision is warranted, run `/a4:spec` to create the draft first, then list its link as carry-forward — never leave the trigger as free-text.
 
-Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:spec` in draft mode for an open design question, `/a4:research` for an open investigation, or add an `## Open Questions` heading to the relevant active spec. Prose around the wikilinks (one-line context, why it's still open) is fine; the wikilink itself is the carry-forward identity.
+Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:spec` in draft mode for an open design question, `/a4:research` for an open investigation, or add an `<open-questions>` section to the relevant active spec. Prose around the links (one-line context, why it's still open) is fine; the link itself is the carry-forward identity.
 
-For projects without a `<project-root>/a4/` workspace, apply the rule analogously: every carry-forward must be a wikilink to an on-disk file the next session can open and update. The file's shape (a draft document, an `## Open Questions` heading on a settled doc, a SKILL/CLAUDE/README path) is the project's call. Free-text without a wikilink target is forbidden in either context.
+For projects without a `<project-root>/a4/` workspace, apply the rule analogously: every carry-forward must be a markdown link to an on-disk file the next session can open and update. The file's shape (a draft document, an `## Open Questions` heading on a settled doc, a SKILL/CLAUDE/README path) is the project's call. Free-text without a link target is forbidden in either context.
 
-**References vs. excerpts.** Use `[[relative/path#Heading]]` for pointers the next session should follow live. Do **not** use transclusion (`![[…]]`) — transclusion renders the *current* source, which would let a past handoff silently mutate as the source drifts. When a section genuinely needs a frozen excerpt, paste the text verbatim with a plain attribution to source path and date; the rendering format is the writer's call.
+**References vs. excerpts.** Use `[label](relative/path.md#heading)` for pointers the next session should follow live. Do **not** copy substantial source content into the handoff — that would make the handoff silently drift as the source evolves. When a section genuinely needs a frozen excerpt, paste the text verbatim with a plain attribution to source path and date.
 
 ### 5. Write the handoff file
 

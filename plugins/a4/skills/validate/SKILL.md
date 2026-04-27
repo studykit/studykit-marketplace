@@ -1,6 +1,6 @@
 ---
 name: validate
-description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the shared frontmatter and body-convention validators against the project's a4/ workspace and reports any schema or Obsidian-convention violations. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
+description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the shared frontmatter and body-convention validators against the project's a4/ workspace and reports any schema or body-format violations. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
 argument-hint: "[file] [--json]"
 disable-model-invocation: true
 allowed-tools: Bash, Read
@@ -10,17 +10,17 @@ allowed-tools: Bash, Read
 
 Runs three category validators against `<project-root>/a4/` through a single aggregator `validate.py`:
 
-- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), wiki-kind basename match, `wiki_impact` names a known wiki kind, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
-- **body** — footnote definition shape (`[^N]: YYYY-MM-DD — [[target]]`, U+2014 em dash), footnote label monotonicity starting at 1, footnote payload is never a `review/*` item, every body wikilink resolves. Canonical rules: `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`.
-- **status consistency** — cross-file status consistency. Flags decisions where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Workspace-only — skipped in single-file mode. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
+- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, `wiki_impact` names a known wiki type, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
+- **body** — body section structure validated against `body_schemas/<type>.xsd` (required tags present, no duplicates of declared tags, no stray content outside section blocks, tags are well-formed lowercase kebab-case). Canonical rules: `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` and the per-type XSDs.
+- **status consistency** — cross-file status consistency. Flags specs where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Workspace-only — skipped in single-file mode. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
 
 The three categories cover **different** inconsistencies than `/a4:drift`:
 
 | Check | Owner |
 |-------|-------|
-| close-guard / missing-wiki-page / stale-footnote / orphan-marker / orphan-definition | `/a4:drift` (cross-session wiki↔issue drift) |
+| close-guard / missing-wiki-page / stale-link | `/a4:drift` (cross-session wiki↔issue drift) |
 | Frontmatter schema, id uniqueness, path format | `/a4:validate` (this skill) |
-| Footnote shape, wikilink resolution, monotonicity | `/a4:validate` (this skill) |
+| Body XSD shape (tag form, required sections, no stray content) | `/a4:validate` (this skill) |
 | Cross-file status consistency (`superseded`, `promoted`) | `/a4:validate` (this skill) |
 
 Invocation: `/a4:validate [file] [--json]`. With a file path, the per-file categories check only that file; cross-file status consistency is skipped because it is a global property of the workspace. With `--json`, the aggregator emits a single combined structured report to stdout.
@@ -57,7 +57,7 @@ Relay the aggregator's output verbatim — the section labels are already presen
 Report the aggregate status as one of:
 
 - **All clean** — "OK — frontmatter, body, and status-consistency validators report no violations."
-- **Only one reports violations** — list them, note the others are clean, and point at the canonical reference doc for the reported class (frontmatter-schema, obsidian-conventions, or frontmatter-schema §Cross-file status consistency).
+- **Only one reports violations** — list them, note the others are clean, and point at the canonical reference doc for the reported class (frontmatter-schema, body-conventions, or frontmatter-schema §Cross-file status consistency).
 - **Multiple report violations** — list each labelled set, then: "Fix frontmatter first — body and consistency checks may resolve in passing once schema issues are fixed (path references and enum values are shared inputs)."
 
 Single-file mode adds one nuance: the consistency check was skipped (the aggregator emits this explicitly); remind the user to re-run the skill workspace-wide before handoff.

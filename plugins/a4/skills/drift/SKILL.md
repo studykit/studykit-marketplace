@@ -58,11 +58,9 @@ The detector emits one review item per drift, with `target: <wiki>` and `wiki_im
 
 | Kind | Review kind | Priority | Trigger |
 |------|-------------|----------|---------|
-| `close-guard` | gap | high | Resolved review item declares `wiki_impact: [<wiki>]` but `<wiki>.md` has no footnote citing the causing issue. |
+| `close-guard` | gap | high | Resolved review item declares `wiki_impact: [<wiki>]` but `<wiki>.md` has no `<change-logs>` bullet citing the causing issue. |
 | `missing-wiki-page` | gap | high | A `wiki_impact` entry names a wiki page that does not exist at `a4/` root. |
-| `stale-footnote` | finding | medium | Footnote definition's wikilink resolves to a non-existent issue or wiki page. |
-| `orphan-marker` | finding | low | Inline `[^N]` marker without a `## Changes` definition. |
-| `orphan-definition` | finding | low | `## Changes` defines `[^N]:` but no inline `[^N]` marker exists. |
+| `stale-link` | finding | medium | A body markdown link in a `<change-logs>` bullet resolves to a non-existent issue or wiki page. |
 
 Each emitted review item carries `labels: [drift, drift:<kind>, drift-cause:<cause-slug>?]` for downstream filtering and dedup.
 

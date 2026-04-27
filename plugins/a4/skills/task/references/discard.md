@@ -38,17 +38,19 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --json
 ```
 
-The writer flips `status:`, bumps `updated:`, and appends a `## Log` entry. If exit code is non-zero, surface the writer's stderr verbatim and stop — do not retry with `--force`.
+The writer flips `status:`, bumps `updated:`, and appends a `<log>` entry. If exit code is non-zero, surface the writer's stderr verbatim and stop — do not retry with `--force`.
 
-If the user supplied a reason explicit enough to deserve narrative capture (more than a few words, or distinct from the writer's `## Log` line), additionally append (or extend) a `## Why discarded` body section via `Edit`:
+If the user supplied a reason explicit enough to deserve narrative capture (more than a few words, or distinct from the writer's `<log>` line), additionally append (or extend) a `<why-discarded>` body section via `Edit`:
 
 ```markdown
-## Why discarded
+<why-discarded>
 
-<YYYY-MM-DD> — <reason text>
+- <YYYY-MM-DD> — <reason text>
+
+</why-discarded>
 ```
 
-Append a new dated line if the section already exists. Skip this step entirely when no reason was supplied — the `## Log` entry is sufficient.
+Append a new dated bullet if the section already exists. Skip this step entirely when no reason was supplied — the `<log>` entry is sufficient.
 
 ## D4. Spike sidecar advisory (if `kind: spike`)
 
@@ -70,7 +72,7 @@ Tell the user:
 
 ```
 Discarded task #<id> (<title>, kind: <kind>) → a4/task/<id>-<slug>.md
-Reason: <reason or "(none — see ## Log)">
+Reason: <reason or "(none — see <log>)">
 Spike sidecar: <left in place at spike/<id>-<slug>/ | not present | n/a>
 ```
 
@@ -81,4 +83,4 @@ Mention any other artifacts the user may want to revisit:
 
 If the discarded task was the only `pending` / `implementing` / `failing` task tied to a UC, mention that the UC may now have nothing to ship — the user can decide whether to author a replacement task, discard the UC itself, or leave the UC in `implementing` waiting for another task.
 
-Do not commit. Leave files in the working tree. The single-commit scope is just the edited task file (status flip + optional `## Why discarded` section). Spike sidecar moves/deletes are a separate, user-driven commit per the experiments-slot spec.
+Do not commit. Leave files in the working tree. The single-commit scope is just the edited task file (status flip + optional `<why-discarded>` section). Spike sidecar moves/deletes are a separate, user-driven commit per the experiments-slot spec.

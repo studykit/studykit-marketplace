@@ -22,11 +22,15 @@ If the same fix fails twice, stop and emit a review item rather than retrying fu
 
 Allocate ids via `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
 
+`body_schemas/review.xsd` requires `<description>`; `<log>` and `<change-logs>` are optional.
+
 ### Architecture issue
 
-```yaml
+````markdown
 ---
+type: review
 id: <allocated via allocate_id.py>
+title: "<short title>"
 kind: finding
 status: open
 target: architecture
@@ -38,23 +42,24 @@ created: <today>
 updated: <today>
 ---
 
-# <short title>
+<description>
 
-## Summary
-<What was attempted; what failed.>
+**Summary.** What was attempted; what failed.
 
-## Evidence
-<Build / run / test output, truncated.>
+**Evidence.** Build / run / test output, truncated.
 
-## Suggestion
-Re-evaluate <component / test-tier / dependency> choice in architecture.md. Concrete alternative: <proposed fix>. Run /a4:arch iterate to address.
-```
+**Suggestion.** Re-evaluate <component / test-tier / dependency> choice in architecture.md. Concrete alternative: <proposed fix>. Run `/a4:arch iterate` to address.
+
+</description>
+````
 
 ### Environment issue (auto-fixed)
 
-```yaml
+````markdown
 ---
+type: review
 id: <allocated>
+title: "<short title>"
 kind: finding
 status: resolved
 target: bootstrap
@@ -66,18 +71,21 @@ created: <today>
 updated: <today>
 ---
 
-# <short title>
+<description>
 
-## Summary
-<What went wrong.>
+**Summary.** What went wrong.
 
-## Fix applied
-<What was done, citing [[research/bootstrap-<label>]] if a research report informed the fix.>
+**Fix applied.** What was done, citing [research/bootstrap-<label>](../../research/bootstrap-<label>.md) if a research report informed the fix.
 
-## Log
-<today> — resolved at bootstrap time
-```
+</description>
+
+<log>
+
+- <today> — resolved at bootstrap time
+
+</log>
+````
 
 ### Environment issue (unresolved)
 
-Same as auto-fixed but `status: open` and no `## Fix applied` section; add a `## Suggestion` section with concrete next-step guidance for the user.
+Same as auto-fixed but `status: open` and the `<description>` carries a `**Suggestion.**` paragraph with concrete next-step guidance for the user instead of `**Fix applied.**`.

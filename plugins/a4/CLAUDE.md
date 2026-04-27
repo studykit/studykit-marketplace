@@ -27,8 +27,8 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
 
 - **Global monotonic ids.** `id` is unique across the entire workspace (GitHub-issue semantics). Allocated by `scripts/allocate_id.py`.
 - **Filenames.** `<id>-<slug>.md`. Folder indicates type — no `uc-` / `task-` prefix.
-- **Wiki updates flow through review items.** Wiki pages have no lifecycle but change continuously; edits are nudged by single-edit skills, deferred via `kind: gap` review items, and reconciled by the drift detector. Footnote markers (`[^N]`) + `## Changes` section record causes.
-- **Obsidian markdown throughout.** Body uses `[[wikilinks]]` and `![[embeds]]`. Frontmatter paths are plain strings (no brackets, no `.md`).
+- **Wiki updates flow through review items.** Wiki pages have no lifecycle but change continuously; edits are nudged by single-edit skills, deferred via `kind: gap` review items, and reconciled by the drift detector. The `<change-logs>` section on each wiki page records causes (dated bullets with markdown links to the causing issue).
+- **Tagged-XML body format.** Each file declares `type:` in frontmatter matching its body root tag; sections are column-0 `<tag>...</tag>` blocks (lowercase, kebab-case) with markdown content. Body links are standard markdown `[text](relative/path.md)`. Frontmatter list paths stay plain strings without `.md`.
 
 ## Two `spec/` layers — do not confuse them
 
@@ -46,12 +46,12 @@ ADRs are retired at both layers — workspace decisions live inside spec bodies 
 Reference docs in `plugins/a4/references/` are the authoritative source for cross-cutting concerns. Read the relevant one before changing any skill/script that touches it:
 
 - `frontmatter-schema.md` — frontmatter contract (also required by root CLAUDE.md)
+- `body-conventions.md` — body tag form, `<change-logs>` / `<log>` rules, link form
 - `pipeline-shapes.md` — Full / Reverse-engineer / Minimal / No-shape; read before changing shape-aware skills (`auto-bootstrap`, `run`, `compass`)
 - `skill-modes.md` — interactive vs autonomous, forward vs reverse axes
 - `wiki-authorship.md` — who can write each wiki page; cross-stage feedback policy
 - `spec-triggers.md` — when a spec is warranted
 - `iterate-mechanics.md` — iterate-mode contract for skills
-- `obsidian-conventions.md` — wikilinks, embeds, change footnotes
 - `hook-conventions.md` — hook contract
 
 ## Skill-generated frontmatter is script-managed

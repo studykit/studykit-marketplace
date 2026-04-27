@@ -20,27 +20,28 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
 Outputs:
 
-- `a4/roadmap.md` — single wiki page: Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Shared Integration Points. The Launch & Verify section is an Obsidian embed of bootstrap.md, not authored content.
+- `a4/roadmap.md` — single wiki page covering Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points (all as H3+ headings inside the `<plan>` section). Launch & Verify is a one-line pointer to `bootstrap.md`, not authored content.
 - `a4/task/<id>-<slug>.md` — one per executable unit of work (Jira-task semantics).
 - `a4/review/<id>-<slug>.md` — findings from roadmap-reviewer.
 
-Derived views (dependency graph, open-task dashboard, milestone progress) render via Obsidian dataview; no separate files.
+Derived views (dependency graph, open-task dashboard, milestone progress) are produced on demand by `/a4:compass` or by grep over frontmatter; no separate files.
 
 ## Roadmap Wiki Schema
 
 ```yaml
 ---
-kind: roadmap
+type: roadmap
 updated: 2026-04-24
 ---
 ```
 
-No lifecycle, revision, or source SHA fields. Cross-references, footnote markers, and the Wiki Update Protocol follow the shared conventions at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`.
+No lifecycle, revision, or source SHA fields. Cross-references and the Wiki Update Protocol follow the shared conventions at `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`.
 
 ## Task File Schema
 
 ```yaml
 ---
+type: task
 id: 5
 title: Render markdown
 kind: feature | spike | bug
@@ -58,7 +59,7 @@ updated: 2026-04-24
 ---
 ```
 
-Body sections: `## Description`, `## Files` (action/path/change table), `## Unit Test Strategy` (scenarios + isolation + test files), `## Acceptance Criteria` (checklist), `## Interface Contracts` (the contracts this task consumes or provides, with wikilinks to `[[architecture]]` sections), `## Log` (append-only per cycle).
+Body sections (per `body_schemas/task.xsd`): required — `<description>`, `<files>` (action/path/change table), `<unit-test-strategy>` (scenarios + isolation + test files), `<acceptance-criteria>` (checklist). Optional — `<interface-contracts>` (the contracts this task consumes or provides, with markdown links to `architecture.md` sections), `<log>` (append-only writer-owned trail), `<change-logs>`, `<why-discarded>`.
 
 `kind:` is required and must be one of `feature | spike | bug`. The roadmap batch generator emits `kind: feature` for every UC-derived task; single ad-hoc spike / bug entries are authored via `/a4:task`.
 
@@ -76,12 +77,12 @@ All task status changes flow through `scripts/transition_status.py`. Cascades: w
 
 ### Acceptance Criteria source by kind
 
-The `## Acceptance Criteria` section is required on every task body. The source convention (documentation only — validators do not enforce):
+The `<acceptance-criteria>` section is required on every task body. The source convention (documentation only — validators do not enforce):
 
 | Task kind / shape | AC source |
 |---|---|
-| `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-| `feature` + `spec: [spec/...]` (UC-less) | spec `## Decision` + relevant `architecture.md` section |
+| `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
+| `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
 | `spike` | hypothesis + expected result, the spike's own body |
 | `bug` | reproduction scenario + fixed criteria |
 
@@ -147,47 +148,52 @@ Enter plan mode (the `EnterPlanMode` Claude Code primitive). Design:
    - Derive from architecture components + UC flows.
    - Size: covers 1–5 related UCs, touches 1–3 components, independently testable, ≤ ~500 lines.
    - File mapping (source files + unit test files following the bootstrap/codebase convention).
-   - Dependencies (`depends_on:` using task wikilink paths).
+   - Dependencies (`depends_on:` using plain `task/<id>-<slug>` strings).
    - Unit test scenarios + isolation strategy.
    - Acceptance criteria derived from UC flows, validation, error handling (per the AC source table above).
    - Milestone assignment (`milestone:` field).
    - `kind: feature` (the batch generator emits feature for UC-derived work).
 4. **Shared Integration Points** — identify any file appearing in 3+ tasks' file lists. Define the integration pattern.
-5. **Launch & Verify** — *do not author content here*. `bootstrap.md` is the single source of truth (per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)); roadmap.md embeds it via Obsidian transclusion so readers see the commands inline without duplicating them. `/a4:run` reads `bootstrap.md` directly — it does not parse the roadmap embed.
+5. **Launch & Verify** — *do not author content here*. `bootstrap.md` is the single source of truth (per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)); roadmap.md links to it. `/a4:run` reads `bootstrap.md` directly.
 
-Exit plan mode. Write artifacts:
+Exit plan mode. Write artifacts.
 
-**`a4/roadmap.md` body** (with the wiki frontmatter above):
+**`a4/roadmap.md` body** uses `<plan>` (required, per `body_schemas/roadmap.xsd`) and optional `<change-logs>`. All narrative — Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points — lives as H3+ markdown headings inside `<plan>`:
 
-```markdown
-# Roadmap
+````markdown
+---
+type: roadmap
+updated: <today>
+---
 
-> Implements the architecture in [[architecture]] to deliver the use cases in [[context]].
+<plan>
 
-## Overview
+Implements the architecture in [architecture](architecture.md) to deliver the use cases in [context](context.md).
+
+### Overview
 
 <One paragraph: what is being implemented, how it serves the UCs, key sequencing intuition.>
 
-## Implementation Strategy
+### Implementation Strategy
 
 - **Approach:** <component-first | feature-first | hybrid>
 - **Incremental delivery:** <how the system stays testable at each step>
 - **Key constraints:** <architectural or operational constraints shaping order>
 
-## Milestones
+### Milestones
 
-### v1.0 — Foundation
+#### v1.0 — Foundation
 
 **Goal:** <what "done" means for this milestone>
-**Scope:** [[task/1-setup-schema]], [[task/2-auth-service]], [[task/3-render-engine]]
+**Scope:** [task/1-setup-schema](task/1-setup-schema.md), [task/2-auth-service](task/2-auth-service.md), [task/3-render-engine](task/3-render-engine.md)
 **Success criteria:** <observable outcome — e.g., "user can send a message and see a response">
 **Risks:** <anything with mitigation>
 
-### v1.1 — Enrichment
+#### v1.1 — Enrichment
 
 …
 
-## Dependency Graph (snapshot)
+### Dependency Graph (snapshot)
 
 ```plantuml
 @startuml
@@ -199,32 +205,30 @@ T3 --> T1
 @enduml
 ```
 
-> Authoritative source: per-task `depends_on:` frontmatter. This diagram is a point-in-time snapshot; regenerate via compass / dataview when tasks change.
+> Authoritative source: per-task `depends_on:` frontmatter. This diagram is a point-in-time snapshot; regenerate via `/a4:compass` when tasks change.
 
-## Launch & Verify
+### Launch & Verify
 
-> Single source of truth: [[bootstrap]]. Re-run `/a4:auto-bootstrap` to update.
+Single source of truth: [bootstrap](bootstrap.md). Re-run `/a4:auto-bootstrap` to update its `<verify>` section. `/a4:run` reads it directly.
 
-![[bootstrap#Verified Commands]]
-
-![[bootstrap#Smoke Scenario]]
-
-![[bootstrap#Test Isolation Flags]]
-
-## Shared Integration Points
+### Shared Integration Points
 
 <Only when a file appears in 3+ tasks.>
 
 | File | Integration Pattern | Contributing Tasks |
 |------|--------------------|-------------------|
-| `src/app.ts` | Handler registration; tasks register their handlers via `app.register(...)` | [[task/2-auth-service]], [[task/3-render-engine]], [[task/5-history-service]] |
+| `src/app.ts` | Handler registration; tasks register their handlers via `app.register(...)` | [task/2-auth-service](task/2-auth-service.md), [task/3-render-engine](task/3-render-engine.md), [task/5-history-service](task/5-history-service.md) |
 
-## Changes
+</plan>
 
-[^1]: 2026-04-24 — [[architecture]]
-```
+<change-logs>
 
-**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` using the schema above. The roadmap.md's Milestones section references them via wikilinks.
+- 2026-04-24 — [architecture](architecture.md)
+
+</change-logs>
+````
+
+**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` using the task schema above. The roadmap's Milestones subsection references them via standard markdown links.
 
 After all task files are written, refresh the reverse link on each UC so `ready → implementing` will pass mechanical validation:
 
@@ -247,9 +251,9 @@ The reviewer emits per-finding review items to `a4/review/<id>-<slug>.md` and re
 
 Walk each new review item per the **stop on strong upstream dependency** policy at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback — roadmap depends directly on architecture (component → task split) and UCs (UC → AC source), so upstream findings halt this skill rather than continuing with stale assumptions.
 
-- **Roadmap-level fix** — edit `roadmap.md` or the affected task file; resolve the review item (`status: resolved`, append `## Log`, add wiki footnote if roadmap.md changed).
+- **Roadmap-level fix** — edit `roadmap.md` or the affected task file; flip the review item via `transition_status.py --to resolved` (which appends the `<log>` entry); add a `<change-logs>` bullet on `roadmap.md` if it changed.
 - **Arch / usecase finding** — **stop**. Leave the review item `status: open` with its existing `target:` pointing at `architecture` or `usecase/...`. Tell the user to run `/a4:arch` or `/a4:usecase iterate` and resume `/a4:roadmap iterate` afterwards.
-- **Defer** — leave `status: open` with a `## Log` reason.
+- **Defer** — leave `status: open`. Capture the deferral reason in conversation notes / handoff.
 
 Loop up to 3 review rounds if roadmap-level revisions are substantial. Once the reviewer returns `ACTIONABLE` (or the user explicitly approves moving on with deferred findings), the roadmap is ready. Suggest `/a4:run` to drive the implement loop.
 
@@ -261,7 +265,7 @@ After Step 4 closes, this skill's job is done. The implement + test loop, status
 
 > Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks (spike / bug / spec-justified feature) can be added at any time via `/a4:task`.
 
-`/a4:run` reads `a4/bootstrap.md` (single source of truth for Launch & Verify). Make sure `bootstrap.md` exists and its `## Verified Commands`, `## Smoke Scenario`, and `## Test Isolation Flags` sections are correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
+`/a4:run` reads `a4/bootstrap.md` (single source of truth for Launch & Verify). Make sure `bootstrap.md` exists and its `<verify>` content (verified commands, smoke scenario, test isolation flags) is correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
 
 ## Commit Points
 
@@ -303,8 +307,8 @@ Context is passed via file paths, not agent memory.
 
 - Do not split the roadmap into per-milestone files. `roadmap.md` holds all milestone narrative in one file per the spec.
 - Do not add a `phase:` frontmatter field to tasks. `milestone:` covers phase semantics.
-- Do not maintain a separate `roadmap.history.md`. Each task's `## Log` section records per-task history; the workspace's git history covers the rest.
+- Do not maintain a separate `roadmap.history.md`. Each task's `<log>` section records per-task history; the workspace's git history covers the rest.
 - Do not emit aggregated roadmap-review reports. All findings are per-review-item files.
-- Do not track per-source SHAs on `roadmap.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency.
+- Do not track per-source SHAs on `roadmap.md`. The wiki update protocol's `<change-logs>` + drift-detector flow handles cross-reference consistency.
 - Do not run the implement loop here. That is `/a4:run`'s exclusive role; merging the two back together is explicitly out of scope per the plan-restructure spec.
-- Do not author Launch & Verify content in `roadmap.md`. `bootstrap.md` is the single source of truth; roadmap embeds those sections via Obsidian transclusion. If the verified commands need updating, re-run `/a4:auto-bootstrap`.
+- Do not author Launch & Verify content in `roadmap.md`. `bootstrap.md` is the single source of truth; the roadmap links to it. If the verified commands need updating, re-run `/a4:auto-bootstrap`.

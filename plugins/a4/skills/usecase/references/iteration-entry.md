@@ -59,4 +59,4 @@ Most discipline is shared (see [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/re
 
 - **Show before/after on UC modifications** — when modifying an existing UC body, present the before/after to the user before writing.
 - **Preserve allocator gaps** — when adding new UCs after iteration, gaps from earlier discards/renumbers stay; do not compact ids.
-- **Wiki edits inside iterate** still flow through footnote + `## Changes` per the shared rules; no usecase-specific override.
+- **Wiki edits inside iterate** still flow through `<change-logs>` per the shared rules; no usecase-specific override.

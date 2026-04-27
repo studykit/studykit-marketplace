@@ -51,7 +51,7 @@ Include these paths in each subagent prompt.
 
 ## Source Attribution on UCs
 
-Each UC body includes a mandatory `## Source` section identifying where the UC came from (`input`, `research — <systems>`, `code — <path>`, or `implicit`). See [`references/source-attribution.md`](references/source-attribution.md) for the value definitions and the rationale for the requirement.
+Each UC body records source attribution (`input`, `research — <systems>`, `code — <path>`, or `implicit`) as a one-line note inside the relevant required section (typically the start of `<situation>`). See [`references/source-attribution.md`](references/source-attribution.md) for the value definitions and the rationale for the requirement. The XSD does not declare a separate `<source>` tag — keeping attribution inline avoids a per-skill schema deviation.
 
 ## Resume Detection
 
@@ -153,12 +153,12 @@ questions emitted as kind: question review items.
 ```
 
 The composer:
-- Writes `a4/context.md` with `kind: context`, `updated`, Original Idea quote, Problem Framing.
-- Writes `a4/actors.md` with `kind: actors`, `updated`, Actors table.
+- Writes `a4/context.md` with `type: context`, `updated`, an `<original-idea>` section quoting the input and a `<problem-framing>` section.
+- Writes `a4/actors.md` with `type: actors`, `updated`, a `<roster>` section containing the Actors table.
 - Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
-- Writes NFRs to `a4/nfr.md` if any are surfaced.
+- Writes NFRs to `a4/nfr.md` (with `type: nfr` and a `<requirements>` section) if any are surfaced.
 - Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (workspace authorship policy: [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)). The final summary recommends running `/a4:domain` after auto-usecase finishes.
-- Emits `kind: question` review items for unresolvable ambiguities (not merely autonomous defaults it has chosen — those are recorded in the UC body's `## Source` section).
+- Emits `kind: question` review items for unresolvable ambiguities (not merely autonomous defaults it has chosen — those are recorded inline within the UC body, e.g., as a paragraph under `<flow>` or `<dependencies>` flagged as a source attribution).
 - Never rewrites previously confirmed UC files without cause.
 
 #### Step 3b: Verify Write
@@ -186,10 +186,11 @@ Repeat up to 3 rounds. Each round:
    Shared refs: <paths>
 
    For each review item (status: open, source: usecase-reviewer): read it, apply
-   the Suggestion to the target UC / wiki page, mark the item status: resolved,
-   append a ## Log entry, and add wiki footnote markers when wiki_impact is set.
-   If a finding cannot be applied (e.g., ambiguous), leave status: open with a
-   ## Log entry explaining why.
+   the Suggestion to the target UC / wiki page, flip status: resolved via
+   transition_status.py (which appends the <log> entry), and append a
+   <change-logs> bullet on each modified wiki page when wiki_impact is set.
+   If a finding cannot be applied (e.g., ambiguous), leave status: open and
+   capture the reason in conversation notes for the main session to surface.
 
    Return: revised UC ids, resolved review item ids, deferred review item ids.
    """)
@@ -270,5 +271,5 @@ Apply the rules in [`references/autonomous-decision-rules.md`](references/autono
 
 - Do not write an aggregated `a4/<topic>.usecase.md` file. All output is per-UC + wiki pages.
 - Do not maintain per-topic or per-slug file naming. `a4/` is a single workspace — filenames carry no topic.
-- Do not write a `history.md` file. Per-UC `## Log` sections plus git history cover audit needs.
+- Do not write a `history.md` file. Per-UC `<log>` sections plus git history cover audit needs.
 - Do not create GitHub Issues — `a4/` replaces that role.

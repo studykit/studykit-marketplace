@@ -29,14 +29,14 @@ a4/
   mock/                       # Optional: HTML mocks per screen group
 ```
 
-Wiki pages (`context.md`, `actors.md`, `domain.md`, `nfr.md`) are flat at `a4/` root. Issues (UC, review) each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are **not files** — they render on demand from frontmatter via Obsidian dataview.
+Wiki pages (`context.md`, `actors.md`, `domain.md`, `nfr.md`) are flat at `a4/` root. Issues (UC, review) each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are **not files** — they are produced on demand by `compass` or by grep over frontmatter.
 
 ## Frontmatter Schemas
 
 **Wiki page** — `context.md`, `actors.md`, `domain.md`, `nfr.md`:
 ```yaml
 ---
-kind: context | actors | domain | nfr
+type: context | actors | domain | nfr
 updated: 2026-04-24
 ---
 ```
@@ -44,6 +44,7 @@ updated: 2026-04-24
 **Use Case** — `usecase/<id>-<slug>.md`:
 ```yaml
 ---
+type: usecase
 id: 3
 title: Search history
 status: draft | ready | implementing | revising | shipped | superseded | discarded | blocked
@@ -59,7 +60,7 @@ updated: 2026-04-24
 ---
 ```
 
-Omit empty fields or leave `[]`. `milestone` is optional until the plan phase assigns one. Paths are plain strings (no brackets, `.md` omitted) for dataview compatibility. Body uses Obsidian wikilinks (`[[...]]`) and embeds (`![[...]]`).
+Omit empty fields or leave `[]`. `milestone` is optional until the plan phase assigns one. Frontmatter paths are plain strings (no brackets, `.md` omitted). The body is a sequence of column-0 `<tag>...</tag>` sections; in-body cross-references use standard markdown links — `[task/5-render-markdown](../task/5-render-markdown.md)`.
 
 UC lifecycle has eight states:
 
@@ -72,13 +73,14 @@ UC lifecycle has eight states:
 - `discarded` — direction abandoned. Terminal. Related tasks and open review items cascade to `discarded`.
 - `blocked` — implementation-time blocker; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`.
 
-**All status changes flow through `scripts/transition_status.py`.** Do not hand-edit `status:` / `updated:` / `## Log` entries — the writer owns them.
+**All status changes flow through `scripts/transition_status.py`.** Do not hand-edit `status:` / `updated:` / `<log>` entries — the writer owns them.
 
 **`implementing → draft` is disallowed.** Once code has started, use `implementing → revising` for in-place spec edit, or `implementing → discarded` to abandon the direction. `shipped` never returns to `implementing` or `draft` — post-ship changes are either a new UC with `supersedes:` or `shipped → discarded` when removing the feature.
 
 **Review item** — `review/<id>-<slug>.md` (used by wrap-up and the in-situ nudge):
 ```yaml
 ---
+type: review
 id: 6
 kind: finding | gap | question
 status: open | in-progress | resolved | discarded
@@ -104,14 +106,14 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Run this **immediately before** writing a new UC, review item, etc. Ids are monotonic across the whole workspace (GitHub-issue semantics); do not reuse or renumber.
 
-## Obsidian Conventions
+## Body Conventions
 
-Wikilink / embed syntax, the footnote audit trail, and the Wiki Update Protocol (when a wiki page needs an update, how to apply one, how to defer via a review item, and the close guard) are documented in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md`. That reference is shared by `usecase`, `arch`, and `roadmap`. Read it once.
+Body tag form (column-0 `<tag>` blocks, lowercase kebab-case, no attributes), the `<change-logs>` audit trail, and the Wiki Update Protocol (when a wiki page needs an update, how to apply one, how to defer via a review item, and the close guard) are documented in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`. That reference is shared by `usecase`, `arch`, and `roadmap`. Read it once.
 
 Key rules this skill invokes below:
 
-- Body prose uses wikilinks (`[[usecase/3-search-history]]`) and embeds (`![[usecase/3-search-history]]`). Frontmatter paths stay bracket-free per [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
-- When a confirmed UC / actor / concept change affects a wiki page, update the wiki page in place: leave a `[^N]` footnote in the modified section, append a `## Changes` line pointing at the causing issue, and bump the wiki page's `updated:`.
+- Body cross-references use standard markdown links — `[task/5-render](../task/5-render.md)` (relative paths, `.md` retained). Frontmatter paths stay plain strings (no brackets, no `.md`) per [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+- When a confirmed UC / actor / concept change affects a wiki page, update the wiki page in place: edit the relevant section tag, append a dated bullet with a markdown link to the causing issue inside the page's `<change-logs>` section (creating the section if absent), and bump the wiki page's `updated:`.
 - If the user defers a wiki update, open a review item with `wiki_impact:` set; the close guard re-surfaces it at session close.
 
 ## Modes
@@ -166,7 +168,7 @@ Domain Model extraction is **out of scope** for this skill — it lives in `/a4:
 Restate the idea back in one sentence to confirm understanding. Then immediately:
 
 1. Run `mkdir -p a4/usecase a4/review`.
-2. Write `a4/context.md` with frontmatter `kind: context`, `updated: <today>`, a `# Context` heading, an **Original Idea** section quoting the user's input, and a **Problem Framing** section stub to be filled in as the interview progresses.
+2. Write `a4/context.md` with frontmatter `type: context`, `updated: <today>`, an `<original-idea>` section quoting the user's input, and a `<problem-framing>` section stub to be filled in as the interview progresses.
 3. Tell the user: "I've started `a4/context.md`. UC and wiki files will appear as we confirm them."
 4. Mark "Step 1" completed. Mark "Discovery: Use cases" in_progress.
 
@@ -176,9 +178,9 @@ Uncover enough context to write concrete Use Cases by targeting four gaps: **Wha
 
 **Actor discovery.** When the conversation reveals a new person or system:
 1. Confirm the actor with the user (name, type `person`/`system`, role — privilege level, short description).
-2. If `a4/actors.md` does not exist, create it with frontmatter `kind: actors`, `updated: <today>`, and an empty Actors table.
+2. If `a4/actors.md` does not exist, create it with frontmatter `type: actors`, `updated: <today>`, and a `<roster>` section containing an empty Actors table.
 3. Add the confirmed actor to the table. Use a slug identifier (`meeting-organizer`, `team-member`) that UC frontmatter can reference in `actors: [...]`.
-4. If the new actor justifies a wiki update (it usually does on first appearance), append a footnote marker + `## Changes` entry as described in the Wiki Update Protocol.
+4. If the new actor justifies a wiki update (it usually does on first appearance), append a `<change-logs>` bullet with today's date and a markdown link to the causing UC, per the Wiki Update Protocol.
 
 ### 3. Progressive Use Case Extraction
 
@@ -203,13 +205,13 @@ After the user confirms the core UC, **immediately drill into precision**:
 - **Error handling** — what the user sees when things fail.
 - **Boundary conditions** — empty input, maximum items, concurrent access, timeouts.
 
-Record these in the UC's body as `## Validation` / `## Error handling` sections. Both are optional — omit when the UC has no meaningful constraints or failure modes.
+Record these in the UC's body as `<validation>` / `<error-handling>` sections. Both are optional — omit when the UC has no meaningful constraints or failure modes.
 
 **Write the UC file on confirmation:**
 
 1. Derive a kebab-case slug from the title (`Share meeting summary` → `share-summary`).
 2. Run the id allocator (see Id Allocation) to get the next id `N`.
-3. Write `a4/usecase/<N>-<slug>.md` with the frontmatter schema above. Body sections: `## Goal`, `## Situation`, `## Flow` (numbered list), `## Expected Outcome`, and optional `## Validation` / `## Error handling` / `## Dependencies` / `## Log`.
+3. Write `a4/usecase/<N>-<slug>.md` with the frontmatter schema above. Required body sections (per `body_schemas/usecase.xsd`): `<goal>`, `<situation>`, `<flow>` (numbered list), `<expected-outcome>`. Optional: `<validation>`, `<error-handling>`, `<dependencies>`, `<change-logs>`, `<log>` (writer-owned).
 4. Create a task `"Discovery: UC-<N> <title>"` and mark it completed.
 5. **In-situ nudge** (see next subsection) — offer to capture wiki impact if the UC introduces new actors, new concepts, or changes framing.
 
@@ -223,7 +225,7 @@ After writing a UC file (and after any other significant issue change — new ac
 
 If yes, present the candidate updates and ask the user to confirm. For each confirmed update:
 
-1. Edit the affected wiki page — update the section, append a footnote marker `[^N]` inline, append a `## Changes` line with today's date and an Obsidian wikilink to the causing issue.
+1. Edit the affected wiki page — update the relevant `<section>` content, then append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. Create the `<change-logs>` section if it does not yet exist.
 2. Bump the wiki page's `updated:` frontmatter to today.
 
 Minor edits (typo, metadata-only) skip the nudge. Use judgment; the rule is "significant changes only — create, status transition, resolve."
@@ -268,16 +270,16 @@ After all primary UCs are confirmed, perform a final audit for implicit platform
 After 5+ UCs are confirmed, analyze and present relationships. Read `${CLAUDE_SKILL_DIR}/references/usecase-relationships.md`. Relationships are captured as:
 
 - **Dependencies** — `depends_on: [usecase/<id>-<slug>]` in the dependent UC's frontmatter.
-- **Reinforcements** — `related: [usecase/<id>-<slug>]` (soft ties) or body wikilinks.
+- **Reinforcements** — `related: [usecase/<id>-<slug>]` (soft ties) or body links — standard markdown link form.
 - **Groups** — `labels: [<group-slug>]`. Group definitions live as body text in `context.md` when useful.
 
-No separate section file is written — these are derived views, rendered by dataview or by compass.
+No separate section file is written — these are derived views, rendered by `compass` or by grep over frontmatter.
 
 ### 9. UI Screen Grouping (if UI UCs exist)
 
 After UCs are confirmed, group UI-related UCs by screen. For each screen:
 1. Propose a group label (e.g., `screen-dashboard`) and add it to `labels:` in the involved UCs.
-2. Record the screen-navigation narrative as a section in `context.md` (or a dedicated `## Screens` section), with wikilinks back to the participating UCs.
+2. Record the screen-navigation narrative inside `context.md`'s `<screens>` section (creating the section if absent — it is optional in `context.xsd`), with markdown links back to the participating UCs.
 
 ### 10. Mock Generation (optional, per screen group)
 
@@ -295,7 +297,7 @@ Ask the user once:
 
 > Are there non-functional requirements? Performance targets, security, scalability, accessibility, compliance. If not, we can skip this.
 
-If yes, write `a4/nfr.md` with frontmatter `kind: nfr`, `updated: <today>`, and a table of requirements (Description | Affected UCs via wikilinks | Measurable criteria). Skip creating the file when there are no NFRs.
+If yes, write `a4/nfr.md` with frontmatter `type: nfr`, `updated: <today>`, and a `<requirements>` section containing a table (Description | Affected UCs via markdown links | Measurable criteria). Skip creating the file when there are no NFRs.
 
 ## Wrapping Up
 
@@ -308,8 +310,8 @@ When the user indicates they're done, mark `"Platform capabilities audit"` (or w
 1. Launch `Agent(subagent_type: "a4:usecase-explorer")` to surface additional perspectives.
 2. Reflect accepted candidates (new UC files as above).
 3. Launch `Agent(subagent_type: "a4:usecase-reviewer")`. The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md`.
-4. Walk the user through each emitted review item. Resolve in place (edit the target UC / wiki page, set `status: resolved` in the review item, add `## Log` entries) or defer (leave `status: open`).
-5. **Wiki close guard** — for each resolved review item with non-empty `wiki_impact`, verify each referenced wiki page has a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
+4. Walk the user through each emitted review item. Resolve in place (edit the target UC / wiki page, set `status: resolved` in the review item via `transition_status.py`, which appends the `<log>` entry) or defer (leave `status: open`).
+5. **Wiki close guard** — for each resolved review item with non-empty `wiki_impact`, verify each referenced wiki page has a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing.
 6. **Ready-gate.** Before the final summary, per-UC ask the user whether each UC still at `status: draft` or `status: revising` is ready to hand off (or re-hand-off) to implementation. Accept natural-language answers:
    - yes / ok / 확정 / `"mark ready"` → call the writer:
      ```bash

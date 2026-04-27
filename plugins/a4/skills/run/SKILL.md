@@ -14,7 +14,7 @@ Two stages over the tasks already authored in `a4/task/`:
    - **Failure path** — user classifies each failing test-runner finding into task / arch / UC and routes accordingly.
    - **Ship path** — user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md); `roadmap.md` only embeds those bootstrap sections for human readers).
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md); `roadmap.md` only links to it for human readers).
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task` writes single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -24,7 +24,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
 - `a4/task/<id>-<slug>.md` — required. The set of executable units this run consumes.
 - `a4/bootstrap.md` — required. Single source of truth for Launch & Verify (build / launch / test / smoke / isolation).
-- `a4/roadmap.md` — optional. Provides milestone narrative + dependency-graph snapshot. Embeds bootstrap's L&V sections; this skill does not parse the embed.
+- `a4/roadmap.md` — optional. Provides milestone narrative + dependency-graph snapshot. Links to bootstrap for L&V; this skill does not parse the link.
 - `a4/architecture.md` — passed to agents for contract context.
 - `a4/usecase/*.md` — read for UC ship-review candidates (Step 4b). Absent in UC-less projects; that's fine.
 - `a4/review/*.md` — open review items influence ready-set selection and resume behavior.
@@ -32,14 +32,14 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 Outputs:
 
 - `a4/review/<id>-<slug>.md` — test-runner findings; gap items emitted during ship-review when the user defers.
-- Per-task `## Log` entries appended via `scripts/transition_status.py` on every status change.
+- Per-task `<log>` entries appended via `scripts/transition_status.py` on every status change.
 - Per-task implementation commits authored by `task-implementer` agents.
 
 ## Launch & Verify Source
 
 `/a4:run` does not auto-detect commands. Resolution:
 
-1. `a4/bootstrap.md` — single source of truth. Read `## Verified Commands` (build / launch / test), `## Smoke Scenario`, `## Test Isolation Flags`. Both `/a4:auto-bootstrap` and the manual bootstrap flow write these sections; the roadmap (when present) embeds them via Obsidian transclusion but does **not** own them.
+1. `a4/bootstrap.md` — single source of truth. Read its `<verify>` section (verified commands, smoke scenario, test isolation flags) plus `<launch>` (build / launch). Both `/a4:auto-bootstrap` and the manual bootstrap flow write these sections; the roadmap (when present) links to them but does **not** own them.
 2. **Halt and delegate to `/a4:compass`** when `bootstrap.md` is absent. Invoke compass with the structured diagnosis argument so its Step 3 Gap Diagnosis recommends the correct upstream skill:
 
    ```
@@ -75,8 +75,8 @@ Mechanics (filter, backlog presentation, writer calls, footnote rules, disciplin
 **Backlog filter:** `target: task/*` OR `target: roadmap` (typically `source: test-runner` from the prior cycle).
 
 **Run-specific work** between writer calls:
-- **Cycle counter** — task `cycle:` increments at every revise → re-run pass; the `## Log` entry cites the cycle number.
-- **Cascade reset** — when a task is reset to `pending` for re-implementation, every downstream task whose `depends_on` traces back to it also resets to `pending` and gets a `## Log` entry.
+- **Cycle counter** — task `cycle:` increments at every revise → re-run pass; the `<log>` entry cites the cycle number.
+- **Cascade reset** — when a task is reset to `pending` for re-implementation, every downstream task whose `depends_on` traces back to it also resets to `pending` and gets a `<log>` entry.
 - **Crash hygiene at session start** — see Resume Hygiene below.
 - **Merge-sweep retry** — for tasks left at `failing` because Step 2.5 hit a conflict, the preserved worktree branch is the user's resolution surface. After the user resolves, `/a4:run iterate` re-attempts `git merge --no-ff` on that branch from local main; on success it transitions the task to `complete` and runs the standard 3-step worktree cleanup. If the user instead discards the work, the task drops back to `pending` and the next cycle re-spawns a fresh worktree.
 - **Stop on strong upstream** — `target: architecture` and `target: usecase/*` findings halt the run and route to `/a4:arch iterate` or `/a4:usecase iterate` per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Cross-stage feedback. The full classification table is at [`references/failure-classification.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/failure-classification.md).
@@ -134,8 +134,8 @@ Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>
 
-Read the task file for Description, Files, Unit Test Strategy, Acceptance Criteria.
-Pull build + unit-test commands from bootstrap.md's ## Verified Commands section.
+Read the task file for <description>, <files>, <unit-test-strategy>, <acceptance-criteria>.
+Pull build + unit-test commands from bootstrap.md's <verify> section.
 
 Implement the task and write its unit tests. All unit tests must pass.
 Commit code + unit tests (one commit per task) using subject form
@@ -154,7 +154,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --reason "/a4:run Step 2 spawning task-implementer"
 ```
 
-Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` / `## Log` — the writer owns them.
+Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` / `<log>` — the writer owns them.
 
 The agent commits in its current working tree, which is transparently the worktree — the agent does not need to know it is isolated. Worktree return-value shape, branch naming, and cleanup commands live in [`references/parallel-isolation.md`](${CLAUDE_PLUGIN_ROOT}/skills/run/references/parallel-isolation.md).
 
@@ -198,8 +198,8 @@ Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for
 a4/ path: <absolute path>
 Cycle: <current integer>
 
-Use bootstrap.md's ## Verified Commands, ## Smoke Scenario, and ## Test Isolation Flags
-sections for build / run / test commands. Run integration and smoke tests as defined
+Use bootstrap.md's <verify> section (verified commands, smoke scenario, test isolation
+flags) for build / run / test commands. Run integration and smoke tests as defined
 there. For each failing test, emit one review item at
 a4/review/<id>-<slug>.md via allocate_id.py with:
 
@@ -255,12 +255,12 @@ After 4b finishes (or 4a routes the run elsewhere), proceed to wrap-up.
 
 ## Acceptance Criteria Source by Task Kind
 
-When a task-implementer reads a task's `## Acceptance Criteria` section, the source convention (set at authoring time by `/a4:roadmap` or `/a4:task`) is:
+When a task-implementer reads a task's `<acceptance-criteria>` section, the source convention (set at authoring time by `/a4:roadmap` or `/a4:task`) is:
 
 | Task kind / shape | AC source |
 |---|---|
-| `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-| `feature` + `spec: [spec/...]` (UC-less) | spec `## Decision` + relevant `architecture.md` section |
+| `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
+| `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
 | `spike` | hypothesis + expected result, the spike's own body |
 | `bug` | reproduction scenario + fixed criteria |
 
@@ -272,7 +272,7 @@ All commit subjects follow [`references/commit-message-convention.md`](${CLAUDE_
 
 - **Per-task implementation** — `task-implementer` commits its own code + unit tests per task as `#<task-id> <type>(a4): <description>` (`feat` / `fix` per task kind). `/a4:run` does not also commit those files.
 - **Per-task integration (Step 2.5, parallel mode only)** — `git merge --no-ff -m "#<task-id> merge(a4): integrate <task-slug>" <worktreeBranch>` per successfully-implemented task. Serial mode skips this step (task-implementer commits land directly on local main).
-- **Per-cycle test results** — after Step 3, commit the emitted test-runner review items + updated task `## Log` entries as one commit:
+- **Per-cycle test results** — after Step 3, commit the emitted test-runner review items + updated task `<log>` entries as one commit:
   ```
   #<r1> #<r2> ... chore(a4): cycle <N> test-runner findings
   ```

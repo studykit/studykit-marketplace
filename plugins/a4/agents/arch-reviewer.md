@@ -53,7 +53,7 @@ Verdicts: `OK` | `MISSING` | `INCOMPLETE`.
 ### 2. UC Coverage — "Does the architecture cover every Use Case?"
 
 For each file in `a4/usecase/`:
-- Is there at least one Information Flow section in `architecture.md` that references it via `[[usecase/<id>-<slug>]]`?
+- Is there at least one Information Flow subsection inside `architecture.md`'s `<components>` that references the UC via a markdown link (e.g., `[usecase/<id>-<slug>](usecase/<id>-<slug>.md)`)?
 - Are the UC's `actors:` mapped to component interactions in that flow?
 
 Verdict per UC: `OK` | `UNMAPPED UC`.
@@ -100,7 +100,7 @@ Verdicts: `OK` | `MISSING TIER` | `UNVERIFIED TOOL` | `NO SETUP NOTES`.
 ### 7. Technical Claim Verification — "Are the technical statements true?"
 
 Scan `architecture.md` for technical claims (library capabilities, framework constraints, compatibility assertions). For each:
-- Is it sourced? (`(ref: [[research/<label>]])` or official docs link)
+- Is it sourced? (`(ref: [research/<label>](research/<label>.md))` or official docs link)
 - Actively verify suspect claims using `WebSearch` / `WebFetch` against official docs.
 
 Verdicts: `OK` | `UNVERIFIED` | `SUSPECT` | `CONFIRMED`.
@@ -145,7 +145,9 @@ Short kebab-case, 2–5 words — e.g., `arch-unmapped-uc3`, `arch-no-contract-s
 
 ```markdown
 ---
+type: review
 id: <allocated id>
+title: "<short finding title>"
 kind: finding | gap | question
 status: open
 target: architecture
@@ -157,27 +159,19 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-# <short finding title>
+<description>
 
 > Review run: <YYYY-MM-DD HH:mm>
 
-## Summary
+**Summary.** One paragraph describing the issue.
 
-One paragraph describing the issue.
+**Evidence.** Quote the architecture section, UC line, or domain model entry that demonstrates the issue. Reference the offending section via markdown link — `[architecture#<section>](../architecture.md#<section>)`.
 
-## Evidence
+**Impact.** What a developer would have to guess or re-decide when implementing this architecture as-is.
 
-Quote the architecture section, UC line, or domain model entry that demonstrates the issue. Embed where useful:
+**Suggestion.** Concrete direction for the fix. Do not rewrite `architecture.md` — suggest the edit. For coverage gaps, name the missing UC / component / tier explicitly.
 
-![[architecture#<section>]]
-
-## Impact
-
-What a developer would have to guess or re-decide when implementing this architecture as-is.
-
-## Suggestion
-
-Concrete direction for the fix. Do not rewrite `architecture.md` — suggest the edit. For coverage gaps, name the missing UC / component / tier explicitly.
+</description>
 ```
 
 ### Target / wiki_impact Mapping

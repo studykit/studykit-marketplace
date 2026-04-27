@@ -40,7 +40,7 @@ Action: same as B1. Trade-off articulation is one of the strongest spec-worthy s
 
 Triggers: "not sure", "더 생각해봐야", "I'm torn between...", "I keep going back and forth on this".
 
-Action: clarify whether the uncertainty is decision-pending (→ `/a4:spec` after enough context) or research-pending (→ `/a4:research` to surface evidence). If neither resolves the uncertainty quickly, the moment may simply not be ready for a spec — leave a `## Open Questions` placeholder in any draft spec rather than forcing closure.
+Action: clarify whether the uncertainty is decision-pending (→ `/a4:spec` after enough context) or research-pending (→ `/a4:research` to surface evidence). If neither resolves the uncertainty quickly, the moment may simply not be ready for a spec — leave an `<open-questions>` section in any draft spec rather than forcing closure.
 
 ### B4. Prior-spec references
 

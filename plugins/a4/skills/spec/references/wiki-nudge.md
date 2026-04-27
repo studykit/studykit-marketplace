@@ -12,4 +12,4 @@ After writing (or activating) a spec, check whether it affects existing wiki pag
 | New domain concept | `domain.md` |
 | Non-functional requirement change | `nfr.md` |
 
-For each applicable candidate, present the proposed update and ask the user to confirm. The footnote / `## Changes` / `updated:` mechanics, the defer-via-`kind: gap`-review-item fallback, and the close guard follow [`obsidian-conventions.md §Wiki Update Protocol`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md). Cite this spec (`[[spec/<id>-<slug>]]`) as the causing issue in the footnote payload.
+For each applicable candidate, present the proposed update and ask the user to confirm. The `<change-logs>` / `updated:` mechanics, the defer-via-`kind: gap`-review-item fallback, and the close guard follow [`body-conventions.md §Wiki Update Protocol`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md). Cite this spec as a standard markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`, with the relative path computed from the wiki page) in the `<change-logs>` bullet.

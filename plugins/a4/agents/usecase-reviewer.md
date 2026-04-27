@@ -44,7 +44,7 @@ labels: []
 milestone: v1.0
 ```
 
-Body sections (all optional except the Flow + Expected Outcome): `## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`, `## Validation`, `## Error handling`, `## Dependencies`, `## Log`.
+Body sections (per `body_schemas/usecase.xsd` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`).
 
 ## Review Criteria
 
@@ -194,7 +194,9 @@ Short kebab-case, 2–5 words, derived from the finding — e.g., `uc3-vague-sit
 
 ```markdown
 ---
+type: review
 id: <allocated id>
+title: "<short finding title>"
 kind: finding | gap | question
 status: open
 target: <usecase/<id>-<slug> | actors | domain | context | nfr | null>
@@ -206,23 +208,17 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-# <short finding title>
+<description>
 
 > Review run: <YYYY-MM-DD HH:mm>
 
-## Summary
+**Summary.** One short paragraph describing the issue.
 
-One short paragraph describing the issue.
+**Evidence.** Quote the specific UC lines, actor row, or wiki section demonstrating the issue. Reference the target via standard markdown link — `[<target>](../<target>.md)`.
 
-## Evidence
+**Suggestion.** Concrete, user-level suggestion for the fix. For `SPLIT` findings, include the full proposed child UCs. For `MISSING PRECISION`, list the specific validation/error scenarios to add. Do not rewrite the UC body — direction, not replacement.
 
-Quote the specific UC lines, actor row, or wiki section demonstrating the issue. Embed the target for visual context:
-
-![[<target path>]]
-
-## Suggestion
-
-Concrete, user-level suggestion for the fix. For `SPLIT` findings, include the full proposed child UCs. For `MISSING PRECISION`, list the specific validation/error scenarios to add. Do not rewrite the UC body — direction, not replacement.
+</description>
 ```
 
 ### Target / wiki_impact Mapping

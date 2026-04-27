@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 # Project Bootstrap
 
-Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** (build / launch / test / smoke / isolation) per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md). Both `/a4:run` and the `task-implementer` / `test-runner` agents read this file directly; `/a4:roadmap` only embeds its sections via Obsidian transclusion.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** (build / launch / test / smoke / isolation) per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md). Both `/a4:run` and the `task-implementer` / `test-runner` agents read this file directly; `/a4:roadmap` only links to it.
 
 ## Workspace
 
@@ -18,7 +18,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
 Outputs:
 
-- `a4/bootstrap.md` — wiki page (`kind: bootstrap`).
+- `a4/bootstrap.md` — wiki page (`type: bootstrap`).
 - `a4/archive/bootstrap-<YYYY-MM-DD>.md` — archived copy of the prior bootstrap.md before iteration (only when iterating).
 - `a4/review/<id>-<slug>.md` — per-issue review items for unresolved environment or architecture problems.
 - `a4/research/bootstrap-<label>.md` — research reports produced by the `api-researcher` agent when diagnosing issues.
@@ -27,12 +27,14 @@ Outputs:
 
 ```yaml
 ---
-kind: bootstrap
+type: bootstrap
 updated: 2026-04-24
 ---
 ```
 
 No lifecycle / revision / source SHA fields.
+
+Body sections per `body_schemas/bootstrap.xsd`: required — `<environment>`, `<launch>`, `<verify>`. Optional — `<change-logs>`. The full template is in [`references/bootstrap-md-template.md`](references/bootstrap-md-template.md).
 
 ## What This Skill Does
 
@@ -117,11 +119,11 @@ For each Step 4 verification failure: classify as architecture vs environment, r
 
 ## Step 6: Write bootstrap.md
 
-Use the markdown scaffold in [`references/bootstrap-md-template.md`](references/bootstrap-md-template.md): Environment / Verified Commands / Test Infrastructure / Test Isolation Flags / Smoke Scenario / Issues / Changes. Fresh run uses `Write`; incremental run uses `Edit` to touch only the changed sections plus a new footnote + `## Changes` entry (typically citing `[[architecture]]`).
+Use the markdown scaffold in [`references/bootstrap-md-template.md`](references/bootstrap-md-template.md). The body has three required tag sections — `<environment>`, `<launch>`, `<verify>` — plus an optional `<change-logs>`. Fresh run uses `Write`; incremental run uses `Edit` to touch only the changed sections plus a new `<change-logs>` bullet (typically citing `[architecture](architecture.md)`).
 
 ## Step 7: Drift Detection
 
-Before committing, run the shared drift detector against `a4/`. It scans every wiki page's `## Changes` footnotes plus every issue file's frontmatter and emits one review item per detected drift (stale footnotes, orphan markers, close-guard violations, missing wiki pages):
+Before committing, run the shared drift detector against `a4/`. It scans every wiki page's `<change-logs>` plus every issue file's frontmatter and emits one review item per detected drift (stale links, close-guard violations, missing wiki pages):
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$(git rev-parse --show-toplevel)/a4"

@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, WebSearch, WebFetch
 
 # Research Facilitator
 
-A standalone research skill. Investigates a technical topic or compares alternatives, and saves the result as a portable markdown artifact at `./research/<slug>.md` (relative to the current working directory / project root). The output is designed to be **cited** by spec files (`a4/spec/<id>-<slug>.md`) or any other artifact via `related:` / wikilink — not consumed as a decision itself.
+A standalone research skill. Investigates a technical topic or compares alternatives, and saves the result as a portable markdown artifact at `./research/<slug>.md` (relative to the current working directory / project root). The output is designed to be **cited** by spec files (`a4/spec/<id>-<slug>.md`) or any other artifact via `register_research_citation.py` (which writes both frontmatter and a body markdown link) — not consumed as a decision itself.
 
 Research: **$ARGUMENTS**
 
@@ -49,6 +49,7 @@ Write immediately after mode and candidates are confirmed.
 
 ```markdown
 ---
+type: research
 topic: "<topic>"
 status: draft       # draft | final | standalone | archived
 mode: comparative
@@ -58,19 +59,25 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 tags: []
 ---
-# <topic>
 
-## Context
-<Why this research is needed. What the caller wants to know. 1–3 sentences.>
+<context>
 
-## Options
+Why this research is needed. What the caller wants to know. 1–3 sentences.
+
+</context>
+
+<options>
+
 *Subsections will appear here as each option is researched.*
+
+</options>
 ```
 
 **`single` mode:**
 
 ```markdown
 ---
+type: research
 topic: "<topic>"
 status: draft       # draft | final | standalone | archived
 mode: single
@@ -79,13 +86,18 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 tags: []
 ---
-# <topic>
 
-## Context
-<The specific question to answer. 1–3 sentences.>
+<context>
 
-## Findings
+The specific question to answer. 1–3 sentences.
+
+</context>
+
+<findings>
+
 *Findings will appear here as research progresses.*
+
+</findings>
 ```
 
 `cited_by:` is a stored reverse-link auto-maintained by `scripts/register_research_citation.py` when a spec cites this research. Never hand-edit.
@@ -101,7 +113,7 @@ tags: []
 
 ### Comparative mode
 
-For each option, spawn `Agent(subagent_type: "a4:api-researcher", run_in_background: true)`. Independent options run in parallel. The agent returns its findings as a markdown subsection per `${CLAUDE_SKILL_DIR}/references/research-report.md`. This skill inserts each returned subsection under `## Options` at the next checkpoint.
+For each option, spawn `Agent(subagent_type: "a4:api-researcher", run_in_background: true)`. Independent options run in parallel. The agent returns its findings as a markdown subsection per `${CLAUDE_SKILL_DIR}/references/research-report.md`. This skill inserts each returned subsection inside the `<options>` block at the next checkpoint.
 
 `api-researcher` is narrowly scoped to API / library / SDK documentation lookup (uses `get-api-docs`, `find-docs`, web fallback). Use it when each option is a concrete API, library, framework, SaaS product, or tool.
 
@@ -109,7 +121,7 @@ When options are **not** API-centric (architectural patterns, conceptual trade-o
 
 ### Single mode
 
-No subagent. The skill investigates directly (`WebSearch` / `WebFetch`, and `get-api-docs` / `find-docs` if the topic is API-shaped). Findings accumulate under `## Findings`.
+No subagent. The skill investigates directly (`WebSearch` / `WebFetch`, and `get-api-docs` / `find-docs` if the topic is API-shaped). Findings accumulate inside `<findings>`.
 
 ### Protocol (both modes)
 
@@ -133,7 +145,7 @@ When the user indicates completion:
    Leave `status: draft` if more iterations are expected; flip to `archived` later when the research becomes irrelevant.
 3. **Bump `updated:`** to today.
 4. **Report the path** and how to reference it:
-   - From `/a4:spec`: cite this research via `scripts/register_research_citation.py`, which writes the citation in four places (spec frontmatter `research:`, spec body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`).
+   - From `/a4:spec`: cite this research via `scripts/register_research_citation.py`, which writes the citation in four places (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`).
    - Optional review pass: `/a4:research-review ./research/<slug>.md` before relying on it for a decision.
 
 ## Non-goals

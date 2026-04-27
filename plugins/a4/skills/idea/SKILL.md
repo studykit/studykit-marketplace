@@ -11,7 +11,7 @@ allowed-tools: Bash, Write, Read, Edit, Glob
 Two modes:
 
 - **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for pre-pipeline possibilities.
-- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `## Why discarded` section with the reason.
+- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `<change-logs>` bullet capturing the discard reason (idea has no required body sections per `body_schemas/idea.xsd`; `<change-logs>` is the natural slot for the rationale).
 
 ## Context
 
@@ -74,6 +74,7 @@ Write to `<project-root>/a4/idea/<id>-<slug>.md` using the Write tool. Content:
 
 ```markdown
 ---
+type: idea
 id: <id>
 title: <title>
 status: open
@@ -83,18 +84,18 @@ labels: []
 created: <today>
 updated: <today>
 ---
-# <title>
 ```
 
 Fields:
 
+- `type: idea` — literal; selects `body_schemas/idea.xsd`.
 - `id:` — the integer from step 3, as a YAML int (no quotes).
 - `title:` — the user's trimmed argument. If it contains characters that break bare YAML (colons, `#`, leading/trailing whitespace, quotes), wrap in double quotes and escape as needed.
 - `status: open` — literal.
 - `promoted: []`, `related: []`, `labels: []` — empty lists as placeholders. `[]` (not omitted) because these fields are part of the idea shape; their emptiness is noteworthy.
 - `created:` / `updated:` — today's date in `YYYY-MM-DD` format (from the `date +%Y-%m-%d` context).
 
-The body is just the H1. Longer ideas can be edited in later — this skill writes the minimum.
+The body is empty on capture (idea XSD has no required tags). Longer ideas can be edited in later — this skill writes the minimum.
 
 ### 6. Report
 
@@ -106,7 +107,7 @@ Captured as idea #12 → /abs/path/to/a4/idea/12-콜그래프에-주석-렌더�
 
 If the idea warrants expansion, mention one-line follow-up options:
 
-- Edit the file directly to add rationale under a `## Why this matters` or `## Notes` section.
+- Edit the file directly to add rationale inside a `<why-this-matters>` or `<notes>` section (both optional per the XSD).
 - When ready to pursue it, change `status:` to `promoted` and set `promoted: [<target-path>]` pointing at the new artifact (usecase / task / spark session).
 
 Do not propose auto-promotion or auto-commit.
@@ -139,15 +140,17 @@ Edit the file in-place via the `Edit` tool:
 
 1. Change the frontmatter `status:` value from `open` to `discarded`.
 2. Update the frontmatter `updated:` to today's date.
-3. If a reason was provided (any tokens after `<id-or-slug>`), append a body section (or add one if not already present):
+3. If a reason was provided (any tokens after `<id-or-slug>`), append a `<change-logs>` bullet (creating the section if not already present):
 
    ```markdown
-   ## Why discarded
+   <change-logs>
 
-   <reason text>
+   - <YYYY-MM-DD> discarded — <reason text>
+
+   </change-logs>
    ```
 
-   Use the reason verbatim — no re-wording. If the section already exists, append a new line under it prefixed with today's date.
+   Use the reason verbatim — no re-wording. If the section already exists, append a new dated bullet.
 
 ### D4. Report
 

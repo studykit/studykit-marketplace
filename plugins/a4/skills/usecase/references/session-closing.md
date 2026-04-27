@@ -23,6 +23,7 @@ Then proceed:
 
 ### 1. Explore
 
+
 Launch `Agent(subagent_type: "a4:usecase-explorer")`. Pass:
 - `a4/` absolute path
 - Expected report output path: `a4/research/exploration-<YYYY-MM-DD>.md` (create `a4/research/` if missing)
@@ -53,10 +54,10 @@ Mark "Walk findings and open review items" `in_progress`.
 For each new review item from the reviewer (ordered by priority then id), read the file, present the finding to the user, and walk through resolution. Resolution paths:
 
 **Fix now** — edit the target (UC file or wiki page). On success:
-1. Flip the review item via the writer: `scripts/transition_status.py --file review/<id>-<slug>.md --to resolved --reason "resolved by editing [[<target path>]]"`.
-2. If the edit touched a wiki page and the review item had a non-empty `wiki_impact`, add the footnote marker + `## Changes` entry on that wiki page per the Wiki Update Protocol.
+1. Flip the review item via the writer: `scripts/transition_status.py --file review/<id>-<slug>.md --to resolved --reason "resolved by editing <target path>"`.
+2. If the edit touched a wiki page and the review item had a non-empty `wiki_impact`, append a dated bullet with a markdown link to the causing issue inside the page's `<change-logs>` section per the Wiki Update Protocol.
 
-**Defer** — leave the review item `status: open`. Add a `## Log` entry noting the deferral reason.
+**Defer** — leave the review item `status: open`. The writer appends the deferral reason to the `<log>` section when called for any subsequent transition; for a pure-defer pause, the `<log>` is unchanged and the deferral is captured in conversation notes / handoff.
 
 **Discard** — call `scripts/transition_status.py --file review/<id>-<slug>.md --to discarded --reason "<why>"`; the writer records the reason.
 
@@ -77,8 +78,8 @@ Mark "Wiki close guard" `in_progress`.
 For each review item that transitioned to `resolved` in this session AND has a non-empty `wiki_impact`:
 
 1. For each wiki basename in `wiki_impact` (e.g., `domain`), read `a4/<basename>.md`.
-2. Check whether the page has a footnote in `## Changes` whose payload wikilinks the causing issue (the resolved item's `target`, or the item itself if `target` was null).
-3. If missing, warn the user: `"<basename>.md has no footnote for [[<causing issue>]]. Resolve anyway?"`. On override, accept and proceed. On correction, edit the wiki page to add the footnote.
+2. Check whether the page's `<change-logs>` section contains a bullet whose markdown link points at the causing issue (the resolved item's `target`, or the item itself if `target` was null).
+3. If missing, warn the user: `"<basename>.md has no change-log entry for <causing issue>. Resolve anyway?"`. On override, accept and proceed. On correction, edit the wiki page to add the bullet (creating `<change-logs>` if absent).
 
 Mark "Wiki close guard" completed.
 

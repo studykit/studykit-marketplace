@@ -8,6 +8,7 @@ Frontmatter:
 
 ```yaml
 ---
+type: review
 id: <allocated via scripts/allocate_id.py>
 kind: finding | gap | question
 status: open
@@ -15,30 +16,27 @@ target: usecase/<id>-<slug>       # omit for cross-cutting findings
 source: usecase-reviewer
 wiki_impact: [<wiki basenames>]   # [] when no wiki update is implied
 priority: high | medium | low
+title: "<short finding title>"
 labels: []
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 ```
 
-Body structure:
+Body structure (per `body_schemas/review.xsd` — `<description>` required, `<log>` and `<change-logs>` optional):
 
 ```markdown
-# <short finding title>
+<description>
 
 > Review run: <YYYY-MM-DD HH:mm>
 
-## Summary
+**Summary.** One-paragraph statement of the issue.
 
-One-paragraph statement of the issue.
+**Evidence.** Quote the specific UC lines, actor table row, or wiki section that demonstrate the issue. Reference the target via standard markdown link — `[usecase/<id>-<slug>](../usecase/<id>-<slug>.md)`.
 
-## Evidence
+**Suggestion.** Concrete, user-level suggestion for the fix. Do not rewrite the UC body — suggest direction and let the facilitator/author apply the edit.
 
-Quote the specific UC lines, actor table row, or wiki section that demonstrate the issue. Embed the target for context: `![[usecase/<id>-<slug>]]`.
-
-## Suggestion
-
-Concrete, user-level suggestion for the fix. Do not rewrite the UC body — suggest direction and let the facilitator/author apply the edit.
+</description>
 ```
 
 ## Kind Mapping

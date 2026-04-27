@@ -25,18 +25,18 @@ Output:
 - `a4/review/<id>-<slug>.md` — per-finding review items emitted by the wrap-up reviewer.
 - `a4/research/<label>.md` — research reports from `api-researcher` (if invoked).
 
-Derived views (consistency tables, UC×component coverage matrix, open-arch-findings dashboard) are **not files**; they render via Obsidian dataview on demand.
+Derived views (consistency tables, UC×component coverage matrix, open-arch-findings dashboard) are **not files**; they are produced on demand by `compass` or by grep over frontmatter.
 
 ## Wiki Page Schema
 
 ```yaml
 ---
-kind: architecture
+type: architecture
 updated: 2026-04-24
 ---
 ```
 
-No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as Obsidian wikilinks (`[[usecase/3-search-history]]`) in body prose. Footnotes + `## Changes` section track updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` (shared across `usecase`, `arch`, and `roadmap`).
+No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as standard markdown links (`[usecase/3-search-history](usecase/3-search-history.md)`) in body prose. The `<change-logs>` section tracks updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` (shared across `usecase`, `arch`, and `roadmap`).
 
 ## Id Allocation
 
@@ -60,8 +60,8 @@ Mechanics (filter, backlog presentation, writer calls, footnote rules, disciplin
 **Backlog filter:** `target: architecture` OR `architecture` in `wiki_impact`.
 
 **Architecture-specific staleness signals (alongside the backlog):**
-1. **New or changed UCs** — compare `architecture.md`'s `## Changes` footnotes against current UC files. UCs not yet cited in any arch footnote are "needs coverage" candidates.
-2. **UC ↔ actor / domain drift** — quick pass: for each Information Flow section in `architecture.md`, check that the referenced UCs and components still exist as current files / component sections.
+1. **New or changed UCs** — compare `architecture.md`'s `<change-logs>` entries against current UC files. UCs not yet cited in any change-log entry are "needs coverage" candidates.
+2. **UC ↔ actor / domain drift** — quick pass: for each `<components>` Information Flow subsection in `architecture.md`, check that the referenced UCs and components still exist as current files / component sections.
 
 **Architecture impact propagation rule** — when one area changes, check whether it affects others:
 - Technology stack change → do components need restructuring? Do test tools need changing?
@@ -99,38 +99,38 @@ Mark "Step 0" completed when the survey is done.
 
 ## Architecture.md Structure
 
-As the interview progresses, grow `a4/architecture.md` with these sections (write on phase transitions; see File Writing Rules below):
+As the interview progresses, grow `a4/architecture.md` with these `<tag>` sections (per `body_schemas/architecture.xsd`; write on phase transitions, see File Writing Rules below):
 
-```markdown
+````markdown
 ---
-kind: architecture
+type: architecture
 updated: <today>
 ---
 
-# Architecture
+<overview>
 
-> Frames the buildable system for the use cases in [[context]], built against the actors in [[actors]] and the concepts in [[domain]].
+One-paragraph summary of the architectural approach and key decisions. Frames the buildable system for the use cases in [context](context.md), built against the actors in [actors](actors.md) and the concepts in [domain](domain.md).
 
-## Overview
+</overview>
 
-<One-paragraph summary of the architectural approach and key decisions.>
-
-## Technology Stack
+<technology-stack>
 
 | Category | Choice | Rationale |
 |----------|--------|-----------|
 | Language | TypeScript | … |
 | Framework | Next.js | … |
 
-## External Dependencies
+</technology-stack>
 
-<Omit if none.>
+<external-dependencies>
 
 | External System | Used By | Purpose | Access Pattern | Fallback |
 |----------------|---------|---------|----------------|----------|
-| OAuth Provider | [[usecase/1-share-summary]], [[usecase/2-search-history]] | … | … | … |
+| OAuth Provider | [usecase/1-share-summary](usecase/1-share-summary.md), [usecase/2-search-history](usecase/2-search-history.md) | … | … | … |
 
-## Component Diagram
+</external-dependencies>
+
+<component-diagram>
 
 ```plantuml
 @startuml
@@ -140,7 +140,9 @@ session --> renderer : events
 @enduml
 ```
 
-## Components
+</component-diagram>
+
+<components>
 
 ### SessionService
 
@@ -156,7 +158,7 @@ entity "Session" { *id : number | *userId : number | createdAt : datetime }
 
 #### Information Flow
 
-##### [[usecase/3-search-history]]
+##### [usecase/3-search-history](usecase/3-search-history.md)
 
 ```plantuml
 @startuml
@@ -174,7 +176,9 @@ S -> H : request history
 
 (Repeat per component.)
 
-## Test Strategy
+</components>
+
+<test-strategy>
 
 | Tier | Tool | Purpose | Rationale |
 |------|------|---------|-----------|
@@ -182,29 +186,35 @@ S -> H : request history
 | Integration | @vscode/test-electron | Host environment APIs | … |
 | E2E | WebdriverIO + wdio-vscode-service | Full UI interaction | … |
 
-## Changes
-```
-[^1]: 2026-04-24 — [[usecase/3-search-history]]
-[^2]: 2026-04-24 — [[spec/8-caching-strategy]]
-```
+</test-strategy>
 
-UC references in Information Flow sections use Obsidian wikilinks — they resolve to `a4/usecase/<id>-<slug>.md`. Component names and schema fields should use domain terms from `a4/domain.md`.
+<change-logs>
+
+- 2026-04-24 — [usecase/3-search-history](usecase/3-search-history.md)
+- 2026-04-24 — [spec/8-caching-strategy](spec/8-caching-strategy.md)
+
+</change-logs>
+````
+
+UC references in Information Flow subsections use standard markdown links — they resolve to `a4/usecase/<id>-<slug>.md` (relative path retained, `.md` retained). Component names and schema fields should use domain terms from `a4/domain.md`.
 
 ### Required vs Conditional Sections
 
-**Required** (present from First Design onwards): Overview, Technology Stack, Component Diagram, Components (at least one), Test Strategy.
+**Required** (per the XSD): `<components>`, `<overview>`, `<technology-stack>`, `<test-strategy>`.
 
-**Conditional:**
-- **External Dependencies** — only if the system uses external services.
-- **DB Schema** (per component) — only when the component has its own data store.
-- **Interface Contracts** (per component pair) — progressively filled as the architecture matures; required once components are stable.
-- **Information Flow** (per UC) — progressively filled; a mature architecture covers every UC in `a4/usecase/`.
+**Optional** (per the XSD): `<change-logs>`, `<component-diagram>`, `<external-dependencies>`. Convention:
+
+- **`<external-dependencies>`** — populate when the system uses external services; omit otherwise.
+- **`<component-diagram>`** — populate when the component graph is non-trivial.
+- **DB Schema** (per component, inside `<components>`) — only when the component has its own data store.
+- **Interface Contracts** (per component pair, inside `<components>`) — progressively filled as the architecture matures; expected once components are stable.
+- **Information Flow** (per UC, inside `<components>`) — progressively filled; a mature architecture covers every UC in `a4/usecase/`.
 
 ## File Writing Rules
 
-- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter above, Overview stub, and the confirmed Technology Stack.
+- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter above, `<overview>` stub, and the confirmed `<technology-stack>` content.
 - **Update** the file at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Footnote markers** — when a change is driven by a specific UC / spec / review item (new UC added, component split after review, etc.), add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the full protocol (when to update, how to defer via a review item, close guard).
+- **Change-log entries** — when a change is driven by a specific UC / spec / review item (new UC added, component split after review, etc.), append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. See `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` for the full protocol (when to update, how to defer via a review item, close guard).
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Interview Phases
@@ -222,12 +232,12 @@ If a codebase already exists, detect the stack from project files and confirm. W
 ### Phase 2: External Dependencies
 
 1. **Scan UCs** for external interactions — any UC whose Flow or Outcome references third-party authentication, notifications, file storage, external data sources, etc.
-2. **Present the list** with `Used By` (UC wikilinks), `Purpose`, and ask for confirmation.
+2. **Present the list** with `Used By` (UC markdown links), `Purpose`, and ask for confirmation.
 3. **For each confirmed dependency**, clarify:
    - What the system sends/receives (Access Pattern)
    - Constraints (rate limits, pricing tiers, specific provider)
    - Fallback behavior when unavailable
-4. Record in `architecture.md`'s External Dependencies section. Add a `## Changes` footnote keyed by the causing UCs.
+4. Record in `architecture.md`'s `<external-dependencies>` section. Append `<change-logs>` bullets keyed by the causing UCs.
 
 ### Phase 3: Component Design
 
@@ -239,14 +249,14 @@ Component names, schema fields, and contract parameters must use `a4/domain.md` 
 
 | Change shape | Owner | What arch does |
 |---|---|---|
-| New concept / new attribute on existing concept | arch | Edit `a4/domain.md` directly. Footnote + `## Changes` entry pointing at `[[architecture#<section>]]`. Bump `updated:`. |
-| 1:1 rename of an existing concept | arch | Edit `a4/domain.md` directly. Update every existing reference in the same file. Footnote + `## Changes`. Bump `updated:`. |
-| Definition wording / clarification on an existing concept | arch | Edit `a4/domain.md` directly. Footnote + `## Changes`. Bump `updated:`. |
+| New concept / new attribute on existing concept | arch | Edit `a4/domain.md` `<concepts>` directly. Append `<change-logs>` bullet pointing at `[architecture#<section>](architecture.md#<section>)`. Bump `updated:`. |
+| 1:1 rename of an existing concept | arch | Edit `a4/domain.md` directly. Update every existing reference in the same file. Append `<change-logs>` bullet. Bump `updated:`. |
+| Definition wording / clarification on an existing concept | arch | Edit `a4/domain.md` directly. Append `<change-logs>` bullet. Bump `updated:`. |
 | Concept split / merge | `/a4:domain` | Allocate a review item: `kind: gap`, `target: domain`, `wiki_impact: [domain]`, `source: self`, body summarizes the proposed split/merge with arch's rationale. **Do not edit `domain.md`.** Continue arch using a placeholder term; the user will run `/a4:domain iterate` later to land the structural change. |
 | Relationship add / remove / cardinality change | `/a4:domain` | Same as split/merge — emit a review item targeting `domain`; do not edit. |
 | State or transition added / removed | `/a4:domain` | Same — emit a review item; do not edit. |
 
-When emitting a review item under this table, allocate via `allocate_id.py` and write `a4/review/<id>-<slug>.md`. Place a wikilink to the new review item inline in the architecture section that surfaced the issue, so the user can find it during `/a4:domain iterate`.
+When emitting a review item under this table, allocate via `allocate_id.py` and write `a4/review/<id>-<slug>.md`. Place a markdown link to the new review item inline in the architecture section that surfaced the issue (e.g., `[review/12-domain-split](review/12-domain-split.md)`), so the user can find it during `/a4:domain iterate`.
 
 The boundary is: *content changes* (add a concept, rename, clarify) are inline; *structural changes* (split, merge, relationship topology, state topology) require a focused cross-cutting pass that arch does not attempt mid-component-design.
 
@@ -267,10 +277,10 @@ When writing or confirming any technical claim (API support, library capability,
 1. **Check the codebase first** — for claims about the current project's stack, read the actual code, configs, or dependency files.
 2. **Launch an `api-researcher` agent** — for external verification, spawn a background `Agent(subagent_type: "a4:api-researcher", run_in_background: true)`. Prompt it with the specific claim and ask it to verify against official documentation.
 3. **Continue the interview** — keep working while waiting. Do not transition to the next phase until all pending research results have been received and reflected.
-4. **On completion** — the agent writes results to `a4/research/<label>.md`. Read it and apply the verification outcome. Add an inline `(ref: [[research/<label>]])` where the claim is recorded.
+4. **On completion** — the agent writes results to `a4/research/<label>.md`. Read it and apply the verification outcome. Add an inline `(ref: [research/<label>](research/<label>.md))` where the claim is recorded.
 5. **Flag uncertainty** — when official documentation is ambiguous, tell the user and ask whether to proceed as an assumption or investigate further.
 
-Maintain the set of research reports under `a4/research/`. Derived indexes (which claims cite which report) come from Obsidian backlinks, not a separately maintained index file.
+Maintain the set of research reports under `a4/research/`. Derived indexes (which claims cite which report) come from grep over the body links, not a separately maintained index file.
 
 ## Wrapping Up
 
@@ -285,11 +295,11 @@ The architecture ends only when the user says so. When the user indicates they'r
    The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md` (using `allocate_id.py`) and returns a summary.
 
 3. **Walk findings** — for each emitted review item (ordered by priority then id), present to the user and resolve or defer:
-   - **Fix now** — edit `architecture.md` (and any cross-referenced file). Set the review item `status: resolved`, append a `## Log` entry, and add a footnote marker on each modified wiki page per the Wiki Update Protocol.
-   - **Defer** — leave `status: open`; add a `## Log` entry noting the deferral reason.
-   - **Discard** — set `status: discarded` via `scripts/transition_status.py`; the writer records the reason in `## Log`.
+   - **Fix now** — edit `architecture.md` (and any cross-referenced file). Flip the review item `status: resolved` via `transition_status.py` (which appends the `<log>` entry), and add a dated `<change-logs>` bullet on each modified wiki page per the Wiki Update Protocol.
+   - **Defer** — leave `status: open`. Capture the deferral reason in conversation notes / handoff (writer-managed `<log>` only updates on transitions).
+   - **Discard** — set `status: discarded` via `scripts/transition_status.py`; the writer records the reason in `<log>`.
 
-4. **Wiki close guard** — for each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a footnote whose payload wikilinks the causing issue. Warn + allow override when missing.
+4. **Wiki close guard** — for each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing.
 
 5. **Report** — summarize to the user:
    - Phases completed this session
@@ -308,5 +318,5 @@ Context is passed via file paths, not agent memory.
 
 - Do not write a separate `design.md` wiki page. The spec explicitly rejects it — `architecture.md` covers design content (stack, components, interfaces, test strategy).
 - Do not track per-UC / per-source SHAs in `architecture.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency without SHA bookkeeping.
-- Do not create a research-index file. Use Obsidian backlinks.
+- Do not create a research-index file. Use grep over body links.
 - Do not emit aggregated review reports. All findings are per-review-item files.

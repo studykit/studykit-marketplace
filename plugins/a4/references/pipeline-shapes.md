@@ -39,7 +39,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Required issue path.** `usecase/<id>-<slug>.md` (one or more) → `task/<id>-<slug>.md` (UC-driven batch produced by `/a4:roadmap`).
 
-**Acceptance Criteria source.** Each task's `implements: usecase/<id>-<slug>` resolves to that UC's `## Flow` / `## Validation` / `## Error handling` sections. `/a4:run` Step 4b ships **per UC**; multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
+**Acceptance Criteria source.** Each task's `implements: usecase/<id>-<slug>` resolves to that UC's `<flow>` / `<validation>` / `<error-handling>` sections. `/a4:run` Step 4b ships **per UC**; multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
 
 **When this shape fits.** Greenfield projects, large new features in any project, and any work where upstream wiki investment pays back across multiple tasks.
 
@@ -68,8 +68,8 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 | `kind` | AC source |
 |---|---|
-| `feature` + `implements: [usecase/...]` | UC's `## Flow` / `## Validation` / `## Error handling` (this is Full-shape AC reused inside Minimal) |
-| `feature` + `spec: [spec/...]` | spec's `## Decision` + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
+| `feature` + `implements: [usecase/...]` | UC's `<flow>` / `<validation>` / `<error-handling>` (this is Full-shape AC reused inside Minimal) |
+| `feature` + `spec: [spec/...]` | spec's `decision:` frontmatter + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
 | `feature` with neither | Smell — `/a4:task` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
 | `bug` | The bug description in the task body itself |
 | `spike` | The hypothesis stated in the task body itself |
@@ -88,7 +88,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 |---|---|---|
 | **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
 | **Production (secondary)** | `/a4:spec` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
-| **Consumption (primary)** | `architecture.md` `## Changes` footnote `[[spec/N-...]]` records why an architecture change happened. | Full |
+| **Consumption (primary)** | `architecture.md` `<change-logs>` bullet linking `[spec/N-...](spec/N-...md)` records why an architecture change happened. | Full |
 | **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
 
 **Trigger conditions** for writing a spec (independent of shape):
@@ -101,20 +101,20 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 *Mandatory* (the system requires the citation to function correctly):
 
-- `architecture.md` `## Changes` footnote `[[spec/N-...]]` whenever an arch section is changed by a spec. Per [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) change-footnote rules.
-- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `## Decision` plus the cited `architecture.md` section as AC source.
-- A successor spec's `Status: superseded by spec-M` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk.
-- Other wiki pages' `## Changes` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same footnote pattern as architecture.md.
+- `architecture.md` `<change-logs>` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) change-log rules.
+- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `decision:` plus the cited `architecture.md` section as AC source.
+- A successor spec's `supersedes: [spec/N]` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk and the older spec flips to `superseded` via cascade.
+- Other wiki pages' `<change-logs>` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same bullet pattern as architecture.md.
 
 *Optional* (the citation adds clarity but is not required):
 
-- Task body prose (`## Description`, `## Open Questions`) — explain why this task takes a particular approach, even when `spec:` is not set.
+- Task body prose (`<description>`, plus open questions captured inside `<description>` or `<change-logs>`) — explain why this task takes a particular approach, even when `spec:` is not set.
 - Review item body — clarify what decision a `kind: question` is asking about or what decision a `kind: finding` is violating.
 - Research artifacts (`research/<slug>.md`) — the artifact's conclusion can forward-point to a spec that fixed its conclusion.
 
 **Common omissions** that erode spec value:
 
-- Writing a spec but not adding the `architecture.md` `## Changes` footnote when arch was driven by it. The drift detector may eventually catch this; preferring to add the footnote in the same session avoids the drift entry.
+- Writing a spec but not adding the `architecture.md` `<change-logs>` bullet when arch was driven by it. The drift detector may eventually catch this; preferring to add the bullet in the same session avoids the drift entry.
 - Minimal-shape `feature` task with no UC and no spec — `/a4:task` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
 - Reversing a decision without an explicit `superseded by` chain. Both specs end up live and ambiguous about which is current.
 

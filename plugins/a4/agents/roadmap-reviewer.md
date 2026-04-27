@@ -101,7 +101,7 @@ Verdicts: `OK` | `NO TEST STRATEGY` | `VAGUE TESTS` | `MISSING ERROR TESTS` | `N
 ### 6. File Mapping — `files`
 
 Per task:
-- Is a `## Files` section (or frontmatter `files:`) populated?
+- Is a `<files>` section (or frontmatter `files:`) populated?
 - Are paths specific enough (`src/services/auth.service.ts`, not "a service file")?
 - For modifications to existing files, is the change scope described (added fields, modified signatures)?
 - Do file paths respect the codebase's existing conventions (check via `a4/bootstrap.md` and direct codebase exploration)?
@@ -123,7 +123,7 @@ Verdicts: `OK` | `NO CRITERIA` | `UNMEASURABLE` | `MISALIGNED`.
 - **Domain terms** — any roadmap/task content using terms that conflict with `a4/domain.md` glossary.
 - **Architecture components** — do tasks reference components that actually exist in `architecture.md`?
 - **Behavior** — do task Descriptions contradict UC Flow / Outcome?
-- **Launch & Verify** — bootstrap.md is the single source of truth; verify the roadmap's Launch & Verify section uses Obsidian embeds (`![[bootstrap#...]]`) rather than authored content. Authored L&V tables on `roadmap.md` are a `CONFLICT` against the workspace authorship policy.
+- **Launch & Verify** — bootstrap.md is the single source of truth; verify the roadmap's Launch & Verify subsection is a one-line link to `bootstrap.md` rather than authored command tables. Authored L&V tables on `roadmap.md` are a `CONFLICT` against the workspace authorship policy.
 
 Verdicts: `OK` | `CONFLICT`.
 
@@ -133,7 +133,7 @@ Per milestone section in `roadmap.md`:
 - Does its Scope reference tasks that actually exist and have matching `milestone:` frontmatter?
 - Does its Success Criteria translate into checkable outcomes from the constituent tasks' Acceptance Criteria?
 
-Verdicts: `OK` | `MILESTONE DRIFT` (scope wikilinks vs task frontmatter disagree) | `WEAK MILESTONE CRITERIA`.
+Verdicts: `OK` | `MILESTONE DRIFT` (scope links vs task frontmatter disagree) | `WEAK MILESTONE CRITERIA`.
 
 ## Output — Per-Finding Review Item Files
 
@@ -155,7 +155,9 @@ Short kebab-case, 2–5 words — e.g., `roadmap-unmapped-uc3`, `roadmap-cycle-t
 
 ```markdown
 ---
+type: review
 id: <allocated id>
+title: "<short finding title>"
 kind: finding | gap
 status: open
 target: <roadmap | task/<id>-<slug> | architecture | usecase/<id>-<slug>>
@@ -167,27 +169,19 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-# <short finding title>
+<description>
 
 > Review run: <YYYY-MM-DD HH:mm>
 
-## Summary
+**Summary.** One paragraph describing the issue.
 
-One paragraph describing the issue.
+**Evidence.** Quote the roadmap / task / architecture / UC lines demonstrating the issue. Reference the offending file via markdown link — `[task/<id>-<slug>](../task/<id>-<slug>.md)`.
 
-## Evidence
+**Impact.** What a developer would guess or re-decide when implementing this roadmap as-is.
 
-Quote the roadmap / task / architecture / UC lines demonstrating the issue. Embed where useful:
+**Suggestion.** Concrete direction for the fix. For coverage gaps, name the missing UC / component / tier. For granularity issues, propose the split / merge. For source conflicts, state which side should be corrected and why.
 
-![[task/<id>-<slug>#Files]]
-
-## Impact
-
-What a developer would guess or re-decide when implementing this roadmap as-is.
-
-## Suggestion
-
-Concrete direction for the fix. For coverage gaps, name the missing UC / component / tier. For granularity issues, propose the split / merge. For source conflicts, state which side should be corrected and why.
+</description>
 ```
 
 ### Target Mapping
@@ -195,7 +189,7 @@ Concrete direction for the fix. For coverage gaps, name the missing UC / compone
 | Finding category | `target` | `wiki_impact` |
 |------------------|----------|----------------|
 | Roadmap-level strategy, milestones, dependency graph, integration points | `roadmap` | `[roadmap]` |
-| Roadmap authored Launch & Verify content (should be an embed) | `roadmap` | `[roadmap]` (also flag for `bootstrap` review if commands diverge) |
+| Roadmap authored Launch & Verify content (should be a link to bootstrap) | `roadmap` | `[roadmap]` (also flag for `bootstrap` review if commands diverge) |
 | Task-level scope, files, tests, acceptance | `task/<id>-<slug>` | `[]` |
 | Architecture gap surfaced during roadmap review | `architecture` | `[architecture]` |
 | UC gap surfaced during roadmap review | `usecase/<id>-<slug>` | `[]` |

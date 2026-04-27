@@ -98,7 +98,7 @@ Verdicts: `OK` | `NAMING CONFLICT` | `ACTOR-AS-CONCEPT`.
 - **Glossary ↔ Class diagram** — every concept in the diagram exists in the Glossary; every Glossary concept central to the system appears in the diagram (singletons may be omitted).
 - **Class diagram ↔ State diagrams** — every concept with a state diagram exists in the class diagram.
 - **Referenced By ↔ UCs** — every UC named in `Referenced By` is an existing UC file.
-- **`## Changes` ↔ wiki nudges** — for every `[[<causing-issue>]]` in `## Changes`, the section above the corresponding `[^N]` footnote actually contains the change described.
+- **`<change-logs>` ↔ wiki nudges** — for every dated bullet in `<change-logs>`, a corresponding section in the body actually reflects the change described.
 
 Verdicts: `OK` | `CONFLICT`.
 
@@ -107,10 +107,10 @@ Verdicts: `OK` | `CONFLICT`.
 *Only when `architecture.md` exists.*
 
 Per `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3, arch may edit `domain.md` directly for simple changes (add concept, 1:1 rename, definition wording). Verify those edits are well-formed:
-- Each `## Changes` entry citing `[[architecture#<section>]]` corresponds to a footnote whose source section is in the Glossary or definition wording (not relationships, not state transitions).
+- Each `<change-logs>` bullet citing `[architecture#<section>](architecture.md#<section>)` corresponds to an actual edit in `<concepts>` (definition wording or new entry), not in `<relationships>` or `<state-transitions>`.
 - Structural changes (split / merge / relationship / state) should never appear inline from arch — they should be open review items with `target: domain`. Flag any such inline edit as a structural-edit-bypass.
 
-Verdicts: `OK` | `STRUCTURAL EDIT BYPASS` | `ORPHAN CHANGE FOOTNOTE`.
+Verdicts: `OK` | `STRUCTURAL EDIT BYPASS` | `ORPHAN CHANGE-LOG ENTRY`.
 
 ## Output — Per-Finding Review Item Files
 
@@ -132,7 +132,9 @@ Short kebab-case, 2–5 words — e.g., `domain-missing-session-concept`, `domai
 
 ```markdown
 ---
+type: review
 id: <allocated id>
+title: "<short finding title>"
 kind: finding | gap | question
 status: open
 target: domain
@@ -144,27 +146,19 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-# <short finding title>
+<description>
 
 > Review run: <YYYY-MM-DD HH:mm>
 
-## Summary
+**Summary.** One paragraph describing the issue.
 
-One paragraph describing the issue.
+**Evidence.** Quote the domain.md section, UC line, or architecture entry that demonstrates the issue. Reference via markdown link — `[domain#<section>](../domain.md#<section>)`.
 
-## Evidence
+**Impact.** What downstream work (architecture, implementation, future UCs) would have to invent or re-decide because of this gap.
 
-Quote the domain.md section, UC line, or architecture entry that demonstrates the issue. Embed where useful:
+**Suggestion.** Concrete direction for the fix. For `MISSING CONCEPT`, name the concept and suggest a one-line definition. For `NAMING CONFLICT`, name both terms and suggest which to canonicalize. Do not rewrite `domain.md` — suggest the edit.
 
-![[domain#<section>]]
-
-## Impact
-
-What downstream work (architecture, implementation, future UCs) would have to invent or re-decide because of this gap.
-
-## Suggestion
-
-Concrete direction for the fix. For `MISSING CONCEPT`, name the concept and suggest a one-line definition. For `NAMING CONFLICT`, name both terms and suggest which to canonicalize. Do not rewrite `domain.md` — suggest the edit.
+</description>
 ```
 
 ### Target / wiki_impact Mapping

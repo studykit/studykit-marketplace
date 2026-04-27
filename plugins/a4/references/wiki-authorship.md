@@ -2,7 +2,7 @@
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
-Companion to [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (field-level rules), [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) (footnote / `## Changes` / wikilink rules), [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape), and [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) (when a spec is warranted; signals during dialogue and content-aware upward propagation).
+Companion to [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) (field-level rules), [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) (tag form, `<change-logs>` / `<log>` rules, link form), [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape), and [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) (when a spec is warranted; signals during dialogue and content-aware upward propagation).
 
 ## Wiki page authorship
 
@@ -15,8 +15,8 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 | `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: domain`, `wiki_impact: [domain]` |
 | `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: nfr`, `wiki_impact: [nfr]` |
 | `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: architecture`, `wiki_impact: [architecture]` |
-| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — `## Verified Commands`, `## Smoke Scenario`, `## Test Isolation Flags` are read directly by `/a4:run`, `task-implementer`, and `test-runner`; never duplicated into other wikis | review item, `target: bootstrap` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
-| `roadmap.md` | `roadmap` | `roadmap`: milestone narrative, dependency graph, Shared Integration Points. **Must not author Launch & Verify content** — that section is an Obsidian embed (`![[bootstrap#...]]`) of bootstrap.md | review item, `target: roadmap`, `wiki_impact: [roadmap]` |
+| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `<verify>` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:run`, `task-implementer`, and `test-runner`; never duplicated into other wikis | review item, `target: bootstrap` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
+| `roadmap.md` | `roadmap` | `roadmap`: milestone narrative, dependency graph, Shared Integration Points (all inside `<plan>`). **Must not author Launch & Verify content** — that section is a one-line link pointer to `bootstrap.md` | review item, `target: roadmap`, `wiki_impact: [roadmap]` |
 
 ### Why architecture is more restrictive than domain
 
@@ -56,9 +56,9 @@ The choice is determined by **whether this stage's output is valid before the up
 
 When `/a4:arch iterate` resolves a `target: architecture` review item:
 
-1. `architecture.md` is edited; the resolved review item gets a `## Log` line; a new footnote on `architecture.md` cites the resolved item.
-2. The wiki close guard (per `obsidian-conventions.md`) ensures the footnote is well-formed.
-3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, `roadmap`, related `task/*.md`) whose `updated:` predates the new architecture footnote. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
+1. `architecture.md` is edited; the resolved review item gets a `<log>` line written by `transition_status.py`; a new bullet in `architecture.md`'s `<change-logs>` cites the resolved item.
+2. The wiki close guard (per `body-conventions.md`) ensures the change-log bullet is well-formed.
+3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, `roadmap`, related `task/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
 4. `compass` Layer 2 / Layer 3 routes the user to the correct downstream `iterate` skill based on the new review-item targets.
 
 Until staleness propagation lands, the user remains responsible for re-running `/a4:auto-bootstrap`, `/a4:roadmap iterate`, or `/a4:run iterate` after a substantial architecture fix. SKILL.md wrap-ups recommend the right next step.
@@ -110,6 +110,6 @@ The cross-area-consistency validator (`scripts/validate_status_consistency.py`) 
 
 - SKILL.md authors — wrap-up steps explicitly cite this document.
 - Reviewer agents — `arch-reviewer`, `domain-reviewer`, `usecase-reviewer` flag clear violations as findings (e.g., `architecture.md` edited by something other than arch, `domain.md` structural edit bypassing review item).
-- The drift detector — surfaces orphan footnotes and close-guard violations.
+- The drift detector — surfaces stale `<change-logs>` links and close-guard violations.
 
 When this document is updated, the changelog of every dependent SKILL.md should be checked for inline copies that drifted.
