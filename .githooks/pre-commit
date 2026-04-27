@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 #
-# pre-commit hook: detect secrets in .obsidian/ files before commit
+# pre-commit hook:
+#   1. detect secrets in .obsidian/ files
+#   2. flag drift between plugins/a4/scripts/status_model.py and the ASCII
+#      transition blocks in plugins/a4/references/frontmatter-schema.md
 #
 
 set -euo pipefail
@@ -9,10 +12,6 @@ ALLOWLIST_FILE="$(git rev-parse --show-toplevel)/.githooks/.secretallowlist"
 
 # Collect staged .obsidian/ files (added or modified, skip deletions)
 OBSIDIAN_FILES=$(git diff --cached --name-only --diff-filter=ACM -- '.obsidian/' 2>/dev/null || true)
-
-if [ -z "$OBSIDIAN_FILES" ]; then
-    exit 0
-fi
 
 # --- Secret patterns ---
 
@@ -108,19 +107,39 @@ check_file() {
     done
 }
 
-echo "Scanning .obsidian/ files for secrets..."
+if [ -n "$OBSIDIAN_FILES" ]; then
+    echo "Scanning .obsidian/ files for secrets..."
 
-for file in $OBSIDIAN_FILES; do
-    check_file "$file"
-done
+    for file in $OBSIDIAN_FILES; do
+        check_file "$file"
+    done
 
-if [ "$FOUND" -eq 1 ]; then
-    echo ""
-    echo "ERROR: Potential secrets detected in .obsidian/ files."
-    echo "If these are false positives, add the matching text to:"
-    echo "  $ALLOWLIST_FILE"
-    echo ""
-    exit 1
+    if [ "$FOUND" -eq 1 ]; then
+        echo ""
+        echo "ERROR: Potential secrets detected in .obsidian/ files."
+        echo "If these are false positives, add the matching text to:"
+        echo "  $ALLOWLIST_FILE"
+        echo ""
+        exit 1
+    fi
+fi
+
+# --- a4 status-diagram drift ---
+
+A4_TRIGGERS=$(git diff --cached --name-only --diff-filter=ACM \
+    -- 'plugins/a4/scripts/status_model.py' \
+       'plugins/a4/references/frontmatter-schema.md' 2>/dev/null || true)
+
+if [ -n "$A4_TRIGGERS" ]; then
+    echo "Checking a4 status-diagram drift..."
+    if ! uv run plugins/a4/scripts/generate_status_diagrams.py --check; then
+        echo ""
+        echo "ERROR: a4 status diagrams in references/frontmatter-schema.md"
+        echo "       are out of sync with scripts/status_model.py."
+        echo "Fix: uv run plugins/a4/scripts/generate_status_diagrams.py --write"
+        echo ""
+        exit 1
+    fi
 fi
 
 exit 0
