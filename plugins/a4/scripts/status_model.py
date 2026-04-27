@@ -13,7 +13,7 @@ plugins/a4/references/frontmatter-schema.md mirrors this data for human
 readers and must be kept in sync when the model changes.
 
 Keys are folder names under `<a4-dir>/` (`usecase`, `task`, `review`,
-`decision`, `idea`, `spark`). The validator's `spark_brainstorm` schema
+`adr`, `idea`, `spark`). The validator's `spark_brainstorm` schema
 maps to the `spark` folder key.
 """
 
@@ -42,7 +42,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
         {"open", "pending", "progress", "complete", "failing", "discarded"}
     ),
     "review": frozenset({"open", "in-progress", "resolved", "discarded"}),
-    "decision": frozenset({"draft", "final", "superseded"}),
+    "adr": frozenset({"draft", "final", "superseded"}),
     "idea": frozenset({"open", "promoted", "discarded"}),
     "spark": frozenset({"open", "promoted", "discarded"}),
 }
@@ -82,7 +82,7 @@ REVIEW_TRANSITIONS: dict[str, frozenset[str]] = {
     "resolved": frozenset({"open"}),
 }
 
-DECISION_TRANSITIONS: dict[str, frozenset[str]] = {
+ADR_TRANSITIONS: dict[str, frozenset[str]] = {
     "draft": frozenset({"final"}),
     "final": frozenset({"superseded"}),
 }
@@ -91,7 +91,7 @@ FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
     "usecase": UC_TRANSITIONS,
     "task": TASK_TRANSITIONS,
     "review": REVIEW_TRANSITIONS,
-    "decision": DECISION_TRANSITIONS,
+    "adr": ADR_TRANSITIONS,
 }
 
 
@@ -103,7 +103,7 @@ TERMINAL_STATUSES: dict[str, frozenset[str]] = {
     "usecase": frozenset({"shipped", "superseded", "discarded"}),
     "task": frozenset({"complete", "discarded"}),
     "review": frozenset({"resolved", "discarded"}),
-    "decision": frozenset({"final", "superseded"}),
+    "adr": frozenset({"final", "superseded"}),
     "idea": frozenset({"promoted", "discarded"}),
     "spark": frozenset({"promoted", "discarded"}),
 }
@@ -112,7 +112,7 @@ IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
     "usecase": frozenset({"implementing", "revising"}),
     "task": frozenset({"progress"}),
     "review": frozenset({"in-progress"}),
-    "decision": frozenset(),
+    "adr": frozenset(),
     "idea": frozenset(),
     "spark": frozenset(),
 }

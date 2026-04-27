@@ -12,7 +12,7 @@ Enforces the body-side rules defined in plugins/a4/references/obsidian-conventio
   - footnote-sequence       Footnote labels are integers in strict monotonic
                             order starting at 1, in file order.
   - footnote-review-payload Footnote payload wikilinks the causing issue (UC,
-                            task, decision, or architecture-section heading) —
+                            task, adr, or architecture-section heading) —
                             never a `review/*` item.
   - wikilink-broken         Every body wikilink (wiki pages, issue bodies,
                             spark files) resolves to a file in the workspace.
@@ -231,7 +231,7 @@ def validate_wiki_footnotes(
                     abs_line,
                     f"footnote `[^{label}]` wikilinks `[[{bare}]]` which is a "
                     "review item; payload must wikilink the causing issue "
-                    "(UC, task, decision, or architecture-section heading)",
+                    "(UC, task, adr, or architecture-section heading)",
                 ))
             if resolve_link(bare, wikis, issues, sparks) is None:
                 violations.append(Violation(

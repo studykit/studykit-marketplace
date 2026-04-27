@@ -74,7 +74,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset(
-            {"depends_on", "justified_by", "related", "supersedes", "implemented_by"}
+            {"depends_on", "adr", "related", "supersedes", "implemented_by"}
         ),
     ),
     "task": Schema(
@@ -86,7 +86,7 @@ SCHEMAS: dict[str, Schema] = {
         },
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
-        path_list_fields=frozenset({"implements", "depends_on", "justified_by"}),
+        path_list_fields=frozenset({"implements", "depends_on", "adr"}),
     ),
     "review": Schema(
         name="review",
@@ -101,10 +101,10 @@ SCHEMAS: dict[str, Schema] = {
         path_scalar_fields=frozenset({"target"}),
         wiki_ref_list_fields=frozenset({"wiki_impact"}),
     ),
-    "decision": Schema(
-        name="decision",
+    "adr": Schema(
+        name="adr",
         required=frozenset({"id", "title", "status", "created"}),
-        enums={"status": STATUS_BY_FOLDER["decision"]},
+        enums={"status": STATUS_BY_FOLDER["adr"]},
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"supersedes", "related"}),

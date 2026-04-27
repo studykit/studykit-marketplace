@@ -165,7 +165,7 @@ def _report_status_consistency_post(
         "```\n\n"
         "This is informational only — no retry is forced. Surface it to "
         "the user when relevant to the current task. Rules:\n"
-        "- `decision.status = superseded` iff another decision declares "
+        "- `adr.status = superseded` iff another adr declares "
         "`supersedes: [<this>]`.\n"
         "- `idea.status = promoted` iff own `promoted:` list is non-empty.\n"
         "- `spark/*.brainstorm.md` `status = promoted` iff own `promoted:` "
@@ -423,7 +423,7 @@ def _report_status_consistency_session_start(a4_dir: Path) -> str:
         f"{body}\n"
         "```\n\n"
         "Rules checked:\n"
-        "- `decision.status = superseded` iff another decision declares "
+        "- `adr.status = superseded` iff another adr declares "
         "`supersedes: [<this>]`.\n"
         "- `idea.status = promoted` iff own `promoted:` list is non-empty.\n"
         "- `spark/*.brainstorm.md` `status = promoted` iff own `promoted:` "
@@ -441,7 +441,7 @@ _LOOKUP_FOLDERS: tuple[str, ...] = (
     "usecase",
     "task",
     "review",
-    "decision",
+    "adr",
     "idea",
 )
 

@@ -6,7 +6,7 @@
 
 Some status enum values are semantically derived from cross-file state:
 
-  - decision.status = "superseded" iff another decision/*.md at
+  - adr.status = "superseded" iff another adr/*.md at
     `status: final` declares `supersedes: [<this-path>]`.
   - usecase.status = "superseded" iff another usecase/*.md at
     `status: shipped` declares `supersedes: [<this-path>]`.
@@ -22,9 +22,9 @@ Some status enum values are semantically derived from cross-file state:
 These are normally materialized by active writers:
   - `scripts/transition_status.py` cascades UC `shipped → superseded`
     (on successor ship), UC `discarded` → task/review discard,
-    UC `revising` → task reset, and decision `final → superseded`
+    UC `revising` → task reset, and adr `final → superseded`
     (on successor finalization). It is the single writer across
-    usecase / task / review / decision.
+    usecase / task / review / adr.
 
 This validator is the safety net — it catches drift left behind if a
 writer was skipped, bypassed, or ran before the successor reached its
@@ -32,17 +32,17 @@ terminal-active state. Report-only; no file is mutated.
 
 Two modes:
 
-  Workspace mode (default) — scan every decision/usecase/idea/brainstorm
+  Workspace mode (default) — scan every adr/usecase/idea/brainstorm
   file and report all mismatches. Used by SessionStart and `/a4:validate`.
 
   File-scoped mode (`--file <path>`) — report only mismatches involving
   the given file's "related set":
     - idea/<id>-<slug>.md        → that file only (self-contained rule)
     - spark/<...>.brainstorm.md  → that file only (self-contained rule)
-    - decision/<id>-<slug>.md    → that file + files it supersedes +
+    - adr/<id>-<slug>.md         → that file + files it supersedes +
                                    files that supersede it (connected
                                    component via `supersedes:`)
-    - usecase/<id>-<slug>.md     → same as decision, walked via
+    - usecase/<id>-<slug>.md     → same as adr, walked via
                                    usecase-to-usecase `supersedes:`
     - anything else              → no output (no consistency rule applies)
   Used by the PostToolUse hook so edits do not re-surface unrelated
@@ -85,10 +85,10 @@ def _fm(path: Path) -> dict | None:
 
 # Families for which a `superseded` status is actively materialized by
 # transition_status.py when a successor reaches its terminal-active
-# state. Both sides must be same-family — a decision does not supersede
+# state. Both sides must be same-family — an adr does not supersede
 # a usecase and vice versa.
 SUPERSEDES_FAMILIES: dict[str, str] = {
-    "decision": "final",
+    "adr": "final",
     "usecase": "shipped",
 }
 
@@ -108,9 +108,9 @@ def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
     return out
 
 
-def collect_decisions(a4_dir: Path) -> dict[str, dict]:
-    """Back-compat alias for `collect_family(a4_dir, "decision")`."""
-    return collect_family(a4_dir, "decision")
+def collect_adrs(a4_dir: Path) -> dict[str, dict]:
+    """Back-compat alias for `collect_family(a4_dir, "adr")`."""
+    return collect_family(a4_dir, "adr")
 
 
 def collect_with_promoted(
@@ -137,7 +137,7 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
 
     A target artifact is expected to be at `status: superseded` iff it is
     named in the `supersedes:` list of another artifact in the same family
-    that is itself at its terminal-active status (decision=final,
+    that is itself at its terminal-active status (adr=final,
     usecase=shipped). Draft/implementing successors do NOT yet render
     their targets superseded.
     """
@@ -360,14 +360,14 @@ def _supersedes_component(items: dict[str, dict], key: str) -> set[str]:
 
 
 # Back-compat alias used by older callers.
-def _decision_component(decisions: dict[str, dict], key: str) -> set[str]:
-    return _supersedes_component(decisions, key)
+def _adr_component(adrs: dict[str, dict], key: str) -> set[str]:
+    return _supersedes_component(adrs, key)
 
 
 def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
     """Return mismatches in the connected component of `rel_file`.
 
-    `rel_file` is workspace-relative: `decision/1-x.md`, `idea/3-y.md`,
+    `rel_file` is workspace-relative: `adr/1-x.md`, `idea/3-y.md`,
     `spark/2026-04-24-1200-z.brainstorm.md`. Anything else returns [].
     """
     parts = rel_file.split("/", 1)

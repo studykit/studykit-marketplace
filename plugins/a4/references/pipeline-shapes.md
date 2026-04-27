@@ -69,7 +69,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 | `kind` | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC's `## Flow` / `## Validation` / `## Error handling` (this is Full-shape AC reused inside Minimal) |
-| `feature` + `justified_by: [decision/...]` | ADR's `## Decision` + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
+| `feature` + `adr: [adr/...]` | ADR's `## Decision` + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
 | `feature` with neither | Smell — `/a4:task` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
 | `bug` | The bug description in the task body itself |
 | `spike` | The hypothesis stated in the task body itself |
@@ -80,16 +80,16 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 ## Cross-cutting concerns
 
-### ADRs (`/a4:decision`)
+### ADRs (`/a4:adr`)
 
 ADRs are **orthogonal to shape**. They are produced and consumed across all shapes, with two production channels and two consumption channels:
 
 | Channel | Where | Most common shape |
 |---|---|---|
-| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:decision` for non-trivial choices. | Full (arch is Full-only) |
-| **Production (secondary)** | `/a4:decision` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
-| **Consumption (primary)** | `architecture.md` `## Changes` footnote `[[decision/N-...]]` records why an architecture change happened. | Full |
-| **Consumption (secondary)** | `task.justified_by: decision/N-...` makes an ADR the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
+| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:adr` for non-trivial choices. | Full (arch is Full-only) |
+| **Production (secondary)** | `/a4:adr` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
+| **Consumption (primary)** | `architecture.md` `## Changes` footnote `[[adr/N-...]]` records why an architecture change happened. | Full |
+| **Consumption (secondary)** | `task.adr: adr/N-...` makes an ADR the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
 
 **Trigger conditions** for writing an ADR (independent of shape):
 
@@ -101,21 +101,21 @@ ADRs are **orthogonal to shape**. They are produced and consumed across all shap
 
 *Mandatory* (the system requires the citation to function correctly):
 
-- `architecture.md` `## Changes` footnote `[[decision/N-...]]` whenever an arch section is changed by an ADR. Per [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) change-footnote rules.
-- `task.justified_by: [decision/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in an ADR rather than a UC. `/a4:run` Step 4b reads the ADR's `## Decision` plus the cited `architecture.md` section as AC source.
+- `architecture.md` `## Changes` footnote `[[adr/N-...]]` whenever an arch section is changed by an ADR. Per [`obsidian-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md) change-footnote rules.
+- `task.adr: [adr/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in an ADR rather than a UC. `/a4:run` Step 4b reads the ADR's `## Decision` plus the cited `architecture.md` section as AC source.
 - A successor ADR's `Status: superseded by ADR-M` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk.
 - Other wiki pages' `## Changes` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by an ADR — same footnote pattern as architecture.md.
 
 *Optional* (the citation adds clarity but is not required):
 
-- Task body prose (`## Description`, `## Open Questions`) — explain why this task takes a particular approach, even when `justified_by:` is not set.
+- Task body prose (`## Description`, `## Open Questions`) — explain why this task takes a particular approach, even when `adr:` is not set.
 - Review item body — clarify what decision a `kind: question` is asking about or what decision a `kind: finding` is violating.
 - Research artifacts (`research/<slug>.md`) — the artifact's conclusion can forward-point to an ADR that fixed its conclusion.
 
 **Common omissions** that erode ADR value:
 
 - Writing an ADR but not adding the `architecture.md` `## Changes` footnote when arch was driven by it. The drift detector may eventually catch this; preferring to add the footnote in the same session avoids the drift entry.
-- Minimal-shape `feature` task with no UC and no ADR — `/a4:task` Step 2 flags as smell. The fix is usually to write a short ADR first, then cite it via `justified_by:`.
+- Minimal-shape `feature` task with no UC and no ADR — `/a4:task` Step 2 flags as smell. The fix is usually to write a short ADR first, then cite it via `adr:`.
 - Reversing a decision without an explicit `superseded by` chain. Both ADRs end up live and ambiguous about which is current.
 
 **Anti-patterns** (do not write an ADR for these):
@@ -125,7 +125,7 @@ ADRs are **orthogonal to shape**. They are produced and consumed across all shap
 - Post-hoc justification — ADRs capture the trade-off at decision time, not after the fact.
 - Multiple decisions in one file — one decision per file (Nygard 1:1 rule).
 
-ADRs do not have a shape entry of their own. `/a4:decision` is shape-independent — it always writes the same ADR file regardless of which shape (if any) is in flight.
+ADRs do not have a shape entry of their own. `/a4:adr` is shape-independent — it always writes the same ADR file regardless of which shape (if any) is in flight.
 
 ## No shape
 
@@ -133,7 +133,7 @@ When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may
 
 This is a normal state, not an error. Workspaces in this state typically use:
 
-- `/a4:decision` — record decisions standalone before any implementation work.
+- `/a4:adr` — record ADRs standalone before any implementation work.
 - `/a4:research` — investigate options or topics, producing `research/<slug>.md` outside `a4/`.
 - `/a4:research-review` — audit a research artifact for source quality and bias.
 - `/a4:spark-brainstorm` — capture ideas before they take shape.
@@ -168,7 +168,7 @@ Skills that **do not** cite this document, by design:
 - `usecase`, `domain`, `arch`, `roadmap` — Full-only stages. Shape is determined by the fact of their invocation; no internal branching needed.
 - `auto-usecase` — the Reverse entry. Shape is determined by invocation; no internal branching.
 - `task` — itself the Minimal entry. Always Jira-issue-modeled regardless of any other shape activity in the workspace.
-- `decision` — cross-cutting; shape-independent.
+- `adr` — cross-cutting; shape-independent.
 - `compass` — uses this reference at the **Step 2.0 catalog level** (entry routing) rather than as an internal branch citation.
 
 ## Reading order

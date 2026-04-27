@@ -210,7 +210,7 @@ When a task-implementer reads a task's `## Acceptance Criteria` section, the sou
 | Task kind / shape | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-| `feature` + `justified_by: [decision/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
+| `feature` + `adr: [adr/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
 | `spike` | hypothesis + expected result, the spike's own body |
 | `bug` | reproduction scenario + fixed criteria |
 

@@ -47,7 +47,7 @@ kind: feature | spike | bug
 status: open | pending | progress | complete | failing | discarded
 implements: [usecase/3-search-history, usecase/4-render-preview]
 depends_on: [task/4-parse-config]
-justified_by: []
+adr: []
 related: []
 files: [src/render.ts, src/render.test.ts]
 cycle: 1
@@ -81,7 +81,7 @@ The `## Acceptance Criteria` section is required on every task body. The source 
 | Task kind / shape | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-| `feature` + `justified_by: [decision/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
+| `feature` + `adr: [adr/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
 | `spike` | hypothesis + expected result, the spike's own body |
 | `bug` | reproduction scenario + fixed criteria |
 

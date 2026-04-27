@@ -15,7 +15,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `spark-brainstorm` | Generate ideas with structured creative techniques |
 | `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
 | `research-review` | Review a research artifact at `./research/<slug>.md` for source quality, option balance, bias, and neutrality |
-| `decision` | Record a decision reached through conversation as `a4/decision/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
+| `adr` | Record an ADR reached through conversation as `a4/adr/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
 
 ## Pipeline (interactive)
 

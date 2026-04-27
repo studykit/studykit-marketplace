@@ -9,8 +9,8 @@ Frontmatter-side rules (path format inside YAML, required fields, enums) live in
 Applies to files written into the `a4/` workspace:
 
 - **Wiki pages** — `context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `roadmap.md`, `bootstrap.md`. Continuously updated. Follow the Wiki Update Protocol below.
-- **Issue bodies** — `usecase/*.md`, `task/*.md`, `review/*.md`, `decision/*.md`, `idea/*.md`. Use wikilinks for body cross-references; the update protocol applies only to wiki pages, not to issue bodies.
-- **Spark files** — `spark/*.brainstorm.md`. Use wikilinks in body prose. Spark files are append-only session artifacts and do **not** follow the wiki update protocol. (Historical note: `spark/*.decide.md` was retired; decisions now live at `a4/decision/<id>-<slug>.md`, recorded by `/a4:decision` after a conversational convergence, with supporting research produced by `/a4:research` at project-root `./research/<slug>.md` and cited from the decision's body as `[[research/<slug>]]` wikilinks.)
+- **Issue bodies** — `usecase/*.md`, `task/*.md`, `review/*.md`, `adr/*.md`, `idea/*.md`. Use wikilinks for body cross-references; the update protocol applies only to wiki pages, not to issue bodies.
+- **Spark files** — `spark/*.brainstorm.md`. Use wikilinks in body prose. Spark files are append-only session artifacts and do **not** follow the wiki update protocol. (Historical note: `spark/*.decide.md` was retired; ADRs now live at `a4/adr/<id>-<slug>.md`, recorded by `/a4:adr` after a conversational convergence, with supporting research produced by `/a4:research` at project-root `./research/<slug>.md` and cited from the ADR's body as `[[research/<slug>]]` wikilinks.)
 
 ## Link syntax (body)
 
@@ -51,13 +51,13 @@ A single `## Changes` section at the bottom of the wiki page resolves every mark
 
 [^1]: 2026-04-23 — [[usecase/1-share-summary]]
 [^2]: 2026-04-24 — [[usecase/3-search-history]]
-[^3]: 2026-04-24 — [[decision/8-caching-strategy]]
+[^3]: 2026-04-24 — [[adr/8-caching-strategy]]
 ```
 
 Format: `[^N]: YYYY-MM-DD — [[causing-issue]]`
 
 - **Date** — today in `YYYY-MM-DD`.
-- **Wikilink target** — the **causing issue**: a UC, task, decision, or architecture-section heading (e.g., `[[architecture#SessionService]]`). Never a review item; review items surface in the close guard but are not what the wiki records as "why this section changed."
+- **Wikilink target** — the **causing issue**: a UC, task, ADR, or architecture-section heading (e.g., `[[architecture#SessionService]]`). Never a review item; review items surface in the close guard but are not what the wiki records as "why this section changed."
 
 ### Full example
 

@@ -2,13 +2,13 @@
 # requires-python = ">=3.11"
 # dependencies = ["pyyaml>=6.0"]
 # ///
-"""Atomically register a research → decision citation.
+"""Atomically register a research → adr citation.
 
-A decision file may cite a research artifact at
+An adr file may cite a research artifact at
 `<project-root>/research/<slug>.md`. The citation has four representations:
 
-  - decision/<id>-<slug>.md frontmatter `research:` list
-  - decision/<id>-<slug>.md body `## Research` section
+  - adr/<id>-<slug>.md frontmatter `research:` list
+  - adr/<id>-<slug>.md body `## Research` section
   - research/<slug>.md frontmatter `cited_by:` list (stored reverse-link)
   - research/<slug>.md body `## Cited By` section
 
@@ -17,11 +17,11 @@ file's `updated:` field to today. Idempotent: when a side already records
 the citation that side is left alone.
 
 Usage:
-    uv run register_research_citation.py <a4-dir> <research-ref> <decision-ref>
+    uv run register_research_citation.py <a4-dir> <research-ref> <adr-ref>
 
   <a4-dir>        path to the a4/ workspace (research/ is a sibling of this)
   <research-ref>  research/<slug> (or a path that resolves to research/<slug>.md)
-  <decision-ref>  decision/<id>-<slug> (or a path inside a4/decision/)
+  <adr-ref>       adr/<id>-<slug> (or a path inside a4/adr/)
 """
 
 from __future__ import annotations
@@ -41,10 +41,10 @@ from markdown import parse
 @dataclass
 class Result:
     a4_dir: str = ""
-    decision_file: str = ""
+    adr_file: str = ""
     research_file: str = ""
-    decision_research_field_added: bool = False
-    decision_body_added: bool = False
+    adr_research_field_added: bool = False
+    adr_body_added: bool = False
     research_cited_by_added: bool = False
     research_body_added: bool = False
     research_updated_bumped: bool = False
@@ -185,71 +185,71 @@ def _resolve_research(a4_dir: Path, ref: str) -> Path | None:
     return fallback if fallback.is_file() else None
 
 
-def _resolve_decision(a4_dir: Path, ref: str) -> Path | None:
-    """Resolve a decision reference to a filesystem path under a4/decision/."""
-    decision_dir = a4_dir / "decision"
+def _resolve_adr(a4_dir: Path, ref: str) -> Path | None:
+    """Resolve an adr reference to a filesystem path under a4/adr/."""
+    adr_dir = a4_dir / "adr"
     if Path(ref).is_absolute():
         path = Path(ref)
         return path if path.is_file() else None
 
-    if ref.startswith("decision/"):
-        rel = ref[len("decision/") :]
+    if ref.startswith("adr/"):
+        rel = ref[len("adr/") :]
         if not rel.endswith(".md"):
             rel += ".md"
-        path = decision_dir / rel
+        path = adr_dir / rel
         return path if path.is_file() else None
 
     rel = ref if ref.endswith(".md") else f"{ref}.md"
-    path = decision_dir / rel
+    path = adr_dir / rel
     return path if path.is_file() else None
 
 
 def register(
     a4_dir: Path,
     research_path: Path,
-    decision_path: Path,
+    adr_path: Path,
     dry_run: bool,
 ) -> Result:
     today = date.today().isoformat()
     result = Result(
         a4_dir=str(a4_dir),
-        decision_file=str(decision_path),
+        adr_file=str(adr_path),
         research_file=str(research_path),
         dry_run=dry_run,
     )
 
     research_ref = f"research/{research_path.stem}"
-    decision_ref = f"decision/{decision_path.stem}"
+    adr_ref = f"adr/{adr_path.stem}"
 
-    # Decision side.
-    decision_md = parse(decision_path)
-    decision_existing = _existing_list(decision_md.preamble.fm, "research")
-    decision_fm = decision_md.preamble.raw
-    decision_body = decision_md.body.content
-    if research_ref not in decision_existing:
-        decision_fm = _rewrite_list_field(
-            decision_fm, "research", sorted(decision_existing + [research_ref])
+    # ADR side.
+    adr_md = parse(adr_path)
+    adr_existing = _existing_list(adr_md.preamble.fm, "research")
+    adr_fm = adr_md.preamble.raw
+    adr_body = adr_md.body.content
+    if research_ref not in adr_existing:
+        adr_fm = _rewrite_list_field(
+            adr_fm, "research", sorted(adr_existing + [research_ref])
         )
-        result.decision_research_field_added = True
-    new_decision_body, body_changed = _append_to_section(
-        decision_body, "Research", f"- [[{research_ref}]]"
+        result.adr_research_field_added = True
+    new_adr_body, body_changed = _append_to_section(
+        adr_body, "Research", f"- [[{research_ref}]]"
     )
     if body_changed:
-        decision_body = new_decision_body
-        result.decision_body_added = True
+        adr_body = new_adr_body
+        result.adr_body_added = True
 
     # Research side.
     research_md = parse(research_path)
     research_existing = _existing_list(research_md.preamble.fm, "cited_by")
     research_fm = research_md.preamble.raw
     research_body = research_md.body.content
-    if decision_ref not in research_existing:
+    if adr_ref not in research_existing:
         research_fm = _rewrite_list_field(
-            research_fm, "cited_by", sorted(research_existing + [decision_ref])
+            research_fm, "cited_by", sorted(research_existing + [adr_ref])
         )
         result.research_cited_by_added = True
     new_research_body, body_changed = _append_to_section(
-        research_body, "Cited By", f"- [[{decision_ref}]]"
+        research_body, "Cited By", f"- [[{adr_ref}]]"
     )
     if body_changed:
         research_body = new_research_body
@@ -259,8 +259,8 @@ def register(
         result.research_updated_bumped = True
 
     if not dry_run:
-        if result.decision_research_field_added or result.decision_body_added:
-            _write_file(decision_path, decision_fm, decision_body)
+        if result.adr_research_field_added or result.adr_body_added:
+            _write_file(adr_path, adr_fm, adr_body)
         if (
             result.research_cited_by_added
             or result.research_body_added
@@ -273,7 +273,7 @@ def register(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Atomically register a research → decision citation."
+        description="Atomically register a research → adr citation."
     )
     parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
     parser.add_argument(
@@ -281,8 +281,8 @@ def main() -> None:
         help="research/<slug> or a path resolving to research/<slug>.md",
     )
     parser.add_argument(
-        "decision_ref",
-        help="decision/<id>-<slug> or a path inside a4/decision/",
+        "adr_ref",
+        help="adr/<id>-<slug> or a path inside a4/adr/",
     )
     parser.add_argument(
         "--dry-run", action="store_true",
@@ -307,16 +307,16 @@ def main() -> None:
         )
         sys.exit(2)
 
-    decision_path = _resolve_decision(a4_dir, args.decision_ref)
-    if decision_path is None:
+    adr_path = _resolve_adr(a4_dir, args.adr_ref)
+    if adr_path is None:
         print(
-            f"Error: decision file not found for ref {args.decision_ref!r}",
+            f"Error: adr file not found for ref {args.adr_ref!r}",
             file=sys.stderr,
         )
         sys.exit(2)
 
     result = register(
-        a4_dir, research_path.resolve(), decision_path.resolve(), args.dry_run
+        a4_dir, research_path.resolve(), adr_path.resolve(), args.dry_run
     )
 
     if args.json:
@@ -324,18 +324,18 @@ def main() -> None:
     else:
         prefix = "(dry-run) " if args.dry_run else ""
         try:
-            decision_disp = decision_path.relative_to(a4_dir.parent)
+            adr_disp = adr_path.relative_to(a4_dir.parent)
         except ValueError:
-            decision_disp = decision_path
+            adr_disp = adr_path
         try:
             research_disp = research_path.relative_to(a4_dir.parent)
         except ValueError:
             research_disp = research_path
-        print(f"{prefix}decision: {decision_disp}")
+        print(f"{prefix}adr: {adr_disp}")
         print(f"{prefix}research: {research_disp}")
         flags = [
-            ("research field on decision", result.decision_research_field_added),
-            ("Research section on decision", result.decision_body_added),
+            ("research field on adr", result.adr_research_field_added),
+            ("Research section on adr", result.adr_body_added),
             ("cited_by field on research", result.research_cited_by_added),
             ("Cited By section on research", result.research_body_added),
             ("updated bumped on research", result.research_updated_bumped),

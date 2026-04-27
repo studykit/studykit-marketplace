@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, WebSearch, WebFetch
 
 # Research Facilitator
 
-A standalone research skill. Investigates a technical topic or compares alternatives, and saves the result as a portable markdown artifact at `./research/<slug>.md` (relative to the current working directory / project root). The output is designed to be **cited** by decision files (`a4/decision/<id>-<slug>.md`) or any other artifact via `related:` / wikilink — not consumed as a decision itself.
+A standalone research skill. Investigates a technical topic or compares alternatives, and saves the result as a portable markdown artifact at `./research/<slug>.md` (relative to the current working directory / project root). The output is designed to be **cited** by ADR files (`a4/adr/<id>-<slug>.md`) or any other artifact via `related:` / wikilink — not consumed as a decision itself.
 
 Research: **$ARGUMENTS**
 
@@ -88,7 +88,7 @@ tags: []
 *Findings will appear here as research progresses.*
 ```
 
-`cited_by:` is a stored reverse-link auto-maintained by `scripts/register_research_citation.py` when a decision cites this research. Never hand-edit.
+`cited_by:` is a stored reverse-link auto-maintained by `scripts/register_research_citation.py` when an ADR cites this research. Never hand-edit.
 
 ## Update discipline
 
@@ -133,14 +133,14 @@ When the user indicates completion:
    Leave `status: draft` if more iterations are expected; flip to `archived` later when the research becomes irrelevant.
 3. **Bump `updated:`** to today.
 4. **Report the path** and how to reference it:
-   - From `/a4:decision`: cite this research via `scripts/register_research_citation.py`, which writes the citation in four places (decision frontmatter `research:`, decision body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`).
+   - From `/a4:adr`: cite this research via `scripts/register_research_citation.py`, which writes the citation in four places (ADR frontmatter `research:`, ADR body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`).
    - Optional review pass: `/a4:research-review ./research/<slug>.md` before relying on it for a decision.
 
 ## Non-goals
 
-- **No decisions.** Research is objective investigation. The decision is recorded elsewhere via `/a4:decision`, which writes `a4/decision/<id>-<slug>.md` and performs the wiki nudge.
+- **No decisions.** Research is objective investigation. The decision is recorded elsewhere via `/a4:adr`, which writes `a4/adr/<id>-<slug>.md` and performs the wiki nudge.
 - **No evaluation / scoring.** Weighted scoring, Pugh matrices, SWOT — that's for the decision step.
-- **No wiki updates.** Research is workspace-agnostic. Nudges to `a4/architecture.md` etc. happen during `/a4:decision`, not here.
+- **No wiki updates.** Research is workspace-agnostic. Nudges to `a4/architecture.md` etc. happen during `/a4:adr`, not here.
 - **No commit.** Leave the file in the working tree.
 
 ## Output format

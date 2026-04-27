@@ -324,7 +324,7 @@ def render_issue_counts(issues: dict[str, list[IssueItem]]) -> str:
     if review_other:
         lines.append(row("review (other)", review_other, "review"))
 
-    lines.append(row("decision", issues["decision"], "decision"))
+    lines.append(row("adr", issues["adr"], "adr"))
     lines.append(row("idea", issues["idea"], "idea"))
 
     tasks = issues["task"]

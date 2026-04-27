@@ -4,7 +4,7 @@
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
-All status changes on usecase, task, review, and decision files flow
+All status changes on usecase, task, review, and adr files flow
 through this script. Skills and agents call it with the target file and
 the desired new status. The script:
 
@@ -26,7 +26,7 @@ the desired new status. The script:
         usecase → shipped                      → supersedes chain: each same-
                                                   family target currently
                                                   `shipped` flips to `superseded`
-        decision → final                       → supersedes chain: each same-
+        adr → final                            → supersedes chain: each same-
                                                   family target currently
                                                   `final` flips to `superseded`
 
@@ -283,7 +283,7 @@ def validate_transition(
             _validate_implementing_to_shipped(a4_dir, rel_path, fm, issues)
             return issues
         return issues
-    if family == "decision":
+    if family == "adr":
         if from_status == "draft" and to_status == "final":
             _validate_draft_to_final(fm, body, issues)
             return issues
@@ -357,7 +357,7 @@ def _validate_implementing_to_shipped(
 
 
 def _validate_draft_to_final(fm: dict, body: str, issues: list[str]) -> None:
-    """Decision draft → final: title placeholder + required body sections."""
+    """ADR draft → final: title placeholder + required body sections."""
     for field_name in ("title",):
         placeholder = _placeholder_in(fm.get(field_name))
         if placeholder:
@@ -597,35 +597,35 @@ def _cascade_uc_shipped(
         )
 
 
-def _cascade_decision_final(
+def _cascade_adr_final(
     a4_dir: Path,
-    decision_rel: str,
+    adr_rel: str,
     today: str,
     dry_run: bool,
     report: Report,
     from_status: str,
 ) -> None:
-    """Decision → final: flip supersedes targets (final → superseded)."""
+    """ADR → final: flip supersedes targets (final → superseded)."""
     if from_status != "draft":
         return
-    decision_path = a4_dir / decision_rel
-    fm, _, _ = _parse(decision_path)
+    adr_path = a4_dir / adr_rel
+    fm, _, _ = _parse(adr_path)
     if fm is None:
         return
     supersedes = fm.get("supersedes")
     if not isinstance(supersedes, list):
         return
-    decision_ref = decision_rel.removesuffix(".md")
+    adr_ref = adr_rel.removesuffix(".md")
     for entry in supersedes:
         norm = normalize_ref(entry)
         if norm is None:
             continue
-        if not norm.startswith("decision/"):
+        if not norm.startswith("adr/"):
             report.skipped.append(
                 {
                     "path": norm,
                     "reason": "cross-family-supersedes",
-                    "detail": f"ignored non-decision target in {decision_ref}",
+                    "detail": f"ignored non-adr target in {adr_ref}",
                 }
             )
             continue
@@ -658,7 +658,7 @@ def _cascade_decision_final(
             target_path,
             "final",
             "superseded",
-            f"superseded by {decision_ref}",
+            f"superseded by {adr_ref}",
             dry_run,
             today,
         )
@@ -667,7 +667,7 @@ def _cascade_decision_final(
                 path=f"{norm}.md",
                 from_status="final",
                 to_status="superseded",
-                reason=f"superseded by {decision_ref}",
+                reason=f"superseded by {adr_ref}",
             )
         )
 
@@ -692,7 +692,7 @@ def transition(
     if family is None:
         report.errors.append(
             f"cannot detect family from path {rel_path!r}. Expected "
-            "usecase/, task/, or review/ prefix."
+            "usecase/, task/, review/, or adr/ prefix."
         )
         return report
     report.family = family
@@ -784,9 +784,9 @@ def transition(
             _cascade_uc_shipped(
                 a4_dir, rel_path, today, dry_run, report, current
             )
-    elif family == "decision":
+    elif family == "adr":
         if new_status == "final":
-            _cascade_decision_final(
+            _cascade_adr_final(
                 a4_dir, rel_path, today, dry_run, report, current
             )
 
@@ -805,7 +805,7 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     Covers both families that carry `supersedes:`:
 
       - usecase @ `shipped` → flip same-family targets `shipped → superseded`.
-      - decision @ `final` → flip same-family targets `final → superseded`.
+      - adr @ `final` → flip same-family targets `final → superseded`.
 
     Used when edits bypassed the script (e.g., manual git checkout) and
     `## Log` back-pointers may have been lost. Idempotent.
@@ -840,9 +840,9 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
             if report.cascades or report.errors:
                 reports.append(report)
 
-    decision_dir = a4_dir / "decision"
-    if decision_dir.is_dir():
-        for p in sorted(decision_dir.glob("*.md")):
+    adr_dir = a4_dir / "adr"
+    if adr_dir.is_dir():
+        for p in sorted(adr_dir.glob("*.md")):
             fm, _, _ = _parse(p)
             if fm is None:
                 continue
@@ -851,16 +851,16 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
             supersedes = fm.get("supersedes")
             if not isinstance(supersedes, list) or not supersedes:
                 continue
-            rel = f"decision/{p.name}"
+            rel = f"adr/{p.name}"
             report = Report(
                 a4_dir=str(a4_dir),
                 file=rel,
-                family="decision",
+                family="adr",
                 current_status="final",
                 target_status="final",
                 dry_run=dry_run,
             )
-            _cascade_decision_final(
+            _cascade_adr_final(
                 a4_dir, rel, today, dry_run, report, from_status="draft"
             )
             report.ok = not report.errors

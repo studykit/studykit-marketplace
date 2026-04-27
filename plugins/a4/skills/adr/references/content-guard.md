@@ -1,8 +1,8 @@
-# Decision content guard — examples and false-positive carve-outs
+# ADR content guard — examples and false-positive carve-outs
 
-Reference for the `decision-content-guard` agent. The descriptive-not-prescriptive rule lives in [`references/frontmatter-schema.md §Decision`](../../../references/frontmatter-schema.md). This file gives concrete leakage vs. clean prose so the guard does not over- or under-flag.
+Reference for the `adr-content-guard` agent. The descriptive-not-prescriptive rule lives in [`references/frontmatter-schema.md §ADR`](../../../references/frontmatter-schema.md). This file gives concrete leakage vs. clean prose so the guard does not over- or under-flag.
 
-The rule, restated: an ADR body captures *what* was chosen and *why*. *How* to execute the choice lives in `task/<id>-<slug>.md` files linked via `task.justified_by:`. The reverse view (`justifies`) is derived on demand and never written into the decision body.
+The rule, restated: an ADR body captures *what* was chosen and *why*. *How* to execute the choice lives in `task/<id>-<slug>.md` files linked via `task.adr:`. The reverse view (`justifies`) is derived on demand and never written into the ADR body.
 
 ## Section-by-section policy
 
@@ -123,12 +123,12 @@ experience from the platform tier; MySQL is unfamiliar.
 | Wikilink | In `## Decision` | In `## Consequences` | In `## Context` |
 |----------|------------------|----------------------|------------------|
 | `[[research/<slug>]]` | OK | OK | OK |
-| `[[decision/<id>-<slug>]]` | OK | OK | OK |
+| `[[adr/<id>-<slug>]]` | OK | OK | OK |
 | `[[usecase/<id>-<slug>]]` | OK | OK | OK |
 | `[[architecture#section]]` | OK | OK | OK |
 | `[[task/<id>-<slug>]]` | OK | **FLAG** | OK |
 
-Only one wikilink shape is forbidden, and only inside `## Consequences`: task wikilinks. Every other reference shape — research, prior decisions, UCs, architecture sections — is a legitimate cross-reference.
+Only one wikilink shape is forbidden, and only inside `## Consequences`: task wikilinks. Every other reference shape — research, prior ADRs, UCs, architecture sections — is a legitimate cross-reference.
 
 ## When in doubt
 
@@ -142,4 +142,4 @@ The clearest leak signals, in order of severity:
 4. **Implementation detail** (function names, file paths, CLI commands) **outside `## Context`**.
 5. **Option-as-task framing** in `## Options Considered` or `## Rejected Alternatives`.
 
-A clean decision file rarely fails any of these. A file failing two or more is almost certainly leaking implementation thinking that belongs in `task/`.
+A clean ADR file rarely fails any of these. A file failing two or more is almost certainly leaking implementation thinking that belongs in `task/`.

@@ -6,7 +6,7 @@
 
 The drift detector implements the spec-as-wiki+issues ADR's invariant that
 wiki page footnotes track every substantive issue change. It scans a4/ wiki
-pages and a4/{usecase,task,review,decision}/ issue files, then emits review
+pages and a4/{usecase,task,review,adr}/ issue files, then emits review
 items with `source: drift-detector` for each detected drift.
 
 Wiki normalization (runs before detection):
@@ -26,7 +26,7 @@ Detection rules:
   - missing-wiki-page A `wiki_impact` entry names a wiki page that does
                       not exist at the workspace root.
   - missing-adr-cite  Architecture-only. A live `## Changes` footnote
-                      records a change without citing any `decision/*`
+                      records a change without citing any `adr/*`
                       ADR. Resolution: cite the ADR, author one, or
                       discard with rationale.
 
@@ -60,7 +60,7 @@ from markdown import extract_body, extract_preamble
 # `"idea"`). Preserved verbatim from pre-shared-module behavior — widening
 # to include `idea/` changes wikilink-resolution and next-id semantics and
 # belongs in a separate loud commit, not in this refactor.
-ISSUE_FOLDERS = ("usecase", "task", "review", "decision")
+ISSUE_FOLDERS = ("usecase", "task", "review", "adr")
 DEDUP_BLOCKING_STATUSES = {"open", "in-progress", "discarded"}
 
 INLINE_FOOTNOTE_RE = re.compile(r"\[\^([^\]\s]+)\](?!:)")
@@ -223,7 +223,7 @@ def detect_wiki_drift(
                     ),
                     cause=link,
                 ))
-            elif resolved.startswith("decision/"):
+            elif resolved.startswith("adr/"):
                 has_adr_cite = True
 
         if name == "architecture" and not has_adr_cite:
@@ -231,8 +231,8 @@ def detect_wiki_drift(
                 kind="missing-adr-cite",
                 wiki=name,
                 detail=(
-                    f"`## Changes [^{label}]` records a change without citing a "
-                    "`decision/*` ADR."
+                    f"`## Changes [^{label}]` records a change without citing an "
+                    "`adr/*` ADR."
                 ),
                 cause=f"footnote-{label}",
             ))
@@ -418,12 +418,12 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
         body_lines += [
             "Three resolution paths — pick one:",
             "",
-            "1. **ADR already exists.** If an ADR in `decision/` already records this",
-            f"   change, add `[[decision/<id>-<slug>]]` to the relevant footnote in",
+            "1. **ADR already exists.** If an ADR in `adr/` already records this",
+            f"   change, add `[[adr/<id>-<slug>]]` to the relevant footnote in",
             f"   `{drift.wiki}.md`'s `## Changes` section, then set this review's",
             "   status to `resolved`.",
             "",
-            "2. **ADR needed.** Run `/a4:decision` to author one, then cite it from",
+            "2. **ADR needed.** Run `/a4:adr` to author one, then cite it from",
             "   the footnote and set status to `resolved`.",
             "",
             "3. **No ADR warranted.** If this change is routine (framework-mandated,",

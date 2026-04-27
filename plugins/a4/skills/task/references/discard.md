@@ -23,7 +23,7 @@ Read the resolved file's frontmatter. The writer (`transition_status.py` `TASK_T
 - Any of those five → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.
 
-Surface the task's `kind:` and `implements:` / `justified_by:` to the user before flipping, so they can confirm they're discarding the right one. One-line summary, no separate prompt unless slug-fragment resolution returned multiple candidates in D1.
+Surface the task's `kind:` and `implements:` / `adr:` to the user before flipping, so they can confirm they're discarding the right one. One-line summary, no separate prompt unless slug-fragment resolution returned multiple candidates in D1.
 
 ## D3. Apply the discard
 
@@ -77,7 +77,7 @@ Spike sidecar: <left in place at spike/<id>-<slug>/ | not present | n/a>
 Mention any other artifacts the user may want to revisit:
 
 - If `implements:` was non-empty, name the UC(s) so the user can decide whether to re-author a replacement task or also discard the UC.
-- If `justified_by:` was non-empty, the cited ADR(s) are unaffected.
+- If `adr:` was non-empty, the cited ADR(s) are unaffected.
 
 If the discarded task was the only `pending` / `implementing` / `failing` task tied to a UC, mention that the UC may now have nothing to ship — the user can decide whether to author a replacement task, discard the UC itself, or leave the UC in `implementing` waiting for another task.
 
