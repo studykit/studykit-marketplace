@@ -54,6 +54,7 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
 Frontmatter on files written by a4 skills (under `<project-root>/a4/`) is the responsibility of scripts in `plugins/a4/scripts/`, not hand edits. This keeps cross-file consistency and reverse-links intact.
 
 - Status transitions go through `transition_status.py`. Skills never write `status:` directly after the initial create.
+- Status enums, transitions, and terminal/in-progress sets live in `scripts/status_model.py` — the canonical model imported by the writer, validators, workspace state, and search. Add new status values there first; consumers pick them up automatically.
 - Reverse-link fields (e.g., `usecase.implemented_by:`) are owned by refresh scripts (`refresh_implemented_by.py`) and are recomputed on SessionStart. Do not hand-edit them.
 - Forward-link fields (e.g., `task.implements:`, `task.justified_by:`) are user input but path-validated by `validate_frontmatter.py`.
 - When adding a new link or status field, add the corresponding script first; do not introduce frontmatter that no script reads or writes.

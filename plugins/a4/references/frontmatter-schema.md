@@ -461,6 +461,7 @@ When these land, update this document **and** the validator simultaneously — t
 
 - **Body-level conventions:** `plugins/a4/references/obsidian-conventions.md` — wikilink syntax, footnote audit trail, Wiki Update Protocol.
 - **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
+- **Status model (canonical):** `plugins/a4/scripts/status_model.py` — per-family status enums, allowed transitions, terminal/in-progress/active classifications, kind enums. Imported by the writer, validators, workspace state, and search; the prose tables in this document mirror the same data.
 - **Status transition writer:** `plugins/a4/scripts/transition_status.py` — single writer for usecase / task / review / decision status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, decision final → superseded chain).
 - **Implemented-by back-link refresher:** `plugins/a4/scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
 - **Research citation registrar:** `plugins/a4/scripts/register_research_citation.py` — atomically records a research → decision citation in four places (decision frontmatter `research:`, decision body `## Research`, research frontmatter `cited_by:`, research body `## Cited By`) and bumps the research file's `updated:`.

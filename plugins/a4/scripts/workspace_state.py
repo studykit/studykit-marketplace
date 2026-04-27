@@ -60,6 +60,12 @@ from typing import Any, Callable
 
 from common import ISSUE_FOLDERS
 from markdown import extract_preamble
+from status_model import (
+    ACTIVE_TASK_STATUSES,
+    BLOCKED_STATUSES,
+    IN_PROGRESS_STATUSES,
+    TERMINAL_STATUSES,
+)
 
 # Local ordered tuple — drives the Wiki-pages table rendering.
 # `common.WIKI_KINDS` is a frozenset (membership-test only).
@@ -73,31 +79,13 @@ WIKI_KINDS: tuple[str, ...] = (
     "bootstrap",
 )
 
-# Status vocabularies per the ADRs (2026-04-23-spec-as-wiki-and-issues.decide.md
-# and 2026-04-24-idea-slot.decide.md for `idea`).
-TERMINAL_STATUSES: dict[str, set[str]] = {
-    "usecase": {"shipped", "superseded", "discarded"},
-    "task": {"complete", "discarded"},
-    "review": {"resolved", "discarded"},
-    "decision": {"final", "superseded"},
-    "idea": {"promoted", "discarded"},
-}
-IN_PROGRESS_STATUSES: dict[str, set[str]] = {
-    "usecase": {"implementing", "revising"},
-    "task": {"progress"},
-    "review": {"in-progress"},
-    "decision": set(),
-    "idea": set(),
-}
-BLOCKED_STATUSES: set[str] = {"blocked"}
-
-SPARK_TERMINAL: dict[str, set[str]] = {
-    "brainstorm": {"promoted", "discarded"},
+# Spark flavor → terminal set. Distinct from TERMINAL_STATUSES["spark"]
+# because the file-flavor key (`brainstorm`) does not equal the folder
+# key (`spark`).
+SPARK_TERMINAL: dict[str, frozenset[str]] = {
+    "brainstorm": TERMINAL_STATUSES["spark"],
 }
 
-ACTIVE_TASK_STATUSES: frozenset[str] = frozenset(
-    {"pending", "progress", "failing"}
-)
 PRIORITY_ORDER: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
 RECENT_ACTIVITY_LIMIT = 10
 

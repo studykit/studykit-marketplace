@@ -56,6 +56,10 @@ from typing import Any
 
 from common import ISSUE_FOLDERS, normalize_ref
 from markdown import extract_preamble
+from status_model import (
+    KIND_BY_FOLDER as _MODEL_KIND_BY_FOLDER,
+    STATUS_BY_FOLDER,
+)
 
 
 WIKI_KINDS_TUPLE: tuple[str, ...] = (
@@ -68,30 +72,12 @@ WIKI_KINDS_TUPLE: tuple[str, ...] = (
     "bootstrap",
 )
 
-# Folder → set of valid `status:` enum values.
-STATUS_BY_FOLDER: dict[str, set[str]] = {
-    "usecase": {
-        "draft",
-        "ready",
-        "implementing",
-        "revising",
-        "shipped",
-        "superseded",
-        "discarded",
-        "blocked",
-    },
-    "task": {"open", "pending", "progress", "complete", "failing", "discarded"},
-    "review": {"open", "in-progress", "resolved", "discarded"},
-    "decision": {"draft", "final", "superseded"},
-    "idea": {"open", "promoted", "discarded"},
-    "spark": {"open", "promoted", "discarded"},
-}
-
-# Folder → set of valid `kind:` enum values.
-KIND_BY_FOLDER: dict[str, set[str]] = {
-    "task": {"feature", "spike", "bug"},
-    "review": {"finding", "gap", "question"},
-    "wiki": set(WIKI_KINDS_TUPLE),
+# Folder → set of valid `kind:` enum values. Issue-folder kinds come
+# from the canonical model; `wiki` is layered in here because its kinds
+# derive from the ordered WIKI_KINDS_TUPLE used elsewhere in this file.
+KIND_BY_FOLDER: dict[str, frozenset[str]] = {
+    **_MODEL_KIND_BY_FOLDER,
+    "wiki": frozenset(WIKI_KINDS_TUPLE),
 }
 
 # Forward relation fields that `--references` / `--references-via` can scan.

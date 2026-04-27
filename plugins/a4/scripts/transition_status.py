@@ -57,60 +57,21 @@ from typing import Any
 
 from common import normalize_ref
 from markdown import parse
+from status_model import (
+    FAMILY_TRANSITIONS,
+    STATUS_BY_FOLDER as FAMILY_STATES,
+)
 
 
 # ---------------------------------------------------------------------------
 # Family model
 # ---------------------------------------------------------------------------
-
-
-# Each family's allowed outgoing transitions. States absent as keys have no
-# outgoing transitions (terminal).
-UC_TRANSITIONS: dict[str, set[str]] = {
-    "draft": {"ready", "discarded"},
-    "ready": {"draft", "implementing", "discarded"},
-    "implementing": {"shipped", "revising", "discarded", "blocked"},
-    "revising": {"ready", "discarded"},
-    "blocked": {"ready", "discarded"},
-    "shipped": {"superseded", "discarded"},
-}
-
-TASK_TRANSITIONS: dict[str, set[str]] = {
-    "open": {"pending", "discarded"},
-    "pending": {"progress", "discarded"},
-    "progress": {"complete", "failing", "pending", "discarded"},
-    "complete": {"pending", "discarded"},
-    "failing": {"pending", "progress", "discarded"},
-}
-
-REVIEW_TRANSITIONS: dict[str, set[str]] = {
-    "open": {"in-progress", "resolved", "discarded"},
-    "in-progress": {"open", "resolved", "discarded"},
-    "resolved": {"open"},
-}
-
-DECISION_TRANSITIONS: dict[str, set[str]] = {
-    "draft": {"final"},
-    "final": {"superseded"},
-}
-
-FAMILY_TRANSITIONS: dict[str, dict[str, set[str]]] = {
-    "usecase": UC_TRANSITIONS,
-    "task": TASK_TRANSITIONS,
-    "review": REVIEW_TRANSITIONS,
-    "decision": DECISION_TRANSITIONS,
-}
-
-# Complete set of valid states per family (includes terminal states).
-FAMILY_STATES: dict[str, set[str]] = {
-    "usecase": {
-        "draft", "ready", "implementing", "revising",
-        "shipped", "superseded", "discarded", "blocked",
-    },
-    "task": {"open", "pending", "progress", "complete", "failing", "discarded"},
-    "review": {"open", "in-progress", "resolved", "discarded"},
-    "decision": {"draft", "final", "superseded"},
-}
+#
+# Status enums and transition tables are imported from status_model
+# (canonical source). FAMILY_STATES is the issue-family subset of
+# STATUS_BY_FOLDER — the writer only handles families with mechanical
+# transitions (idea/spark are user-driven and absent from
+# FAMILY_TRANSITIONS).
 
 
 def detect_family(rel_path: str) -> str | None:

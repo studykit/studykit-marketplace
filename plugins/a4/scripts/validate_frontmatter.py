@@ -43,6 +43,7 @@ from common import (
     is_int as _is_int,
 )
 from markdown import extract_preamble
+from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -69,14 +70,7 @@ SCHEMAS: dict[str, Schema] = {
     "usecase": Schema(
         name="usecase",
         required=frozenset({"id", "title", "status", "created", "updated"}),
-        enums={
-            "status": frozenset(
-                {
-                    "draft", "ready", "implementing", "revising",
-                    "shipped", "superseded", "discarded", "blocked",
-                }
-            )
-        },
+        enums={"status": STATUS_BY_FOLDER["usecase"]},
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset(
@@ -87,10 +81,8 @@ SCHEMAS: dict[str, Schema] = {
         name="task",
         required=frozenset({"id", "title", "kind", "status", "created", "updated"}),
         enums={
-            "kind": frozenset({"feature", "spike", "bug"}),
-            "status": frozenset(
-                {"open", "pending", "progress", "complete", "failing", "discarded"}
-            ),
+            "kind": KIND_BY_FOLDER["task"],
+            "status": STATUS_BY_FOLDER["task"],
         },
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
@@ -100,8 +92,8 @@ SCHEMAS: dict[str, Schema] = {
         name="review",
         required=frozenset({"id", "kind", "status", "source", "created", "updated"}),
         enums={
-            "kind": frozenset({"finding", "gap", "question"}),
-            "status": frozenset({"open", "in-progress", "resolved", "discarded"}),
+            "kind": KIND_BY_FOLDER["review"],
+            "status": STATUS_BY_FOLDER["review"],
             "priority": frozenset({"high", "medium", "low"}),
         },
         int_fields=frozenset({"id"}),
@@ -112,7 +104,7 @@ SCHEMAS: dict[str, Schema] = {
     "decision": Schema(
         name="decision",
         required=frozenset({"id", "title", "status", "created"}),
-        enums={"status": frozenset({"draft", "final", "superseded"})},
+        enums={"status": STATUS_BY_FOLDER["decision"]},
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"supersedes", "related"}),
@@ -120,7 +112,7 @@ SCHEMAS: dict[str, Schema] = {
     "idea": Schema(
         name="idea",
         required=frozenset({"id", "title", "status", "created", "updated"}),
-        enums={"status": frozenset({"open", "promoted", "discarded"})},
+        enums={"status": STATUS_BY_FOLDER["idea"]},
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted", "related"}),
@@ -133,7 +125,7 @@ SCHEMAS: dict[str, Schema] = {
         enums={
             "type": frozenset({"brainstorm"}),
             "pipeline": frozenset({"spark"}),
-            "status": frozenset({"open", "promoted", "discarded"}),
+            "status": STATUS_BY_FOLDER["spark"],
         },
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted"}),
