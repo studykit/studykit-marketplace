@@ -72,6 +72,5 @@ Single-file mode adds one nuance: the consistency check was skipped (the aggrega
 
 - Do not fix violations here. The skill only reports; the user or an iteration skill fixes.
 - Do not run the drift detector. `/a4:drift` covers a different class of inconsistency (cross-session wiki↔issue drift); running both is the user's choice.
-- Do not render the workspace dashboard. `/a4:dashboard` owns that.
 - Do not commit anything. Validators are read-only.
 - Do not invoke this skill autonomously. It is user-triggered; iteration skills and bulk-generation skills do not need to call it.

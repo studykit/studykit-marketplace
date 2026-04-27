@@ -6,8 +6,9 @@
 
 Single source of truth for the workspace dashboard view. Two callers:
 
-  /a4:dashboard skill — surfaces the full report to the user as the
-                        on-demand workspace summary (no file is written).
+  workspace-assistant agent (snapshot mode) — surfaces the full report
+                to the user as the on-demand workspace summary (no
+                file is written).
   /a4:compass   Step 3.2 — pulls only the sections its layered gap diagnosis
                 needs (`skills/compass/references/gap-diagnosis.md`).
 

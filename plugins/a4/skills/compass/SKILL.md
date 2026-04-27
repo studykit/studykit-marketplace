@@ -1,6 +1,6 @@
 ---
 name: compass
-description: "Explicit-invocation only via `/a4:compass`. This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, needs help deciding the next step, or wants a recommendation rather than a raw report. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'diagnose', 'pipeline status', 'compass'. Runs the drift detector (writes new review items to disk) and produces a layered diagnosis + a single recommended next skill to invoke (and may invoke it via the Skill tool). ROUTING: for a plain workspace snapshot or a single pre-defined section view (drift list, active tasks, milestones, etc.) without a recommendation, use `/a4:dashboard` instead. For per-item search by frontmatter (status / kind / milestone / references / labels / custom field), use `/a4:find` instead."
+description: "Explicit-invocation only via `/a4:compass`. This skill should be used when the user doesn't know which a4 skill to use, is stuck mid-pipeline, needs help deciding the next step, or wants a recommendation rather than a raw report. Triggers: 'what should I do next', 'where do I go from here', 'which skill should I use', 'help me navigate', 'I'm stuck', 'next step', 'continue the pipeline', 'diagnose', 'pipeline status', 'compass'. Runs the drift detector (writes new review items to disk) and produces a layered diagnosis + a single recommended next skill to invoke (and may invoke it via the Skill tool). ROUTING: for a plain workspace snapshot or a single pre-defined section view (drift list, active tasks, milestones, etc.) without a recommendation, delegate to the `workspace-assistant` agent (snapshot mode). For per-item search by frontmatter (status / kind / milestone / references / labels / custom field), use `/a4:find` instead."
 argument-hint: <issue id, path (e.g. usecase/3-search-history), wiki basename, or free-text description>
 disable-model-invocation: true
 allowed-tools: Read, Write, Glob, Grep, Bash, Skill
@@ -44,7 +44,7 @@ Determine the user's situation and route to Step 2 (Fresh Start) or Step 3 (Gap 
 
 ### 1.2 Note on workspace state
 
-Compass reads a fresh workspace-state snapshot via `scripts/workspace_state.py` in Step 3.2 — same script `/a4:dashboard` uses. Do not pre-scan or aggregate state here; defer to Step 3.
+Compass reads a fresh workspace-state snapshot via `scripts/workspace_state.py` in Step 3.2 — the same script the `workspace-assistant` agent uses for snapshot mode. Do not pre-scan or aggregate state here; defer to Step 3.
 
 ---
 
@@ -85,7 +85,7 @@ The detector writes one review item per new finding into `a4/review/`, deduplica
 
 ### 3.2 Read workspace state
 
-`scripts/workspace_state.py` renders workspace state as markdown to stdout, with an optional section filter. Compass requests only the sections its layered diagnosis (Step 3.3) and presentation (Step 3.4) need — `recent-activity`, `open-ideas`, `open-sparks` are dashboard-only and skipped:
+`scripts/workspace_state.py` renders workspace state as markdown to stdout, with an optional section filter. Compass requests only the sections its layered diagnosis (Step 3.3) and presentation (Step 3.4) need — `recent-activity`, `open-ideas`, `open-sparks` are snapshot-only and skipped:
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4" \
