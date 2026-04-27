@@ -23,7 +23,7 @@ Read the resolved file's frontmatter. The writer (`transition_status.py` `TASK_T
 - Any of those five → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.
 
-Surface the task's `kind:` and `implements:` / `adr:` to the user before flipping, so they can confirm they're discarding the right one. One-line summary, no separate prompt unless slug-fragment resolution returned multiple candidates in D1.
+Surface the task's `kind:` and `implements:` / `spec:` to the user before flipping, so they can confirm they're discarding the right one. One-line summary, no separate prompt unless slug-fragment resolution returned multiple candidates in D1.
 
 ## D3. Apply the discard
 
@@ -52,7 +52,7 @@ Append a new dated line if the section already exists. Skip this step entirely w
 
 ## D4. Spike sidecar advisory (if `kind: spike`)
 
-If the task's `kind:` is `spike` and `<project-root>/spike/<id>-<slug>/` exists, **do not delete it**. Per the experiments-slot ADR, archiving spike code is a manual `git mv` decision. Tell the user:
+If the task's `kind:` is `spike` and `<project-root>/spike/<id>-<slug>/` exists, **do not delete it**. Per the experiments-slot spec, archiving spike code is a manual `git mv` decision. Tell the user:
 
 > Spike sidecar `spike/<id>-<slug>/` was left in place. Options: (a) leave as-is for reference, (b) `git mv spike/<id>-<slug> spike/archive/<id>-<slug>` to archive, (c) `git rm -r spike/<id>-<slug>` to delete. Pick one when convenient.
 
@@ -77,8 +77,8 @@ Spike sidecar: <left in place at spike/<id>-<slug>/ | not present | n/a>
 Mention any other artifacts the user may want to revisit:
 
 - If `implements:` was non-empty, name the UC(s) so the user can decide whether to re-author a replacement task or also discard the UC.
-- If `adr:` was non-empty, the cited ADR(s) are unaffected.
+- If `spec:` was non-empty, the cited spec(s) are unaffected.
 
 If the discarded task was the only `pending` / `implementing` / `failing` task tied to a UC, mention that the UC may now have nothing to ship — the user can decide whether to author a replacement task, discard the UC itself, or leave the UC in `implementing` waiting for another task.
 
-Do not commit. Leave files in the working tree. The single-commit scope is just the edited task file (status flip + optional `## Why discarded` section). Spike sidecar moves/deletes are a separate, user-driven commit per the experiments-slot ADR.
+Do not commit. Leave files in the working tree. The single-commit scope is just the edited task file (status flip + optional `## Why discarded` section). Spike sidecar moves/deletes are a separate, user-driven commit per the experiments-slot spec.

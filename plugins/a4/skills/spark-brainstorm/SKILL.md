@@ -84,7 +84,7 @@ When the user indicates they're done:
 4. **Decide status** — Before asking the save location, determine the initial `status:` by interpreting the user's natural-language signals from the session and its close:
    - Signals for `discarded` (session closes without ideas to pursue): "접자", "없던 일로", "그냥 두자", "discard", "drop this", "buried", "not worth it". If these or similar close-out signals dominated the session's end, set `status: discarded`.
    - Otherwise set `status: open` (the session may be revisited, ideas may later graduate).
-   - Do **not** set `status: promoted` here. `promoted` is written only when a downstream artifact (adr / usecase / task) is actually produced — that is a separate action from closing the brainstorm. If the user already produced an ADR during the session and wants to record the link, ask them to run `/a4:adr` first, then edit `promoted:` by hand.
+   - Do **not** set `status: promoted` here. `promoted` is written only when a downstream artifact (spec / usecase / task) is actually produced — that is a separate action from closing the brainstorm. If the user already produced a spec during the session and wants to record the link, ask them to run `/a4:spec` first, then edit `promoted:` by hand.
    - If the signal is ambiguous, ask once: "Close this brainstorm as `open` (we may return to these ideas) or `discarded` (these ideas are buried)?" Accept the user's answer literally.
 5. **Ask save location** — Ask where to save. Default path: `a4/spark/<YYYY-MM-DD-HHmm>-<topic-slug>.brainstorm.md` relative to the working directory. Create the directory if it does not exist.
 6. **Write the file** — Save using the Write tool. Use the `status:` from step 4.
@@ -100,7 +100,7 @@ topic: "<session topic>"
 status: open        # open | promoted | discarded
 created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
-promoted: []        # paths populated when status → promoted (e.g., [adr/<id>-<slug>, usecase/<id>-<slug>])
+promoted: []        # paths populated when status → promoted (e.g., [spec/<id>-<slug>, usecase/<id>-<slug>])
 tags: []
 ---
 # Brainstorming: <session topic>
@@ -127,8 +127,8 @@ tags: []
 
 Additional sections may be added when the session content warrants them (e.g., Constraints, Open Questions), but always use headed sections (`##` or `###`) — never free-form prose outside a section.
 
-## Handoff to Research and ADR
+## Handoff to Research and spec
 
 If the brainstorming produced options that warrant further investigation or a documented decision, suggest the two-step path:
 
-> "If you'd like to investigate these options, run `/a4:research <file_path>` to produce a portable research artifact at `./research/<slug>.md`; optionally review it with `/a4:research-review`. Once you've converged on a choice through conversation, run `/a4:adr` to record it as `a4/adr/<id>-<slug>.md` and nudge any affected wiki pages."
+> "If you'd like to investigate these options, run `/a4:research <file_path>` to produce a portable research artifact at `./research/<slug>.md`; optionally review it with `/a4:research-review`. Once you've converged on a choice through conversation, run `/a4:spec` to record it as `a4/spec/<id>-<slug>.md` and nudge any affected wiki pages."

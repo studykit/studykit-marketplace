@@ -15,7 +15,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `spark-brainstorm` | Generate ideas with structured creative techniques |
 | `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
 | `research-review` | Review a research artifact at `./research/<slug>.md` for source quality, option balance, bias, and neutrality |
-| `adr` | Record an ADR reached through conversation as `a4/adr/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
+| `spec` | Record a spec reached through conversation as `a4/spec/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
 
 ## Pipeline (interactive)
 
@@ -25,7 +25,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
 | `arch` | Design architecture — tech stack, components, interfaces, test strategy |
 | `roadmap` | Author the implementation roadmap and per-task files |
-| `task` | Author a single task (feature / spike / bug) — UC-derived or ADR-justified |
+| `task` | Author a single task (feature / spike / bug) — UC-derived or spec-justified |
 | `run` | Run the agent loop — implement and test until all pass |
 
 ## Pipeline (autonomous)

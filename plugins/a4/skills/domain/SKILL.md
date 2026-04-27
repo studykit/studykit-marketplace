@@ -180,7 +180,7 @@ Concept names in the Glossary become **canonical terms**. Architecture component
 
 - **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter above and the confirmed Glossary.
 - **Update** at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Footnote markers** — when a change is driven by a specific UC / ADR / review item / arch discussion, add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the protocol (when to update, how to defer via a review item, close guard).
+- **Footnote markers** — when a change is driven by a specific UC / spec / review item / arch discussion, add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the protocol (when to update, how to defer via a review item, close guard).
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Phases

@@ -1,6 +1,6 @@
 ---
 name: roadmap
-description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files in a4/task/. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks (spike, bug, ADR-justified) are in /a4:task."
+description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files in a4/task/. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks (spike, bug, spec-justified) are in /a4:task."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
@@ -47,7 +47,7 @@ kind: feature | spike | bug
 status: open | pending | progress | complete | failing | discarded
 implements: [usecase/3-search-history, usecase/4-render-preview]
 depends_on: [task/4-parse-config]
-adr: []
+spec: []
 related: []
 files: [src/render.ts, src/render.test.ts]
 cycle: 1
@@ -81,7 +81,7 @@ The `## Acceptance Criteria` section is required on every task body. The source 
 | Task kind / shape | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-| `feature` + `adr: [adr/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
+| `feature` + `spec: [spec/...]` (UC-less) | spec `## Decision` + relevant `architecture.md` section |
 | `spike` | hypothesis + expected result, the spike's own body |
 | `bug` | reproduction scenario + fixed criteria |
 
@@ -259,7 +259,7 @@ Loop up to 3 review rounds if roadmap-level revisions are substantial. Once the 
 
 After Step 4 closes, this skill's job is done. The implement + test loop, status transitions, failure classification, and UC ship-review live in `/a4:run`. Tell the user:
 
-> Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks (spike / bug / ADR-justified feature) can be added at any time via `/a4:task`.
+> Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks (spike / bug / spec-justified feature) can be added at any time via `/a4:task`.
 
 `/a4:run` reads `a4/bootstrap.md` (single source of truth for Launch & Verify). Make sure `bootstrap.md` exists and its `## Verified Commands`, `## Smoke Scenario`, and `## Test Isolation Flags` sections are correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
 
@@ -301,10 +301,10 @@ Context is passed via file paths, not agent memory.
 
 ## Non-Goals
 
-- Do not split the roadmap into per-milestone files. `roadmap.md` holds all milestone narrative in one file per the ADR.
+- Do not split the roadmap into per-milestone files. `roadmap.md` holds all milestone narrative in one file per the spec.
 - Do not add a `phase:` frontmatter field to tasks. `milestone:` covers phase semantics.
 - Do not maintain a separate `roadmap.history.md`. Each task's `## Log` section records per-task history; the workspace's git history covers the rest.
 - Do not emit aggregated roadmap-review reports. All findings are per-review-item files.
 - Do not track per-source SHAs on `roadmap.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency.
-- Do not run the implement loop here. That is `/a4:run`'s exclusive role; merging the two back together is explicitly out of scope per the plan-restructure ADR.
+- Do not run the implement loop here. That is `/a4:run`'s exclusive role; merging the two back together is explicitly out of scope per the plan-restructure spec.
 - Do not author Launch & Verify content in `roadmap.md`. `bootstrap.md` is the single source of truth; roadmap embeds those sections via Obsidian transclusion. If the verified commands need updating, re-run `/a4:auto-bootstrap`.

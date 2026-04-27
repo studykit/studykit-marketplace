@@ -1,6 +1,6 @@
 # Reviewer Output — Per-Finding Review Items
 
-The `usecase-reviewer` agent no longer writes a single aggregated review report. Instead, it writes **one markdown file per finding** into `a4/review/<id>-<slug>.md`, matching the review-item schema documented in the `spec-as-wiki-and-issues` ADR.
+The `usecase-reviewer` agent no longer writes a single aggregated review report. Instead, it writes **one markdown file per finding** into `a4/review/<id>-<slug>.md`, matching the review-item schema documented in the `spec-as-wiki-and-issues` spec.
 
 ## Per-Item File Format
 

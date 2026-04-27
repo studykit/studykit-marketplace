@@ -1,6 +1,6 @@
 ---
 name: task
-description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or adr: (ADR paths); writes a4/task/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `## Why discarded` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
+description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `## Why discarded` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
 argument-hint: "kind=<feature|spike|bug> [title] | discard <id-or-slug> [reason]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList
 ---
@@ -9,7 +9,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 Two modes:
 
-- **Author** (default) — writes one `a4/task/<id>-<slug>.md` outside the UC-batch path. Co-exists with `/a4:roadmap` (which writes the full UC-driven task set in one go). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; an ADR-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored.
+- **Author** (default) — writes one `a4/task/<id>-<slug>.md` outside the UC-batch path. Co-exists with `/a4:roadmap` (which writes the full UC-driven task set in one go). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; a spec-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored.
 - **Discard** — `discard <id-or-slug> [reason]`. Flips an existing task's `status: → discarded` via `transition_status.py` and records the reason. Use when a task is abandoned independent of any UC cascade — e.g., the spike answered its question and no implementation is needed, the bug turned out to be a non-issue, the feature direction was rejected without discarding the parent UC, or `/a4:run` decided the task is no longer worth pursuing.
 
 `/a4:run` is the agent loop that consumes files this skill produces. This skill never spawns implementation agents itself.
@@ -18,7 +18,7 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In (author mode):** writing one task file at `status: pending`, allocating its id, resolving `implements:` / `adr:` references, proposing the `spike/<id>-<slug>/` sidecar for `kind: spike`, refreshing `implemented_by:` on referenced UCs.
+- **In (author mode):** writing one task file at `status: pending`, allocating its id, resolving `implements:` / `spec:` references, proposing the `spike/<id>-<slug>/` sidecar for `kind: spike`, refreshing `implemented_by:` on referenced UCs.
 - **In (discard mode):** flipping an existing task's `status: → discarded` via `transition_status.py`, appending an optional `## Why discarded` note, advising on the spike sidecar (no auto-delete).
 - **Out:** UC-batch generation (`/a4:roadmap`), implement / test loop (`/a4:run`), automated reviewer (single-task author is the user's own thinking; no machine critique is auto-spawned). No commit.
 
@@ -50,7 +50,7 @@ Draft a scratch summary (do not write to disk yet):
 
 Present this draft to the user and iterate until the substance is right. One question per turn.
 
-## Step 2: Resolve `implements:` (UC) and `adr:` (ADR)
+## Step 2: Resolve `implements:` (UC) and `spec:` (spec)
 
 These are optional and orthogonal — a task may declare zero, one, or both.
 
@@ -62,17 +62,17 @@ These are optional and orthogonal — a task may declare zero, one, or both.
 
 Discovery: `Glob a4/usecase/*.md`. Show the user candidates by title; confirm the final list. The candidate UC must be at `status ∈ {ready, implementing}` for the task to be picked up by `/a4:run` later.
 
-**`adr:`** — list of `adr/<id>-<slug>` paths backing the task.
+**`spec:`** — list of `spec/<id>-<slug>` paths backing the task.
 
-- **`feature`** in a UC-less project (no relevant UC exists) declares this; the ADR's `## Decision` + relevant `architecture.md` section becomes the AC source.
-- **`spike`** declares this when the exploration was triggered by an ADR's `## Open Questions` or `## Discussion Log`.
-- **`bug`** declares this when an ADR sets the expected behavior the bug violates.
+- **`feature`** in a UC-less project (no relevant UC exists) declares this; the spec's `## Decision` + relevant `architecture.md` section becomes the AC source.
+- **`spike`** declares this when the exploration was triggered by a spec's `## Open Questions` or `## Discussion Log`.
+- **`bug`** declares this when a spec sets the expected behavior the bug violates.
 
-Discovery: `Glob a4/adr/*.md`. Confirm matches with the user.
+Discovery: `Glob a4/spec/*.md`. Confirm matches with the user.
 
-If the kind is `feature` and **both** `implements:` and `adr:` end up empty, ask the user where the AC will be drawn from. A `feature` task with no AC source is a smell — either point it at a UC, point it at an ADR, or downgrade to `spike` if the work is genuinely exploratory.
+If the kind is `feature` and **both** `implements:` and `spec:` end up empty, ask the user where the AC will be drawn from. A `feature` task with no AC source is a smell — either point it at a UC, point it at a spec, or downgrade to `spike` if the work is genuinely exploratory.
 
-Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing ADR records, this is content-aware upward propagation per [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md). Surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: adr/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing. The user can author the upstream artifact and re-link the task, or close the review with `discarded` + rationale ("genuinely small, no upstream needed").
+Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing spec records, this is content-aware upward propagation per [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md). Surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing. The user can author the upstream artifact and re-link the task, or close the review with `discarded` + rationale ("genuinely small, no upstream needed").
 
 ## Step 3: Compose the task body
 
@@ -86,20 +86,20 @@ Required body sections (mirrors `/a4:roadmap`'s task schema):
   | Task kind / shape | AC source |
   |---|---|
   | `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-  | `feature` + `adr: [adr/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
+  | `feature` + `spec: [spec/...]` (UC-less) | spec `## Decision` + relevant `architecture.md` section |
   | `spike` | hypothesis + expected result, the spike's own body |
   | `bug` | reproduction scenario + fixed criteria |
 
   Validators do not enforce source-by-kind — this is a documentation convention. The `## Acceptance Criteria` section must exist regardless.
 
-- `## Interface Contracts` — contracts this task consumes or provides, with wikilinks to `[[architecture]]` sections. For UC-less work, link to the ADR (`[[adr/<id>-<slug>]]`) or the relevant `architecture.md` section. May be empty for self-contained spikes.
+- `## Interface Contracts` — contracts this task consumes or provides, with wikilinks to `[[architecture]]` sections. For UC-less work, link to the spec (`[[spec/<id>-<slug>]]`) or the relevant `architecture.md` section. May be empty for self-contained spikes.
 - `## Log` — append-only; starts empty (`status: pending` is the implicit creation entry, written by the writer on first transition).
 
 Present the composed body to the user. Iterate until confirmed.
 
 ## Step 4: For `kind: spike`, propose the sidecar
 
-If `kind: spike`, the PoC code lives at `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/` workspace (per the experiments-slot ADR).
+If `kind: spike`, the PoC code lives at `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/` workspace (per the experiments-slot spec).
 
 Ask the user once:
 
@@ -128,7 +128,7 @@ kind: feature | spike | bug
 status: open | pending | complete
 implements: [<paths or empty>]
 depends_on: [<paths or empty>]
-adr: [<paths or empty>]
+spec: [<paths or empty>]
 related: []
 files: [<paths>]
 cycle: 1
@@ -209,7 +209,7 @@ Never skip hooks, amend, or force-push without explicit user instruction.
 
 **Author mode** — when the task file is written:
 
-1. Summarize: task id / title / kind, `implements:` / `adr:` references (or "none — AC sourced from <X>"), whether the spike sidecar was created, files updated by `refresh_implemented_by.py`.
+1. Summarize: task id / title / kind, `implements:` / `spec:` references (or "none — AC sourced from <X>"), whether the spike sidecar was created, files updated by `refresh_implemented_by.py`.
 2. Suggest `/a4:run` as the next step.
 3. Suggest `/a4:handoff` only if the broader session warrants a snapshot — single-task authoring usually doesn't.
 
@@ -222,5 +222,5 @@ Never skip hooks, amend, or force-push without explicit user instruction.
 - Do not discard multiple tasks in one invocation. Re-invoke `/a4:task discard <id>` per task. UC-cascade discards happen automatically when the parent UC is discarded — do not duplicate that path here.
 - Do not write `roadmap.md`. If the project has no roadmap and the user wants one, redirect to `/a4:roadmap`. Single tasks are valid without a roadmap (they read `bootstrap.md`'s Launch & Verify in `/a4:run`).
 - Do not flip task status beyond the initial `open` / `pending` / `complete` write (author mode) or the explicit `→ discarded` flip (discard mode). `/a4:run` and `transition_status.py` own all other transitions, including `open → pending` (the user requests it; the writer applies it).
-- Do not auto-delete or auto-archive `spike/<id>-<slug>/` on discard. Archiving a finished spike is a manual `git mv` per the experiments-slot ADR.
+- Do not auto-delete or auto-archive `spike/<id>-<slug>/` on discard. Archiving a finished spike is a manual `git mv` per the experiments-slot spec.
 - Do not delete the task file on discard. The file stays at `status: discarded` so its `## Log` and `## Why discarded` remain part of the workspace history; `git rm` is a separate user choice.

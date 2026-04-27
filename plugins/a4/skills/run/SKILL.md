@@ -117,7 +117,7 @@ A task is **ready** when all of:
 - every `depends_on` entry resolves to a task with `status: complete`
 - one of:
   - `implements:` is non-empty AND every UC in `implements:` has `status ∈ {ready, implementing}` (so `revising` / `discarded` / `blocked` / `superseded` / `shipped` UCs' tasks are skipped), OR
-  - `implements:` is empty (UC-less task — ADR-justified feature, spike, or bug). Ready conditions vacuously pass; UC status checks do not apply.
+  - `implements:` is empty (UC-less task — spec-justified feature, spike, or bug). Ready conditions vacuously pass; UC status checks do not apply.
 
 Build the ready set by reading task + UC frontmatter.
 
@@ -243,9 +243,9 @@ For each ship-candidate UC, compose a short verdict and ask the user `mark shipp
 The ship unit varies by **pipeline shape** (see [`references/pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md)). Per-task vs per-UC ship is `task.implements:`-driven, not invocation-driven:
 
 - **Per-UC ship** — when `task.implements:` is non-empty (Full shape, or Minimal-feature-with-UC). Multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
-- **Per-task ship** — when `task.implements:` is empty (Minimal shape's bug / spike / ADR-justified feature). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely. That is the normal case for those shapes, not an error.
+- **Per-task ship** — when `task.implements:` is empty (Minimal shape's bug / spike / spec-justified feature). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely. That is the normal case for those shapes, not an error.
 
-A run can mix both unit types in one invocation (e.g., a UC-driven task and an ADR-justified bug fix shipping in the same cycle); each task's `implements:` field decides which branch its ship verdict takes.
+A run can mix both unit types in one invocation (e.g., a UC-driven task and a spec-justified bug fix shipping in the same cycle); each task's `implements:` field decides which branch its ship verdict takes.
 
 Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:run iterate` session will re-offer them.
 
@@ -260,7 +260,7 @@ When a task-implementer reads a task's `## Acceptance Criteria` section, the sou
 | Task kind / shape | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error handling` |
-| `feature` + `adr: [adr/...]` (UC-less) | ADR `## Decision` + relevant `architecture.md` section |
+| `feature` + `spec: [spec/...]` (UC-less) | spec `## Decision` + relevant `architecture.md` section |
 | `spike` | hypothesis + expected result, the spike's own body |
 | `bug` | reproduction scenario + fixed criteria |
 
@@ -316,7 +316,7 @@ Context is passed via file paths, not agent memory.
 
 ## Out of Scope
 
-- **Authoring** — task files, roadmap.md, ADRs, UCs are written elsewhere. `/a4:run` only reads them.
+- **Authoring** — task files, roadmap.md, specs, UCs are written elsewhere. `/a4:run` only reads them.
 - **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** When `bootstrap.md` is absent, `/a4:run` delegates to `/a4:compass` — the user is routed to the correct upstream skill rather than `/a4:run` guessing commands from `package.json` scripts or `AGENTS.md`. Auto-detection of commands is intentionally out of scope. Note: `roadmap.md`'s presence is irrelevant for L&V resolution — bootstrap is the single source of truth.
 - **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline. Inline scoped re-review is a possible future addition.
 - **Per-cycle parallelism beyond independent ready tasks** — task-implementer parallelism is bounded by the dependency graph; no further parallelization is attempted.

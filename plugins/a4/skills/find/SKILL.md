@@ -28,8 +28,8 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 
 | Flag | Meaning |
 |------|---------|
-| `--folder <name>` | usecase / task / review / adr / idea / spark / wiki / archive |
-| `--status <value>` | family-validated enum (e.g. task: `open`/`pending`/`progress`/`complete`/`failing`/`discarded`; usecase: `draft`/`ready`/`implementing`/`shipped`; adr: `draft`/`final`) |
+| `--folder <name>` | usecase / task / review / spec / idea / spark / wiki / archive |
+| `--status <value>` | family-validated enum (e.g. task: `open`/`pending`/`progress`/`complete`/`failing`/`discarded`; usecase: `draft`/`ready`/`implementing`/`shipped`; spec: `draft`/`active`/`deprecated`/`superseded`) |
 | `--kind <value>` | task: feature/spike/bug · review: finding/gap/question · wiki: context/domain/architecture/actors/nfr/roadmap/bootstrap |
 | `--id <int>` | numeric id |
 | `--slug <substr>` | case-sensitive substring on filename stem |
@@ -38,7 +38,7 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 | `--updated-since YYYY-MM-DD` / `--updated-until YYYY-MM-DD` | date-range filter on `updated:` |
 | `--target <ref>` | review.target equals this |
 | `--wiki-impact <basename>` | bare wiki basename present in `wiki_impact` |
-| `--references <ref>` | back-scan all forward relation fields (`depends_on`, `implements`, `adr`, `target`, `wiki_impact`, `supersedes`, `promoted`, `parent`, `related`, `research`) for items pointing at `<ref>` |
+| `--references <ref>` | back-scan all forward relation fields (`depends_on`, `implements`, `spec`, `target`, `wiki_impact`, `supersedes`, `promoted`, `parent`, `related`, `research`) for items pointing at `<ref>` |
 | `--references-via <field>` | restrict `--references` to a single forward field |
 | `--field NAME=VALUE` | exact match on any frontmatter field, including custom/unknown ones; for list values, any element matches |
 | `--has-field NAME` | require a frontmatter field to be present and non-null |
@@ -55,7 +55,7 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 - "items tagged perf" → `--label perf`
 - "items updated since 2026-04-01" → `--updated-since 2026-04-01`
 - "items with custom field source set to drift-detector" → `--field source=drift-detector`
-- "all ADRs" → `--folder adr`
+- "all specs" → `--folder spec`
 - If the user just wants raw output and passes flags directly (e.g. `/a4:find --folder task --status pending`), pass `$ARGUMENTS` through verbatim.
 
 If the query is ambiguous (e.g. "show me everything"), ask one clarifying question before running. Do not guess between mutually exclusive interpretations.

@@ -14,7 +14,7 @@ Target: **$ARGUMENTS**
 ## Scope
 
 - **In:** running the reviewer, walking findings with the user, applying accepted revisions, bumping `updated:`.
-- **Out:** no decision recording (that's `/a4:adr`). No wiki nudge — research is workspace-agnostic and does not touch `a4/`. No commit.
+- **Out:** no decision recording (that's `/a4:spec`). No wiki nudge — research is workspace-agnostic and does not touch `a4/`. No commit.
 
 ## Pre-flight
 
@@ -79,11 +79,11 @@ Once the user confirms the review pass is done:
    - Final status (`draft` or `final`).
    - Reminder: the file is left in the working tree.
 
-If the review surfaces unresolved trade-offs or user uncertainty about the conclusion, those are ADR-trigger signals (B2 / B3 in [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md)). Surface them as candidates for `/a4:adr` rather than asking the reviewer to resolve them — research review is about evidence quality, not about making the decision.
+If the review surfaces unresolved trade-offs or user uncertainty about the conclusion, those are spec-trigger signals (B2 / B3 in [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md)). Surface them as candidates for `/a4:spec` rather than asking the reviewer to resolve them — research review is about evidence quality, not about making the decision.
 
 ## Non-goals
 
-- Do not write a decision. If the research is meant to feed a decision, tell the user to invoke `/a4:adr` next.
+- Do not write a decision. If the research is meant to feed a decision, tell the user to invoke `/a4:spec` next.
 - Do not extend the research unilaterally. If the reviewer finds gaps, offer to delegate to `/a4:research` rather than investigating inline.
 - Do not touch `a4/`. Research and its review are workspace-agnostic.
 - Do not commit. Leave in the working tree.

@@ -6,7 +6,7 @@ This document holds the per-UC verdict template + acceptance/defer/gap protocol 
 
 ## Conditional on UC presence
 
-If no task in this run has a non-empty `implements:` (UC-less project, or every task in scope is a spike / bug / ADR-justified feature), the candidate set is empty by construction — skip ship review entirely and go to wrap-up. This is normal, not an error.
+If no task in this run has a non-empty `implements:` (UC-less project, or every task in scope is a spike / bug / spec-justified feature), the candidate set is empty by construction — skip ship review entirely and go to wrap-up. This is normal, not an error.
 
 ## Candidate selection
 

@@ -14,7 +14,7 @@ tools: ["Read", "Write", "Bash", "Glob", "Grep"]
 memory: project
 ---
 
-You are a Use Case quality reviewer. Your job is to analyze a spec-as-wiki+issues workspace (`a4/`) and emit per-finding review items — one markdown file per finding — matching the review-item schema in the `spec-as-wiki-and-issues` ADR.
+You are a Use Case quality reviewer. Your job is to analyze a spec-as-wiki+issues workspace (`a4/`) and emit per-finding review items — one markdown file per finding — matching the review-item schema in the `spec-as-wiki-and-issues` spec.
 
 ## What You Receive
 

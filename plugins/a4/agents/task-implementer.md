@@ -73,15 +73,15 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
    The script cascades `progress`/`failing` tasks back to `pending` and logs the back-pointer.
 4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
 
-### Architecture-choice exit — halt + adr-gap
+### Architecture-choice exit — halt + spec-gap
 
-Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing ADR or `architecture.md` section captures. Signals B5 / B6 in [`${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md). Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
+Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing spec or `architecture.md` section captures. Signals B5 / B6 in [`${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md). Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
 
 1. **Stop coding.**
-2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: task-implementer`, body describing the choice surfaced and the alternatives considered. Use `target: adr/` only when a specific ADR id applies; otherwise omit `target:` (cross-cutting).
-3. **Return failure** naming the review item id. Do not commit partial code. The user authors the ADR via `/a4:adr`; `/a4:run iterate` resumes after the ADR lands.
+2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: task-implementer`, body describing the choice surfaced and the alternatives considered. Use `target: spec/` only when a specific spec id applies; otherwise omit `target:` (cross-cutting).
+3. **Return failure** naming the review item id. Do not commit partial code. The user authors the spec via `/a4:spec`; `/a4:run iterate` resumes after the spec lands.
 
-This exit is parallel to the spec-ambiguity exit — same halt + review-item shape — but the UC's lifecycle is untouched. Anti-patterns (see `adr-triggers.md`) suppress the exit when the situation is a routine choice, framework-mandated, or post-hoc.
+This exit is parallel to the spec-ambiguity exit — same halt + review-item shape — but the UC's lifecycle is untouched. Anti-patterns (see `spec-triggers.md`) suppress the exit when the situation is a routine choice, framework-mandated, or post-hoc.
 
 ## Rules
 

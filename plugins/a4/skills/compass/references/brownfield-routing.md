@@ -27,7 +27,7 @@ Ask **one** question before showing the catalog:
 > - **(b) Single change** (Minimal shape) — make one small change without the full pipeline (`bootstrap.md` only, then `/a4:task` → `/a4:run`).
 > - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:domain` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
 
-A user with no implementation goal yet (just recording an ADR via `/a4:adr`, capturing research, or sketching ideas) is in a **No-shape** state — none of (a)/(b)/(c) applies. Compass does not prompt for that explicitly; the catalog's Ideation and Standalone sections cover those cases as fall-throughs.
+A user with no implementation goal yet (just recording a spec via `/a4:spec`, capturing research, or sketching ideas) is in a **No-shape** state — none of (a)/(b)/(c) applies. Compass does not prompt for that explicitly; the catalog's Ideation and Standalone sections cover those cases as fall-throughs.
 
 ## Routing per choice
 

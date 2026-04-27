@@ -39,19 +39,19 @@ List available topics with `ls <project-root>/.handoff/` — each subdirectory i
 
 ### 3. Update project documentation in parallel
 
-Before writing the handoff body, identify anything from this session that belongs in long-lived documentation — ADRs in `a4/adr/`, `CLAUDE.md` rules, README changes, schema references — and update those files first.
+Before writing the handoff body, identify anything from this session that belongs in long-lived documentation — specs in `a4/spec/`, `CLAUDE.md` rules, README changes, schema references — and update those files first.
 
 The handoff still records the session's narrative and state, but durable decisions live in durable docs. The handoff remains self-contained even if the same knowledge is also in the proper doc.
 
-When updating wiki pages under `<project-root>/a4/`, follow the footnote protocol in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md §Wiki Update Protocol` (inline `[^N]` marker + `## Changes` definition). Any `## Changes` entry on `architecture.md` must include a `[[adr/<id>-<slug>]]` wikilink — `drift_detector` raises a `missing-adr-cite` gap otherwise.
+When updating wiki pages under `<project-root>/a4/`, follow the footnote protocol in `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md §Wiki Update Protocol` (inline `[^N]` marker + `## Changes` definition). Any `## Changes` entry on `architecture.md` must include a `[[spec/<id>-<slug>]]` wikilink — `drift_detector` raises a `missing-spec-cite` gap otherwise.
 
-When an ADR newly cites a research artifact, never hand-edit the `adr`/`research` frontmatter or body. Run the registrar to write all four places atomically:
+When a spec newly cites a research artifact, never hand-edit the `spec`/`research` frontmatter or body. Run the registrar to write all four places atomically:
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
     "<project-root>/a4" \
     "research/<slug>" \
-    "adr/<id>-<slug>"
+    "spec/<id>-<slug>"
 ```
 
 ### 4. Draft the handoff body
@@ -61,13 +61,13 @@ Write in **English**. Make the handoff self-contained: a fresh session should re
 **Carry-forward items.** Whenever the handoff lists open work, in-progress items, or things the next session should pick up (typical sections: `## Open`, `## Carry-forward`, `## Where to start the next session`, "still open" tier tables), every item must be a wikilink to an on-disk tracker:
 
 - `[[task/<id>-<slug>]]` — execution-ready or in-progress work (`status: pending | implementing`).
-- `[[adr/<id>-<slug>]]` — open design question (`status: draft`).
-- `[[adr/<id>-<slug>#Open Questions]]` — open question inside a settled ADR.
+- `[[spec/<id>-<slug>]]` — open design question (`status: draft`).
+- `[[spec/<id>-<slug>#Open Questions]]` — open question inside an active spec.
 - `[[research/<slug>]]` — investigation still in flight (`status: draft`); `final` / `standalone` / `archived` artifacts are not carry-forward.
 
-Before listing carry-forwards, sweep the session against `${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md` (B1–B6 + content-aware upward propagation) to surface any ADR-worthy moment that was discussed but never authored. If a new decision is warranted, run `/a4:adr` to create the draft first, then list its wikilink as carry-forward — never leave the trigger as free-text.
+Before listing carry-forwards, sweep the session against `${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md` (B1–B6 + content-aware upward propagation) to surface any spec-worthy moment that was discussed but never authored. If a new decision is warranted, run `/a4:spec` to create the draft first, then list its wikilink as carry-forward — never leave the trigger as free-text.
 
-Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:adr` in draft mode for an open design question, `/a4:research` for an open investigation, or add an `## Open Questions` heading to the relevant final ADR. Prose around the wikilinks (one-line context, why it's still open) is fine; the wikilink itself is the carry-forward identity.
+Free-text carry-forward — an item that lives nowhere on disk — is forbidden. If the appropriate tracker doesn't exist yet, create it before listing the item: `/a4:task` for execution-ready work, `/a4:spec` in draft mode for an open design question, `/a4:research` for an open investigation, or add an `## Open Questions` heading to the relevant active spec. Prose around the wikilinks (one-line context, why it's still open) is fine; the wikilink itself is the carry-forward identity.
 
 For projects without a `<project-root>/a4/` workspace, apply the rule analogously: every carry-forward must be a wikilink to an on-disk file the next session can open and update. The file's shape (a draft document, an `## Open Questions` heading on a settled doc, a SKILL/CLAUDE/README path) is the project's call. Free-text without a wikilink target is forbidden in either context.
 

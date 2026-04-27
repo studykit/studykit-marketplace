@@ -185,7 +185,7 @@ S -> H : request history
 ## Changes
 ```
 [^1]: 2026-04-24 — [[usecase/3-search-history]]
-[^2]: 2026-04-24 — [[adr/8-caching-strategy]]
+[^2]: 2026-04-24 — [[spec/8-caching-strategy]]
 ```
 
 UC references in Information Flow sections use Obsidian wikilinks — they resolve to `a4/usecase/<id>-<slug>.md`. Component names and schema fields should use domain terms from `a4/domain.md`.
@@ -204,7 +204,7 @@ UC references in Information Flow sections use Obsidian wikilinks — they resol
 
 - **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter above, Overview stub, and the confirmed Technology Stack.
 - **Update** the file at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Footnote markers** — when a change is driven by a specific UC / ADR / review item (new UC added, component split after review, etc.), add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the full protocol (when to update, how to defer via a review item, close guard).
+- **Footnote markers** — when a change is driven by a specific UC / spec / review item (new UC added, component split after review, etc.), add `[^N]` inline in the modified section and append a `## Changes` entry with date + `[[causing-issue]]`. See `${CLAUDE_PLUGIN_ROOT}/references/obsidian-conventions.md` for the full protocol (when to update, how to defer via a review item, close guard).
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Interview Phases
@@ -213,9 +213,9 @@ The architecture covers four areas. In **First Design**, start with Technology S
 
 ### Phase 1: Technology Stack
 
-Select language, framework, platform, and key libraries. For each choice, record the rationale. For lightweight choices — discuss inline and record with a brief rationale. For heavy choices (multiple viable options with significant trade-offs), ask the user: "This seems like a decision worth investigating more deeply. Would you like to run `/a4:research` on the candidates first, then record the conclusion via `/a4:adr` once we've converged?"
+Select language, framework, platform, and key libraries. For each choice, record the rationale. For lightweight choices — discuss inline and record with a brief rationale. For heavy choices (multiple viable options with significant trade-offs), ask the user: "This seems like a decision worth investigating more deeply. Would you like to run `/a4:research` on the candidates first, then record the conclusion via `/a4:spec` once we've converged?"
 
-ADR-trigger signals to watch for during the interview (multi-option enumeration, trade-off language, user uncertainty, prior-ADR references) and the anti-patterns that suppress nudges are catalogued at [`references/adr-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/adr-triggers.md).
+spec-trigger signals to watch for during the interview (multi-option enumeration, trade-off language, user uncertainty, prior-spec references) and the anti-patterns that suppress nudges are catalogued at [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md).
 
 If a codebase already exists, detect the stack from project files and confirm. Write the initial `architecture.md` at the end of Phase 1.
 
@@ -306,7 +306,7 @@ Context is passed via file paths, not agent memory.
 
 ## Non-Goals
 
-- Do not write a separate `design.md` wiki page. The ADR explicitly rejects it — `architecture.md` covers design content (stack, components, interfaces, test strategy).
+- Do not write a separate `design.md` wiki page. The spec explicitly rejects it — `architecture.md` covers design content (stack, components, interfaces, test strategy).
 - Do not track per-UC / per-source SHAs in `architecture.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency without SHA bookkeeping.
 - Do not create a research-index file. Use Obsidian backlinks.
 - Do not emit aggregated review reports. All findings are per-review-item files.

@@ -110,14 +110,14 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
 
 ## Transition Workflow
 
-`scripts/transition_status.py` is the single writer for `usecase` / `task` / `review` / `adr` status changes. It validates the transition, writes `status:` + `updated:` + a `## Log` entry, and runs cascades (UC `revising` task reset, `discarded` cascade, `shipped → superseded` chain, ADR `final → superseded` chain). See [`references/frontmatter-schema.md §Status writers`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+`scripts/transition_status.py` is the single writer for `usecase` / `task` / `review` / `spec` status changes. It validates the transition, writes `status:` + `updated:` + a `## Log` entry, and runs cascades (UC `revising` task reset, `discarded` cascade, `shipped → superseded` chain, spec `active → superseded` chain). See [`references/frontmatter-schema.md §Status writers`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 **Caller-explicit-only contract.** Run a transition only when the caller has supplied **both** the target file and the desired status. If the caller asks vaguely ("clean up finished tasks"), you respond by listing candidates with citations and ask the caller to confirm the exact `(file, status)` pair before executing. You never pick a status yourself.
 
 **Steps:**
 
 1. **Resolve the file** — accept either an absolute path or a workspace-relative path (`task/7-foo` or `task/7-foo.md`); pass the resolved path to `--file`.
-2. **Dry-run first when stakes are non-trivial.** For terminal-or-cascade-bearing transitions (UC `→ shipped`, UC `→ discarded`, ADR `→ final`), invoke once with `--dry-run --json` to surface planned cascades, and include the cascade summary in your response. Then re-run without `--dry-run` only if the caller has confirmed.
+2. **Dry-run first when stakes are non-trivial.** For terminal-or-cascade-bearing transitions (UC `→ shipped`, UC `→ discarded`, spec `→ final`), invoke once with `--dry-run --json` to surface planned cascades, and include the cascade summary in your response. Then re-run without `--dry-run` only if the caller has confirmed.
 3. **Invoke:**
    ```bash
    uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "$ROOT/a4" \
@@ -129,7 +129,7 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
 
 - Do not pass `--force` (mechanical-validation bypass) under any circumstances. If validation fails, report it and stop.
 - Do not pass `--sweep` (chain-cascade recovery walks the whole workspace; that is an operator-initiated maintenance command, not a delegation target).
-- Do not call `transition_status.py` for any file family other than `usecase` / `task` / `review` / `adr`.
+- Do not call `transition_status.py` for any file family other than `usecase` / `task` / `review` / `spec`.
 
 ## Response Rules
 
@@ -159,6 +159,6 @@ The frontmatter contract — required fields, enums, status meanings, allowed tr
 
 - **Do not run `/a4:find` for the caller on plain frontmatter queries.** Tell the caller to invoke it directly with the right flags.
 - **Do not decide status.** Caller-explicit `(file, target_status)` only. No "looks shipped to me" leaps.
-- **Do not analyze whether items are correct, complete, or well-shaped.** Reviewer agents (`arch-reviewer`, `domain-reviewer`, `usecase-reviewer`, `adr-content-guard`) do that. You only locate, surface, and execute named transitions.
+- **Do not analyze whether items are correct, complete, or well-shaped.** Reviewer agents (`arch-reviewer`, `domain-reviewer`, `usecase-reviewer`, ) do that. You only locate, surface, and execute named transitions.
 - **Do not recommend next actions or diagnose pipeline gaps.** That is `/a4:compass`. You render snapshots, not recommendations.
 - **Do not write or edit any file directly.** Status changes go through `transition_status.py`; everything else is read-only.
