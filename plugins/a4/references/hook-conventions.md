@@ -1,7 +1,7 @@
 # a4/ hook conventions
 
-Design principles and policies for hooks under `${CLAUDE_PLUGIN_ROOT}/hooks/` and the
-dispatcher `${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`.
+Design principles and policies for hooks under `../hooks/` and the
+dispatcher `../scripts/a4_hook.py`.
 
 This document is the authoritative source. The dispatcher's module docstring
 and `hooks/README.md` reference this file rather than duplicating its
@@ -97,7 +97,7 @@ non-trivial logic goes in the Python dispatcher `scripts/a4_hook.py` and is
 invoked as:
 
 ```
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>
+uv run "../scripts/a4_hook.py" <subcommand>
 ```
 
 This matches the project-wide Python convention (`uv run`, not raw

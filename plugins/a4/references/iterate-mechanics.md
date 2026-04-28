@@ -5,11 +5,11 @@ Single source of truth for the **formal procedure** every a4 iterate flow follow
 **Mental model.** Treat each skill's iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when you start, archive (resolve / discard) when done. The mechanics here are the mailbox protocol; per-stage SKILL.md sections describe what each *kind* of message actually requires you to do when you read it.
 
 Companion to:
-- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; cross-stage stop/continue policy.
-- [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; iterate flows run identically across shapes but the available stages depend on shape.
-- [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) — review items emitted from B5/B6 and content-aware upward propagation land in iterate flows for resolution.
-- [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) — body tag form, `<change-logs>` and `<log>` rules, link form.
-- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — review-item frontmatter contract.
+- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage stop/continue policy.
+- [`pipeline-shapes.md`](./pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; iterate flows run identically across shapes but the available stages depend on shape.
+- [`spec-triggers.md`](./spec-triggers.md) — review items emitted from B5/B6 and content-aware upward propagation land in iterate flows for resolution.
+- [`body-conventions.md`](./body-conventions.md) — body tag form, `<change-logs>` and `<log>` rules, link form.
+- [`frontmatter-schema.md`](./frontmatter-schema.md) — review-item frontmatter contract.
 
 ## Scope
 
@@ -68,7 +68,7 @@ Every status change goes through `transition_status.py`. Never hand-edit `status
 **Pick → in-progress** (when the user selects an item):
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+uv run "../scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
   --file "review/<id>-<slug>.md" --to in-progress \
   --reason "iterate: user picked for resolution"
@@ -77,7 +77,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
 **Resolve → resolved** (when the fix is applied):
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+uv run "../scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
   --file "review/<id>-<slug>.md" --to resolved \
   --reason "<short — what was fixed>"
@@ -86,7 +86,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
 **Discard → discarded** (when the item is no longer applicable):
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
+uv run "../scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
   --file "review/<id>-<slug>.md" --to discarded \
   --reason "<short — why discarded>"
@@ -99,14 +99,14 @@ The writer writes `status:`, bumps `updated:`, and appends a `<log>` entry. Skil
 When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `roadmap.md`, `bootstrap.md`):
 
 - Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section (per the page's XSD) if it does not yet exist.
-- Honor the wiki page's authorship rule per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md). If the change is out of in-situ scope, do not edit; instead emit a fresh review item targeting the upstream wiki.
+- Honor the wiki page's authorship rule per [`wiki-authorship.md`](./wiki-authorship.md). If the change is out of in-situ scope, do not edit; instead emit a fresh review item targeting the upstream wiki.
 - The wiki close guard warns at resolve-time when `wiki_impact:` is non-empty but the referenced page lacks a `<change-logs>` bullet pointing at the causing issue.
 
-Full `<change-logs>` formatting rules: [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
+Full `<change-logs>` formatting rules: [`body-conventions.md`](./body-conventions.md).
 
 ## 5. Discipline (always-hold rules)
 
-- **Never hand-edit** `status:` / `updated:` / `<log>` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+- **Never hand-edit** `status:` / `updated:` / `<log>` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](./frontmatter-schema.md).
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.

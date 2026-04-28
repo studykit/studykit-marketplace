@@ -3,10 +3,10 @@
 The a4 pipeline is not one shape. Three named shapes describe how a workspace flows from intent to shipped code, and one named **no-shape** state describes when no pipeline runs at all. Each constituent skill that behaves differently across shapes cites this document; skills with shape-independent behavior do not.
 
 Companion to:
-- [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) — interactive vs autonomous, forward vs reverse axes for individual skills.
-- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
-- [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) — when a spec is warranted; signal catalog complementing this doc's spec cross-cutting section.
-- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — field-level rules.
+- [`skill-modes.md`](./skill-modes.md) — interactive vs autonomous, forward vs reverse axes for individual skills.
+- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
+- [`spec-triggers.md`](./spec-triggers.md) — when a spec is warranted; signal catalog complementing this doc's spec cross-cutting section.
+- [`frontmatter-schema.md`](./frontmatter-schema.md) — field-level rules.
 
 ## Why name the shapes
 
@@ -101,7 +101,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 *Mandatory* (the system requires the citation to function correctly):
 
-- `architecture.md` `<change-logs>` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) change-log rules.
+- `architecture.md` `<change-logs>` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per [`body-conventions.md`](./body-conventions.md) change-log rules.
 - `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `decision:` plus the cited `architecture.md` section as AC source.
 - A successor spec's `supersedes: [spec/N]` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk and the older spec flips to `superseded` via cascade.
 - Other wiki pages' `<change-logs>` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same bullet pattern as architecture.md.

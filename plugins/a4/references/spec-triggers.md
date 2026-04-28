@@ -1,13 +1,13 @@
 # spec-trigger Detection
 
-How a4 skills and agents recognize the moments when a spec (`a4/spec/<id>-<slug>.md`) is warranted, in dialogue or in artifact content. This complements [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md), which names the production and consumption channels for specs but does not catalog the triggers themselves.
+How a4 skills and agents recognize the moments when a spec (`a4/spec/<id>-<slug>.md`) is warranted, in dialogue or in artifact content. This complements [`pipeline-shapes.md`](./pipeline-shapes.md), which names the production and consumption channels for specs but does not catalog the triggers themselves.
 
 Companion to:
-- [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) — when shape-aware skills branch, and where spec production is heaviest.
-- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page; relevant when a spec drives a wiki update.
-- [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) — interactive vs autonomous + forward vs reverse axes per skill.
-- [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) — review-item processing; the resolution path for spec-trigger review items lands here.
-- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — spec and review frontmatter.
+- [`pipeline-shapes.md`](./pipeline-shapes.md) — when shape-aware skills branch, and where spec production is heaviest.
+- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; relevant when a spec drives a wiki update.
+- [`skill-modes.md`](./skill-modes.md) — interactive vs autonomous + forward vs reverse axes per skill.
+- [`iterate-mechanics.md`](./iterate-mechanics.md) — review-item processing; the resolution path for spec-trigger review items lands here.
+- [`frontmatter-schema.md`](./frontmatter-schema.md) — spec and review frontmatter.
 
 ## What makes a moment spec-worthy
 
@@ -92,7 +92,7 @@ These look like spec moments but are not. Suppress nudges when the situation mat
 
 ## How skills should use this reference
 
-- Cite this doc (`${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md`) in the SKILL.md or agent system prompt at the step where signals can fire — typically the conversational step (architecture authoring, research review, spec finalization, task implementation) rather than the wrap-up.
+- Cite this doc (`./spec-triggers.md`) in the SKILL.md or agent system prompt at the step where signals can fire — typically the conversational step (architecture authoring, research review, spec finalization, task implementation) rather than the wrap-up.
 - Surface a signal when one of B1–B6 (or the upward-propagation shape) matches the current dialogue or artifact content.
 - Run the Anti-pattern check before nudging — if the situation matches an anti-pattern, suppress the nudge.
 - For B1–B4 nudges that the user dismisses, do not re-nudge in the same session for the same topic. For review-item-emission paths (B5, B6, upward propagation), the existing `discarded` + rationale flow on the review item closes the loop without re-emission (`drift_detector.py` dedup blocks per `(kind, target, cause)` fingerprint).

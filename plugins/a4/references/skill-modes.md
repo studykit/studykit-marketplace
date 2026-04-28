@@ -3,10 +3,10 @@
 Why each a4 pipeline stage has the mode it has, and why the missing interactive/autonomous pairs are intentional rather than gaps.
 
 Companion to:
-- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
-- [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/references/pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; complements this doc's per-skill mode taxonomy with which stages run in which shape.
-- [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) — when a spec is warranted; conversational signals + content-aware upward propagation.
-- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — field-level rules.
+- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
+- [`pipeline-shapes.md`](./pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; complements this doc's per-skill mode taxonomy with which stages run in which shape.
+- [`spec-triggers.md`](./spec-triggers.md) — when a spec is warranted; conversational signals + content-aware upward propagation.
+- [`frontmatter-schema.md`](./frontmatter-schema.md) — field-level rules.
 
 ## Two axes, not one
 
@@ -34,14 +34,14 @@ The `/a4:auto-*` prefix is *not* a guarantee that the skill is the autonomous tw
 The pipeline deliberately does **not** include:
 
 - `/a4:auto-domain`, `/a4:auto-arch`, `/a4:auto-roadmap` — these stages are decision-collaboration. An autonomous variant would commit decisions the user has to re-litigate, multiplying review-item load without saving work.
-- `/a4:bootstrap` (interactive) — bootstrap's work is verification, not decision. Environment or arch issues that need user input become review items (`auto-bootstrap` is **continue + review item** per [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) §Stage-by-stage policy), not interactive prompts.
+- `/a4:bootstrap` (interactive) — bootstrap's work is verification, not decision. Environment or arch issues that need user input become review items (`auto-bootstrap` is **continue + review item** per [`wiki-authorship.md`](./wiki-authorship.md) §Stage-by-stage policy), not interactive prompts.
 - `/a4:run` interactive variant — `run` is loop execution. Pause / resume / iteration entry are already supported via the `iterate` argument and review-item routing.
 
 Adding these would inflate the namespace and prompt surface without serving real demand. Each stage's mode reflects the nature of the work, not symmetry-for-symmetry's-sake.
 
 ## When a missing pair becomes a real gap
 
-If the user repeatedly hits friction in one of the missing combinations, capture the recurring case under `${CLAUDE_PLUGIN_ROOT}/spec/` (plugin-level meta-design) before introducing a new skill. Real signals to watch:
+If the user repeatedly hits friction in one of the missing combinations, capture the recurring case under `../spec/` (plugin-level meta-design) before introducing a new skill. Real signals to watch:
 
 - `auto-bootstrap` repeatedly fails on the same sandboxed / air-gapped scenarios where the issue is *which* command to run, not *whether* it works → a guided variant might earn its keep.
 - `auto-usecase` is triggered when the user actually wanted interactive discovery → fix compass routing first; a true `auto` twin of `usecase` would still be inferior to dialogue.

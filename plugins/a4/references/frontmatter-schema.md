@@ -20,7 +20,7 @@ These apply to every family.
 
 ### `type:` field — body root tag
 
-Every markdown file declares a `type:` field in frontmatter. The value names the **body root tag** and resolves to a per-type XSD at `plugins/a4/scripts/body_schemas/<type>.xsd`. The XSD declares which `<tag>` sections are required vs optional in the body.
+Every markdown file declares a `type:` field in frontmatter. The value names the **body root tag** and resolves to a per-type XSD at `../scripts/body_schemas/<type>.xsd`. The XSD declares which `<tag>` sections are required vs optional in the body.
 
 | Family | `type:` value | Body root tag |
 |--------|--------------|---------------|
@@ -54,7 +54,7 @@ Body sections are column-0 `<tag>...</tag>` blocks (lowercase + kebab-case) with
 ### Ids
 
 - Ids are **monotonically increasing integers, global to the workspace**. Unique across all issue folders in a given `a4/` (GitHub-issue semantics).
-- Next id is computed as `max(existing ids in a4/) + 1` by `plugins/a4/scripts/allocate_id.py`.
+- Next id is computed as `max(existing ids in a4/) + 1` by `../scripts/allocate_id.py`.
 - Wiki pages and spark files do **not** carry an `id:` field — they have no issue-tracker identity.
 
 ### Path references
@@ -328,7 +328,7 @@ The `spike/` directory:
 - Is not validated by any a4 script — the markdown-only contract of `a4/` is preserved.
 - Is opt-in — projects without spike tasks have no `spike/` directory.
 
-Source: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
+Source: `../spec/archive/2026-04-24-experiments-slot.decide.md`.
 
 ## Review item (`a4/review/<id>-<slug>.md`)
 
@@ -405,7 +405,7 @@ Notable rules:
 
 Pre-pipeline quick-capture slot — Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family.
 
-Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea. See `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md` for the full rationale.
+Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea. See `../spec/archive/2026-04-24-idea-slot.decide.md` for the full rationale.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -429,7 +429,7 @@ Boundary with `review/`: **idea = independent possibility, captured raw; review 
 
 Body is largely free — only optional sections per the XSD. Captured via `/a4:idea <line>` the body is typically empty or just a short `<notes>` block; longer ideas may add `<why-this-matters>`.
 
-Source: `plugins/a4/skills/idea/SKILL.md` and `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
+Source: `../skills/idea/SKILL.md` and `../spec/archive/2026-04-24-idea-slot.decide.md`.
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 
@@ -446,7 +446,7 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-Source: `plugins/a4/skills/spark-brainstorm/SKILL.md`.
+Source: `../skills/spark-brainstorm/SKILL.md`.
 
 **Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `<decision-log>` absorbing the rationale that previously lived in standalone decision records). The current shape is: `/a4:research` (optional) → `/a4:research-review` (optional) → conversation → `/a4:spec` (records the spec + performs the wiki nudge). No spark-family file carries `type: decide` anymore.
 
@@ -477,7 +477,7 @@ The staleness courtesy nudges only files at `status: final` with empty `cited_by
 
 ## Body sections per type
 
-The XSDs at `plugins/a4/scripts/body_schemas/<type>.xsd` are the source of truth for the per-type body shape. The tables below mirror them. Each `<tag>` listed is a column-0 markdown section block; "required" tags must appear in every file of that type, "optional" tags may appear, and unknown tags are tolerated by the XSD's openContent (so authors can drop in `<benchmarks>` or any other supplemental block as needed).
+The XSDs at `../scripts/body_schemas/<type>.xsd` are the source of truth for the per-type body shape. The tables below mirror them. Each `<tag>` listed is a column-0 markdown section block; "required" tags must appear in every file of that type, "optional" tags may appear, and unknown tags are tolerated by the XSD's openContent (so authors can drop in `<benchmarks>` or any other supplemental block as needed).
 
 Two universal optional sections appear on most types:
 
@@ -517,7 +517,7 @@ Two universal optional sections appear on most types:
 
 ## Hand-written XSDs
 
-The XSDs under `plugins/a4/scripts/body_schemas/` are the authoritative schema. Each:
+The XSDs under `../scripts/body_schemas/` are the authoritative schema. Each:
 
 - Declares `vc:minVersion="1.1"` (XSD 1.1 features required — `xmlschema.XMLSchema11` in Python).
 - Defines a single root element matching its `type:` value.
@@ -530,8 +530,8 @@ Edit a section list by hand-editing the XSD. There is no generator script. The X
 
 Two validators cover frontmatter and body in parallel:
 
-- `plugins/a4/scripts/validate_frontmatter.py` — enforces this schema (frontmatter only).
-- `plugins/a4/scripts/validate_body.py` — enforces the body XML structure against per-type XSDs.
+- `../scripts/validate_frontmatter.py` — enforces this schema (frontmatter only).
+- `../scripts/validate_body.py` — enforces the body XML structure against per-type XSDs.
 
 Every rule violation is an error; both validators exit `2` on any violation and `0` on a clean run.
 
@@ -570,7 +570,7 @@ Several enum values are semantically derived from cross-file state rather than b
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 | `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
 
-`plugins/a4/scripts/validate_status_consistency.py` reports either direction of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference). It is report-only — no file is mutated.
+`../scripts/validate_status_consistency.py` reports either direction of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference). It is report-only — no file is mutated.
 
 Two modes:
 
@@ -590,13 +590,13 @@ When these land, update this document **and** the validator simultaneously — t
 ## Cross-references
 
 - **Body-level conventions:** [`body-conventions.md`](body-conventions.md) — tag form (column-0, kebab-case, no attributes), blank-line discipline, `<change-logs>` and `<log>` entry format, body link form (standard markdown).
-- **XSDs (source of truth for body shape):** `plugins/a4/scripts/body_schemas/<type>.xsd`.
-- **Body schema registry:** `plugins/a4/scripts/body_schemas.py` (`schema_path(type_)`, `all_types()`).
-- **Id allocator:** `plugins/a4/scripts/allocate_id.py`.
-- **Status model (canonical):** `plugins/a4/scripts/status_model.py` — per-family status enums, allowed transitions, terminal/in-progress/active classifications, kind enums. Imported by the writer, validators, workspace state, and search; the prose tables in this document mirror the same data.
-- **Status transition writer:** `plugins/a4/scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain). Body validation runs `validate_body.run()` on the relevant flips.
-- **Implemented-by back-link refresher:** `plugins/a4/scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
-- **Research citation registrar:** `plugins/a4/scripts/register_research_citation.py` — atomically records a research → spec citation in four places (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`) and bumps the research file's `updated:`.
-- **Drift detector (uses wiki / review schemas):** `plugins/a4/scripts/drift_detector.py`.
-- **Cross-file status consistency validator:** `plugins/a4/scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).
-- **Spark schemas (origin):** `plugins/a4/skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).
+- **XSDs (source of truth for body shape):** `../scripts/body_schemas/<type>.xsd`.
+- **Body schema registry:** `../scripts/body_schemas.py` (`schema_path(type_)`, `all_types()`).
+- **Id allocator:** `../scripts/allocate_id.py`.
+- **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal/in-progress/active classifications, kind enums. Imported by the writer, validators, workspace state, and search; the prose tables in this document mirror the same data.
+- **Status transition writer:** `../scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain). Body validation runs `validate_body.run()` on the relevant flips.
+- **Implemented-by back-link refresher:** `../scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
+- **Research citation registrar:** `../scripts/register_research_citation.py` — atomically records a research → spec citation in four places (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`) and bumps the research file's `updated:`.
+- **Drift detector (uses wiki / review schemas):** `../scripts/drift_detector.py`.
+- **Cross-file status consistency validator:** `../scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).
+- **Spark schemas (origin):** `../skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).
