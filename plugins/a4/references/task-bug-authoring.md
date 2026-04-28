@@ -19,7 +19,7 @@ implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
 related: []            # catchall for cross-references
-files: []              # source paths the task writes or modifies
+files: []              # artifact paths under artifacts/task/bug/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
 milestone: <optional>  # milestone name
@@ -33,7 +33,7 @@ updated: YYYY-MM-DD
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it when the bug is a regression against a spec's expected behavior.
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.
-- `files:` paths point at the project's production source tree.
+- `files:` is artifact-only — paths must point under `artifacts/task/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `<files>` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
 
@@ -89,7 +89,7 @@ When the chosen initial status is `complete`, the fix is asserted to already be 
 **Required:**
 
 - `<description>` — what's broken and why the fix matters. State the observed behavior and the expected behavior.
-- `<files>` — action / path / change table. Paths point at the project's production source tree.
+- `<files>` — action / path / change table. Lists production source paths the fix writes or modifies, plus any artifact paths under `artifacts/task/bug/<id>-<slug>/` when the task uses an artifact directory.
 - `<unit-test-strategy>` — regression test scenarios + isolation strategy + test file paths. The bug must end with a test that fails before the fix and passes after.
 - `<acceptance-criteria>` — checklist. AC source: **reproduction scenario + fixed criteria** (the regression test pinning the expected behavior). The `<acceptance-criteria>` section must exist regardless.
 
@@ -102,11 +102,28 @@ When the chosen initial status is `complete`, the fix is asserted to already be 
 
 Unknown kebab-case tags are tolerated.
 
+## Artifacts directory (optional)
+
+A bug task may have a sibling artifact directory at `<project-root>/artifacts/task/bug/<id>-<slug>/` when reproduction or evidence is itself worth keeping — minimal repro repos, crash logs, screenshots, traces:
+
+```
+<project-root>/
+  a4/task/bug/<id>-<slug>.md             # task markdown — kind: bug
+  artifacts/task/bug/<id>-<slug>/        # repro, logs, screenshots (opt-in)
+```
+
+Optional — the production fix lives in the project's source tree (documented in body `<files>`), not here. Use the artifact directory only when reproduction artifacts have lasting value (a hard-to-reproduce data file, a heap dump that anchors the regression test). Frontmatter `files:` lists artifact paths only.
+
+No archive convention — closed bug tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
+
+Cross-kind conventions for the artifact directory — what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./frontmatter-schema.md#task-artifacts-convention`](./frontmatter-schema.md#task-artifacts-convention) and apply to `kind: bug` as written there.
+
 ## Common mistakes (task-specific)
 
 - **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/bug/` must declare `kind: bug`. Mismatched declarations are a folder-routing error and should be re-located.
+- **Production source paths in frontmatter `files:`** — `files:` is artifact-only. Production source belongs in the body `<files>` section.
 
 (Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 

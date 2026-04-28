@@ -1,6 +1,6 @@
 # a4 — spike task authoring
 
-A spike task at `a4/task/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives at `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `kind: research` instead.
+A spike task at `a4/task/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives in the spike's artifact directory at `<project-root>/artifacts/task/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `kind: research` instead.
 
 Lifecycle is identical across task kinds (`feature` / `bug` / `spike` / `research`).
 
@@ -19,7 +19,7 @@ implements: []         # usually empty for spike (exploratory)
 depends_on: []         # list of paths to other tasks
 spec: []               # populated when the spike is triggered by a spec's open questions
 related: []            # catchall for cross-references
-files: []              # paths under spike/<id>-<slug>/ — never project source tree
+files: []              # paths under artifacts/task/spike/<id>-<slug>/ — never project source tree
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
 milestone: <optional>  # milestone name
@@ -32,7 +32,7 @@ updated: YYYY-MM-DD
 - `kind: spike` is fixed for files under `a4/task/spike/`. Every task must declare the kind explicitly.
 - `implements:` is **usually empty** — a spike is exploratory, not a deliverable. Populate only when the PoC validates a hypothesis directly tied to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths the spike investigates. Most spikes are spec-triggered; populate this when applicable.
-- `files:` paths must live under `spike/<id>-<slug>/...` (or `spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — that would defeat the throwaway contract.
+- `files:` paths must live under `artifacts/task/spike/<id>-<slug>/...` (or `artifacts/task/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `<files>` section, not in frontmatter.
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
 
@@ -67,7 +67,7 @@ Writer rules (task-specific):
 
 When the chosen initial status is `complete`, the spike is asserted to already be done. Verify before writing:
 
-1. For each path in `files:`, confirm it exists under `spike/<id>-<slug>/` (or `spike/archive/<id>-<slug>/`). If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
+1. For each path in `files:`, confirm it exists under `artifacts/task/spike/<id>-<slug>/` (or `artifacts/task/spike/archive/<id>-<slug>/`). If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
 2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
 3. After writing the file, append an explicit `<log>` block recording the post-hoc origin:
 
@@ -88,7 +88,7 @@ When the chosen initial status is `complete`, the spike is asserted to already b
 **Required:**
 
 - `<description>` — the question being explored and why a spike (vs. going straight to a feature task). State the hypothesis and the decision the spike's outcome will inform.
-- `<files>` — action / path / change table. Every path is under `spike/<id>-<slug>/`.
+- `<files>` — action / path / change table. Artifact paths under `artifacts/task/spike/<id>-<slug>/` for files the spike creates; production source paths the spike may probe or temporarily touch may also appear here for reader context. (Frontmatter `files:` is artifact-only.)
 - `<unit-test-strategy>` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). The section is still required.
 - `<acceptance-criteria>` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question. The `<acceptance-criteria>` section must exist regardless.
 
@@ -101,27 +101,30 @@ When the chosen initial status is `complete`, the spike is asserted to already b
 
 Unknown kebab-case tags are tolerated.
 
-## Spike sidecar convention
+## Artifacts directory
 
-For every spike task, accompanying PoC code lives at `<project-root>/spike/<id>-<slug>/`, parallel to (not inside) `a4/`:
+For every spike task, accompanying PoC code lives at `<project-root>/artifacts/task/spike/<id>-<slug>/`, parallel to (not inside) `a4/`:
 
 ```
 <project-root>/
-  a4/task/spike/<id>-<slug>.md   # task markdown — kind: spike
-  spike/<id>-<slug>/             # PoC code, data, scratch notes
+  a4/task/spike/<id>-<slug>.md             # task markdown — kind: spike
+  artifacts/task/spike/<id>-<slug>/        # PoC code, data, scratch notes
     *.py *.json ...
 ```
 
-The `spike/` directory is part of the project repo (not scratch), is **not validated** by any a4 script (the markdown-only contract of `a4/` is preserved), and is opt-in. `feature`, `bug`, and `research` tasks have no sidecar — `feature` / `bug` `files:` paths point at production source, and `research` typically has no `files:` at all.
+Spike-specific notes:
 
-When a spike completes (or fails), the directory is manually `git mv`'d to `spike/archive/<id>-<slug>/` and the task's `files:` paths are updated. The move is **never automated**.
+- The directory is the spike's primary deliverable while exploration is underway. Most active spikes have one.
+- When the spike completes (or fails), `git mv` it to `artifacts/task/spike/archive/<id>-<slug>/` and update `files:` paths to match. The move is **never automated**.
+
+Cross-kind conventions for the artifact directory — what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./frontmatter-schema.md#task-artifacts-convention`](./frontmatter-schema.md#task-artifacts-convention) and apply to `kind: spike` as written there.
 
 ## Common mistakes (task-specific)
 
 - **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/spike/` must declare `kind: spike`. Mismatched declarations are a folder-routing error and should be re-located.
-- **`files:` paths under the project source tree, not under `spike/<id>-<slug>/`** — breaks the throwaway contract; the writer refuses.
+- **`files:` paths under the project source tree, not under `artifacts/task/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths belong in the body `<files>` section.
 
 (Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
@@ -131,6 +134,6 @@ When a spike completes (or fails), the directory is manually `git mv`'d to `spik
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a spike stays enqueued or moves forward / out.
 - **Don't omit `kind:`.** Every task declares `feature | spike | bug | research`.
-- **Don't auto-delete or auto-archive `spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
-- **Don't write production source from a spike.** `files:` paths staying under `spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the spike's outcome warrants production work, follow up with a `kind: feature` task.
+- **Don't auto-delete or auto-archive `artifacts/task/spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
+- **Don't write production source from a spike.** `files:` paths staying under `artifacts/task/spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the spike's outcome warrants production work, follow up with a `kind: feature` task.
 - **Don't author a `kind: feature` / `bug` / `research` task here.** Move them to the matching `a4/task/<kind>/` so the per-kind authoring contract applies.

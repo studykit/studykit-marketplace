@@ -10,7 +10,7 @@ When **authoring or editing** any spike task file, read these first.
 
 ## Required reading before authoring
 
-- `../references/task-spike-authoring.md` — purpose, sidecar convention (`<project-root>/spike/<id>-<slug>/`), frontmatter, lifecycle, body shape, common mistakes, "Don't" list.
+- `../references/task-spike-authoring.md` — purpose, artifacts directory convention (`<project-root>/artifacts/task/spike/<id>-<slug>/`), frontmatter, lifecycle, body shape, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Sibling rules

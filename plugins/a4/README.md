@@ -91,9 +91,12 @@ Four hook flows share the same events, dispatched through a single Python entry 
     spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md
     archive/                                  # Closed items; folder = archived flag
 
-  spike/                                    # PoC code for kind: spike tasks (sibling of a4/)
-    <task-id>-<slug>/                       # Active spike (parallel to a4/task/spike/<id>-<slug>.md)
-    archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
+  artifacts/task/                           # Task artifact directories (sibling of a4/)
+    spike/<id>-<slug>/                      # Active spike — PoC code, data, scratch notes
+    spike/archive/<id>-<slug>/              # Archived after spike completes (manual git mv)
+    research/<id>-<slug>/                   # Optional — raw data, charts, eval scripts
+    feature/<id>-<slug>/                    # Optional — comparison samples, execution outputs
+    bug/<id>-<slug>/                        # Optional — repro, logs, screenshots
 ```
 
 ### Wiki vs. issues
@@ -102,7 +105,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels`, `milestone` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
-- **Spike vs. feature vs. research task** — every task carries `kind: feature | spike | bug | research`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix; `research` is a written investigation whose body is the deliverable (sources consulted, findings, options). Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
+- **Spike vs. feature vs. research task** — every task carries `kind: feature | spike | bug | research`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `artifacts/task/spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix; `research` is a written investigation whose body is the deliverable (sources consulted, findings, options). Any kind may opt in to an `artifacts/task/<kind>/<id>-<slug>/` sibling directory for byproducts that need to live alongside the task — see `plugins/a4/references/frontmatter-schema.md#task-artifacts-convention` for what each kind typically stores there. Closed spikes are archived by manual `git mv` to `artifacts/task/spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
 - **Task kind = subfolder.** Task files live under `a4/task/<kind>/<id>-<slug>.md`, where `<kind>` matches the `kind:` frontmatter (one of `feature` / `bug` / `spike` / `research`). The kind subfolder is the path scope that lets the matching per-kind authoring rule (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`, `a4-task-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 ### Conventions
@@ -131,3 +134,28 @@ The `workspace-assistant` agent (snapshot mode) renders the current workspace st
 ### Archive
 
 Closed items are archived by `git mv`-ing them into `a4/archive/`. Folder location is the flag — there is no `archived:` frontmatter field. The move is always user-confirmed.
+
+## Migration: `spike/` → `artifacts/task/spike/` (a4 v5.0.0)
+
+a4 v5.0.0 replaced the per-spike sidecar `<project-root>/spike/<id>-<slug>/` with the unified artifact directory `<project-root>/artifacts/task/<kind>/<id>-<slug>/`. Existing projects with a populated `spike/` tree should migrate by hand:
+
+```bash
+# 1. Move active spike directories under the new root.
+mkdir -p artifacts/task/spike
+git mv spike/* artifacts/task/spike/   # leaves spike/archive/ behind if present
+[ -d spike/archive ] && git mv spike/archive artifacts/task/spike/archive
+rmdir spike
+
+# 2. Rewrite `files:` paths in spike task markdown.
+#    macOS sed; for GNU sed drop the empty -i argument.
+find a4/task/spike -name '*.md' -print0 \
+  | xargs -0 sed -i '' \
+      -e 's|^\(\s*-\s*\)spike/|\1artifacts/task/spike/|' \
+      -e 's|files: \[spike/|files: [artifacts/task/spike/|g'
+
+# 3. Verify and commit.
+uv run plugins/a4/scripts/validate.py
+git status
+```
+
+Validator changes that strictly enforce the new path prefixes are deferred to a follow-up release; for now the migration is documentation-driven. Tasks whose `files:` still reference `spike/...` keep working but no longer match the schema, so migrate when convenient.

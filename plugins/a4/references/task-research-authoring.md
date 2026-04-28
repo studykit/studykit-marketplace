@@ -14,7 +14,7 @@ A research task is the right slot when:
 - The output should be **citable** by a later spec, feature task, or design conversation.
 - The investigation has a **bounded scope** — a question, a topic, or a fixed set of options to compare.
 
-If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `<decision-log>` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `kind: spike` task with the `spike/<id>-<slug>/` sidecar.
+If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `<decision-log>` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `kind: spike` task with an `artifacts/task/spike/<id>-<slug>/` directory.
 
 ## Frontmatter contract (do not deviate)
 
@@ -31,7 +31,7 @@ implements: []                       # usually empty (research is not a delivera
 depends_on: []                       # other tasks this one needs first
 spec: []                             # specs whose open question triggered this research
 related: []                          # catchall — e.g., other research tasks on adjacent topics
-files: []                            # typically empty; the body is the deliverable
+files: []                            # typically empty; if used, paths under artifacts/task/research/<id>-<slug>/
 cycle: 1
 labels: []                           # free-form tags
 milestone: <optional>
@@ -46,7 +46,7 @@ updated: YYYY-MM-DD
 - `options:` is required when `mode: comparative` — list the option names that the body's `<options>` section will cover, one subsection per option.
 - `implements:` is **usually empty** — research is investigation, not delivery. Populate only if the research is scoped to a specific UC's open question.
 - `spec:` is populated when the research was triggered by a spec's `<open-questions>` or `<rejected-alternatives>` discussion.
-- `files:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts under the project tree (data files, evaluation scripts).
+- `files:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/task/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `files:` (they belong in body links).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
 
@@ -117,6 +117,25 @@ When the chosen initial status is `complete`, the investigation is asserted to a
 - `<why-discarded>` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture beyond the `<log>` line.
 
 Unknown kebab-case tags are tolerated.
+
+## Artifacts directory
+
+A research task may have a sibling artifact directory at `<project-root>/artifacts/task/research/<id>-<slug>/` for ancillary artifacts that don't belong in the body — comparison raw data, charts, evaluation scripts, downloaded sources too large or binary to embed:
+
+```
+<project-root>/
+  a4/task/research/<id>-<slug>.md             # task markdown — kind: research
+  artifacts/task/research/<id>-<slug>/        # raw data, scripts, charts (opt-in)
+    *.csv *.png *.py ...
+```
+
+Research-specific notes:
+
+- The directory is **opt-in**. Most research tasks need none — the body is the deliverable. Add the directory only when raw evidence cited from the body needs to live alongside the task.
+- When `files:` is non-empty, every entry must point under `artifacts/task/research/<id>-<slug>/...`. Empty list stays the typical default.
+- No archive convention — closed research tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
+
+Cross-kind conventions for the artifact directory — what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./frontmatter-schema.md#task-artifacts-convention`](./frontmatter-schema.md#task-artifacts-convention) and apply to `kind: research` as written there.
 
 ## Reviewing a research task
 

@@ -19,7 +19,7 @@ implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
 related: []            # catchall for cross-references
-files: []              # source paths the task writes or modifies
+files: []              # artifact paths under artifacts/task/feature/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
 milestone: <optional>  # milestone name
@@ -33,7 +33,7 @@ updated: YYYY-MM-DD
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it whenever the project is UC-driven.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `decision:` + relevant `architecture.md` section becomes the AC source).
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.
-- `files:` paths point at the project's production source tree.
+- `files:` is artifact-only — paths must point under `artifacts/task/feature/<id>-<slug>/...`. The list is typically empty for feature work that ships only production source. Production source paths the task writes or modifies are documented in the body `<files>` section, not in this frontmatter field. See "Artifacts directory" below for when to use the artifact directory.
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
 
@@ -96,7 +96,7 @@ When the chosen initial status is `complete`, the work is asserted to already be
 **Required:**
 
 - `<description>` — what and why.
-- `<files>` — action / path / change table. Paths point at the project's production source tree.
+- `<files>` — action / path / change table. Lists production source paths the task writes or modifies, plus any artifact paths under `artifacts/task/feature/<id>-<slug>/` when the task uses an artifact directory.
 - `<unit-test-strategy>` — scenarios + isolation strategy + test file paths.
 - `<acceptance-criteria>` — checklist. AC source:
 
@@ -116,11 +116,28 @@ When the chosen initial status is `complete`, the work is asserted to already be
 
 Unknown kebab-case tags are tolerated.
 
+## Artifacts directory (optional)
+
+A feature task may have a sibling artifact directory at `<project-root>/artifacts/task/feature/<id>-<slug>/` when artifacts have evidentiary or comparative value — feature-comparison test samples, execution outputs, design mockups, migration dry-run results:
+
+```
+<project-root>/
+  a4/task/feature/<id>-<slug>.md             # task markdown — kind: feature
+  artifacts/task/feature/<id>-<slug>/        # comparison samples, outputs, mockups (opt-in)
+```
+
+Optional and the exception, not the default — most feature tasks have no artifact directory. Use it only when the artifacts themselves need to be preserved (before/after screenshots that anchor a UC's expected outcome, sample inputs/outputs proving a parser change). Production source the feature ships goes in the body `<files>` table; frontmatter `files:` lists artifact paths only.
+
+No archive convention — closed feature tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
+
+Cross-kind conventions for the artifact directory — what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./frontmatter-schema.md#task-artifacts-convention`](./frontmatter-schema.md#task-artifacts-convention) and apply to `kind: feature` as written there.
+
 ## Common mistakes (task-specific)
 
 - **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/feature/` must declare `kind: feature`. Mismatched declarations are a folder-routing error and should be re-located.
+- **Production source paths in frontmatter `files:`** — `files:` is artifact-only. Production source belongs in the body `<files>` section.
 
 (Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 

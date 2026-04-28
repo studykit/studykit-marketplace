@@ -220,7 +220,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `implements` | no | list of paths | use cases delivered (typically empty for `spike` / `research`) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | Specs governing this task |
-| `files` | no | list of strings | source paths the task writes or modifies. For `kind: spike`, points at `spike/<id>-<slug>/...` (or `spike/archive/<id>-<slug>/...` after archive); for `feature`/`bug`, points at the project's production source tree. For `kind: research`, typically empty (research output is the task body itself). |
+| `files` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `<files>` section, **not** in this frontmatter field. |
 | `mode` | conditional | enum | `comparative` \| `single` — required when `kind: research` |
 | `options` | conditional | list of strings | option names — required when `kind: research` and `mode: comparative` |
 | `cycle` | no | int | implementation cycle number |
@@ -234,7 +234,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | Value | Meaning |
 |-------|---------|
 | `feature` | Regular implementation — new functionality, extension, refactor. The default case. |
-| `spike` | Time-boxed exploration to unblock a decision (XP sense). Throwaway code expected. PoC, investigation, benchmark. PoC code lives at project-root `spike/<id>-<slug>/`, **outside the `a4/` workspace**. |
+| `spike` | Time-boxed exploration to unblock a decision (XP sense). Throwaway code expected. PoC, investigation, benchmark. PoC code lives at project-root `artifacts/task/spike/<id>-<slug>/`, **outside the `a4/` workspace**. |
 | `bug` | Defect fix. Production code change, not throwaway. |
 | `research` | Investigation of a technical topic or comparison of alternatives. Output is the task body itself (sources, findings, options). No code is produced. Typically cited by a follow-up `feature` or `spec` via `task.spec:` or via a body link. |
 
@@ -274,26 +274,44 @@ Three initial states are allowed on task file create:
 
 `progress` and `failing` are never used as initial states; only the writer (`transition_status.py`) produces them as a result of transitions.
 
-### Spike sidecar convention
+### Task artifacts convention
 
-For tasks with `kind: spike`, accompanying PoC code lives at project-root `spike/<id>-<slug>/`, parallel to (not inside) `a4/`:
+Each task may have a sibling **artifact directory** at project-root `artifacts/task/<kind>/<id>-<slug>/`, parallel to (not inside) `a4/`:
 
 ```
 <project-root>/
-  a4/task/spike/<id>-<slug>.md  # task markdown — kind: spike
-  spike/<id>-<slug>/            # PoC code, data, scratch notes
-    *.py *.json ...
+  a4/task/<kind>/<id>-<slug>.md         # task markdown
+  artifacts/task/<kind>/<id>-<slug>/    # artifact directory (opt-in)
+    *.py *.json *.png *.csv ...
 ```
 
-When a spike completes (or fails), the user manually `git mv`s the directory to `spike/archive/<id>-<slug>/` and updates the task's `files:` paths to match. `spike/archive/` is a sibling of active spike directories — self-contained under the `spike/` umbrella. The move is **never automated**; same-precedent reasoning as `idea/` promotion (deferred until manual cost surfaces as pain).
+Per-kind expectations:
 
-`feature`, `bug`, and `research` tasks have no `spike/` sidecar; their `files:` paths point at the project's production source tree (for `feature`/`bug`) or are typically empty (for `research`).
+| kind | Typical contents | Strength |
+|---|---|---|
+| `spike` | PoC code, benchmark raw, scratch scripts | Primary use — most active spikes have one |
+| `research` | Comparison raw data, charts, evaluation scripts, downloaded sources | Recommended when the investigation produces ancillary artifacts |
+| `feature` | Test samples, execution outputs for feature comparison, design mockups, migration dry-run results | Optional — only when artifacts have evidentiary or comparative value |
+| `bug` | Reproduction repos, crash logs, screenshots, traces | Optional — only when reproduction or evidence is itself worth keeping |
 
-The `spike/` directory:
+Frontmatter `task.files:` lists artifact paths only — production source paths the task writes or modifies belong in the body `<files>` section, not in frontmatter. For `kind: spike`, `files:` may also point under `artifacts/task/spike/archive/<id>-<slug>/` once the directory has been archived.
+
+When a spike completes (or fails), the user manually `git mv`s the directory to `artifacts/task/spike/archive/<id>-<slug>/` and updates the task's `files:` paths to match. The archive convention applies to `spike` only; `feature`, `bug`, and `research` artifact directories are not archived (closed task markdown moves to `a4/archive/` independently). The move is **never automated**; same-precedent reasoning as `idea/` promotion (deferred until manual cost surfaces as pain).
+
+The `artifacts/` directory:
 
 - Is part of the project repo, not a temporary scratch area.
 - Is not validated by any a4 script — the markdown-only contract of `a4/` is preserved.
-- Is opt-in — projects without spike tasks have no `spike/` directory.
+- Is opt-in — projects without artifact-bearing tasks have no `artifacts/` directory.
+
+#### Artifact directory curation
+
+The artifact directory is part of the project repo, not scratch. Commit intentionally — only what carries value beyond the current session.
+
+- **Keep:** comparison results, reproducible data/scripts, evidence cited from the task body, decision-supporting raw output.
+- **Drop:** regenerable build outputs, machine-specific caches, large binaries not referenced from the body, secrets/API keys.
+
+Curation is user-driven. There is no automated cleanup. When a spike's exploration ends, manually `git mv` the directory to `artifacts/task/spike/archive/<id>-<slug>/`.
 
 ## Review item (`a4/review/<id>-<slug>.md`)
 
@@ -512,6 +530,8 @@ These are schema items deliberately left softened until a follow-up round.
 1. **Issue `<log>` entry format.** Body-level `<log>` convention is referenced throughout but the exact entry format (prefix, timestamp granularity, author attribution) is not yet locked.
 2. **Exact YAML grammar for path references.** Plain string is the current rule; whether to allow alternative forms (list-of-maps for typed references, etc.) is not yet decided.
 3. **Stricter enums.** Several fields are currently open strings (`source` on review items) because the full value set has not been enumerated.
+4. **`task.files:` artifact-path enforcement.** The artifact-only contract on `task.files:` is documented (this round) but not yet enforced by `validate_frontmatter.py`. Pending validator work: per-kind prefix check (`artifacts/task/<kind>/<id>-<slug>/...` for `spike` is required, optional for the other kinds; `spike` paths may also start with `artifacts/task/spike/archive/<id>-<slug>/`), plus a task-id-vs-path consistency check (the `<id>-<slug>` segment must match the file's own id and slug). Until then, frontmatter `files:` paths that still point at production source or a foreign id are tolerated.
+5. **`research` `complete` initial-status preflight.** The path-existence check on `files:` (already enforced for `spike` and `feature`/`bug`) needs extension to `research` — when `research` is authored at `status: complete` with non-empty `files:`, every artifact path must exist under `artifacts/task/research/<id>-<slug>/` before the writer accepts the file.
 
 When these land, update this document **and** the validator simultaneously — the two must not drift.
 

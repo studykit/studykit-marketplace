@@ -4,7 +4,7 @@ All commit subjects follow `../../../references/commit-message-convention.md`.
 
 ## Author mode
 
-Single commit covers the new task file + any UC files updated by `refresh_implemented_by.py` (when `implements:` is non-empty) + the empty `spike/<id>-<slug>/` directory (with `.gitkeep` if added). Suggest the commit when the user confirms; do not auto-commit.
+Single commit covers the new task file + any UC files updated by `refresh_implemented_by.py` (when `implements:` is non-empty) + the empty `artifacts/task/spike/<id>-<slug>/` directory (with `.gitkeep` if added). Suggest the commit when the user confirms; do not auto-commit.
 
 ```
 #<task-id> [#<uc-id> ...] docs(a4): author task <slug>

@@ -12,7 +12,7 @@ Draft a scratch summary (do not write to disk yet):
 - **Title** — short, human-readable phrase.
 - **Description** — one or two paragraphs covering goal, scope, and any non-obvious constraints.
 - **Initial status** — one of `open` (default; backlog) / `pending` (enqueue immediately) / `complete` (post-hoc documentation; code already shipped, or for `kind: research`, investigation captured in this conversation). Decide based on the user's intent. Ask once if unclear, defaulting to `open` for new ideas, `pending` when the user is mid-stream of `/a4:run`-style work, and `complete` when the user describes work that has already landed.
-- **Files** — source paths the task writes or modifies. For `feature` / `bug`, point at the project's production tree. For `spike`, paths live under `spike/<id>-<slug>/`. For `research`, typically empty — the body is the deliverable.
+- **Files** — frontmatter `files:` lists artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `feature` / `bug`, this list is typically empty (production source paths go in the body `<files>` table); populate only when the task uses an artifact directory. For `spike`, every `files:` path lives under `artifacts/task/spike/<id>-<slug>/`. For `research`, typically empty — the body is the deliverable; populate only when the investigation produces ancillary artifacts under `artifacts/task/research/<id>-<slug>/`.
 - **Dependencies** — `depends_on:` paths (other tasks) and any wiki-page context.
 - **Cycle / labels / milestone** — start `cycle: 1`; labels are free-form.
 - **Research-only fields** — for `kind: research` only: `mode:` (`comparative` for option comparison, `single` for a flat topic) and `options:` (list of option names, required when `mode: comparative`). Capture both before composing the body.
@@ -53,18 +53,18 @@ For `kind: research`, this is also where the body's research content (sources co
 
 Present the composed body to the user. Iterate until confirmed.
 
-## Step 4: For `kind: spike`, propose the sidecar
+## Step 4: For `kind: spike`, propose the artifact directory
 
-If `kind: spike`, the PoC code lives at `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/` workspace.
+If `kind: spike`, the PoC code lives at `<project-root>/artifacts/task/spike/<id>-<slug>/`, **outside** the `a4/` workspace.
 
 Ask the user once:
 
-> Spike code will live at `spike/<allocated-id>-<slug>/`. Create the directory now?
+> Spike code will live at `artifacts/task/spike/<allocated-id>-<slug>/`. Create the directory now?
 
-- **Yes** → create after Step 5 (id is needed for the path). `mkdir -p <project-root>/spike/<id>-<slug>`. Optionally drop a `.gitkeep` so the empty directory is committable.
+- **Yes** → create after Step 5 (id is needed for the path). `mkdir -p <project-root>/artifacts/task/spike/<id>-<slug>`. Optionally drop a `.gitkeep` so the empty directory is committable.
 - **No** → leave the path in the task's `<files>` table for the user (or task-implementer) to create later.
 
-Do not auto-create archive paths or scaffolding files. The spike directory is opt-in scratch space; only the task markdown is mandatory.
+Do not auto-create archive paths or scaffolding files. The artifact directory is opt-in scratch space; only the task markdown is mandatory.
 
 ## Step 5: Allocate id and write the file
 
@@ -87,13 +87,13 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/refresh_implemented_by.py" \
 
 Idempotent. Skip when `implements:` is empty.
 
-## Step 7: Spike sidecar (if confirmed in Step 4)
+## Step 7: Spike artifact directory (if confirmed in Step 4)
 
 ```bash
-mkdir -p "$(git rev-parse --show-toplevel)/spike/<id>-<slug>"
+mkdir -p "$(git rev-parse --show-toplevel)/artifacts/task/spike/<id>-<slug>"
 ```
 
-Suggest (do not auto-create) a `README.md` inside it pointing back to the task file as `[task/<id>-<slug>](../a4/task/spike/<id>-<slug>.md)`. Whether to seed scaffolding files is the user's call.
+Suggest (do not auto-create) a `README.md` inside it pointing back to the task file as `[task/<id>-<slug>](../../../a4/task/spike/<id>-<slug>.md)`. Whether to seed scaffolding files is the user's call.
 
 ## Step 8: Hand-off
 
