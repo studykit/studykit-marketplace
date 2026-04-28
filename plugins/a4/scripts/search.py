@@ -54,7 +54,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any
 
-from common import ISSUE_FOLDERS, normalize_ref
+from common import ISSUE_FOLDERS, iter_issue_files, normalize_ref
 from markdown import extract_preamble
 from status_model import (
     KIND_BY_FOLDER as _MODEL_KIND_BY_FOLDER,
@@ -215,10 +215,7 @@ def discover(a4_dir: Path, include_archived: bool) -> list[Record]:
             out.append(Record(folder="wiki", path=path, fm=fm))
 
     for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if not sub.is_dir():
-            continue
-        for md in sorted(sub.glob("*.md")):
+        for md in iter_issue_files(a4_dir, folder):
             fm = extract_preamble(md).fm or {}
             out.append(Record(folder=folder, path=md, fm=fm))
 

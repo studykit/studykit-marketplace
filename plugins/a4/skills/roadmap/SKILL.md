@@ -1,13 +1,13 @@
 ---
 name: roadmap
-description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files in a4/task/. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks (spike, bug, spec-justified) are in /a4:task."
+description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files at a4/task/feature/<id>-<slug>.md. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks (spike, bug, spec-justified) are in /a4:task."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Implementation Roadmap Builder
 
-> **Authoring contracts:** the wiki contract for `a4/roadmap.md` lives in [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md); the contract for the per-task files this skill generates lives in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md). This skill orchestrates the batch — frontmatter shape, body sections, status enums, and AC-source-by-kind are defined in those rules.
+> **Authoring contracts:** the wiki contract for `a4/roadmap.md` lives in [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md); the contract for the per-task files this skill generates (always `kind: feature`) lives in [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md). This skill orchestrates the batch — frontmatter shape, body sections, status enums, and AC source are defined in those rules.
 
 Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and authors the implementation roadmap plus per-task files. The agent-driven implement + test loop lives in `/a4:run`.
 
@@ -23,7 +23,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 Outputs:
 
 - `a4/roadmap.md` — single wiki page covering Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points (all as H3+ headings inside the `<plan>` section). Launch & Verify is a one-line pointer to `bootstrap.md`, not authored content.
-- `a4/task/<id>-<slug>.md` — one per executable unit of work (Jira-task semantics).
+- `a4/task/feature/<id>-<slug>.md` — one per executable unit of work (Jira-task semantics). The roadmap generator always emits `kind: feature` and writes under the `feature/` subfolder; spike / bug tasks come through `/a4:task` instead.
 - `a4/review/<id>-<slug>.md` — findings from roadmap-reviewer.
 
 Derived views (dependency graph, open-task dashboard, milestone progress) are produced on demand by `/a4:compass` or by grep over frontmatter; no separate files.
@@ -32,7 +32,7 @@ Derived views (dependency graph, open-task dashboard, milestone progress) are pr
 
 `a4/roadmap.md` frontmatter / body shape: see [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md).
 
-Per-task files (`a4/task/<id>-<slug>.md`) — frontmatter, body sections, status enum + cascades, AC-source-by-kind table, `cycle:` semantics: see [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md). The batch generator emits `kind: feature` and `status: pending` for every UC-derived task; single ad-hoc spike / bug entries flow through `/a4:task`.
+Per-task files (`a4/task/feature/<id>-<slug>.md`) — frontmatter, body sections, status enum + cascades, AC source, `cycle:` semantics: see [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md). The batch generator emits `kind: feature` and `status: pending` for every UC-derived task; single ad-hoc spike / bug entries flow through `/a4:task` (which writes under `a4/task/spike/` or `a4/task/bug/`).
 
 ## Id Allocation
 
@@ -46,17 +46,17 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Determined by the workspace state, not by frontmatter flags:
 
-- **Roadmap mode** — `a4/roadmap.md` absent OR `a4/task/` is empty. Run Step 1 onward.
+- **Roadmap mode** — `a4/roadmap.md` absent OR `a4/task/` (any kind subfolder) is empty. Run Step 1 onward.
 - **Iterate mode** — open review items target `roadmap` or a task. See **Iteration Entry** below.
 
 Mode detection at session start:
 
 ```bash
-ls a4/task/*.md                                             # any tasks?
+ls a4/task/*/*.md                                           # any tasks? (recursive: feature/, bug/, spike/)
 ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/'
 ```
 
-If `a4/task/` already has the full set and the user's intent is to run the implement loop, redirect them to `/a4:run`.
+If `a4/task/feature/` already has the full set and the user's intent is to run the implement loop, redirect them to `/a4:run`.
 
 ### Iteration Entry
 
@@ -108,7 +108,7 @@ Exit plan mode. Write artifacts.
 
 **`a4/roadmap.md` body** — write `<plan>` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md) §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `<change-logs>` bullet citing the driving wiki/issue.
 
-**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` per [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) (`kind: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links.
+**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/feature/<id>-<slug>.md` per [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md) (`kind: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `feature/<id>-<slug>.md`.
 
 After all task files are written, refresh the reverse link on each UC so `ready → implementing` will pass mechanical validation:
 
@@ -151,7 +151,7 @@ After Step 4 closes, this skill's job is done. The implement + test loop, status
 
 All commit subjects follow [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md).
 
-- **Roadmap generation** — commit `a4/roadmap.md` + all new `a4/task/*.md` files + UCs updated by `refresh_implemented_by.py` together once the user confirms. Subject:
+- **Roadmap generation** — commit `a4/roadmap.md` + all new `a4/task/feature/*.md` files + UCs updated by `refresh_implemented_by.py` together once the user confirms. Subject:
   ```
   #<uc-ids> #<task-ids> docs(a4): roadmap for <milestone-or-scope>
   ```

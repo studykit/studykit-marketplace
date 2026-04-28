@@ -62,7 +62,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Required wiki path.** `bootstrap.md` only. `domain.md`, `architecture.md`, `usecase/*.md`, `roadmap.md` are all skippable.
 
-**Required issue path.** `task/<id>-<slug>.md` → `/a4:run`.
+**Required issue path.** `task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, or `spike/`) → `/a4:run`.
 
 **Acceptance Criteria source.** Set by task `kind`, mirroring the Jira-issue model that `/a4:task` is built on:
 

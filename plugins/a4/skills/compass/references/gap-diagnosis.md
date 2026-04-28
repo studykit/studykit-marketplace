@@ -34,7 +34,7 @@ Carry the detected shape into the diagnosis report (Step 3.4) so the user sees t
 **Layer 3 — Open review items (non-drift).** Any other open review items?
 - Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: `architecture` / `architecture` `wiki_impact` → `/a4:arch iterate`; `domain` / `domain` `wiki_impact` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
-**Layer 4 — Active tasks.** Any `task/*.md` with `status: pending | progress | failing`?
+**Layer 4 — Active tasks.** Any `task/*/*.md` (recursing through `feature/`, `bug/`, `spike/`) with `status: pending | progress | failing`?
 - Yes → recommend `/a4:run iterate` (resume implementation).
 
 **Layer 5 — Blocked items.** Any item with `status: blocked`?

@@ -59,7 +59,7 @@ from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Callable
 
-from common import ISSUE_FOLDERS
+from common import ISSUE_FOLDERS, iter_issue_files
 from markdown import extract_preamble
 from status_model import (
     ACTIVE_TASK_STATUSES,
@@ -184,10 +184,7 @@ def discover_wikis(a4_dir: Path) -> list[WikiPage]:
 def discover_issues(a4_dir: Path) -> dict[str, list[IssueItem]]:
     out: dict[str, list[IssueItem]] = {folder: [] for folder in ISSUE_FOLDERS}
     for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if not sub.is_dir():
-            continue
-        for md in sorted(sub.glob("*.md")):
+        for md in iter_issue_files(a4_dir, folder):
             fm = _fm(md)
             raw_id = fm.get("id")
             out[folder].append(

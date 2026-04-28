@@ -24,7 +24,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 From the invoking `roadmap` / `run` skill:
 
 - **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify: the `<verify>` section, with verified commands, smoke scenario, and test isolation flags as H3+ subsections).
-- **`a4/` path** — absolute path to the workspace, so you can enumerate tasks (`a4/task/*.md`), identify task-to-test mappings, and write review items into `a4/review/`.
+- **`a4/` path** — absolute path to the workspace, so you can enumerate tasks (`ls a4/task/*/*.md` — task files live under `feature/`, `bug/`, or `spike/` subfolders), identify task-to-test mappings, and write review items into `a4/review/`.
 - **Cycle** — integer identifying this test cycle (1, 2, 3…). Used as a `labels:` entry on emitted review items (`cycle-<N>`).
 
 ## What You Do

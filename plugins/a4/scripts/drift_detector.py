@@ -53,13 +53,15 @@ from pathlib import Path
 
 import yaml
 
-from common import WIKI_TYPES
+from common import WIKI_TYPES, iter_issue_files
 from markdown import extract_body, extract_preamble
 
 # Local ISSUE_FOLDERS diverges from `common.ISSUE_FOLDERS` (which includes
 # `"idea"`). Preserved verbatim from pre-shared-module behavior — widening
 # to include `idea/` changes wikilink-resolution and next-id semantics and
-# belongs in a separate loud commit, not in this refactor.
+# belongs in a separate loud commit, not in this refactor. Recursion into
+# nested kind subfolders (e.g. `task/feature/`) is delegated to
+# `iter_issue_files` so this list stays a flat folder enumeration.
 ISSUE_FOLDERS = ("usecase", "task", "review", "spec")
 DEDUP_BLOCKING_STATUSES = {"open", "in-progress", "discarded"}
 
@@ -122,13 +124,15 @@ def discover_wiki_pages(a4_dir: Path) -> dict[str, Path]:
 
 
 def discover_issues(a4_dir: Path) -> dict[str, Path]:
-    """Map both `<folder>/<stem>` and bare `<stem>` to issue paths."""
+    """Map both `<folder>/<stem>` and bare `<stem>` to issue paths.
+
+    Recurses into nested kind subfolders (e.g. `task/feature/`,
+    `task/bug/`, `task/spike/`); the reference key drops the kind segment
+    so refs stay stable when a task is moved between kinds.
+    """
     out: dict[str, Path] = {}
     for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if not sub.is_dir():
-            continue
-        for md in sorted(sub.glob("*.md")):
+        for md in iter_issue_files(a4_dir, folder):
             out[f"{folder}/{md.stem}"] = md
             out.setdefault(md.stem, md)
     return out
@@ -242,11 +246,8 @@ def detect_wiki_drift(
 
 def detect_close_guard_drift(a4_dir: Path, wikis: dict[str, Path]) -> list[Drift]:
     drifts: list[Drift] = []
-    review_dir = a4_dir / "review"
-    if not review_dir.is_dir():
-        return drifts
 
-    for path in sorted(review_dir.glob("*.md")):
+    for path in iter_issue_files(a4_dir, "review"):
         fm = _fm(path)
         if fm.get("status") != "resolved":
             continue
@@ -313,10 +314,7 @@ def fingerprint(drift: Drift) -> tuple[str, str, str | None]:
 
 def existing_fingerprints(a4_dir: Path) -> set[tuple[str, str, str | None]]:
     out: set[tuple[str, str, str | None]] = set()
-    review_dir = a4_dir / "review"
-    if not review_dir.is_dir():
-        return out
-    for path in review_dir.glob("*.md"):
+    for path in iter_issue_files(a4_dir, "review"):
         fm = _fm(path)
         if fm.get("source") != "drift-detector":
             continue
@@ -343,10 +341,7 @@ def existing_fingerprints(a4_dir: Path) -> set[tuple[str, str, str | None]]:
 def compute_next_id(a4_dir: Path) -> int:
     max_id = 0
     for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if not sub.is_dir():
-            continue
-        for md in sub.glob("*.md"):
+        for md in iter_issue_files(a4_dir, folder):
             raw = _fm(md).get("id")
             if isinstance(raw, int):
                 max_id = max(max_id, raw)

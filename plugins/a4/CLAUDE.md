@@ -12,7 +12,7 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
     context.md domain.md architecture.md         # Wiki pages (flat, no lifecycle):
     actors.md  nfr.md    roadmap.md  bootstrap.md  # one file per cross-cutting concern
     usecase/<id>-<slug>.md     # Use Cases
-    task/<id>-<slug>.md        # Executable work units (kind: feature | spike | bug)
+    task/<kind>/<id>-<slug>.md # Executable work units (kind subfolder: feature | bug | spike)
     spec/<id>-<slug>.md        # Living specifications (status: draft | active | deprecated | superseded)
     review/<id>-<slug>.md      # Findings / gaps / questions (kind: finding | gap | question)
     idea/<id>-<slug>.md        # Pre-pipeline quick-capture
@@ -26,7 +26,7 @@ When an a4 skill runs in a user project, it reads and writes a single workspace 
 **Conventions**:
 
 - **Global monotonic ids.** `id` is unique across the entire workspace (GitHub-issue semantics). Allocated by `scripts/allocate_id.py`.
-- **Filenames.** `<id>-<slug>.md`. Folder indicates type — no `uc-` / `task-` prefix.
+- **Filenames.** `<id>-<slug>.md`. Folder indicates type — no `uc-` / `task-` prefix. For tasks, the parent folder is the kind subfolder (`task/feature/`, `task/bug/`, `task/spike/`); the kind segment is part of the file path but **not** part of frontmatter reference strings (`implements`, `depends_on`, etc., still use the bare `task/<id>-<slug>` form).
 - **Wiki updates flow through review items.** Wiki pages have no lifecycle but change continuously; edits are nudged by single-edit skills, deferred via `kind: gap` review items, and reconciled by the drift detector. The `<change-logs>` section on each wiki page records causes (dated bullets with markdown links to the causing issue).
 - **Tagged-XML body format.** Each file declares `type:` in frontmatter matching its body root tag; sections are column-0 `<tag>...</tag>` blocks (lowercase, kebab-case) with markdown content. Body links are standard markdown `[text](relative/path.md)`. Frontmatter list paths stay plain strings without `.md`.
 
@@ -86,8 +86,12 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
   - **Issue-family rules** scope to `a4/<type>/**/*.md` (folder glob).
     They consolidate the schema, lifecycle, body shape, and "do not"
     rules for one issue family. Current instances:
-    `a4-spec-authoring.md`, `a4-task-authoring.md`,
-    `a4-usecase-authoring.md`, `a4-review-authoring.md`.
+    `a4-spec-authoring.md`, `a4-usecase-authoring.md`,
+    `a4-review-authoring.md`. The task family is split across three
+    per-kind rules (`a4-task-feature-authoring.md`,
+    `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`), each
+    scoped to its kind subfolder (`a4/task/feature/**/*.md`, etc.) so
+    the rule that auto-loads matches the kind of file being read.
   - **Wiki-page rules** scope to a single file path
     (`a4/<basename>.md`). Wiki pages have no id / status / lifecycle,
     so the rule focuses on the authorship table from

@@ -1,6 +1,6 @@
 ---
 name: a4-workspace-policies
-description: Cross-cutting policies that apply to every file under `a4/`. Auto-loaded whenever Claude reads any `a4/**/*.md` file. Per-type authoring rules (`a4-task-authoring.md`, `a4-architecture-authoring.md`, etc.) build on top of these policies and only document type-specific shape.
+description: Cross-cutting policies that apply to every file under `a4/`. Auto-loaded whenever Claude reads any `a4/**/*.md` file. Per-type authoring rules (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`, `a4-architecture-authoring.md`, etc.) build on top of these policies and only document type-specific shape.
 paths: ["a4/**/*.md"]
 ---
 
@@ -9,7 +9,8 @@ paths: ["a4/**/*.md"]
 These rules apply to **every** file under `a4/`, regardless of type or
 location. They are the working contract for any LLM about to read,
 draft, edit, or review an a4 artifact. Per-type authoring rules (e.g.,
-`a4-task-authoring.md`, `a4-architecture-authoring.md`) describe
+`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`,
+`a4-task-spike-authoring.md`, `a4-architecture-authoring.md`) describe
 type-specific frontmatter / body / lifecycle on top of these
 cross-cutting policies — they do not redefine them.
 

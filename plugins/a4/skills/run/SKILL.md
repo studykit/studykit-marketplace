@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Run Loop
 
-> **Authoring contracts:** task files this loop reads are governed by [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) (status enum + cascades, AC-source-by-kind, lifecycle). UC ship gates against [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md). Test-runner findings emit reviews per [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill never writes those files directly — `transition_status.py` and the test-runner agent do.
+> **Authoring contracts:** task files this loop reads are governed by per-kind authoring rules: [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md), [`rules/a4-task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md), [`rules/a4-task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md). The matching rule auto-loads when the loop reads or writes a task file under `a4/task/<kind>/`. Lifecycle and writer-owned status field rules are identical across kinds; only the body shape and AC source differ. UC ship gates against [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md). Test-runner findings emit reviews per [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill never writes those files directly — `transition_status.py` and the test-runner agent do.
 
 Two stages over the tasks already authored in `a4/task/`:
 
@@ -24,7 +24,7 @@ Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/
 
 Resolve `a4/` via `git rev-parse --show-toplevel`. Inputs:
 
-- `a4/task/<id>-<slug>.md` — required. The set of executable units this run consumes.
+- `a4/task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, or `spike/`) — required. The set of executable units this run consumes; kind is recorded both in frontmatter and in the file's parent folder.
 - `a4/bootstrap.md` — required. Single source of truth for Launch & Verify (build / launch / test / smoke / isolation).
 - `a4/roadmap.md` — optional. Provides milestone narrative + dependency-graph snapshot. Links to bootstrap for L&V; this skill does not parse the link.
 - `a4/architecture.md` — passed to agents for contract context.
@@ -62,9 +62,9 @@ Determined by the workspace state, not by frontmatter flags:
 Mode detection at session start:
 
 ```bash
-ls a4/task/*.md                                   # any tasks?
-grep -l '^status: pending'   a4/task/*.md         # pending tasks
-grep -l '^status: failing'   a4/task/*.md         # failing tasks
+ls a4/task/*/*.md                                 # any tasks? (recursive: feature/, bug/, spike/)
+grep -lr '^status: pending'   a4/task/            # pending tasks
+grep -lr '^status: failing'   a4/task/            # failing tasks
 ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/'
 ```
 
@@ -90,7 +90,7 @@ At session start, for every task with `status: progress`, reset to `pending` via
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
-  --file "task/<id>-<slug>.md" --to pending \
+  --file "task/<kind>/<id>-<slug>.md" --to pending \
   --reason "session-start hygiene: previous session terminated"
 ```
 
@@ -131,7 +131,7 @@ For each ready task, spawn one agent **with worktree isolation** (omit `isolatio
 
 ```
 Agent(subagent_type: "a4:task-implementer", isolation: "worktree", prompt: """
-Task file: <absolute path to a4/task/<id>-<slug>.md>
+Task file: <absolute path to a4/task/<kind>/<id>-<slug>.md>
 Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>
@@ -152,7 +152,7 @@ Before spawning, flip the task via the writer:
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
-  --file "task/<id>-<slug>.md" --to progress \
+  --file "task/<kind>/<id>-<slug>.md" --to progress \
   --reason "/a4:run Step 2 spawning task-implementer"
 ```
 
@@ -257,7 +257,7 @@ After 4b finishes (or 4a routes the run elsewhere), proceed to wrap-up.
 
 ## Acceptance Criteria Source by Task Kind
 
-The AC-source-by-kind convention is defined in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) §Body shape. `/a4:run` does not enforce it — validators do not block on AC source; the `<acceptance-criteria>` section's existence is what the body XSD checks.
+The per-kind AC-source convention is defined in the matching authoring rule: feature tasks draw AC from UC `<flow>` / `<validation>` / `<error-handling>` (or spec `decision:` + `architecture.md` for UC-less features) per [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md); bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per [`rules/a4-task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md); spike tasks draw AC from the hypothesis + expected result in the spike's own body per [`rules/a4-task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md). `/a4:run` does not enforce these — validators do not block on AC source; the `<acceptance-criteria>` section's existence is what the body XSD checks.
 
 ## Commit Points
 

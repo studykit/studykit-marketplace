@@ -116,7 +116,7 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
 
 **Steps:**
 
-1. **Resolve the file** — accept either an absolute path or a workspace-relative path (`task/7-foo` or `task/7-foo.md`); pass the resolved path to `--file`.
+1. **Resolve the file** — accept either an absolute path or a workspace-relative path. For tasks the path must include the kind subfolder (`task/feature/7-foo`, `task/bug/7-foo`, `task/spike/7-foo`, with or without `.md`) since `transition_status.py --file` resolves files via the literal filesystem path. If the caller hands you the bare `task/7-foo` ref form, look up the file with `ls a4/task/*/7-*.md` first to learn the kind subfolder, then pass the full path.
 2. **Dry-run first when stakes are non-trivial.** For terminal-or-cascade-bearing transitions (UC `→ shipped`, UC `→ discarded`, spec `→ final`), invoke once with `--dry-run --json` to surface planned cascades, and include the cascade summary in your response. Then re-run without `--dry-run` only if the caller has confirmed.
 3. **Invoke:**
    ```bash

@@ -38,7 +38,7 @@ import sys
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
-from common import normalize_ref
+from common import iter_issue_files, normalize_ref
 from markdown import extract_preamble, parse
 
 
@@ -70,12 +70,15 @@ def _parse(path: Path) -> tuple[dict | None, str, str]:
 
 
 def collect_implements(a4_dir: Path) -> dict[str, list[str]]:
-    """Map `usecase/<stem>` → sorted list of `task/<stem>` references."""
-    task_dir = a4_dir / "task"
+    """Map `usecase/<stem>` → sorted list of `task/<stem>` references.
+
+    Recurses through `task/{feature,bug,spike}/` kind subfolders. The
+    emitted reference form is `task/<stem>` (without the kind segment) so
+    `implements` / `implemented_by` references stay stable when a task is
+    moved between kinds.
+    """
     out: dict[str, set[str]] = {}
-    if not task_dir.is_dir():
-        return {}
-    for p in sorted(task_dir.glob("*.md")):
+    for p in iter_issue_files(a4_dir, "task"):
         fm = extract_preamble(p).fm
         if fm is None:
             continue
@@ -176,11 +179,8 @@ def _refresh_uc(
 
 def refresh_all(a4_dir: Path, dry_run: bool) -> Report:
     report = Report(a4_dir=str(a4_dir), dry_run=dry_run)
-    uc_dir = a4_dir / "usecase"
-    if not uc_dir.is_dir():
-        return report
     implements_map = collect_implements(a4_dir)
-    for p in sorted(uc_dir.glob("*.md")):
+    for p in iter_issue_files(a4_dir, "usecase"):
         uc_ref = f"usecase/{p.stem}"
         target = implements_map.get(uc_ref, [])
         _refresh_uc(a4_dir, p, target, dry_run, report)

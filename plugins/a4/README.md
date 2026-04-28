@@ -81,7 +81,9 @@ Four hook flows share the same events, dispatched through a single Python entry 
     actors.md nfr.md roadmap.md bootstrap.md # one file per cross-cutting concern
 
     usecase/<id>-<slug>.md                    # Use Cases
-    task/<id>-<slug>.md                       # Executable work units (Jira sense; kind: feature|spike|bug)
+    task/feature/<id>-<slug>.md               # Executable work units (Jira sense) — kind subfolder is required
+    task/bug/<id>-<slug>.md                   #   so per-kind authoring rules auto-load on read/edit
+    task/spike/<id>-<slug>.md
     review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
     spec/<id>-<slug>.md                        # specs
     idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
@@ -90,7 +92,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
     archive/                                  # Closed items; folder = archived flag
 
   spike/                                    # PoC code for kind: spike tasks (sibling of a4/)
-    <task-id>-<slug>/                       # Active spike (parallel to a4/task/<id>-<slug>.md)
+    <task-id>-<slug>/                       # Active spike (parallel to a4/task/spike/<id>-<slug>.md)
     archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
 
   research/                                 # Portable research artifacts from /a4:research
@@ -104,6 +106,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
 - **Spike vs. feature task** — every task carries `kind: feature | spike | bug`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix. Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
+- **Task kind = subfolder.** Task files live under `a4/task/<kind>/<id>-<slug>.md`, where `<kind>` matches the `kind:` frontmatter (one of `feature` / `bug` / `spike`). The kind subfolder is the path scope that lets the matching per-kind authoring rule (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 ### Conventions
 

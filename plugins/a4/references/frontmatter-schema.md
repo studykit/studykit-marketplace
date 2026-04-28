@@ -11,7 +11,7 @@ Every markdown file created by an a4 skill carries YAML frontmatter. Files split
 | Family | Examples | Location |
 |--------|----------|----------|
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `roadmap.md`, `bootstrap.md` | `a4/` root |
-| **Issue** | use case, task, review item, spec, idea | `a4/usecase/`, `a4/task/`, `a4/review/`, `a4/spec/`, `a4/idea/` |
+| **Issue** | use case, task, review item, spec, idea | `a4/usecase/`, `a4/task/<kind>/` (`feature`/`bug`/`spike`), `a4/review/`, `a4/spec/`, `a4/idea/` |
 | **Spark** | brainstorm output | `a4/spark/` |
 
 ## Universal rules
@@ -240,9 +240,9 @@ Notable rules:
 - **`ready → implementing` requires `implemented_by:` non-empty.** The UC must have at least one task declaring `implements: [usecase/<this>]`.
 - **`implementing → shipped` requires every task in `implemented_by:` to be `complete`.** `transition_status.py` enforces this.
 
-## Task (`a4/task/<id>-<slug>.md`)
+## Task (`a4/task/<kind>/<id>-<slug>.md`)
 
-Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, and defect work; lifecycle is identical across kinds.
+Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, and defect work; lifecycle is identical across kinds. The kind subfolder (`feature/`, `bug/`, `spike/`) is part of the file path so the matching per-kind authoring rule auto-loads on read or edit; reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -313,8 +313,8 @@ For tasks with `kind: spike`, accompanying PoC code lives at project-root `spike
 
 ```
 <project-root>/
-  a4/task/<id>-<slug>.md       # task markdown — kind: spike
-  spike/<id>-<slug>/           # PoC code, data, scratch notes
+  a4/task/spike/<id>-<slug>.md  # task markdown — kind: spike
+  spike/<id>-<slug>/            # PoC code, data, scratch notes
     *.py *.json ...
 ```
 
@@ -562,7 +562,7 @@ Several enum values are semantically derived from cross-file state rather than b
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
 | `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
-| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*.md` carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; called at end of `/a4:roadmap` Step 3 and from `/a4:task` Step 6, plus the `scripts/a4_hook.py session-start` SessionStart hook) |
+| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*/*.md` (recursing through `feature/`/`bug/`/`spike/`) carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; called at end of `/a4:roadmap` Step 3 and from `/a4:task` Step 6, plus the `scripts/a4_hook.py session-start` SessionStart hook). Emits the bare `task/<id>-<slug>` form (no kind segment) so refs stay stable across kind moves. |
 | `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
 | `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |

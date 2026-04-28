@@ -41,6 +41,7 @@ from common import (
     discover_files,
     is_empty as _is_empty,
     is_int as _is_int,
+    iter_issue_files,
 )
 from markdown import extract_preamble
 from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER
@@ -331,10 +332,7 @@ def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
 def validate_id_uniqueness(a4_dir: Path) -> list[Violation]:
     seen: dict[int, list[Path]] = {}
     for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if not sub.is_dir():
-            continue
-        for p in sorted(sub.glob("*.md")):
+        for p in iter_issue_files(a4_dir, folder):
             preamble = extract_preamble(p)
             if not preamble.fm:
                 continue

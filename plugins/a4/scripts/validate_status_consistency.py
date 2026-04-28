@@ -67,6 +67,7 @@ from pathlib import Path
 
 from common import (
     is_non_empty_list as _is_non_empty_list,
+    iter_issue_files,
     normalize_ref as _normalize_ref,
 )
 from markdown import extract_preamble
@@ -94,12 +95,14 @@ SUPERSEDES_FAMILIES: dict[str, str] = {
 
 
 def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
-    """Map `<family>/<id>-<slug>` → frontmatter for every .md in folder."""
+    """Map `<family>/<id>-<slug>` → frontmatter for every .md in folder.
+
+    For nested issue folders (e.g. `task/{feature,bug,spike}/`), descends
+    into kind subfolders. The reference-key form drops the kind segment
+    so refs stay stable when a task is moved between kinds.
+    """
     out: dict[str, dict] = {}
-    folder = a4_dir / family
-    if not folder.is_dir():
-        return out
-    for p in sorted(folder.glob("*.md")):
+    for p in iter_issue_files(a4_dir, family):
         fm = _fm(p)
         if fm is None:
             continue
@@ -234,9 +237,9 @@ def check_discarded_cascade(
     if not discarded_uc_keys:
         return mismatches
 
-    task_dir = a4_dir / "task"
-    if task_dir.is_dir():
-        for p in sorted(task_dir.glob("*.md")):
+    task_files = iter_issue_files(a4_dir, "task")
+    if task_files:
+        for p in task_files:
             fm = _fm(p)
             if fm is None:
                 continue
@@ -265,29 +268,27 @@ def check_discarded_cascade(
                 )
             )
 
-    review_dir = a4_dir / "review"
-    if review_dir.is_dir():
-        for p in sorted(review_dir.glob("*.md")):
-            fm = _fm(p)
-            if fm is None:
-                continue
-            target = _normalize_ref(fm.get("target"))
-            if target is None or target not in discarded_uc_keys:
-                continue
-            status = fm.get("status")
-            if status in {"discarded", "resolved"}:
-                continue
-            mismatches.append(
-                Mismatch(
-                    path=f"review/{p.stem}.md",
-                    rule="missing-discarded-status-review",
-                    message=(
-                        f"status={status!r} but target {target!r} is "
-                        f"discarded. Expected status=discarded — "
-                        "transition_status.py should have cascaded."
-                    ),
-                )
+    for p in iter_issue_files(a4_dir, "review"):
+        fm = _fm(p)
+        if fm is None:
+            continue
+        target = _normalize_ref(fm.get("target"))
+        if target is None or target not in discarded_uc_keys:
+            continue
+        status = fm.get("status")
+        if status in {"discarded", "resolved"}:
+            continue
+        mismatches.append(
+            Mismatch(
+                path=f"review/{p.stem}.md",
+                rule="missing-discarded-status-review",
+                message=(
+                    f"status={status!r} but target {target!r} is "
+                    f"discarded. Expected status=discarded — "
+                    "transition_status.py should have cascaded."
+                ),
             )
+        )
 
     return mismatches
 

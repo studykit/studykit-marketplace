@@ -1,54 +1,38 @@
 ---
-name: a4-task-authoring
-description: Authoring rules for a4 task files. Auto-loaded when reading or editing anything under `a4/task/`.
-paths: ["a4/task/**/*.md"]
+name: a4-task-bug-authoring
+description: Authoring rules for a4 bug tasks. Auto-loaded when reading or editing anything under `a4/task/bug/`.
+paths: ["a4/task/bug/**/*.md"]
 ---
 
-# a4 — task authoring guide
+# a4 — bug task authoring guide
 
-A task at `a4/task/<id>-<slug>.md` is a **unit of executable work** —
-Jira "task" semantics. Three flavors live in one schema, distinguished
-by the required `kind:` field:
+A bug task at `a4/task/bug/<id>-<slug>.md` is a **defect fix** —
+production code change against expected behavior. Not throwaway.
 
-- `feature` — regular implementation (new functionality, extension,
-  refactor). The default case.
-- `spike` — time-boxed exploration to unblock a decision (XP sense).
-  Throwaway code. PoC, investigation, benchmark. Code lives at
-  `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/`
-  workspace.
-- `bug` — defect fix. Production code change, not throwaway.
-
-Lifecycle is identical across kinds. Tasks are produced by `/a4:task`
-(single ad-hoc) or `/a4:roadmap` (UC-batch); they are consumed by
+Lifecycle is identical across task kinds (`feature` / `bug` / `spike`).
+Bug tasks are produced by `/a4:task` (single ad-hoc) and consumed by
 `/a4:run` (the implement + test loop) and the `task-implementer` agent.
 
 > **Workspace-wide policies** — writer-owned fields, id allocation,
 > path-reference form, tag form, `<change-logs>` discipline, wiki
 > authorship, cross-stage feedback, commit message form — live in
 > [`a4-workspace-policies.md`](a4-workspace-policies.md) and load
-> automatically alongside this rule. This rule covers the
-> task-specific contract on top.
+> automatically alongside this rule. This rule covers the bug-task
+> contract on top.
 
 This rule is the working contract for any LLM about to read, draft, or
-edit a task file. The full schema and rationale live in
-[`references/frontmatter-schema.md §Task`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
-content-aware upward-propagation (the "feature with no anchor" smell)
-lives in
-[`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md).
+edit a bug task. The full schema and rationale live in
+[`references/frontmatter-schema.md §Task`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
-## How to author — always via `/a4:task` or `/a4:roadmap`
+## How to author — always via `/a4:task`
 
-Do **not** hand-craft a task file with `Write`. Always invoke the
-authoring skill so id allocation, slug derivation, frontmatter shape,
-body validation, `implements:` / `spec:` resolution, the `kind: spike`
-sidecar prompt, and the `implemented_by:` reverse-link refresh all run
-through the same code path.
+Do **not** hand-craft a bug task file with `Write`. Always invoke
+`/a4:task` so id allocation, slug derivation, frontmatter shape, body
+validation, and `implements:` / `spec:` resolution all run through
+the same code path. `/a4:roadmap` is feature-only; bugs always come
+through the single-task path.
 
-- **`/a4:task`** — single ad-hoc task outside the UC-batch path. Use
-  for one-off spikes, bug logging, post-hoc complete documentation, or
-  a single feature task that lands after the roadmap.
-- **`/a4:roadmap`** — batch generation of the full UC-driven task set
-  in one go. Always writes new tasks at `pending` (queue-fill intent).
+- **`/a4:task`** — single ad-hoc bug task. Use to log a tracked fix.
 - **`/a4:task discard <id-or-slug> [reason]`** — explicit one-off
   discard. Flips `status: → discarded` via `transition_status.py` and
   appends an optional `<why-discarded>` body block. UC-cascade
@@ -66,7 +50,7 @@ If you must read a task to answer a question, prefer
 type: task
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-kind: feature | spike | bug
+kind: bug
 status: open | pending | progress | complete | failing | discarded
 implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
@@ -83,46 +67,20 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; the writer
   rejects `<title>`-shaped strings.
-- `kind` is **required**. There is no implicit default — every task
-  must declare `feature`, `spike`, or `bug`. Files predating this
-  schema fail validation until backfilled.
+- `kind: bug` is fixed for files under `a4/task/bug/`. Every task
+  must declare the kind explicitly.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers.
-  Typical by kind: `feature` declares it when the project is UC-driven;
-  `spike` is usually empty (exploratory, not a deliverable); `bug`
-  declares it when the bug traces to a UC's flow.
-- `spec:` lists `spec/<id>-<slug>` paths backing the task. Typical:
-  `feature` in a UC-less project (spec's `decision:` + relevant
-  `architecture.md` section becomes the AC source); `spike` triggered
-  by a spec's open questions; `bug` against a spec's expected behavior.
-- `implements:` and `spec:` are **optional and orthogonal** — a task
-  may declare zero, one, or both. See the smell check below for the
-  zero-anchor `feature` case.
-- `files:` paths point at the project's production tree for `feature`
-  / `bug`. For `kind: spike`, paths live under
-  `spike/<id>-<slug>/...` (or `spike/archive/<id>-<slug>/...` after
-  archive).
+  Declare it when the bug traces to a UC's flow.
+- `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it
+  when the bug is a regression against a spec's expected behavior.
+- `implements:` and `spec:` are **optional and orthogonal** — a bug
+  may declare zero, one, or both. Empty anchors are common for cross-
+  cutting fixes.
+- `files:` paths point at the project's production source tree.
 - `cycle` starts at `1`; bumped by `/a4:run` on `failing → pending`
   next-cycle defers.
 - `implemented_by:` is **not** a task field — it is a UC reverse-link
   written by `refresh_implemented_by.py`. Do not put it on a task.
-
-### `kind: feature` with empty `implements:` and `spec:` — smell check
-
-A `feature` task with **both** anchors empty has no AC source. The
-authoring skill asks where the AC will be drawn from; downgrade to
-`spike` if the work is genuinely exploratory, or attach an anchor.
-
-Empty anchors are not always a problem — small UI tweaks, single-
-property validations, and roadmap-auto-generated features without a
-UC group can legitimately stay anchorless. The deeper signal is in
-the body: when the description implies a user-facing scope no
-existing UC covers, or an architectural choice no existing spec
-records, this is **content-aware upward propagation** per
-`references/spec-triggers.md`. Surface the gap as a review item with
-`kind: gap`, `target: usecase/` or `target: spec/` (omit `target:`
-for cross-cutting), `source: task`, body specifying which upstream
-artifact appears missing. The user resolves by authoring the upstream
-and re-linking, or closing the review with `discarded` + rationale.
 
 ### Lifecycle and writer ownership
 
@@ -144,9 +102,7 @@ Per-status meaning:
   ready-set entry for `/a4:run`.
 - `progress` — A `task-implementer` agent is working (or crashed
   mid-work — reset to `pending` on session resume by `/a4:run`).
-- `complete` — Unit tests passed. **Not** a forward-path terminal —
-  UC `revising` cascade can return tasks to `pending` for
-  re-implementation.
+- `complete` — Unit tests passed. The fix is in.
 - `failing` — Unit tests red. Resumed via `failing → progress`
   (immediate retry, same cycle) or deferred via `failing → pending`
   (next cycle, `/a4:run` bumps `cycle:`).
@@ -158,8 +114,7 @@ is in `a4-workspace-policies.md` §1):
 
 - **Allowed initial statuses on file create:** `open` (default —
   backlog), `pending` (`/a4:run` queue-fill intent), `complete`
-  (post-hoc documentation; code already shipped). `/a4:roadmap`
-  always uses `pending`.
+  (post-hoc documentation; fix already shipped).
 - `progress` and `failing` are **writer-only** — never used as initial
   statuses. The writer produces them as a result of transitions.
 - `open → progress` is allowed (e.g., `task-implementer` spawned
@@ -167,14 +122,10 @@ is in `a4-workspace-policies.md` §1):
   skip it when the queue is not the entry path.
 - There is **no `pending → open` reverse** — once enqueued, a task
   cannot be returned to backlog.
-- UC-cascade automatic flips: when a UC flips to `discarded`, all
-  related tasks → `discarded`. When a UC flips to `revising`, tasks
-  at `progress`/`failing` reset to `pending`; `open`/`pending`/
-  `complete` tasks stay. Do not flip these by hand.
 
 ### `complete` initial-status preflight
 
-When the chosen initial status is `complete`, the work is asserted to
+When the chosen initial status is `complete`, the fix is asserted to
 already be shipped. The skill verifies before writing:
 
 1. For each path in `files:`, confirm it exists in the working tree.
@@ -191,7 +142,7 @@ already be shipped. The skill verifies before writing:
    ```markdown
    <log>
 
-   - <YYYY-MM-DD> created at status: complete (post-hoc documentation; code shipped prior to task authorship)
+   - <YYYY-MM-DD> created at status: complete (post-hoc documentation; fix shipped prior to task authorship)
 
    </log>
    ```
@@ -207,23 +158,18 @@ already be shipped. The skill verifies before writing:
 
 **Required (enforced by `body_schemas/task.xsd`):**
 
-- `<description>` — what and why.
-- `<files>` — action / path / change table. For `kind: spike`, every
-  path is under `spike/<id>-<slug>/`. For `feature` / `bug`, paths
-  point at the project's production source tree.
-- `<unit-test-strategy>` — scenarios + isolation strategy + test file
-  paths. For `spike`, may be a one-line "validate hypothesis via
-  <method>".
-- `<acceptance-criteria>` — checklist. AC source by kind:
+- `<description>` — what's broken and why the fix matters. State the
+  observed behavior and the expected behavior.
+- `<files>` — action / path / change table. Paths point at the
+  project's production source tree.
+- `<unit-test-strategy>` — regression test scenarios + isolation
+  strategy + test file paths. The bug must end with a test that fails
+  before the fix and passes after.
+- `<acceptance-criteria>` — checklist. AC source: **reproduction
+  scenario + fixed criteria** (the regression test pinning the
+  expected behavior).
 
-  | Task kind / shape | AC source |
-  |---|---|
-  | `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
-  | `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
-  | `spike` | hypothesis + expected result, the spike's own body |
-  | `bug` | reproduction scenario + fixed criteria |
-
-  Validators do not enforce source-by-kind — this is a documentation
+  Validators do not enforce AC source — this is a documentation
   convention. The `<acceptance-criteria>` section must exist
   regardless.
 
@@ -231,9 +177,7 @@ already be shipped. The skill verifies before writing:
 
 - `<interface-contracts>` — contracts this task consumes or provides,
   with markdown links to `architecture.md` sections (e.g.,
-  `[architecture#SessionService](../architecture.md#sessionservice)`).
-  For UC-less work, link to the spec or relevant `architecture.md`
-  section. May be omitted for self-contained spikes.
+  `[architecture#SessionService](../../architecture.md#sessionservice)`).
 - `<change-logs>` — append-only audit trail when the task body is
   materially edited post-create (dated bullets with markdown links to
   the causing issue or spec).
@@ -249,34 +193,15 @@ already be shipped. The skill verifies before writing:
 
 Unknown kebab-case tags are tolerated by the XSD's openContent.
 
-### Spike sidecar convention
-
-For `kind: spike`, accompanying PoC code lives at
-`<project-root>/spike/<id>-<slug>/`, parallel to (not inside) `a4/`:
-
-```
-<project-root>/
-  a4/task/<id>-<slug>.md       # task markdown — kind: spike
-  spike/<id>-<slug>/           # PoC code, data, scratch notes
-    *.py *.json ...
-```
-
-The `spike/` directory is part of the project repo (not scratch), is
-**not validated** by any a4 script (the markdown-only contract of
-`a4/` is preserved), and is opt-in. `feature` and `bug` tasks have no
-sidecar — their `files:` paths point at production source.
-
-When a spike completes (or fails), the user manually `git mv`s the
-directory to `spike/archive/<id>-<slug>/` and updates the task's
-`files:` paths. The move is **never automated** — same precedent as
-`idea/` promotion.
-
 ## Common mistakes the validator catches (task-specific)
 
 - **Required section missing** (`<description>`, `<files>`,
   `<unit-test-strategy>`, `<acceptance-criteria>`) → `body-xsd`.
 - **Missing `kind:` frontmatter field** → frontmatter validator
   error. `kind` has no default.
+- **`kind:` value mismatched against folder** — a file under
+  `a4/task/bug/` must declare `kind: bug`. Mismatched declarations
+  are a folder-routing error and should be re-located.
 
 (Universal validator catches — stray body content, attribute-bearing
 tags, same-tag nesting, H1 in body — are documented in
@@ -286,10 +211,10 @@ To validate manually before commit:
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
-  "<project-root>/a4" --file task/<id>-<slug>.md
+  "<project-root>/a4" --file task/bug/<id>-<slug>.md
 ```
 
-## Don't (task-specific)
+## Don't (bug-task-specific)
 
 (Universal Don'ts — hand-editing writer-owned fields, inventing ids,
 bracketing frontmatter paths, H1 in body, deleting review files —
@@ -302,24 +227,25 @@ are in `a4-workspace-policies.md` §10.)
 - **Don't reverse `pending → open`.** Once enqueued, a task stays
   enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` →
-  task `discarded`, UC `revising` → task `pending`-reset are the
-  writer's job.
-- **Don't auto-delete or auto-archive `spike/<id>-<slug>/`** on
-  discard. Archiving is a user-driven `git mv`.
+  task `discarded` is the writer's job.
 - **Don't author multiple tasks in one `/a4:task` invocation.**
-  Re-invoke per task; use `/a4:roadmap` for the batch path.
-- **Don't write `roadmap.md` from `/a4:task`.** If the project has no
-  roadmap and the user wants one, redirect to `/a4:roadmap`.
+  Re-invoke per task.
 - **Don't omit `kind:`.** Every task declares `feature | spike | bug`.
+- **Don't ship a bug fix without a regression test.** The
+  `<unit-test-strategy>` must include a scenario that pins the
+  expected behavior; closing the task without it is the most common
+  way the same bug returns.
+- **Don't author a `kind: feature` or `kind: spike` task here.** Move
+  features to `a4/task/feature/` and spikes to `a4/task/spike/` so
+  the per-kind authoring rule auto-loads.
 
 ## After authoring
 
 `/a4:task` author mode runs `refresh_implemented_by.py` (when
-`implements:` is non-empty) to update the UC reverse-links, optionally
-creates the `spike/<id>-<slug>/` sidecar (for `kind: spike`, after
-user confirmation), and suggests `/a4:run` as the next step. The skill
-does not commit; the file (and any UC files updated by the refresh) is
-left in the working tree for the user to commit.
+`implements:` is non-empty) to update the UC reverse-links and
+suggests `/a4:run` as the next step. The skill does not commit; the
+file (and any UC files updated by the refresh) is left in the working
+tree for the user to commit.
 
 `/a4:task discard` flips status, optionally appends `<why-discarded>`,
 and reports — also without committing.
@@ -328,13 +254,15 @@ and reports — also without committing.
 
 - [`references/frontmatter-schema.md §Task`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
   full field schema, kind semantics, lifecycle, initial-status policy,
-  spike sidecar convention, and validator behavior.
-- [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) —
-  content-aware upward propagation (the `kind: feature` smell check),
-  B5 task-implementer architectural-choice exit.
+  and validator behavior.
 - [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
   tag form, blank-line discipline, link form,
   `<change-logs>` / `<log>` rules.
+- [`a4-task-feature-authoring.md`](a4-task-feature-authoring.md) —
+  feature-task contract (regular implementation work).
+- [`a4-task-spike-authoring.md`](a4-task-spike-authoring.md) —
+  spike-task contract (sidecar code under `spike/<id>-<slug>/`,
+  hypothesis-driven AC).
 - [`skills/task/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/task/SKILL.md) —
   the authoring skill itself; this rule complements it for read/edit
   contexts where the skill is not invoked.

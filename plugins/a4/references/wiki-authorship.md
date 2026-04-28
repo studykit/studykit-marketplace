@@ -22,7 +22,7 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 
 `domain.md` is downstream of UCs and upstream of arch. Term churn is normal — concept rename happens often during arch work, and forcing every rename through a review item is too much friction. Hence the b3 split (simple inline / structural deferred).
 
-`architecture.md` is the **most depended-on wiki**: `bootstrap`, `roadmap`, every `task/*.md`, and `run` all read it directly. Allowing in-situ edits from other stages would let contract drift propagate before review. Architecture changes therefore stay single-author; the cost of a review-item round trip is justified by the size of the dependent surface.
+`architecture.md` is the **most depended-on wiki**: `bootstrap`, `roadmap`, every `task/*/*.md` (across `feature/`/`bug/`/`spike/`), and `run` all read it directly. Allowing in-situ edits from other stages would let contract drift propagate before review. Architecture changes therefore stay single-author; the cost of a review-item round trip is justified by the size of the dependent surface.
 
 ### Why bootstrap, roadmap have a single in-situ owner
 
@@ -58,7 +58,7 @@ When `/a4:arch iterate` resolves a `target: architecture` review item:
 
 1. `architecture.md` is edited; the resolved review item gets a `<log>` line written by `transition_status.py`; a new bullet in `architecture.md`'s `<change-logs>` cites the resolved item.
 2. The wiki close guard (per `body-conventions.md`) ensures the change-log bullet is well-formed.
-3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, `roadmap`, related `task/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
+3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, `roadmap`, related `task/*/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
 4. `compass` Layer 2 / Layer 3 routes the user to the correct downstream `iterate` skill based on the new review-item targets.
 
 Until staleness propagation lands, the user remains responsible for re-running `/a4:auto-bootstrap`, `/a4:roadmap iterate`, or `/a4:run iterate` after a substantial architecture fix. SKILL.md wrap-ups recommend the right next step.

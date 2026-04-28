@@ -37,8 +37,9 @@ Typical markers:
   any) is active.
 
 Example: `a4/usecase/*.md` frontmatter field `implemented_by:` — a property
-of the UC document that must be kept correct relative to `a4/task/*.md`
-`implements:` reverse-links.
+of the UC document that must be kept correct relative to `a4/task/*/*.md`
+`implements:` reverse-links (the back-scan recurses through `feature/`,
+`bug/`, `spike/` subfolders).
 
 ### Discriminator
 

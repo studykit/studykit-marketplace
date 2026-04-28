@@ -8,11 +8,11 @@ The remainder after the first whitespace is parsed as: `<id-or-slug> [reason]`. 
 
 The second token is the **target**. Accept three forms and resolve in this order:
 
-1. **Numeric id** (e.g., `42`) — glob `<project-root>/a4/task/<id>-*.md`. Exactly one match expected; error if zero or multiple.
-2. **Folder-prefixed path** (e.g., `task/42-foo`) — glob `<project-root>/a4/<path>.md`. Exactly one match expected.
-3. **Slug fragment** (any other non-empty token) — glob `<project-root>/a4/task/*<fragment>*.md`. If exactly one matches, use it; if multiple match, list them with id + title and ask which.
+1. **Numeric id** (e.g., `42`) — recursive glob `<project-root>/a4/task/**/<id>-*.md` so files under `feature/`, `bug/`, or `spike/` are all found. Exactly one match expected; error if zero or multiple.
+2. **Folder-prefixed path** — accept either the bare `task/<id>-<slug>` form (resolve via the same recursive glob in #1, matching `<id>-<slug>.md` under any kind) or the explicit `task/<kind>/<id>-<slug>` path (resolve as `<project-root>/a4/<path>.md`).
+3. **Slug fragment** (any other non-empty token) — recursive glob `<project-root>/a4/task/**/*<fragment>*.md`. If exactly one matches, use it; if multiple match, list them with id + kind + title and ask which.
 
-If no file resolves, abort with: "No task file found for `<target>`. List candidates with `ls a4/task/`."
+If no file resolves, abort with: "No task file found for `<target>`. List candidates with `ls a4/task/*/`."
 
 If the target is missing entirely (no second token), abort with the usage hint: "`/a4:task discard <id-or-slug> [reason]` — provide a task id, slug fragment, or `task/<id>-<slug>` path."
 
@@ -32,7 +32,7 @@ Compose the reason: every token after `<id-or-slug>` joined by a single space. I
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
-  --file task/<id>-<slug>.md \
+  --file task/<kind>/<id>-<slug>.md \
   --to discarded \
   --reason "<reason>" \
   --json
@@ -71,7 +71,7 @@ If the user later wants the discarded task removed from UC reverse links, that i
 Tell the user:
 
 ```
-Discarded task #<id> (<title>, kind: <kind>) → a4/task/<id>-<slug>.md
+Discarded task #<id> (<title>, kind: <kind>) → a4/task/<kind>/<id>-<slug>.md
 Reason: <reason or "(none — see <log>)">
 Spike sidecar: <left in place at spike/<id>-<slug>/ | not present | n/a>
 ```

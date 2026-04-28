@@ -58,7 +58,7 @@ from typing import Any
 
 import re
 
-from common import normalize_ref
+from common import iter_issue_files, normalize_ref
 from markdown import parse
 from status_model import (
     FAMILY_TRANSITIONS,
@@ -183,12 +183,12 @@ def write_file(path: Path, raw_fm: str, body: str) -> None:
 
 
 def find_tasks_implementing(a4_dir: Path, uc_ref: str) -> list[Path]:
-    """Tasks whose `implements:` list contains the given UC reference."""
-    task_dir = a4_dir / "task"
-    if not task_dir.is_dir():
-        return []
+    """Tasks whose `implements:` list contains the given UC reference.
+
+    Recurses through `task/{feature,bug,spike}/` kind subfolders.
+    """
     matching: list[Path] = []
-    for p in sorted(task_dir.glob("*.md")):
+    for p in iter_issue_files(a4_dir, "task"):
         fm, _, _ = _parse(p)
         if fm is None:
             continue
@@ -204,11 +204,8 @@ def find_tasks_implementing(a4_dir: Path, uc_ref: str) -> list[Path]:
 
 def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
     """Review items whose `target:` equals the given reference."""
-    review_dir = a4_dir / "review"
-    if not review_dir.is_dir():
-        return []
     matching: list[Path] = []
-    for p in sorted(review_dir.glob("*.md")):
+    for p in iter_issue_files(a4_dir, "review"):
         fm, _, _ = _parse(p)
         if fm is None:
             continue
@@ -220,11 +217,8 @@ def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
 
 def find_usecases_superseded_by(a4_dir: Path, ref: str) -> list[Path]:
     """Usecases whose `supersedes:` list contains the given UC reference."""
-    uc_dir = a4_dir / "usecase"
-    if not uc_dir.is_dir():
-        return []
     matching: list[Path] = []
-    for p in sorted(uc_dir.glob("*.md")):
+    for p in iter_issue_files(a4_dir, "usecase"):
         fm, _, _ = _parse(p)
         if fm is None:
             continue
@@ -866,59 +860,55 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     reports: list[Report] = []
     today = date.today().isoformat()
 
-    uc_dir = a4_dir / "usecase"
-    if uc_dir.is_dir():
-        for p in sorted(uc_dir.glob("*.md")):
-            fm, _, _ = _parse(p)
-            if fm is None:
-                continue
-            if fm.get("status") != "shipped":
-                continue
-            supersedes = fm.get("supersedes")
-            if not isinstance(supersedes, list) or not supersedes:
-                continue
-            rel = f"usecase/{p.name}"
-            report = Report(
-                a4_dir=str(a4_dir),
-                file=rel,
-                family="usecase",
-                current_status="shipped",
-                target_status="shipped",
-                dry_run=dry_run,
-            )
-            _cascade_uc_shipped(
-                a4_dir, rel, today, dry_run, report, from_status="implementing"
-            )
-            report.ok = not report.errors
-            if report.cascades or report.errors:
-                reports.append(report)
+    for p in iter_issue_files(a4_dir, "usecase"):
+        fm, _, _ = _parse(p)
+        if fm is None:
+            continue
+        if fm.get("status") != "shipped":
+            continue
+        supersedes = fm.get("supersedes")
+        if not isinstance(supersedes, list) or not supersedes:
+            continue
+        rel = f"usecase/{p.name}"
+        report = Report(
+            a4_dir=str(a4_dir),
+            file=rel,
+            family="usecase",
+            current_status="shipped",
+            target_status="shipped",
+            dry_run=dry_run,
+        )
+        _cascade_uc_shipped(
+            a4_dir, rel, today, dry_run, report, from_status="implementing"
+        )
+        report.ok = not report.errors
+        if report.cascades or report.errors:
+            reports.append(report)
 
-    spec_dir = a4_dir / "spec"
-    if spec_dir.is_dir():
-        for p in sorted(spec_dir.glob("*.md")):
-            fm, _, _ = _parse(p)
-            if fm is None:
-                continue
-            if fm.get("status") != "active":
-                continue
-            supersedes = fm.get("supersedes")
-            if not isinstance(supersedes, list) or not supersedes:
-                continue
-            rel = f"spec/{p.name}"
-            report = Report(
-                a4_dir=str(a4_dir),
-                file=rel,
-                family="spec",
-                current_status="active",
-                target_status="active",
-                dry_run=dry_run,
-            )
-            _cascade_spec_active(
-                a4_dir, rel, today, dry_run, report, from_status="draft"
-            )
-            report.ok = not report.errors
-            if report.cascades or report.errors:
-                reports.append(report)
+    for p in iter_issue_files(a4_dir, "spec"):
+        fm, _, _ = _parse(p)
+        if fm is None:
+            continue
+        if fm.get("status") != "active":
+            continue
+        supersedes = fm.get("supersedes")
+        if not isinstance(supersedes, list) or not supersedes:
+            continue
+        rel = f"spec/{p.name}"
+        report = Report(
+            a4_dir=str(a4_dir),
+            file=rel,
+            family="spec",
+            current_status="active",
+            target_status="active",
+            dry_run=dry_run,
+        )
+        _cascade_spec_active(
+            a4_dir, rel, today, dry_run, report, from_status="draft"
+        )
+        report.ok = not report.errors
+        if report.cascades or report.errors:
+            reports.append(report)
 
     return reports
 

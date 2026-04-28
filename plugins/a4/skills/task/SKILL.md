@@ -1,17 +1,17 @@
 ---
 name: task
-description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `<why-discarded>` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
+description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<kind>/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `<why-discarded>` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
 argument-hint: "kind=<feature|spike|bug> [title] | discard <id-or-slug> [reason]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Single Task Author + Discard
 
-> **Authoring contract:** the frontmatter / body / lifecycle contract for `a4/task/**/*.md` lives in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md). This skill orchestrates writing through the rule's contract — it does not redefine it. Read the rule before deviating from any field shape, status enum, or body section requirement below.
+> **Authoring contract:** the frontmatter / body / lifecycle contract for each task kind lives in a per-kind rule file: [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md), [`rules/a4-task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md), [`rules/a4-task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md). The matching rule auto-loads when reading or editing a file under `a4/task/<kind>/`. This skill orchestrates writing through those contracts — it does not redefine them. Read the relevant rule before deviating from any field shape, status enum, or body section requirement below.
 
 Two modes:
 
-- **Author** (default) — writes one `a4/task/<id>-<slug>.md` outside the UC-batch path. Co-exists with `/a4:roadmap` (which writes the full UC-driven task set in one go). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; a spec-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored.
+- **Author** (default) — writes one `a4/task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, or `spike/`) outside the UC-batch path. Co-exists with `/a4:roadmap` (which writes the full UC-driven task set in one go). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; a spec-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored.
 - **Discard** — `discard <id-or-slug> [reason]`. Flips an existing task's `status: → discarded` via `transition_status.py` and records the reason. Use when a task is abandoned independent of any UC cascade — e.g., the spike answered its question and no implementation is needed, the bug turned out to be a non-issue, the feature direction was rejected without discarding the parent UC, or `/a4:run` decided the task is no longer worth pursuing.
 
 `/a4:run` is the agent loop that consumes files this skill produces. This skill never spawns implementation agents itself.
@@ -28,7 +28,7 @@ Seed: **$ARGUMENTS**
 
 1. Resolve project root: `git rev-parse --show-toplevel`. If not a git repo, abort.
 2. Verify `<project-root>/a4/` exists. If not, abort — this skill is workspace-scoped.
-3. Ensure `<project-root>/a4/task/` exists; create with `mkdir -p` if missing.
+3. Ensure the kind subfolder exists: `<project-root>/a4/task/<kind>/` (one of `feature/`, `bug/`, `spike/`). Create with `mkdir -p` if missing. The parent `a4/task/` itself may also need creating on first use.
 4. **Mode dispatch.** Read the first whitespace-delimited token of `$ARGUMENTS`:
    - If the token is exactly `discard` (lowercase), this is **discard mode** — jump to the "## Discard mode" pointer below and load `references/discard.md`; skip Steps 1–8 entirely.
    - Otherwise this is **author mode** — continue with Step 5.
@@ -78,7 +78,7 @@ Empty anchors are not always a problem — small UI tweaks, single-property vali
 
 ## Step 3: Compose the task body
 
-Required and optional body sections, the AC-source-by-kind table, and the writer-owned `<log>` rules are defined in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) §Body shape. Compose the section content per that contract.
+Required and optional body sections, the AC-source convention, and the writer-owned `<log>` rules are defined in the per-kind authoring rule that matches `kind` — [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md), [`rules/a4-task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md), or [`rules/a4-task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md) §Body shape. Compose the section content per that contract.
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -101,9 +101,9 @@ Do not auto-create archive paths or scaffolding files. The spike directory is op
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
-Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/task/<id>-<slug>.md`.
+Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/task/<kind>/<id>-<slug>.md` — the file lives under the kind subfolder so the matching per-kind rule auto-loads on read/edit.
 
-Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `files:` + the post-hoc `<log>` block — the only case where a skill writes into `<log>` directly) are defined in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `files:` + the post-hoc `<log>` block — the only case where a skill writes into `<log>` directly) are defined in the per-kind authoring rule that matches `kind` — [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md), [`rules/a4-task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md), or [`rules/a4-task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md) §Frontmatter contract / §`complete` initial-status preflight.
 
 Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value and the create is itself the log-implicit "first appearance" event. Subsequent transitions go through the writer.
 
@@ -122,7 +122,7 @@ Idempotent. Back-scans every task's `implements:` list and writes `implemented_b
 mkdir -p "$(git rev-parse --show-toplevel)/spike/<id>-<slug>"
 ```
 
-Suggest (do not auto-create) a `README.md` inside it pointing back to the task file as `[task/<id>-<slug>](../a4/task/<id>-<slug>.md)`. Whether to seed scaffolding files is the user's call — single spikes vary widely.
+Suggest (do not auto-create) a `README.md` inside it pointing back to the task file as `[task/<id>-<slug>](../a4/task/spike/<id>-<slug>.md)`. Whether to seed scaffolding files is the user's call — single spikes vary widely.
 
 ## Step 8: Hand-off
 

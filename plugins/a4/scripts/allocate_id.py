@@ -18,7 +18,7 @@ Usage:
 import sys
 from pathlib import Path
 
-from common import ISSUE_FOLDERS
+from common import ISSUE_FOLDERS, iter_issue_files
 from markdown import extract_preamble
 
 
@@ -33,10 +33,7 @@ def extract_id(path: Path) -> int | None:
 def collect_ids(a4_dir: Path) -> list[tuple[int, Path]]:
     results: list[tuple[int, Path]] = []
     for folder in ISSUE_FOLDERS:
-        sub = a4_dir / folder
-        if not sub.is_dir():
-            continue
-        for md in sorted(sub.glob("*.md")):
+        for md in iter_issue_files(a4_dir, folder):
             id_value = extract_id(md)
             if id_value is not None:
                 results.append((id_value, md))
