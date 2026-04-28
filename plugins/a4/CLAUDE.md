@@ -73,14 +73,27 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
   pre-commit hook re-checks for drift whenever any
   `scripts/body_schemas/*.xsd` or the rule file is staged.
 - `rules/a4-<type>-authoring.md` files are hand-edited per-type
-  authoring guides scoped to `a4/<type>/**/*.md`. They consolidate the
-  schema, lifecycle, body shape, and "do not" rules for one issue
-  family so an LLM about to read or edit a file in that folder picks
-  them up automatically (in installed user projects). They have no
-  generator backing and no pre-commit drift check; they are normal
-  prose that must be revised by hand when the source schemas or skills
-  change. The first one is `a4-spec-authoring.md`; add new ones for
-  other types by copying its shape.
+  authoring guides. Two flavors share the shape:
+  - **Issue-family rules** scope to `a4/<type>/**/*.md` (folder glob).
+    They consolidate the schema, lifecycle, body shape, and "do not"
+    rules for one issue family. Current instances:
+    `a4-spec-authoring.md`, `a4-task-authoring.md`,
+    `a4-usecase-authoring.md`, `a4-review-authoring.md`.
+  - **Wiki-page rules** scope to a single file path
+    (`a4/<basename>.md`). Wiki pages have no id / status / lifecycle,
+    so the rule focuses on the authorship table from
+    `references/wiki-authorship.md` (primary author, in-situ
+    allowances), the `<change-logs>` discipline, and what each section
+    must / must not contain. Current instances:
+    `a4-architecture-authoring.md`, `a4-context-authoring.md`,
+    `a4-domain-authoring.md`, `a4-actors-authoring.md`,
+    `a4-nfr-authoring.md`, `a4-roadmap-authoring.md`,
+    `a4-bootstrap-authoring.md`.
+
+  Both flavors have no generator backing and no pre-commit drift
+  check; they are normal prose that must be revised by hand when the
+  source schemas, skills, or `wiki-authorship.md` change. Add new
+  ones for other types or wiki pages by copying the shape.
 
 ## Skill-generated frontmatter is script-managed
 
