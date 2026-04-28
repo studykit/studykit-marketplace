@@ -1,6 +1,6 @@
 # a4 — spec authoring
 
-A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code, validators, and review items must conform to. Specs replace the retired ADR family; design rationale lives inline as `<decision-log>` entries co-located with the spec they shaped.
+A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code, validators, and review items must conform to. Design rationale for the chosen shape lives inline as `<decision-log>` entries in the same file.
 
 Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), `./body-conventions.md`.
 
@@ -21,7 +21,7 @@ A spec offer is warranted when these appear in dialogue:
 
 - **B1 — multi-option enumeration:** "A or B", "REST vs GraphQL", "Postgres or Mongo".
 - **B2 — trade-off language:** "we trade X for Y", "the cost of Z is …", "장단점이 있다".
-- **B3 — uncertainty markers:** "not sure", "torn between", "더 생각해봐야". Clarify first whether it is decision-pending (→ spec) or evidence-pending (→ research) — leave `<open-questions>` open if neither resolves quickly.
+- **B3 — uncertainty markers:** "not sure", "torn between", "더 생각해봐야". Clarify first whether it is decision-pending (→ spec) or evidence-pending (→ `kind: research` task) — leave `<open-questions>` open if neither resolves quickly.
 - **B4 — prior-spec references:** "we decided X before, but now…". This is a **supersede candidate** — author with `supersedes: [spec/<prior-id>-<slug>]` populated; do not edit the prior spec body.
 - **B5 — task-implementer architectural-choice exit:** mid-task implementation surfaces a design alternative not yet captured. Halt, emit a `kind: gap` review item with `target: spec/`, return failure naming the review id.
 - **B6 — mid-implementation architecture-impacting choice:** same exit shape as B5 from the human-driven side.
@@ -34,10 +34,6 @@ A spec offer is warranted when these appear in dialogue:
 - **Multiple decisions in one spec.** Three independent decisions → three specs, each with its own `<decision-log>` and supersede chain.
 - **Bug fixes that just use the right tool.** Switching to the correct API call is a fix, not a decision.
 
-## Reading a spec
-
-If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
-
 ## Frontmatter contract (do not deviate)
 
 ```yaml
@@ -48,8 +44,7 @@ title: "<short, human-readable phrase>"
 status: <draft | active | deprecated | superseded>
 decision: "<one-line shape summary>"
 supersedes: []        # list of paths, e.g. [spec/8-caching-strategy]
-research: []          # list of paths, e.g. [research/<slug>]
-related: []           # catchall for cross-references
+related: []           # catchall for cross-references — e.g. supporting research tasks
 labels: []            # free-form tags (alias: tags)
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -60,8 +55,7 @@ updated: YYYY-MM-DD
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `decision` is the one-liner that summarizes the chosen shape — the same string `transition_status.py --reason` will quote in the `<log>` entry on `→ active`.
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
-- `research:` is **registrar-owned**. Do not hand-edit it; invoke `register_research_citation.py` so the four-place atom (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`) stays in sync.
-- `related:` is **not** the slot for research links — those go to `research:` exclusively. `related:` is for cross-references between issue-family artifacts.
+- `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `kind: research` task that informed this spec (e.g., `related: [task/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `search.py`.
 - Path values are plain strings without `.md` and without brackets (e.g., `spec/8-caching-strategy`, not `[spec/8-caching-strategy.md]`).
 - Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; the writer bumps it on status flips.
 
@@ -83,50 +77,42 @@ superseded → (terminal)
 
 The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body — title belongs to frontmatter `title:`. Use H3+ headings inside sections freely.
 
-**Required (enforced by `../scripts/body_schemas/spec.xsd`):**
+**Required:**
 
 - `<context>` — why this spec exists; what artifact it describes; the scope it covers.
 - `<specification>` — the prescriptive content. Grammar, fields, format rules, examples. This is the heart of the spec.
 
 **Optional, emit only when there is content for them:**
 
-- `<decision-log>` — append-only, dated bullets summarizing what was chosen and why. **The only sanctioned slot for ADR-style rationale.** Earlier entries are never edited or removed; corrections are added as new entries that explain why prior reasoning no longer holds.
+- `<decision-log>` — append-only, dated bullets summarizing what was chosen and why. **The only sanctioned slot for design rationale tied to this spec.** Earlier entries are never edited or removed; corrections are added as new entries that explain why prior reasoning no longer holds. Inline markdown links (e.g., `[task/42-grpc-streaming](../task/research/42-grpc-streaming.md)`) cite informing research tasks.
 - `<open-questions>` — unresolved aspects the spec deliberately defers. Better than forcing premature closure.
-- `<rejected-alternatives>` — the options considered and why they lost. Pairs naturally with `<decision-log>`.
+- `<rejected-alternatives>` — the options considered and why they lost. Pairs naturally with `<decision-log>`. Inline citations to research tasks land here too when the rejection rationale leans on the investigation.
 - `<consequences>` — downstream effects (positive, negative, or neutral) the spec creates.
 - `<examples>` — concrete cases that pin down the prescriptive rules.
-- `<research>` — registrar-owned markdown links to citing research files. Do not hand-edit; invoke `register_research_citation.py`.
 - `<change-logs>` — append-only audit trail of why this file was edited (dated bullets with markdown links to the causing issue).
 - `<log>` — writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Never write into `<log>` directly.
 
-Unknown kebab-case tags are tolerated by the XSD's openContent (`<benchmarks>`, `<migration-notes>`, etc.). A `<migration-plan>` section is **not** used — migration work belongs in `task/<id>-<slug>.md`.
+Unknown kebab-case tags are tolerated (`<benchmarks>`, `<migration-notes>`, etc.). A `<migration-plan>` section is **not** used — migration work belongs in `task/<id>-<slug>.md`.
 
 ### Body-link form
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Frontmatter list paths are different (plain strings, no `.md`).
 
-## Common mistakes the validator catches
+## Common mistakes
 
-- **Stray content outside section blocks** → `body-stray-content`. Anything in the body that is not whitespace must live inside a `<tag>...</tag>` block.
-- **`<context>` or `<specification>` missing** → `body-xsd`. Both are required by the XSD; the writer rejects the `→ active` flip until they are present and non-empty.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`. Open and close lines must be on column 0; no attributes; no self-closing.
-- **Same-tag nesting** → `body-tag-invalid`. Sections do not nest; every section sits at the body's top level.
-- **H1 in body** → `body-stray-content`. Title is frontmatter-only.
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file spec/<id>-<slug>.md
-```
+- **Stray content outside section blocks.** Anything in the body that is not whitespace must live inside a `<tag>...</tag>` block.
+- **`<context>` or `<specification>` missing.** Both are required by convention; the writer rejects the `→ active` flip until they are present and non-empty.
+- **Inline or attribute-bearing tags.** Open and close lines must be on column 0; no attributes; no self-closing.
+- **Same-tag nesting.** Sections do not nest; every section sits at the body's top level.
+- **H1 in body.** Title is frontmatter-only.
 
 ## Don't
 
 - **Don't hand-edit `status:`.** Use `transition_status.py`.
-- **Don't hand-edit `research:` / `<research>` / `<cited-by>`.** Use `register_research_citation.py`.
 - **Don't hand-edit `<log>`** (except the documented post-hoc `complete` task case — does not apply to specs).
 - **Don't auto-populate `supersedes:`.** It is an explicit user decision in the authoring conversation.
 - **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the writer cascades the prior spec's status automatically.
 - **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `<decision-log>`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `<decision-log>`.
+- **Don't reach for a research artifact at project-root `./research/<slug>.md`.** That convention has been retired — research now lives as `kind: research` tasks under `a4/task/research/`. Cite them from `related:` and inline body links.

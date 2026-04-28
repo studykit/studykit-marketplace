@@ -1,14 +1,10 @@
 # a4 — spike task authoring
 
-A spike task at `a4/task/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives at `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/` workspace.
+A spike task at `a4/task/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives at `<project-root>/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `kind: research` instead.
 
-Lifecycle is identical across task kinds (`feature` / `bug` / `spike`).
+Lifecycle is identical across task kinds (`feature` / `bug` / `spike` / `research`).
 
 Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./body-conventions.md`.
-
-## Reading a task
-
-If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
 
 ## Frontmatter contract (do not deviate)
 
@@ -72,7 +68,7 @@ Writer rules (task-specific):
 When the chosen initial status is `complete`, the spike is asserted to already be done. Verify before writing:
 
 1. For each path in `files:`, confirm it exists under `spike/<id>-<slug>/` (or `spike/archive/<id>-<slug>/`). If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
-2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per `body_schemas/task.xsd` — `complete` does not exempt the task from documentation.
+2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
 3. After writing the file, append an explicit `<log>` block recording the post-hoc origin:
 
    ```markdown
@@ -89,14 +85,12 @@ When the chosen initial status is `complete`, the spike is asserted to already b
 
 (Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
-**Required (enforced by `../scripts/body_schemas/task.xsd`):**
+**Required:**
 
 - `<description>` — the question being explored and why a spike (vs. going straight to a feature task). State the hypothesis and the decision the spike's outcome will inform.
 - `<files>` — action / path / change table. Every path is under `spike/<id>-<slug>/`.
-- `<unit-test-strategy>` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). The XSD still requires the section.
-- `<acceptance-criteria>` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question.
-
-  Validators do not enforce AC source — this is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
+- `<unit-test-strategy>` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). The section is still required.
+- `<acceptance-criteria>` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question. The `<acceptance-criteria>` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
@@ -105,7 +99,7 @@ When the chosen initial status is `complete`, the spike is asserted to already b
 - `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — `status: pending` is the implicit creation entry, written by the writer on first transition. **Never write into `<log>` directly**, except for the documented post-hoc-`complete` case above.
 - `<why-discarded>` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture beyond the `<log>` line.
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
 ## Spike sidecar convention
 
@@ -118,32 +112,25 @@ For every spike task, accompanying PoC code lives at `<project-root>/spike/<id>-
     *.py *.json ...
 ```
 
-The `spike/` directory is part of the project repo (not scratch), is **not validated** by any a4 script (the markdown-only contract of `a4/` is preserved), and is opt-in. `feature` and `bug` tasks have no sidecar — their `files:` paths point at production source.
+The `spike/` directory is part of the project repo (not scratch), is **not validated** by any a4 script (the markdown-only contract of `a4/` is preserved), and is opt-in. `feature`, `bug`, and `research` tasks have no sidecar — `feature` / `bug` `files:` paths point at production source, and `research` typically has no `files:` at all.
 
 When a spike completes (or fails), the directory is manually `git mv`'d to `spike/archive/<id>-<slug>/` and the task's `files:` paths are updated. The move is **never automated**.
 
-## Common mistakes the validator catches (task-specific)
+## Common mistakes (task-specific)
 
-- **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) → `body-xsd`.
+- **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/spike/` must declare `kind: spike`. Mismatched declarations are a folder-routing error and should be re-located.
 - **`files:` paths under the project source tree, not under `spike/<id>-<slug>/`** — breaks the throwaway contract; the writer refuses.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file task/spike/<id>-<slug>.md
-```
+(Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (spike-task-specific)
 
 - **Don't put `implemented_by:` on a task.** It is a UC reverse-link, auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a spike stays enqueued or moves forward / out.
-- **Don't omit `kind:`.** Every task declares `feature | spike | bug`.
+- **Don't omit `kind:`.** Every task declares `feature | spike | bug | research`.
 - **Don't auto-delete or auto-archive `spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
 - **Don't write production source from a spike.** `files:` paths staying under `spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the spike's outcome warrants production work, follow up with a `kind: feature` task.
-- **Don't author a `kind: feature` or `kind: bug` task here.** Move features to `a4/task/feature/` and bugs to `a4/task/bug/` so the matching per-kind authoring contract applies.
+- **Don't author a `kind: feature` / `bug` / `research` task here.** Move them to the matching `a4/task/<kind>/` so the per-kind authoring contract applies.

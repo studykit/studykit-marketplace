@@ -11,10 +11,11 @@ Draft a scratch summary (do not write to disk yet):
 
 - **Title** — short, human-readable phrase.
 - **Description** — one or two paragraphs covering goal, scope, and any non-obvious constraints.
-- **Initial status** — one of `open` (default; backlog) / `pending` (enqueue immediately) / `complete` (post-hoc documentation; code already shipped). Decide based on the user's intent. Ask once if unclear, defaulting to `open` for new ideas, `pending` when the user is mid-stream of `/a4:run`-style work, and `complete` when the user describes work that has already landed.
-- **Files** — source paths the task writes or modifies. For `feature` / `bug`, point at the project's production tree. For `spike`, paths live under `spike/<id>-<slug>/`.
+- **Initial status** — one of `open` (default; backlog) / `pending` (enqueue immediately) / `complete` (post-hoc documentation; code already shipped, or for `kind: research`, investigation captured in this conversation). Decide based on the user's intent. Ask once if unclear, defaulting to `open` for new ideas, `pending` when the user is mid-stream of `/a4:run`-style work, and `complete` when the user describes work that has already landed.
+- **Files** — source paths the task writes or modifies. For `feature` / `bug`, point at the project's production tree. For `spike`, paths live under `spike/<id>-<slug>/`. For `research`, typically empty — the body is the deliverable.
 - **Dependencies** — `depends_on:` paths (other tasks) and any wiki-page context.
 - **Cycle / labels / milestone** — start `cycle: 1`; labels are free-form.
+- **Research-only fields** — for `kind: research` only: `mode:` (`comparative` for option comparison, `single` for a flat topic) and `options:` (list of option names, required when `mode: comparative`). Capture both before composing the body.
 
 Present this draft to the user and iterate until the substance is right. One question per turn.
 
@@ -27,6 +28,7 @@ These are optional and orthogonal — a task may declare zero, one, or both.
 - **`feature`** typically declares this when the project is UC-driven.
 - **`spike`** is typically empty; spikes are exploratory rather than deliverables. A spike *may* reference a UC if the exploration is scoped to that UC's questions.
 - **`bug`** declares this when the bug is traceable to a specific UC's flow.
+- **`research`** is typically empty; research investigations precede UC delivery. Populate only when the investigation is scoped to a single UC's open question.
 
 Discovery: `Glob a4/usecase/*.md`. Show the user candidates by title; confirm the final list. The candidate UC must be at `status ∈ {ready, implementing}` for the task to be picked up by `/a4:run` later.
 
@@ -35,16 +37,19 @@ Discovery: `Glob a4/usecase/*.md`. Show the user candidates by title; confirm th
 - **`feature`** in a UC-less project (no relevant UC exists) declares this; the spec's `## Decision` + relevant `architecture.md` section becomes the AC source.
 - **`spike`** declares this when the exploration was triggered by a spec's `## Open Questions` or `## Discussion Log`.
 - **`bug`** declares this when a spec sets the expected behavior the bug violates.
+- **`research`** declares this when the investigation was triggered by a spec's open question or rejected-alternatives discussion.
 
 Discovery: `Glob a4/spec/*.md`. Confirm matches with the user.
 
 If the kind is `feature` and **both** `implements:` and `spec:` end up empty, ask the user where the AC will be drawn from. A `feature` task with no AC source is a smell — either point it at a UC, point it at a spec, or downgrade to `spike` if the work is genuinely exploratory.
 
-Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing spec records, this is content-aware upward propagation per `../../../docs/spec-triggers.md`. Surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/`, `source: task`, body specifying which upstream artifact appears missing.
+Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing spec records, surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/`, `source: task`, body specifying which upstream artifact appears missing.
 
 ## Step 3: Compose the task body
 
-Required and optional body sections, the AC-source convention, and the writer-owned `<log>` rules are defined in the per-kind authoring reference that matches `kind` — `../../../references/task-feature-authoring.md`, `../../../references/task-bug-authoring.md`, or `../../../references/task-spike-authoring.md` §Body shape. Compose the section content per that contract.
+Required and optional body sections, the AC-source convention, and the writer-owned `<log>` rules are defined in the per-kind authoring reference that matches `kind` — `../../../references/task-feature-authoring.md`, `../../../references/task-bug-authoring.md`, `../../../references/task-spike-authoring.md`, or `../../../references/task-research-authoring.md` §Body shape. Compose the section content per that contract.
+
+For `kind: research`, this is also where the body's research content (sources consulted, key findings, raw excerpts) lands — flat under `<findings>` for `mode: single`, or per-option H3 subsections under `<options>` for `mode: comparative`. Authors may seed an empty body and fill it later under `status: progress`, or capture the full investigation in this conversation and write at `status: complete` (post-hoc).
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -69,7 +74,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/task/<kind>/<id>-<slug>.md`.
 
-Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `files:` + the post-hoc `<log>` block — the only case where a skill writes into `<log>` directly) are defined in the per-kind authoring reference that matches `kind` — `../../../references/task-feature-authoring.md`, `../../../references/task-bug-authoring.md`, or `../../../references/task-spike-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `files:` for `feature`/`spike`/`bug`, body-section presence check for `research`, plus the post-hoc `<log>` block — the only case where a skill writes into `<log>` directly) are defined in the per-kind authoring reference that matches `kind` — `../../../references/task-feature-authoring.md`, `../../../references/task-bug-authoring.md`, `../../../references/task-spike-authoring.md`, or `../../../references/task-research-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
 Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value.
 

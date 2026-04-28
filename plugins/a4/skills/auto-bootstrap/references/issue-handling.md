@@ -22,7 +22,7 @@ If the same fix fails twice, stop and emit a review item rather than retrying fu
 
 Allocate ids via `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
 
-`body_schemas/review.xsd` requires `<description>`; `<log>` and `<change-logs>` are optional.
+Review body shape (per `references/review-authoring.md`) requires `<description>`; `<log>` and `<change-logs>` are optional.
 
 ### Architecture issue
 

@@ -2,7 +2,7 @@
 
 Use the `Write` tool with this scaffold for fresh runs. On incremental bootstrap, use `Edit` to touch only the sections that changed and append a `<change-logs>` bullet citing what drove the update (typically `[architecture](architecture.md)` when architectural changes triggered re-bootstrap).
 
-`body_schemas/bootstrap.xsd` requires `<environment>`, `<launch>`, `<verify>`. `<change-logs>` is optional but written whenever a change cites a causing wiki/issue.
+`references/bootstrap-authoring.md` requires `<environment>`, `<launch>`, `<verify>`. `<change-logs>` is optional but written whenever a change cites a causing wiki/issue.
 
 ````markdown
 ---

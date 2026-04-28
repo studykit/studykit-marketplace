@@ -5,7 +5,6 @@ The a4 pipeline is not one shape. Three named shapes describe how a workspace fl
 Companion to:
 - [`skill-modes.md`](./skill-modes.md) — interactive vs autonomous, forward vs reverse axes for individual skills.
 - [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
-- [`spec-triggers.md`](./spec-triggers.md) — when a spec is warranted; signal catalog complementing this doc's spec cross-cutting section.
 - [`frontmatter-schema.md`](./frontmatter-schema.md) — field-level rules.
 
 ## Why name the shapes
@@ -86,7 +85,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 | Channel | Where | Most common shape |
 |---|---|---|
-| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
+| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:task kind=research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
 | **Production (secondary)** | `/a4:spec` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
 | **Consumption (primary)** | `architecture.md` `<change-logs>` bullet linking `[spec/N-...](spec/N-...md)` records why an architecture change happened. | Full |
 | **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
@@ -110,7 +109,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 - Task body prose (`<description>`, plus open questions captured inside `<description>` or `<change-logs>`) — explain why this task takes a particular approach, even when `spec:` is not set.
 - Review item body — clarify what decision a `kind: question` is asking about or what decision a `kind: finding` is violating.
-- Research artifacts (`research/<slug>.md`) — the artifact's conclusion can forward-point to a spec that fixed its conclusion.
+- Research tasks (`a4/task/research/<id>-<slug>.md`) — the task body's conclusion can forward-point to a spec that fixed its outcome via inline markdown links.
 
 **Common omissions** that erode spec value:
 
@@ -129,13 +128,13 @@ specs do not have a shape entry of their own. `/a4:spec` is shape-independent �
 
 ## No shape
 
-When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research artifacts, sparks, or hand-editing wiki pages — but `/a4:run` cannot execute and no task → ship flow is in motion.
+When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research tasks, sparks, or hand-editing wiki pages — but `/a4:run` cannot execute and no task → ship flow is in motion.
 
 This is a normal state, not an error. Workspaces in this state typically use:
 
 - `/a4:spec` — record specs standalone before any implementation work.
-- `/a4:research` — investigate options or topics, producing `research/<slug>.md` outside `a4/`.
-- `/a4:research-review` — audit a research artifact for source quality and bias.
+- `/a4:task kind=research` — investigate options or topics, producing `a4/task/research/<id>-<slug>.md`.
+- `/a4:research-review` — audit a research task for source quality and bias.
 - `/a4:spark-brainstorm` — capture ideas before they take shape.
 - Direct wiki edits on `context.md` / `domain.md` for purely descriptive purposes.
 

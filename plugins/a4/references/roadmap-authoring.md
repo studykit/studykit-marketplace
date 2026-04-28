@@ -4,10 +4,6 @@
 
 Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## Reading the file
-
-If only a specific section is needed to answer a question, prefer `extract_section.py a4/roadmap.md <tag>` over loading the whole markdown.
-
 ## Frontmatter contract (do not deviate)
 
 ```yaml
@@ -25,7 +21,7 @@ updated: YYYY-MM-DD
 
 The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
-**Required (enforced by `../scripts/body_schemas/roadmap.xsd`):**
+**Required:**
 
 - `<plan>` — the entire roadmap content lives in this single section, organized internally with H3+ headings:
   - **Milestone narrative.** What each milestone delivers, in user terms (links to the UCs it ships).
@@ -37,7 +33,7 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 
 - `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
 ### Body-link form
 
@@ -56,21 +52,14 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. The wiki close guard surfaces missing bullets when a review item with `wiki_impact: [roadmap]` transitions to `resolved`.
 
-## Common mistakes the validator catches
+## Common mistakes
 
-- **Stray content outside section blocks** → `body-stray-content`.
-- **Required section missing** (`<plan>`) → `body-xsd`.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`.
-- **Same-tag nesting** → `body-tag-invalid`.
-- **H1 in body** → `body-stray-content`. Page name is the file basename.
+- **Stray content outside section blocks**.
+- **Required section missing** (`<plan>`).
+- **Inline or attribute-bearing tags**.
+- **Same-tag nesting**.
+- **H1 in body**. Page name is the file basename.
 - **`type:` mismatch** with filename → frontmatter validator error.
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file roadmap.md
-```
 
 ## Don't
 

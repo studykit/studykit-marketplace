@@ -52,4 +52,4 @@ Key turning points, rejected directions and why, how the conversation arrived at
 </ideas>
 ```
 
-`body_schemas/brainstorm.xsd` requires the `<ideas>` section; `<notes>` and `<change-logs>` are optional. Research findings, TODOs, Constraints, Open Questions, etc. are H3+ headings inside `<ideas>` (or `<notes>` if you prefer to separate them). H1 (`# Title`) is forbidden in body — the topic lives in frontmatter.
+Brainstorm body shape requires the `<ideas>` section; `<notes>` and `<change-logs>` are optional. Research findings, TODOs, Constraints, Open Questions, etc. are H3+ headings inside `<ideas>` (or `<notes>` if you prefer to separate them). H1 (`# Title`) is forbidden in body — the topic lives in frontmatter.

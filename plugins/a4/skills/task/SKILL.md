@@ -1,17 +1,17 @@
 ---
 name: task
-description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<kind>/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `<why-discarded>` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
-argument-hint: "kind=<feature|spike|bug> [title] | discard <id-or-slug> [reason]"
-allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList
+description: "This skill should be used when the user wants to author a single ad-hoc task outside the UC-batch path that /a4:roadmap takes, OR to discard an existing task. Common authoring triggers: 'add a task', 'create a task', 'spike on X', 'log a bug', 'research X', 'investigate X', 'compare alternatives', 'I need a task for', 'one-off task'. Common discard triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. Authoring required argument: kind (feature | spike | bug | research); optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<kind>/<id>-<slug>.md; for kind: spike also proposes a project-root spike/<id>-<slug>/ sidecar; for kind: research also requires mode (comparative | single) and options when comparative. Discard form: `discard <id-or-slug> [reason]`; flips status via transition_status.py and appends a `<why-discarded>` note. Single-task entry. Use /a4:roadmap for batch UC-driven generation; use /a4:run to drive the implement loop."
+argument-hint: "kind=<feature|spike|bug|research> [title] | discard <id-or-slug> [reason]"
+allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList, WebSearch, WebFetch
 ---
 
 # Single Task Author + Discard
 
-> **Authoring contracts:** per-kind authoring references — `${CLAUDE_PLUGIN_ROOT}/references/task-feature-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/task-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/task-spike-authoring.md`. This skill orchestrates writing through those contracts.
+> **Authoring contracts:** per-kind authoring references — `${CLAUDE_PLUGIN_ROOT}/references/task-feature-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/task-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/task-spike-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/task-research-authoring.md`. This skill orchestrates writing through those contracts.
 
 Two modes:
 
-- **Author** (default) — writes one `a4/task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, or `spike/`) outside the UC-batch path. Co-exists with `/a4:roadmap` (batch UC-driven generation). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; a spec-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored.
+- **Author** (default) — writes one `a4/task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, `spike/`, or `research/`) outside the UC-batch path. Co-exists with `/a4:roadmap` (batch UC-driven generation). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; a spec-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored; a topic needs investigation before a spec can be written.
 - **Discard** — `discard <id-or-slug> [reason]`. Flips an existing task's `status: → discarded` via `transition_status.py` and records the reason. Use when a task is abandoned independent of any UC cascade.
 
 `/a4:run` is the agent loop that consumes files this skill produces. This skill never spawns implementation agents itself.
@@ -20,9 +20,9 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In (author mode):** writing one task file at `status: pending`, allocating its id, resolving `implements:` / `spec:` references, proposing the `spike/<id>-<slug>/` sidecar for `kind: spike`, refreshing `implemented_by:` on referenced UCs.
+- **In (author mode):** writing one task file at `status: pending` (or `complete` for post-hoc), allocating its id, resolving `implements:` / `spec:` references, proposing the `spike/<id>-<slug>/` sidecar for `kind: spike`, capturing `mode:` / `options:` for `kind: research`, refreshing `implemented_by:` on referenced UCs.
 - **In (discard mode):** flipping an existing task's `status: → discarded` via `transition_status.py`, appending an optional `<why-discarded>` note, advising on the spike sidecar (no auto-delete).
-- **Out:** UC-batch generation (`/a4:roadmap`), implement / test loop (`/a4:run`), automated reviewer. No commit.
+- **Out:** UC-batch generation (`/a4:roadmap`), implement / test loop (`/a4:run`), automated reviewer (use `/a4:research-review` for the kind=research quality pass). No commit.
 
 ## Pre-flight
 
@@ -32,7 +32,7 @@ Seed: **$ARGUMENTS**
 4. **Mode dispatch.** Read the first whitespace-delimited token of `$ARGUMENTS`:
    - If the token is exactly `discard` (lowercase), this is **discard mode** — jump to "## Discard mode" below; skip Steps 1–8.
    - Otherwise this is **author mode** — continue with Step 5.
-5. Parse `kind` from the argument or the recent conversation. **`kind` is required for author mode**; if absent or not one of `feature | spike | bug`, ask the user once which kind this task is.
+5. Parse `kind` from the argument or the recent conversation. **`kind` is required for author mode**; if absent or not one of `feature | spike | bug | research`, ask the user once which kind this task is.
 
 ## Author Mode Flow
 
@@ -52,8 +52,10 @@ Per-mode subject formats and timing: `references/commit-points.md`.
 
 **Author mode** — when the task file is written:
 
-1. Summarize: task id / title / kind, `implements:` / `spec:` references (or "none — AC sourced from <X>"), whether the spike sidecar was created, files updated by `refresh_implemented_by.py`.
-2. Suggest `/a4:run` as the next step.
+1. Summarize: task id / title / kind, `implements:` / `spec:` references (or "none — AC sourced from <X>"), whether the spike sidecar was created (or for `kind: research`, the captured `mode:` / `options:`), files updated by `refresh_implemented_by.py`.
+2. Suggest the next step:
+   - `feature` / `spike` / `bug` at `pending` → `/a4:run`.
+   - `research` at `pending` or `progress` → start the investigation directly (the user or an investigator agent will fill `<context>` + `<options>`/`<findings>`); when finalized, optionally run `/a4:research-review` before flipping to `complete`.
 3. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
 
 **Discard mode** — D6 in `references/discard.md` produces the summary. Do not suggest `/a4:run`. Suggest `/a4:handoff` only if the broader session warrants a snapshot.

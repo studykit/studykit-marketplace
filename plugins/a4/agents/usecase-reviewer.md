@@ -53,7 +53,7 @@ labels: []
 milestone: v1.0
 ```
 
-Body sections (per `body_schemas/usecase.xsd` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`).
+Body sections (per `references/usecase-authoring.md` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`).
 
 ## Review Criteria
 

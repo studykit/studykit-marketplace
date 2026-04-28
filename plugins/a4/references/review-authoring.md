@@ -10,10 +10,6 @@ Review items are **never the user's primary product** — they are the deferred-
 
 Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## Reading a review item
-
-If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
-
 ## Frontmatter contract (do not deviate)
 
 ```yaml
@@ -88,7 +84,7 @@ When resolving, append the bullet to each affected wiki:
 </change-logs>
 ```
 
-Create the `<change-logs>` section if it does not yet exist (per the page's XSD).
+Create the `<change-logs>` section if it does not yet exist.
 
 ## Body shape
 
@@ -96,7 +92,7 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 
 Review item bodies are **deliberately minimal** — they hold a single observation, not a long-form artifact.
 
-**Required (enforced by `../scripts/body_schemas/review.xsd`):**
+**Required:**
 
 - `<description>` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise. The body of a review item is a hand-off note, not an essay.
 
@@ -105,7 +101,7 @@ Review item bodies are **deliberately minimal** — they hold a single observati
 - `<change-logs>` — append-only audit trail when the review item body is materially edited post-create (rare; usually the original description is the final word).
 - `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent; the first status flip writes the first entry. **Never write into `<log>` directly.**
 
-Unknown kebab-case tags are tolerated by the XSD's openContent — useful for embedding `<diff>`, `<repro>`, or `<context>` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `<description>` is usually enough.
+Unknown kebab-case tags are tolerated — useful for embedding `<diff>`, `<repro>`, or `<context>` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `<description>` is usually enough.
 
 There is no standalone "title" body section — the file's frontmatter carries no `title:` field either. The slug + first line of `<description>` serves as the human-readable name in iterate backlogs.
 
@@ -113,21 +109,14 @@ There is no standalone "title" body section — the file's frontmatter carries n
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained (e.g., `[usecase/3-search-history](../usecase/3-search-history.md)`). Frontmatter list paths are different (plain strings, no `.md`).
 
-## Common mistakes the validator catches
+## Common mistakes
 
-- **Stray content outside section blocks** → `body-stray-content`. Anything in the body that is not whitespace must live inside a `<tag>...</tag>` block.
-- **`<description>` missing** → `body-xsd`. The only required body section.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`. Open and close lines must be on column 0; no attributes; no self-closing.
-- **Same-tag nesting** → `body-tag-invalid`. Sections do not nest; every section sits at the body's top level.
-- **H1 in body** → `body-stray-content`.
+- **Stray content outside section blocks**. Anything in the body that is not whitespace must live inside a `<tag>...</tag>` block.
+- **`<description>` missing**. The only required body section.
+- **Inline or attribute-bearing tags**. Open and close lines must be on column 0; no attributes; no self-closing.
+- **Same-tag nesting**. Sections do not nest; every section sits at the body's top level.
+- **H1 in body**.
 - **`wiki_impact:` entry not in the wiki-type enum** → frontmatter validator error. Use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`).
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file review/<id>-<slug>.md
-```
 
 ## Don't
 

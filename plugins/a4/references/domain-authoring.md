@@ -4,10 +4,6 @@
 
 Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## Reading the file
-
-If only a specific section is needed to answer a question, prefer `extract_section.py a4/domain.md <tag>` over loading the whole markdown.
-
 ## Frontmatter contract (do not deviate)
 
 ```yaml
@@ -25,7 +21,7 @@ updated: YYYY-MM-DD
 
 The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
-**Required (enforced by `../scripts/body_schemas/domain.xsd`):**
+**Required:**
 
 - `<concepts>` — glossary of the domain entities, value objects, and significant terms. Each entry includes a name, a one-paragraph definition, and (optionally) examples or invariants. Concepts are the terms UC bodies, spec bodies, and architecture component names must use consistently.
 
@@ -35,7 +31,7 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 - `<state-transitions>` — for concepts whose lifecycle has named states, the transition graph (state, allowed next states, trigger). Common for entities tracked by the workspace (a `Session`'s state, a `Document`'s revision).
 - `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
 ### Body-link form
 
@@ -54,21 +50,14 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. The drift detector checks for `domain` ↔ `architecture` term consistency: if a concept appears in `architecture.md` `<components>` but is missing from `domain.md` `<concepts>`, a `kind: gap` review item is emitted.
 
-## Common mistakes the validator catches
+## Common mistakes
 
-- **Stray content outside section blocks** → `body-stray-content`.
-- **Required section missing** (`<concepts>`) → `body-xsd`.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`.
-- **Same-tag nesting** → `body-tag-invalid`.
-- **H1 in body** → `body-stray-content`. Page name is the file basename.
+- **Stray content outside section blocks**.
+- **Required section missing** (`<concepts>`).
+- **Inline or attribute-bearing tags**.
+- **Same-tag nesting**.
+- **H1 in body**. Page name is the file basename.
 - **`type:` mismatch** with filename → frontmatter validator error.
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file domain.md
-```
 
 ## Don't
 

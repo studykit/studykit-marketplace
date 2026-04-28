@@ -81,5 +81,5 @@ If the result is `(no matches)`, optionally suggest a relaxed query (e.g. drop a
 
 - This skill is read-only. It never writes a file or mutates frontmatter.
 - Body text is **not** searched. Use `Grep` directly for body grep.
-- Reverse lookups always recompute from forward fields; stored-reverse fields (`implemented_by`, `cited_by`) are intentionally ignored so results stay consistent even when refresh scripts have not run.
+- Reverse lookups always recompute from forward fields; the stored-reverse field `implemented_by` is intentionally ignored so results stay consistent even when `refresh_implemented_by.py` has not run.
 - For workspace-wide aggregate state (counts, drift alerts, blocked items, milestone progress), delegate to the `workspace-assistant` agent (snapshot mode).

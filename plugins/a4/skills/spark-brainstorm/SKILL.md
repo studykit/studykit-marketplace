@@ -23,4 +23,4 @@ Start a brainstorming session on: **$ARGUMENTS**
 
 If the brainstorming produced options that warrant further investigation or a documented decision, suggest the two-step path:
 
-> "If you'd like to investigate these options, run `/a4:research <file_path>` to produce a portable research artifact at `./research/<slug>.md`; optionally review it with `/a4:research-review`. Once you've converged on a choice through conversation, run `/a4:spec` to record it as `a4/spec/<id>-<slug>.md` and nudge any affected wiki pages."
+> "If you'd like to investigate these options, run `/a4:task kind=research <topic>` to author a research task at `a4/task/research/<id>-<slug>.md`; optionally review it with `/a4:research-review`. Once you've converged on a choice through conversation, run `/a4:spec` to record it as `a4/spec/<id>-<slug>.md` and nudge any affected wiki pages."

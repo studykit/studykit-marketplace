@@ -8,9 +8,9 @@ Single-pass scan over the a4/ workspace (wiki pages + issue folders +
 spark/), applying the requested filters and printing matching records.
 
 Reverse lookups are computed by back-scanning forward relation fields on
-every file. Stored-reverse fields (`implemented_by`, `cited_by`) are
-intentionally ignored so the result is always consistent with the
-forward edges, even when a refresh script is stale.
+every file. The stored-reverse field `implemented_by` is intentionally
+ignored so the result is always consistent with the forward edges, even
+when `refresh_implemented_by.py` is stale.
 
 Usage:
     uv run search.py <a4-dir> [filters...]
@@ -94,7 +94,6 @@ FORWARD_FIELDS: tuple[str, ...] = (
     "promoted",
     "parent",
     "related",
-    "research",
 )
 
 ALL_FOLDERS: tuple[str, ...] = (

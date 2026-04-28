@@ -15,4 +15,4 @@ When **authoring or editing** any feature task file, read these first.
 
 ## Sibling rules
 
-- `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`
+- `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`, `a4-task-research-authoring.md`

@@ -4,15 +4,13 @@
 # ///
 """Unified validator entrypoint for an a4/ workspace.
 
-Runs the three category validators in one process and emits a combined
+Runs the two category validators in one process and emits a combined
 report:
 
     validate_frontmatter           YAML schema, enum values, field types,
                                     path-reference format, wiki `type:`
                                     matches filename, `wiki_impact`
                                     targets, id uniqueness.
-    validate_body                  footnote definition shape + sequence +
-                                    payload class, body wikilink resolution.
     validate_status_consistency    cross-file derived status
                                     (`superseded`, `promoted`, cascaded
                                     `discarded`). Workspace-only; skipped
@@ -20,8 +18,8 @@ report:
                                     as `/a4:validate`).
 
 Per-category CLI entrypoints remain available and unchanged — users
-wanting a single class of check can still run `validate_frontmatter.py`,
-`validate_body.py`, or `validate_status_consistency.py` directly.
+wanting a single class of check can still run `validate_frontmatter.py`
+or `validate_status_consistency.py` directly.
 
 Exit code is 2 if any category reports violations, else 0. Exit 1 for
 usage errors (missing workspace, file not inside workspace).
@@ -41,7 +39,6 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-import validate_body
 import validate_frontmatter
 import validate_status_consistency
 
@@ -49,8 +46,8 @@ import validate_status_consistency
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Run all a4 validators (frontmatter + body + status "
-            "consistency) in one pass."
+            "Run all a4 validators (frontmatter + status consistency) in "
+            "one pass."
         )
     )
     parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
@@ -79,7 +76,6 @@ def main() -> None:
         target = resolved
 
     fm_violations, fm_scanned = validate_frontmatter.run(a4_dir, target)
-    body_violations, body_scanned = validate_body.run(a4_dir, target)
 
     # Cross-file consistency is global — single-file mode skips it so the
     # user gets a stable workspace-scoped verdict from `/a4:validate`. A
@@ -93,7 +89,7 @@ def main() -> None:
         status_mismatches: list[validate_status_consistency.Mismatch] = []
         status_skipped = True
 
-    total = len(fm_violations) + len(body_violations) + len(status_mismatches)
+    total = len(fm_violations) + len(status_mismatches)
     exit_code = 2 if total else 0
 
     if args.json:
@@ -104,10 +100,6 @@ def main() -> None:
                 "scanned": [str(p.relative_to(a4_dir)) for p in fm_scanned],
                 "violations": [asdict(v) for v in fm_violations],
             },
-            "body": {
-                "scanned": [str(p.relative_to(a4_dir)) for p in body_scanned],
-                "violations": [asdict(v) for v in body_violations],
-            },
             "status_consistency": {
                 "skipped": status_skipped,
                 "mismatches": [asdict(m) for m in status_mismatches],
@@ -117,7 +109,6 @@ def main() -> None:
         sys.exit(exit_code)
 
     _print_frontmatter(fm_violations, fm_scanned)
-    _print_body(body_violations, body_scanned)
     _print_status(status_mismatches, status_skipped)
 
     sys.exit(exit_code)
@@ -137,25 +128,6 @@ def _print_frontmatter(
     )
     for v in violations:
         loc = v.path + (f" [{v.field}]" if v.field else "")
-        print(f"  {loc} ({v.rule}): {v.message}", file=sys.stderr)
-
-
-def _print_body(
-    violations: list[validate_body.Violation], scanned: list[Path]
-) -> None:
-    print("=== body ===")
-    if not violations:
-        print(
-            f"OK — {len(scanned)} file(s) scanned, no body-convention violations."
-        )
-        return
-    file_count = len({v.path for v in violations})
-    print(
-        f"{len(violations)} violation(s) across {file_count} file(s):",
-        file=sys.stderr,
-    )
-    for v in violations:
-        loc = v.path + (f":{v.line}" if v.line is not None else "")
         print(f"  {loc} ({v.rule}): {v.message}", file=sys.stderr)
 
 

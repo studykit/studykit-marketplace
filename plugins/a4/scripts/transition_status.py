@@ -1,6 +1,6 @@
 # /// script
 # requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0", "xmlschema>=3.4"]
+# dependencies = ["pyyaml>=6.0"]
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
@@ -64,7 +64,6 @@ from status_model import (
     FAMILY_TRANSITIONS,
     STATUS_BY_FOLDER as FAMILY_STATES,
 )
-from validate_body import run as validate_body_run
 
 
 # ---------------------------------------------------------------------------
@@ -285,22 +284,6 @@ def _is_non_empty_list(value: Any) -> bool:
     )
 
 
-def _validate_body_xsd(a4_dir: Path, rel_path: str, issues: list[str]) -> None:
-    """Run validate_body's XSD pass on a single file and surface failures.
-
-    Replaces the previous heading-substring checks (e.g., looking for
-    ``"## Flow"`` in the body) — body structure is now declared by
-    ``body_schemas/<type>.xsd`` and enforced by xmlschema.
-    """
-    target = a4_dir / rel_path
-    violations, _ = validate_body_run(a4_dir, target)
-    for v in violations:
-        prefix = f"body[{v.rule}]"
-        if v.line is not None:
-            prefix += f" line {v.line}"
-        issues.append(f"{prefix}: {v.message}")
-
-
 def validate_transition(
     a4_dir: Path,
     rel_path: str,
@@ -353,7 +336,6 @@ def _validate_ready_to_implementing(
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-    _validate_body_xsd(a4_dir, rel_path, issues)
 
 
 def _validate_revising_to_ready(
@@ -370,7 +352,6 @@ def _validate_revising_to_ready(
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-    _validate_body_xsd(a4_dir, rel_path, issues)
 
 
 def _validate_implementing_to_shipped(
@@ -404,14 +385,13 @@ def _validate_implementing_to_shipped(
 def _validate_draft_to_active(
     a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
 ) -> None:
-    """Spec draft → active: title placeholder + body XSD compliance."""
+    """Spec draft → active: title placeholder check."""
     for field_name in ("title",):
         placeholder = _placeholder_in(fm.get(field_name))
         if placeholder:
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-    _validate_body_xsd(a4_dir, rel_path, issues)
 
 
 # ---------------------------------------------------------------------------

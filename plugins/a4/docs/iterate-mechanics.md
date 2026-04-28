@@ -89,7 +89,7 @@ The writer writes `status:`, bumps `updated:`, and appends a `<log>` entry. Do n
 
 When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `roadmap.md`, `bootstrap.md`):
 
-- Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section (per the page's XSD) if it does not yet exist.
+- Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
 - The wiki close guard warns at resolve-time when `wiki_impact:` is non-empty but the referenced page lacks a `<change-logs>` bullet pointing at the causing issue.
 
 Full `<change-logs>` formatting rules: [`body-conventions.md`](./body-conventions.md).

@@ -4,10 +4,6 @@
 
 Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## Reading the file
-
-If only a specific section is needed to answer a question, prefer `extract_section.py a4/bootstrap.md <tag>` over loading the whole markdown.
-
 ## Frontmatter contract (do not deviate)
 
 ```yaml
@@ -25,7 +21,7 @@ updated: YYYY-MM-DD
 
 The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
-**Required (enforced by `../scripts/body_schemas/bootstrap.xsd`):**
+**Required:**
 
 - `<environment>` — the runtime environment the workspace requires: language version, package manager, OS-specific notes, env vars needed at runtime. Discovered and recorded — not speculated.
 - `<launch>` — the build / start commands, in order. Each command is the **literal** invocation that was verified to work, not a template. Distinguish dev / build / production where applicable.
@@ -38,7 +34,7 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 
 - `<change-logs>` — append-only audit trail of why this page was re-derived (dated bullets with markdown links to the causing review item or architecture spec). Most edits to this page are full re-runs, so `<change-logs>` is sparse — record why a re-run was needed.
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
 ### Why `<verify>` lives only here
 
@@ -61,21 +57,14 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. Most bullets cite a `target: architecture` review item that triggered the re-run.
 
-## Common mistakes the validator catches
+## Common mistakes
 
-- **Stray content outside section blocks** → `body-stray-content`.
-- **Required section missing** (`<environment>`, `<launch>`, `<verify>`) → `body-xsd`.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`.
-- **Same-tag nesting** → `body-tag-invalid`.
-- **H1 in body** → `body-stray-content`. Page name is the file basename.
+- **Stray content outside section blocks**.
+- **Required section missing** (`<environment>`, `<launch>`, `<verify>`).
+- **Inline or attribute-bearing tags**.
+- **Same-tag nesting**.
+- **H1 in body**. Page name is the file basename.
 - **`type:` mismatch** with filename → frontmatter validator error.
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file bootstrap.md
-```
 
 ## Don't
 

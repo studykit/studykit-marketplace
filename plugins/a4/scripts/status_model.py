@@ -133,6 +133,6 @@ ACTIVE_TASK_STATUSES: frozenset[str] = frozenset({"pending", "progress", "failin
 # fragment the wiki vocabulary across two modules.
 
 KIND_BY_FOLDER: dict[str, frozenset[str]] = {
-    "task": frozenset({"feature", "spike", "bug"}),
+    "task": frozenset({"feature", "spike", "bug", "research"}),
     "review": frozenset({"finding", "gap", "question"}),
 }

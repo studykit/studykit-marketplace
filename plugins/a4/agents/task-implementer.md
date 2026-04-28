@@ -48,7 +48,7 @@ Read the task file first, then bootstrap.md's `<verify>` section (Verified Comma
    The script enforces:
    - Current status must be `ready`. If it is `draft`, **refuse to start** — return failure with the UC reference and instruct the user to finalize via `/a4:usecase` (ready-gate). The script reports this as an illegal-transition error; surface it in `issues:`.
    - `implementing`, `shipped`, `superseded`, `revising`, `discarded`, `blocked` → the script reports already-at-target or illegal. Do not force, do not continue on that UC.
-   - Mechanical validation (`implemented_by:` non-empty, `actors:` non-empty, body XSD pass via `validate_body.run()` — required tags including `<flow>` are present, no placeholders in `title:`). If validation fails, return failure surfacing the reported issues. Do **not** pass `--force`.
+   - Mechanical validation (`implemented_by:` non-empty, `actors:` non-empty, no placeholders in `title:`). If validation fails, return failure surfacing the reported issues. Do **not** pass `--force`.
 
    Do this **before** beginning implementation so the workspace reflects active work.
 
@@ -60,7 +60,7 @@ Read the task file first, then bootstrap.md's `<verify>` section (Verified Comma
    ```
    #<task-id> <type>(a4): <description>
    ```
-   `<type>` is `feat` for `kind: feature`, `fix` for `kind: bug`, `chore` for `kind: spike` (or `feat` if the spike produces user-visible scaffolding). The task's `id:` from the file's frontmatter is the only id in the subject — the agent does not enumerate touched UCs here. Never skip hooks, amend, or force-push.
+   `<type>` is `feat` for `kind: feature`, `fix` for `kind: bug`, `chore` for `kind: spike` (or `feat` if the spike produces user-visible scaffolding), `docs` for `kind: research`. The task's `id:` from the file's frontmatter is the only id in the subject — the agent does not enumerate touched UCs here. Never skip hooks, amend, or force-push.
 
 ### Spec-ambiguity exit — `implementing → revising`
 
@@ -83,13 +83,13 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 
 ### Architecture-choice exit — halt + spec-gap
 
-Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing spec or `architecture.md` section captures. Signals B5 / B6 in [`${CLAUDE_PLUGIN_ROOT}/docs/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/docs/spec-triggers.md). Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
+Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing spec or `architecture.md` section captures. Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
 
 1. **Stop coding.**
 2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: gap`, `status: open`, `source: task-implementer`, `<description>` describing the choice surfaced and the alternatives considered. Use `target: spec/` only when a specific spec id applies; otherwise omit `target:` (cross-cutting).
 3. **Return failure** naming the review item id. Do not commit partial code. The user authors the spec via `/a4:spec`; `/a4:run iterate` resumes after the spec lands.
 
-This exit is parallel to the spec-ambiguity exit — same halt + review-item shape — but the UC's lifecycle is untouched. Anti-patterns (see `spec-triggers.md`) suppress the exit when the situation is a routine choice, framework-mandated, or post-hoc.
+This exit is parallel to the spec-ambiguity exit — same halt + review-item shape — but the UC's lifecycle is untouched. Suppress the exit when the choice is routine (variable names, file layout), framework-mandated (no real alternative), or post-hoc (the code is already written and the conversation is just explaining what's there).
 
 ## Rules
 

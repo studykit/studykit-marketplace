@@ -13,9 +13,9 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | Skill | What it does |
 |-------|-------------|
 | `spark-brainstorm` | Generate ideas with structured creative techniques |
-| `research` | Investigate options or a topic; produces a portable artifact at `./research/<slug>.md` (outside `a4/`) for reference |
-| `research-review` | Review a research artifact at `./research/<slug>.md` for source quality, option balance, bias, and neutrality |
-| `spec` | Record a spec reached through conversation as `a4/spec/<id>-<slug>.md`, cite related research, nudge affected wiki pages |
+| `task` (`kind=research`) | Investigate options or a topic; produces an investigation task at `a4/task/research/<id>-<slug>.md` whose body holds sources, findings, and (in comparative mode) per-option subsections |
+| `research-review` | Review a research task at `a4/task/research/<id>-<slug>.md` for source quality, option balance, bias, and neutrality |
+| `spec` | Record a spec reached through conversation as `a4/spec/<id>-<slug>.md`, soft-link related research tasks, nudge affected wiki pages |
 
 ## Pipeline (interactive)
 

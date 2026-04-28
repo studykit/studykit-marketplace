@@ -4,10 +4,6 @@
 
 Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## Reading the file
-
-If only a specific section is needed to answer a question, prefer `extract_section.py a4/architecture.md <tag>` over loading the whole markdown.
-
 ## Frontmatter contract (do not deviate)
 
 ```yaml
@@ -25,7 +21,7 @@ updated: YYYY-MM-DD
 
 (Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
-**Required (enforced by `../scripts/body_schemas/architecture.xsd`):**
+**Required:**
 
 - `<overview>` — high-level architectural narrative; how the system fits together, what trade-offs shaped it.
 - `<components>` — per-component definitions. Each component lists its responsibility, the interface it exposes (consumed by tasks via `<interface-contracts>` links), and any cross-component dependencies.
@@ -38,25 +34,18 @@ updated: YYYY-MM-DD
 - `<external-dependencies>` — third-party services, vendor APIs, or upstream systems the architecture depends on. Skip when self-contained.
 - `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing review item, spec, or UC). The wiki-update protocol requires a bullet whenever a non-trivial change lands.
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
 ### Component anchor stability
 
 `<components>` exposes anchor-targeted headings that tasks reference in their `<interface-contracts>` section (`[architecture#SessionService](../architecture.md#sessionservice)`). Keep component heading text stable — renaming a component requires a review item explaining the cascade because every task that links into it is affected.
 
-## Common mistakes the validator catches (architecture-specific)
+## Common mistakes (architecture-specific)
 
-- **Required section missing** (`<overview>`, `<components>`, `<technology-stack>`, `<test-strategy>`) → `body-xsd`.
+- **Required section missing** (`<overview>`, `<components>`, `<technology-stack>`, `<test-strategy>`).
 - **`type:` mismatch** with filename → frontmatter validator error.
 
 (Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file architecture.md
-```
 
 ## Don't (architecture-specific)
 

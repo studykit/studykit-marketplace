@@ -19,9 +19,8 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
 | `spark-brainstorm` | Structured brainstorming sessions |
-| `research` | Standalone research facilitator; writes a portable artifact at `./research/<slug>.md` (outside `a4/`) referenced by spec files |
-| `research-review` | Reviews a research artifact at `./research/<slug>.md` via the `research-reviewer` agent; applies accepted revisions |
-| `spec` | Records a spec reached through conversation as `a4/spec/<id>-<slug>.md`; cites related research via `[[research/<slug>]]` wikilinks in body; nudges affected wiki pages |
+| `research-review` | Reviews a `kind: research` task body via the `research-reviewer` agent; applies accepted revisions |
+| `spec` | Records a spec reached through conversation as `a4/spec/<id>-<slug>.md`; soft-links related research tasks via standard markdown body links + optional `related:` frontmatter; nudges affected wiki pages |
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
@@ -34,7 +33,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 
 Four hook flows share the same events, dispatched through a single Python entry point:
 
-1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; exit 2 on frontmatter/body violations so Claude retries.
+1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; exit 2 on frontmatter violations so Claude retries.
 2. **Cross-file status consistency** (non-blocking) — scan `a4/` on SessionStart and after each edit; inject findings as `additionalContext` so the LLM sees mismatches on the next turn without a retry loop.
 3. **`implemented_by` reconciliation** (non-blocking) — refresh UC `implemented_by:` reverse-links on SessionStart so drift from cross-branch edits or manual task edits is healed before work begins.
 4. **Issue-id resolution** (non-blocking) — scan UserPromptSubmit for `#<id>` references; inject the resolved `a4/<type>/<id>-<slug>.md` path so Claude reads the file directly instead of searching. Per-session dedupe — once an id has been announced, repeats stay silent.
@@ -42,7 +41,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 | Event | Script | Purpose |
 |-------|--------|---------|
 | `PostToolUse` (`Write\|Edit\|MultiEdit`) | `scripts/a4_hook.py post-edit` | Record the edited `$project/a4/**/*.md` path to a session-scoped file, then run `validate_status_consistency.py --file <edited>` and inject mismatches in that file's connected component as `additionalContext`. Non-blocking. |
-| `Stop` | `scripts/a4_hook.py stop` | Run `validate_frontmatter.py` + `validate_body.py` on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
+| `Stop` | `scripts/a4_hook.py stop` | Run `validate_frontmatter.py` on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
 | `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record files (`a4-edited-<sid>.txt`, `a4-resolved-ids-<sid>.txt`). Always exits 0. |
 | `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan record files from crashed sessions where SessionEnd never fired. Always exits 0. |
 | `SessionStart` | `scripts/a4_hook.py session-start` | Refresh UC `implemented_by:` reverse-links (write; emits `systemMessage` + `additionalContext` when UCs change), then run `validate_status_consistency.py` and inject workspace-wide mismatches as `additionalContext`. Non-blocking; silent on clean. |
@@ -84,6 +83,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
     task/feature/<id>-<slug>.md               # Executable work units (Jira sense) — kind subfolder is required
     task/bug/<id>-<slug>.md                   #   so per-kind authoring rules auto-load on read/edit
     task/spike/<id>-<slug>.md
+    task/research/<id>-<slug>.md              # Investigation tasks; body is the deliverable
     review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
     spec/<id>-<slug>.md                        # specs
     idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
@@ -94,9 +94,6 @@ Four hook flows share the same events, dispatched through a single Python entry 
   spike/                                    # PoC code for kind: spike tasks (sibling of a4/)
     <task-id>-<slug>/                       # Active spike (parallel to a4/task/spike/<id>-<slug>.md)
     archive/<task-id>-<slug>/               # Archived after spike completes (manual git mv)
-
-  research/                                 # Portable research artifacts from /a4:research
-    <slug>.md                               # Cited from a4/spec/ body via [[research/<slug>]] wikilinks
 ```
 
 ### Wiki vs. issues
@@ -105,8 +102,8 @@ Four hook flows share the same events, dispatched through a single Python entry 
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels`, `milestone` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
-- **Spike vs. feature task** — every task carries `kind: feature | spike | bug`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix. Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
-- **Task kind = subfolder.** Task files live under `a4/task/<kind>/<id>-<slug>.md`, where `<kind>` matches the `kind:` frontmatter (one of `feature` / `bug` / `spike`). The kind subfolder is the path scope that lets the matching per-kind authoring rule (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
+- **Spike vs. feature vs. research task** — every task carries `kind: feature | spike | bug | research`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix; `research` is a written investigation whose body is the deliverable (sources consulted, findings, options). Closed spikes are archived by manual `git mv` to `spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
+- **Task kind = subfolder.** Task files live under `a4/task/<kind>/<id>-<slug>.md`, where `<kind>` matches the `kind:` frontmatter (one of `feature` / `bug` / `spike` / `research`). The kind subfolder is the path scope that lets the matching per-kind authoring rule (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`, `a4-task-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 ### Conventions
 

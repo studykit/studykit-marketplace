@@ -10,8 +10,8 @@ Subcommands:
                  status-consistency mismatches within the edited file's
                  connected component.
   stop           Stop. Validate all a4/*.md edited in this session against
-                 frontmatter and body schemas. rc=2 on violations (forces
-                 Claude retry); rc=0 on clean or any internal failure.
+                 frontmatter schema. rc=2 on violations (forces Claude
+                 retry); rc=0 on clean or any internal failure.
   session-start  SessionStart. Refresh UC `implemented_by:` reverse-links,
                  then report workspace-wide status-consistency mismatches.
   user-prompt    UserPromptSubmit. Scan the prompt for `#<id>` references
@@ -26,10 +26,10 @@ in-event ordering, non-blocking policy, output channel usage) live in
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
 
-Sibling scripts (`validate_frontmatter.py`, `validate_body.py`,
-`validate_status_consistency.py`, `refresh_implemented_by.py`) are called
-in-process via `import` rather than `uv run` subprocess, so per-invocation
-interpreter startup is paid once — not once per validator call.
+Sibling scripts (`validate_frontmatter.py`, `validate_status_consistency.py`,
+`refresh_implemented_by.py`) are called in-process via `import` rather than
+`uv run` subprocess, so per-invocation interpreter startup is paid once —
+not once per validator call.
 
 Every subcommand exits 0 except `stop`, which may exit 2 on validation
 violations. Internal failures (missing env, missing modules, library
@@ -229,7 +229,6 @@ def _stop() -> int:
 
     try:
         import validate_frontmatter as vfm
-        import validate_body as vbody
         from markdown import extract_preamble
     except ImportError as e:
         sys.stderr.write(
@@ -237,18 +236,7 @@ def _stop() -> int:
         )
         return 0
 
-    try:
-        wikis = vbody.discover_wiki_pages(a4_dir)
-        issues = vbody.discover_issues(a4_dir)
-        sparks = vbody.discover_sparks(a4_dir)
-    except Exception as e:
-        sys.stderr.write(
-            f"a4_hook.py stop: body index build failed ({e}) — skipping validation\n"
-        )
-        return 0
-
     fm_violations: list = []
-    body_violations: list = []
 
     try:
         for f in edited:
@@ -260,44 +248,30 @@ def _stop() -> int:
                     fm_violations.append(missing)
             else:
                 fm_violations.extend(vfm.validate_file(path, a4_dir, preamble.fm))
-            body_violations.extend(
-                vbody.validate_file(path, a4_dir, wikis, issues, sparks)
-            )
     except Exception as e:
         sys.stderr.write(
             f"a4_hook.py stop: validator error ({e}) — skipping validation\n"
         )
         return 0
 
-    if not fm_violations and not body_violations:
+    if not fm_violations:
         _unlink_silent(record_file)
         return 0
 
     out_lines = ["a4/ validators found issues in files edited this session:"]
-    if fm_violations:
-        fm_file_count = len({v.path for v in fm_violations})
-        out_lines.append("")
-        out_lines.append("--- validate_frontmatter.py ---")
-        out_lines.append(
-            f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
-        )
-        for v in fm_violations:
-            loc = v.path + (f" [{v.field}]" if v.field else "")
-            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
-    if body_violations:
-        body_file_count = len({v.path for v in body_violations})
-        out_lines.append("")
-        out_lines.append("--- validate_body.py ---")
-        out_lines.append(
-            f"{len(body_violations)} violation(s) across {body_file_count} file(s):"
-        )
-        for v in body_violations:
-            loc = v.path + (f":{v.line}" if v.line is not None else "")
-            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
+    fm_file_count = len({v.path for v in fm_violations})
+    out_lines.append("")
+    out_lines.append("--- validate_frontmatter.py ---")
+    out_lines.append(
+        f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
+    )
+    for v in fm_violations:
+        loc = v.path + (f" [{v.field}]" if v.field else "")
+        out_lines.append(f"  {loc} ({v.rule}): {v.message}")
     out_lines.append("")
     out_lines.append(
         "Fix the issues above before stopping. "
-        "See plugins/a4/references/frontmatter-schema.md and obsidian-conventions.md."
+        "See plugins/a4/references/frontmatter-schema.md."
     )
     out_lines.append(
         "For a full workspace sweep (id uniqueness etc.), run /a4:validate."

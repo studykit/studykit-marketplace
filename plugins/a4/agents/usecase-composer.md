@@ -65,10 +65,10 @@ updated: <today>
 ---
 ```
 
-Body sections (per `body_schemas/context.xsd`):
+Body sections (per `references/context-authoring.md`):
 
 - `<original-idea>` — verbatim quote of the user's input.
-- `<problem-framing>` — 2–4 sentences: what problem, who's affected, why it matters. Add measurable success criteria here as well (no separate `<success-criteria>` tag in the XSD).
+- `<problem-framing>` — 2–4 sentences: what problem, who's affected, why it matters. Add measurable success criteria here as well (no separate `<success-criteria>` tag).
 
 **Expansion mode:** leave existing `context.md` unchanged unless the new input introduces a genuine scope shift. If it does, edit the relevant section and append a `<change-logs>` bullet linking the new UC.
 
@@ -116,7 +116,7 @@ updated: <today>
 ---
 ```
 
-Body (per `body_schemas/usecase.xsd` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`):
+Body (per `references/usecase-authoring.md` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`):
 
 ```markdown
 <goal>
@@ -130,8 +130,8 @@ One sentence.
 Concrete trigger — specific moment, not a generic condition.
 
 > Source: input — "<quoted idea fragment>"
-> *(or)* research — <systems> (ref: [research/<label>](../../research/<label>.md))
-> *(or)* code — <path> (ref: [research/code-analysis-<label>](../../research/code-analysis-<label>.md))
+> *(or)* research — <systems> (ref: [task/<id>-<slug>](../task/research/<id>-<slug>.md))
+> *(or)* code — <path> (ref: [task/<id>-code-analysis-<label>](../task/research/<id>-code-analysis-<label>.md))
 > *(or)* implicit — surfaced during completeness analysis
 
 </situation>
@@ -162,7 +162,7 @@ Optional — user-visible failure states.
 </error-handling>
 ```
 
-Source attribution lives inline at the start of `<situation>` as a blockquote — the XSD does not declare a separate `<source>` tag.
+Source attribution lives inline at the start of `<situation>` as a blockquote — there is no separate `<source>` tag.
 
 **Abstraction guard (critical):** every field is user-level. No technology references (API, database, webhook, cache, queue, REST, GraphQL, SQL), no system internals ("the system queries"), no infrastructure (server, container, microservice).
 
@@ -202,7 +202,7 @@ updated: <today>
 ---
 ```
 
-Body: `<requirements>` section (required by `body_schemas/nfr.xsd`) containing a table — Description | Affected UCs via markdown links | Measurable criteria.
+Body: `<requirements>` section (required by `references/nfr-authoring.md`) containing a table — Description | Affected UCs via markdown links | Measurable criteria.
 
 ### 7. Ambiguities → Review Items
 

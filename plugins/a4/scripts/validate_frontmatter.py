@@ -120,7 +120,7 @@ SCHEMAS: dict[str, Schema] = {
         },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
-        path_list_fields=frozenset({"supersedes", "research", "related"}),
+        path_list_fields=frozenset({"supersedes", "related"}),
     ),
     "idea": Schema(
         name="idea",

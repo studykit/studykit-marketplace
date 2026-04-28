@@ -2,13 +2,9 @@
 
 A feature task at `a4/task/feature/<id>-<slug>.md` is a **unit of regular implementation work** — new functionality, extension, or refactor. The default task kind in the Jira sense.
 
-Lifecycle is identical across task kinds (`feature` / `bug` / `spike`).
+Lifecycle is identical across task kinds (`feature` / `bug` / `spike` / `research`).
 
 Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./body-conventions.md`.
-
-## Reading a task
-
-If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
 
 ## Frontmatter contract (do not deviate)
 
@@ -80,7 +76,7 @@ Writer rules (task-specific):
 When the chosen initial status is `complete`, the work is asserted to already be shipped. Verify before writing:
 
 1. For each path in `files:`, confirm it exists in the working tree. If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
-2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per `body_schemas/task.xsd` — `complete` does not exempt the task from documentation.
+2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
 3. After writing the file, append an explicit `<log>` block recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
 
    ```markdown
@@ -97,7 +93,7 @@ When the chosen initial status is `complete`, the work is asserted to already be
 
 (Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
-**Required (enforced by `../scripts/body_schemas/task.xsd`):**
+**Required:**
 
 - `<description>` — what and why.
 - `<files>` — action / path / change table. Paths point at the project's production source tree.
@@ -109,7 +105,7 @@ When the chosen initial status is `complete`, the work is asserted to already be
   | `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
   | `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
 
-  Validators do not enforce source-by-shape — this is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
+  AC source is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
@@ -118,22 +114,15 @@ When the chosen initial status is `complete`, the work is asserted to already be
 - `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — `status: pending` is the implicit creation entry, written by the writer on first transition. **Never write into `<log>` directly**, except for the documented post-hoc-`complete` case above.
 - `<why-discarded>` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture beyond the `<log>` line.
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
-## Common mistakes the validator catches (task-specific)
+## Common mistakes (task-specific)
 
-- **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) → `body-xsd`.
+- **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/feature/` must declare `kind: feature`. Mismatched declarations are a folder-routing error and should be re-located.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file task/feature/<id>-<slug>.md
-```
+(Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (feature-task-specific)
 
@@ -141,5 +130,5 @@ uv run "../scripts/validate_body.py" \
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a task stays enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded`, UC `revising` → task `pending`-reset are the writer's job.
-- **Don't omit `kind:`.** Every task declares `feature | spike | bug`.
-- **Don't author a `kind: spike` or `kind: bug` task here.** Move spikes to `a4/task/spike/` and bugs to `a4/task/bug/` so the matching per-kind authoring contract applies.
+- **Don't omit `kind:`.** Every task declares `feature | spike | bug | research`.
+- **Don't author a `kind: spike` / `bug` / `research` task here.** Move spikes to `a4/task/spike/`, bugs to `a4/task/bug/`, and research to `a4/task/research/` so the matching per-kind authoring contract applies.

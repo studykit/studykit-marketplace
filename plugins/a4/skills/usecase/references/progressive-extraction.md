@@ -27,6 +27,6 @@ Record these in the UC's body as `<validation>` / `<error-handling>` sections. B
 
 1. Derive a kebab-case slug from the title (`Share meeting summary` → `share-summary`).
 2. Run `allocate_id.py` to get the next id `N`.
-3. Write `a4/usecase/<N>-<slug>.md` per `../../../references/usecase-authoring.md`. Required body sections (per `body_schemas/usecase.xsd`): `<goal>`, `<situation>`, `<flow>` (numbered list), `<expected-outcome>`. Optional: `<validation>`, `<error-handling>`, `<dependencies>`, `<change-logs>`, `<log>` (writer-owned).
+3. Write `a4/usecase/<N>-<slug>.md` per `../../../references/usecase-authoring.md`. Required body sections: `<goal>`, `<situation>`, `<flow>` (numbered list), `<expected-outcome>`. Optional: `<validation>`, `<error-handling>`, `<dependencies>`, `<change-logs>`, `<log>` (writer-owned).
 4. Create a task `"Discovery: UC-<N> <title>"` and mark it completed.
 5. **In-situ nudge** — see `./in-situ-wiki-nudge.md`.

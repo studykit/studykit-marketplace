@@ -23,7 +23,7 @@ updated: <YYYY-MM-DD>
 ---
 ```
 
-Body structure (per `body_schemas/review.xsd` — `<description>` required, `<log>` and `<change-logs>` optional):
+Body structure (per `references/review-authoring.md` — `<description>` required, `<log>` and `<change-logs>` optional):
 
 ```markdown
 <description>

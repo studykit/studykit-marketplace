@@ -6,7 +6,7 @@ Frontmatter-side rules (path format inside YAML, required fields, enums, the uni
 
 ## Scope
 
-Applies to every markdown file inside the `a4/` workspace plus the project-root `research/` artifact. Each file declares `type:` in frontmatter matching the body root tag, and the body is validated against `../scripts/body_schemas/<type>.xsd` by `validate_body.py`.
+Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter matching the body root tag. The recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`; reference XSDs at `../scripts/body_schemas/<type>.xsd` mirror the same shape for human readers but are not consumed by any runtime validator.
 
 ## Section tag form
 
@@ -20,14 +20,14 @@ A meeting just ended; absent teammates need the outcome.
 </situation>
 ```
 
-Rules (enforced by `validate_body.py`):
+Rules:
 
 - **Open and close lines on column 0**, each on its own line. `<tag>` and `</tag>` cannot be inline.
 - **Tag names** match the regex `^[a-z][a-z0-9-]*$` — lowercase ASCII, kebab-case, starting with a letter.
-- **No attributes, no self-closing.** `<tag attr="x">` and `<tag/>` are rejected.
+- **No attributes, no self-closing.** `<tag attr="x">` and `<tag/>` are rejected by the convention.
 - **No nesting of the same tag** within itself. Different declared tags do not nest either — every section sits at the body's top level.
-- **Unknown tags are tolerated** by the XSD's openContent (so authors can drop in `<benchmarks>` or any supplemental block), provided the tag name is well-formed and the section is otherwise valid.
-- **Anything outside a section block** that is not whitespace is `body-stray-content`. H1 (`# Title`) is forbidden in body — title belongs to frontmatter `title:`.
+- **Unknown tags are tolerated** (so authors can drop in `<benchmarks>` or any supplemental block), provided the tag name is well-formed and the section is otherwise valid.
+- **Anything outside a section block** that is not whitespace is stray content. H1 (`# Title`) is forbidden in body — title belongs to frontmatter `title:`.
 
 Inside a section, content is opaque markdown. Use H3+ headings (`###`, `####`) freely, paragraphs, lists, code fences, tables, blockquotes, PlantUML — anything CommonMark or its extensions support. Fenced code blocks are passed through verbatim.
 
@@ -45,11 +45,7 @@ Writers emit blank lines around tags so the file renders predictably:
 </flow>
 ```
 
-The validator does **not** require the blank lines (the XSD uses CDATA-wrapped opaque content), but renderers do — without them, the content immediately under `<flow>` may merge with the open tag for some markdown processors. Keep the blank-line frame consistent.
-
-### CDATA handling
-
-`validate_body.py` builds a synthetic XML document by wrapping each section's content in `<![CDATA[...]]>` and runs `xmlschema.XMLSchema11.iter_errors`. Authors do not write CDATA delimiters — the wrapper is internal. Literal `]]>` strings inside content are split into two CDATA segments by the wrapper, so they round-trip correctly. Authors should not need to escape anything in body markdown.
+The blank lines are convention rather than enforced syntax, but renderers depend on them — without them, the content immediately under `<flow>` may merge with the open tag for some markdown processors. Keep the blank-line frame consistent.
 
 ## Link form (body)
 
@@ -59,7 +55,7 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 |------|---------|
 | Cross-file reference | `[usecase/3-search-history](../usecase/3-search-history.md)` |
 | Section anchor on a wiki page | `[architecture#sessionservice](../architecture.md#sessionservice)` |
-| Sibling-folder reference | `[research/<slug>](../../research/<slug>.md)` (from `a4/spec/`) |
+| Sibling-folder reference | `[task/42-grpc-streaming](../task/research/42-grpc-streaming.md)` (from `a4/spec/`) |
 | External URL | `[the spec text](https://example.com/spec)` |
 
 Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text.
@@ -68,7 +64,7 @@ Frontmatter paths are different — they stay plain strings (no brackets, no `.m
 
 ## `<change-logs>` audit trail
 
-Every wiki page (and every issue file that supports it) carries a `<change-logs>` section once a substantive edit has happened. The section is optional in every XSD — only emit it once it has content.
+Every wiki page (and every issue file that supports it) carries a `<change-logs>` section once a substantive edit has happened. The section is optional in every authoring contract — only emit it once it has content.
 
 Format:
 
@@ -124,7 +120,7 @@ Skip: typo fixes, metadata-only tweaks, internal notes that don't change semanti
 ### How to update
 
 1. Edit the affected `<section>` content.
-2. Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)`. Create the section (per the page's XSD) if it does not yet exist.
+2. Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)`. Create the section if it does not yet exist.
 3. Bump the wiki page's frontmatter `updated:` to today.
 
 ### Deferring the update
@@ -153,8 +149,8 @@ Before a session ends, for each review item that transitioned to `status: resolv
 ## Cross-references
 
 - `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
-- `../scripts/body_schemas/<type>.xsd` — source of truth for required vs optional sections per type.
-- `../scripts/validate_body.py` — enforces tag form (`body-tag-invalid`, `body-tag-unclosed`), stray content (`body-stray-content`), and per-type XSD shape (`body-xsd`).
+- `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting required vs optional sections per type (no runtime validator consumes them).
+- `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - `../scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved `<change-logs>` and close-guard violations.
 - `../scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums).

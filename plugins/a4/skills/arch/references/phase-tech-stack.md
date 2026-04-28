@@ -6,9 +6,9 @@ Select language, framework, platform, and key libraries for `<technology-stack>`
 
 1. **For each choice, record the rationale.** Lightweight choices: discuss inline and record with a brief rationale. Heavy choices (multiple viable options with significant trade-offs): ask the user:
 
-   > "This seems like a decision worth investigating more deeply. Would you like to run `/a4:research` on the candidates first, then record the conclusion via `/a4:spec` once we've converged?"
+   > "This seems like a decision worth investigating more deeply. Would you like to author a research task via `/a4:task kind=research <topic>` first, then record the conclusion via `/a4:spec` once we've converged?"
 
-2. **Watch for spec-trigger signals during the interview** — multi-option enumeration, trade-off language, user uncertainty, prior-spec references. The full list of signals and the anti-patterns that suppress nudges is in `../spec-triggers.md`.
+2. **Watch for spec-worthy moments during the interview** — multi-option enumeration ("A or B"), trade-off language ("we trade X for Y"), user uncertainty ("not sure", "torn between..."), or references to prior specs ("we decided X before, but now..."). When one fires, pause and offer `/a4:task kind=research` then `/a4:spec`. Suppress the nudge for routine choices (variable names, file layout), framework-mandated picks (no real alternative), or post-hoc justification (code already written).
 
 3. **Codebase detection.** If a codebase already exists, detect the stack from project files (package.json, pyproject.toml, Cargo.toml, lockfiles, framework configs) and confirm with the user before recording.
 

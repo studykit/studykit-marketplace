@@ -5,7 +5,6 @@ Why each a4 pipeline stage has the mode it has, and why the missing interactive/
 Companion to:
 - [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
 - [`pipeline-shapes.md`](./pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; complements this doc's per-skill mode taxonomy with which stages run in which shape.
-- [`spec-triggers.md`](./spec-triggers.md) — when a spec is warranted; conversational signals + content-aware upward propagation.
 - [`frontmatter-schema.md`](./frontmatter-schema.md) — field-level rules.
 
 ## Two axes, not one

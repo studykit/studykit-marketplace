@@ -11,14 +11,19 @@ Draft a scratch summary covering the fields and sections defined in `../../../re
 
 Present the draft to the user before proceeding. Iterate until the substance is confirmed.
 
-## Step 3: Discover related research
+## Step 3: Discover related research tasks
 
-Offer two sources for citations:
+Offer two sources for soft links:
 
-1. **Auto-scan.** `Glob ./research/*.md` (relative to project root). For each candidate, compare the file's `topic:` frontmatter or slug to the spec's title/topic. Propose plausible matches.
-2. **User-specified.** If the user named a research file during the conversation, include it verbatim.
+1. **Auto-scan.** `Glob a4/task/research/*.md`. For each candidate, compare the file's `title:` frontmatter or slug to the spec's title/topic. Propose plausible matches.
+2. **User-specified.** If the user named a research task during the conversation, include it verbatim.
 
-Confirm the final list with the user. Empty is fine — specs do not require prior research. Step 5b runs the registrar.
+Confirm the final list with the user. Empty is fine — specs do not require prior research. The links land in two places (Step 5):
+
+- `related:` frontmatter list (e.g., `related: [task/42-grpc-streaming]`) for frontmatter-level discoverability.
+- Inline standard markdown links inside whichever spec section the user wants the citation rendered in (typically `<decision-log>` or `<rejected-alternatives>`).
+
+There is no stored-reverse contract — the research task is not auto-modified, and reverse lookups are derived on demand via grep / `search.py`.
 
 ## Step 4: Decide on status via dialogue
 
@@ -43,22 +48,9 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
 3. File path: `<project-root>/a4/spec/<id>-<slug>.md`.
 
-4. Use the `Write` tool. Frontmatter shape, required body sections (`<context>`, `<specification>`), optional sections (`<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`), and tag-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`; `decision:` is the one-liner that Step 6 will quote in the activate transition. Do **not** hand-write `<research>` — Step 5b registers it.
+4. Use the `Write` tool. Frontmatter shape, required body sections (`<context>`, `<specification>`), optional sections (`<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`), and tag-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`; `decision:` is the one-liner that Step 6 will quote in the activate transition. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [task/42-grpc-streaming]`), and add inline `[task/<id>-<slug>](../task/research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `<decision-log>` or `<rejected-alternatives>`).
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
-
-## Step 5b: Register research citations
-
-For each research artifact confirmed in Step 3, invoke the registrar:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
-  "<project-root>/a4" \
-  "research/<slug>" \
-  "spec/<id>-<slug>"
-```
-
-Idempotent. Skip entirely when Step 3's list is empty; run once per (research, spec) pair otherwise. The registrar owns the four-place atom (spec `research:` + `<research>`, research `cited_by:` + `<cited-by>`) and bumps the research file's `updated:`.
 
 ## Step 6: Activate via writer (if signal was `active`)
 

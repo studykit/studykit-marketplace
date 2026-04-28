@@ -4,11 +4,7 @@ A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a u
 
 Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## Reading a UC
-
-If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
-
-### Abstraction discipline
+## Abstraction discipline
 
 Use cases stay at the **user level** — what the actor does, not what the system does internally. A UC that says "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
 
@@ -79,7 +75,7 @@ Writer rules (UC-specific):
 
 (Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
-**Required (enforced by `../scripts/body_schemas/usecase.xsd`):**
+**Required:**
 
 - `<goal>` — what the actor wants to accomplish, framed at the user level (the *why*).
 - `<situation>` — the trigger / current context. When does this UC apply? What's already happened? Concrete, not abstract.
@@ -94,7 +90,7 @@ Writer rules (UC-specific):
 - `<change-logs>` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
 - `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — the first status flip writes the first entry. **Never write into `<log>` directly.**
 
-Unknown kebab-case tags are tolerated by the XSD's openContent.
+Unknown kebab-case tags are tolerated.
 
 ## In-situ wiki nudge — when a UC change implies a wiki edit
 
@@ -126,19 +122,12 @@ When a UC turns out to be too large, the protocol is:
 
 Splits do **not** flow through the supersede mechanism — supersession presumes the predecessor was at one point shipped.
 
-## Common mistakes the validator catches (UC-specific)
+## Common mistakes (UC-specific)
 
-- **Required section missing** (`<goal>`, `<situation>`, `<flow>`, `<expected-outcome>`) → `body-xsd`.
+- **Required section missing** (`<goal>`, `<situation>`, `<flow>`, `<expected-outcome>`).
 - **Hand-edited `implemented_by:`** → not a validator error per se, but the next `refresh_implemented_by.py` run silently overwrites the field. Never depend on hand-written values.
 
 (Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
-
-To validate manually before commit:
-
-```bash
-uv run "../scripts/validate_body.py" \
-  "<project-root>/a4" --file usecase/<id>-<slug>.md
-```
 
 ## Don't (UC-specific)
 
