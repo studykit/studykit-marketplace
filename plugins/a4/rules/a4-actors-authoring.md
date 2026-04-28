@@ -21,7 +21,7 @@ view from it.
 
 This rule is the working contract for any LLM about to read, draft, or
 edit the actors wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:usecase` (or `/a4:arch` for system actors only)
 
@@ -143,7 +143,7 @@ emits a `kind: finding` review item.
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file actors.md
 ```
 
@@ -172,13 +172,13 @@ introduced or renamed the actor; commit them together.
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md) —
   full field schema, body-section table, validator behavior.
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   primary-author table; `/a4:arch`'s system-actor allowance.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, link form, `<change-logs>` rules.
-- [`skills/usecase/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md) —
+- [`skills/usecase/SKILL.md`](../skills/usecase/SKILL.md) —
   Step 2's actor-discovery flow.
 - `body_schemas/actors.xsd` — the source of truth for required vs
   optional sections.

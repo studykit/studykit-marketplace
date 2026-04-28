@@ -40,7 +40,7 @@ deferred-work mailbox between stages. Authored by reviewer agents
 
 This rule is the working contract for any LLM about to read, draft, or
 edit a review file. The full schema and rationale live in
-[`references/frontmatter-schema.md §Review item`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Review item`](../references/frontmatter-schema.md).
 
 ## How to author — review items are emitted by skills, not hand-written
 
@@ -261,7 +261,7 @@ Frontmatter list paths are different (plain strings, no `.md`).
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file review/<id>-<slug>.md
 ```
 
@@ -312,22 +312,22 @@ that may surface review items.
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Review item`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Review item`](../references/frontmatter-schema.md) —
   full field schema, lifecycle, cascade, validator behavior.
-- [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) —
+- [`references/iterate-mechanics.md`](../references/iterate-mechanics.md) —
   the shared procedure every iterate flow follows when walking the
   backlog (filter, present, transition, record wiki edit, discipline).
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   primary-author table, in-situ edit allowances, cross-stage
   stop/continue policy that decides when to emit a review item vs
   halt the current stage.
-- [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) —
+- [`references/spec-triggers.md`](../references/spec-triggers.md) —
   B5 task-implementer architectural-choice exit and content-aware
   upward propagation that emit `kind: gap` review items.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, blank-line discipline, link form,
   `<change-logs>` / `<log>` rules.
-- [`skills/drift/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/drift/SKILL.md) —
+- [`skills/drift/SKILL.md`](../skills/drift/SKILL.md) —
   drift detector entry point and dedup labels.
 - `body_schemas/review.xsd` — the source of truth for required vs
   optional sections; the `a4-section-enum` rule's bullet block is

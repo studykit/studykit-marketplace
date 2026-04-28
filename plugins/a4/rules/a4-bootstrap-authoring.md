@@ -22,7 +22,7 @@ into other wiki pages.
 
 This rule is the working contract for any LLM about to read, draft, or
 edit the bootstrap wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:auto-bootstrap`
 
@@ -163,7 +163,7 @@ architecture` review item that triggered the re-run.
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file bootstrap.md
 ```
 
@@ -197,14 +197,14 @@ re-verified environment).
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md) —
   full field schema, body-section table, validator behavior.
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   primary-author table; bootstrap's single-owner rule and
   continue-with-review-item policy on architecture issues.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, link form, `<change-logs>` rules.
-- [`skills/auto-bootstrap/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/auto-bootstrap/SKILL.md) —
+- [`skills/auto-bootstrap/SKILL.md`](../skills/auto-bootstrap/SKILL.md) —
   the authoring skill itself; verification sequence and archive
   semantics.
 - `body_schemas/bootstrap.xsd` — the source of truth for required vs

@@ -22,7 +22,7 @@ vocabulary).
 
 This rule is the working contract for any LLM about to read, draft, or
 edit the domain wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:domain` (or `/a4:arch` for limited cases)
 
@@ -138,7 +138,7 @@ Create the section if absent. The drift detector checks for `domain`
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file domain.md
 ```
 
@@ -173,16 +173,16 @@ propagate component renames or new component additions, plus
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md) —
   full field schema, body-section table, validator behavior.
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   why domain has a limited-shared in-situ edit allowance with
   architecture; the structural-change boundary.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, link form, `<change-logs>` rules.
-- [`skills/domain/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/domain/SKILL.md) —
+- [`skills/domain/SKILL.md`](../skills/domain/SKILL.md) —
   the primary authoring skill.
-- [`skills/arch/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md) —
+- [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) —
   Phase 3 b3 decision table for in-situ domain edits from arch.
 - `body_schemas/domain.xsd` — the source of truth for required vs
   optional sections.

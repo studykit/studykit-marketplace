@@ -24,7 +24,7 @@ Spike tasks are produced by `/a4:task` (single ad-hoc) and consumed by
 
 This rule is the working contract for any LLM about to read, draft, or
 edit a spike task. The full schema and rationale live in
-[`references/frontmatter-schema.md §Task`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Task`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:task`
 
@@ -237,7 +237,7 @@ tags, same-tag nesting, H1 in body — are documented in
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file task/spike/<id>-<slug>.md
 ```
 
@@ -280,20 +280,20 @@ also without committing.
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Task`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Task`](../references/frontmatter-schema.md) —
   full field schema, kind semantics, lifecycle, initial-status policy,
   spike sidecar convention, and validator behavior.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, blank-line discipline, link form,
   `<change-logs>` / `<log>` rules.
 - [`a4-task-feature-authoring.md`](a4-task-feature-authoring.md) —
   feature-task contract (regular implementation work).
 - [`a4-task-bug-authoring.md`](a4-task-bug-authoring.md) — bug-task
   contract (reproduction + fixed criteria).
-- [`skills/task/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/task/SKILL.md) —
+- [`skills/task/SKILL.md`](../skills/task/SKILL.md) —
   the authoring skill itself; this rule complements it for read/edit
   contexts where the skill is not invoked.
-- [`skills/task/references/discard.md`](${CLAUDE_PLUGIN_ROOT}/skills/task/references/discard.md) —
+- [`skills/task/references/discard.md`](../skills/task/references/discard.md) —
   the discard procedure (D1–D6) loaded by `/a4:task discard`.
 - `body_schemas/task.xsd` — the source of truth for required vs
   optional sections; the `a4-section-enum` rule's bullet block is

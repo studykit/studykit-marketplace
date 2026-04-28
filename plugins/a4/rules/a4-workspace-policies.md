@@ -16,12 +16,12 @@ cross-cutting policies — they do not redefine them.
 
 The deeper specs live in `references/`:
 
-- [`frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) — full field schema, lifecycle tables, validator behavior.
-- [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) — body tag form, blank-line discipline, link form, `<change-logs>` / `<log>` rules, wiki update protocol.
-- [`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) — primary-author table, cross-stage feedback policy.
-- [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) — review-item walk procedure.
-- [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md) — `#<id>` commit subject form.
-- [`spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) — when a spec is warranted.
+- [`frontmatter-schema.md`](../references/frontmatter-schema.md) — full field schema, lifecycle tables, validator behavior.
+- [`body-conventions.md`](../references/body-conventions.md) — body tag form, blank-line discipline, link form, `<change-logs>` / `<log>` rules, wiki update protocol.
+- [`wiki-authorship.md`](../references/wiki-authorship.md) — primary-author table, cross-stage feedback policy.
+- [`iterate-mechanics.md`](../references/iterate-mechanics.md) — review-item walk procedure.
+- [`commit-message-convention.md`](../references/commit-message-convention.md) — `#<id>` commit subject form.
+- [`spec-triggers.md`](../references/spec-triggers.md) — when a spec is warranted.
 
 Read those before deviating from the rules below. This rule is the
 **reminder card**, not the spec.
@@ -55,7 +55,7 @@ entry is the writer's.
   number space.
 - Allocate via:
   ```bash
-  uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+  uv run "../scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
   ```
 - **Never** invent, reuse, or renumber an id. Gaps are fine — the
   Stop hook will not flag them.
@@ -134,7 +134,7 @@ Rules:
 
 Each wiki page has exactly one primary author skill. Other skills may
 edit only under the limited in-situ rules in
-[`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md);
+[`wiki-authorship.md`](../references/wiki-authorship.md);
 everything else flows through review items.
 
 Quick-reference summary (full table is in `wiki-authorship.md`):
@@ -176,7 +176,7 @@ upstream issue is fixed**:
   useful. → **continue + review item**.
 
 Stage-by-stage decisions are tabulated in
-[`wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)
+[`wiki-authorship.md`](../references/wiki-authorship.md)
 §Cross-stage feedback policy. Highlights:
 
 - `roadmap`, `run` Step 4, `roadmap-reviewer` → **stop** on arch / UC
@@ -190,7 +190,7 @@ When walking review items in any iterate mode (`usecase iterate`,
 `domain iterate`, `arch iterate`, `roadmap iterate`, `run iterate`):
 
 - Filter the backlog per the stage's filter expression
-  (see [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) §1).
+  (see [`iterate-mechanics.md`](../references/iterate-mechanics.md) §1).
 - **Pick → in-progress** via `transition_status.py --to in-progress`.
 - **Resolve → resolved** via `transition_status.py --to resolved`.
 - **Discard → discarded** via `transition_status.py --to discarded`.
@@ -226,7 +226,7 @@ Conventional-Commits prefix. The `#<id>` prefix is what makes
 
 Per-skill commit-point details (when to commit, which files to stage)
 live in each SKILL.md's "Commit Points" section. Subject form is
-[`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md)'s
+[`commit-message-convention.md`](../references/commit-message-convention.md)'s
 job.
 
 ## 10. Universally-applicable Don'ts

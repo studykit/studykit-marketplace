@@ -25,7 +25,7 @@ hand off to implementation when their `<flow>` / `<validation>` /
 
 This rule is the working contract for any LLM about to read, draft, or
 edit a UC file. The full schema and rationale live in
-[`references/frontmatter-schema.md §Use case`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Use case`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:usecase` or `/a4:auto-usecase`
 
@@ -51,7 +51,7 @@ If you must read a UC to answer a question, prefer
 
 Use cases stay at the **user level** — what the actor does, not what
 the system does internally. Banned terms and conversion examples live
-in `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md`.
+in `../skills/usecase/references/abstraction-guard.md`.
 A UC that says "the system stores the record in PostgreSQL" is wrong
 shape; "the user submits the form and sees a confirmation" is right.
 Internal mechanics belong to `architecture.md` and tasks.
@@ -223,7 +223,7 @@ close guard re-surfaces unresolved impact at session close.
 ## Splitting a UC — preserve traceability
 
 When the conversation reveals a UC is too large (read
-`${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-splitting.md`
+`../skills/usecase/references/usecase-splitting.md`
 for the splitting guide), the protocol is:
 
 1. Confirm the split with the user.
@@ -253,7 +253,7 @@ tags, same-tag nesting, H1 in body — are documented in
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file usecase/<id>-<slug>.md
 ```
 
@@ -295,21 +295,21 @@ state — typically `/a4:domain` (cross-cutting concept extraction) or
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Use case`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Use case`](../references/frontmatter-schema.md) —
   full field schema, lifecycle, transition rules, validator behavior.
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   primary-author table, in-situ edit allowances, cross-stage feedback
   policy (continue + review item vs stop).
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, blank-line discipline, link form,
   `<change-logs>` / `<log>` rules, wiki update protocol.
-- [`skills/usecase/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md) —
+- [`skills/usecase/SKILL.md`](../skills/usecase/SKILL.md) —
   the authoring skill itself; this rule complements it for read/edit
   contexts where the skill is not invoked.
-- [`skills/usecase/references/abstraction-guard.md`](${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md) —
+- [`skills/usecase/references/abstraction-guard.md`](../skills/usecase/references/abstraction-guard.md) —
   banned-term list and conversion examples for keeping UCs at the
   user level.
-- [`skills/usecase/references/usecase-splitting.md`](${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-splitting.md) —
+- [`skills/usecase/references/usecase-splitting.md`](../skills/usecase/references/usecase-splitting.md) —
   the splitting guide.
 - `body_schemas/usecase.xsd` — the source of truth for required vs
   optional sections; the `a4-section-enum` rule's bullet block is

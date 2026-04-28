@@ -23,7 +23,7 @@ single-author rule.
 
 This rule is the working contract for any LLM about to read, draft, or
 edit the architecture wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:arch`
 
@@ -123,7 +123,7 @@ tags, same-tag nesting, H1 in body — are documented in
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file architecture.md
 ```
 
@@ -163,17 +163,17 @@ work.
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md) —
   full field schema, body-section table, validator behavior.
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   primary-author table, why architecture is more restrictive than
   domain, cross-stage stop/continue policy.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, blank-line discipline, link form,
   `<change-logs>` rules, wiki update protocol.
-- [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) —
+- [`references/iterate-mechanics.md`](../references/iterate-mechanics.md) —
   the iterate procedure and close guard.
-- [`skills/arch/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md) —
+- [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) —
   the authoring skill itself; this rule complements it for read/edit
   contexts where the skill is not invoked.
 - `body_schemas/architecture.xsd` — the source of truth for required

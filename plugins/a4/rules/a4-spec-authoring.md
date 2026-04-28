@@ -22,9 +22,9 @@ retired ADR family; design rationale lives inline as
 
 This rule is the working contract for any LLM about to read, draft, or
 edit a spec file. The full schema and rationale live in
-[`references/frontmatter-schema.md §Spec`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
+[`references/frontmatter-schema.md §Spec`](../references/frontmatter-schema.md);
 trigger detection lives in
-[`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md).
+[`references/spec-triggers.md`](../references/spec-triggers.md).
 
 ## When a spec is warranted
 
@@ -229,7 +229,7 @@ Frontmatter list paths are different (plain strings, no `.md`).
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file spec/<id>-<slug>.md
 ```
 
@@ -266,15 +266,15 @@ in the working tree for the user to commit at their convenience.
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Spec`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Spec`](../references/frontmatter-schema.md) —
   full field schema, lifecycle, and validator behavior.
-- [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md) —
+- [`references/spec-triggers.md`](../references/spec-triggers.md) —
   conversational and content-aware trigger catalog, plus
   anti-patterns.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, blank-line discipline, link form,
   `<change-logs>` / `<log>` rules.
-- [`skills/spec/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/spec/SKILL.md) —
+- [`skills/spec/SKILL.md`](../skills/spec/SKILL.md) —
   the authoring skill itself; this rule complements it for
   read/edit contexts where the skill is not invoked.
 - `body_schemas/spec.xsd` — the source of truth for required vs

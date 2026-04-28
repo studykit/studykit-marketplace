@@ -46,8 +46,8 @@ When you only need one section of an a4 file, prefer
 `extract_section.py` over reading the entire markdown:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/extract_section.py" <file> <tag>
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/extract_section.py" <file> --list
+uv run "../scripts/extract_section.py" <file> <tag>
+uv run "../scripts/extract_section.py" <file> --list
 ```
 
 The script reuses the same fence-aware section scanner as
@@ -63,5 +63,5 @@ pre-commit hook re-checks for drift whenever any XSD or this rule file
 is staged. To sync after changing an XSD:
 
 ```bash
-uv run plugins/a4/scripts/generate_section_enum.py --write
+uv run ../scripts/generate_section_enum.py --write
 ```

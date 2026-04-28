@@ -21,7 +21,7 @@ roadmap drives `/a4:run`'s cycle planning and the order
 
 This rule is the working contract for any LLM about to read, draft, or
 edit the roadmap wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+[`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:roadmap`
 
@@ -137,7 +137,7 @@ to `resolved`.
 To validate manually before commit:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
+uv run "../scripts/validate_body.py" \
   "<project-root>/a4" --file roadmap.md
 ```
 
@@ -176,14 +176,14 @@ milestone narrative and dependency graph.
 
 ## Cross-references
 
-- [`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md) —
+- [`references/frontmatter-schema.md §Wiki pages`](../references/frontmatter-schema.md) —
   full field schema, body-section table, validator behavior.
-- [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md) —
+- [`references/wiki-authorship.md`](../references/wiki-authorship.md) —
   primary-author table; `/a4:roadmap`-stops policy on upstream
   issues.
-- [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md) —
+- [`references/body-conventions.md`](../references/body-conventions.md) —
   tag form, link form, `<change-logs>` rules.
-- [`skills/roadmap/SKILL.md`](${CLAUDE_PLUGIN_ROOT}/skills/roadmap/SKILL.md) —
+- [`skills/roadmap/SKILL.md`](../skills/roadmap/SKILL.md) —
   the authoring skill itself.
 - `body_schemas/roadmap.xsd` — the source of truth for required vs
   optional sections.
