@@ -4,7 +4,7 @@ A spike task at `a4/task/spike/<id>-<slug>.md` is a **time-boxed exploration to 
 
 Lifecycle is identical across task kinds (`feature` / `bug` / `spike`). Spike tasks are produced by `/a4:task` (single ad-hoc) and consumed by `/a4:run` (the implement + test loop) and the `task-implementer` agent.
 
-Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md).
+Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./body-conventions.md`.
 
 ## How to author — always via `/a4:task`
 
@@ -92,7 +92,7 @@ When the chosen initial status is `complete`, the spike is asserted to already b
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see [`./body-conventions.md`](./body-conventions.md).)
+(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required (enforced by `../scripts/body_schemas/task.xsd`):**
 
@@ -134,7 +134,7 @@ When a spike completes (or fails), the user manually `git mv`s the directory to 
 - **`kind:` value mismatched against folder** — a file under `a4/task/spike/` must declare `kind: spike`. Mismatched declarations are a folder-routing error and should be re-located.
 - **`files:` paths under the project source tree, not under `spike/<id>-<slug>/`** — breaks the throwaway contract; the writer refuses.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in [`./body-conventions.md`](./body-conventions.md).)
+(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 To validate manually before commit:
 

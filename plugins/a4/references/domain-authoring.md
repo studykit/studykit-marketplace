@@ -2,7 +2,7 @@
 
 `a4/domain.md` is the **shared vocabulary wiki**. It catalogs the cross-cutting concepts every UC, spec, and architecture component references — entities, value objects, lifecycle states. The domain page is downstream of UCs (concepts surface during interview) and upstream of architecture (components depend on the agreed vocabulary).
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
 
 ## How to author — always via `/a4:domain` (or `/a4:arch` for limited cases)
 
@@ -12,7 +12,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/do
 
 ## Authorship — who can edit this page
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md):
+Per `./wiki-authorship.md`:
 
 - **`/a4:domain` is the primary author.** Owns all body sections.
 - **`/a4:arch` is allowed limited in-situ edits** when concept changes surface during component design. The b3 decision table in `../skills/arch/SKILL.md` Phase 3 enumerates exactly what arch can change in-situ:

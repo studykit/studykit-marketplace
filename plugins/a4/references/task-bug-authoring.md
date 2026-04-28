@@ -4,7 +4,7 @@ A bug task at `a4/task/bug/<id>-<slug>.md` is a **defect fix** — production co
 
 Lifecycle is identical across task kinds (`feature` / `bug` / `spike`). Bug tasks are produced by `/a4:task` (single ad-hoc) and consumed by `/a4:run` (the implement + test loop) and the `task-implementer` agent.
 
-Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md).
+Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./body-conventions.md`.
 
 ## How to author — always via `/a4:task`
 
@@ -93,7 +93,7 @@ When the chosen initial status is `complete`, the fix is asserted to already be 
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see [`./body-conventions.md`](./body-conventions.md).)
+(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required (enforced by `../scripts/body_schemas/task.xsd`):**
 
@@ -119,7 +119,7 @@ Unknown kebab-case tags are tolerated by the XSD's openContent.
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/bug/` must declare `kind: bug`. Mismatched declarations are a folder-routing error and should be re-located.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in [`./body-conventions.md`](./body-conventions.md).)
+(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 To validate manually before commit:
 

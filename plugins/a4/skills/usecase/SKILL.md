@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Use Case Discovery Facilitator
 
-> **Authoring contracts:** the contract for `a4/usecase/**/*.md` — frontmatter, body sections, lifecycle (8 states), writer ownership, abstraction discipline, in-situ wiki nudge, splitting protocol — lives in [`references/usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md). This skill is also primary author for `context.md`, `actors.md`, and `nfr.md`; see [`references/context-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/context-authoring.md), [`references/actors-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md), [`references/nfr-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md). Review-item shape: [`references/review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md).
+> **Authoring contracts:** UC files — `${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md`. Wiki pages this skill primary-authors: `${CLAUDE_PLUGIN_ROOT}/references/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md`. Review-item shape: `${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md`.
 
 A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. The conversation progressively produces **Use Cases** — concrete descriptions of how users interact with the system, grounded in real situations — together with the cross-cutting wiki pages that frame them (context, actors, domain, NFRs).
 
@@ -31,15 +31,7 @@ a4/
   mock/                       # Optional: HTML mocks per screen group
 ```
 
-Wiki pages (`context.md`, `actors.md`, `domain.md`, `nfr.md`) are flat at `a4/` root. Issues (UC, review) each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are **not files** — they are produced on demand by `compass` or by grep over frontmatter.
-
-## Frontmatter Schemas
-
-UC frontmatter / body / 8-state lifecycle / writer ownership / `implementing → draft` ban / `shipped` post-rules: see [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md).
-
-Review item shape (`review/<id>-<slug>.md`, `kind: finding | gap | question`, `target:`, `source:`, `wiki_impact:`, status cascade): see [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md).
-
-Wiki page schemas for `context.md` / `actors.md` / `nfr.md` (this skill's primary-author pages): each is a single-section page with `type:` matching the file basename and an `updated:` ISO date. Per-page body shape lives in [`rules/a4-context-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md), [`rules/a4-actors-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-actors-authoring.md), and [`rules/a4-nfr-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-nfr-authoring.md).
+Wiki pages are flat at `a4/` root. Issues each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are produced on demand by `compass` or by grep over frontmatter — not files.
 
 ## Id Allocation
 
@@ -49,35 +41,26 @@ Every new issue file gets the next globally-unique id:
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
-Run this **immediately before** writing a new UC, review item, etc. Ids are monotonic across the whole workspace (GitHub-issue semantics); do not reuse or renumber.
+Run this **immediately before** writing a new UC, review item, etc. Ids are monotonic across the whole workspace; do not reuse or renumber.
 
 ## Body Conventions
 
-Body tag form, link form, `<change-logs>` audit trail, and the Wiki Update Protocol live in [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md). The UC-specific in-situ wiki nudge procedure (apply vs defer, close guard) is in [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md) §In-situ wiki nudge.
+Body tag form, link form, `<change-logs>` audit trail, and the Wiki Update Protocol live in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`.
 
 ## Modes
 
-Determine the mode from `$ARGUMENTS` and the current `a4/` state:
-
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run the iteration entry procedure in [`references/iteration-entry.md`](${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/iteration-entry.md). Mechanics shared across all a4 iterate flows are in [`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md); the per-skill procedure is the usecase-specific addendum on top.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md`.
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 
 ## Session Task List
 
-Use the task list as a live workflow map. The user should be able to check the task list at any point and understand exactly where they are and what remains.
+Use the task list as a live workflow map.
 
-**Naming convention:** phase-level tasks use the phase name. Sub-tasks use `<phase prefix>: <detail>`. Sub-tasks are created **dynamically** when entering a phase — not all upfront.
+**Naming convention:** phase-level tasks use the phase name. Sub-tasks use `<phase prefix>: <detail>` and are created **dynamically** when entering a phase.
 
-**Task lifecycle:**
-- Mark phase-level task `in_progress` when entering the phase.
-- Create sub-tasks as work items are identified within the phase.
-- Mark sub-tasks `completed` as each is confirmed.
-- Mark phase-level task `completed` when all sub-tasks are done.
-- If the user navigates back to a completed phase, set it back to `in_progress`.
-
-**New workspace** — create phase-level tasks at session start:
+**New workspace** — initial tasks:
 - `"Step 1: Receive idea and write context.md"` → `in_progress`
 - `"Discovery: Use cases"` → `pending`
 - `"Platform capabilities audit"` → `pending`
@@ -85,24 +68,22 @@ Use the task list as a live workflow map. The user should be able to check the t
 - `"Wrap Up: Reviewer validation"` → `pending`
 - `"Wrap Up: Record review items"` → `pending`
 
-Domain Model extraction is **out of scope** for this skill — it lives in `/a4:domain`. The Discovery loop captures actors and per-UC bodies; cross-cutting concept/relationship/state work happens after the UC set settles, in a separate skill invocation.
+Domain Model extraction is **out of scope** for this skill — it lives in `/a4:domain`.
 
 **Iteration** — adjust based on the work backlog:
 - `"Review open items and backlog"` → `in_progress`
-- One task per selected item (e.g., `"Resolve review/6: missing validation on UC-3"`)
-- `"Wrap Up: Explorer review"` → `pending`
-- `"Wrap Up: Reviewer validation"` → `pending`
-- `"Wrap Up: Record review items"` → `pending`
+- One task per selected item
+- `"Wrap Up: ..."` → `pending` (3 wrap-up tasks)
 
-**Conditional tasks** — add when they become relevant:
+**Conditional tasks** — add when relevant:
 - `"Discovery: Relationship analysis"` — when 5+ UCs are confirmed
 - `"UI screen grouping"` — when UI use cases are confirmed
 - `"Mock generation"` — when the user agrees to create mocks
 - `"Non-functional requirements"` — when the user has NFRs to capture
 
-## Interview Flow
+## Workflow
 
-### 1. Receive the Idea (new workspace only)
+### Step 1: Receive the Idea (new workspace only)
 
 Restate the idea back in one sentence to confirm understanding. Then immediately:
 
@@ -111,182 +92,35 @@ Restate the idea back in one sentence to confirm understanding. Then immediately
 3. Tell the user: "I've started `a4/context.md`. UC and wiki files will appear as we confirm them."
 4. Mark "Step 1" completed. Mark "Discovery: Use cases" in_progress.
 
-### 2. Discovery Loop
+### Steps 2–11: Interview phases
 
-Uncover enough context to write concrete Use Cases by targeting four gaps: **What's happening now?** (current situation/trigger), **Who's involved?** (people → actors), **What should change?** (desired action → flow), **What does success look like?** (outcome). Follow the conversation naturally, targeting whichever gap is most unclear.
+| Step | Phase | Procedure |
+|------|-------|-----------|
+| 2 | Discovery loop (gaps + actor discovery) | `${CLAUDE_PLUGIN_ROOT}/references/usecase/discovery-loop.md` |
+| 3 | Progressive UC extraction | `${CLAUDE_PLUGIN_ROOT}/references/usecase/progressive-extraction.md` |
+| 3a | In-situ wiki nudge | `${CLAUDE_PLUGIN_ROOT}/references/usecase/in-situ-wiki-nudge.md` |
+| 4 | UC splitting | `references/usecase-splitting.md` |
+| 5 | Challenge mode shifts (Contrarian / Simplifier / Reframer) | `references/facilitation-techniques.md` |
+| 6 | Similar systems research (on request, after 3+ UCs) | `references/research-procedure.md` |
+| 7 | Platform capabilities audit | `${CLAUDE_PLUGIN_ROOT}/references/usecase/platform-capabilities-audit.md` |
+| 8 | UC relationship analysis (after 5+ UCs) | `references/usecase-relationships.md` |
+| 9 | UI screen grouping + (10) mock generation | `${CLAUDE_PLUGIN_ROOT}/references/usecase/ui-screen-grouping.md` |
+| 11 | Non-functional requirements | `${CLAUDE_PLUGIN_ROOT}/references/usecase/nfr-capture.md` |
 
-**Actor discovery.** When the conversation reveals a new person or system:
-1. Confirm the actor with the user (name, type `person`/`system`, role — privilege level, short description).
-2. If `a4/actors.md` does not exist, create it with frontmatter `type: actors`, `updated: <today>`, and a `<roster>` section containing an empty Actors table.
-3. Add the confirmed actor to the table. Use a slug identifier (`meeting-organizer`, `team-member`) that UC frontmatter can reference in `actors: [...]`.
-4. If the new actor justifies a wiki update (it usually does on first appearance), append a `<change-logs>` bullet with today's date and a markdown link to the causing UC, per the Wiki Update Protocol.
+### Wrap Up
 
-### 3. Progressive Use Case Extraction
+When the user indicates they're done, run `${CLAUDE_PLUGIN_ROOT}/references/usecase/wrap-up.md`: explorer → compose new UCs → reviewer → walk findings → wiki close guard → ready-gate → report.
 
-When the conversation reveals enough context, draft a Use Case and present it to the user for confirmation. Every UC has five required fields: **Actor**, **Goal**, **Situation**, **Flow**, **Expected Outcome**. Abstraction must stay at the user level — read `${CLAUDE_SKILL_DIR}/references/abstraction-guard.md` for the banned-term list and conversion examples.
+### Revising an `implementing` UC
 
-**How to present:**
+If the user asks to edit a UC currently at `status: implementing`, follow `${CLAUDE_PLUGIN_ROOT}/references/usecase/revising-implementing-uc.md` — confirm the `implementing → revising` transition before editing.
 
-> Based on what you've described, here's a Use Case:
->
-> **UC-draft. Share meeting summary**
-> - **Actor:** Meeting organizer
-> - **Goal:** Share key decisions with absent teammates quickly
-> - **Situation:** Just finished a 30-minute meeting; absent teammates need the outcome
-> - **Flow:** 1. Open the meeting record … 5. Send to the team channel
-> - **Expected Outcome:** Absent teammates receive a 3-line summary within minutes; organizer spends < 2 minutes instead of 20
->
-> Does this capture it? Anything to adjust?
-
-After the user confirms the core UC, **immediately drill into precision**:
-
-- **Validation** — input constraints, limits, required formats (user-visible, not system-internal).
-- **Error handling** — what the user sees when things fail.
-- **Boundary conditions** — empty input, maximum items, concurrent access, timeouts.
-
-Record these in the UC's body as `<validation>` / `<error-handling>` sections. Both are optional — omit when the UC has no meaningful constraints or failure modes.
-
-**Write the UC file on confirmation:**
-
-1. Derive a kebab-case slug from the title (`Share meeting summary` → `share-summary`).
-2. Run the id allocator (see Id Allocation) to get the next id `N`.
-3. Write `a4/usecase/<N>-<slug>.md` with the frontmatter schema above. Required body sections (per `body_schemas/usecase.xsd`): `<goal>`, `<situation>`, `<flow>` (numbered list), `<expected-outcome>`. Optional: `<validation>`, `<error-handling>`, `<dependencies>`, `<change-logs>`, `<log>` (writer-owned).
-4. Create a task `"Discovery: UC-<N> <title>"` and mark it completed.
-5. **In-situ nudge** (see next subsection) — offer to capture wiki impact if the UC introduces new actors, new concepts, or changes framing.
-
-### 3a. In-Situ Wiki Nudge
-
-After writing a UC file (and after any other significant issue change — new actor, domain concept, NFR, etc.), check whether the change affects existing wiki pages:
-
-- New actor → `actors.md` likely needs an entry.
-- Concept used across 3+ UCs → `domain.md` needs a glossary entry.
-- Scope broadening → `context.md` Problem Framing may need refinement.
-
-If yes, present the candidate updates and ask the user to confirm. For each confirmed update:
-
-1. Edit the affected wiki page — update the relevant `<section>` content, then append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. Create the `<change-logs>` section if it does not yet exist.
-2. Bump the wiki page's `updated:` frontmatter to today.
-
-Minor edits (typo, metadata-only) skip the nudge. Use judgment; the rule is "significant changes only — create, status transition, resolve."
-
-If the user defers the update, open a review item instead:
-
-1. Allocate id, write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: self`, `target: <causing issue path>`, and `wiki_impact: [<affected wiki basenames>]`.
-2. The wiki close guard (run at session close and by drift detection) surfaces the unresolved impact later.
-
-### 4. Use Case Splitting
-
-After a UC is confirmed, evaluate whether it is too large. Read `${CLAUDE_SKILL_DIR}/references/usecase-splitting.md` for the full splitting guide.
-
-When splitting a UC that has already been written to disk:
-1. Confirm the split with the user.
-2. Allocate new ids for each child UC.
-3. Write each child UC file.
-4. Delete the parent UC file (or keep it with `status: blocked` and `supersedes`-like `related: [<child paths>]` if the split history matters).
-5. Update any UC that referenced the parent via `depends_on` or `related`.
-
-### 5. Challenge Mode Shifts
-
-After sustained questioning in one direction, shift perspective to break habitual thinking. Three modes: Contrarian, Simplifier, Reframer. For detailed techniques and trigger conditions, read `${CLAUDE_SKILL_DIR}/references/facilitation-techniques.md`.
-
-### 6. Similar Systems Research (on request)
-
-Research is **not automatic** — only trigger when the user explicitly asks or agrees to a one-time nudge after 3+ confirmed use cases. For the full procedure (nudge timing, background agent launch, result handling), read `${CLAUDE_SKILL_DIR}/references/research-procedure.md`. Reports land in `a4/research/<label>.md`.
-
-### 7. Platform Capabilities Audit
-
-Mark "Discovery: Use cases" as `completed`. Mark "Platform capabilities audit" as `in_progress`.
-
-After all primary UCs are confirmed, perform a final audit for implicit platform capabilities — shared behaviors that multiple UCs assume but no UC defines (message input, conversation display, navigation, session restore, etc.).
-
-1. **Scan all UC flows** for user actions that appear across 3+ UCs but aren't themselves covered by any UC.
-2. **Present findings** to the user as a table (Assumed Capability | Referenced By | Example flow text). Ask whether to create UCs.
-3. **Create UCs** for confirmed gaps the same way as any other UC (allocate id, write `usecase/<id>-<slug>.md`). These UCs use `actors: [platform]` or a suitable system actor.
-4. Skip silently if no gaps are found.
-
-### 8. UC Relationship Analysis
-
-After 5+ UCs are confirmed, analyze and present relationships. Read `${CLAUDE_SKILL_DIR}/references/usecase-relationships.md`. Relationships are captured as:
-
-- **Dependencies** — `depends_on: [usecase/<id>-<slug>]` in the dependent UC's frontmatter.
-- **Reinforcements** — `related: [usecase/<id>-<slug>]` (soft ties) or body links — standard markdown link form.
-- **Groups** — `labels: [<group-slug>]`. Group definitions live as body text in `context.md` when useful.
-
-No separate section file is written — these are derived views, rendered by `compass` or by grep over frontmatter.
-
-### 9. UI Screen Grouping (if UI UCs exist)
-
-After UCs are confirmed, group UI-related UCs by screen. For each screen:
-1. Propose a group label (e.g., `screen-dashboard`) and add it to `labels:` in the involved UCs.
-2. Record the screen-navigation narrative inside `context.md`'s `<screens>` section (creating the section if absent — it is optional in `context.xsd`), with markdown links back to the participating UCs.
-
-### 10. Mock Generation (optional, per screen group)
-
-For each confirmed screen group, optionally generate an HTML mock at `a4/mock/<screen-slug>/`:
-
-1. Invoke `Agent(subagent_type: "a4:mock-html-generator")` with UCs in the group, layout requirements, and output path.
-2. Present the mock and gather feedback.
-3. Refine UCs from mock feedback.
-
-Mocks are suggested, not required.
-
-### 11. Non-Functional Requirements (optional)
-
-Ask the user once:
-
-> Are there non-functional requirements? Performance targets, security, scalability, accessibility, compliance. If not, we can skip this.
-
-If yes, write `a4/nfr.md` with frontmatter `type: nfr`, `updated: <today>`, and a `<requirements>` section containing a table (Description | Affected UCs via markdown links | Measurable criteria). Skip creating the file when there are no NFRs.
-
-## Wrapping Up
-
-The interview ends only when the user says so. Never conclude on your own — even if all gaps seem covered, the user may want to go deeper.
-
-This skill primary-authors `context.md`, `actors.md`, and `nfr.md` (per the workspace-wide policy at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md)). When iteration uncovers an issue in `domain.md` or `architecture.md`, **continue** with usecase work and emit a review item targeting the upstream wiki — do not edit it inline.
-
-When the user indicates they're done, mark `"Platform capabilities audit"` (or whichever phase task is currently `in_progress`) as `completed`, then proceed to **End Iteration** in `${CLAUDE_SKILL_DIR}/references/session-closing.md`. The short version:
-
-1. Launch `Agent(subagent_type: "a4:usecase-explorer")` to surface additional perspectives.
-2. Reflect accepted candidates (new UC files as above).
-3. Launch `Agent(subagent_type: "a4:usecase-reviewer")`. The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md`.
-4. Walk the user through each emitted review item. Resolve in place (edit the target UC / wiki page, set `status: resolved` in the review item via `transition_status.py`, which appends the `<log>` entry) or defer (leave `status: open`).
-5. **Wiki close guard** — for each resolved review item with non-empty `wiki_impact`, verify each referenced wiki page has a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing.
-6. **Ready-gate.** Before the final summary, per-UC ask the user whether each UC still at `status: draft` or `status: revising` is ready to hand off (or re-hand-off) to implementation. Accept natural-language answers:
-   - yes / ok / 확정 / `"mark ready"` → call the writer:
-     ```bash
-     uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-       "$(git rev-parse --show-toplevel)/a4" \
-       --file "usecase/<id>-<slug>.md" --to ready \
-       --reason "user confirmed ready-gate"
-     ```
-   - no / `"아직"` / `"still iterating"` / silence → leave at current status.
-
-   Only `draft` and `revising` UCs are offered. UCs at `ready`, `implementing`, `shipped`, `superseded`, `discarded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC at any status other than `ready`, so this gate is the hand-off point between spec work and coding.
-7. Report a summary: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened, review items resolved. Suggest `/a4:domain` as the next step (cross-cutting concept extraction). If `a4/domain.md` already exists and looks current, suggest `/a4:arch` instead.
-
-## Revising an `implementing` UC
-
-When the user asks to edit a UC that is currently `status: implementing` (e.g., "UC 5 Flow 수정해줘", "fix the spec for UC-7"), do not silently edit the body. Instead:
-
-1. **Confirm** the transition: "UC X is currently `implementing`. Edit in-place means flipping to `revising` (pauses code work; resets `progress`/`failing` tasks to `pending`; `complete` tasks stay). OK?"
-2. On user confirmation, call the writer:
-   ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-     "$(git rev-parse --show-toplevel)/a4" \
-     --file "usecase/<id>-<slug>.md" --to revising \
-     --reason "user-triggered spec edit"
-   ```
-   The script cascades task status automatically.
-3. Walk through the edit with the user (Flow, actors, Validation, Error handling) — same protocol as iteration on a `draft` UC. When the user indicates the spec is done, Step 6 ready-gate flips `revising → ready`.
-
-If `task-implementer` previously triggered the flip (a review item with `source: task-implementer` exists for this UC), walk those review items first — they describe exactly what ambiguity blocked implementation.
-
-### Agent Usage
+## Agent Usage
 
 Reviews, explorations, and mock generation spawn fresh subagents. Context is passed via file paths, not agent memory.
 
-- **Reviewer:** `Agent(subagent_type: "a4:usecase-reviewer")`. Pass `a4/` path and any prior-session review item ids (so the reviewer can check whether prior findings were addressed).
-- **Explorer:** `Agent(subagent_type: "a4:usecase-explorer")`. Pass `a4/` path and the expected report output path (`a4/research/<label>.md`).
+- **Reviewer:** `Agent(subagent_type: "a4:usecase-reviewer")`. Pass `a4/` path and any prior-session review item ids.
+- **Explorer:** `Agent(subagent_type: "a4:usecase-explorer")`. Pass `a4/` path and the expected report output path.
 - **Mock generator:** `Agent(subagent_type: "a4:mock-html-generator")`. Pass participating UC paths, layout requirements, and output directory.
 
-**Execution order in Wrap Up:** explorer first (find gaps and new UC candidates), then reviewer (validates the full set).
+**Execution order in Wrap Up:** explorer first, then reviewer.

@@ -2,7 +2,7 @@
 
 A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They are produced by `/a4:usecase` (Socratic interview) or `/a4:auto-usecase` (forward-shape draft from existing input), and they hand off to implementation when their `<flow>` / `<validation>` / `<error-handling>` close enough to drive AC for tasks.
 
-Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), [`./wiki-authorship.md`](./wiki-authorship.md), [`./body-conventions.md`](./body-conventions.md).
+Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), `./wiki-authorship.md`, `./body-conventions.md`.
 
 ## How to author — always via `/a4:usecase` or `/a4:auto-usecase`
 
@@ -15,7 +15,7 @@ If you must read a UC to answer a question, prefer `extract_section.py <file> <t
 
 ### Abstraction discipline
 
-Use cases stay at the **user level** — what the actor does, not what the system does internally. Banned terms and conversion examples live in [`../skills/usecase/references/abstraction-guard.md`](../skills/usecase/references/abstraction-guard.md). A UC that says "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
+Use cases stay at the **user level** — what the actor does, not what the system does internally. Banned terms and conversion examples live in `../skills/usecase/references/abstraction-guard.md`. A UC that says "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
 
 ## Frontmatter contract (do not deviate)
 
@@ -83,7 +83,7 @@ Writer rules (UC-specific):
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see [`./body-conventions.md`](./body-conventions.md).)
+(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required (enforced by `../scripts/body_schemas/usecase.xsd`):**
 
@@ -112,7 +112,7 @@ Authoring or revising a UC frequently has side-effects on wiki pages:
 - New screen group → `context.md` `<screens>` section + UC `labels:`.
 - New non-functional requirement → `nfr.md` `<requirements>` row.
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md), the `usecase` skill is the **primary author** for `context.md`, `actors.md`, and `nfr.md`, and may edit them in-situ. For `domain.md` and `architecture.md`, **continue** the UC work and emit a review item targeting the upstream wiki — do not edit those inline.
+Per `./wiki-authorship.md`, the `usecase` skill is the **primary author** for `context.md`, `actors.md`, and `nfr.md`, and may edit them in-situ. For `domain.md` and `architecture.md`, **continue** the UC work and emit a review item targeting the upstream wiki — do not edit those inline.
 
 When applying an in-situ wiki edit:
 
@@ -124,7 +124,7 @@ When deferring, open a review item with `kind: gap`, `source: self`, `target: <c
 
 ## Splitting a UC — preserve traceability
 
-When the conversation reveals a UC is too large (read [`../skills/usecase/references/usecase-splitting.md`](../skills/usecase/references/usecase-splitting.md) for the splitting guide), the protocol is:
+When the conversation reveals a UC is too large (read `../skills/usecase/references/usecase-splitting.md` for the splitting guide), the protocol is:
 
 1. Confirm the split with the user.
 2. Allocate new ids for each child UC.
@@ -139,7 +139,7 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 - **Required section missing** (`<goal>`, `<situation>`, `<flow>`, `<expected-outcome>`) → `body-xsd`.
 - **Hand-edited `implemented_by:`** → not a validator error per se, but the next `refresh_implemented_by.py` run silently overwrites the field. Never depend on hand-written values.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in [`./body-conventions.md`](./body-conventions.md).)
+(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 To validate manually before commit:
 

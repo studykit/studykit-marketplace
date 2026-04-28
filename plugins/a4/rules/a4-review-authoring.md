@@ -10,12 +10,12 @@ When **authoring or editing** any review file, read these first. (Review items a
 
 ## Required reading before authoring
 
-- [`../references/review-authoring.md`](../references/review-authoring.md) — kinds (finding/gap/question), emitter sources, frontmatter, lifecycle, cascade, close guard, body shape, common mistakes, "Don't" list.
-- [`a4-workspace-policies.md`](a4-workspace-policies.md) — workspace-wide policies (also auto-loaded).
+- `../references/review-authoring.md` — kinds (finding/gap/question), emitter sources, frontmatter, lifecycle, cascade, close guard, body shape, common mistakes, "Don't" list.
+- `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Skill / scripts / schema
 
-- Drift scan → `/a4:drift` (skill: [`../skills/drift/SKILL.md`](../skills/drift/SKILL.md)). Writes `source: drift-detector`.
+- Drift scan → `/a4:drift` (skill: `../skills/drift/SKILL.md`). Writes `source: drift-detector`.
 - Resolve → iterate flows: `/a4:usecase iterate`, `/a4:arch iterate`, `/a4:domain iterate`, `/a4:roadmap iterate`, `/a4:run iterate`.
 - Status flips → `../scripts/transition_status.py` (writer-only; handles `target: usecase/X discarded` cascade).
 - Validate → `uv run ../scripts/validate_body.py "<project-root>/a4" --file review/<id>-<slug>.md`

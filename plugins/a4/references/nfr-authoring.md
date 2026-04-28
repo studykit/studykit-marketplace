@@ -2,7 +2,7 @@
 
 `a4/nfr.md` is the **non-functional requirements wiki**. It records performance targets, security requirements, scalability bounds, accessibility requirements, compliance constraints, and other cross-cutting properties that affect every UC and architecture decision. NFRs are optional — small or exploratory projects may have none, in which case the file simply does not exist.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
 
 ## How to author — always via `/a4:usecase`
 
@@ -14,7 +14,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/nf
 
 ## Authorship — who can edit this page
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md):
+Per `./wiki-authorship.md`:
 
 - **`/a4:usecase` is the primary author.** Owns all NFR rows. In-situ edits from `/a4:usecase` are unrestricted.
 - **`/a4:arch` may append a footnote** pointing to the architecture decision that *responds* to an existing NFR row. No new NFR rows from arch, no edits to existing NFR text — only footnote annotations. The intent is to preserve the arch ↔ NFR linkage without inverting authorship.

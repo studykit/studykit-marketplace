@@ -1,0 +1,55 @@
+# Domain Wrap Up
+
+Domain extraction ends only when the user says so. When the user indicates they're done, run this procedure.
+
+## 1. Pre-flight consistency check
+
+Read `domain.md` end-to-end. Confirm:
+
+- Every concept in `<relationships>` exists in `<concepts>`.
+- Every state-diagram concept in `<state-transitions>` exists in `<concepts>`.
+- Every UC referenced from `Referenced By` is an existing UC file.
+
+Resolve obvious gaps before launching the reviewer.
+
+## 2. Launch domain-reviewer
+
+Spawn:
+
+```
+Agent(subagent_type: "a4:domain-reviewer")
+```
+
+Pass:
+
+- `a4/` absolute path
+- Prior-session open review items that target `domain` (so the reviewer can skip duplicates)
+
+The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.md` (using `allocate_id.py`) and returns a summary.
+
+## 3. Walk findings
+
+For each emitted review item, ordered by priority then id, present to the user and resolve or defer:
+
+- **Fix now** — edit `domain.md` (and any cross-referenced file). Flip the review item `status: resolved` via `transition_status.py`, and add a dated `<change-logs>` bullet on each modified wiki page.
+- **Defer** — leave `status: open`. Capture the deferral reason in conversation notes / handoff.
+- **Discard** — set `status: discarded` via `scripts/transition_status.py`.
+
+## 4. Wiki close guard
+
+For each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing.
+
+## 5. Report
+
+Summarize to the user:
+
+- Phases completed this session
+- Concepts added / revised
+- Relationships added / revised
+- State diagrams added / revised
+- Review items opened / resolved / still open
+- Suggested next step: `/a4:arch` (or `/a4:arch iterate` if architecture exists and the domain change affects it)
+
+## Cross-stage findings
+
+If domain work surfaces an issue in another wiki (e.g., a rename invalidates a `architecture.md` component name), do not edit that wiki — emit a review item with the appropriate `target:`. Per `../wiki-authorship.md` §Cross-stage feedback, this skill is **continue + review item** for upstream findings: finish domain wrap-up, leave the review item open for the owning skill's `iterate` mode.

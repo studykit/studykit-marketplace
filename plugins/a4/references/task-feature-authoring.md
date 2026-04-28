@@ -4,7 +4,7 @@ A feature task at `a4/task/feature/<id>-<slug>.md` is a **unit of regular implem
 
 Lifecycle is identical across task kinds (`feature` / `bug` / `spike`). Tasks are produced by `/a4:task` (single ad-hoc) or `/a4:roadmap` (UC-batch); they are consumed by `/a4:run` (the implement + test loop) and the `task-implementer` agent.
 
-Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), [`./spec-triggers.md`](./spec-triggers.md), [`./body-conventions.md`](./body-conventions.md).
+Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./spec-triggers.md`, `./body-conventions.md`.
 
 ## How to author — always via `/a4:task` or `/a4:roadmap`
 
@@ -51,7 +51,7 @@ updated: YYYY-MM-DD
 
 A `feature` task with **both** anchors empty has no AC source. The authoring skill asks where the AC will be drawn from; downgrade to `spike` (and move the file to `a4/task/spike/`) if the work is genuinely exploratory, or attach an anchor.
 
-Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal is in the body: when the description implies a user-facing scope no existing UC covers, or an architectural choice no existing spec records, this is **content-aware upward propagation** per [`./spec-triggers.md`](./spec-triggers.md). Surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing. The user resolves by authoring the upstream and re-linking, or closing the review with `discarded` + rationale.
+Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated features without a UC group can legitimately stay anchorless. The deeper signal is in the body: when the description implies a user-facing scope no existing UC covers, or an architectural choice no existing spec records, this is **content-aware upward propagation** per `./spec-triggers.md`. Surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing. The user resolves by authoring the upstream and re-linking, or closing the review with `discarded` + rationale.
 
 ### Lifecycle and writer ownership
 
@@ -101,7 +101,7 @@ When the chosen initial status is `complete`, the work is asserted to already be
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see [`./body-conventions.md`](./body-conventions.md).)
+(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required (enforced by `../scripts/body_schemas/task.xsd`):**
 
@@ -132,7 +132,7 @@ Unknown kebab-case tags are tolerated by the XSD's openContent.
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/feature/` must declare `kind: feature`. Mismatched declarations are a folder-routing error and should be re-located.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in [`./body-conventions.md`](./body-conventions.md).)
+(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 To validate manually before commit:
 

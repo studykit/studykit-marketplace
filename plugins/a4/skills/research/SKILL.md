@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, WebSearch, WebFetch
 
 # Research Facilitator
 
-A standalone research skill. Investigates a technical topic or compares alternatives, and saves the result as a portable markdown artifact at `./research/<slug>.md` (relative to the current working directory / project root). The output is designed to be **cited** by spec files (`a4/spec/<id>-<slug>.md`) or any other artifact via `register_research_citation.py` (which writes both frontmatter and a body markdown link) — not consumed as a decision itself.
+A standalone research skill. Investigates a technical topic or compares alternatives, and saves the result as a portable markdown artifact at `./research/<slug>.md` (relative to the current working directory / project root). The output is designed to be **cited** by spec files (`a4/spec/<id>-<slug>.md`) or any other artifact via `register_research_citation.py` — not consumed as a decision itself.
 
 Research: **$ARGUMENTS**
 
@@ -22,131 +22,19 @@ Two modes:
 | `comparative` | 2+ options to compare | Per-option `### <name>` subsections under `## Options` |
 | `single` | One topic / question | Flat `## Findings` section |
 
-## Input handling
+## Workflow
 
-Resolve the argument to `(mode, candidates)`:
+| Step | Focus | Procedure |
+|------|-------|-----------|
+| 1 | Resolve argument + working file path | `${CLAUDE_PLUGIN_ROOT}/references/research/input-handling.md` |
+| 2 | Initial file content (yaml templates per mode) | `${CLAUDE_PLUGIN_ROOT}/references/research/file-templates.md` |
+| 3 | Update discipline (checkpoint writes) | `${CLAUDE_PLUGIN_ROOT}/references/research/update-discipline.md` |
+| 4 | Research orchestration (comparative / single / protocol) | `${CLAUDE_PLUGIN_ROOT}/references/research/orchestration.md` |
+| 5 | Wrap up (final write, status flip, report) | `${CLAUDE_PLUGIN_ROOT}/references/research/wrap-up.md` |
 
-1. **File path** (`a4/spark/...brainstorm.md`, `a4/idea/<id>-<slug>.md`, any `.md`): read the file, extract candidates. Present to the user: "Here's what I found. Which do you want to research?" The user's answer determines the final list; 2+ items → `comparative`, 1 → `single`.
-2. **Comma / `vs` separated list** (e.g., `React vs Svelte vs Vue`, `Postgres, MySQL, SQLite`): parse into a list, confirm, `comparative`.
-3. **Single topic or question** (e.g., `gRPC streaming semantics`, `how does RocksDB handle compaction`): confirm the question, `single`.
+## Output format
 
-If the input is ambiguous, ask the user for mode + scope before creating the file.
-
-## Working file path
-
-1. Derive the slug from the topic (kebab-case, ASCII + CJK allowed, trim to ~40 chars).
-2. Ensure `./research/` exists; create with `mkdir -p` if missing.
-3. Resolve collisions: if `./research/<slug>.md` exists, try `-2`, `-3`, … until free. Tell the user about the suffix.
-4. File path: `./research/<slug>.md` relative to the current working directory.
-
-Report the full path as soon as the file is created: "Research file started at `<path>`. It will update as we go."
-
-## Initial file content
-
-Write immediately after mode and candidates are confirmed.
-
-**`comparative` mode:**
-
-```markdown
----
-type: research
-topic: "<topic>"
-status: draft       # draft | final | standalone | archived
-mode: comparative
-options: [name-a, name-b, name-c]
-cited_by: []
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
-tags: []
----
-
-<context>
-
-Why this research is needed. What the caller wants to know. 1–3 sentences.
-
-</context>
-
-<options>
-
-*Subsections will appear here as each option is researched.*
-
-</options>
-```
-
-**`single` mode:**
-
-```markdown
----
-type: research
-topic: "<topic>"
-status: draft       # draft | final | standalone | archived
-mode: single
-cited_by: []
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
-tags: []
----
-
-<context>
-
-The specific question to answer. 1–3 sentences.
-
-</context>
-
-<findings>
-
-*Findings will appear here as research progresses.*
-
-</findings>
-```
-
-`cited_by:` is a stored reverse-link auto-maintained by `scripts/register_research_citation.py` when a spec cites this research. Never hand-edit.
-
-## Update discipline
-
-- **Track each option (or sub-question) via a task.** Mark completed as findings come in. This gives the user a running overview without writing the file after every update.
-- **Write at checkpoints only.** Use the `Write` tool to rewrite the entire file with all pending confirmed content. Never partial-edit mid-research. Always preserve prior confirmed content.
-- **Checkpoint triggers:** every 2 options researched (`comparative`), major progress increments (`single`), user request, before the finalize step.
-- **Bump `updated:`** on every checkpoint write.
-
-## Research orchestration
-
-### Comparative mode
-
-For each option, spawn `Agent(subagent_type: "a4:api-researcher", run_in_background: true)`. Independent options run in parallel. The agent returns its findings as a markdown subsection per `${CLAUDE_SKILL_DIR}/references/research-report.md`. This skill inserts each returned subsection inside the `<options>` block at the next checkpoint.
-
-`api-researcher` is narrowly scoped to API / library / SDK documentation lookup (uses `get-api-docs`, `find-docs`, web fallback). Use it when each option is a concrete API, library, framework, SaaS product, or tool.
-
-When options are **not** API-centric (architectural patterns, conceptual trade-offs, qualitative approaches), research them directly from this skill — `WebSearch` / `WebFetch` (+ `get-api-docs` / `find-docs` where applicable) — and write the subsection yourself in the same format.
-
-### Single mode
-
-No subagent. The skill investigates directly (`WebSearch` / `WebFetch`, and `get-api-docs` / `find-docs` if the topic is API-shaped). Findings accumulate inside `<findings>`.
-
-### Protocol (both modes)
-
-1. **Ask before researching.** "I'm about to research [X]. Any specific questions you want me to answer?" Prevents wasted effort.
-2. **Avoid duplicate work.** Before launching a new pass on the same option/topic, check the current file for existing content.
-3. **Be objective.** Present both strengths and limitations. Do not advocate or recommend — that's for the caller (a decision file or the user).
-4. **Cite sources.** Every factual claim carries an inline `([ref](<url>))` citation. Raw excerpts go in `<details><summary>Raw excerpts</summary>…</details>` blocks per the research-report contract.
-5. **Match depth across options** (comparative mode) — roughly equal rigor per option.
-
-## Wrapping Up
-
-End only when the user says the research is done. Never conclude unilaterally.
-
-When the user indicates completion:
-
-1. **Final checkpoint write** — ensure every confirmed finding is in the file.
-2. **Flip `status:`** from `draft` to the terminal value that fits:
-   - `final` — research is complete and may feed a decision (default).
-   - `standalone` — research is complete and intentionally won't feed any decision (terminal; the SessionStart staleness courtesy never nudges `standalone` files).
-
-   Leave `status: draft` if more iterations are expected; flip to `archived` later when the research becomes irrelevant.
-3. **Bump `updated:`** to today.
-4. **Report the path** and how to reference it:
-   - From `/a4:spec`: cite this research via `scripts/register_research_citation.py`, which writes the citation in four places (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`).
-   - Optional review pass: `/a4:research-review ./research/<slug>.md` before relying on it for a decision.
+Subsection contract (sources, key findings, raw excerpts): `references/research-report.md`.
 
 ## Non-goals
 
@@ -154,7 +42,3 @@ When the user indicates completion:
 - **No evaluation / scoring.** Weighted scoring, Pugh matrices, SWOT — that's for the decision step.
 - **No wiki updates.** Research is workspace-agnostic. Nudges to `a4/architecture.md` etc. happen during `/a4:spec`, not here.
 - **No commit.** Leave the file in the working tree.
-
-## Output format
-
-Follow `${CLAUDE_SKILL_DIR}/references/research-report.md` for the subsection contract (sources, key findings, raw excerpts).

@@ -2,7 +2,7 @@
 
 `a4/roadmap.md` is the **milestone narrative wiki**. It groups UCs into milestones, names the dependency graph between them, and records Shared Integration Points the architecture exposes. The roadmap drives `/a4:run`'s cycle planning and the order `task-implementer` agents pick up work.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md), [`./pipeline-shapes.md`](./pipeline-shapes.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`, `./pipeline-shapes.md`.
 
 ## How to author — always via `/a4:roadmap`
 
@@ -12,7 +12,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/ro
 
 ## Authorship — who can edit this page
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md):
+Per `./wiki-authorship.md`:
 
 - **`/a4:roadmap` is the primary author.** Owns all body sections. In-situ edits from `/a4:roadmap` are unrestricted within the `<plan>` section.
 - **No other skill edits in-situ.** `/a4:run` reads the roadmap; it never writes to it. Architecture changes that affect the roadmap flow back through `/a4:arch iterate` first, then a `/a4:roadmap iterate` pass picks up the resulting `target: roadmap` review items.

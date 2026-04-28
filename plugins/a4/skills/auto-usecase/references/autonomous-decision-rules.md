@@ -22,4 +22,4 @@ The skill runs without a person to disambiguate against. Without consistent defa
 - **Conservative inclusion** (rules 6–8) — autonomous overreach pollutes the workspace; the explorer pass exists to add UCs deliberately.
 - **User control of the lifecycle** (rule 9) — automation produces drafts; humans promote.
 
-Subagents (composer, reviser, reviewer, explorer) all apply these rules. Decisions made under rules 1, 4, and 5 must be recorded in the UC's `## Source` section; see [`source-attribution.md`](source-attribution.md).
+Subagents (composer, reviser, reviewer, explorer) all apply these rules. Decisions made under rules 1, 4, and 5 must be recorded in the UC's `## Source` section; see `source-attribution.md`.

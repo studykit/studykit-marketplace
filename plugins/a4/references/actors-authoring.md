@@ -2,7 +2,7 @@
 
 `a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it, and `compass` derives the Authorization Matrix view from it.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
 
 ## How to author — always via `/a4:usecase` (or `/a4:arch` for system actors only)
 
@@ -12,7 +12,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/ac
 
 ## Authorship — who can edit this page
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md):
+Per `./wiki-authorship.md`:
 
 - **`/a4:usecase` is the primary author.** Owns all roster entries. In-situ edits from `/a4:usecase` are unrestricted.
 - **`/a4:arch` may add a `system`-type actor** that surfaces during component design (privilege/description text only; never modify a `person`-type actor). The justification is symmetric with the `/a4:domain` cross-edit allowance — system actors often only emerge during architectural work, and forcing them through review-item friction is wasteful.

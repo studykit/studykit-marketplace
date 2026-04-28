@@ -11,7 +11,7 @@ allowed-tools: Bash, Write, Read, Edit, Glob
 Two modes:
 
 - **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for pre-pipeline possibilities.
-- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `<change-logs>` bullet capturing the discard reason (idea has no required body sections per `body_schemas/idea.xsd`; `<change-logs>` is the natural slot for the rationale).
+- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `<change-logs>` bullet.
 
 ## Context
 
@@ -20,23 +20,23 @@ Two modes:
 
 If the project root resolved to `NOT_A_GIT_REPO`, abort with a clear message. This skill is workspace-scoped and keyed off the git worktree root.
 
-## Task
+## Workflow
 
 ### 1. Parse argument and dispatch
 
 Read the first whitespace-delimited token of `$ARGUMENTS`.
 
-- If the first token is `discard` (lowercase, exact match), this is the **discard** path — jump to "Discard mode" below.
-- Otherwise, this is the **capture** path — continue with steps 2–6.
+- If the first token is `discard` (lowercase, exact match), this is the **discard** path — apply `${CLAUDE_PLUGIN_ROOT}/references/idea/discard-flow.md`.
+- Otherwise, this is the **capture** path — continue with steps 2–6 below.
 - If `$ARGUMENTS` is empty or contains only whitespace, abort and tell the user: "Please provide an idea as a one-line argument — e.g., `/a4:idea 콜그래프에 주석 렌더링 넣기` — or discard one via `/a4:idea discard <id>`."
 
 In capture mode, the argument's trimmed text becomes the `title` and the H1 of the new file.
 
 ### 2. Verify the workspace
 
-Check that `<project-root>/a4/` exists and is a directory. If not, tell the user no `a4/` workspace was found and stop — ideas are workspace-scoped.
+Check that `<project-root>/a4/` exists and is a directory. If not, tell the user no `a4/` workspace was found and stop.
 
-Ensure `<project-root>/a4/idea/` exists; create it with `mkdir -p` if missing (first-time use in this workspace).
+Ensure `<project-root>/a4/idea/` exists; create with `mkdir -p` if missing.
 
 ### 3. Allocate next id
 
@@ -48,54 +48,11 @@ The script prints the next integer. Capture it — this becomes the idea's `id:`
 
 ### 4. Generate slug
 
-Produce a URL-friendly slug from the title:
-
-- Lowercase the entire string (ASCII letters only; Korean / CJK characters pass through untouched since they have no case).
-- Replace whitespace runs with a single hyphen.
-- Remove punctuation that is not a hyphen, alphanumeric, or a non-ASCII word character (keep Korean hangul, kanji, etc.).
-- Collapse multiple consecutive hyphens to one.
-- Trim leading and trailing hyphens.
-- Truncate to 50 characters at a hyphen boundary where possible (never mid-word for ASCII; best-effort for CJK).
-
-If the slug ends up empty after normalization (e.g., argument was pure punctuation), fall back to `untitled`.
-
-Examples:
-
-| Title | Slug |
-|-------|------|
-| `콜그래프에 주석 렌더링 넣기` | `콜그래프에-주석-렌더링-넣기` |
-| `Add caching layer to API` | `add-caching-layer-to-api` |
-| `!!!!???` | `untitled` |
-| `Rename: the Foo module, v2.0` | `rename-the-foo-module-v20` |
+Slug derivation rules + examples: `${CLAUDE_PLUGIN_ROOT}/references/idea/slug-rules.md`.
 
 ### 5. Compose the file
 
-Write to `<project-root>/a4/idea/<id>-<slug>.md` using the Write tool. Content:
-
-```markdown
----
-type: idea
-id: <id>
-title: <title>
-status: open
-promoted: []
-related: []
-labels: []
-created: <today>
-updated: <today>
----
-```
-
-Fields:
-
-- `type: idea` — literal; selects `body_schemas/idea.xsd`.
-- `id:` — the integer from step 3, as a YAML int (no quotes).
-- `title:` — the user's trimmed argument. If it contains characters that break bare YAML (colons, `#`, leading/trailing whitespace, quotes), wrap in double quotes and escape as needed.
-- `status: open` — literal.
-- `promoted: []`, `related: []`, `labels: []` — empty lists as placeholders. `[]` (not omitted) because these fields are part of the idea shape; their emptiness is noteworthy.
-- `created:` / `updated:` — today's date in `YYYY-MM-DD` format (from the `date +%Y-%m-%d` context).
-
-The body is empty on capture (idea XSD has no required tags). Longer ideas can be edited in later — this skill writes the minimum.
+Frontmatter template + field definitions: `${CLAUDE_PLUGIN_ROOT}/references/idea/capture-template.md`. Use the `Write` tool.
 
 ### 6. Report
 
@@ -114,54 +71,7 @@ Do not propose auto-promotion or auto-commit.
 
 ## Discard mode
 
-Triggered when `$ARGUMENTS` starts with the token `discard`. The remainder after the first whitespace is parsed as: `<id-or-slug> [reason]`.
-
-### D1. Resolve the idea file
-
-The second token is the **target**. Accept three forms and resolve in this order:
-
-1. **Numeric id** (e.g., `12`) — glob `<project-root>/a4/idea/<id>-*.md`. Exactly one match expected; error if zero or multiple.
-2. **Folder-prefixed path** (e.g., `idea/12-foo`) — glob `<project-root>/a4/<path>.md`. Exactly one match expected.
-3. **Slug fragment** (any other non-empty token) — glob `<project-root>/a4/idea/*-<fragment>*.md`. If exactly one matches, use it; if multiple match, list them to the user and ask which.
-
-If no file resolves, abort with: "No idea file found for `<target>`. List candidates with `ls a4/idea/`."
-
-### D2. Check current status
-
-Read the resolved file's frontmatter. If `status` is:
-
-- `open` → proceed to D3.
-- `promoted` → abort: "Idea `<path>` is already `promoted`. Discarding a promoted idea is ambiguous; edit by hand if you truly want to reverse that."
-- `discarded` → report "`<path>` is already `discarded`. No change." and exit.
-
-### D3. Apply the discard
-
-Edit the file in-place via the `Edit` tool:
-
-1. Change the frontmatter `status:` value from `open` to `discarded`.
-2. Update the frontmatter `updated:` to today's date.
-3. If a reason was provided (any tokens after `<id-or-slug>`), append a `<change-logs>` bullet (creating the section if not already present):
-
-   ```markdown
-   <change-logs>
-
-   - <YYYY-MM-DD> discarded — <reason text>
-
-   </change-logs>
-   ```
-
-   Use the reason verbatim — no re-wording. If the section already exists, append a new dated bullet.
-
-### D4. Report
-
-Tell the user:
-
-```
-Discarded idea #<id> → /abs/path/to/a4/idea/<id>-<slug>.md
-Reason recorded: <reason or "none">
-```
-
-Do not commit. Leave in the working tree.
+Procedure: `${CLAUDE_PLUGIN_ROOT}/references/idea/discard-flow.md`. Covers target resolution (D1), status check (D2), in-place edit + `<change-logs>` append (D3), report (D4).
 
 ## Non-Goals
 
@@ -169,7 +79,7 @@ Do not commit. Leave in the working tree.
 - Do not propose a target artifact at capture time. Ideas are independent by definition; graduation is a separate, later decision.
 - Do not launch a brainstorm or research session off the back of a capture. If the user wants that, they invoke `/a4:spark-brainstorm` or `/a4:research` with the idea path as input themselves.
 - Do not surface existing `a4/idea/` open count or nudge the user about prior ideas. Capture is capture; review is separate.
-- Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; a race with a concurrent session is extremely unlikely in single-user workflows, and the Stop-hook validator catches any collision on next stop.
+- Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; the Stop-hook validator catches any collision on next stop.
 
 ## Failure modes
 

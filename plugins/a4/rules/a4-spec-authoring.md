@@ -10,12 +10,12 @@ When **authoring or editing** any spec file, read these first.
 
 ## Required reading before authoring
 
-- [`../references/spec-authoring.md`](../references/spec-authoring.md) — when a spec is warranted, conversational triggers, anti-patterns, frontmatter, lifecycle, body shape, common mistakes, "Don't" list.
-- [`a4-workspace-policies.md`](a4-workspace-policies.md) — workspace-wide policies (also auto-loaded).
+- `../references/spec-authoring.md` — when a spec is warranted, conversational triggers, anti-patterns, frontmatter, lifecycle, body shape, common mistakes, "Don't" list.
+- `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Skill / scripts / schema
 
-- Author / activate / revise → `/a4:spec` (skill: [`../skills/spec/SKILL.md`](../skills/spec/SKILL.md)).
+- Author / activate / revise → `/a4:spec` (skill: `../skills/spec/SKILL.md`).
 - Status flips → `../scripts/transition_status.py` (writer-only).
 - Research linkage → `../scripts/register_research_citation.py` (atomic four-place update).
 - Validate → `uv run ../scripts/validate_body.py "<project-root>/a4" --file spec/<id>-<slug>.md`

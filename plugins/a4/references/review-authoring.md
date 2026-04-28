@@ -6,9 +6,9 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 - `gap` — something is missing that ought to exist (a UC that no spec covers, an architectural choice nobody recorded, a wiki page that has not been updated to reflect a confirmed change).
 - `question` — an open question the conversation could not resolve in place (deferred decision, unclear constraint).
 
-Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. Authored by reviewer agents (`usecase-reviewer`, `arch-reviewer`, `domain-reviewer`, `roadmap-reviewer`, `task-implementer`), by `../scripts/drift_detector.py` (`source: drift-detector`), and by single-edit skill defer paths (`source: self`). Resolved through the iterate flows (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:domain iterate`, `/a4:roadmap iterate`, `/a4:run iterate`) per the shared procedure in [`./iterate-mechanics.md`](./iterate-mechanics.md).
+Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. Authored by reviewer agents (`usecase-reviewer`, `arch-reviewer`, `domain-reviewer`, `roadmap-reviewer`, `task-implementer`), by `../scripts/drift_detector.py` (`source: drift-detector`), and by single-edit skill defer paths (`source: self`). Resolved through the iterate flows (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:domain iterate`, `/a4:roadmap iterate`, `/a4:run iterate`) per the shared procedure in `./iterate-mechanics.md`.
 
-Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), [`./iterate-mechanics.md`](./iterate-mechanics.md), [`./wiki-authorship.md`](./wiki-authorship.md), [`./spec-triggers.md`](./spec-triggers.md), [`./body-conventions.md`](./body-conventions.md).
+Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), `./iterate-mechanics.md`, `./wiki-authorship.md`, `./spec-triggers.md`, `./body-conventions.md`.
 
 ## How to author — review items are emitted by skills, not hand-written
 
@@ -16,8 +16,8 @@ There is no `/a4:review` skill. Review items are emitted in three shapes:
 
 - **Reviewer-agent finding.** Emitted by `usecase-reviewer`, `arch-reviewer`, `domain-reviewer`, `roadmap-reviewer` after the primary-author skill's wrap-up. `source: <reviewer-agent-name>`.
 - **Drift-detector finding.** Emitted by `../scripts/drift_detector.py` (invoked via `/a4:drift`). `source: drift-detector`. Carries `labels: [drift, drift:<kind>, drift-cause:<cause-slug>?]` for dedup across runs.
-- **Defer / cross-stage feedback.** Emitted by single-edit skills when a wiki edit is deferred (e.g., a UC change implies an `architecture.md` update but `usecase` is not the primary author of that page), or when a stage detects an upstream issue and chooses *continue + review item* per [`./wiki-authorship.md`](./wiki-authorship.md). `source: self` (or the skill name).
-- **Task-implementer architectural-choice exit.** When a `task-implementer` agent encounters an architectural alternative not yet captured, it emits a `kind: gap`, `target: spec/`, `source: task-implementer` review item and returns failure naming the review id (per [`./spec-triggers.md`](./spec-triggers.md) B5).
+- **Defer / cross-stage feedback.** Emitted by single-edit skills when a wiki edit is deferred (e.g., a UC change implies an `architecture.md` update but `usecase` is not the primary author of that page), or when a stage detects an upstream issue and chooses *continue + review item* per `./wiki-authorship.md`. `source: self` (or the skill name).
+- **Task-implementer architectural-choice exit.** When a `task-implementer` agent encounters an architectural alternative not yet captured, it emits a `kind: gap`, `target: spec/`, `source: task-implementer` review item and returns failure naming the review id (per `./spec-triggers.md` B5).
 
 Do **not** hand-craft a review file with `Write`. The emitting skill or script handles id allocation, slug derivation, frontmatter shape, and dedup. If you find yourself wanting to author a review item from a normal conversation, route the impulse through the appropriate skill: `/a4:idea` for pre-pipeline capture, `/a4:spec` for an architectural decision, `/a4:usecase` for a UC concern, or trigger `/a4:drift` for cross-file consistency.
 
@@ -48,7 +48,7 @@ updated: YYYY-MM-DD
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` points at the artifact this review is about. Accepts any issue path (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `spec/<id>-<slug>`) or a wiki basename (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). **Omit `target:` entirely when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. The validator currently accepts any string, but the conventional set is `self`, `drift-detector`, and the reviewer-agent names. Do not invent new values without updating [`./frontmatter-schema.md`](./frontmatter-schema.md).
+- `source:` records who emitted the item. The validator currently accepts any string, but the conventional set is `self`, `drift-detector`, and the reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
 - `wiki_impact:` lists **wiki basenames** (no `.md`, no folder prefix) whose `<change-logs>` must record the resolution. Used by the close guard at resolve-time. Empty list when no wiki page is affected.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low). Drift items at `priority: high` lead.
 - `labels:` are free-form. The drift detector reserves `drift`, `drift:<kind>`, and `drift-cause:<slug>` for dedup; do not reuse these prefixes for unrelated tags.

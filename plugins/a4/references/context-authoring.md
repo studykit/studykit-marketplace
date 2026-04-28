@@ -2,7 +2,7 @@
 
 `a4/context.md` is the **upstream framing wiki**. It records the original idea, the problem framing the workspace is shaped around, and (optionally) the screen-navigation narrative that ties UI use cases together. Every other wiki page and every issue family indirectly assumes the framing this page captures.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
 
 ## How to author — always via `/a4:usecase`
 
@@ -14,7 +14,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/co
 
 ## Authorship — who can edit this page
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md):
+Per `./wiki-authorship.md`:
 
 - **`/a4:usecase` is the primary author.** It owns all body sections. In-situ edits from `/a4:usecase` are unrestricted.
 - **No other skill edits in-situ.** When another stage discovers a framing issue, it emits a review item with `target: context` and `wiki_impact: [context]`.

@@ -2,7 +2,7 @@
 
 Body-level rules for every file written by an a4 skill. Covers section tag form, blank-line discipline, link form, and the `<change-logs>` / `<log>` audit-trail conventions.
 
-Frontmatter-side rules (path format inside YAML, required fields, enums, the universal `type:` field) live in [`frontmatter-schema.md`](frontmatter-schema.md). The two should be read together.
+Frontmatter-side rules (path format inside YAML, required fields, enums, the universal `type:` field) live in `frontmatter-schema.md`. The two should be read together.
 
 ## Scope
 
@@ -64,7 +64,7 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 
 Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text.
 
-Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per [`frontmatter-schema.md`](frontmatter-schema.md).
+Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `frontmatter-schema.md`.
 
 ## `<change-logs>` audit trail
 
@@ -152,7 +152,7 @@ Before a session ends, for each review item that transitioned to `status: resolv
 
 ## Cross-references
 
-- [`frontmatter-schema.md`](frontmatter-schema.md) — frontmatter field rules, the universal `type:` field, per-type body section enums.
+- `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
 - `../scripts/body_schemas/<type>.xsd` — source of truth for required vs optional sections per type.
 - `../scripts/validate_body.py` — enforces tag form (`body-tag-invalid`, `body-tag-unclosed`), stray content (`body-stray-content`), and per-type XSD shape (`body-xsd`).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.

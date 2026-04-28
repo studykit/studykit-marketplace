@@ -2,7 +2,7 @@
 
 `a4/bootstrap.md` is the **single source of truth for Launch & Verify**. It records the environment setup, the build/launch commands, and the verified smoke test that proves the workspace "runs". The `<verify>` section in particular is read directly by `/a4:run`, `task-implementer`, and `test-runner` — never duplicated into other wiki pages.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
 
 ## How to author — always via `/a4:auto-bootstrap`
 
@@ -14,7 +14,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/bo
 
 ## Authorship — who can edit this page
 
-Per [`./wiki-authorship.md`](./wiki-authorship.md):
+Per `./wiki-authorship.md`:
 
 - **`/a4:auto-bootstrap` is the only writer.** It owns all body sections; re-runs archive the prior copy and write a fresh version.
 - **No other skill edits in-situ.** Editing `bootstrap.md` by hand defeats the verification contract — the section names commands asserted to have run successfully on the recorded environment, and hand-edits that bypass verification produce stale or wrong contracts that `/a4:run` then trusts.

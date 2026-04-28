@@ -10,14 +10,14 @@ These pointers apply to **every** file under `a4/`, regardless of type or locati
 
 ## Cross-cutting contracts
 
-- [`../references/frontmatter-schema.md`](../references/frontmatter-schema.md) — full field schema, lifecycle tables, validator behavior, writer-owned fields.
-- [`../references/body-conventions.md`](../references/body-conventions.md) — body tag form, blank-line discipline, link form, frontmatter vs body path-reference form, `<change-logs>` / `<log>` rules, wiki update protocol.
-- [`../references/wiki-authorship.md`](../references/wiki-authorship.md) — primary-author table, in-situ edit allowances, cross-stage stop/continue policy.
-- [`../references/iterate-mechanics.md`](../references/iterate-mechanics.md) — review-item walk procedure (filter, transition, close guard).
-- [`../references/spec-triggers.md`](../references/spec-triggers.md) — when a spec is warranted; conversational + content-aware triggers; anti-patterns.
-- [`../references/commit-message-convention.md`](../references/commit-message-convention.md) — `#<id>` commit subject form.
-- [`../references/pipeline-shapes.md`](../references/pipeline-shapes.md) — Full / Reverse / Minimal / No-shape pipelines.
-- [`../references/skill-modes.md`](../references/skill-modes.md) — interactive vs autonomous, forward vs reverse axes per skill.
+- `../references/frontmatter-schema.md` — full field schema, lifecycle tables, validator behavior, writer-owned fields.
+- `../references/body-conventions.md` — body tag form, blank-line discipline, link form, frontmatter vs body path-reference form, `<change-logs>` / `<log>` rules, wiki update protocol.
+- `../references/wiki-authorship.md` — primary-author table, in-situ edit allowances, cross-stage stop/continue policy.
+- `../references/iterate-mechanics.md` — review-item walk procedure (filter, transition, close guard).
+- `../references/spec-triggers.md` — when a spec is warranted; conversational + content-aware triggers; anti-patterns.
+- `../references/commit-message-convention.md` — `#<id>` commit subject form.
+- `../references/pipeline-shapes.md` — Full / Reverse / Minimal / No-shape pipelines.
+- `../references/skill-modes.md` — interactive vs autonomous, forward vs reverse axes per skill.
 
 ## Writer scripts (never hand-edit the fields they own)
 

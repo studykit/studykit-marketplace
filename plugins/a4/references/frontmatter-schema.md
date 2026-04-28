@@ -2,7 +2,7 @@
 
 Consolidated frontmatter reference for the `a4/` workspace and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**.
 
-Body-side conventions (tag form, blank-line discipline, change-log and log section format, link form) live in [`body-conventions.md`](body-conventions.md). The two should be read together.
+Body-side conventions (tag form, blank-line discipline, change-log and log section format, link form) live in `body-conventions.md`. The two should be read together.
 
 ## Scope
 
@@ -49,7 +49,7 @@ Validator rules:
 
 ### Body section tags
 
-Body sections are column-0 `<tag>...</tag>` blocks (lowercase + kebab-case) with markdown content between the open and close lines. The set of allowed tags per `type:` is fixed by the XSD; required tags must appear, optional tags may appear, unknown tags are tolerated. See [`body-conventions.md`](body-conventions.md) for the full tag-form rules and [§Body sections per type](#body-sections-per-type) below for the per-type required/optional split.
+Body sections are column-0 `<tag>...</tag>` blocks (lowercase + kebab-case) with markdown content between the open and close lines. The set of allowed tags per `type:` is fixed by the XSD; required tags must appear, optional tags may appear, unknown tags are tolerated. See `body-conventions.md` for the full tag-form rules and [§Body sections per type](#body-sections-per-type) below for the per-type required/optional split.
 
 ### Ids
 
@@ -66,7 +66,7 @@ Frontmatter fields that reference other files (`depends_on`, `implements`, `targ
 - **Folder-prefixed when cross-folder.** `usecase/3-search-history`, `task/5-render-markdown`, `review/6-missing-validation`, `spec/8-caching-strategy`, `spark/<base>`, `research/<slug>` (project-root `research/`, sibling of `a4/`). Bare basename (`3-search-history`) resolves correctly because ids are globally unique, but folder-prefixed form is preferred for readability.
 - **Wiki targets use bare basename.** `wiki_impact: [architecture, domain]`, not `wiki_impact: [architecture.md]`.
 
-Body links use a different form — standard markdown `[text](relative/path.md)`. See [`body-conventions.md`](body-conventions.md).
+Body links use a different form — standard markdown `[text](relative/path.md)`. See `body-conventions.md`.
 
 ### Dates
 
@@ -481,7 +481,7 @@ The XSDs at `../scripts/body_schemas/<type>.xsd` are the source of truth for the
 
 Two universal optional sections appear on most types:
 
-- **`<change-logs>`** — append-only audit trail of why this file was edited. Bullet entries dated `YYYY-MM-DD` with a markdown link to the causing issue or spec. See [`body-conventions.md`](body-conventions.md). Replaces the prior `[^N]` footnote + `## Changes` mechanism.
+- **`<change-logs>`** — append-only audit trail of why this file was edited. Bullet entries dated `YYYY-MM-DD` with a markdown link to the causing issue or spec. See `body-conventions.md`. Replaces the prior `[^N]` footnote + `## Changes` mechanism.
 - **`<log>`** — append-only status-transition trail written by `transition_status.py`. Bullet entries `YYYY-MM-DD — <from> → <to> — <reason>`. Authors should never write into `<log>` directly except for the documented post-hoc-`complete` task case.
 
 ### Wiki pages
@@ -589,7 +589,7 @@ When these land, update this document **and** the validator simultaneously — t
 
 ## Cross-references
 
-- **Body-level conventions:** [`body-conventions.md`](body-conventions.md) — tag form (column-0, kebab-case, no attributes), blank-line discipline, `<change-logs>` and `<log>` entry format, body link form (standard markdown).
+- **Body-level conventions:** `body-conventions.md` — tag form (column-0, kebab-case, no attributes), blank-line discipline, `<change-logs>` and `<log>` entry format, body link form (standard markdown).
 - **XSDs (source of truth for body shape):** `../scripts/body_schemas/<type>.xsd`.
 - **Body schema registry:** `../scripts/body_schemas.py` (`schema_path(type_)`, `all_types()`).
 - **Id allocator:** `../scripts/allocate_id.py`.

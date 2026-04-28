@@ -2,7 +2,7 @@
 
 A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code, validators, and review items must conform to. Specs replace the retired ADR family; design rationale lives inline as `<decision-log>` entries co-located with the spec they shaped.
 
-Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), [`./spec-triggers.md`](./spec-triggers.md), [`./body-conventions.md`](./body-conventions.md).
+Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), `./spec-triggers.md`, `./body-conventions.md`.
 
 ## When a spec is warranted
 

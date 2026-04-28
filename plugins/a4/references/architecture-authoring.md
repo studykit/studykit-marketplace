@@ -2,7 +2,7 @@
 
 `a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), every `task/*.md` (`<interface-contracts>` links into it), and `/a4:run` (AC source for UC-less tasks). Allowing in-situ edits from non-architecture stages would let contract drift propagate before review — hence the single-author rule.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), [`./body-conventions.md`](./body-conventions.md), [`./wiki-authorship.md`](./wiki-authorship.md), [`./iterate-mechanics.md`](./iterate-mechanics.md).
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`, `./iterate-mechanics.md`.
 
 ## How to author — always via `/a4:arch`
 
@@ -12,7 +12,7 @@ If you must read the file to answer a question, prefer `extract_section.py a4/ar
 
 ## Authorship — architecture is single-author
 
-`/a4:arch` is the **only** in-situ editor of `architecture.md`. No other skill edits in-situ; everything else flows through review items with `target: architecture` (and `wiki_impact: [architecture]` when applicable). The general primary-author rule + cross-stage feedback policy is in [`./wiki-authorship.md`](./wiki-authorship.md).
+`/a4:arch` is the **only** in-situ editor of `architecture.md`. No other skill edits in-situ; everything else flows through review items with `target: architecture` (and `wiki_impact: [architecture]` when applicable). The general primary-author rule + cross-stage feedback policy is in `./wiki-authorship.md`.
 
 If you find yourself wanting to edit `architecture.md` from any context other than `/a4:arch`, **stop** and emit a review item.
 
@@ -31,7 +31,7 @@ updated: YYYY-MM-DD
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see [`./body-conventions.md`](./body-conventions.md).)
+(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required (enforced by `../scripts/body_schemas/architecture.xsd`):**
 
@@ -57,7 +57,7 @@ Unknown kebab-case tags are tolerated by the XSD's openContent.
 - **Required section missing** (`<overview>`, `<components>`, `<technology-stack>`, `<test-strategy>`) → `body-xsd`.
 - **`type:` mismatch** with filename → frontmatter validator error.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in [`./body-conventions.md`](./body-conventions.md).)
+(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 To validate manually before commit:
 
