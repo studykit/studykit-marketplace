@@ -142,4 +142,22 @@ if [ -n "$A4_TRIGGERS" ]; then
     fi
 fi
 
+# --- a4 section-enum drift ---
+
+A4_ENUM_TRIGGERS=$(git diff --cached --name-only --diff-filter=ACM \
+    -- 'plugins/a4/scripts/body_schemas/' \
+       'plugins/a4/rules/a4-section-enum.md' 2>/dev/null || true)
+
+if [ -n "$A4_ENUM_TRIGGERS" ]; then
+    echo "Checking a4 section-enum drift..."
+    if ! uv run plugins/a4/scripts/generate_section_enum.py --check; then
+        echo ""
+        echo "ERROR: a4 section enum in rules/a4-section-enum.md is out of"
+        echo "       sync with scripts/body_schemas/."
+        echo "Fix: uv run plugins/a4/scripts/generate_section_enum.py --write"
+        echo ""
+        exit 1
+    fi
+fi
+
 exit 0

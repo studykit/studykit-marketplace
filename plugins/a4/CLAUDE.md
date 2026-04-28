@@ -54,6 +54,25 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
 - `iterate-mechanics.md` — iterate-mode contract for skills
 - `hook-conventions.md` — hook contract
 
+## Per-section reads and path-scoped rules
+
+- `scripts/extract_section.py` reads one section out of an a4 file
+  without loading the whole markdown. Modes: `<file> <tag>`,
+  `<file> --list`, `<file> <tag> --json`. It reuses the fence-aware
+  scanner from `validate_body.py`, so outline-shaped tags inside fenced
+  code blocks are not mistaken for section boundaries.
+- `rules/` ships path-scoped rule files (`paths:` frontmatter). They do
+  **not** auto-load in user projects until explicitly installed via the
+  `/a4:install-rules` slash command, which symlinks each rule file into
+  `<project-root>/.claude/rules/`. `/a4:uninstall-rules` removes only
+  the plugin-sourced symlinks. Symlinks (not copies) so plugin updates
+  propagate.
+- `rules/a4-section-enum.md` is generator-owned. Its bullet block lives
+  between `<!-- BEGIN section-enum -->` / `<!-- END section-enum -->`
+  markers and is rewritten by `scripts/generate_section_enum.py`. The
+  pre-commit hook re-checks for drift whenever any
+  `scripts/body_schemas/*.xsd` or the rule file is staged.
+
 ## Skill-generated frontmatter is script-managed
 
 Frontmatter on files written by a4 skills (under `<project-root>/a4/`) is the responsibility of scripts in `plugins/a4/scripts/`, not hand edits. This keeps cross-file consistency and reverse-links intact.
