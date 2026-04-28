@@ -41,7 +41,7 @@ Adding these would inflate the namespace and prompt surface without serving real
 
 ## When a missing pair becomes a real gap
 
-If the user repeatedly hits friction in one of the missing combinations, capture the recurring case under `plugins/a4/spec/` (plugin-level meta-design) before introducing a new skill. Real signals to watch:
+If the user repeatedly hits friction in one of the missing combinations, capture the recurring case under `${CLAUDE_PLUGIN_ROOT}/spec/` (plugin-level meta-design) before introducing a new skill. Real signals to watch:
 
 - `auto-bootstrap` repeatedly fails on the same sandboxed / air-gapped scenarios where the issue is *which* command to run, not *whether* it works → a guided variant might earn its keep.
 - `auto-usecase` is triggered when the user actually wanted interactive discovery → fix compass routing first; a true `auto` twin of `usecase` would still be inferior to dialogue.

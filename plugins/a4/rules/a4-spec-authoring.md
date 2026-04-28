@@ -13,14 +13,18 @@ code, validators, and review items must conform to. Specs replace the
 retired ADR family; design rationale lives inline as
 `<decision-log>` entries co-located with the spec they shaped.
 
+> **Workspace-wide policies** — writer-owned fields, id allocation,
+> path-reference form, tag form, `<change-logs>` discipline, wiki
+> authorship, cross-stage feedback, commit message form — live in
+> [`a4-workspace-policies.md`](a4-workspace-policies.md) and load
+> automatically alongside this rule. This rule covers the
+> spec-specific contract on top.
+
 This rule is the working contract for any LLM about to read, draft, or
 edit a spec file. The full schema and rationale live in
 [`references/frontmatter-schema.md §Spec`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
 trigger detection lives in
-[`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md);
-body-tag mechanics live in
-[`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-Read those before deviating from the rules below.
+[`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md).
 
 ## When a spec is warranted
 

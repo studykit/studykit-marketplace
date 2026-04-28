@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Run Loop
 
+> **Authoring contracts:** task files this loop reads are governed by [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) (status enum + cascades, AC-source-by-kind, lifecycle). UC ship gates against [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md). Test-runner findings emit reviews per [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill never writes those files directly — `transition_status.py` and the test-runner agent do.
+
 Two stages over the tasks already authored in `a4/task/`:
 
 1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
@@ -255,16 +257,7 @@ After 4b finishes (or 4a routes the run elsewhere), proceed to wrap-up.
 
 ## Acceptance Criteria Source by Task Kind
 
-When a task-implementer reads a task's `<acceptance-criteria>` section, the source convention (set at authoring time by `/a4:roadmap` or `/a4:task`) is:
-
-| Task kind / shape | AC source |
-|---|---|
-| `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
-| `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
-| `spike` | hypothesis + expected result, the spike's own body |
-| `bug` | reproduction scenario + fixed criteria |
-
-`/a4:run` does not enforce this — validators do not block on AC source. The convention is documentation only; the AC section must exist on the task body regardless.
+The AC-source-by-kind convention is defined in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) §Body shape. `/a4:run` does not enforce it — validators do not block on AC source; the `<acceptance-criteria>` section's existence is what the body XSD checks.
 
 ## Commit Points
 

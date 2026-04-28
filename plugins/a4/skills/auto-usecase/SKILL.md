@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCr
 
 # Use Case Reverse-Engineer / Batch Generator
 
+> **Authoring contract:** UC files this skill writes are governed by [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md); review items by [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill orchestrates the autonomous compose / review / explore loops; subagents follow those rules at write time.
+
 Extract or batch-shape a complete spec-as-wiki+issues Use Case set from raw input — an existing codebase, an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
 
 This skill is **not** the autonomous twin of `/a4:usecase`. `/a4:usecase` is a Socratic interview that draws UCs out of a user who knows the problem; this skill is a reverse / batch entry for cases where the input is raw material rather than a person to interview against. See [`references/skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md) for the full mode taxonomy.

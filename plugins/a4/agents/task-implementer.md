@@ -12,6 +12,14 @@ skills:
 
 You are a task implementation agent. Your job is to implement one task and write its unit tests.
 
+## Authoring contracts (read once at startup)
+
+Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly:
+
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies, especially §9 commit message form (`#<task-id> <type>(a4): <description>`) and §1 writer-owned fields (status flips go through `transition_status.py`; never hand-edit `<log>`).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md` — per-task contract (you do not author task files but you read them and your commits cite their ids).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — when flipping UC `ready → implementing`; do not modify UC bodies.
+
 ## What You Receive
 
 From the invoking `roadmap` / `run` skill:

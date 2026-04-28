@@ -22,15 +22,19 @@ Lifecycle is identical across kinds. Tasks are produced by `/a4:task`
 (single ad-hoc) or `/a4:roadmap` (UC-batch); they are consumed by
 `/a4:run` (the implement + test loop) and the `task-implementer` agent.
 
+> **Workspace-wide policies** — writer-owned fields, id allocation,
+> path-reference form, tag form, `<change-logs>` discipline, wiki
+> authorship, cross-stage feedback, commit message form — live in
+> [`a4-workspace-policies.md`](a4-workspace-policies.md) and load
+> automatically alongside this rule. This rule covers the
+> task-specific contract on top.
+
 This rule is the working contract for any LLM about to read, draft, or
 edit a task file. The full schema and rationale live in
 [`references/frontmatter-schema.md §Task`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
 content-aware upward-propagation (the "feature with no anchor" smell)
 lives in
-[`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md);
-body-tag mechanics live in
-[`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-Read those before deviating from the rules below.
+[`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md).
 
 ## How to author — always via `/a4:task` or `/a4:roadmap`
 
@@ -77,8 +81,6 @@ updated: YYYY-MM-DD
 ---
 ```
 
-- `id` is allocated by `scripts/allocate_id.py` (workspace-global,
-  monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer
   rejects `<title>`-shaped strings.
 - `kind` is **required**. There is no implicit default — every task
@@ -103,10 +105,6 @@ updated: YYYY-MM-DD
   next-cycle defers.
 - `implemented_by:` is **not** a task field — it is a UC reverse-link
   written by `refresh_implemented_by.py`. Do not put it on a task.
-- Path values are plain strings without `.md` and without brackets
-  (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:`
-  on every revision; the writer bumps it on status flips.
 
 ### `kind: feature` with empty `implements:` and `spec:` — smell check
 
@@ -155,11 +153,9 @@ Per-status meaning:
 - `discarded` — Abandoned. Terminal. Reached either via UC
   `discarded` cascade or explicit `/a4:task discard`.
 
-Writer rules:
+Writer rules (task-specific; the universal "writer-owned fields" rule
+is in `a4-workspace-policies.md` §1):
 
-- All status changes after the initial create flow through
-  `scripts/transition_status.py`. Skills and humans never write
-  `status:` directly post-create.
 - **Allowed initial statuses on file create:** `open` (default —
   backlog), `pending` (`/a4:run` queue-fill intent), `complete`
   (post-hoc documentation; code already shipped). `/a4:roadmap`
@@ -206,10 +202,8 @@ already be shipped. The skill verifies before writing:
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks
-(lowercase + kebab-case), with markdown content between the open and
-close lines. H1 (`# Title`) is forbidden in the body — title belongs
-to frontmatter `title:`. Use H3+ headings inside sections freely.
+(Tag form / link form / H1-forbidden are universal — see
+`a4-workspace-policies.md` §4.)
 
 **Required (enforced by `body_schemas/task.xsd`):**
 
@@ -255,12 +249,6 @@ to frontmatter `title:`. Use H3+ headings inside sections freely.
 
 Unknown kebab-case tags are tolerated by the XSD's openContent.
 
-### Body-link form
-
-Body cross-references are standard markdown links —
-`[text](relative/path.md)` — with the `.md` extension retained.
-Frontmatter list paths are different (plain strings, no `.md`).
-
 ### Spike sidecar convention
 
 For `kind: spike`, accompanying PoC code lives at
@@ -283,21 +271,16 @@ directory to `spike/archive/<id>-<slug>/` and updates the task's
 `files:` paths. The move is **never automated** — same precedent as
 `idea/` promotion.
 
-## Common mistakes the validator catches
+## Common mistakes the validator catches (task-specific)
 
-- **Stray content outside section blocks** → `body-stray-content`.
-  Anything in the body that is not whitespace must live inside a
-  `<tag>...</tag>` block.
 - **Required section missing** (`<description>`, `<files>`,
   `<unit-test-strategy>`, `<acceptance-criteria>`) → `body-xsd`.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`. Open
-  and close lines must be on column 0; no attributes; no
-  self-closing.
-- **Same-tag nesting** → `body-tag-invalid`. Sections do not nest;
-  every section sits at the body's top level.
-- **H1 in body** → `body-stray-content`. Title is frontmatter-only.
 - **Missing `kind:` frontmatter field** → frontmatter validator
   error. `kind` has no default.
+
+(Universal validator catches — stray body content, attribute-bearing
+tags, same-tag nesting, H1 in body — are documented in
+`a4-workspace-policies.md` §4.)
 
 To validate manually before commit:
 
@@ -306,12 +289,12 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
   "<project-root>/a4" --file task/<id>-<slug>.md
 ```
 
-## Don't
+## Don't (task-specific)
 
-- **Don't hand-edit `status:`.** Use `transition_status.py` (or
-  `/a4:task discard` for the explicit-discard path).
-- **Don't hand-edit `<log>`** except the documented post-hoc-
-  `complete` initial entry. Every subsequent entry is the writer's.
+(Universal Don'ts — hand-editing writer-owned fields, inventing ids,
+bracketing frontmatter paths, H1 in body, deleting review files —
+are in `a4-workspace-policies.md` §10.)
+
 - **Don't put `implemented_by:` on a task.** It is a UC reverse-link,
   auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
 - **Don't use `progress` or `failing` as an initial status.** They

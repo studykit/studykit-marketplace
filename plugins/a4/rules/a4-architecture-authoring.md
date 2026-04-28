@@ -14,14 +14,16 @@ UC-less tasks). Allowing in-situ edits from non-architecture stages
 would let contract drift propagate before review — hence the
 single-author rule.
 
+> **Workspace-wide policies** — writer-owned fields, id allocation,
+> path-reference form, tag form, `<change-logs>` discipline, wiki
+> authorship boundary, cross-stage feedback, commit message form —
+> live in [`a4-workspace-policies.md`](a4-workspace-policies.md) and
+> load automatically alongside this rule. This rule covers the
+> architecture-wiki-specific contract on top.
+
 This rule is the working contract for any LLM about to read, draft, or
 edit the architecture wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
-authorship boundaries live in
-[`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md);
-body-tag mechanics live in
-[`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-Read those before deviating from the rules below.
+[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:arch`
 
@@ -35,26 +37,16 @@ If you must read the file to answer a question, prefer
 `extract_section.py a4/architecture.md <tag>` over loading the whole
 markdown (see `a4-section-enum.md`).
 
-## Authorship — who can edit this page
+## Authorship — architecture is single-author
 
-Per `references/wiki-authorship.md`:
-
-- **`/a4:arch` is the primary author.** Any change to body
-  sections originates from this skill.
-- **No other skill edits in-situ.** When `/a4:usecase`, `/a4:domain`,
-  `/a4:roadmap`, `/a4:auto-bootstrap`, or `task-implementer` discover
-  an architecture issue, they emit a review item with
-  `target: architecture` and (when applicable)
-  `wiki_impact: [architecture]`. Resolution flows back through
-  `/a4:arch iterate`.
-- The cross-stage stop/continue policy decides whether the discovering
-  stage halts (`roadmap`, `run`) or continues with a review item
-  (`auto-bootstrap`, `usecase iterate`, `domain iterate`,
-  `auto-usecase`).
+`/a4:arch` is the **only** in-situ editor of `architecture.md`. No
+other skill edits in-situ; everything else flows through review items
+with `target: architecture` (and `wiki_impact: [architecture]` when
+applicable). The general primary-author rule + cross-stage feedback
+policy is in `a4-workspace-policies.md` §6 and §7.
 
 If you find yourself wanting to edit `architecture.md` from any
-context other than `/a4:arch`, **stop** and emit the review item
-instead.
+context other than `/a4:arch`, **stop** and emit a review item.
 
 ## Frontmatter contract (do not deviate)
 
@@ -67,8 +59,6 @@ updated: YYYY-MM-DD
 
 - `type:` must be exactly `architecture`. The frontmatter validator
   rejects mismatches between `type:` and the file basename.
-- `updated:` is an unquoted ISO date. Bump on every edit (including
-  in-situ `<change-logs>` bullet appends).
 - Wiki pages have **no** `id`, no `status`, no `<log>`, no lifecycle.
   They change continuously; the `<change-logs>` body section records
   the why.
@@ -78,10 +68,8 @@ updated: YYYY-MM-DD
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks
-(lowercase + kebab-case), with markdown content between the open and
-close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings
-inside sections freely.
+(Tag form / link form / H1-forbidden are universal — see
+`a4-workspace-policies.md` §4.)
 
 **Required (enforced by `body_schemas/architecture.xsd`):**
 
@@ -113,12 +101,7 @@ inside sections freely.
 
 Unknown kebab-case tags are tolerated by the XSD's openContent.
 
-### Body-link form
-
-Body cross-references are standard markdown links —
-`[text](relative/path.md)` — with the `.md` extension retained
-(e.g., `[task/5-render-markdown](task/5-render-markdown.md)`,
-`[review/9-arch-rename-cascade](review/9-arch-rename-cascade.md)`).
+### Component anchor stability
 
 `<components>` exposes anchor-targeted headings that tasks reference
 in their `<interface-contracts>` section
@@ -127,42 +110,15 @@ Keep component heading text stable — renaming a component requires a
 review item explaining the cascade because every task that links
 into it is affected.
 
-## `<change-logs>` discipline
+## Common mistakes the validator catches (architecture-specific)
 
-Every non-trivial edit appends a bullet:
-
-```markdown
-<change-logs>
-
-- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>
-- YYYY-MM-DD — [spec/<id>-<slug>](spec/<id>-<slug>.md) — <short note>
-
-</change-logs>
-```
-
-Create the section if absent. Order is append-only — earlier bullets
-are never edited or removed.
-
-The wiki **close guard** (per
-`references/iterate-mechanics.md`) warns when a review item with
-`wiki_impact: [architecture]` transitions to `resolved` but no bullet
-points back at it. The drift detector re-surfaces violations.
-
-## Common mistakes the validator catches
-
-- **Stray content outside section blocks** → `body-stray-content`.
-  Anything in the body that is not whitespace must live inside a
-  `<tag>...</tag>` block.
 - **Required section missing** (`<overview>`, `<components>`,
   `<technology-stack>`, `<test-strategy>`) → `body-xsd`.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`. Open
-  and close lines must be on column 0; no attributes; no
-  self-closing.
-- **Same-tag nesting** → `body-tag-invalid`. Sections do not nest;
-  every section sits at the body's top level.
-- **H1 in body** → `body-stray-content`. Wiki pages have no
-  frontmatter `title:` field; the page name is the file basename.
 - **`type:` mismatch** with filename → frontmatter validator error.
+
+(Universal validator catches — stray body content, attribute-bearing
+tags, same-tag nesting, H1 in body — are documented in
+`a4-workspace-policies.md` §4. `<change-logs>` discipline is in §5.)
 
 To validate manually before commit:
 
@@ -171,10 +127,12 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
   "<project-root>/a4" --file architecture.md
 ```
 
-## Don't
+## Don't (architecture-specific)
 
-- **Don't edit from any skill other than `/a4:arch`.** Emit a review
-  item with `target: architecture`.
+(Universal Don'ts — non-primary-author edits, hand-editing writer-
+owned fields, bare-text `<change-logs>` bullets — are in
+`a4-workspace-policies.md` §10.)
+
 - **Don't write Launch & Verify content here.** That belongs in
   `bootstrap.md`'s `<verify>` section, the single source of truth.
   Reference bootstrap by markdown link if needed.
@@ -186,9 +144,6 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
 - **Don't rename a component heading silently.** Renames cascade to
   every task's `<interface-contracts>` link. Open a review item to
   manage the cascade.
-- **Don't append to `<change-logs>` without a markdown link to the
-  causing issue.** Bare-text bullets break the close-guard / drift
-  detection chain.
 - **Don't pack a decision rationale into `<overview>`.** Decisions
   belong in a spec's `<decision-log>`. The architecture page records
   the *current* shape, not how it was reached.

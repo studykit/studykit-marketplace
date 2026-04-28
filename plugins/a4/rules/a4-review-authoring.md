@@ -30,17 +30,17 @@ deferred-work mailbox between stages. Authored by reviewer agents
 `/a4:roadmap iterate`, `/a4:run iterate`) per the shared procedure in
 `references/iterate-mechanics.md`.
 
+> **Workspace-wide policies** — writer-owned fields, id allocation,
+> path-reference form, tag form, `<change-logs>` discipline, wiki
+> authorship, cross-stage feedback (stop vs continue + review item),
+> iterate-flow writer mechanics, commit message form — live in
+> [`a4-workspace-policies.md`](a4-workspace-policies.md) and load
+> automatically alongside this rule. This rule covers the
+> review-item-specific contract on top.
+
 This rule is the working contract for any LLM about to read, draft, or
 edit a review file. The full schema and rationale live in
-[`references/frontmatter-schema.md §Review item`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
-the resolution / iterate procedure lives in
-[`references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md);
-the cross-stage stop/continue policy that decides when to emit a
-review item vs halt lives in
-[`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md);
-body-tag mechanics live in
-[`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-Read those before deviating from the rules below.
+[`references/frontmatter-schema.md §Review item`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 ## How to author — review items are emitted by skills, not hand-written
 

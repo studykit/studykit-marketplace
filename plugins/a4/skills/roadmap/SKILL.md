@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPl
 
 # Implementation Roadmap Builder
 
+> **Authoring contracts:** the wiki contract for `a4/roadmap.md` lives in [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md); the contract for the per-task files this skill generates lives in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md). This skill orchestrates the batch — frontmatter shape, body sections, status enums, and AC-source-by-kind are defined in those rules.
+
 Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and authors the implementation roadmap plus per-task files. The agent-driven implement + test loop lives in `/a4:run`.
 
 ## Workspace Layout
@@ -26,65 +28,11 @@ Outputs:
 
 Derived views (dependency graph, open-task dashboard, milestone progress) are produced on demand by `/a4:compass` or by grep over frontmatter; no separate files.
 
-## Roadmap Wiki Schema
+## Schemas
 
-```yaml
----
-type: roadmap
-updated: 2026-04-24
----
-```
+`a4/roadmap.md` frontmatter / body shape: see [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md).
 
-No lifecycle, revision, or source SHA fields. Cross-references and the Wiki Update Protocol follow the shared conventions at `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`.
-
-## Task File Schema
-
-```yaml
----
-type: task
-id: 5
-title: Render markdown
-kind: feature | spike | bug
-status: open | pending | progress | complete | failing | discarded
-implements: [usecase/3-search-history, usecase/4-render-preview]
-depends_on: [task/4-parse-config]
-spec: []
-related: []
-files: [src/render.ts, src/render.test.ts]
-cycle: 1
-labels: [renderer]
-milestone: v1.0
-created: 2026-04-22
-updated: 2026-04-24
----
-```
-
-Body sections (per `body_schemas/task.xsd`): required — `<description>`, `<files>` (action/path/change table), `<unit-test-strategy>` (scenarios + isolation + test files), `<acceptance-criteria>` (checklist). Optional — `<interface-contracts>` (the contracts this task consumes or provides, with markdown links to `architecture.md` sections), `<log>` (append-only writer-owned trail), `<change-logs>`, `<why-discarded>`.
-
-`kind:` is required and must be one of `feature | spike | bug`. The roadmap batch generator emits `kind: feature` for every UC-derived task; single ad-hoc spike / bug entries are authored via `/a4:task`.
-
-`status` semantics:
-- `open` — backlog (kanban "todo"); captured but not yet enqueued for `/a4:run`. `/a4:roadmap` does **not** emit this status — batch generation always writes `pending`. Authored by `/a4:task` when the user wants to defer scheduling.
-- `pending` — in the work queue, awaiting a `task-implementer`. Default for `/a4:roadmap`-generated tasks.
-- `progress` — a `task-implementer` agent is working or crashed mid-work (reset to `pending` on session resume by `/a4:run`).
-- `complete` — implemented; unit tests pass.
-- `failing` — implementation or unit tests failed after a task-implementer attempt.
-- `discarded` — UC this task implements was discarded; cascade-flipped by `transition_status.py`.
-
-All task status changes flow through `scripts/transition_status.py`. Cascades: when a UC goes `implementing → revising`, this script flips related `progress` / `failing` tasks back to `pending` (spec is being rewritten; re-implementation is required). When a UC goes to `discarded`, related tasks cascade to `discarded`.
-
-`cycle:` starts at 1 and increments each retry. `updated:` bumps on every status change (written by the status writer).
-
-### Acceptance Criteria source by kind
-
-The `<acceptance-criteria>` section is required on every task body. The source convention (documentation only — validators do not enforce):
-
-| Task kind / shape | AC source |
-|---|---|
-| `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
-| `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
-| `spike` | hypothesis + expected result, the spike's own body |
-| `bug` | reproduction scenario + fixed criteria |
+Per-task files (`a4/task/<id>-<slug>.md`) — frontmatter, body sections, status enum + cascades, AC-source-by-kind table, `cycle:` semantics: see [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md). The batch generator emits `kind: feature` and `status: pending` for every UC-derived task; single ad-hoc spike / bug entries flow through `/a4:task`.
 
 ## Id Allocation
 
@@ -158,77 +106,9 @@ Enter plan mode (the `EnterPlanMode` Claude Code primitive). Design:
 
 Exit plan mode. Write artifacts.
 
-**`a4/roadmap.md` body** uses `<plan>` (required, per `body_schemas/roadmap.xsd`) and optional `<change-logs>`. All narrative — Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points — lives as H3+ markdown headings inside `<plan>`:
+**`a4/roadmap.md` body** — write `<plan>` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md) §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `<change-logs>` bullet citing the driving wiki/issue.
 
-````markdown
----
-type: roadmap
-updated: <today>
----
-
-<plan>
-
-Implements the architecture in [architecture](architecture.md) to deliver the use cases in [context](context.md).
-
-### Overview
-
-<One paragraph: what is being implemented, how it serves the UCs, key sequencing intuition.>
-
-### Implementation Strategy
-
-- **Approach:** <component-first | feature-first | hybrid>
-- **Incremental delivery:** <how the system stays testable at each step>
-- **Key constraints:** <architectural or operational constraints shaping order>
-
-### Milestones
-
-#### v1.0 — Foundation
-
-**Goal:** <what "done" means for this milestone>
-**Scope:** [task/1-setup-schema](task/1-setup-schema.md), [task/2-auth-service](task/2-auth-service.md), [task/3-render-engine](task/3-render-engine.md)
-**Success criteria:** <observable outcome — e.g., "user can send a message and see a response">
-**Risks:** <anything with mitigation>
-
-#### v1.1 — Enrichment
-
-…
-
-### Dependency Graph (snapshot)
-
-```plantuml
-@startuml
-[task/1-setup-schema] as T1
-[task/2-auth-service] as T2
-[task/3-render-engine] as T3
-T2 --> T1
-T3 --> T1
-@enduml
-```
-
-> Authoritative source: per-task `depends_on:` frontmatter. This diagram is a point-in-time snapshot; regenerate via `/a4:compass` when tasks change.
-
-### Launch & Verify
-
-Single source of truth: [bootstrap](bootstrap.md). Re-run `/a4:auto-bootstrap` to update its `<verify>` section. `/a4:run` reads it directly.
-
-### Shared Integration Points
-
-<Only when a file appears in 3+ tasks.>
-
-| File | Integration Pattern | Contributing Tasks |
-|------|--------------------|-------------------|
-| `src/app.ts` | Handler registration; tasks register their handlers via `app.register(...)` | [task/2-auth-service](task/2-auth-service.md), [task/3-render-engine](task/3-render-engine.md), [task/5-history-service](task/5-history-service.md) |
-
-</plan>
-
-<change-logs>
-
-- 2026-04-24 — [architecture](architecture.md)
-
-</change-logs>
-````
-
-**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` using the task schema above. The roadmap's Milestones subsection references them via standard markdown links.
+**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` per [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) (`kind: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links.
 
 After all task files are written, refresh the reverse link on each UC so `ready → implementing` will pass mechanical validation:
 

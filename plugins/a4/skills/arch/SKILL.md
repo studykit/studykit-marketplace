@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Architecture Designer
 
+> **Authoring contract:** the wiki contract for `a4/architecture.md` lives in [`rules/a4-architecture-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md). When this skill edits `domain.md` for in-situ concept work, [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md) §Authorship enumerates the limited-shared in-situ scope. This skill orchestrates — frontmatter shape, body sections, validator behavior are defined in those rules.
+
 Takes the use-case set in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`, and designs the system architecture — technology stack, external dependencies, components, information flows, interface contracts, and test strategy — through collaborative dialogue. Writes the result to `a4/architecture.md` as a single wiki page.
 
 ## Workspace Layout
@@ -29,14 +31,7 @@ Derived views (consistency tables, UC×component coverage matrix, open-arch-find
 
 ## Wiki Page Schema
 
-```yaml
----
-type: architecture
-updated: 2026-04-24
----
-```
-
-No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / domain concepts / actors are expressed as standard markdown links (`[usecase/3-search-history](usecase/3-search-history.md)`) in body prose. The `<change-logs>` section tracks updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` (shared across `usecase`, `arch`, and `roadmap`).
+Frontmatter / body sections / `<change-logs>` discipline: see [`rules/a4-architecture-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md).
 
 ## Id Allocation
 
@@ -99,122 +94,20 @@ Mark "Step 0" completed when the survey is done.
 
 ## Architecture.md Structure
 
-As the interview progresses, grow `a4/architecture.md` with these `<tag>` sections (per `body_schemas/architecture.xsd`; write on phase transitions, see File Writing Rules below):
+Required and optional body sections, the per-component sub-structure(DB Schema / Information Flow / Interface Contracts), and the `<change-logs>` discipline are defined in [`rules/a4-architecture-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md) §Body shape. Phase-transition fill-in convention used by this skill:
 
-````markdown
----
-type: architecture
-updated: <today>
----
-
-<overview>
-
-One-paragraph summary of the architectural approach and key decisions. Frames the buildable system for the use cases in [context](context.md), built against the actors in [actors](actors.md) and the concepts in [domain](domain.md).
-
-</overview>
-
-<technology-stack>
-
-| Category | Choice | Rationale |
-|----------|--------|-----------|
-| Language | TypeScript | … |
-| Framework | Next.js | … |
-
-</technology-stack>
-
-<external-dependencies>
-
-| External System | Used By | Purpose | Access Pattern | Fallback |
-|----------------|---------|---------|----------------|----------|
-| OAuth Provider | [usecase/1-share-summary](usecase/1-share-summary.md), [usecase/2-search-history](usecase/2-search-history.md) | … | … | … |
-
-</external-dependencies>
-
-<component-diagram>
-
-```plantuml
-@startuml
-component [SessionService] as session
-component [RendererService] as renderer
-session --> renderer : events
-@enduml
-```
-
-</component-diagram>
-
-<components>
-
-### SessionService
-
-**Responsibility:** …
-
-#### DB Schema *(only if data store: yes)*
-
-```plantuml
-@startuml
-entity "Session" { *id : number | *userId : number | createdAt : datetime }
-@enduml
-```
-
-#### Information Flow
-
-##### [usecase/3-search-history](usecase/3-search-history.md)
-
-```plantuml
-@startuml
-participant "SessionService" as S
-participant "HistoryService" as H
-S -> H : request history
-@enduml
-```
-
-#### Interface Contracts
-
-| Operation | Direction | Request | Response | Notes |
-|-----------|-----------|---------|----------|-------|
-| createSession | client → SessionService | { userId, title } | { sessionId, status } | sync |
-
-(Repeat per component.)
-
-</components>
-
-<test-strategy>
-
-| Tier | Tool | Purpose | Rationale |
-|------|------|---------|-----------|
-| Unit | Vitest | Component-internal logic | … |
-| Integration | @vscode/test-electron | Host environment APIs | … |
-| E2E | WebdriverIO + wdio-vscode-service | Full UI interaction | … |
-
-</test-strategy>
-
-<change-logs>
-
-- 2026-04-24 — [usecase/3-search-history](usecase/3-search-history.md)
-- 2026-04-24 — [spec/8-caching-strategy](spec/8-caching-strategy.md)
-
-</change-logs>
-````
-
-UC references in Information Flow subsections use standard markdown links — they resolve to `a4/usecase/<id>-<slug>.md` (relative path retained, `.md` retained). Component names and schema fields should use domain terms from `a4/domain.md`.
-
-### Required vs Conditional Sections
-
-**Required** (per the XSD): `<components>`, `<overview>`, `<technology-stack>`, `<test-strategy>`.
-
-**Optional** (per the XSD): `<change-logs>`, `<component-diagram>`, `<external-dependencies>`. Convention:
-
-- **`<external-dependencies>`** — populate when the system uses external services; omit otherwise.
+- **`<external-dependencies>`** — populate when the system uses external services.
 - **`<component-diagram>`** — populate when the component graph is non-trivial.
-- **DB Schema** (per component, inside `<components>`) — only when the component has its own data store.
-- **Interface Contracts** (per component pair, inside `<components>`) — progressively filled as the architecture matures; expected once components are stable.
-- **Information Flow** (per UC, inside `<components>`) — progressively filled; a mature architecture covers every UC in `a4/usecase/`.
+- **DB Schema** (inside a `<components>` entry) — only when that component has its own data store.
+- **Interface Contracts / Information Flow** (per `<components>` entry) — progressively filled across phases; a mature architecture covers every UC in `a4/usecase/`.
+
+Component names and schema fields must use domain terms from `a4/domain.md`.
 
 ## File Writing Rules
 
-- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter above, `<overview>` stub, and the confirmed `<technology-stack>` content.
-- **Update** the file at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Change-log entries** — when a change is driven by a specific UC / spec / review item (new UC added, component split after review, etc.), append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. See `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` for the full protocol (when to update, how to defer via a review item, close guard).
+- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter, `<overview>` stub, and the confirmed `<technology-stack>` content.
+- **Update** at each phase transition using `Edit` where possible (preserves structure). `Write` only for full rewrites.
+- **Change-log entries** — append a dated bullet citing the causing UC / spec / review item per the rule's `<change-logs>` discipline.
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Interview Phases
@@ -245,20 +138,7 @@ Read `${CLAUDE_SKILL_DIR}/references/architecture-guide.md` for the detailed pro
 
 Component names, schema fields, and contract parameters must use `a4/domain.md` terminology.
 
-**Domain Model modifications during arch work.** Cross-cutting domain authorship is `/a4:domain`'s job; arch's role is to flag mismatches and apply *simple* edits inline. The full workspace-wide authorship + cross-stage feedback policy is at [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md); the table below is the arch-specific b3 instance:
-
-| Change shape | Owner | What arch does |
-|---|---|---|
-| New concept / new attribute on existing concept | arch | Edit `a4/domain.md` `<concepts>` directly. Append `<change-logs>` bullet pointing at `[architecture#<section>](architecture.md#<section>)`. Bump `updated:`. |
-| 1:1 rename of an existing concept | arch | Edit `a4/domain.md` directly. Update every existing reference in the same file. Append `<change-logs>` bullet. Bump `updated:`. |
-| Definition wording / clarification on an existing concept | arch | Edit `a4/domain.md` directly. Append `<change-logs>` bullet. Bump `updated:`. |
-| Concept split / merge | `/a4:domain` | Allocate a review item: `kind: gap`, `target: domain`, `wiki_impact: [domain]`, `source: self`, body summarizes the proposed split/merge with arch's rationale. **Do not edit `domain.md`.** Continue arch using a placeholder term; the user will run `/a4:domain iterate` later to land the structural change. |
-| Relationship add / remove / cardinality change | `/a4:domain` | Same as split/merge — emit a review item targeting `domain`; do not edit. |
-| State or transition added / removed | `/a4:domain` | Same — emit a review item; do not edit. |
-
-When emitting a review item under this table, allocate via `allocate_id.py` and write `a4/review/<id>-<slug>.md`. Place a markdown link to the new review item inline in the architecture section that surfaced the issue (e.g., `[review/12-domain-split](review/12-domain-split.md)`), so the user can find it during `/a4:domain iterate`.
-
-The boundary is: *content changes* (add a concept, rename, clarify) are inline; *structural changes* (split, merge, relationship topology, state topology) require a focused cross-cutting pass that arch does not attempt mid-component-design.
+**Domain Model modifications during arch work.** The in-situ scope (add concept / 1:1 rename / definition wording — inline; split / merge / relationship change / state change — review item with `target: domain`) is enumerated in [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md) §Authorship. When emitting a review item, allocate via `allocate_id.py`, write `a4/review/<id>-<slug>.md`, and place a markdown link to the review item inline in the architecture section that surfaced the issue.
 
 ### Phase 4: Test Strategy
 

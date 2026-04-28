@@ -12,14 +12,16 @@ is the single source of truth for actor slugs — UC frontmatter is
 validated against it, and `compass` derives the Authorization Matrix
 view from it.
 
+> **Workspace-wide policies** — writer-owned fields, id allocation,
+> path-reference form, tag form, `<change-logs>` discipline, wiki
+> authorship, cross-stage feedback, commit message form — live in
+> [`a4-workspace-policies.md`](a4-workspace-policies.md) and load
+> automatically alongside this rule. This rule covers the
+> actors-wiki-specific contract on top.
+
 This rule is the working contract for any LLM about to read, draft, or
 edit the actors wiki. The full schema lives in
-[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
-authorship boundaries live in
-[`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md);
-body-tag mechanics live in
-[`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-Read those before deviating from the rules below.
+[`references/frontmatter-schema.md §Wiki pages`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:usecase` (or `/a4:arch` for system actors only)
 

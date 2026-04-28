@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 
 # Spec Recorder
 
+> **Authoring contract:** the contract for `a4/spec/**/*.md` — frontmatter, body sections, `<decision-log>` append-only rule, lifecycle, supersedes cascade, registrar-owned `research:` — lives in [`rules/a4-spec-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-spec-authoring.md). Spec-trigger detection (when a moment is spec-worthy) lives in [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md). This skill orchestrates capture + activate + wiki nudge.
+
 Documents a converged-on shape (format, protocol, schema, renderer rule, CLI surface, etc.) into `a4/spec/<id>-<slug>.md`, cites supporting research if any, optionally records the decision rationale inline, and nudges affected wiki pages. This skill does not facilitate the design itself — it captures an already-converged shape from the current session.
 
 Seed: **$ARGUMENTS**
@@ -36,43 +38,32 @@ If the user's phrasing is ambiguous, ask once which mode they mean.
 
 Two input modes:
 
-- **No argument.** Read recent conversation context. Identify the shape that converged — what artifact it describes, the prescriptive rules (grammar, fields, formats, examples), and any decisions taken along the way that explain why the shape landed this way. If no clear shape emerged, ask the user which one to record.
-- **Short summary / title.** Use `$ARGUMENTS` as a seed. Still draw the full content (context, prescriptive rules, decisions, alternatives, open questions) from recent conversation — the argument is a hint, not the source.
+- **No argument.** Read recent conversation context. Identify the converged shape — what artifact it describes, the prescriptive rules, and any decisions explaining why the shape landed this way. If no clear shape emerged, ask the user which one to record.
+- **Short summary / title.** Use `$ARGUMENTS` as a seed; still draw the full content from recent conversation.
 
-Draft the following in a scratch summary (do not write to disk yet):
+Draft a scratch summary covering the fields and sections defined in [`rules/a4-spec-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-spec-authoring.md) (`title`, `decision` one-liner, required `<context>` + `<specification>`, optional sections only when the conversation produced content for them, candidate `supersedes:` if the conversation referenced a predecessor). Do **not** emit placeholder sections.
 
-- **Title** — a short, human-readable phrase (becomes the `title:` frontmatter field; H1 in body is forbidden). Example: "Reading-order tree footnote layout".
-- **Decision** — the chosen shape as a one-liner (becomes `decision:` frontmatter). Example: "Caller annotations rendered as bracketed footnote tokens with two-space padding."
-- **Context** — why the spec exists, what scope it covers, what artifact it describes.
-- **Specification** — the prescriptive content. Grammar, fields, format rules, examples. This is the heart of the spec — the part downstream code, validators, and review items must conform to.
-- **Decision Log** (optional) — append-only notes on the decisions that shaped the spec. Each entry: short date-prefixed bullet summarizing what was chosen and why. Empty is fine for a fresh spec; entries accrete over time as the spec is revised.
-- **Body outline** — the set of `<tag>` sections that best fit this spec's shape. `<context>` and `<specification>` are **required** (enforced by `body_schemas/spec.xsd`); beyond those, include only sections the conversation actually produced content for (e.g., `<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`). Unknown supplemental tags (e.g., `<benchmarks>`) are tolerated by the XSD's openContent. Do not emit placeholder sections.
-- **Supersedes** — when the conversation references a prior spec being replaced, search `a4/spec/*.md` for the prior spec and propose `supersedes: [spec/<prior-id>-<slug>]`. The `transition_status.py` cascade flips the prior spec(s) to `superseded` on `→ active`.
-- **Related research** — candidate `./research/<slug>.md` files (see Step 3).
-
-Present this draft to the user before proceeding. Iterate until the user confirms the substance is right.
+Present the draft to the user before proceeding. Iterate until the substance is confirmed.
 
 ## Step 3: Discover related research
 
-Offer two sources for `<research>` body citations (markdown links in the body, written by the registrar):
+Offer two sources for citations:
 
-1. **Auto-scan.** `Glob ./research/*.md` (relative to project root). For each candidate, compare the file's `topic:` frontmatter or slug to the spec's title/topic. Propose plausible matches to the user.
-2. **User-specified.** If the user mentioned a research file during the conversation (by slug, topic, or path), include it verbatim.
+1. **Auto-scan.** `Glob ./research/*.md` (relative to project root). For each candidate, compare the file's `topic:` frontmatter or slug to the spec's title/topic. Propose plausible matches.
+2. **User-specified.** If the user named a research file during the conversation, include it verbatim.
 
-Confirm the final list with the user. The list may be empty — specs do not require prior research.
-
-Research citations are recorded by `register_research_citation.py` (Step 5b below), which atomically writes them in four places: the spec's `research:` frontmatter list and body `<research>` section, plus the research file's `cited_by:` frontmatter list and body `<cited-by>` section. Do **not** hand-edit any of those four — always invoke the registrar so forward and reverse stay in sync.
+Confirm the final list with the user. Empty is fine — specs do not require prior research. Step 5b runs the registrar.
 
 ## Step 4: Decide on status via dialogue
 
-Interpret from the user's natural-language signals about confidence and commitment:
+Interpret confidence/commitment from the user:
 
-- Signals for `active` — "this is the spec", "lock this in", "downstream should conform to this", "확정", "이걸로 가자".
-- Signals for `draft` — "let's record this but I want to sit with it", "still somewhat open", "tentative", "두고 보자", "아직 여지 있음".
+- `active` signals — "this is the spec", "lock this in", "확정", "이걸로 가자".
+- `draft` signals — "tentative", "still open", "두고 보자", "아직 여지 있음".
 
-When the signal is ambiguous, ask once with a light phrasing that does not feel like a binary form: *"Activate now, or leave as `draft` for now?"*
+If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
-**Record the signal — do not write it yet.** The file is always born at `status: draft` in Step 5. If the signal is `active`, Step 6 calls `transition_status.py` to flip it. This keeps every status change on a spec file flowing through the single writer.
+**Record the signal — do not write it yet.** The file is always born at `status: draft` in Step 5; Step 6 flips it via the writer if `active` was signaled.
 
 ## Step 5: Allocate id, slug, and write the file
 
@@ -86,48 +77,13 @@ When the signal is ambiguous, ask once with a light phrasing that does not feel 
 
 3. File path: `<project-root>/a4/spec/<id>-<slug>.md`.
 
-4. Use the `Write` tool. Content:
-
-```markdown
----
-type: spec
-id: <id>
-title: "<title>"
-status: draft
-decision: "<one-line shape summary>"
-supersedes: []
-research: []
-related: []
-labels: []
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
----
-
-<context>
-
-<Why this spec exists; what artifact it describes; the scope it covers. Reference related research as the registrar will inject — do not hand-write `<research>` here; Step 5b runs the registrar.>
-
-</context>
-
-<specification>
-
-<The prescriptive content. Grammar, fields, format rules, examples. Use markdown sub-headings (`###`) freely to break up large specs — H3+ headings inside a section tag are fine; H1 (`# Title`) is forbidden in body.>
-
-</specification>
-
-<!-- Additional sections per `body_schemas/spec.xsd` — emit only when the conversation produced content:
-     <decision-log>, <open-questions>, <rejected-alternatives>, <consequences>, <examples> -->
-```
-
-Tag form rules: each `<tag>` and `</tag>` lives on column 0 on its own line; lowercase + kebab-case names; no attributes; blank lines around each tag for readability. See [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-
-Body structure rules and the full frontmatter field schema (including the `validate_body.py`-enforced `<context>` + `<specification>` requirement via `body_schemas/spec.xsd`, the prescriptive principle, and the append-only `<decision-log>` rule) are in [`frontmatter-schema.md §Spec`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). Read that file before drafting the body and frontmatter; it shapes Step 2's body outline.
+4. Use the `Write` tool. Frontmatter shape, required body sections (`<context>`, `<specification>`), optional sections (`<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`), and tag-form rules are defined in [`rules/a4-spec-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-spec-authoring.md). Initial `status:` is always `draft`; `decision:` is the one-liner that Step 6 will quote in the activate transition. Do **not** hand-write `<research>` — Step 5b registers it.
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
 
 ## Step 5b: Register research citations
 
-For each research artifact confirmed in Step 3, invoke the registrar to atomically record the citation in four places (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`):
+For each research artifact confirmed in Step 3, invoke the registrar:
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
@@ -136,13 +92,11 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/register_research_citation.py" \
   "spec/<id>-<slug>"
 ```
 
-Idempotent — if a side already records the citation, that side is left alone. Skip the step entirely when Step 3's research list is empty. Run once per (research, spec) pair when there are multiple research artifacts.
-
-The registrar bumps the research file's `updated:` field and never touches its `status:` — research lifecycle (`draft | final | standalone | archived`) stays the user's call.
+Idempotent. Skip entirely when Step 3's list is empty; run once per (research, spec) pair otherwise. The registrar owns the four-place atom (spec `research:` + `<research>`, research `cited_by:` + `<cited-by>`) and bumps the research file's `updated:`.
 
 ## Step 6: Activate via writer (if signal was `active`)
 
-Invoke only when the user signaled `active` in Step 4 (new-record mode) **or** the whole invocation is in activate-existing mode from Step 1 (a).
+Invoke only when the user signaled `active` in Step 4, or the whole invocation is in activate-existing mode from Step 1 (a).
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "<project-root>/a4" \
@@ -152,13 +106,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "<project-root>/a4" 
   --json
 ```
 
-The writer:
-
-1. Enforces mechanical validation (title no placeholder; body XSD pass via `validate_body.run()` — `<context>` and `<specification>` present, no stray content, no unclosed tags). If validation fails, the exit code is `2` and `validation_issues` lists the gaps — fix them and re-run (never use `--force` here).
-2. Flips `status: draft → active`, bumps `updated:`, appends a `<log>` entry `<today> — draft → active — <reason>`.
-3. If `supersedes:` is non-empty, walks each same-family target and flips it `{active|deprecated} → superseded` in the same invocation. Targets already `superseded` are skipped; targets at `draft` are reported as `not-supersedable` and left alone. Cross-family entries are silently skipped.
-
-If the writer returns `ok: true`, report the primary flip plus any cascades. If it returns validation issues, surface them verbatim to the user and do not retry blindly — the gap usually means the body needs another pass in Step 5.
+The writer's lifecycle / validation / supersedes-cascade behavior is defined in [`rules/a4-spec-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-spec-authoring.md) §Lifecycle. On `ok: true`, report the primary flip plus any cascades. On `exit 2`, surface `validation_issues` verbatim and return to Step 5 — never retry with `--force`.
 
 ## Step 7: In-situ wiki nudge
 
@@ -179,6 +127,6 @@ Summarize to the user:
 - **Do not research.** If the spec needs more investigation, stop and tell the user to run `/a4:research` first.
 - **Do not review whether the shape is correct.** Whether the chosen shape is the right one is the user's own thinking; no machine critique pass exists for that.
 - **Do not commit.** Leave files in the working tree.
-- **Do not hand-edit `status:`.** All status changes on spec files flow through `transition_status.py`; this skill never writes `status: active` directly nor uses `Edit`/`Write` to change an existing spec's status. (Setting `status: deprecated` is the user's manual call via `transition_status.py`; the skill does not retire specs unprompted.)
-- **Do not auto-populate `supersedes:`.** The user sets it explicitly in Step 2 if this spec replaces prior ones.
-- **`<decision-log>` is append-only.** Earlier entries are never edited or removed. Corrections are added as new entries that explain why the prior reasoning no longer holds.
+- **Do not auto-populate `supersedes:`** or retire specs unprompted. The user sets `supersedes:` in Step 2; `→ deprecated` is a manual user call via `transition_status.py`.
+
+(Frontmatter / body / lifecycle / writer-only field rules — including the `<decision-log>` append-only invariant and the `status:` writer-only rule — live in the spec authoring rule, not here.)

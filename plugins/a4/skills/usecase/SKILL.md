@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Use Case Discovery Facilitator
 
+> **Authoring contract:** the contract for `a4/usecase/**/*.md` — frontmatter, body sections, lifecycle (8 states), writer ownership, abstraction discipline, in-situ wiki nudge — lives in [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md). Review-item shape is in [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill orchestrates the Socratic interview and the wrap-up loop.
+
 A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. The conversation progressively produces **Use Cases** — concrete descriptions of how users interact with the system, grounded in real situations — together with the cross-cutting wiki pages that frame them (context, actors, domain, NFRs).
 
 Discover use cases for: **$ARGUMENTS**
@@ -33,68 +35,11 @@ Wiki pages (`context.md`, `actors.md`, `domain.md`, `nfr.md`) are flat at `a4/` 
 
 ## Frontmatter Schemas
 
-**Wiki page** — `context.md`, `actors.md`, `domain.md`, `nfr.md`:
-```yaml
----
-type: context | actors | domain | nfr
-updated: 2026-04-24
----
-```
+UC frontmatter / body / 8-state lifecycle / writer ownership / `implementing → draft` ban / `shipped` post-rules: see [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md).
 
-**Use Case** — `usecase/<id>-<slug>.md`:
-```yaml
----
-type: usecase
-id: 3
-title: Search history
-status: draft | ready | implementing | revising | shipped | superseded | discarded | blocked
-actors: [meeting-organizer, team-member]
-depends_on: [usecase/1-share-summary]
-supersedes: []
-implemented_by: []   # auto-maintained by refresh_implemented_by.py
-related: []
-labels: [search, ui]
-milestone: v1.0
-created: 2026-04-24
-updated: 2026-04-24
----
-```
+Review item shape (`review/<id>-<slug>.md`, `kind: finding | gap | question`, `target:`, `source:`, `wiki_impact:`, status cascade): see [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md).
 
-Omit empty fields or leave `[]`. `milestone` is optional until the plan phase assigns one. Frontmatter paths are plain strings (no brackets, `.md` omitted). The body is a sequence of column-0 `<tag>...</tag>` sections; in-body cross-references use standard markdown links — `[task/5-render-markdown](../task/5-render-markdown.md)`.
-
-UC lifecycle has eight states:
-
-- `draft` — spec still being shaped (initial state).
-- `ready` — spec closed; waiting for an implementer to pick it up.
-- `implementing` — a `task-implementer` agent is working on it.
-- `revising` — implementation paused for in-place spec edit. Re-enters `ready` on re-approval.
-- `shipped` — the running system reflects this UC. Forward-path terminal.
-- `superseded` — replaced by a newer UC that declared `supersedes: [<this>]` and shipped. Terminal.
-- `discarded` — direction abandoned. Terminal. Related tasks and open review items cascade to `discarded`.
-- `blocked` — implementation-time blocker; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`.
-
-**All status changes flow through `scripts/transition_status.py`.** Do not hand-edit `status:` / `updated:` / `<log>` entries — the writer owns them.
-
-**`implementing → draft` is disallowed.** Once code has started, use `implementing → revising` for in-place spec edit, or `implementing → discarded` to abandon the direction. `shipped` never returns to `implementing` or `draft` — post-ship changes are either a new UC with `supersedes:` or `shipped → discarded` when removing the feature.
-
-**Review item** — `review/<id>-<slug>.md` (used by wrap-up and the in-situ nudge):
-```yaml
----
-type: review
-id: 6
-kind: finding | gap | question
-status: open | in-progress | resolved | discarded
-target: usecase/3-search-history       # omit for cross-cutting
-source: self | usecase-reviewer | drift-detector | task-implementer
-wiki_impact: [domain, actors]          # basenames of wiki pages needing updates; [] when none
-priority: high | medium | low
-labels: []
-created: 2026-04-24
-updated: 2026-04-24
----
-```
-
-Review status transitions flow through `transition_status.py` too (`open → in-progress → resolved` / `discarded`). A review item with `target: usecase/<X>` automatically cascades to `discarded` when its target UC is discarded.
+Wiki page schemas for `context.md` / `actors.md` / `nfr.md` (this skill's primary-author pages): each is a single-section page with `type:` matching the file basename and an `updated:` ISO date. Per-page body shape lives in [`rules/a4-context-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md), [`rules/a4-actors-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-actors-authoring.md), and [`rules/a4-nfr-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-nfr-authoring.md).
 
 ## Id Allocation
 
@@ -108,13 +53,7 @@ Run this **immediately before** writing a new UC, review item, etc. Ids are mono
 
 ## Body Conventions
 
-Body tag form (column-0 `<tag>` blocks, lowercase kebab-case, no attributes), the `<change-logs>` audit trail, and the Wiki Update Protocol (when a wiki page needs an update, how to apply one, how to defer via a review item, and the close guard) are documented in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`. That reference is shared by `usecase`, `arch`, and `roadmap`. Read it once.
-
-Key rules this skill invokes below:
-
-- Body cross-references use standard markdown links — `[task/5-render](../task/5-render.md)` (relative paths, `.md` retained). Frontmatter paths stay plain strings (no brackets, no `.md`) per [frontmatter-schema.md](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
-- When a confirmed UC / actor / concept change affects a wiki page, update the wiki page in place: edit the relevant section tag, append a dated bullet with a markdown link to the causing issue inside the page's `<change-logs>` section (creating the section if absent), and bump the wiki page's `updated:`.
-- If the user defers a wiki update, open a review item with `wiki_impact:` set; the close guard re-surfaces it at session close.
+Body tag form, link form, `<change-logs>` audit trail, and the Wiki Update Protocol live in [`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md). The UC-specific in-situ wiki nudge procedure (apply vs defer, close guard) is in [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md) §In-situ wiki nudge.
 
 ## Modes
 

@@ -14,9 +14,18 @@ memory: project
 
 You are a Use Case revision agent. Your job is to walk a set of open review items emitted by `usecase-reviewer` and apply each item's Suggestion to its target, matching the spec-as-wiki+issues layout.
 
+## Authoring contracts (read once at startup)
+
+Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before editing any a4 file:
+
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, change-logs, cross-stage feedback).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — per-UC contract.
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item lifecycle (resolved / discarded transitions via `transition_status.py`).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md` / `a4-actors-authoring.md` / `a4-nfr-authoring.md` — when the Suggestion targets one of those wikis.
+
 ## Shared References
 
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout, frontmatter schemas, wiki update protocol.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout, wiki update protocol.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-splitting.md` — splitting procedure.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md` — banned terms, conversion rules.
 

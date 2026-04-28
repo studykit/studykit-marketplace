@@ -72,6 +72,15 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
   markers and is rewritten by `scripts/generate_section_enum.py`. The
   pre-commit hook re-checks for drift whenever any
   `scripts/body_schemas/*.xsd` or the rule file is staged.
+- `rules/a4-workspace-policies.md` is the **cross-cutting baseline**
+  rule (`paths: ["a4/**/*.md"]`). It auto-loads on any a4 file Read
+  and consolidates the policies that apply uniformly: writer-owned
+  fields (`status:` / `updated:` / `<log>` / reverse-links), id
+  allocation, frontmatter path form vs body link form, body tag form,
+  `<change-logs>` discipline, primary-author boundary + cross-stage
+  stop/continue, iterate-flow writer mechanics, and the `#<id>`
+  commit-subject form. Per-type rules build on top — they do not
+  redefine these policies.
 - `rules/a4-<type>-authoring.md` files are hand-edited per-type
   authoring guides. Two flavors share the shape:
   - **Issue-family rules** scope to `a4/<type>/**/*.md` (folder glob).
@@ -93,7 +102,38 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
   Both flavors have no generator backing and no pre-commit drift
   check; they are normal prose that must be revised by hand when the
   source schemas, skills, or `wiki-authorship.md` change. Add new
-  ones for other types or wiki pages by copying the shape.
+  ones for other types or wiki pages by copying the shape. Per-type
+  rules should defer cross-cutting items to `a4-workspace-policies.md`
+  rather than re-stating them, so policy changes flow through one
+  file.
+
+## Subagents do not auto-inherit project-level rules
+
+Per the official subagent docs: "Subagents receive only this system
+prompt (plus basic environment details), not the full Claude Code
+system prompt", and "Subagents don't inherit skills from the parent
+conversation". The same applies to path-scoped rules from
+`.claude/rules/` — they may not auto-load when a subagent reads
+matching files.
+
+a4 subagents that author or emit a4 files therefore include an
+"Authoring contracts" section near the top of their system prompt
+body that explicitly directs them to read the relevant rule files at
+startup. Subagents currently carrying that section:
+
+- **Authors / revisers** (write a4 issue + wiki files):
+  `usecase-composer`, `usecase-reviser`.
+- **Reviewers** (emit `kind: finding | gap | question` review items):
+  `usecase-reviewer`, `arch-reviewer`, `domain-reviewer`,
+  `roadmap-reviewer`.
+- **Implementer / runner** (write code + emit reviews + commit with
+  `#<id>` form): `task-implementer`, `test-runner`.
+
+Other agents (`api-researcher`, `mock-html-generator`,
+`research-reviewer`, `usecase-explorer`, `workspace-assistant`) do not
+write a4 issue files in normal operation and currently do not embed
+the authoring-contracts section. Add the section if a future change
+broadens an agent's responsibilities to issue authorship.
 
 ## Skill-generated frontmatter is script-managed
 

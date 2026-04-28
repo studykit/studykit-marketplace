@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Task Author + Discard
 
+> **Authoring contract:** the frontmatter / body / lifecycle contract for `a4/task/**/*.md` lives in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md). This skill orchestrates writing through the rule's contract — it does not redefine it. Read the rule before deviating from any field shape, status enum, or body section requirement below.
+
 Two modes:
 
 - **Author** (default) — writes one `a4/task/<id>-<slug>.md` outside the UC-batch path. Co-exists with `/a4:roadmap` (which writes the full UC-driven task set in one go). Use when a spike is needed to unblock an architecture or decision question; a bug needs a tracked fix; a spec-justified feature needs implementation in a UC-less or partially-UC project; a new feature task lands after the initial roadmap was authored.
@@ -76,23 +78,7 @@ Empty anchors are not always a problem — small UI tweaks, single-property vali
 
 ## Step 3: Compose the task body
 
-Required body sections (per `body_schemas/task.xsd`):
-
-- `<description>` — what and why.
-- `<files>` — action / path / change table. For `spike`, every path is under `spike/<id>-<slug>/`.
-- `<unit-test-strategy>` — scenarios + isolation strategy + test file paths. For `spike`, this may be a one-line "validate hypothesis via <method>".
-- `<acceptance-criteria>` — checklist. Source by kind:
-
-  | Task kind / shape | AC source |
-  |---|---|
-  | `feature` + `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
-  | `feature` + `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
-  | `spike` | hypothesis + expected result, the spike's own body |
-  | `bug` | reproduction scenario + fixed criteria |
-
-  Validators do not enforce source-by-kind — this is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
-
-Optional body sections (per the XSD): `<interface-contracts>` (contracts this task consumes or provides, with markdown links to `architecture.md` sections — e.g., `[architecture#SessionService](../architecture.md#sessionservice)`. For UC-less work, link to the spec or the relevant `architecture.md` section. May be omitted for self-contained spikes); `<log>` (append-only writer-owned trail; starts absent — `status: pending` is the implicit creation entry, written by the writer on first transition); `<change-logs>` (audit trail when the task body is materially edited post-create); `<why-discarded>` (populated by discard mode).
+Required and optional body sections, the AC-source-by-kind table, and the writer-owned `<log>` rules are defined in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) §Body shape. Compose the section content per that contract.
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -117,47 +103,9 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/task/<id>-<slug>.md`.
 
-Frontmatter (substitute the initial status decided in Step 1):
+Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `files:` + the post-hoc `<log>` block — the only case where a skill writes into `<log>` directly) are defined in [`rules/a4-task-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md) §Frontmatter contract / §`complete` initial-status preflight.
 
-```yaml
----
-type: task
-id: <allocated>
-title: <human-readable title>
-kind: feature | spike | bug
-status: open | pending | complete
-implements: [<paths or empty>]
-depends_on: [<paths or empty>]
-spec: [<paths or empty>]
-related: []
-files: [<paths>]
-cycle: 1
-labels: []
-milestone: <optional>
-created: <today>
-updated: <today>
----
-```
-
-Allowed initial statuses are `open` (default — backlog), `pending` (enqueue for `/a4:run`), and `complete` (post-hoc documentation). `progress` and `failing` are writer-only; never use them as initial states.
-
-**`complete` initial-status preflight.** When the chosen initial status is `complete`, the work is asserted to already be shipped — verify before writing:
-
-1. For each path in `files:`, confirm it exists in the working tree (`test -e` on the absolute path). If any path is missing, halt and ask the user: (a) fix the path, or (b) downgrade the initial status to `pending` so the task enters the implement loop.
-2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per `body_schemas/task.xsd` — `complete` does not exempt the task from documentation. `<interface-contracts>` is optional; include it when relevant.
-3. After writing the file, append an explicit `<log>` block recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
-
-   ```markdown
-   <log>
-
-   - <YYYY-MM-DD> created at status: complete (post-hoc documentation; code shipped prior to task authorship)
-
-   </log>
-   ```
-
-   This is the only case where a skill writes into `<log>` directly — every subsequent entry must come from `transition_status.py`.
-
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value and the create is itself the log-implicit "first appearance" event (the post-hoc `<log>` block above is the documented exception for the `complete` case). Subsequent transitions go through the writer.
+Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value and the create is itself the log-implicit "first appearance" event. Subsequent transitions go through the writer.
 
 ## Step 6: Refresh `implemented_by:` (if `implements:` non-empty)
 

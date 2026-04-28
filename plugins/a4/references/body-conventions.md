@@ -6,7 +6,7 @@ Frontmatter-side rules (path format inside YAML, required fields, enums, the uni
 
 ## Scope
 
-Applies to every markdown file inside the `a4/` workspace plus the project-root `research/` artifact. Each file declares `type:` in frontmatter matching the body root tag, and the body is validated against `plugins/a4/scripts/body_schemas/<type>.xsd` by `validate_body.py`.
+Applies to every markdown file inside the `a4/` workspace plus the project-root `research/` artifact. Each file declares `type:` in frontmatter matching the body root tag, and the body is validated against `${CLAUDE_PLUGIN_ROOT}/scripts/body_schemas/<type>.xsd` by `validate_body.py`.
 
 ## Section tag form
 
@@ -143,7 +143,7 @@ If the user chooses not to update the wiki page immediately, open a review item 
 
 ### Close guard
 
-Before a session ends, for each review item that transitioned to `status: resolved` with non-empty `wiki_impact`, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing. The drift detector at `plugins/a4/scripts/drift_detector.py` re-surfaces violations between sessions.
+Before a session ends, for each review item that transitioned to `status: resolved` with non-empty `wiki_impact`, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing. The drift detector at `${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py` re-surfaces violations between sessions.
 
 ## Bumping `updated:`
 
@@ -153,8 +153,8 @@ Before a session ends, for each review item that transitioned to `status: resolv
 ## Cross-references
 
 - [`frontmatter-schema.md`](frontmatter-schema.md) — frontmatter field rules, the universal `type:` field, per-type body section enums.
-- `plugins/a4/scripts/body_schemas/<type>.xsd` — source of truth for required vs optional sections per type.
-- `plugins/a4/scripts/validate_body.py` — enforces tag form (`body-tag-invalid`, `body-tag-unclosed`), stray content (`body-stray-content`), and per-type XSD shape (`body-xsd`).
-- `plugins/a4/scripts/allocate_id.py` — id allocator; required before writing any new issue file.
-- `plugins/a4/scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved `<change-logs>` and close-guard violations.
-- `plugins/a4/scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums).
+- `${CLAUDE_PLUGIN_ROOT}/scripts/body_schemas/<type>.xsd` — source of truth for required vs optional sections per type.
+- `${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py` — enforces tag form (`body-tag-invalid`, `body-tag-unclosed`), stray content (`body-stray-content`), and per-type XSD shape (`body-xsd`).
+- `${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py` — id allocator; required before writing any new issue file.
+- `${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved `<change-logs>` and close-guard violations.
+- `${CLAUDE_PLUGIN_ROOT}/scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums).

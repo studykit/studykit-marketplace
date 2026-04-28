@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, EnterPlanMode, ExitPl
 
 # Domain Model Designer
 
+> **Authoring contract:** the wiki contract for `a4/domain.md` lives in [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md). This skill orchestrates the extraction phases — frontmatter shape, body sections, validator behavior, and the `arch`/`domain` shared in-situ scope are defined in that rule.
+
 Takes the use-case set in `a4/usecase/`, the actor roster in `a4/actors.md`, and the problem framing in `a4/context.md`, and extracts the **cross-cutting Domain Model** — the shared vocabulary architecture and implementation will use. Writes the result to `a4/domain.md` as a single wiki page.
 
 This skill exists separately from `/a4:usecase` because cross-cutting concept extraction requires a different reasoning mode from per-UC interview. UCs are captured one at a time inductively (actor / situation / flow); domain emerges as patterns across the set. Splitting them keeps each skill's task list and context focused.
@@ -30,14 +32,7 @@ Derived views (concept-to-UC coverage matrix, open-domain-findings dashboard) ar
 
 ## Wiki Page Schema
 
-```yaml
----
-type: domain
-updated: 2026-04-25
----
-```
-
-No `revision`, `sources`, or `reflected_files` fields — wiki pages have no lifecycle. Cross-references to UCs / actors / architecture sections are expressed as standard markdown links (`[usecase/3-search-history](usecase/3-search-history.md)`, `[architecture#SessionService](architecture.md#sessionservice)`) in body prose. The `<change-logs>` section tracks updates driven by issue changes, per the Wiki Update Protocol at `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` (shared across `usecase`, `domain`, `arch`, `roadmap`).
+Frontmatter / body sections / `<change-logs>` discipline: see [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md).
 
 ## Id Allocation
 
@@ -105,90 +100,18 @@ Mark "Step 0" completed when the read pass is done.
 
 ## Domain.md Structure
 
-As phases progress, grow `a4/domain.md` with these `<tag>` sections (per `body_schemas/domain.xsd`; write on phase transitions):
-
-````markdown
----
-type: domain
-updated: <today>
----
-
-<concepts>
-
-Cross-cutting vocabulary emerging from the use cases in [context](context.md), grounded in the actors of [actors](actors.md).
-
-| Concept | Definition | Key Attributes | Referenced By |
-|---------|-----------|----------------|---------------|
-| Session | A scoped working context bound to a single user and topic. | id, owner, topic, createdAt | [usecase/1-share-summary](usecase/1-share-summary.md), [usecase/3-search-history](usecase/3-search-history.md) |
-| Message | A single utterance recorded within a session. | id, sessionId, body, sentAt | [usecase/2-render-preview](usecase/2-render-preview.md) |
-
-</concepts>
-
-<relationships>
-
-```plantuml
-@startuml
-class Session {
-  +id
-  +owner
-  +topic
-}
-class Message {
-  +id
-  +body
-  +sentAt
-}
-Session "1" -- "0..*" Message : contains
-@enduml
-```
-
-Sessions own messages (1:N). A message cannot exist without an owning session. Message ordering within a session is by `sentAt`.
-
-</relationships>
-
-<state-transitions>
-
-### Session
-
-```plantuml
-@startuml
-[*] --> Active
-Active --> Archived : owner archives
-Active --> Discarded : owner deletes
-Archived --> Active : owner restores
-Archived --> Discarded : retention expires
-Discarded --> [*]
-@enduml
-```
-
-`Active` is the default state on creation. Archive is reversible; discard is terminal.
-
-</state-transitions>
-
-<change-logs>
-
-- 2026-04-25 — [usecase/3-search-history](usecase/3-search-history.md)
-- 2026-04-25 — [architecture#SessionService](architecture.md#sessionservice)
-
-</change-logs>
-````
-
-Concept names in `<concepts>` become **canonical terms**. Architecture component names, schema fields, and contract parameters reuse them. UC bodies reference them via standard markdown links where helpful.
-
-### Required vs Optional Sections
-
-**Required** (per the XSD): `<concepts>`.
-
-**Optional** (per the XSD): `<change-logs>`, `<relationships>`, `<state-transitions>`. Convention:
+Required (`<concepts>`) and optional (`<relationships>`, `<state-transitions>`, `<change-logs>`) body sections, plus the `<change-logs>` discipline, are defined in [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md) §Body shape. Phase-transition fill-in convention used by this skill:
 
 - **`<relationships>`** — populate once two or more concepts interact in non-trivial ways.
-- **`<state-transitions>`** — only when at least one concept has state changes across UCs. A pure value/data model with no lifecycle skips this section.
+- **`<state-transitions>`** — only when at least one concept has state changes across UCs.
+
+Concept names in `<concepts>` become **canonical terms**. Architecture component names, schema fields, and contract parameters reuse them.
 
 ## File Writing Rules
 
-- **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter above and the confirmed `<concepts>` section.
-- **Update** at each phase transition using the `Edit` tool where possible (preserves structure). Use `Write` only for full rewrites.
-- **Change-log entries** — when a change is driven by a specific UC / spec / review item / arch discussion, append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. See `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` for the protocol (when to update, how to defer via a review item, close guard).
+- **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter and the confirmed `<concepts>` section.
+- **Update** at each phase transition using `Edit` where possible. `Write` only for full rewrites.
+- **Change-log entries** — append a dated bullet citing the causing UC / spec / review item per the rule's `<change-logs>` discipline.
 - **`updated:`** — bump on every phase transition or reflected resolution.
 
 ## Phases

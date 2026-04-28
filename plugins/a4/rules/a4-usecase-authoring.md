@@ -16,15 +16,16 @@ problem). They are produced by `/a4:usecase` (Socratic interview) or
 hand off to implementation when their `<flow>` / `<validation>` /
 `<error-handling>` close enough to drive AC for tasks.
 
+> **Workspace-wide policies** — writer-owned fields, id allocation,
+> path-reference form, tag form, `<change-logs>` discipline, wiki
+> authorship, cross-stage feedback, commit message form — live in
+> [`a4-workspace-policies.md`](a4-workspace-policies.md) and load
+> automatically alongside this rule. This rule covers the
+> usecase-specific contract on top.
+
 This rule is the working contract for any LLM about to read, draft, or
 edit a UC file. The full schema and rationale live in
-[`references/frontmatter-schema.md §Use case`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md);
-authorship boundaries (who can write what wiki page, when to defer)
-live in
-[`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md);
-body-tag mechanics live in
-[`references/body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
-Read those before deviating from the rules below.
+[`references/frontmatter-schema.md §Use case`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 ## How to author — always via `/a4:usecase` or `/a4:auto-usecase`
 
@@ -76,8 +77,6 @@ updated: YYYY-MM-DD
 ---
 ```
 
-- `id` is allocated by `scripts/allocate_id.py` (workspace-global,
-  monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer
   rejects `<title>`-shaped strings.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s
@@ -97,10 +96,6 @@ updated: YYYY-MM-DD
 - `related:` is the catchall for cross-references between issue-family
   artifacts. Soft mentions belong as markdown links in the body, not
   here.
-- Path values are plain strings without `.md` and without brackets
-  (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:`
-  on every revision; the writer bumps it on status flips.
 
 ### Lifecycle and writer ownership
 
@@ -133,11 +128,9 @@ Per-status meaning:
 - `blocked` — Implementation-time blocker surfaced; crosscutting.
   Resolved via `blocked → ready` or `blocked → discarded`.
 
-Writer rules:
+Writer rules (UC-specific; the universal "writer-owned fields" rule
+is in `a4-workspace-policies.md` §1):
 
-- All status changes after the initial create flow through
-  `scripts/transition_status.py`. Skills and humans never write
-  `status:` directly post-create.
 - `draft` is the **only** initial status. New UCs are always born at
   `draft`; everything else is a transition.
 - **`implementing → draft` is disallowed.** Once code has started, the
@@ -164,10 +157,8 @@ Writer rules:
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks
-(lowercase + kebab-case), with markdown content between the open and
-close lines. H1 (`# Title`) is forbidden in the body — title belongs
-to frontmatter `title:`. Use H3+ headings inside sections freely.
+(Tag form / link form / H1-forbidden are universal — see
+`a4-workspace-policies.md` §4.)
 
 **Required (enforced by `body_schemas/usecase.xsd`):**
 
@@ -199,13 +190,6 @@ to frontmatter `title:`. Use H3+ headings inside sections freely.
   directly.**
 
 Unknown kebab-case tags are tolerated by the XSD's openContent.
-
-### Body-link form
-
-Body cross-references are standard markdown links —
-`[text](relative/path.md)` — with the `.md` extension retained
-(e.g., `[task/5-render-markdown](../task/5-render-markdown.md)`).
-Frontmatter list paths are different (plain strings, no `.md`).
 
 ## In-situ wiki nudge — when a UC change implies a wiki edit
 
@@ -254,22 +238,17 @@ for the splitting guide), the protocol is:
 Splits do **not** flow through the supersede mechanism — supersession
 presumes the predecessor was at one point shipped.
 
-## Common mistakes the validator catches
+## Common mistakes the validator catches (UC-specific)
 
-- **Stray content outside section blocks** → `body-stray-content`.
-  Anything in the body that is not whitespace must live inside a
-  `<tag>...</tag>` block.
 - **Required section missing** (`<goal>`, `<situation>`, `<flow>`,
   `<expected-outcome>`) → `body-xsd`.
-- **Inline or attribute-bearing tags** → `body-tag-invalid`. Open
-  and close lines must be on column 0; no attributes; no
-  self-closing.
-- **Same-tag nesting** → `body-tag-invalid`. Sections do not nest;
-  every section sits at the body's top level.
-- **H1 in body** → `body-stray-content`. Title is frontmatter-only.
 - **Hand-edited `implemented_by:`** → not a validator error per se,
   but the next `refresh_implemented_by.py` run silently overwrites
   the field. Never depend on hand-written values.
+
+(Universal validator catches — stray body content, attribute-bearing
+tags, same-tag nesting, H1 in body — are documented in
+`a4-workspace-policies.md` §4.)
 
 To validate manually before commit:
 
@@ -278,12 +257,12 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
   "<project-root>/a4" --file usecase/<id>-<slug>.md
 ```
 
-## Don't
+## Don't (UC-specific)
 
-- **Don't hand-edit `status:`.** Use `transition_status.py` (or the
-  ready-gate at `/a4:usecase` wrap-up Step 6).
-- **Don't hand-edit `<log>`.** It is writer-owned. Every entry comes
-  from `transition_status.py`.
+(Universal Don'ts — hand-editing writer-owned fields, inventing ids,
+non-primary-author wiki edits, deleting review files — are in
+`a4-workspace-policies.md` §10.)
+
 - **Don't hand-edit `implemented_by:`.** Auto-maintained by
   `refresh_implemented_by.py` from `task.implements:`.
 - **Don't manually flip cascade-driven statuses.** UC `shipped` →
@@ -296,8 +275,6 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate_body.py" \
 - **Don't edit a `revising` UC silently.** When the user asks to edit
   a UC currently at `implementing`, confirm the `implementing →
   revising` flip first; the writer cascades dependent tasks.
-- **Don't edit `domain.md` or `architecture.md` in-situ from this
-  skill.** Per `wiki-authorship.md`, defer to a review item.
 - **Don't author a UC for a routine framework-mandated behavior.**
   UCs describe user-visible interactions; if the only thing to say is
   "the framework does X," there is no UC there.

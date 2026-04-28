@@ -1,7 +1,7 @@
 # a4/ hook conventions
 
-Design principles and policies for hooks under `plugins/a4/hooks/` and the
-dispatcher `plugins/a4/scripts/a4_hook.py`.
+Design principles and policies for hooks under `${CLAUDE_PLUGIN_ROOT}/hooks/` and the
+dispatcher `${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`.
 
 This document is the authoritative source. The dispatcher's module docstring
 and `hooks/README.md` reference this file rather than duplicating its

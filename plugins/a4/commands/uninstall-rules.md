@@ -35,8 +35,8 @@ removed=0
 skipped=0
 foreign=0
 
-shopt -s nullglob
 for src in "$src_dir"/*.md; do
+  [ -e "$src" ] || continue   # POSIX-safe nullglob — works under bash and zsh
   base="$(basename "$src")"
   dst="$dst_dir/$base"
 
