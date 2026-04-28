@@ -83,7 +83,7 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 
 ### Architecture-choice exit — halt + spec-gap
 
-Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing spec or `architecture.md` section captures. Signals B5 / B6 in [`${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md). Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
+Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing spec or `architecture.md` section captures. Signals B5 / B6 in [`${CLAUDE_PLUGIN_ROOT}/docs/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/docs/spec-triggers.md). Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
 
 1. **Stop coding.**
 2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: gap`, `status: open`, `source: task-implementer`, `<description>` describing the choice surfaced and the alternatives considered. Use `target: spec/` only when a specific spec id applies; otherwise omit `target:` (cross-cutting).

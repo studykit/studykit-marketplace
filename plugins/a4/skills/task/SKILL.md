@@ -36,7 +36,7 @@ Seed: **$ARGUMENTS**
 
 ## Author Mode Flow
 
-Steps 1–8 procedure: `${CLAUDE_PLUGIN_ROOT}/references/task/author-flow.md`. Covers capture intent → resolve implements/spec → compose body → spike sidecar proposal → allocate id + write → refresh implemented_by → spike sidecar create → hand-off.
+Steps 1–8 procedure: `references/author-flow.md`. Covers capture intent → resolve implements/spec → compose body → spike sidecar proposal → allocate id + write → refresh implemented_by → spike sidecar create → hand-off.
 
 For more single tasks, re-invoke `/a4:task`. If the user wants the task implemented immediately and no other ready tasks are pending, they may invoke `/a4:run` directly.
 
@@ -46,7 +46,7 @@ Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure
 
 ## Commit Points
 
-Per-mode subject formats and timing: `${CLAUDE_PLUGIN_ROOT}/references/task/commit-points.md`.
+Per-mode subject formats and timing: `references/commit-points.md`.
 
 ## Wrap Up
 

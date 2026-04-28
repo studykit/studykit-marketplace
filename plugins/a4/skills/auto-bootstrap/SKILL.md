@@ -9,7 +9,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 > **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/references/bootstrap-authoring.md`. This skill is the sole writer for `a4/bootstrap.md`.
 
-Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** per `${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md`. Both `/a4:run` and the `task-implementer` / `test-runner` agents read this file directly; `/a4:roadmap` only links to it.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** per `${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md`. Both `/a4:run` and the `task-implementer` / `test-runner` agents read this file directly; `/a4:roadmap` only links to it.
 
 ## Workspace
 
@@ -54,14 +54,14 @@ If `a4/bootstrap.md` already exists, archive it before proceeding: copy to `a4/a
 
 | Step | Focus | Procedure |
 |------|-------|-----------|
-| 1 | Codebase assessment (project state × pipeline shape) | `${CLAUDE_PLUGIN_ROOT}/references/auto-bootstrap/codebase-assessment.md` |
-| 2 | Project structure + dependencies + build | `${CLAUDE_PLUGIN_ROOT}/references/auto-bootstrap/project-structure.md` |
-| 3 | Test infrastructure per tier | `${CLAUDE_PLUGIN_ROOT}/references/auto-bootstrap/test-infrastructure.md` |
-| 4 | Verification checklist | `${CLAUDE_PLUGIN_ROOT}/references/auto-bootstrap/verification.md` |
+| 1 | Codebase assessment (project state × pipeline shape) | `references/codebase-assessment.md` |
+| 2 | Project structure + dependencies + build | `references/project-structure.md` |
+| 3 | Test infrastructure per tier | `references/test-infrastructure.md` |
+| 4 | Verification checklist | `references/verification.md` |
 | 5 | Handle issues (architecture vs environment classification) | `references/issue-handling.md` |
 | 6 | Write bootstrap.md (template + edit/write rule) | `references/bootstrap-md-template.md` |
 | 7 | Drift detection | see below |
-| 8 | Commit | `${CLAUDE_PLUGIN_ROOT}/references/auto-bootstrap/commit.md` |
+| 8 | Commit | `references/commit.md` |
 
 ### Step 7: Drift Detection
 

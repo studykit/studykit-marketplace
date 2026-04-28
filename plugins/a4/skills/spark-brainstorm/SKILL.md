@@ -15,9 +15,9 @@ Start a brainstorming session on: **$ARGUMENTS**
 
 | Step | Focus | Procedure |
 |------|-------|-----------|
-| 1 | Situation assessment + technique selection matrix | `${CLAUDE_PLUGIN_ROOT}/references/spark-brainstorm/assessment-and-techniques.md` |
-| 2 | Facilitation guidelines + technique transitions | `${CLAUDE_PLUGIN_ROOT}/references/spark-brainstorm/facilitation.md` |
-| 3 | Wrap up (status decision + file format) | `${CLAUDE_PLUGIN_ROOT}/references/spark-brainstorm/wrap-up.md` |
+| 1 | Situation assessment + technique selection matrix | `references/assessment-and-techniques.md` |
+| 2 | Facilitation guidelines + technique transitions | `references/facilitation.md` |
+| 3 | Wrap up (status decision + file format) | `references/wrap-up.md` |
 
 ## Handoff to Research and spec
 

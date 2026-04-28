@@ -2,25 +2,11 @@
 
 `a4/nfr.md` is the **non-functional requirements wiki**. It records performance targets, security requirements, scalability bounds, accessibility requirements, compliance constraints, and other cross-cutting properties that affect every UC and architecture decision. NFRs are optional — small or exploratory projects may have none, in which case the file simply does not exist.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## How to author — always via `/a4:usecase`
+## Reading the file
 
-Do **not** hand-craft `nfr.md` with `Write`. Always invoke `/a4:usecase` so the NFR set is captured during the interview wrap-up ("Are there non-functional requirements?" prompt) and individual requirements link back to the UCs they affect.
-
-The skill creates `nfr.md` only when the user has at least one NFR to capture; skip creating an empty file.
-
-If you must read the file to answer a question, prefer `extract_section.py a4/nfr.md <tag>` over loading the whole markdown.
-
-## Authorship — who can edit this page
-
-Per `./wiki-authorship.md`:
-
-- **`/a4:usecase` is the primary author.** Owns all NFR rows. In-situ edits from `/a4:usecase` are unrestricted.
-- **`/a4:arch` may append a footnote** pointing to the architecture decision that *responds* to an existing NFR row. No new NFR rows from arch, no edits to existing NFR text — only footnote annotations. The intent is to preserve the arch ↔ NFR linkage without inverting authorship.
-- All other skills emit review items with `target: nfr`.
-
-If you find yourself wanting to add a new NFR or edit an existing one outside `/a4:usecase`, **stop** and emit the review item instead.
+If only a specific section is needed to answer a question, prefer `extract_section.py a4/nfr.md <tag>` over loading the whole markdown.
 
 ## Frontmatter contract (do not deviate)
 
@@ -56,7 +42,7 @@ Unknown kebab-case tags are tolerated by the XSD's openContent.
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. The Affected UCs column relies entirely on this form.
 
-`/a4:arch` footnote annotations look like:
+Architecture footnote annotations may attach to an existing NFR row to point at the architecture decision that satisfies it:
 
 ```markdown
 - Cold-start response under 200 ms p95 — [usecase/3](usecase/3-search-history.md), [usecase/5](usecase/5-render-mock.md) — p95 < 200 ms across all responses[^1]
@@ -97,13 +83,7 @@ uv run "../scripts/validate_body.py" \
 
 ## Don't
 
-- **Don't edit from any skill other than `/a4:usecase`** (or `/a4:arch` for footnote annotations only). Emit a review item with `target: nfr`.
-- **Don't add NFR rows from `/a4:arch`.** Arch responds to NFRs; it does not author them.
 - **Don't write aspirational requirements without a measurable criterion.** "Should be fast" is not an NFR. "p95 < 200 ms" is.
 - **Don't list functional behavior here.** Functional requirements belong in UCs (`<flow>`, `<validation>`, `<error-handling>`). NFRs are cross-cutting properties.
-- **Don't put implementation strategies here.** "We will use Redis for caching" belongs in `architecture.md`. The NFR is the target; arch records the response.
+- **Don't put implementation strategies here.** "We will use Redis for caching" belongs in `architecture.md`. The NFR is the target; the architecture page records the response.
 - **Don't append `<change-logs>` bullets without a markdown link.**
-
-## After authoring
-
-`/a4:usecase` does not commit; the file is left in the working tree. Substantial NFR changes typically motivate `/a4:arch iterate` to record the architectural response.

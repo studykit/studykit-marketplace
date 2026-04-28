@@ -14,7 +14,7 @@ Two stages over the tasks already authored in `a4/task/`:
 1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md`; `roadmap.md` only links to it).
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md`; `roadmap.md` only links to it).
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task` writes single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -39,12 +39,12 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 ## Launch & Verify Source
 
-Resolution policy: `${CLAUDE_PLUGIN_ROOT}/references/run/launch-verify-source.md`. When `bootstrap.md` is absent, halt and delegate to `/a4:compass`.
+Resolution policy: `references/launch-verify-source.md`. When `bootstrap.md` is absent, halt and delegate to `/a4:compass`.
 
 ## Mode Detection
 
 - **Implement mode** — `a4/task/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
-- **Iterate mode** — open review items target a task or `roadmap`. Apply `${CLAUDE_PLUGIN_ROOT}/references/run/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md`.
+- **Iterate mode** — open review items target a task or `roadmap`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
 - **Pre-flight** (both modes, run at Step 1 entry) — local `HEAD` must equal `origin/HEAD` per `references/parallel-isolation.md`. Halt with a push instruction on mismatch.
 - **Serial fallback** (`/a4:run serial` or `/a4:run iterate serial`) — opt-in mode that skips worktree isolation and the merge sweep entirely. Rules in `references/parallel-isolation.md`.
 
@@ -61,17 +61,17 @@ If no tasks exist at all: halt and tell the user to run `/a4:roadmap` (UC-driven
 
 ## Resume Hygiene
 
-Crash recovery + orphaned worktree handling: `${CLAUDE_PLUGIN_ROOT}/references/run/resume-hygiene.md`.
+Crash recovery + orphaned worktree handling: `references/resume-hygiene.md`.
 
 ## Workflow
 
 | Step | Focus | Procedure |
 |------|-------|-----------|
-| 1 | Pick ready tasks (+ pre-flight) | `${CLAUDE_PLUGIN_ROOT}/references/run/ready-set.md` |
-| 2 | Spawn task-implementer (worktree isolation) | `${CLAUDE_PLUGIN_ROOT}/references/run/spawn-implementer.md` |
-| 2.5 | Merge sweep (parallel mode) | `${CLAUDE_PLUGIN_ROOT}/references/run/merge-sweep.md` |
-| 3 | Integration + smoke tests via test-runner | `${CLAUDE_PLUGIN_ROOT}/references/run/integration-tests.md` |
-| 4 | Post-loop review (failure path / ship path) | `${CLAUDE_PLUGIN_ROOT}/references/run/post-loop-review.md` |
+| 1 | Pick ready tasks (+ pre-flight) | `references/ready-set.md` |
+| 2 | Spawn task-implementer (worktree isolation) | `references/spawn-implementer.md` |
+| 2.5 | Merge sweep (parallel mode) | `references/merge-sweep.md` |
+| 3 | Integration + smoke tests via test-runner | `references/integration-tests.md` |
+| 4 | Post-loop review (failure path / ship path) | `references/post-loop-review.md` |
 
 ## Acceptance Criteria Source by Task Kind
 
@@ -79,7 +79,7 @@ The per-kind AC-source convention is defined in the matching authoring rule: fea
 
 ## Commit Points
 
-Per-step subject formats and timing: `${CLAUDE_PLUGIN_ROOT}/references/run/commit-points.md`.
+Per-step subject formats and timing: `references/commit-points.md`.
 
 ## Wrap Up
 

@@ -1,21 +1,16 @@
 # a4 — usecase authoring
 
-A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They are produced by `/a4:usecase` (Socratic interview) or `/a4:auto-usecase` (forward-shape draft from existing input), and they hand off to implementation when their `<flow>` / `<validation>` / `<error-handling>` close enough to drive AC for tasks.
+A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `<flow>` / `<validation>` / `<error-handling>` close enough to drive AC for tasks.
 
-Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), `./wiki-authorship.md`, `./body-conventions.md`.
+Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## How to author — always via `/a4:usecase` or `/a4:auto-usecase`
+## Reading a UC
 
-Do **not** hand-craft a UC file with `Write`. Always invoke the authoring skill so id allocation, slug derivation, frontmatter shape, body validation, in-situ wiki nudge, and the ready-gate hand-off all run through the same code path.
-
-- **`/a4:usecase`** — Socratic interview, single UC at a time. Use for new workspaces (creates `context.md` first), iteration on the existing UC set, or revising an `implementing` UC (flips `implementing → revising` via `transition_status.py` first).
-- **`/a4:auto-usecase`** — forward-shape draft from existing input (e.g., a `spark/<...>.brainstorm.md` or a free-form description). Drafts UCs at `status: draft` for the user to refine via `/a4:usecase` iteration.
-
-If you must read a UC to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
+If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
 
 ### Abstraction discipline
 
-Use cases stay at the **user level** — what the actor does, not what the system does internally. Banned terms and conversion examples live in `../skills/usecase/references/abstraction-guard.md`. A UC that says "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
+Use cases stay at the **user level** — what the actor does, not what the system does internally. A UC that says "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
 
 ## Frontmatter contract (do not deviate)
 
@@ -75,11 +70,10 @@ Writer rules (UC-specific):
 - `draft` is the **only** initial status. New UCs are always born at `draft`; everything else is a transition.
 - **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
 - **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
-- **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited through `/a4:usecase`, and the Step 6 ready-gate re-approves `revising → ready`.
+- **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited, and the ready-gate re-approves `revising → ready`.
 - **`ready → implementing` requires `implemented_by:` non-empty.** The UC must have at least one task declaring `implements: [usecase/<this>]`.
 - **`implementing → shipped` requires every task in `implemented_by:` to be `complete`.** Enforced by `transition_status.py`.
 - `shipped → superseded` is **automatic** — fires when a successor UC with `supersedes: [<this>]` reaches `shipped`. Do not flip by hand.
-- `task-implementer` refuses to start on a UC at any status other than `ready`. The ready-gate (Step 6 of `/a4:usecase` wrap-up) is the hand-off point between spec work and coding.
 
 ## Body shape
 
@@ -92,7 +86,7 @@ Writer rules (UC-specific):
 - `<flow>` — numbered list of user-visible steps. The actor's actions and the system's user-facing responses, **not** internal mechanics.
 - `<expected-outcome>` — what success looks like in user-observable terms (timing, content, state change). Used as one input to AC for any task that `implements:` this UC.
 
-**Optional, emit only when the conversation produced content for them:**
+**Optional, emit only when there is content for them:**
 
 - `<validation>` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
 - `<error-handling>` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
@@ -112,8 +106,6 @@ Authoring or revising a UC frequently has side-effects on wiki pages:
 - New screen group → `context.md` `<screens>` section + UC `labels:`.
 - New non-functional requirement → `nfr.md` `<requirements>` row.
 
-Per `./wiki-authorship.md`, the `usecase` skill is the **primary author** for `context.md`, `actors.md`, and `nfr.md`, and may edit them in-situ. For `domain.md` and `architecture.md`, **continue** the UC work and emit a review item targeting the upstream wiki — do not edit those inline.
-
 When applying an in-situ wiki edit:
 
 1. Edit the relevant section tag.
@@ -124,7 +116,7 @@ When deferring, open a review item with `kind: gap`, `source: self`, `target: <c
 
 ## Splitting a UC — preserve traceability
 
-When the conversation reveals a UC is too large (read `../skills/usecase/references/usecase-splitting.md` for the splitting guide), the protocol is:
+When a UC turns out to be too large, the protocol is:
 
 1. Confirm the split with the user.
 2. Allocate new ids for each child UC.
@@ -153,11 +145,5 @@ uv run "../scripts/validate_body.py" \
 - **Don't hand-edit `implemented_by:`.** Auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
 - **Don't manually flip cascade-driven statuses.** UC `shipped` → predecessor's `superseded`, UC `discarded` → cascading task / review discards, UC `revising` → task `pending`-reset are all the writer's job.
 - **Don't write internal mechanics into the body.** Storage choices, service names, queue strategies, library calls — those live in `architecture.md` or specs. UC body stays at the user level.
-- **Don't edit a `revising` UC silently.** When the user asks to edit a UC currently at `implementing`, confirm the `implementing → revising` flip first; the writer cascades dependent tasks.
 - **Don't author a UC for a routine framework-mandated behavior.** UCs describe user-visible interactions; if the only thing to say is "the framework does X," there is no UC there.
 - **Don't pack multiple goals into one UC.** Split when the actor's goal forks. One UC = one user-level goal.
-- **Don't promote `draft → ready` by hand.** The wrap-up ready-gate is the user's confirmation point.
-
-## After authoring
-
-`/a4:usecase` ends with the wrap-up sequence (explorer review → reviewer validation → review-item walk-through → wiki close guard → ready-gate → summary). The skill does not commit; the file (and any wiki pages updated by the in-situ nudge) is left in the working tree for the user to commit. The next-step suggestion depends on workspace state — typically `/a4:domain` (cross-cutting concept extraction) or `/a4:arch` if `domain.md` already looks current.

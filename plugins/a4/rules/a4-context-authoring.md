@@ -10,12 +10,5 @@ When **authoring or editing** `a4/context.md`, read these first.
 
 ## Required reading before authoring
 
-- `../references/context-authoring.md` — purpose, authorship, frontmatter, body shape, common mistakes, "Don't" list, after-authoring steps.
+- `../references/context-authoring.md` — purpose, frontmatter, body shape, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
-
-## Skill / scripts / schema
-
-- Author / edit → `/a4:usecase` (skill: `../skills/usecase/SKILL.md`) — primary author for `context.md`.
-- Validate → `uv run ../scripts/validate_body.py "<project-root>/a4" --file context.md`
-- Section read → `uv run ../scripts/extract_section.py a4/context.md <tag>`
-- Body schema → `../scripts/body_schemas/context.xsd`

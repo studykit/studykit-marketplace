@@ -28,11 +28,11 @@ Seed: **$ARGUMENTS**
 
 ### Step 1: Detect mode
 
-Three modes (new record, activate existing, revise existing): `${CLAUDE_PLUGIN_ROOT}/references/spec/mode-detection.md`.
+Three modes (new record, activate existing, revise existing): `references/mode-detection.md`.
 
 ### Steps 2–6: Extract, discover research, decide status, write, activate
 
-Procedure: `${CLAUDE_PLUGIN_ROOT}/references/spec/extract-and-write.md`. Covers extracting the converged shape, discovering related research, deciding `draft` vs `active` from dialogue, allocating id + writing the file, registering research citations via `register_research_citation.py`, and activating via `transition_status.py`.
+Procedure: `references/extract-and-write.md`. Covers extracting the converged shape, discovering related research, deciding `draft` vs `active` from dialogue, allocating id + writing the file, registering research citations via `register_research_citation.py`, and activating via `transition_status.py`.
 
 ### Step 7: In-situ wiki nudge
 

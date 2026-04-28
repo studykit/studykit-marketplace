@@ -16,4 +16,4 @@ invoked from `hooks.json` with subcommands `post-edit`, `stop`,
 
 Design principles — language choice, lifecycle symmetry, ordering,
 non-blocking, output channels — are documented in
-**`../references/hook-conventions.md`**.
+**`../docs/hook-conventions.md`**.

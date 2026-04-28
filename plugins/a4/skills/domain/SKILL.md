@@ -41,7 +41,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Extraction** — `a4/domain.md` does not exist. Run Phase 1 → 2 → 3 in order.
-- **Iteration** — `a4/domain.md` exists OR the user said `iterate`. Apply `${CLAUDE_PLUGIN_ROOT}/references/domain/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md`.
+- **Iteration** — `a4/domain.md` exists OR the user said `iterate`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
 
 `/a4:usecase` does not block on the absence of `domain.md` — it captures actors and per-UC bodies first. Compass routes `UCs exist, domain.md missing → /a4:domain` (Layer 1).
 
@@ -75,13 +75,13 @@ In **First Extraction**, run Phases 1 → 3 in order. In **Iteration**, start wh
 
 | Phase | Focus | Procedure |
 |-------|-------|-----------|
-| 1 | Concept Extraction | `${CLAUDE_PLUGIN_ROOT}/references/domain/phase-concept-extraction.md` |
-| 2 | Relationship Mapping | `${CLAUDE_PLUGIN_ROOT}/references/domain/phase-relationships.md` |
-| 3 | State Transition Analysis | `${CLAUDE_PLUGIN_ROOT}/references/domain/phase-state-transitions.md` |
+| 1 | Concept Extraction | `references/phase-concept-extraction.md` |
+| 2 | Relationship Mapping | `references/phase-relationships.md` |
+| 3 | State Transition Analysis | `references/phase-state-transitions.md` |
 
 ### Wrap Up
 
-When the user indicates they're done, run `${CLAUDE_PLUGIN_ROOT}/references/domain/wrap-up.md`: pre-flight consistency check → launch `domain-reviewer` → walk findings → wiki close guard → report.
+When the user indicates they're done, run `references/wrap-up.md`: pre-flight consistency check → launch `domain-reviewer` → walk findings → wiki close guard → report.
 
 ## File Writing Rules
 

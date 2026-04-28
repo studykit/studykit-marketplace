@@ -1,24 +1,12 @@
 # a4 — actors wiki authoring
 
-`a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it, and `compass` derives the Authorization Matrix view from it.
+`a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## How to author — always via `/a4:usecase` (or `/a4:arch` for system actors only)
+## Reading the file
 
-Do **not** hand-craft `actors.md` with `Write`. Always invoke `/a4:usecase` so new actor entries are confirmed with the user, slugs are derived consistently, and the roster table stays referentially intact for `actors:` lists in UC frontmatter.
-
-If you must read the file to answer a question, prefer `extract_section.py a4/actors.md <tag>` over loading the whole markdown.
-
-## Authorship — who can edit this page
-
-Per `./wiki-authorship.md`:
-
-- **`/a4:usecase` is the primary author.** Owns all roster entries. In-situ edits from `/a4:usecase` are unrestricted.
-- **`/a4:arch` may add a `system`-type actor** that surfaces during component design (privilege/description text only; never modify a `person`-type actor). The justification is symmetric with the `/a4:domain` cross-edit allowance — system actors often only emerge during architectural work, and forcing them through review-item friction is wasteful.
-- All other skills emit review items with `target: actors`.
-
-If you find yourself wanting to edit `actors.md` from any context other than the two above, **stop** and emit the review item instead.
+If only a specific section is needed to answer a question, prefer `extract_section.py a4/actors.md <tag>` over loading the whole markdown.
 
 ## Frontmatter contract (do not deviate)
 
@@ -53,13 +41,13 @@ Unknown kebab-case tags are tolerated by the XSD's openContent.
 
 ### Slug discipline
 
-Actor slugs are referenced from UC frontmatter `actors:` lists. Renaming a slug breaks every UC that references it. **Always treat a rename as a structural change** and open a review item explaining the cascade — even when the rename feels obvious. Single in-situ renames from `/a4:usecase` are acceptable when the impact is one or two UCs, but document the rename in `<change-logs>` linking the review item that motivated it.
+Actor slugs are referenced from UC frontmatter `actors:` lists. Renaming a slug breaks every UC that references it. **Always treat a rename as a structural change** and open a review item explaining the cascade — even when the rename feels obvious.
 
 A new actor's slug should:
 
 - Be lowercase, hyphen-separated.
 - Match the user-facing role, not an implementation detail.
-- Not collide with an existing slug. The validator does not currently enforce uniqueness; visual review during `/a4:usecase` is the gate.
+- Not collide with an existing slug. The validator does not currently enforce uniqueness; visual review at edit time is the gate.
 
 ### Body-link form
 
@@ -96,13 +84,7 @@ uv run "../scripts/validate_body.py" \
 
 ## Don't
 
-- **Don't edit from any skill other than `/a4:usecase` or `/a4:arch` (system actors only).** Emit a review item with `target: actors`.
-- **Don't modify a `person`-type row from `/a4:arch`.** Person actors are user-facing; only `/a4:usecase` knows their full context.
 - **Don't rename a slug without a review item** when the cascade touches more than one or two UCs.
 - **Don't put authorization rules here as prose.** The roster carries privilege levels; per-UC authorization is encoded in UC `<flow>` / `<validation>` (and in `architecture.md` for technical enforcement details).
 - **Don't pack actor backstories.** The description column is one paragraph. Longer narratives belong in `context.md`'s `<problem-framing>`.
 - **Don't append `<change-logs>` bullets without a markdown link.**
-
-## After authoring
-
-`/a4:usecase` does not commit; the file is left in the working tree. A roster change typically lands alongside a UC change that introduced or renamed the actor; commit them together.

@@ -72,4 +72,4 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 
 ## Step 3: Gap Diagnosis
 
-Procedure (3.1 detect drift → 3.2 read workspace state → 3.3 diagnose layer → 3.4 present → 3.5 archive suggestion): `${CLAUDE_PLUGIN_ROOT}/references/compass/gap-diagnosis-flow.md`.
+Procedure (3.1 detect drift → 3.2 read workspace state → 3.3 diagnose layer → 3.4 present → 3.5 archive suggestion): `references/gap-diagnosis-flow.md`.

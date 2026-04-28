@@ -26,7 +26,7 @@ If the project root resolved to `NOT_A_GIT_REPO`, abort with a clear message. Th
 
 Read the first whitespace-delimited token of `$ARGUMENTS`.
 
-- If the first token is `discard` (lowercase, exact match), this is the **discard** path — apply `${CLAUDE_PLUGIN_ROOT}/references/idea/discard-flow.md`.
+- If the first token is `discard` (lowercase, exact match), this is the **discard** path — apply `references/discard-flow.md`.
 - Otherwise, this is the **capture** path — continue with steps 2–6 below.
 - If `$ARGUMENTS` is empty or contains only whitespace, abort and tell the user: "Please provide an idea as a one-line argument — e.g., `/a4:idea 콜그래프에 주석 렌더링 넣기` — or discard one via `/a4:idea discard <id>`."
 
@@ -48,11 +48,11 @@ The script prints the next integer. Capture it — this becomes the idea's `id:`
 
 ### 4. Generate slug
 
-Slug derivation rules + examples: `${CLAUDE_PLUGIN_ROOT}/references/idea/slug-rules.md`.
+Slug derivation rules + examples: `references/slug-rules.md`.
 
 ### 5. Compose the file
 
-Frontmatter template + field definitions: `${CLAUDE_PLUGIN_ROOT}/references/idea/capture-template.md`. Use the `Write` tool.
+Frontmatter template + field definitions: `references/capture-template.md`. Use the `Write` tool.
 
 ### 6. Report
 
@@ -71,7 +71,7 @@ Do not propose auto-promotion or auto-commit.
 
 ## Discard mode
 
-Procedure: `${CLAUDE_PLUGIN_ROOT}/references/idea/discard-flow.md`. Covers target resolution (D1), status check (D2), in-place edit + `<change-logs>` append (D3), report (D4).
+Procedure: `references/discard-flow.md`. Covers target resolution (D1), status check (D2), in-place edit + `<change-logs>` append (D3), report (D4).
 
 ## Non-Goals
 

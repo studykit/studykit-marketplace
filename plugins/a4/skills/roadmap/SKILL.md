@@ -39,7 +39,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **Roadmap mode** — `a4/roadmap.md` absent OR `a4/task/` (any kind subfolder) is empty. Run Steps 1 → 4.
-- **Iterate mode** — open review items target `roadmap` or a task. Apply `${CLAUDE_PLUGIN_ROOT}/references/roadmap/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md`.
+- **Iterate mode** — open review items target `roadmap` or a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
 
 Mode detection at session start:
 
@@ -62,11 +62,11 @@ Check project structure, conventions, test setup, build configuration. File path
 
 ### Step 3: Generate roadmap + tasks
 
-Procedure: `${CLAUDE_PLUGIN_ROOT}/references/roadmap/generate.md`. Covers implementation strategy selection, milestones, per-task derivation, shared integration points, file writing, and the `refresh_implemented_by.py` reverse-link refresh.
+Procedure: `references/generate.md`. Covers implementation strategy selection, milestones, per-task derivation, shared integration points, file writing, and the `refresh_implemented_by.py` reverse-link refresh.
 
 ### Step 4: Roadmap verification
 
-Procedure: `${CLAUDE_PLUGIN_ROOT}/references/roadmap/verification.md`. Spawn `roadmap-reviewer`, walk findings under the stop-on-strong-upstream policy, loop up to 3 review rounds.
+Procedure: `references/verification.md`. Spawn `roadmap-reviewer`, walk findings under the stop-on-strong-upstream policy, loop up to 3 review rounds.
 
 ## Hand-off to /a4:run
 
@@ -78,7 +78,7 @@ After Step 4 closes:
 
 ## Commit Points
 
-Per-step subject formats and timing: `${CLAUDE_PLUGIN_ROOT}/references/roadmap/commit-points.md`.
+Per-step subject formats and timing: `references/commit-points.md`.
 
 ## Wrap Up
 

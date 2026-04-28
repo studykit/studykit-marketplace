@@ -1,6 +1,6 @@
 # a4 Body Conventions
 
-Body-level rules for every file written by an a4 skill. Covers section tag form, blank-line discipline, link form, and the `<change-logs>` / `<log>` audit-trail conventions.
+Body-level rules for every file under the `a4/` workspace. Covers section tag form, blank-line discipline, link form, and the `<change-logs>` / `<log>` audit-trail conventions.
 
 Frontmatter-side rules (path format inside YAML, required fields, enums, the universal `type:` field) live in `frontmatter-schema.md`. The two should be read together.
 
@@ -91,7 +91,7 @@ Rules:
 
 ## `<log>` (writer-owned)
 
-Every issue file (`usecase`, `task`, `review`, `spec`) gets an optional `<log>` section that the status writer (`scripts/transition_status.py`) maintains. Authors should never write into `<log>` directly except for the one documented post-hoc-`complete` task case (a single creation entry, see [`frontmatter-schema.md §Task / Initial status policy`](frontmatter-schema.md)).
+Every issue file (`usecase`, `task`, `review`, `spec`) gets an optional `<log>` section that the status writer (`scripts/transition_status.py`) maintains. Never write into `<log>` directly except for the one documented post-hoc-`complete` task case (a single creation entry, see [`frontmatter-schema.md §Task / Initial status policy`](frontmatter-schema.md)).
 
 Format (one bullet per transition, written by the writer):
 

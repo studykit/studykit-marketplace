@@ -26,11 +26,11 @@ Two modes:
 
 | Step | Focus | Procedure |
 |------|-------|-----------|
-| 1 | Resolve argument + working file path | `${CLAUDE_PLUGIN_ROOT}/references/research/input-handling.md` |
-| 2 | Initial file content (yaml templates per mode) | `${CLAUDE_PLUGIN_ROOT}/references/research/file-templates.md` |
-| 3 | Update discipline (checkpoint writes) | `${CLAUDE_PLUGIN_ROOT}/references/research/update-discipline.md` |
-| 4 | Research orchestration (comparative / single / protocol) | `${CLAUDE_PLUGIN_ROOT}/references/research/orchestration.md` |
-| 5 | Wrap up (final write, status flip, report) | `${CLAUDE_PLUGIN_ROOT}/references/research/wrap-up.md` |
+| 1 | Resolve argument + working file path | `references/input-handling.md` |
+| 2 | Initial file content (yaml templates per mode) | `references/file-templates.md` |
+| 3 | Update discipline (checkpoint writes) | `references/update-discipline.md` |
+| 4 | Research orchestration (comparative / single / protocol) | `references/orchestration.md` |
+| 5 | Wrap up (final write, status flip, report) | `references/wrap-up.md` |
 
 ## Output format
 

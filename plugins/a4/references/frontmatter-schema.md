@@ -1,12 +1,12 @@
 # a4 Frontmatter Schema
 
-Consolidated frontmatter reference for the `a4/` workspace and the aligned spark skill SKILL.md files. This document is the **single source of truth for validators and skill authors**.
+Consolidated frontmatter reference for every file under the `a4/` workspace. This document is the **single source of truth for validators and authoring contracts**.
 
 Body-side conventions (tag form, blank-line discipline, change-log and log section format, link form) live in `body-conventions.md`. The two should be read together.
 
 ## Scope
 
-Every markdown file created by an a4 skill carries YAML frontmatter. Files split into three families:
+Every markdown file under `a4/` carries YAML frontmatter. Files split into three families:
 
 | Family | Examples | Location |
 |--------|----------|----------|
@@ -108,44 +108,14 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 
 ### Status writers
 
-`a4/` files are always written by an LLM via a skill or agent — never hand-edited by the user. Every status change on `usecase`, `task`, `review`, and `spec` files flows through the single writer at [`scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition, writes `status:` + `updated:` + a `<log>` entry, and runs any cascade (task reset on UC `revising`, task/review discard cascade on UC `discarded`, supersedes-chain flip on UC `shipped`, supersedes-chain flip on spec `active`).
+Every status change on `usecase`, `task`, `review`, and `spec` files flows through the single writer at [`../scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition, writes `status:` + `updated:` + a `<log>` entry, and runs any cascade:
 
-Listing who calls the writer for each value makes the invariant auditable.
+- Task reset on UC `revising` (tasks at `progress`/`failing` → `pending`).
+- Task / review discard cascade on UC `discarded`.
+- Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
+- Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 
-| Family | Value | Caller |
-|--------|-------|--------|
-| usecase | `draft` | `/a4:usecase`, `/a4:auto-usecase`, `usecase-composer` (on create) |
-| usecase | `ready` | `/a4:usecase` Step 6 ready-gate (user-confirmed "mark as ready"); also `revising → ready` at the end of a revising-edit session |
-| usecase | `implementing` | `task-implementer` Step 1 (flips `ready → implementing` after pre-flight validation; refuses `draft`) |
-| usecase | `revising` | `/a4:usecase` (user-triggered in-place spec edit), `task-implementer` (when semantic ambiguity surfaces mid-implementation and a review item is emitted) |
-| usecase | `shipped` | `/a4:run` Step 5 (UC ship-review, user-confirmed after the implement + test loop). Cascade: `supersedes:` targets flip `shipped → superseded` inside the same script invocation |
-| usecase | `superseded` | `transition_status.py` cascade — flipped automatically when a newer UC with `supersedes: [usecase/X]` reaches `shipped` |
-| usecase | `discarded` | user-triggered via `/a4:usecase` (spec abandoned) or `/a4:roadmap` (direction rejected). Cascade: related tasks → `discarded`, open review items with `target: usecase/X` → `discarded` |
-| usecase | `blocked` | `usecase-reviser` (on SPLIT), `task-implementer` (on implementation-time blocker detection) |
-| task | `open` | `/a4:task` (on create — default backlog state). Not picked up by `/a4:run`; user must transition to `pending` to enqueue |
-| task | `pending` | `/a4:roadmap` (on create — batch fill-queue intent), `/a4:task` (on create when user opts in over the default `open`), `/a4:run` (on revision reset, on `failing → pending` defer) |
-| task | `progress` | `/a4:run` Step 2 (before `task-implementer` spawn); `task-implementer` when spawned outside `/a4:run` (flips `open → progress` or `pending → progress` directly); user-driven via `transition_status.py` when an LLM-conversation session starts work on a task without going through `/a4:run` |
-| task | `complete` | `/a4:run` Step 2 (after agent returns success); `/a4:task` (on create, post-hoc documentation for already-implemented work) |
-| task | `failing` | `/a4:run` Step 2 / 3 (after agent or test-runner failure) |
-| task | `discarded` | `transition_status.py` cascade — when the UC this task implements flips to `discarded`. Direct calls are also permitted for explicit one-off task discards |
-| review | `open` | reviewer agents, `drift_detector.py`, `task-implementer` (revising-trigger review items), defer paths in single-edit skills |
-| review | `in-progress` | iterate flows (`/a4:usecase`, `/a4:arch`, `/a4:roadmap` iterate) |
-| review | `resolved` | iterate flows + `usecase-reviser` (after fix lands) |
-| review | `discarded` | `usecase-reviser`, `/a4:arch`, `/a4:usecase` iterate (when finding is incorrect); `transition_status.py` cascade when a target UC is `discarded` |
-| spec | `draft` | `/a4:spec` (file is always born at `draft` when `/a4:spec` writes a new record) |
-| spec | `active` | `/a4:spec` Step 6 — flips `draft → active` via `transition_status.py` once the spec is committed. Cascade: `supersedes:` targets flip `active → superseded` (or `deprecated → superseded`) inside the same script invocation |
-| spec | `deprecated` | `/a4:spec` (user signals the spec is no longer the live source of truth but is not yet replaced; still readable for context) |
-| spec | `superseded` | `transition_status.py` cascade — flipped automatically when a newer spec with `supersedes: [spec/X]` reaches `active` |
-| idea | `open` | `/a4:idea` (capture mode) |
-| idea | `promoted` | user-driven; `/a4:spec` / `/a4:usecase` / other consuming skills may write the pipeline target and this status together when the user confirms graduation |
-| idea | `discarded` | `/a4:idea discard <id>` |
-| brainstorm | `open` | `/a4:spark-brainstorm` (default wrap-up) |
-| brainstorm | `promoted` | user-driven; set by hand when an idea from the brainstorm is graduated |
-| brainstorm | `discarded` | `/a4:spark-brainstorm` (wrap-up status decision, from natural-language signals) |
-
-Discovery principle: a derived status value is still materialized into the file when a writer can be assigned. `validate_status_consistency.py` remains the fallback safety net for the `promoted` values on `idea`/`brainstorm`, where no mechanical writer exists; for `superseded` on both `usecase` and `spec`, and for `discarded` on tasks/reviews cascaded from a discarded UC, the active writer `transition_status.py` writes the status so the file alone tells you whether the item is current.
-
-The `workspace-assistant` agent calls `transition_status.py` on behalf of the caller (typically the main session, when delegating to save context) and is therefore not listed as a separate caller in the table above — it executes only `(file, target_status)` pairs the caller has explicitly named, and never decides status on its own.
+`status:` and `<log>` are **never hand-edited** after file creation. The fallback `validate_status_consistency.py` reports drift between `status:` and supporting cross-references for cases the writer cannot mechanically reach (`idea`/`brainstorm` `promoted`).
 
 ## Structural relationship fields
 
@@ -236,13 +206,13 @@ Notable rules:
 
 - **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
 - **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
-- **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited through `/a4:usecase`, and Step 6 ready-gate re-approves `revising → ready`.
+- **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited, and a re-approval ready-gate flips `revising → ready`.
 - **`ready → implementing` requires `implemented_by:` non-empty.** The UC must have at least one task declaring `implements: [usecase/<this>]`.
 - **`implementing → shipped` requires every task in `implemented_by:` to be `complete`.** `transition_status.py` enforces this.
 
 ## Task (`a4/task/<kind>/<id>-<slug>.md`)
 
-Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, and defect work; lifecycle is identical across kinds. The kind subfolder (`feature/`, `bug/`, `spike/`) is part of the file path so the matching per-kind authoring rule auto-loads on read or edit; reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
+Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, and defect work; lifecycle is identical across kinds. The kind subfolder (`feature/`, `bug/`, `spike/`) is part of the file path. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -275,12 +245,12 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 
 | Value | Meaning |
 |-------|---------|
-| `open` | Backlog (kanban "todo"). Captured but not yet committed to the work queue. Not picked up by `/a4:run`; user must transition `open → pending` to enqueue. |
-| `pending` | In the work queue, awaiting an implementer. Default ready-set entry for `/a4:run`. |
-| `progress` | A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume by `/a4:run`). |
+| `open` | Backlog (kanban "todo"). Captured but not yet committed to the work queue. Not picked up by the implement loop; transition `open → pending` to enqueue. |
+| `pending` | In the work queue, awaiting an implementer. Default ready-set entry for the implement loop. |
+| `progress` | A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume). |
 | `complete` | Unit tests passed. Not a forward-path terminal — UC `revising` cascade can return tasks to `pending` for re-implementation. |
 | `failing` | Unit tests red. Resumed via `failing → progress` (immediate retry, same cycle) or deferred via `failing → pending` (next cycle). |
-| `discarded` | Abandoned. Terminal. Reached either via UC `discarded` cascade or explicit `/a4:task discard`. |
+| `discarded` | Abandoned. Terminal. Reached either via UC `discarded` cascade or an explicit task-discard. |
 
 Allowed transitions:
 
@@ -293,17 +263,15 @@ failing   → discarded | pending | progress
 discarded → (terminal)
 ```
 
-`open → progress` is allowed when work is initiated outside `/a4:run` — for example, a `task-implementer` spawned directly, or an LLM-conversation session that starts implementing a backlog task without batch enqueue. The `pending` step exists to express `/a4:run` queue intent; skip it when the queue is not the entry path. There is no `pending → open` reverse — once enqueued, a task cannot be returned to backlog.
+`open → progress` is allowed when work is initiated outside the batch run loop — for example, a `task-implementer` spawned directly, or a session that starts implementing a backlog task without batch enqueue. The `pending` step exists to express batch-queue intent; skip it when the queue is not the entry path. There is no `pending → open` reverse — once enqueued, a task cannot be returned to backlog.
 
 ### Initial status policy
 
-`/a4:task` allows three initial states on file create:
+Three initial states are allowed on task file create:
 
 - `open` (default) — backlog capture.
-- `pending` — author intends `/a4:run` to pick it up immediately.
-- `complete` — post-hoc documentation: code already shipped, task file added for traceability. Skill must verify every path in `files:` exists at create time and append an explicit `<log>` entry noting the post-hoc origin (since no `progress → complete` transition was logged by the writer).
-
-`/a4:roadmap` always writes new tasks at `pending` — batch generation reflects "fill the queue right now" intent.
+- `pending` — author intends the implement loop to pick it up immediately. Batch authoring (e.g., from a roadmap) writes new tasks at `pending`.
+- `complete` — post-hoc documentation: code already shipped, task file added for traceability. The writer must verify every path in `files:` exists at create time and append an explicit `<log>` entry noting the post-hoc origin (since no `progress → complete` transition was logged by the writer).
 
 `progress` and `failing` are never used as initial states; only the writer (`transition_status.py`) produces them as a result of transitions.
 
@@ -328,8 +296,6 @@ The `spike/` directory:
 - Is not validated by any a4 script — the markdown-only contract of `a4/` is preserved.
 - Is opt-in — projects without spike tasks have no `spike/` directory.
 
-Source: `../spec/archive/2026-04-24-experiments-slot.decide.md`.
-
 ## Review item (`a4/review/<id>-<slug>.md`)
 
 Unified conduit for findings, gaps, and questions. The `kind:` field distinguishes them; lifecycle is identical.
@@ -353,7 +319,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 
 ## Spec (`a4/spec/<id>-<slug>.md`)
 
-A spec is a **living specification** — the canonical, prescriptive description of a format, protocol, schema, renderer rule, CLI surface, or other artifact whose exact shape the project commits to. Specs are recorded by `/a4:spec` into `a4/spec/<id>-<slug>.md` after the user and LLM converge on the shape through conversation. Supporting research, when needed, is produced separately by `/a4:research` as a portable artifact at project-root `./research/<slug>.md` and registered atomically via `scripts/register_research_citation.py`. Each citation is recorded in four places — the spec's `research:` frontmatter list and `<research>` body section, plus the research file's `cited_by:` frontmatter list and `<cited-by>` body section. Frontmatter representations stay queryable via plain-text scan; body sections preserve the in-context citation. The `related:` frontmatter field on a spec is **not** the right slot for research — `research` is the dedicated forward field; `related:` remains for cross-references between issue-family artifacts. The wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with a `<change-logs>` entry, or opening a review-item fallback) is performed by `/a4:spec` at record time.
+A spec is a **living specification** — the canonical, prescriptive description of a format, protocol, schema, renderer rule, CLI surface, or other artifact whose exact shape the project commits to. Specs are recorded into `a4/spec/<id>-<slug>.md` after the shape converges through conversation. Supporting research, when needed, is a portable artifact at project-root `./research/<slug>.md` and registered atomically via `scripts/register_research_citation.py`. Each citation is recorded in four places — the spec's `research:` frontmatter list and `<research>` body section, plus the research file's `cited_by:` frontmatter list and `<cited-by>` body section. Frontmatter representations stay queryable via plain-text scan; body sections preserve the in-context citation. The `related:` frontmatter field on a spec is **not** the right slot for research — `research` is the dedicated forward field; `related:` remains for cross-references between issue-family artifacts. A wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with a `<change-logs>` entry, or opening a review-item fallback) is performed at record time.
 
 **Body structure.** Two sections are required: `<context>` (why this spec exists — the problem or scope it covers) and `<specification>` (the prescriptive content — grammar, fields, rules, examples). Both are mechanically enforced by `validate_body.py` against `body_schemas/spec.xsd`, which `transition_status.py` invokes on the `draft → active` flip. Beyond those two, additional sections may be added when the session content warrants them — common examples include `<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`. See [§Body sections per type](#body-sections-per-type) for the full list.
 
@@ -405,7 +371,7 @@ Notable rules:
 
 Pre-pipeline quick-capture slot — Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family.
 
-Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea. See `../spec/archive/2026-04-24-idea-slot.decide.md` for the full rationale.
+Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -427,9 +393,7 @@ Boundary with `review/`: **idea = independent possibility, captured raw; review 
 - `kind` — only one kind of idea (unlike `review/` which unifies finding/gap/question).
 - `milestone` — ideas are not scheduled.
 
-Body is largely free — only optional sections per the XSD. Captured via `/a4:idea <line>` the body is typically empty or just a short `<notes>` block; longer ideas may add `<why-this-matters>`.
-
-Source: `../skills/idea/SKILL.md` and `../spec/archive/2026-04-24-idea-slot.decide.md`.
+Body is largely free — only optional sections per the XSD. Quick-capture ideas are typically empty or just a short `<notes>` block; longer ideas may add `<why-this-matters>`.
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 
@@ -446,9 +410,7 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-Source: `../skills/spark-brainstorm/SKILL.md`.
-
-**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `<decision-log>` absorbing the rationale that previously lived in standalone decision records). The current shape is: `/a4:research` (optional) → `/a4:research-review` (optional) → conversation → `/a4:spec` (records the spec + performs the wiki nudge). No spark-family file carries `type: decide` anymore.
+**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `<decision-log>` absorbing the rationale that previously lived in standalone decision records). No spark-family file carries `type: decide` anymore.
 
 ## Research artifact (project-root `research/<slug>.md`)
 
@@ -553,7 +515,7 @@ Every rule violation is an error; both validators exit `2` on any violation and 
 | `body-tag-unclosed` (EOF inside an open section) | body | error |
 | `body-xsd` (XSD violation — missing required, unexpected duplicate) | body | error |
 
-Hook scope is a separate concern — the validator reports; the caller (hook, skill, manual invocation) decides whether to block, notify, or ignore.
+Hook scope is a separate concern — the validator reports; the caller decides whether to block, notify, or ignore.
 
 ### Cross-file status consistency
 
@@ -562,7 +524,7 @@ Several enum values are semantically derived from cross-file state rather than b
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
 | `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
-| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*/*.md` (recursing through `feature/`/`bug/`/`spike/`) carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; called at end of `/a4:roadmap` Step 3 and from `/a4:task` Step 6, plus the `scripts/a4_hook.py session-start` SessionStart hook). Emits the bare `task/<id>-<slug>` form (no kind segment) so refs stay stable across kind moves. |
+| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*/*.md` (recursing through `feature/`/`bug/`/`spike/`) carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; invoked from task-authoring writers and from `scripts/a4_hook.py session-start`). Emits the bare `task/<id>-<slug>` form (no kind segment) so refs stay stable across kind moves. |
 | `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
 | `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
@@ -574,8 +536,8 @@ Several enum values are semantically derived from cross-file state rather than b
 
 Two modes:
 
-- **Workspace mode** (`<a4-dir>`) — scans all specs/ideas/brainstorms. Used by the SessionStart hook and `/a4:validate`.
-- **File-scoped mode** (`<a4-dir> --file <path>`) — reports only mismatches in the connected component of the given file (idea/brainstorm: self-contained; spec: supersedes chain). Used by the PostToolUse hook so ordinary edits do not re-surface unrelated legacy mismatches.
+- **Workspace mode** (`<a4-dir>`) — scans all specs/ideas/brainstorms. Used at session start and during workspace validation.
+- **File-scoped mode** (`<a4-dir> --file <path>`) — reports only mismatches in the connected component of the given file (idea/brainstorm: self-contained; spec: supersedes chain). Used on PostToolUse so ordinary edits do not re-surface unrelated legacy mismatches.
 
 ## Known deferred items
 
@@ -599,4 +561,4 @@ When these land, update this document **and** the validator simultaneously — t
 - **Research citation registrar:** `../scripts/register_research_citation.py` — atomically records a research → spec citation in four places (spec frontmatter `research:`, spec body `<research>`, research frontmatter `cited_by:`, research body `<cited-by>`) and bumps the research file's `updated:`.
 - **Drift detector (uses wiki / review schemas):** `../scripts/drift_detector.py`.
 - **Cross-file status consistency validator:** `../scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).
-- **Spark schemas (origin):** `../skills/spark-brainstorm/SKILL.md` (brainstorm is the only spark-family schema; `/a4:research` output lives outside `a4/` and is not validated by this schema).
+- **Spark family scope:** brainstorm is the only spark-family schema validated here; research output lives outside `a4/` and is not validated by this schema.

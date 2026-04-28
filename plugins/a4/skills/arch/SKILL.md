@@ -42,7 +42,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Design** — `a4/architecture.md` does not exist. Start from Phase 1 and follow the guided sequence below.
-- **Iteration** — `a4/architecture.md` exists. Apply `${CLAUDE_PLUGIN_ROOT}/references/arch/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md`.
+- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
 
 ## Session Task List
 
@@ -75,8 +75,8 @@ In **First Design**, run Phases 1 → 4 in order. In **Iteration**, start wherev
 
 | Phase | Focus | Procedure |
 |-------|-------|-----------|
-| 1 | Technology Stack | `${CLAUDE_PLUGIN_ROOT}/references/arch/phase-tech-stack.md` |
-| 2 | External Dependencies | `${CLAUDE_PLUGIN_ROOT}/references/arch/phase-external-deps.md` |
+| 1 | Technology Stack | `references/phase-tech-stack.md` |
+| 2 | External Dependencies | `references/phase-external-deps.md` |
 | 3 | Component Design | `references/architecture-guide.md` |
 | 4 | Test Strategy | `references/test-strategy-guide.md` |
 
@@ -84,11 +84,11 @@ Component names, schema fields, and contract parameters must use `a4/domain.md` 
 
 ### Technical Claim Verification
 
-When recording any non-obvious technical claim, verify before writing it down. Procedure: `${CLAUDE_PLUGIN_ROOT}/references/arch/claim-verification.md`.
+When recording any non-obvious technical claim, verify before writing it down. Procedure: `references/claim-verification.md`.
 
 ### Wrap Up
 
-When the user indicates they're done, run `${CLAUDE_PLUGIN_ROOT}/references/arch/wrap-up.md`: pre-flight consistency check → launch `arch-reviewer` → walk findings → wiki close guard → report.
+When the user indicates they're done, run `references/wrap-up.md`: pre-flight consistency check → launch `arch-reviewer` → walk findings → wiki close guard → report.
 
 ## File Writing Rules
 

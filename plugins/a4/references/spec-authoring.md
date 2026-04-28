@@ -2,7 +2,7 @@
 
 A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code, validators, and review items must conform to. Specs replace the retired ADR family; design rationale lives inline as `<decision-log>` entries co-located with the spec they shaped.
 
-Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), `./spec-triggers.md`, `./body-conventions.md`.
+Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), `./body-conventions.md`.
 
 ## When a spec is warranted
 
@@ -17,14 +17,14 @@ If any condition fails, the moment is probably **not** spec-worthy. See the anti
 
 ### Conversational triggers
 
-Surface a spec offer when these appear in dialogue:
+A spec offer is warranted when these appear in dialogue:
 
 - **B1 — multi-option enumeration:** "A or B", "REST vs GraphQL", "Postgres or Mongo".
 - **B2 — trade-off language:** "we trade X for Y", "the cost of Z is …", "장단점이 있다".
 - **B3 — uncertainty markers:** "not sure", "torn between", "더 생각해봐야". Clarify first whether it is decision-pending (→ spec) or evidence-pending (→ research) — leave `<open-questions>` open if neither resolves quickly.
 - **B4 — prior-spec references:** "we decided X before, but now…". This is a **supersede candidate** — author with `supersedes: [spec/<prior-id>-<slug>]` populated; do not edit the prior spec body.
-- **B5 — task-implementer architectural-choice exit:** mid-task implementation surfaces a design alternative not yet captured. Halt, emit a `kind: gap` review item with `target: spec/`, return failure naming the review id; the user resolves via `/a4:spec`.
-- **B6 — mid-`/a4:run` architecture-impacting choice:** same exit shape as B5 from the human-driven side.
+- **B5 — task-implementer architectural-choice exit:** mid-task implementation surfaces a design alternative not yet captured. Halt, emit a `kind: gap` review item with `target: spec/`, return failure naming the review id.
+- **B6 — mid-implementation architecture-impacting choice:** same exit shape as B5 from the human-driven side.
 
 ### Anti-patterns — do **not** author a spec for these
 
@@ -34,15 +34,9 @@ Surface a spec offer when these appear in dialogue:
 - **Multiple decisions in one spec.** Three independent decisions → three specs, each with its own `<decision-log>` and supersede chain.
 - **Bug fixes that just use the right tool.** Switching to the correct API call is a fix, not a decision.
 
-## How to author — always via `/a4:spec`
+## Reading a spec
 
-Do **not** hand-craft a spec file with `Write`. Always invoke `/a4:spec` so id allocation, slug derivation, frontmatter shape, body validation, supersedes cascades, research-citation registration, and the wiki nudge all run through the same skill. The skill detects three modes from the seed and the recent conversation:
-
-- **(a) Activate existing.** The seed names a `draft` spec already on disk; the skill confirms once and calls `transition_status.py --to active`.
-- **(b) Revise existing.** The seed (or conversation) refines an `active` spec; the skill edits the body in place and appends a dated `<decision-log>` entry. `status:` stays `active`.
-- **(c) New record.** Default. The skill drafts the body, writes the file at `status: draft`, then optionally activates it.
-
-If you must read a spec to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
+If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
 
 ## Frontmatter contract (do not deviate)
 
@@ -80,7 +74,7 @@ deprecated → superseded
 superseded → (terminal)
 ```
 
-- All status changes flow through `../scripts/transition_status.py`. Skills and humans never write `status:` directly after the initial create.
+- All status changes flow through `../scripts/transition_status.py`. Never write `status:` directly after the initial create.
 - `draft → superseded` is **disallowed** — supersession presumes the predecessor was at one point live.
 - `active → superseded` is **automatic** — it fires when a successor spec with `supersedes: [<this>]` reaches `active`. Do not flip it by hand.
 - `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.
@@ -94,7 +88,7 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 - `<context>` — why this spec exists; what artifact it describes; the scope it covers.
 - `<specification>` — the prescriptive content. Grammar, fields, format rules, examples. This is the heart of the spec.
 
-**Optional, emit only when the conversation produced content for them:**
+**Optional, emit only when there is content for them:**
 
 - `<decision-log>` — append-only, dated bullets summarizing what was chosen and why. **The only sanctioned slot for ADR-style rationale.** Earlier entries are never edited or removed; corrections are added as new entries that explain why prior reasoning no longer holds.
 - `<open-questions>` — unresolved aspects the spec deliberately defers. Better than forcing premature closure.
@@ -133,10 +127,6 @@ uv run "../scripts/validate_body.py" \
 - **Don't hand-edit `<log>`** (except the documented post-hoc `complete` task case — does not apply to specs).
 - **Don't auto-populate `supersedes:`.** It is an explicit user decision in the authoring conversation.
 - **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the writer cascades the prior spec's status automatically.
-- **Don't pack multiple decisions into one spec.** One `/a4:spec` invocation per decision; each gets its own id, supersede chain, and `<decision-log>`.
+- **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `<decision-log>`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `<decision-log>`.
-
-## After authoring
-
-`/a4:spec` performs the in-situ wiki nudge — mapping the spec's scope to affected wiki pages (`architecture.md`, `context.md`, `domain.md`, `actors.md`, `nfr.md`), confirming with the user, and either editing with a dated `<change-logs>` bullet linking to the spec, or deferring to a `kind: gap` review item. The skill does not commit; the file (and any cascaded supersedes-target edits) is left in the working tree for the user to commit at their convenience.

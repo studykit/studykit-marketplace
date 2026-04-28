@@ -1,6 +1,6 @@
 # Iteration Entry Procedure (usecase)
 
-usecase-specific addendum on top of the shared procedure in [`plugins/a4/references/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md). This document describes only what the **usecase** iterate flow does between writer calls — research-reflected check, revising-UC scope handling, allowed activities, work-surface summary.
+usecase-specific addendum on top of the shared procedure in [`plugins/a4/docs/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md). This document describes only what the **usecase** iterate flow does between writer calls — research-reflected check, revising-UC scope handling, allowed activities, work-surface summary.
 
 When entering Iteration mode (an existing `a4/` workspace with UC files is found), the goal is to surface unresolved review items, unreflected research/exploration reports, and any wiki drift so the session picks up coherently.
 
@@ -15,7 +15,7 @@ List the current state. Do **not** read every UC up front — read on demand.
 
 ## 2. Backlog (per the mechanics)
 
-Filter open review items to this stage's mailbox: `target: usecase/*` OR `target: context` OR `target: actors` OR `target: nfr` OR same in `wiki_impact`. Present as the priority backlog per [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) §1–§2. The writer-call protocol for **pick → in-progress** and **resolve → resolved** is in §3 of that document.
+Filter open review items to this stage's mailbox: `target: usecase/*` OR `target: context` OR `target: actors` OR `target: nfr` OR same in `wiki_impact`. Present as the priority backlog per [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md) §1–§2. The writer-call protocol for **pick → in-progress** and **resolve → resolved** is in §3 of that document.
 
 ### Revising-UC priority
 
@@ -55,7 +55,7 @@ Present a brief status:
 
 ## Usecase-specific iteration rules
 
-Most discipline is shared (see [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md) §5). usecase adds:
+Most discipline is shared (see [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md) §5). usecase adds:
 
 - **Show before/after on UC modifications** — when modifying an existing UC body, present the before/after to the user before writing.
 - **Preserve allocator gaps** — when adding new UCs after iteration, gaps from earlier discards/renumbers stay; do not compact ids.

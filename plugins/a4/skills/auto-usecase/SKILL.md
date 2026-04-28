@@ -1,6 +1,6 @@
 ---
 name: auto-usecase
-description: "This skill should be used when the user wants to extract or batch-shape Use Cases from raw input — an existing codebase, an idea, brainstorm notes, or a file path — without interactive interview. Reverse-engineering an existing system into UCs is its primary job; running it on a fresh idea is a secondary mode. Triggers: 'reverse-engineer use cases', 'extract use cases from code', 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'no interview needed just generate', 'run auto-usecase on'. Writes the result into <project-root>/a4/ per the spec-as-wiki+issues layout (per-UC files + context.md / actors.md / nfr.md). Not the autonomous twin of /a4:usecase — they serve different inputs; see references/skill-modes.md for the mode taxonomy."
+description: "This skill should be used when the user wants to extract or batch-shape Use Cases from raw input — an existing codebase, an idea, brainstorm notes, or a file path — without interactive interview. Reverse-engineering an existing system into UCs is its primary job; running it on a fresh idea is a secondary mode. Triggers: 'reverse-engineer use cases', 'extract use cases from code', 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'no interview needed just generate', 'run auto-usecase on'. Writes the result into <project-root>/a4/ per the spec-as-wiki+issues layout (per-UC files + context.md / actors.md / nfr.md). Not the autonomous twin of /a4:usecase — they serve different inputs; see docs/skill-modes.md for the mode taxonomy."
 argument-hint: <codebase path, idea, brainstorm text, or file path to extract use cases from>
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
@@ -11,7 +11,7 @@ allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCr
 
 Extract or batch-shape a complete spec-as-wiki+issues Use Case set from raw input — an existing codebase, an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
 
-This skill is **not** the autonomous twin of `/a4:usecase`. `/a4:usecase` is a Socratic interview that draws UCs out of a user who knows the problem; this skill is a reverse / batch entry for cases where the input is raw material rather than a person to interview against. See `${CLAUDE_PLUGIN_ROOT}/references/skill-modes.md` for the full mode taxonomy.
+This skill is **not** the autonomous twin of `/a4:usecase`. `/a4:usecase` is a Socratic interview that draws UCs out of a user who knows the problem; this skill is a reverse / batch entry for cases where the input is raw material rather than a person to interview against. See `${CLAUDE_PLUGIN_ROOT}/docs/skill-modes.md` for the full mode taxonomy.
 
 Generate use cases for: **$ARGUMENTS**
 
@@ -64,18 +64,18 @@ This skill runs two nested loops:
 
 | Step | Focus | Procedure |
 |------|-------|-----------|
-| 1 | Classify the input + resume detection | `${CLAUDE_PLUGIN_ROOT}/references/auto-usecase/input-classification.md` |
-| 2 | Research (similar systems + code analysis, parallel) | `${CLAUDE_PLUGIN_ROOT}/references/auto-usecase/research-step.md` |
-| 3 | Compose + refine loop (a/b/c/d) | `${CLAUDE_PLUGIN_ROOT}/references/auto-usecase/compose-refine-loop.md` |
-| 4 | Final summary | `${CLAUDE_PLUGIN_ROOT}/references/auto-usecase/final-summary.md` |
+| 1 | Classify the input + resume detection | `references/input-classification.md` |
+| 2 | Research (similar systems + code analysis, parallel) | `references/research-step.md` |
+| 3 | Compose + refine loop (a/b/c/d) | `references/compose-refine-loop.md` |
+| 4 | Final summary | `references/final-summary.md` |
 
 ## Commit Points
 
-Per-step subject formats and timing: `${CLAUDE_PLUGIN_ROOT}/references/auto-usecase/commit-points.md`.
+Per-step subject formats and timing: `references/commit-points.md`.
 
 ## Cross-Stage Findings
 
-This skill is **continue + review item** for any architecture / domain / NFR concern that surfaces during composition or review — UC drafts are independently meaningful, so emit review items targeting the upstream wiki and finish the autonomous run. See `${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md` §Cross-stage feedback. Domain Model itself is **out of scope** — domain extraction lives in `/a4:domain` and is recommended in the final summary.
+This skill is **continue + review item** for any architecture / domain / NFR concern that surfaces during composition or review — UC drafts are independently meaningful, so emit review items targeting the upstream wiki and finish the autonomous run. See `${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md` §Cross-stage feedback. Domain Model itself is **out of scope** — domain extraction lives in `/a4:domain` and is recommended in the final summary.
 
 ## Autonomous Decision Rules
 

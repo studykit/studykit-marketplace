@@ -6,22 +6,13 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 - `gap` — something is missing that ought to exist (a UC that no spec covers, an architectural choice nobody recorded, a wiki page that has not been updated to reflect a confirmed change).
 - `question` — an open question the conversation could not resolve in place (deferred decision, unclear constraint).
 
-Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. Authored by reviewer agents (`usecase-reviewer`, `arch-reviewer`, `domain-reviewer`, `roadmap-reviewer`, `task-implementer`), by `../scripts/drift_detector.py` (`source: drift-detector`), and by single-edit skill defer paths (`source: self`). Resolved through the iterate flows (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:domain iterate`, `/a4:roadmap iterate`, `/a4:run iterate`) per the shared procedure in `./iterate-mechanics.md`.
+Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents, by `../scripts/drift_detector.py` (`source: drift-detector`), and by single-edit defer paths (`source: self`).
 
-Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), `./iterate-mechanics.md`, `./wiki-authorship.md`, `./spec-triggers.md`, `./body-conventions.md`.
+Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## How to author — review items are emitted by skills, not hand-written
+## Reading a review item
 
-There is no `/a4:review` skill. Review items are emitted in three shapes:
-
-- **Reviewer-agent finding.** Emitted by `usecase-reviewer`, `arch-reviewer`, `domain-reviewer`, `roadmap-reviewer` after the primary-author skill's wrap-up. `source: <reviewer-agent-name>`.
-- **Drift-detector finding.** Emitted by `../scripts/drift_detector.py` (invoked via `/a4:drift`). `source: drift-detector`. Carries `labels: [drift, drift:<kind>, drift-cause:<cause-slug>?]` for dedup across runs.
-- **Defer / cross-stage feedback.** Emitted by single-edit skills when a wiki edit is deferred (e.g., a UC change implies an `architecture.md` update but `usecase` is not the primary author of that page), or when a stage detects an upstream issue and chooses *continue + review item* per `./wiki-authorship.md`. `source: self` (or the skill name).
-- **Task-implementer architectural-choice exit.** When a `task-implementer` agent encounters an architectural alternative not yet captured, it emits a `kind: gap`, `target: spec/`, `source: task-implementer` review item and returns failure naming the review id (per `./spec-triggers.md` B5).
-
-Do **not** hand-craft a review file with `Write`. The emitting skill or script handles id allocation, slug derivation, frontmatter shape, and dedup. If you find yourself wanting to author a review item from a normal conversation, route the impulse through the appropriate skill: `/a4:idea` for pre-pipeline capture, `/a4:spec` for an architectural decision, `/a4:usecase` for a UC concern, or trigger `/a4:drift` for cross-file consistency.
-
-If you must read a review item to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
+If only a specific section is needed to answer a question, prefer `extract_section.py <file> <tag>` over loading the whole file.
 
 ## Frontmatter contract (do not deviate)
 
@@ -48,7 +39,7 @@ updated: YYYY-MM-DD
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` points at the artifact this review is about. Accepts any issue path (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `spec/<id>-<slug>`) or a wiki basename (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). **Omit `target:` entirely when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. The validator currently accepts any string, but the conventional set is `self`, `drift-detector`, and the reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
+- `source:` records who emitted the item. The validator currently accepts any string, but the conventional set is `self`, `drift-detector`, and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
 - `wiki_impact:` lists **wiki basenames** (no `.md`, no folder prefix) whose `<change-logs>` must record the resolution. Used by the close guard at resolve-time. Empty list when no wiki page is affected.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low). Drift items at `priority: high` lead.
 - `labels:` are free-form. The drift detector reserves `drift`, `drift:<kind>`, and `drift-cause:<slug>` for dedup; do not reuse these prefixes for unrelated tags.
@@ -71,14 +62,14 @@ discarded   → (terminal)
 Per-status meaning:
 
 - `open` — Item is in the inbox. Default initial status. Picked up by the iterate flow whose filter matches `target:` / `wiki_impact:`.
-- `in-progress` — User selected the item from the iterate backlog. Active resolution.
+- `in-progress` — Item selected from the iterate backlog. Active resolution.
 - `resolved` — Fix landed. The artifact named in `target:` (and any wiki page in `wiki_impact:`) reflects the resolution. Terminal.
 - `discarded` — No longer applicable (e.g., the underlying UC was discarded, the finding was re-evaluated as not-a-bug, the question was overtaken by events). Terminal.
 
 Writer rules:
 
 - `open` is the **only** initial status. New items are always born at `open`; everything else is a transition.
-- All status changes after the initial create flow through `../scripts/transition_status.py`. Skills, agents, and humans never write `status:` directly post-create.
+- All status changes after the initial create flow through `../scripts/transition_status.py`. Never write `status:` directly post-create.
 - `open → in-progress` is the iterate-flow's "user picked this item" flip; `in-progress → resolved` (or `→ discarded`) closes it.
 - `open → discarded` is allowed for items that are dismissed without being picked (e.g., obvious duplicate, inapplicable on second look).
 - The drift detector **dedups** against open / in-progress / discarded items with matching `(kind, target, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).
@@ -107,7 +98,7 @@ Review item bodies are **deliberately minimal** — they hold a single observati
 
 **Required (enforced by `../scripts/body_schemas/review.xsd`):**
 
-- `<description>` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise. The body of a review item is read by the next person walking the iterate backlog; treat it as a hand-off note, not an essay.
+- `<description>` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise. The body of a review item is a hand-off note, not an essay.
 
 **Optional, emit only when applicable:**
 
@@ -150,14 +141,3 @@ uv run "../scripts/validate_body.py" \
 - **Don't mark `resolved` when the wiki edit was deferred.** Open a fresh follow-up review item targeting the wiki, leave this item `in-progress` (or close as `discarded` with rationale).
 - **Don't override the close guard silently.** The drift detector will re-surface the violation; better to fix the wiki edit now.
 - **Don't author review items as long-form prose.** Bodies are hand-off notes. Long write-ups belong in specs, UCs, or wiki pages.
-
-## After authoring (and after resolving)
-
-The emitting skill / script does not commit; the new review file is left in the working tree alongside the artifacts that motivated it. The next iterate flow run picks the item up from the backlog. On resolution, the iterate flow:
-
-1. Edits the artifact named in `target:` (or the wiki page).
-2. For each `wiki_impact:` page, appends the dated bullet to `<change-logs>`.
-3. Calls `transition_status.py --to resolved` with a short reason.
-4. Honors the close guard (warns + suggests fix when the wiki bullet is missing).
-
-`/a4:drift` is the explicit "scan for fresh review items" entry point. The SessionStart hook also runs lightweight consistency checks that may surface review items.

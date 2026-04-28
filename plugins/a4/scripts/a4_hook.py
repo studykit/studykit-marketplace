@@ -21,7 +21,7 @@ Subcommands:
 
 Conventions (state classification, lifecycle symmetry, language/invocation,
 in-event ordering, non-blocking policy, output channel usage) live in
-`plugins/a4/references/hook-conventions.md`.
+`plugins/a4/docs/hook-conventions.md`.
 
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.

@@ -2,27 +2,11 @@
 
 `a4/domain.md` is the **shared vocabulary wiki**. It catalogs the cross-cutting concepts every UC, spec, and architecture component references — entities, value objects, lifecycle states. The domain page is downstream of UCs (concepts surface during interview) and upstream of architecture (components depend on the agreed vocabulary).
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`.
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## How to author — always via `/a4:domain` (or `/a4:arch` for limited cases)
+## Reading the file
 
-Do **not** hand-craft `domain.md` with `Write`. Always invoke `/a4:domain` so concept extraction, relationship analysis, and state transitions are produced through the same flow.
-
-If you must read the file to answer a question, prefer `extract_section.py a4/domain.md <tag>` over loading the whole markdown.
-
-## Authorship — who can edit this page
-
-Per `./wiki-authorship.md`:
-
-- **`/a4:domain` is the primary author.** Owns all body sections.
-- **`/a4:arch` is allowed limited in-situ edits** when concept changes surface during component design. The b3 decision table in `../skills/arch/SKILL.md` Phase 3 enumerates exactly what arch can change in-situ:
-  - Add a new concept to `<concepts>` (definition wording is `arch`'s call when discovered during component design).
-  - 1:1 rename (e.g., `Conversation → Session`) when the rename is obvious from the architectural context.
-  - Adjust definition wording for an existing concept.
-  - **Structural changes** (split / merge / new relationship / new state transition) are out of in-situ scope — emit a review item with `target: domain`, `wiki_impact: [domain]` and let `/a4:domain iterate` resolve it.
-- All other skills emit review items with `target: domain`.
-
-The split exists because term churn is normal during arch work and forcing every rename through review-item friction is too costly. But structural changes are too easy to get wrong without the domain extraction lens, so they always go back to `/a4:domain`.
+If only a specific section is needed to answer a question, prefer `extract_section.py a4/domain.md <tag>` over loading the whole markdown.
 
 ## Frontmatter contract (do not deviate)
 
@@ -88,14 +72,8 @@ uv run "../scripts/validate_body.py" \
 
 ## Don't
 
-- **Don't edit from any skill other than `/a4:domain` or `/a4:arch` (limited).** Emit a review item with `target: domain`.
-- **Don't make structural changes from `/a4:arch`.** Splits, merges, new relationships, new state transitions go back to `/a4:domain iterate` via a review item.
 - **Don't put architecture component definitions here.** Components live in `architecture.md`'s `<components>` section. Concepts are the user-domain vocabulary; components are the runtime shape.
 - **Don't put framework-mandated terms here.** "Controller", "Repository", "DAO" are framework constructs, not domain concepts. They belong in `architecture.md`.
 - **Don't rename a concept silently.** Renames cascade to UCs, specs, architecture, and code. Open a review item to manage the cascade if the rename surface is large.
 - **Don't append `<change-logs>` bullets without a markdown link.** The link is what powers drift detection.
 - **Don't pack relationship or state diagrams inline as long prose.** Use mermaid / ASCII / table form; keep prose to invariants the diagram does not capture.
-
-## After authoring
-
-`/a4:domain` does not commit; the file is left in the working tree. Substantial concept changes typically warrant `/a4:arch iterate` to propagate component renames or new component additions, plus `/a4:usecase iterate` if the rename touches UC body terminology.

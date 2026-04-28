@@ -1,20 +1,12 @@
 # a4 — architecture wiki authoring
 
-`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), every `task/*.md` (`<interface-contracts>` links into it), and `/a4:run` (AC source for UC-less tasks). Allowing in-situ edits from non-architecture stages would let contract drift propagate before review — hence the single-author rule.
+`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), and every `task/*.md` (`<interface-contracts>` links into it). Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`, `./wiki-authorship.md`, `./iterate-mechanics.md`.
+Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 
-## How to author — always via `/a4:arch`
+## Reading the file
 
-Do **not** hand-craft `architecture.md` with `Write`. Always invoke `/a4:arch` so the component design, technology stack, test strategy, and `<change-logs>` audit trail are produced through the same flow. The skill has a forward draft mode and an iterate mode; iterate is the resolution path for `target: architecture` review items.
-
-If you must read the file to answer a question, prefer `extract_section.py a4/architecture.md <tag>` over loading the whole markdown.
-
-## Authorship — architecture is single-author
-
-`/a4:arch` is the **only** in-situ editor of `architecture.md`. No other skill edits in-situ; everything else flows through review items with `target: architecture` (and `wiki_impact: [architecture]` when applicable). The general primary-author rule + cross-stage feedback policy is in `./wiki-authorship.md`.
-
-If you find yourself wanting to edit `architecture.md` from any context other than `/a4:arch`, **stop** and emit a review item.
+If only a specific section is needed to answer a question, prefer `extract_section.py a4/architecture.md <tag>` over loading the whole markdown.
 
 ## Frontmatter contract (do not deviate)
 
@@ -38,7 +30,7 @@ updated: YYYY-MM-DD
 - `<overview>` — high-level architectural narrative; how the system fits together, what trade-offs shaped it.
 - `<components>` — per-component definitions. Each component lists its responsibility, the interface it exposes (consumed by tasks via `<interface-contracts>` links), and any cross-component dependencies.
 - `<technology-stack>` — runtime, framework, libraries, persistence, build tooling. The chosen stack — not a "considered options" list (that belongs in a spec).
-- `<test-strategy>` — how the system is tested. Unit / integration / e2e split, isolation strategy, fixtures. Read by every `task-implementer` to align test code; consistency here matters.
+- `<test-strategy>` — how the system is tested. Unit / integration / e2e split, isolation strategy, fixtures. Consistency here matters because every implementation reads it to align test code.
 
 **Optional, emit only when the conversation produced content for them:**
 
@@ -75,9 +67,3 @@ uv run "../scripts/validate_body.py" \
 - **Don't list considered options in `<technology-stack>`.** The chosen stack lives here; the comparison and rejected alternatives belong in a spec under `a4/spec/`.
 - **Don't rename a component heading silently.** Renames cascade to every task's `<interface-contracts>` link. Open a review item to manage the cascade.
 - **Don't pack a decision rationale into `<overview>`.** Decisions belong in a spec's `<decision-log>`. The architecture page records the *current* shape, not how it was reached.
-
-## After authoring
-
-`/a4:arch` does not commit; the file is left in the working tree along with any review items that the iterate flow flipped to `resolved`. The next-step suggestion depends on workspace state — typically `/a4:auto-bootstrap` (re-verify environment) or `/a4:roadmap iterate` (propagate component changes into milestones).
-
-When an architecture change has substantial downstream impact (new component, contract change, technology swap), suggest re-running `/a4:auto-bootstrap` and `/a4:roadmap iterate` before further coding work.

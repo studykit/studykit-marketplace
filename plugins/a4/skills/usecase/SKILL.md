@@ -50,7 +50,7 @@ Body tag form, link form, `<change-logs>` audit trail, and the Wiki Update Proto
 ## Modes
 
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/references/iterate-mechanics.md`.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 
@@ -96,24 +96,24 @@ Restate the idea back in one sentence to confirm understanding. Then immediately
 
 | Step | Phase | Procedure |
 |------|-------|-----------|
-| 2 | Discovery loop (gaps + actor discovery) | `${CLAUDE_PLUGIN_ROOT}/references/usecase/discovery-loop.md` |
-| 3 | Progressive UC extraction | `${CLAUDE_PLUGIN_ROOT}/references/usecase/progressive-extraction.md` |
-| 3a | In-situ wiki nudge | `${CLAUDE_PLUGIN_ROOT}/references/usecase/in-situ-wiki-nudge.md` |
+| 2 | Discovery loop (gaps + actor discovery) | `references/discovery-loop.md` |
+| 3 | Progressive UC extraction | `references/progressive-extraction.md` |
+| 3a | In-situ wiki nudge | `references/in-situ-wiki-nudge.md` |
 | 4 | UC splitting | `references/usecase-splitting.md` |
 | 5 | Challenge mode shifts (Contrarian / Simplifier / Reframer) | `references/facilitation-techniques.md` |
 | 6 | Similar systems research (on request, after 3+ UCs) | `references/research-procedure.md` |
-| 7 | Platform capabilities audit | `${CLAUDE_PLUGIN_ROOT}/references/usecase/platform-capabilities-audit.md` |
+| 7 | Platform capabilities audit | `references/platform-capabilities-audit.md` |
 | 8 | UC relationship analysis (after 5+ UCs) | `references/usecase-relationships.md` |
-| 9 | UI screen grouping + (10) mock generation | `${CLAUDE_PLUGIN_ROOT}/references/usecase/ui-screen-grouping.md` |
-| 11 | Non-functional requirements | `${CLAUDE_PLUGIN_ROOT}/references/usecase/nfr-capture.md` |
+| 9 | UI screen grouping + (10) mock generation | `references/ui-screen-grouping.md` |
+| 11 | Non-functional requirements | `references/nfr-capture.md` |
 
 ### Wrap Up
 
-When the user indicates they're done, run `${CLAUDE_PLUGIN_ROOT}/references/usecase/wrap-up.md`: explorer → compose new UCs → reviewer → walk findings → wiki close guard → ready-gate → report.
+When the user indicates they're done, run `references/wrap-up.md`: explorer → compose new UCs → reviewer → walk findings → wiki close guard → ready-gate → report.
 
 ### Revising an `implementing` UC
 
-If the user asks to edit a UC currently at `status: implementing`, follow `${CLAUDE_PLUGIN_ROOT}/references/usecase/revising-implementing-uc.md` — confirm the `implementing → revising` transition before editing.
+If the user asks to edit a UC currently at `status: implementing`, follow `references/revising-implementing-uc.md` — confirm the `implementing → revising` transition before editing.
 
 ## Agent Usage
 
