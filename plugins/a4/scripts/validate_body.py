@@ -78,6 +78,7 @@ from markdown import parse
 OPEN_TAG_RE = re.compile(r"^<([a-z][a-z0-9-]*)>\s*$")
 CLOSE_TAG_RE = re.compile(r"^</([a-z][a-z0-9-]*)>\s*$")
 INVALID_TAG_RE = re.compile(r"^<(/?)([^>\s]+)>\s*$")
+FENCE_RE = re.compile(r"^(`{3,}|~{3,})")
 
 
 @dataclass(frozen=True)
@@ -128,10 +129,23 @@ def _scan_sections(
             content_lines: list[str] = []
             j = i + 1
             closed_at: int | None = None
+            # Track the active fenced code block (``` or ~~~) so an
+            # outline-shaped tag inside a code example does not get
+            # mistaken for a section close.
+            fence: str | None = None
             while j < n:
                 inner = lines[j]
-                # Match close on column 0, exact name, no attributes.
-                if inner.rstrip() == close_marker:
+                stripped = inner.lstrip()
+                fence_match = FENCE_RE.match(stripped)
+                if fence is None:
+                    if fence_match:
+                        fence = fence_match.group(1)[0] * 3
+                else:
+                    if fence_match and stripped.startswith(fence):
+                        fence = None
+                # Match close on column 0, exact name, no attributes —
+                # but only when not inside a fenced code block.
+                if fence is None and inner.rstrip() == close_marker:
                     closed_at = j
                     break
                 content_lines.append(inner)
