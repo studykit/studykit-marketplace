@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Use Case Discovery Facilitator
 
-> **Authoring contract:** the contract for `a4/usecase/**/*.md` — frontmatter, body sections, lifecycle (8 states), writer ownership, abstraction discipline, in-situ wiki nudge — lives in [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md). Review-item shape is in [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill orchestrates the Socratic interview and the wrap-up loop.
+> **Authoring contracts:** the contract for `a4/usecase/**/*.md` — frontmatter, body sections, lifecycle (8 states), writer ownership, abstraction discipline, in-situ wiki nudge, splitting protocol — lives in [`references/usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md). This skill is also primary author for `context.md`, `actors.md`, and `nfr.md`; see [`references/context-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/context-authoring.md), [`references/actors-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md), [`references/nfr-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md). Review-item shape: [`references/review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md).
 
 A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. The conversation progressively produces **Use Cases** — concrete descriptions of how users interact with the system, grounded in real situations — together with the cross-cutting wiki pages that frame them (context, actors, domain, NFRs).
 

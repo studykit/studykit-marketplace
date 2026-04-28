@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Task Author + Discard
 
-> **Authoring contract:** the frontmatter / body / lifecycle contract for each task kind lives in a per-kind rule file: [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md), [`rules/a4-task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md), [`rules/a4-task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md). The matching rule auto-loads when reading or editing a file under `a4/task/<kind>/`. This skill orchestrates writing through those contracts — it does not redefine them. Read the relevant rule before deviating from any field shape, status enum, or body section requirement below.
+> **Authoring contracts:** the frontmatter / body / lifecycle contract for each task kind lives in a per-kind authoring reference: [`references/task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/task-feature-authoring.md), [`references/task-bug-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/task-bug-authoring.md), [`references/task-spike-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/task-spike-authoring.md). This skill orchestrates writing through those contracts — it does not redefine them. Read the relevant reference before deviating from any field shape, status enum, or body section requirement below.
 
 Two modes:
 

@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPl
 
 # Implementation Roadmap Builder
 
-> **Authoring contracts:** the wiki contract for `a4/roadmap.md` lives in [`rules/a4-roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md); the contract for the per-task files this skill generates (always `kind: feature`) lives in [`rules/a4-task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md). This skill orchestrates the batch — frontmatter shape, body sections, status enums, and AC source are defined in those rules.
+> **Authoring contracts:** the contract for `a4/roadmap.md` — frontmatter, `<plan>` body shape, common mistakes, "Don't" list — lives in [`references/roadmap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/roadmap-authoring.md). The contract for the per-task files this skill generates (always `kind: feature`) lives in [`references/task-feature-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/task-feature-authoring.md). This skill orchestrates the batch.
 
 Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and authors the implementation roadmap plus per-task files. The agent-driven implement + test loop lives in `/a4:run`.
 

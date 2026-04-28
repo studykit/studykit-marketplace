@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 
 # Spec Recorder
 
-> **Authoring contract:** the contract for `a4/spec/**/*.md` — frontmatter, body sections, `<decision-log>` append-only rule, lifecycle, supersedes cascade, registrar-owned `research:` — lives in [`rules/a4-spec-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-spec-authoring.md). Spec-trigger detection (when a moment is spec-worthy) lives in [`references/spec-triggers.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-triggers.md). This skill orchestrates capture + activate + wiki nudge.
+> **Authoring contract:** the contract for `a4/spec/**/*.md` — frontmatter, body sections, `<decision-log>` append-only rule, lifecycle, supersedes cascade, registrar-owned `research:`, conversational triggers, anti-patterns — lives in [`references/spec-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/spec-authoring.md). This skill orchestrates capture + activate + wiki nudge.
 
 Documents a converged-on shape (format, protocol, schema, renderer rule, CLI surface, etc.) into `a4/spec/<id>-<slug>.md`, cites supporting research if any, optionally records the decision rationale inline, and nudges affected wiki pages. This skill does not facilitate the design itself — it captures an already-converged shape from the current session.
 

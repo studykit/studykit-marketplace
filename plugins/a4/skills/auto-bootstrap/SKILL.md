@@ -7,6 +7,8 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 # Project Bootstrap
 
+> **Authoring contract:** the contract for `a4/bootstrap.md` — frontmatter, body sections (`<environment>` / `<launch>` / `<verify>`), why `<verify>` lives only here, common mistakes, "Don't" list — lives in [`references/bootstrap-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/bootstrap-authoring.md). This skill is the sole writer.
+
 Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** (build / launch / test / smoke / isolation) per [`references/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/references/wiki-authorship.md). Both `/a4:run` and the `task-implementer` / `test-runner` agents read this file directly; `/a4:roadmap` only links to it.
 
 ## Workspace

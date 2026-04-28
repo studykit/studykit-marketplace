@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, EnterPlanMode, ExitPl
 
 # Domain Model Designer
 
-> **Authoring contract:** the wiki contract for `a4/domain.md` lives in [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md). This skill orchestrates the extraction phases — frontmatter shape, body sections, validator behavior, and the `arch`/`domain` shared in-situ scope are defined in that rule.
+> **Authoring contract:** the contract for `a4/domain.md` — frontmatter, body sections, validator behavior, the `arch`/`domain` shared in-situ scope, common mistakes, "Don't" list — lives in [`references/domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md). This skill orchestrates the extraction phases.
 
 Takes the use-case set in `a4/usecase/`, the actor roster in `a4/actors.md`, and the problem framing in `a4/context.md`, and extracts the **cross-cutting Domain Model** — the shared vocabulary architecture and implementation will use. Writes the result to `a4/domain.md` as a single wiki page.
 

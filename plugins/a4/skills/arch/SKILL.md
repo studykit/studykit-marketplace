@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Architecture Designer
 
-> **Authoring contract:** the wiki contract for `a4/architecture.md` lives in [`rules/a4-architecture-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md). When this skill edits `domain.md` for in-situ concept work, [`rules/a4-domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md) §Authorship enumerates the limited-shared in-situ scope. This skill orchestrates — frontmatter shape, body sections, validator behavior are defined in those rules.
+> **Authoring contracts:** the contract for `a4/architecture.md` lives in [`references/architecture-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/architecture-authoring.md). Cross-edit allowances when this skill touches other wikis: [`references/domain-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md) §Authorship (limited in-situ for non-structural concept work), [`references/actors-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md) §Authorship (system-actor add only), [`references/nfr-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md) §Authorship (footnote annotations only). This skill orchestrates — frontmatter shape, body sections, "Don't" lists, validator behavior are defined in those references.
 
 Takes the use-case set in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`, and designs the system architecture — technology stack, external dependencies, components, information flows, interface contracts, and test strategy — through collaborative dialogue. Writes the result to `a4/architecture.md` as a single wiki page.
 

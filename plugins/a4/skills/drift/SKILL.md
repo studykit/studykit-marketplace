@@ -8,6 +8,8 @@ allowed-tools: Bash, Read
 
 # Drift Detection (a4 plugin)
 
+> **Authoring contract:** review items the detector emits follow [`references/review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md) — `kind`, `source`, `target`, `wiki_impact`, `labels` (drift dedup prefixes), lifecycle, close guard.
+
 Runs the shared drift detector against `<project-root>/a4/` and reports any wiki↔issue inconsistencies as new review items in `a4/review/`. Findings carry `source: drift-detector`.
 
 Invocation: `/a4:drift [--dry-run]`. With `--dry-run`, drift is detected but no review items are written — useful for inspecting findings before letting the detector commit them.

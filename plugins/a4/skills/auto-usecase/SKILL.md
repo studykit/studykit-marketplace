@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCr
 
 # Use Case Reverse-Engineer / Batch Generator
 
-> **Authoring contract:** UC files this skill writes are governed by [`rules/a4-usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md); review items by [`rules/a4-review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md). This skill orchestrates the autonomous compose / review / explore loops; subagents follow those rules at write time.
+> **Authoring contracts:** UC files this skill writes are governed by [`references/usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md); the cross-cutting wiki pages (`context.md`, `actors.md`, `nfr.md`) by [`references/context-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/context-authoring.md), [`references/actors-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md), [`references/nfr-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md); review items by [`references/review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md). This skill orchestrates the autonomous compose / review / explore loops; subagents follow those references at write time.
 
 Extract or batch-shape a complete spec-as-wiki+issues Use Case set from raw input — an existing codebase, an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
 
