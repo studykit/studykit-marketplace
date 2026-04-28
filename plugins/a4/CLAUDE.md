@@ -72,6 +72,15 @@ Reference docs in `plugins/a4/references/` are the authoritative source for cros
   markers and is rewritten by `scripts/generate_section_enum.py`. The
   pre-commit hook re-checks for drift whenever any
   `scripts/body_schemas/*.xsd` or the rule file is staged.
+- `rules/a4-<type>-authoring.md` files are hand-edited per-type
+  authoring guides scoped to `a4/<type>/**/*.md`. They consolidate the
+  schema, lifecycle, body shape, and "do not" rules for one issue
+  family so an LLM about to read or edit a file in that folder picks
+  them up automatically (in installed user projects). They have no
+  generator backing and no pre-commit drift check; they are normal
+  prose that must be revised by hand when the source schemas or skills
+  change. The first one is `a4-spec-authoring.md`; add new ones for
+  other types by copying its shape.
 
 ## Skill-generated frontmatter is script-managed
 
