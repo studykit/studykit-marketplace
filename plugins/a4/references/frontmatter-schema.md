@@ -156,40 +156,7 @@ The `type` value must match the file basename (e.g., `type: architecture` requir
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-### UC lifecycle
-
-Forward progression runs `draft → ready → implementing → shipped`, with `revising` as an in-place pause for spec edit, `blocked` as an off-path crosscutting state, and terminal sinks `superseded` and `discarded`.
-
-| Value | Meaning |
-|-------|---------|
-| `draft` | Spec is still being shaped; not ready for implementation. |
-| `ready` | Spec is closed; ready to be picked up by an implementer. |
-| `implementing` | Coding agent is actively working on the UC. |
-| `revising` | Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Task `progress`/`failing` entries reset to `pending`; `open`/`pending`/`complete` tasks stay. |
-| `shipped` | The running system reflects this use case. Forward-path terminal. |
-| `superseded` | A newer UC declares `supersedes: [<this>]` and has shipped. Terminal. |
-| `discarded` | Abandoned; direction was wrong or UC no longer needed. Terminal. Related tasks and open review items cascade to `discarded`. |
-| `blocked` | Implementation-time blocker surfaced; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`. |
-
-Allowed transitions (forward path + escape paths):
-
-```
-draft        → discarded | ready
-ready        → discarded | draft | implementing
-implementing → blocked | discarded | revising | shipped
-revising     → discarded | ready
-blocked      → discarded | ready
-shipped      → discarded | superseded
-discarded    → (terminal)
-superseded   → (terminal)
-```
-
-Notable rules:
-
-- **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
-- **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
-- **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited, and a re-approval ready-gate flips `revising → ready`.
-- **`ready → implementing` and `implementing → shipped` carry no mechanical task gate.** The writer flips `status:` regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are complete. Authors decide when a UC has enough work staged or has truly shipped; `/a4:run` and roadmap surfaces are the load-bearing checks, not the writer.
+Lifecycle (forward path, escape paths, cascade rules), abstraction discipline, body shape, and authoring guidance live in [`usecase-authoring.md`](./usecase-authoring.md).
 
 ## Task (`a4/task/<kind>/<id>-<slug>.md`)
 
