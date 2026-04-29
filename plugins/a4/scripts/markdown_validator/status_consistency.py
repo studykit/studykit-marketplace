@@ -8,6 +8,8 @@ Some status enum values are semantically derived from cross-file state:
     ``status: shipped`` declares ``supersedes: [<this-path>]``.
   - ``task.status = "discarded"`` iff every UC in the task's
     ``implements:`` is at ``status: discarded``.
+  - ``task.status = "pending"`` (from ``progress``/``failing``) iff a UC
+    in the task's ``implements:`` is at ``status: revising``.
   - ``review.status = "discarded"`` iff the review's ``target:`` points
     at a usecase with ``status: discarded``.
   - ``idea.status = "promoted"`` iff own ``promoted:`` list is
@@ -297,6 +299,56 @@ def check_discarded_cascade(
     return mismatches
 
 
+def check_revising_cascade(
+    a4_dir: Path,
+    usecases: dict[str, dict],
+    index: RefIndex,
+) -> list[Mismatch]:
+    """Flag drift when a UC is ``revising`` but its task cascade did not run.
+
+    When a UC flips to ``revising``, every task whose ``implements:`` list
+    names that UC and is currently at ``progress`` or ``failing`` should
+    have been reset to ``pending`` by ``transition_status.py``. Tasks at
+    ``open`` (not yet started), ``pending`` (already reset), ``complete``
+    (already finished), or ``discarded`` are not part of the cascade.
+    """
+    revising_uc_keys = {
+        key for key, fm in usecases.items()
+        if fm.get("status") == "revising"
+    }
+    if not revising_uc_keys:
+        return []
+
+    mismatches: list[Mismatch] = []
+    for p in iter_issue_files(a4_dir, "task"):
+        fm = _fm(p)
+        if fm is None:
+            continue
+        implements = fm.get("implements") or []
+        if not isinstance(implements, list) or not implements:
+            continue
+        implemented_keys = {index.canonical(x) for x in implements}
+        implemented_keys.discard(None)
+        if not (implemented_keys & revising_uc_keys):
+            continue
+        status = fm.get("status")
+        if status not in {"progress", "failing"}:
+            continue
+        mismatches.append(
+            Mismatch(
+                path=f"task/{p.stem}.md",
+                rule="missing-pending-status-task",
+                message=(
+                    f"status={status!r} but a UC this task implements is at "
+                    "'revising'. Expected status=pending — "
+                    "transition_status.py should have reset it; re-run the "
+                    "UC's revising transition."
+                ),
+            )
+        )
+    return mismatches
+
+
 def check_promoted(items: list[tuple[str, dict]], kind: str) -> list[Mismatch]:
     mismatches: list[Mismatch] = []
     for key, fm in items:
@@ -346,6 +398,7 @@ def collect_workspace_mismatches(
             usecases = items
     if usecases:
         mismatches.extend(check_discarded_cascade(a4_dir, usecases, index))
+        mismatches.extend(check_revising_cascade(a4_dir, usecases, index))
     mismatches.extend(check_promoted(ideas, "idea"))
     mismatches.extend(check_promoted(brainstorms, "brainstorm"))
     return mismatches
