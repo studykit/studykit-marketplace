@@ -47,7 +47,7 @@ Validator rules:
 
 ### Body section headings
 
-Body sections are column-0 H2 markdown headings in Title Case with spaces (`## Context`, `## Specification`, `## Change Logs`, …). The recommended set per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Authoring contracts list required and optional sections; unknown Title Case headings are tolerated. See `body-conventions.md` for the full heading-form rules (including the kebab-case → Title Case mapping that aligns XSD element names with body headings) and [§Body sections per type](#body-sections-per-type) below for the per-type required/optional split.
+Body sections are column-0 H2 markdown headings in Title Case with spaces (`## Context`, `## Specification`, `## Change Logs`, …). The recommended set per `type:` lives in the per-type authoring contracts under `plugins/a4/references/<type>-authoring.md` (or, for the wiki pages, `<type>-authoring.md` for each wiki type), each of which lists required / optional sections and tolerates unknown Title Case headings. See `body-conventions.md` for the full heading-form rules (including the kebab-case → Title Case mapping that aligns XSD element names with body headings).
 
 ### Ids
 
@@ -240,7 +240,7 @@ Lifecycle, body shape, deliberately excluded fields, and authoring guidance live
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 
-Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipeline artifacts.
+Pre-pipeline idea-capture session. Lifecycle tracks whether ideas graduated into pipeline artifacts.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -253,47 +253,7 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `## Decision Log` absorbing the rationale that previously lived in standalone decision records). No spark-family file carries `type: decide` anymore.
-
-## Body sections per type
-
-The per-type authoring contracts under `plugins/a4/references/` are the source of truth for the body shape. The reference XSDs at `../scripts/body_schemas/<type>.xsd` mirror them for human readers but are no longer consumed by any runtime validator. The tables below summarise the recommended split. Each entry is a Title Case H2 heading (`## Heading`); "required" headings should appear in every file of that type, "optional" headings may appear, and unknown Title Case headings are tolerated.
-
-Two universal optional sections appear on most types:
-
-- **`## Change Logs`** — append-only audit trail of why this file was edited. Bullet entries dated `YYYY-MM-DD` with a markdown link to the causing issue or spec. See `body-conventions.md`. Replaces the prior `[^N]` footnote + `## Changes` mechanism.
-- **`## Log`** — optional, hand-maintained status-transition trail. Bullet entries `YYYY-MM-DD — <from> → <to> — <reason>` are a common shape. `transition_status.py` flips `status:` and bumps `updated:` but does **not** write to `## Log`; append bullets manually if you want a body audit trail.
-
-### Wiki pages
-
-| `type:` | Required sections | Optional sections |
-|---|---|---|
-| `actors` | `## Roster` | `## Change Logs` |
-| `architecture` | `## Components`, `## Overview`, `## Technology Stack`, `## Test Strategy` | `## Change Logs`, `## Component Diagram`, `## External Dependencies` |
-| `bootstrap` | `## Environment`, `## Launch`, `## Verify` | `## Change Logs` |
-| `context` | `## Original Idea`, `## Problem Framing` | `## Change Logs`, `## Screens` |
-| `domain` | `## Concepts` | `## Change Logs`, `## Relationships`, `## State Transitions` |
-| `nfr` | `## Requirements` | `## Change Logs` |
-| `roadmap` | `## Plan` | `## Change Logs` |
-
-### Issues
-
-| `type:` | Kind | Required sections | Optional sections |
-|---|---|---|---|
-| `usecase` | — | `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation` | `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation` |
-| `task` | `feature`, `spike`, `bug` | `## Acceptance Criteria`, `## Description`, `## Files`, `## Unit Test Strategy` | `## Change Logs`, `## Interface Contracts`, `## Log`, `## Why Discarded` |
-| `task` | `research` | `## Context` | `## Change Logs`, `## Findings`, `## Options`, `## Log`, `## Why Discarded` |
-| `review` | — | `## Description` | `## Change Logs`, `## Log` |
-| `spec` | — | `## Context`, `## Specification` | `## Change Logs`, `## Consequences`, `## Decision Log`, `## Examples`, `## Log`, `## Open Questions`, `## Rejected Alternatives` |
-| `idea` | — | (none) | `## Change Logs`, `## Log`, `## Notes`, `## Why This Matters` |
-
-### Spark
-
-| `type:` | Required sections | Optional sections |
-|---|---|---|
-| `brainstorm` | `## Ideas` | `## Change Logs`, `## Notes` |
-
-Section ordering does not matter. Authors place sections in any order; the contract only requires presence of required headings. Adding a new section is a documentation change in the per-type authoring reference; the reference XSDs may be updated in parallel for human reference.
+Lifecycle, body shape, the retired `spark-decide` slot history, and authoring guidance live in [`brainstorm-authoring.md`](./brainstorm-authoring.md).
 
 ## Reference XSDs
 
