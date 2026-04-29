@@ -318,13 +318,7 @@ Lifecycle, cascade rules, close guard, and authoring guidance live in [`review-a
 
 ## Spec (`a4/spec/<id>-<slug>.md`)
 
-A spec is a **living specification** — the canonical, prescriptive description of a format, protocol, schema, renderer rule, CLI surface, or other artifact whose exact shape the project commits to. Specs are recorded into `a4/spec/<id>-<slug>.md` after the shape converges through conversation. Supporting investigation, when needed, lives in a sibling `kind: research` task at `a4/task/research/<id>-<slug>.md` and is referenced from the spec body via standard markdown links. A wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with a `## Change Logs` entry, or opening a review-item fallback) is performed at record time.
-
-**Body structure.** Two sections are typically present: `## Context` (why this spec exists — the problem or scope it covers) and `## Specification` (the prescriptive content — grammar, fields, rules, examples). Beyond those two, additional sections may be added when the session content warrants them — common examples include `## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`. See [§Body sections per type](#body-sections-per-type) for the full list.
-
-**`## Decision Log` absorbs ADR-style notes.** The previous a4 model carried ADRs as a separate family; that role now lives inside the spec body as an optional `## Decision Log` section. Each entry is a short note (date + what was chosen + why), so the chain of design decisions that shaped a particular spec is co-located with the spec itself rather than scattered across decision records. Entries are append-only — earlier entries are never edited or removed; corrections are added as new entries that supersede the prior reasoning. This is the only sanctioned location for "decision rationale" content; do not introduce a separate `decisions/` slot, do not split decisions into their own files.
-
-The spec body is **prescriptive**: it captures the chosen shape that downstream code, validators, and review items must conform to. Implementation tasks reference the spec via the forward `task.spec:` field; the reverse view is derived on demand and never rendered into the spec body. A `## Migration Plan` section is not used — migration work lives in `task/<id>-<slug>.md`.
+A spec is a **living, prescriptive specification** — the canonical description of a format, protocol, schema, renderer rule, CLI surface, or other artifact whose exact shape the project commits to.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -339,30 +333,7 @@ The spec body is **prescriptive**: it captures the chosen shape that downstream 
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | no | date | `YYYY-MM-DD` (bump when the spec is revised) |
 
-### Spec lifecycle
-
-| Value | Meaning |
-|-------|---------|
-| `draft` | Spec is being authored; shape is not yet committed. |
-| `active` | Spec is live; downstream code and validators must conform. |
-| `deprecated` | Spec is no longer the live source of truth — preserved for context, but new work should not target it. May or may not have a successor yet. |
-| `superseded` | A newer spec declares `supersedes: [<this>]` and has reached `active`. Terminal. |
-
-Allowed transitions:
-
-```
-draft      → active | deprecated
-active     → deprecated | superseded
-deprecated → superseded
-superseded → (terminal)
-```
-
-Notable rules:
-
-- **`draft → superseded` is disallowed** — supersession presumes the predecessor was at one point live (`active` or `deprecated`).
-- **`active → superseded` requires a newer spec at `active`** with `supersedes: [spec/<this>]`. The flip is automatic via `transition_status.py` cascade during the successor's `→ active` transition.
-- **`deprecated` is opt-in retirement** — used when the user wants to mark a spec as no longer authoritative even before a successor exists. Useful for retiring formats whose replacement is still under design.
-- **No reverse path from `deprecated → active`** — once retired, a new spec must be authored to revive the shape (typically with `supersedes:` pointing back to clarify lineage).
+Lifecycle (including the `→ superseded` cascade), body structure, `## Decision Log` policy, and authoring guidance live in [`spec-authoring.md`](./spec-authoring.md).
 
 ## Idea (`a4/idea/<id>-<slug>.md`)
 
