@@ -79,7 +79,7 @@ Procedure: `references/discard-flow.md`. Covers target resolution (D1), status c
 - Do not propose a target artifact at capture time. Ideas are independent by definition; graduation is a separate, later decision.
 - Do not launch a brainstorm or research session off the back of a capture. If the user wants that, they invoke `/a4:spark-brainstorm` or `/a4:task kind=research` with the idea path as input themselves.
 - Do not surface existing `a4/idea/` open count or nudge the user about prior ideas. Capture is capture; review is separate.
-- Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; the Stop-hook validator catches any collision on next stop.
+- Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; the Stop hook catches any collision on next stop.
 
 ## Failure modes
 

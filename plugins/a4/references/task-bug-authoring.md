@@ -118,7 +118,7 @@ Cross-kind conventions for the artifact directory — per-kind expectations, the
 ## Common mistakes (task-specific)
 
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
-- **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
+- **Missing `kind:` frontmatter field** — `kind` is required and has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/bug/` must declare `kind: bug`. Mismatched declarations are a folder-routing error and should be re-located.
 - **Production source paths in frontmatter `files:`** — `files:` is artifact-only. Production source belongs in the body `## Files` section.
 

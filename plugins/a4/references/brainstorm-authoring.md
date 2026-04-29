@@ -45,7 +45,7 @@ Writer rules (brainstorm-specific):
 
 - `open` is the **only** initial status.
 - The brainstorm family does **not** flow through `../scripts/transition_status.py` — there is no cascade work. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
-- `../scripts/validate_status_consistency.py` reports drift between `status:` and `promoted:`: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
+- Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal.
 
 ## Body shape
@@ -66,7 +66,7 @@ Unknown H2 headings are tolerated.
 ## Common mistakes
 
 - **Required-field omission** (`type`, `pipeline`, `topic`, `status`, `created`, `updated`).
-- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — `validate_status_consistency.py` reports the drift.
+- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — surfaced as a consistency check.
 - **Adding `id:`** — brainstorm files do not carry an id.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
@@ -75,7 +75,7 @@ Unknown H2 headings are tolerated.
 
 - **Don't expand a brainstorm idea inline.** When an idea grows beyond a one-liner, promote it: capture the substance in a spec, usecase, or task and link it from the brainstorm bullet.
 - **Don't pre-populate `promoted:`.** The list is filled when an idea actually graduates.
-- **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; `validate_status_consistency.py` reports drift but does not mutate files.
+- **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; drift is reported separately but does not mutate files.
 
 ## Historical note: retired `spark-decide` slot
 

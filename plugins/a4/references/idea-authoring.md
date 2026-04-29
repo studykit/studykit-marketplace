@@ -63,7 +63,7 @@ Writer rules (idea-specific):
 
 - `open` is the **only** initial status. New ideas are always born at `open`.
 - The idea family does **not** flow through `../scripts/transition_status.py` — there is no cascade work for ideas. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
-- `../scripts/validate_status_consistency.py` reports drift between `status:` and `promoted:`: non-empty `promoted:` while `status: open` is a mismatch (the idea has graduated but the status was not flipped); empty `promoted:` while `status: promoted` is the inverse mismatch.
+- Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch (the idea has graduated but the status was not flipped); empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal. To revive a discarded idea, author a fresh idea (and reference the prior via `related:` if the lineage matters).
 
 ## Body shape
@@ -86,8 +86,8 @@ Unknown H2 headings are tolerated.
 ## Common mistakes
 
 - **Required-field omission** (`type`, `id`, `title`, `status`, `created`, `updated`).
-- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — `validate_status_consistency.py` reports the drift.
-- **Adding `priority`, `source`, `target`, or `kind`** — these are deliberately excluded. The validator currently accepts unknown fields, but they should not appear here.
+- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — surfaced as a consistency check.
+- **Adding `priority`, `source`, `target`, or `kind`** — these are deliberately excluded. Unknown fields are tolerated, but they should not appear here.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
@@ -96,5 +96,5 @@ Unknown H2 headings are tolerated.
 - **Don't author an idea when the input is a gap in current spec work.** That is a `kind: gap` review item with `target:` populated. Ideas are independent possibilities, not blockers.
 - **Don't introduce a `target:` field.** Ideas are independent by definition; a `target:` would blur the boundary with `review/`.
 - **Don't pre-populate `promoted:` at create time.** The list is filled when the idea actually graduates into a pipeline artifact.
-- **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; `validate_status_consistency.py` reports drift but does not mutate files.
+- **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; drift is reported separately but does not mutate files.
 - **Don't pack long-form prose into the body.** Long write-ups belong in specs, use cases, or wiki pages. Ideas are quick-capture; if the content has grown, promote it.

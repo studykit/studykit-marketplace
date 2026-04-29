@@ -33,7 +33,7 @@ updated: YYYY-MM-DD
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. The validator currently accepts any string, but the conventional set is `self`, `drift-detector`, and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
+- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self`, `drift-detector`, and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low). Drift items at `priority: high` lead.
 - `labels:` are free-form. The drift detector reserves `drift`, `drift:<kind>`, and `drift-cause:<slug>` for dedup; do not reuse these prefixes for unrelated tags.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
@@ -111,7 +111,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - **Heading not on column 0**. The H2 marker (`## `) must be at the start of the line; indented headings do not register as section boundaries.
 - **Sections nested**. Sections do not nest; every section sits at the body's top level under its own `## Heading`.
 - **H1 in body**.
-- **Wiki basenames in `target:` written with `.md` or a folder prefix** → use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`). The validator's path-format check already catches the `.md` suffix.
+- **Wiki basenames in `target:` written with `.md` or a folder prefix** → use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`). The path-format rule already excludes the `.md` suffix.
 
 ## Don't
 

@@ -37,6 +37,6 @@ Files under `<project-root>/a4/` declare `type:` in YAML frontmatter, and that v
 Body shape is documented in two co-equal places that must be edited together:
 
 - `../references/<type>-authoring.md` — the binding contract for authors.
-- `../scripts/body_schemas/<type>.xsd` — reference XSD that mirrors the same shape for human readers; pure human reference, not consumed by any runtime validator. Element names in the XSD use lowercase kebab-case (an XML grammar artifact); apply the kebab → Title Case mapping in [`../references/body-conventions.md`](../references/body-conventions.md) when authoring the body.
+- `../scripts/body_schemas/<type>.xsd` — reference XSD that mirrors the same shape for human readers; pure human reference, not consumed at runtime. Element names in the XSD use lowercase kebab-case (an XML grammar artifact); apply the kebab → Title Case mapping in [`../references/body-conventions.md`](../references/body-conventions.md) when authoring the body.
 
 When you change one, update the other in the same change. The bullet list above is hand-maintained — keep it in sync with both sources.

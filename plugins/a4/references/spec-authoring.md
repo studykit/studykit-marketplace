@@ -1,6 +1,6 @@
 # a4 — spec authoring
 
-A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code, validators, and review items must conform to. Design rationale for the chosen shape lives inline as `## Decision Log` entries in the same file.
+A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code and review items must conform to. Design rationale for the chosen shape lives inline as `## Decision Log` entries in the same file.
 
 Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), `./body-conventions.md`.
 

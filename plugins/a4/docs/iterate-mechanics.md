@@ -100,4 +100,4 @@ Full `## Change Logs` formatting rules: [`body-conventions.md`](./body-conventio
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.
-- **Preserve cross-references.** When renaming or splitting, update `depends_on:`, `related:`, `target:` (the list now subsumes the old `wiki_impact:` semantics) consistently across affected files (validators check this).
+- **Preserve cross-references.** When renaming or splitting, update `depends_on:`, `related:`, `target:` (the list now subsumes the old `wiki_impact:` semantics) consistently across affected files (consistency checks pick this up).

@@ -43,7 +43,7 @@ A new actor's slug should:
 
 - Be lowercase, hyphen-separated.
 - Match the user-facing role, not an implementation detail.
-- Not collide with an existing slug. The validator does not currently enforce uniqueness; visual review at edit time is the gate.
+- Not collide with an existing slug. Uniqueness is not currently enforced automatically; visual review at edit time is the gate.
 
 ### Body-link form
 
@@ -67,7 +67,7 @@ Create the section if absent. Drift detection cross-checks UC `actors:` lists ag
 - **H2 not in column 0 or not Title Case**.
 - **Sections nested inside other sections** — every section sits at the body's top level.
 - **H1 in body**. Page name is the file basename; title is frontmatter-only.
-- **`type:` mismatch** with filename → frontmatter validator error.
+- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
 
 ## Don't
 

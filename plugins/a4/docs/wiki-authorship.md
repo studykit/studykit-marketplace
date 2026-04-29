@@ -106,7 +106,7 @@ Until staleness propagation lands, the user remains responsible for re-running `
 
 ## Compliance
 
-The cross-area-consistency validator (`scripts/validate_status_consistency.py`) does not yet enforce authorship rules. Until it does, conformance is the responsibility of:
+The cross-area-consistency check does not yet enforce authorship rules. Until it does, conformance is the responsibility of:
 
 - SKILL.md authors — wrap-up steps explicitly cite this document.
 - Reviewer agents — `arch-reviewer`, `domain-reviewer`, `usecase-reviewer` flag clear violations as findings (e.g., `architecture.md` edited by something other than arch, `domain.md` structural edit bypassing review item).

@@ -6,7 +6,7 @@ Frontmatter-side rules (path format inside YAML, required fields, enums, the uni
 
 ## Scope
 
-Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Reference XSDs at `../scripts/body_schemas/<type>.xsd` indicate which sections are expected for that type, but they are pure human reference — no runtime validator consumes them, and the XML element names inside the XSD (lowercase kebab-case) are an artifact of XML grammar, not an authoring requirement. The binding form in the file body is the markdown heading defined below.
+Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Reference XSDs at `../scripts/body_schemas/<type>.xsd` indicate which sections are expected for that type, but they are pure human reference — they are not consumed at runtime, and the XML element names inside the XSD (lowercase kebab-case) are an artifact of XML grammar, not an authoring requirement. The binding form in the file body is the markdown heading defined below.
 
 ## Section heading form
 
@@ -173,8 +173,8 @@ Before a session ends, for each review item that transitioned to `status: resolv
 ## Cross-references
 
 - `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
-- `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting which sections each `type:` is expected to carry. Pure human reference; no runtime validator consumes them. Element names inside the XSD use lowercase kebab-case (an XML constraint); the body itself uses the Title Case heading form per the table above.
+- `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting which sections each `type:` is expected to carry. Pure human reference; not consumed at runtime. Element names inside the XSD use lowercase kebab-case (an XML constraint); the body itself uses the Title Case heading form per the table above.
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - `../scripts/drift_detector.py` — scans `target:` for wiki basenames to surface unresolved `## Change Logs` and close-guard violations.
-- `../scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums). Body shape is documentation-only; nothing validates section presence at runtime.
+- Body shape is documentation-only; nothing validates section presence at runtime.

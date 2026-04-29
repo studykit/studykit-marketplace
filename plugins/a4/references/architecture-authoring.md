@@ -13,7 +13,7 @@ updated: YYYY-MM-DD
 ---
 ```
 
-- `type:` must be exactly `architecture`. The frontmatter validator rejects mismatches between `type:` and the file basename.
+- `type:` must be exactly `architecture`. Mismatches between `type:` and the file basename are an error.
 - Wiki pages have **no** `id`, no `status`, no `## Log`, no lifecycle. They change continuously; the `## Change Logs` body section records the why.
 - No `created:` field on wiki pages — the `## Original Idea` / problem-framing-style "first appeared" content lives in `context.md`.
 
@@ -43,7 +43,7 @@ Unknown H2 headings are tolerated.
 ## Common mistakes (architecture-specific)
 
 - **Required section missing** (`## Overview`, `## Components`, `## Technology Stack`, `## Test Strategy`).
-- **`type:` mismatch** with filename → frontmatter validator error.
+- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
 
 (Universal body conventions — column-0 H2, Title Case, no H1 in body, sections do not nest — are documented in `./body-conventions.md`.)
 

@@ -122,7 +122,7 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 - **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
 - **Stray `implemented_by:` field** → the field was retired (a4 v6.0.0); the reverse view of `task.implements:` is now derived on demand. Validators ignore the field, but it should not be re-introduced.
 
-(Universal validator catches — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
+(Universal body-shape rules — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (UC-specific)
 

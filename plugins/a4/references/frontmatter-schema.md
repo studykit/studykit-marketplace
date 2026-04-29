@@ -1,6 +1,6 @@
 # a4 Frontmatter Schema
 
-Consolidated frontmatter reference for every file under the `a4/` workspace. This document is the **single source of truth for validators and authoring contracts**.
+Consolidated frontmatter reference for every file under the `a4/` workspace. This document is the **single source of truth for the frontmatter contract**.
 
 Body-side conventions (heading form, blank-line discipline, change-log and log section format, link form) live in `body-conventions.md`. The two should be read together.
 
@@ -20,7 +20,7 @@ These apply to every family.
 
 ### `type:` field
 
-Every markdown file declares a `type:` field in frontmatter. The value selects the per-type reference XSD at `../scripts/body_schemas/<type>.xsd`, which documents which body sections are required vs optional. **Reference-only**: no runtime validator consumes the XSDs; authoring contracts under `plugins/a4/references/` are the binding source. The XSD element names use lowercase kebab-case (an XML grammar artifact); the body itself uses Title Case H2 headings (`## Heading`) per `body-conventions.md`.
+Every markdown file declares a `type:` field in frontmatter. The value selects the per-type reference XSD at `../scripts/body_schemas/<type>.xsd`, which documents which body sections are required vs optional. **Reference-only**: the XSDs are not consumed at runtime; authoring contracts under `plugins/a4/references/` are the binding source. The XSD element names use lowercase kebab-case (an XML grammar artifact); the body itself uses Title Case H2 headings (`## Heading`) per `body-conventions.md`.
 
 | Family | `type:` value |
 |--------|--------------|
@@ -40,10 +40,10 @@ Every markdown file declares a `type:` field in frontmatter. The value selects t
 
 For wiki pages, `type:` doubles as the file-kind discriminator (e.g., `type: architecture` requires the file to be at `a4/architecture.md`). For issues and spark files, `type:` is the body schema selector — the file family is already implied by the folder.
 
-Validator rules:
+Rules:
 
-- Missing `type:` → frontmatter validator error.
-- Wiki page `type:` not matching the file basename (e.g., `type: domain` in `architecture.md`) → frontmatter validator error.
+- Every file must carry `type:`. Missing it is an error.
+- For wiki pages, `type:` must match the file basename (e.g., `type: architecture` requires `architecture.md`). Mismatches are errors.
 
 ### Body section headings
 
@@ -77,7 +77,7 @@ Empty lists may be written as `[]` or omitted entirely. Both are semantically eq
 
 ### Relationships
 
-The schema fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are **derived on demand** (grep, script back-scan) rather than stored. There is currently no stored-reverse field; if a future need arises (a status gate, validator, or hot query that justifies bypassing derive-on-demand), a script must own writes for the field and the rationale must be documented here before the field is introduced.
+The schema fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are **derived on demand** (grep, script back-scan) rather than stored. There is currently no stored-reverse field; if a future need arises (a status gate, automated check, or hot query that justifies bypassing derive-on-demand), a script must own writes for the field and the rationale must be documented here before the field is introduced.
 
 | Forward (stored) | Reverse | Storage |
 |------------------|---------|---------|
@@ -91,7 +91,7 @@ The schema fixes **one direction per relationship** — the forward direction is
 
 ### Unknown fields
 
-Unknown fields are **not errors**. The validator in lenient mode reports them as informational only. Skills may carry additional fields (e.g., `tags`, `labels`) per the per-type tables below; anything outside the known set is treated as extension metadata.
+Unknown fields are **not errors** — they are treated as extension metadata. Skills may carry additional fields (e.g., `tags`, `labels`) per the per-type tables below.
 
 ### Status writers
 
@@ -102,7 +102,7 @@ Every status change on `usecase`, `task`, `review`, and `spec` files flows throu
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 
-`transition_status.py` does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. `status:` is **never hand-edited** after file creation. The fallback `validate_status_consistency.py` reports drift between `status:` and supporting cross-references for cases the writer cannot mechanically reach (`idea`/`brainstorm` `promoted`).
+`transition_status.py` does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. `status:` is **never hand-edited** after file creation. For cases the writer cannot mechanically reach (`idea` / `brainstorm` `promoted`), drift between `status:` and the supporting cross-references is surfaced as a separate consistency check.
 
 ## Structural relationship fields
 
@@ -257,7 +257,7 @@ Lifecycle, body shape, the retired `spark-decide` slot history, and authoring gu
 
 ## Reference XSDs
 
-The XSDs under `../scripts/body_schemas/` are **reference material only** — no runtime validator parses them. They:
+The XSDs under `../scripts/body_schemas/` are **reference material only** — they are not consumed at runtime. They:
 
 - Declare `vc:minVersion="1.1"` (XSD 1.1 features).
 - Define a single root element matching the `type:` value (or, for `task`, a single `task` root that covers all kinds).
@@ -266,13 +266,9 @@ The XSDs under `../scripts/body_schemas/` are **reference material only** — no
 
 Edit a section list by hand-editing both the per-type authoring contract under `plugins/a4/references/` and the matching XSD so the two stay in sync.
 
-## Validator behavior
+## Schema enforcement
 
-One validator covers frontmatter; body shape is documentation-only.
-
-- `../scripts/validate_frontmatter.py` — enforces this schema (frontmatter only).
-
-Every rule violation is an error; the validator exits `2` on any violation and `0` on a clean run.
+Body shape is documentation-only; frontmatter rules below are binding.
 
 | Rule | Behavior |
 |------|----------|
@@ -283,9 +279,9 @@ Every rule violation is an error; the validator exits `2` on any violation and `
 | Path-reference format (brackets, `.md` extension) | error |
 | `type` on wiki page disagrees with filename | error |
 | Id collision across issue folders | error |
-| File in an issue/spark folder has no frontmatter | error |
+| File in an issue / spark folder has no frontmatter | error |
 
-Hook scope is a separate concern — the validator reports; the caller decides whether to block, notify, or ignore.
+How violations are surfaced (block, notify, ignore) is the surfacing layer's concern, not the schema's.
 
 ### Cross-file status consistency
 
@@ -298,15 +294,10 @@ Several enum values are semantically derived from cross-file state rather than b
 | `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
 | `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | `transition_status.py` cascade (fires during successor's `→ active` transition) |
-| `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
-| `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; `validate_status_consistency.py` surfaces drift |
+| `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
+| `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 
-`../scripts/validate_status_consistency.py` reports either direction of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference). It is report-only — no file is mutated.
-
-Two modes:
-
-- **Workspace mode** (`<a4-dir>`) — scans all specs/ideas/brainstorms. Used at session start and during workspace validation.
-- **File-scoped mode** (`<a4-dir> --file <path>`) — reports only mismatches in the connected component of the given file (idea/brainstorm: self-contained; spec: supersedes chain). Used on PostToolUse so ordinary edits do not re-surface unrelated legacy mismatches.
+Both directions of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference) are reported. Reporting is non-mutating — no file is changed automatically.
 
 ## Known deferred items
 
@@ -315,17 +306,16 @@ These are schema items deliberately left softened until a follow-up round.
 1. **Issue `## Log` entry format.** Body-level `## Log` is hand-maintained when authors choose to populate it; the exact entry format (prefix, timestamp granularity, author attribution) is not yet locked.
 2. **Exact YAML grammar for path references.** Plain string is the current rule; whether to allow alternative forms (list-of-maps for typed references, etc.) is not yet decided.
 3. **Stricter enums.** Several fields are currently open strings (`source` on review items) because the full value set has not been enumerated.
-4. **`task.files:` artifact-path enforcement.** The artifact-only contract on `task.files:` is documented (this round) but not yet enforced by `validate_frontmatter.py`. Pending validator work: per-kind prefix check (`artifacts/task/<kind>/<id>-<slug>/...` for `spike` is required, optional for the other kinds; `spike` paths may also start with `artifacts/task/spike/archive/<id>-<slug>/`), plus a task-id-vs-path consistency check (the `<id>-<slug>` segment must match the file's own id and slug). Until then, frontmatter `files:` paths that still point at production source or a foreign id are tolerated.
+4. **`task.files:` artifact-path enforcement.** The artifact-only contract on `task.files:` is documented but not yet enforced. Pending enforcement work: per-kind prefix check (`artifacts/task/<kind>/<id>-<slug>/...` for `spike` is required, optional for the other kinds; `spike` paths may also start with `artifacts/task/spike/archive/<id>-<slug>/`), plus a task-id-vs-path consistency check (the `<id>-<slug>` segment must match the file's own id and slug). Until then, frontmatter `files:` paths that still point at production source or a foreign id are tolerated.
 5. **`research` `complete` initial-status preflight.** The path-existence check on `files:` (already enforced for `spike` and `feature`/`bug`) needs extension to `research` — when `research` is authored at `status: complete` with non-empty `files:`, every artifact path must exist under `artifacts/task/research/<id>-<slug>/` before the writer accepts the file.
 
-When these land, update this document **and** the validator simultaneously — the two must not drift.
+When these land, update this document **and** the enforcement layer simultaneously — the two must not drift.
 
 ## Cross-references
 
 - **Body-level conventions:** `body-conventions.md` — heading form (column-0 H2, Title Case, kebab → Title Case mapping), blank-line discipline, `## Change Logs` and `## Log` entry format, body link form (standard markdown).
-- **Reference XSDs:** `../scripts/body_schemas/<type>.xsd` — documentation of recommended body shape; not consumed by any runtime validator.
+- **Reference XSDs:** `../scripts/body_schemas/<type>.xsd` — documentation of recommended body shape; not consumed at runtime.
 - **Id allocator:** `../scripts/allocate_id.py`.
-- **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal/in-progress/active classifications, kind enums. Imported by the writer, validators, workspace state, and search; the prose tables in this document mirror the same data.
+- **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal / in-progress / active classifications, kind enums. Imported by the writer, workspace state, and search; the prose tables in this document mirror the same data.
 - **Status transition writer:** `../scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain).
 - **Drift detector (uses wiki / review schemas):** `../scripts/drift_detector.py`.
-- **Cross-file status consistency validator:** `../scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).

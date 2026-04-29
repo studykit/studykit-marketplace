@@ -57,7 +57,7 @@ Create the section if absent. The wiki close guard surfaces missing bullets when
 - **H2 not in column 0 or not Title Case**.
 - **Sections nested inside other sections** — every section sits at the body's top level.
 - **H1 in body**. Page name is the file basename; title is frontmatter-only.
-- **`type:` mismatch** with filename → frontmatter validator error.
+- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
 
 ## Don't
 

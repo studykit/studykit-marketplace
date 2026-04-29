@@ -75,7 +75,7 @@ Crash recovery + orphaned worktree handling: `references/resume-hygiene.md`.
 
 ## Acceptance Criteria Source by Task Kind
 
-The per-kind AC-source convention is defined in the matching authoring rule: feature tasks draw AC from UC `## Flow` / `## Validation` / `## Error Handling` (or spec `## Specification` body + `architecture.md` for UC-less features) per `${CLAUDE_PLUGIN_ROOT}/references/task-feature-authoring.md`; bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per `${CLAUDE_PLUGIN_ROOT}/references/task-bug-authoring.md`; spike tasks draw AC from the hypothesis + expected result in the spike's own body per `${CLAUDE_PLUGIN_ROOT}/references/task-spike-authoring.md`. `/a4:run` does not enforce these — validators do not block on AC source; the `## Acceptance Criteria` section's existence is what the body XSD checks.
+The per-kind AC-source convention is defined in the matching authoring rule: feature tasks draw AC from UC `## Flow` / `## Validation` / `## Error Handling` (or spec `## Specification` body + `architecture.md` for UC-less features) per `${CLAUDE_PLUGIN_ROOT}/references/task-feature-authoring.md`; bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per `${CLAUDE_PLUGIN_ROOT}/references/task-bug-authoring.md`; spike tasks draw AC from the hypothesis + expected result in the spike's own body per `${CLAUDE_PLUGIN_ROOT}/references/task-spike-authoring.md`. `/a4:run` does not enforce these — automated checks do not block on AC source; the `## Acceptance Criteria` section's existence is what the body XSD checks.
 
 ## Commit Points
 
