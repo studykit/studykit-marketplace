@@ -62,9 +62,8 @@ id: <allocated id>
 title: "Test failure: <test name>"
 kind: finding
 status: open
-target: <task/<id>-<slug> | roadmap>
+target: [<task/<id>-<slug> or roadmap>]
 source: test-runner
-wiki_impact: []
 priority: high | medium
 labels: [test-failure, cycle-<N>, <tier:integration | tier:smoke>]
 created: <YYYY-MM-DD>

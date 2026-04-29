@@ -47,10 +47,8 @@ id: 3
 title: Search history
 status: draft | ready | implementing | shipped | superseded | blocked
 actors: [meeting-organizer, team-member]
-depends_on: [usecase/1-share-summary]
 related: []
 labels: []
-milestone: v1.0
 ```
 
 Body sections (per `references/usecase-authoring.md` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`).
@@ -140,7 +138,7 @@ Verdict: `OK` | `MISSING PRECISION` | `IMPLEMENTATION LEAK` (error handling uses
 - **State completeness** — stateful concepts should have state diagrams covering states implied by UCs.
 - **Naming consistency** — same concept named consistently across UCs and `domain.md`.
 
-Each finding targets `domain` with `wiki_impact: [domain]`.
+Each finding sets `target: [domain]`.
 
 Verdicts: `MISSING CONCEPT`, `MISSING RELATIONSHIP`, `MISSING STATE`, `NAMING CONFLICT`.
 
@@ -161,13 +159,12 @@ For each actor in `actors.md`:
 - `system` actors should have automated/scheduled UCs; flag if their UCs include "clicks a button".
 - Role vs Flow actions: a `viewer` role performing create/edit/delete → `ROLE MISMATCH`; an `admin` that only reads → role may be overstated.
 
-Findings target `actors` with `wiki_impact: [actors]`, or target the offending UC when the UC text is the problem.
+Findings set `target: [actors]`, or `target: [<uc-path>]` when the UC text is the problem.
 
 ### Relationship Consistency (Cross-UC)
 
 Derived diagram views depend on UC frontmatter:
-- `depends_on: [usecase/<id>-<slug>]` paths must resolve to existing UC files. Dead references → `STALE RELATIONSHIP`.
-- A UC referenced by any `related:` or `depends_on:` should still exist.
+- A UC referenced by any `related:` (or by `<dependencies>` body links) should still exist. Dead references → `STALE RELATIONSHIP`.
 
 ### System Completeness
 
@@ -208,9 +205,8 @@ id: <allocated id>
 title: "<short finding title>"
 kind: finding | gap | question
 status: open
-target: <usecase/<id>-<slug> | actors | domain | context | nfr | null>
+target: [<usecase/<id>-<slug> and/or actors|domain|context|nfr — empty list for cross-cutting>]
 source: usecase-reviewer
-wiki_impact: [<wiki basenames>]
 priority: high | medium | low
 labels: [<optional, e.g. "abstraction", "completeness", "domain">]
 created: <YYYY-MM-DD>
@@ -230,18 +226,18 @@ updated: <YYYY-MM-DD>
 </description>
 ```
 
-### Target / wiki_impact Mapping
+### Target Mapping
 
-| Finding category | `target` | `wiki_impact` |
-|------------------|----------|----------------|
-| UC size / flow / outcome / validation / abstraction | the UC file path | `[]` (pure UC edit) |
-| Actor issue about actors.md itself | `actors` | `[actors]` |
-| Actor issue that's really a UC issue | the UC file path | `[]` or `[actors]` if the UC change will cascade |
-| Stale relationship across UCs | the UC whose frontmatter is stale | `[]` |
-| Domain model gap / inconsistency | `domain` | `[domain]` |
-| NFR missing/wrong | `nfr` | `[nfr]` |
-| Problem framing / scope issue | `context` | `[context]` |
-| System completeness gap | `null` (or the closest affected wiki) | `[]` for pure UC gap, otherwise relevant wiki |
+| Finding category | `target:` (list) |
+|------------------|------------------|
+| UC size / flow / outcome / validation / abstraction | `[<uc-path>]` (pure UC edit) |
+| Actor issue about actors.md itself | `[actors]` |
+| Actor issue that's really a UC issue | `[<uc-path>]` (add `actors` if the UC change cascades to actors.md) |
+| Stale relationship across UCs | `[<stale-uc-path>]` |
+| Domain model gap / inconsistency | `[domain]` |
+| NFR missing/wrong | `[nfr]` |
+| Problem framing / scope issue | `[context]` |
+| System completeness gap | `[]` for pure UC gap, otherwise the relevant wiki basename(s) |
 
 ### Priority Guidance
 

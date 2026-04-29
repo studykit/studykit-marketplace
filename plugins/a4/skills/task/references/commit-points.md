@@ -4,17 +4,17 @@ All commit subjects follow `../../../references/commit-message-convention.md`.
 
 ## Author mode
 
-Single commit covers the new task file + any UC files updated by `refresh_implemented_by.py` (when `implements:` is non-empty) + the empty `artifacts/task/spike/<id>-<slug>/` directory (with `.gitkeep` if added). Suggest the commit when the user confirms; do not auto-commit.
+Single commit covers the new task file + the empty `artifacts/task/spike/<id>-<slug>/` directory (with `.gitkeep` if added, when `kind: spike`). Suggest the commit when the user confirms; do not auto-commit.
 
 ```
-#<task-id> [#<uc-id> ...] docs(a4): author task <slug>
+#<task-id> docs(a4): author task <slug>
 ```
 
-(Include each UC id touched by the reverse-link refresh; the slug is the new task's slug.)
+(The slug is the new task's slug.)
 
 ## Discard mode
 
-See `./discard.md` D6 for commit scope.
+See `./discard.md` D5 for commit scope.
 
 ```
 #<task-id> docs(a4): discard task <slug>

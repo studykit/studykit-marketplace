@@ -19,7 +19,7 @@ The detector writes one review item per new finding into `a4/review/`, deduplica
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4" \
     wiki-pages issue-counts usecases-by-source \
-    drift-alerts open-reviews active-tasks blocked-items milestones
+    drift-alerts open-reviews active-tasks blocked-items
 ```
 
 Section identifiers and the full schema live in `${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py`'s module docstring (run `--list-sections` to enumerate).
@@ -32,7 +32,7 @@ Section identifiers and the full schema live in `${CLAUDE_PLUGIN_ROOT}/scripts/w
 - Layer 3: `open-reviews`
 - Layer 4: `active-tasks`
 - Layer 5: `blocked-items`
-- 3.4 presentation table: `wiki-pages` + `issue-counts` + `drift-alerts` + `milestones`
+- 3.4 presentation table: `wiki-pages` + `issue-counts` + `drift-alerts`
 
 If Step 1.1 resolved a **specific target**, additionally read that file's full body and frontmatter — it drives the 3.3 diagnosis more than aggregate state does.
 
@@ -54,7 +54,6 @@ Shape: <Full | Reverse-then-forward | Reverse-only | Minimal | No shape>
 | Wiki pages | <N of 7 present, list missing> |
 | Open issues | <usecase: N draft / M implementing / …; task: …; review: …> |
 | Drift alerts | <N open (H high, M medium, L low)> |
-| Milestones | <milestone-name: X/Y complete> (only for active milestones) |
 
 ## Diagnosis
 

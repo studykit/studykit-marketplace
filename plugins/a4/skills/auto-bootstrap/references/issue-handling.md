@@ -33,9 +33,8 @@ id: <allocated via allocate_id.py>
 title: "<short title>"
 kind: finding
 status: open
-target: architecture
+target: [architecture]
 source: auto-bootstrap
-wiki_impact: [architecture]
 priority: high | medium
 labels: [bootstrap]
 created: <today>
@@ -62,9 +61,8 @@ id: <allocated>
 title: "<short title>"
 kind: finding
 status: resolved
-target: bootstrap
+target: [bootstrap]
 source: auto-bootstrap
-wiki_impact: []
 priority: low
 labels: [bootstrap, environment]
 created: <today>

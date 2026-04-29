@@ -23,7 +23,7 @@ Reuse the `a4/` workspace resolved via `git rev-parse --show-toplevel`.
 - `a4/actors.md` — actor roster (actors are not domain concepts but inform their relationships).
 - `a4/context.md` — problem framing.
 - `a4/architecture.md` — *only when iterating after arch has run.* Component names may surface domain-term mismatches.
-- `a4/review/*.md` — open items with `target: domain` or `wiki_impact: [domain]` drive iteration.
+- `a4/review/*.md` — open items whose `target:` lists `domain` drive iteration.
 
 **Outputs:**
 

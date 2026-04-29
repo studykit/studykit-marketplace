@@ -12,8 +12,8 @@ Subcommands:
   stop           Stop. Validate all a4/*.md edited in this session against
                  frontmatter schema. rc=2 on violations (forces Claude
                  retry); rc=0 on clean or any internal failure.
-  session-start  SessionStart. Refresh UC `implemented_by:` reverse-links,
-                 then report workspace-wide status-consistency mismatches.
+  session-start  SessionStart. Report workspace-wide status-consistency
+                 mismatches.
   user-prompt    UserPromptSubmit. Scan the prompt for `#<id>` references
                  and inject resolved `a4/<type>/<id>-<slug>.md` paths as
                  `additionalContext` so Claude reads the file directly
@@ -26,10 +26,9 @@ in-event ordering, non-blocking policy, output channel usage) live in
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
 
-Sibling scripts (`validate_frontmatter.py`, `validate_status_consistency.py`,
-`refresh_implemented_by.py`) are called in-process via `import` rather than
-`uv run` subprocess, so per-invocation interpreter startup is paid once —
-not once per validator call.
+Sibling scripts (`validate_frontmatter.py`, `validate_status_consistency.py`)
+are called in-process via `import` rather than `uv run` subprocess, so
+per-invocation interpreter startup is paid once — not once per validator call.
 
 Every subcommand exits 0 except `stop`, which may exit 2 on validation
 violations. Internal failures (missing env, missing modules, library
@@ -291,7 +290,7 @@ def _unlink_silent(path: Path) -> None:
 
 
 def _session_start() -> int:
-    """Refresh implemented_by, then report consistency."""
+    """Report workspace-wide status-consistency mismatches."""
     import os
 
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
@@ -301,70 +300,19 @@ def _session_start() -> int:
     if not a4_dir.is_dir():
         return 0
 
-    # Order: write (refresh) → read (report).
-    refresh_ctx, refresh_sys = _refresh_implemented_by(a4_dir)
     report_ctx = _report_status_consistency_session_start(a4_dir)
-
-    ctx_parts = [p for p in (refresh_ctx, report_ctx) if p]
-    if not ctx_parts and not refresh_sys:
+    if not report_ctx:
         return 0
 
-    payload: dict = {
-        "hookSpecificOutput": {"hookEventName": "SessionStart"}
-    }
-    if ctx_parts:
-        payload["hookSpecificOutput"]["additionalContext"] = "\n\n".join(ctx_parts)
-    if refresh_sys:
-        payload["systemMessage"] = refresh_sys
-    _emit(payload)
-    return 0
-
-
-def _refresh_implemented_by(a4_dir: Path) -> tuple[str, str]:
-    """Return (additional_context_md, system_message). Empty strings on clean/fail."""
-    try:
-        import refresh_implemented_by as rib
-    except ImportError:
-        return ("", "")
-
-    try:
-        report = rib.refresh_all(a4_dir, dry_run=False)
-    except Exception:
-        return ("", "")
-
-    changes = report.changes
-    errors = report.errors
-    if not changes and not errors:
-        return ("", "")
-
-    summary_parts: list[str] = []
-    if changes:
-        summary_parts.append(f"refreshed implemented_by on {len(changes)} UC(s)")
-    if errors:
-        summary_parts.append(f"{len(errors)} error(s)")
-    system_message = ", ".join(summary_parts)
-    if errors:
-        system_message += " — see context"
-
-    lines: list[str] = ["## a4/ implemented_by refresh (SessionStart)", ""]
-    if changes:
-        lines.append(f"Refreshed `implemented_by:` on {len(changes)} UC(s):")
-        lines.append("")
-        for ch in changes:
-            lines.append(f"- `{ch.uc}`: `{ch.previous}` → `{ch.new}`")
-        lines.append("")
-    if errors:
-        lines.append(f"Errors ({len(errors)}):")
-        lines.append("")
-        for e in errors:
-            lines.append(f"- {e}")
-        lines.append("")
-    lines.append(
-        "`implemented_by:` is auto-maintained by "
-        "`scripts/refresh_implemented_by.py`; the SessionStart hook "
-        "reconciles drift from cross-branch edits or manual task edits."
+    _emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": report_ctx,
+            }
+        }
     )
-    return ("\n".join(lines), system_message)
+    return 0
 
 
 def _report_status_consistency_session_start(a4_dir: Path) -> str:

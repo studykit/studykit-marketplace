@@ -26,13 +26,13 @@ Carry the detected shape into the diagnosis report (Step 3.4) so the user sees t
 - `domain.md` exists, `architecture.md` missing → recommend `/a4:arch`.
 - `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
 - `bootstrap.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
-- Any issue's `wiki_impact:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
+- Any review item's `target:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
 
 **Layer 2 — Drift alerts.** Any open `review/*.md` with `source: drift-detector`?
-- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` or `wiki_impact:` tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
+- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` list tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
 **Layer 3 — Open review items (non-drift).** Any other open review items?
-- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target: `architecture` / `architecture` `wiki_impact` → `/a4:arch iterate`; `domain` / `domain` `wiki_impact` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
+- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target entries: `architecture` → `/a4:arch iterate`; `domain` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
 **Layer 4 — Active tasks.** Any `task/*/*.md` (recursing through `feature/`, `bug/`, `spike/`) with `status: pending | progress | failing`?
 - Yes → recommend `/a4:run iterate` (resume implementation).

@@ -10,13 +10,13 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 
 | Wiki page | Primary author | In-situ edit allowed (skill: change kinds) | Out-of-rule changes |
 |---|---|---|---|
-| `context.md` | `usecase` | `usecase`: any | review item, `target: context`, `wiki_impact: [context]` |
-| `actors.md` | `usecase` | `usecase`: any. `arch`: add a `system` actor that surfaces during component design (privilege/description text only); never modify a `person` actor | review item, `target: actors`, `wiki_impact: [actors]` |
-| `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: domain`, `wiki_impact: [domain]` |
-| `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: nfr`, `wiki_impact: [nfr]` |
-| `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: architecture`, `wiki_impact: [architecture]` |
-| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `<verify>` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:run`, `task-implementer`, and `test-runner`; never duplicated into other wikis | review item, `target: bootstrap` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
-| `roadmap.md` | `roadmap` | `roadmap`: milestone narrative, dependency graph, Shared Integration Points (all inside `<plan>`). **Must not author Launch & Verify content** — that section is a one-line link pointer to `bootstrap.md` | review item, `target: roadmap`, `wiki_impact: [roadmap]` |
+| `context.md` | `usecase` | `usecase`: any | review item, `target: [context]` |
+| `actors.md` | `usecase` | `usecase`: any. `arch`: add a `system` actor that surfaces during component design (privilege/description text only); never modify a `person` actor | review item, `target: [actors]` |
+| `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: [domain]` |
+| `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: [nfr]` |
+| `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: [architecture]` |
+| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `<verify>` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:run`, `task-implementer`, and `test-runner`; never duplicated into other wikis | review item, `target: [bootstrap]` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
+| `roadmap.md` | `roadmap` | `roadmap`: milestone narrative, dependency graph, Shared Integration Points (all inside `<plan>`). **Must not author Launch & Verify content** — that section is a one-line link pointer to `bootstrap.md` | review item, `target: [roadmap]` |
 
 ### Why architecture is more restrictive than domain
 
@@ -46,7 +46,7 @@ The choice is determined by **whether this stage's output is valid before the up
 | `roadmap` | `architecture.md`, `usecase/*.md` | strong (component → task split, UC → AC source) | **stop**, recommend `/a4:arch iterate` or `/a4:usecase iterate` |
 | `roadmap-reviewer` | `architecture.md`, `usecase/*.md` | strong | emit review item targeting upstream; `roadmap` Step 4 stops |
 | `run` Step 4 | `architecture.md`, `usecase/*.md` | strong (task contract / AC source) | **stop**, recommend `/a4:arch iterate` or `/a4:usecase iterate` |
-| `auto-bootstrap` | `architecture.md` | weak (verified env is valid as recorded; arch fix triggers re-bootstrap, not invalidation) | **continue + review item**, `target: architecture`, `wiki_impact: [architecture]` |
+| `auto-bootstrap` | `architecture.md` | weak (verified env is valid as recorded; arch fix triggers re-bootstrap, not invalidation) | **continue + review item**, `target: [architecture]` |
 | `usecase iterate` | `architecture.md`, `domain.md` | weak (UC text is independent of arch / domain) | **continue + review item** |
 | `domain` (`/a4:domain`) | `architecture.md` | weak (concept extraction is independent; arch references domain, not the reverse) | **continue + review item** |
 | `auto-usecase` | `architecture.md`, `domain.md` | weak (drafts UCs from input; downstream stages handle alignment) | **continue + review item** |
@@ -54,7 +54,7 @@ The choice is determined by **whether this stage's output is valid before the up
 
 ### How an arch fix flows back downstream
 
-When `/a4:arch iterate` resolves a `target: architecture` review item:
+When `/a4:arch iterate` resolves a review whose `target:` lists `architecture`:
 
 1. `architecture.md` is edited; the resolved review item gets a `<log>` line written by `transition_status.py`; a new bullet in `architecture.md`'s `<change-logs>` cites the resolved item.
 2. The wiki close guard (per `body-conventions.md`) ensures the change-log bullet is well-formed.
@@ -71,7 +71,7 @@ Until staleness propagation lands, the user remains responsible for re-running `
    framework version is incompatible with the chosen runtime.
 2. Diagnose: this is an architecture choice, not an environment issue.
 3. Emit: a4/review/<id>-arch-version-incompatibility.md
-   target: architecture, wiki_impact: [architecture],
+   target: [architecture],
    priority: high, source: auto-bootstrap
 4. Continue: write a4/bootstrap.md with the partial verification
    results (Build: FAIL, others: skipped or PASS where independent).
@@ -85,7 +85,7 @@ Until staleness propagation lands, the user remains responsible for re-running `
    contract has no error-response shape, so task AC for UC-3 is
    ambiguous.
 2. Emit: a4/review/<id>-arch-missing-error-shape.md
-   target: architecture, wiki_impact: [architecture],
+   target: [architecture],
    priority: high, source: roadmap-reviewer
 3. Stop. Do NOT commit a partial roadmap.md.
 4. Wrap-up message: "Roadmap halted — architecture has an open
@@ -98,7 +98,7 @@ Until staleness propagation lands, the user remains responsible for re-running `
 2. domain.md is updated (in-situ, this skill's primary wiki).
 3. Notice: a4/architecture.md uses "ConversationService" — out of sync.
 4. Emit: a4/review/<id>-arch-rename-cascade.md
-   target: architecture, wiki_impact: [architecture, domain],
+   target: [architecture, domain],
    priority: medium, source: self
 5. Continue domain wrap-up. The architecture rename will be picked
    up at /a4:arch iterate (compass Layer 3 routes the user).

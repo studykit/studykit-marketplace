@@ -59,8 +59,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
 
 The script:
 
-- Validates that every task in `implemented_by:` is `complete` (refuses otherwise).
-- Writes `status: shipped`, bumps `updated:`, appends the `<log>` entry.
+- Writes `status: shipped`, bumps `updated:`, appends the `<log>` entry. The writer applies no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `complete` before invoking the flip.
 - If the UC has a non-empty `supersedes:` list, cascades each supersedes target from `shipped` to `superseded` with a back-pointer log entry.
 
 Do **not** hand-edit UC frontmatter or supersedes targets.

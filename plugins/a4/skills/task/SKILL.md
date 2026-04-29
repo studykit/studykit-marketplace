@@ -20,7 +20,7 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In (author mode):** writing one task file at `status: pending` (or `complete` for post-hoc), allocating its id, resolving `implements:` / `spec:` references, proposing the `artifacts/task/spike/<id>-<slug>/` artifact directory for `kind: spike`, capturing `mode:` / `options:` for `kind: research`, refreshing `implemented_by:` on referenced UCs.
+- **In (author mode):** writing one task file at `status: pending` (or `complete` for post-hoc), allocating its id, resolving `implements:` / `spec:` references, proposing the `artifacts/task/spike/<id>-<slug>/` artifact directory for `kind: spike`, capturing `mode:` / `options:` for `kind: research`.
 - **In (discard mode):** flipping an existing task's `status: → discarded` via `transition_status.py`, appending an optional `<why-discarded>` note, advising on the spike artifact directory (no auto-delete).
 - **Out:** UC-batch generation (`/a4:roadmap`), implement / test loop (`/a4:run`), automated reviewer (use `/a4:research-review` for the kind=research quality pass). No commit.
 
@@ -36,13 +36,13 @@ Seed: **$ARGUMENTS**
 
 ## Author Mode Flow
 
-Steps 1–8 procedure: `references/author-flow.md`. Covers capture intent → resolve implements/spec → compose body → spike artifact directory proposal → allocate id + write → refresh implemented_by → spike artifact directory create → hand-off.
+Steps 1–7 procedure: `references/author-flow.md`. Covers capture intent → resolve implements/spec → compose body → spike artifact directory proposal → allocate id + write → spike artifact directory create → hand-off.
 
 For more single tasks, re-invoke `/a4:task`. If the user wants the task implemented immediately and no other ready tasks are pending, they may invoke `/a4:run` directly.
 
 ## Discard mode
 
-Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure in `references/discard.md`: resolve the target task by id / `task/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `<why-discarded>` block (D3), advise on the spike artifact directory without auto-deleting (D4), skip `refresh_implemented_by.py` since `implements:` did not change (D5), and report (D6). UC-cascade discards are handled automatically by `transition_status.py`.
+Triggered when `$ARGUMENTS` starts with the token `discard`. Apply the procedure in `references/discard.md`: resolve the target task by id / `task/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `<why-discarded>` block (D3), advise on the spike artifact directory without auto-deleting (D4), and report (D5). UC-cascade discards are handled automatically by `transition_status.py`.
 
 ## Commit Points
 
@@ -52,7 +52,7 @@ Per-mode subject formats and timing: `references/commit-points.md`.
 
 **Author mode** — when the task file is written:
 
-1. Summarize: task id / title / kind, `implements:` / `spec:` references (or "none — AC sourced from <X>"), whether the spike artifact directory was created (or for `kind: research`, the captured `mode:` / `options:`), files updated by `refresh_implemented_by.py`.
+1. Summarize: task id / title / kind, `implements:` / `spec:` references (or "none — AC sourced from <X>"), whether the spike artifact directory was created (or for `kind: research`, the captured `mode:` / `options:`).
 2. Suggest the next step:
    - `feature` / `spike` / `bug` at `pending` → `/a4:run`.
    - `research` at `pending` or `progress` → start the investigation directly (the user or an investigator agent will fill `<context>` + `<options>`/`<findings>`); when finalized, optionally run `/a4:research-review` before flipping to `complete`.

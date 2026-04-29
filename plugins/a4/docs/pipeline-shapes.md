@@ -68,7 +68,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 | `kind` | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC's `<flow>` / `<validation>` / `<error-handling>` (this is Full-shape AC reused inside Minimal) |
-| `feature` + `spec: [spec/...]` | spec's `decision:` frontmatter + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
+| `feature` + `spec: [spec/...]` | spec's `<specification>` body + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
 | `feature` with neither | Smell — `/a4:task` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
 | `bug` | The bug description in the task body itself |
 | `spike` | The hypothesis stated in the task body itself |
@@ -101,7 +101,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 *Mandatory* (the system requires the citation to function correctly):
 
 - `architecture.md` `<change-logs>` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per [`body-conventions.md`](./body-conventions.md) change-log rules.
-- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `decision:` plus the cited `architecture.md` section as AC source.
+- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `<specification>` body plus the cited `architecture.md` section as AC source.
 - A successor spec's `supersedes: [spec/N]` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk and the older spec flips to `superseded` via cascade.
 - Other wiki pages' `<change-logs>` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same bullet pattern as architecture.md.
 

@@ -42,7 +42,6 @@ type: spec
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
 status: <draft | active | deprecated | superseded>
-decision: "<one-line shape summary>"
 supersedes: []        # list of paths, e.g. [spec/8-caching-strategy]
 related: []           # catchall for cross-references — e.g. supporting research tasks
 labels: []            # free-form tags (alias: tags)
@@ -53,7 +52,7 @@ updated: YYYY-MM-DD
 
 - `id` is allocated by `../scripts/allocate_id.py` (workspace-global, monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- `decision` is the one-liner that summarizes the chosen shape — the same string `transition_status.py --reason` will quote in the `<log>` entry on `→ active`.
+- The chosen shape is summarized in the `<context>` body section (and recorded as the first `<decision-log>` entry on `→ active`); UC `decision:` frontmatter no longer exists (a4 v6.0.0).
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
 - `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `kind: research` task that informed this spec (e.g., `related: [task/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `search.py`.
 - Path values are plain strings without `.md` and without brackets (e.g., `spec/8-caching-strategy`, not `[spec/8-caching-strategy.md]`).

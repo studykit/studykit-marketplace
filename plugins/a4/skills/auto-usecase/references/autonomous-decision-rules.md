@@ -8,7 +8,7 @@ Apply these consistently during composition and revision. No user interaction is
 2. **Unclear actor role** → default to `viewer`. Upgrade to `editor` when actions imply edit capability.
 3. **Splitting boundary** → prefer splitting. Smaller UCs are better.
 4. **Vague situation** → construct a plausible concrete one. Emit a `kind: question` review item.
-5. **Unclear relationship** → prefer `depends_on` over `related`. Note the reasoning in the UC's `## Source` section.
+5. **Unclear relationship** → record it as a markdown link in the UC's `<dependencies>` body section (narrative cross-UC ordering) rather than `related:` (soft tie). Note the reasoning in the UC's `## Source` section. UC frontmatter does not carry a `depends_on:` field (a4 v6.0.0).
 6. **New UC overlaps existing** → exclude. Record in the exclusion log (Step 3a composer output) and do not emit a file.
 7. **New UC outside context** → exclude. Record in the exclusion log.
 8. **Practical value borderline** → prefer exclusion over inclusion.

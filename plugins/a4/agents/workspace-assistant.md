@@ -34,7 +34,7 @@ From the caller (typically the main session):
 1. **Workspace path** — usually inferable as `<project-root>/a4/`. If absent, resolve via `git rev-parse --show-toplevel` and append `/a4`. Abort if no `a4/` directory exists.
 2. **Request** — natural-language. Falls into three categories:
    - **find**: body-content lookup, multi-step composition, single-item summarization, or large-result compression.
-   - **snapshot**: workspace state — full dashboard or one or more named sections (drift, active tasks, blocked items, milestones, recent activity, etc.).
+   - **snapshot**: workspace state — full dashboard or one or more named sections (drift, active tasks, blocked items, recent activity, etc.).
    - **transition**: an explicit `(file, target_status)` pair the caller wants applied. May include a one-line `--reason` text.
 
 If the request is ambiguous between the three, ask one clarifying question before acting.
@@ -50,7 +50,7 @@ If the request is ambiguous between the three, ask one clarifying question befor
 
 ## Find Workflow
 
-1. **Narrow candidates with `search.py` first** when the question has a frontmatter-shaped filter (folder, status, kind, milestone, label, references, updated-since, custom field). Use the `find` skill's translation guide (loaded automatically into this agent's prompt via the `skills:` frontmatter above); do not duplicate the flag table here.
+1. **Narrow candidates with `search.py` first** when the question has a frontmatter-shaped filter (folder, status, kind, label, references, updated-since, custom field). Use the `find` skill's translation guide (loaded automatically into this agent's prompt via the `skills:` frontmatter above); do not duplicate the flag table here.
 2. **Read body only on the narrowed set.** Never `Read` every file in a folder. If the candidate set after step 1 still has more than ~20 files and a body criterion is needed, prefer `Grep` over per-file `Read`.
 3. **Compose multi-step queries internally.** Do not return intermediate result lists to the caller — keep them in your own context and feed them into the next `search.py` call.
 4. **Format the response** per the find response rules below.
@@ -71,7 +71,6 @@ If the request is ambiguous between the three, ask one clarifying question befor
 | `open-reviews` | open / in-progress non-drift reviews, sorted by priority then created then id |
 | `active-tasks` | tasks with status in {pending, progress, failing} |
 | `blocked-items` | any issue with status: blocked, with depends_on chain |
-| `milestones` | per active milestone — tasks complete/total + open reviews |
 | `recent-activity` | top 10 issue items by `updated:` desc |
 | `open-ideas` | non-terminal `idea/*.md` |
 | `open-sparks` | non-terminal `spark/*.md` |
@@ -85,7 +84,6 @@ If the request is ambiguous between the three, ask one clarifying question befor
 - "active tasks" / "what's running" → `active-tasks`
 - "what's blocked" → `blocked-items`
 - "open reviews" / "review queue" → `open-reviews`
-- "milestone progress" / "how is v1.0 going" → `milestones`
 - "recent activity" / "what changed lately" → `recent-activity`
 - "wiki pages" / "wiki status" → `wiki-pages`
 - "issue counts" / "how many tasks/reviews" → `issue-counts`
@@ -95,7 +93,7 @@ If the request is ambiguous between the three, ask one clarifying question befor
 - "usecase sources" → `usecases-by-source`
 - combined ("drift and blocked") → multiple identifiers: `drift-alerts blocked-items`
 
-If the request asks for per-item search by frontmatter ("tasks for v1.0", "what implements usecase/3"), do not run snapshot — answer per the find workflow instead. For "what should I do next" / recommendation requests, see Non-goals.
+If the request asks for per-item search by frontmatter ("what implements usecase/3", "spec items tagged perf"), do not run snapshot — answer per the find workflow instead. For "what should I do next" / recommendation requests, see Non-goals.
 
 **Steps:**
 

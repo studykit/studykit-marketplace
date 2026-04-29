@@ -30,7 +30,6 @@ Sections (kebab-case identifier on the left):
                       priority then created then id.
   active-tasks        tasks with status in {pending, progress, failing}.
   blocked-items       any issue with status: blocked, with depends_on chain.
-  milestones          per active milestone — tasks complete/total + open reviews.
   recent-activity     top 10 issue items by `updated:` desc.
   open-ideas          non-terminal `idea/*.md`.
   open-sparks         non-terminal `spark/*.md`.
@@ -53,7 +52,7 @@ from __future__ import annotations
 
 import argparse
 import sys
-from collections import Counter, defaultdict
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import date, datetime
 from pathlib import Path
@@ -101,12 +100,10 @@ class IssueItem:
     kind: str | None
     source: str | None
     priority: str | None
-    target: str | None
-    milestone: str | None
-    updated: str | None
+    target: list[str] = field(default_factory=list)
+    updated: str | None = None
     created: str | None = None
     depends_on: list[str] = field(default_factory=list)
-    wiki_impact: list[str] = field(default_factory=list)
 
     @property
     def stem(self) -> str:
@@ -197,12 +194,10 @@ def discover_issues(a4_dir: Path) -> dict[str, list[IssueItem]]:
                     kind=_str_field(fm, "kind"),
                     source=_str_field(fm, "source"),
                     priority=_str_field(fm, "priority"),
-                    target=_str_field(fm, "target"),
-                    milestone=_str_field(fm, "milestone"),
+                    target=_str_list(fm, "target"),
                     updated=_display_date(fm.get("updated")),
                     created=_display_date(fm.get("created")),
                     depends_on=_str_list(fm, "depends_on"),
-                    wiki_impact=_str_list(fm, "wiki_impact"),
                 )
             )
     return out
@@ -271,15 +266,11 @@ def render_stage_progress(
             return "not created"
         return f"present · updated {page.updated or '—'}"
 
-    milestones = sorted({t.milestone for t in tasks if t.milestone})
     roadmap = pages_by_kind.get("roadmap")
     if roadmap is None or roadmap.path is None:
         roadmap_row = "not created"
     else:
-        roadmap_row = (
-            f"present · updated {roadmap.updated or '—'} · "
-            f"{len(milestones)} milestone(s)"
-        )
+        roadmap_row = f"present · updated {roadmap.updated or '—'}"
 
     lines = [
         "## Stage progress",
@@ -364,7 +355,7 @@ def render_drift_alerts(reviews: list[IssueItem]) -> str:
     )
     lines = [heading, ""]
     for r in alerts:
-        target = r.target or "—"
+        target = ", ".join(r.target) if r.target else "—"
         lines.append(
             f"- {r.ref} — {r.priority or '—'} {r.kind or '—'} — {r.title} (target=`{target}`)"
         )
@@ -389,11 +380,10 @@ def render_open_reviews(reviews: list[IssueItem]) -> str:
     )
     lines = [heading, ""]
     for r in open_items:
-        target = f" (target=`{r.target}`)" if r.target else ""
-        ms = f" [milestone={r.milestone}]" if r.milestone else ""
+        target = f" (target=`{', '.join(r.target)}`)" if r.target else ""
         created = f" · created {r.created}" if r.created else ""
         lines.append(
-            f"- {r.ref} — {r.priority or '—'} {r.kind or '—'}{created} — {r.title}{target}{ms}"
+            f"- {r.ref} — {r.priority or '—'} {r.kind or '—'}{created} — {r.title}{target}"
         )
     return "\n".join(lines)
 
@@ -407,9 +397,8 @@ def render_active_tasks(tasks: list[IssueItem]) -> str:
     lines = [heading, ""]
     for t in active:
         deps = f" depends_on={t.depends_on}" if t.depends_on else ""
-        ms = f" [milestone={t.milestone}]" if t.milestone else ""
         kind = f" {t.kind}" if t.kind else ""
-        lines.append(f"- {t.ref} — {t.status}{kind} — {t.title}{ms}{deps}")
+        lines.append(f"- {t.ref} — {t.status}{kind} — {t.title}{deps}")
     return "\n".join(lines)
 
 
@@ -424,38 +413,6 @@ def render_blocked_items(issues: dict[str, list[IssueItem]]) -> str:
     for i in blocked:
         deps = f" depends_on={i.depends_on}" if i.depends_on else ""
         lines.append(f"- {i.ref} — {i.title}{deps}")
-    return "\n".join(lines)
-
-
-def render_milestones(tasks: list[IssueItem], reviews: list[IssueItem]) -> str:
-    buckets: dict[str, dict[str, int]] = defaultdict(
-        lambda: {"total": 0, "complete": 0, "open_reviews": 0}
-    )
-    for t in tasks:
-        if not t.milestone:
-            continue
-        buckets[t.milestone]["total"] += 1
-        if t.status in TERMINAL_STATUSES["task"]:
-            buckets[t.milestone]["complete"] += 1
-    for r in reviews:
-        if not r.milestone:
-            continue
-        if r.status in TERMINAL_STATUSES["review"]:
-            continue
-        buckets[r.milestone]["open_reviews"] += 1
-
-    if not buckets:
-        return "## Milestones\n\n*No milestones declared.*"
-
-    lines = [
-        "## Milestones",
-        "",
-        "| Milestone | Tasks complete / total | Open reviews |",
-        "|-----------|------------------------|--------------|",
-    ]
-    for name in sorted(buckets):
-        b = buckets[name]
-        lines.append(f"| {name} | {b['complete']} / {b['total']} | {b['open_reviews']} |")
     return "\n".join(lines)
 
 
@@ -525,9 +482,6 @@ SECTION_RENDERERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "open-reviews": lambda ctx: render_open_reviews(ctx["issues"]["review"]),
     "active-tasks": lambda ctx: render_active_tasks(ctx["issues"]["task"]),
     "blocked-items": lambda ctx: render_blocked_items(ctx["issues"]),
-    "milestones": lambda ctx: render_milestones(
-        ctx["issues"]["task"], ctx["issues"]["review"]
-    ),
     "recent-activity": lambda ctx: render_recent_activity(ctx["issues"]),
     "open-ideas": lambda ctx: render_open_ideas(ctx["issues"]["idea"]),
     "open-sparks": lambda ctx: render_open_sparks(ctx["sparks"]),

@@ -71,7 +71,7 @@ Before committing, run the shared drift detector against `a4/`:
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
-It deduplicates against existing open / in-progress / discarded `source: drift-detector` items, so re-running is safe. Findings target the affected wiki page (e.g., `target: architecture`) with `wiki_impact: [<wiki>]`, entering the unified review-item flow alongside Step 5 items. Use `--dry-run` to inspect before writing.
+It deduplicates against existing open / in-progress / discarded `source: drift-detector` items, so re-running is safe. Findings list the affected wiki page in `target:` (e.g., `target: [architecture]`), entering the unified review-item flow alongside Step 5 items. Use `--dry-run` to inspect before writing.
 
 ## Session Management
 

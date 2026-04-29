@@ -18,7 +18,7 @@ Group tasks into named deliverable sets (`v1.0`, `beta`, `phase-1`). Milestones 
 - Dependencies (`depends_on:` using plain `task/<id>-<slug>` strings).
 - Unit test scenarios + isolation strategy.
 - Acceptance criteria derived from UC flows, validation, error handling.
-- Milestone assignment (`milestone:` field).
+- Milestone assignment is captured in the roadmap milestone narrative (links from each milestone to the UCs it ships); tasks themselves do not carry a `milestone:` field.
 - `kind: feature` (the batch generator emits feature for UC-derived work).
 
 ## 4. Shared Integration Points
@@ -37,13 +37,4 @@ Exit plan mode.
 
 **Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/feature/<id>-<slug>.md` per `../../../references/task-feature-authoring.md` (`kind: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `feature/<id>-<slug>.md`.
 
-## Refresh reverse links
-
-After all task files are written, refresh the reverse link on each UC so `ready → implementing` will pass mechanical validation:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/refresh_implemented_by.py" \
-  "$(git rev-parse --show-toplevel)/a4"
-```
-
-This back-scans every task's `implements:` list and writes `implemented_by: [...]` onto each referenced UC. The script is idempotent.
+The UC ↔ task reverse view (which tasks implement a UC) is computed on demand by `search.py` and roadmap surfaces — there is no UC frontmatter field to refresh.

@@ -22,7 +22,6 @@ related: []            # catchall for cross-references
 files: []              # artifact paths under artifacts/task/feature/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
-milestone: <optional>  # milestone name
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -31,11 +30,11 @@ updated: YYYY-MM-DD
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `kind: feature` is fixed for files under `a4/task/feature/`. Every task must declare the kind explicitly.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it whenever the project is UC-driven.
-- `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `decision:` + relevant `architecture.md` section becomes the AC source).
+- `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `<specification>` body + relevant `architecture.md` section becomes the AC source).
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.
 - `files:` is artifact-only — paths must point under `artifacts/task/feature/<id>-<slug>/...`. The list is typically empty for feature work that ships only production source. Production source paths the task writes or modifies are documented in the body `<files>` section, not in this frontmatter field. See "Artifacts directory" below for when to use the artifact directory.
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
-- `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
+- `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### `kind: feature` with empty `implements:` and `spec:` — smell check
 
@@ -103,7 +102,7 @@ When the chosen initial status is `complete`, the work is asserted to already be
   | Shape | AC source |
   |---|---|
   | `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
-  | `spec: [spec/...]` (UC-less) | spec `decision:` frontmatter + relevant `architecture.md` section |
+  | `spec: [spec/...]` (UC-less) | spec `<specification>` body + relevant `architecture.md` section |
 
   AC source is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
 
@@ -143,7 +142,7 @@ Cross-kind conventions for the artifact directory — what to keep vs. drop, own
 
 ## Don't (feature-task-specific)
 
-- **Don't put `implemented_by:` on a task.** It is a UC reverse-link, auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
+- **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a task stays enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded`, UC `revising` → task `pending`-reset are the writer's job.

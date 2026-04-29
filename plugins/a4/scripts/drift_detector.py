@@ -14,17 +14,18 @@ Wiki normalization (runs before detection):
     section is left empty for subsequent edits to populate.
 
 Detection rules:
-  - close-guard       Resolved review item declares a `wiki_impact` page,
-                      but the named wiki page has no footnote citing the
-                      causing issue (the review item's `target`).
+  - close-guard       Resolved review item lists a wiki basename in
+                      `target:` (mixed list of issue paths + wiki
+                      basenames), but that wiki page has no footnote
+                      citing the review item.
   - stale-footnote    A footnote definition's wikilink resolves to a
                       non-existent issue or wiki page.
   - orphan-marker     Inline `[^N]` marker without a corresponding entry
                       in the `## Changes` section.
   - orphan-definition `## Changes` entry without a corresponding inline
                       `[^N]` marker.
-  - missing-wiki-page A `wiki_impact` entry names a wiki page that does
-                      not exist at the workspace root.
+  - missing-wiki-page A wiki basename appearing in a resolved review's
+                      `target:` does not exist at the workspace root.
   - missing-spec-cite Architecture-only. A live `## Changes` footnote
                       records a change without citing any `spec/*`
                       spec. Resolution: cite the spec, author one, or
@@ -251,29 +252,26 @@ def detect_close_guard_drift(a4_dir: Path, wikis: dict[str, Path]) -> list[Drift
         fm = _fm(path)
         if fm.get("status") != "resolved":
             continue
-        wiki_impact = fm.get("wiki_impact") or []
-        if not isinstance(wiki_impact, list) or not wiki_impact:
+        target = fm.get("target") or []
+        if not isinstance(target, list) or not target:
             continue
-        target = fm.get("target")
-        if not isinstance(target, str) or not target:
-            # cross-cutting review without a target — cause is ambiguous; skip
+        # Wiki targets are bare basenames (no `/`); issue targets carry a folder prefix.
+        wiki_targets = [t for t in target if isinstance(t, str) and "/" not in t]
+        if not wiki_targets:
             continue
-        target_basename = target.rsplit("/", 1)[-1]
+        review_ref = f"review/{path.stem}"
 
-        for wiki_name in wiki_impact:
-            if not isinstance(wiki_name, str):
-                continue
-
+        for wiki_name in wiki_targets:
             wiki_path = wikis.get(wiki_name)
             if wiki_path is None:
                 drifts.append(Drift(
                     kind="missing-wiki-page",
                     wiki=wiki_name,
                     detail=(
-                        f"resolved `review/{path.stem}` declares "
-                        f"`wiki_impact: [{wiki_name}]` but `{wiki_name}.md` does not exist"
+                        f"resolved `review/{path.stem}` lists "
+                        f"`target: [..., {wiki_name}, ...]` but `{wiki_name}.md` does not exist"
                     ),
-                    cause=target,
+                    cause=review_ref,
                 ))
                 continue
 
@@ -282,7 +280,7 @@ def detect_close_guard_drift(a4_dir: Path, wikis: dict[str, Path]) -> list[Drift
             cited = False
             for fbody in definitions.values():
                 for link in parse_wikilinks(fbody):
-                    if link == target or link == target_basename:
+                    if link == review_ref or link == path.stem:
                         cited = True
                         break
                 if cited:
@@ -293,11 +291,11 @@ def detect_close_guard_drift(a4_dir: Path, wikis: dict[str, Path]) -> list[Drift
                     kind="close-guard",
                     wiki=wiki_name,
                     detail=(
-                        f"resolved `review/{path.stem}` declares "
-                        f"`wiki_impact: [{wiki_name}]` but `{wiki_name}.md` has no "
-                        f"footnote citing `[[{target}]]`"
+                        f"resolved `review/{path.stem}` lists "
+                        f"`target: [..., {wiki_name}, ...]` but `{wiki_name}.md` has no "
+                        f"footnote citing `[[{review_ref}]]`"
                     ),
-                    cause=target,
+                    cause=review_ref,
                 ))
 
     return drifts
@@ -333,8 +331,15 @@ def existing_fingerprints(a4_dir: Path) -> set[tuple[str, str, str | None]]:
             elif label.startswith("drift-cause:"):
                 cause = label[len("drift-cause:"):]
         target = fm.get("target")
-        if drift_kind and isinstance(target, str):
-            out.add((drift_kind, target, cause))
+        if drift_kind and isinstance(target, list) and target:
+            # Drift items emit `target: [<wiki>]` as a single-entry list; the
+            # detector's fingerprint pivots on that wiki basename.
+            wiki_entry = next(
+                (t for t in target if isinstance(t, str) and "/" not in t),
+                None,
+            )
+            if wiki_entry:
+                out.add((drift_kind, wiki_entry, cause))
     return out
 
 
@@ -365,9 +370,8 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
         "id": item_id,
         "kind": KIND_TO_REVIEW_KIND.get(drift.kind, "finding"),
         "status": "open",
-        "target": drift.wiki,
+        "target": [drift.wiki],
         "source": "drift-detector",
-        "wiki_impact": [drift.wiki],
         "priority": KIND_TO_PRIORITY.get(drift.kind, "medium"),
         "labels": labels,
         "created": today,
@@ -400,7 +404,7 @@ def build_review_item(drift: Drift, item_id: int, today: str) -> tuple[str, str]
         body_lines += [
             f"Either create `{drift.wiki}.md` (with the proper `type:` frontmatter)",
             f"and add a footnote citing `[[{drift.cause}]]`, or amend the originating",
-            "review item's `wiki_impact` field to remove this entry.",
+            f"review item's `target:` list to remove the `{drift.wiki}` entry.",
         ]
     elif drift.kind == "stale-footnote":
         body_lines += [

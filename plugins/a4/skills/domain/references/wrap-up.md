@@ -37,7 +37,7 @@ For each emitted review item, ordered by priority then id, present to the user a
 
 ## 4. Wiki close guard
 
-For each item that transitioned to `resolved` with non-empty `wiki_impact`, verify the referenced wiki pages contain a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing.
+For each item that transitioned to `resolved` whose `target:` lists one or more wiki basenames, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the review item itself. Warn + allow override when missing.
 
 ## 5. Report
 

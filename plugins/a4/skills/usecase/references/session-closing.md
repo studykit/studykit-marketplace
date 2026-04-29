@@ -8,7 +8,7 @@ When the user wants to wrap up, explain what will happen and ask for confirmatio
 > 1. Explore — find gaps and new UC candidates from fresh perspectives
 > 2. Review — validate all UCs (existing + newly added) and emit per-finding review items
 > 3. Walk through each emitted review item and resolve or defer
-> 4. Wiki close guard — verify wiki footnotes exist for resolved items with `wiki_impact`
+> 4. Wiki close guard — verify wiki footnotes exist for resolved items whose `target:` lists a wiki basename
 >
 > Ready to proceed?
 
@@ -33,7 +33,7 @@ The explorer writes the report and returns a short summary listing UC candidates
 
 **Walk candidates with the user.** For each candidate:
 - **Accept** — enter the Discovery Loop for that topic (full precision: Flow, Outcome, Validation, Error handling). Write the new UC file as usual.
-- **Defer** — create a review item: allocate id, write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: usecase-explorer`, `target: null` (or a wiki basename if applicable), body summarizing the candidate and why it was deferred.
+- **Defer** — create a review item: allocate id, write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: usecase-explorer`, `target: []` (or `[<wiki basename>]` if applicable), body summarizing the candidate and why it was deferred.
 
 Mark "Explore" completed.
 
@@ -55,7 +55,7 @@ For each new review item from the reviewer (ordered by priority then id), read t
 
 **Fix now** — edit the target (UC file or wiki page). On success:
 1. Flip the review item via the writer: `scripts/transition_status.py --file review/<id>-<slug>.md --to resolved --reason "resolved by editing <target path>"`.
-2. If the edit touched a wiki page and the review item had a non-empty `wiki_impact`, append a dated bullet with a markdown link to the causing issue inside the page's `<change-logs>` section per the Wiki Update Protocol.
+2. If the edit touched a wiki page and the review item's `target:` listed a wiki basename, append a dated bullet with a markdown link to the review item itself inside the page's `<change-logs>` section per the Wiki Update Protocol.
 
 **Defer** — leave the review item `status: open`. The writer appends the deferral reason to the `<log>` section when called for any subsequent transition; for a pure-defer pause, the `<log>` is unchanged and the deferral is captured in conversation notes / handoff.
 
@@ -65,7 +65,7 @@ Common finding types the reviewer emits (mirrored from `${CLAUDE_SKILL_DIR}/refe
 
 - **UC quality issues** — `size/split`, `vague actor`, `unclear goal`, `vague situation`, `incomplete flow`, `implementation leak`, `weak outcome`, `missing precision`, `overlap`.
 - **Actor findings** — `orphan actor`, `incomplete actor`, `privilege split`, `type mismatch`, `role mismatch`, `implicit actor`, `missing system actor`.
-- **Cross-UC findings** — `stale relationship`, `missing UC/actor in diagram` (diagram is now derived, so this becomes "missing from frontmatter `actors`/`depends_on`").
+- **Cross-UC findings** — `stale relationship`, `missing UC/actor in diagram` (diagram is now derived, so this becomes "missing from frontmatter `actors:` or from the UC's `<dependencies>` body section").
 - **Domain model findings** — `missing concept`, `missing relationship`, `missing state`, `naming conflict`.
 - **System completeness findings** — `missing journey`, `usability gap`, `missing lifecycle`, `implicit prerequisite`. These become `kind: gap` review items with UC candidates in the body.
 
@@ -75,10 +75,10 @@ Mark "Walk findings and open review items" completed.
 
 Mark "Wiki close guard" `in_progress`.
 
-For each review item that transitioned to `resolved` in this session AND has a non-empty `wiki_impact`:
+For each review item that transitioned to `resolved` in this session whose `target:` lists one or more wiki basenames:
 
-1. For each wiki basename in `wiki_impact` (e.g., `domain`), read `a4/<basename>.md`.
-2. Check whether the page's `<change-logs>` section contains a bullet whose markdown link points at the causing issue (the resolved item's `target`, or the item itself if `target` was null).
+1. For each wiki basename in `target:` (e.g., `domain`), read `a4/<basename>.md`.
+2. Check whether the page's `<change-logs>` section contains a bullet whose markdown link points at the resolved review item.
 3. If missing, warn the user: `"<basename>.md has no change-log entry for <causing issue>. Resolve anyway?"`. On override, accept and proceed. On correction, edit the wiki page to add the bullet (creating `<change-logs>` if absent).
 
 Mark "Wiki close guard" completed.

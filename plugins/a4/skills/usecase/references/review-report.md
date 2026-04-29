@@ -12,9 +12,8 @@ type: review
 id: <allocated via scripts/allocate_id.py>
 kind: finding | gap | question
 status: open
-target: usecase/<id>-<slug>       # omit for cross-cutting findings
+target: [usecase/<id>-<slug>, <wiki basenames as needed>]   # [] for cross-cutting
 source: usecase-reviewer
-wiki_impact: [<wiki basenames>]   # [] when no wiki update is implied
 priority: high | medium | low
 title: "<short finding title>"
 labels: []
@@ -47,21 +46,21 @@ Body structure (per `references/review-authoring.md` — `<description>` require
 | `VAGUE ACTOR`, `VAGUE SITUATION`, `UNCLEAR GOAL`, `WEAK OUTCOME`, `TOO ABSTRACT`, `INCOMPLETE FLOW`, `IMPLEMENTATION LEAK`, `MISSING PRECISION`, `OVERLAPS UC-N` | `finding` | Target set to the offending UC |
 | `MISSING ACTOR`, `ORPHAN`, `INCOMPLETE ACTOR`, `PRIVILEGE SPLIT`, `IMPLICIT ACTOR`, `MISSING SYSTEM ACTOR`, `TYPE MISMATCH`, `ROLE MISMATCH` | `finding` | `target: actors` when the concern is the actors table; otherwise target the UC |
 | `STALE RELATIONSHIP`, `MISSING UC IN DIAGRAM` | `finding` | Diagram is now a derived view; these translate to frontmatter mismatches between UCs. Target the stale side |
-| Domain model: `MISSING CONCEPT`, `MISSING RELATIONSHIP`, `MISSING STATE`, `NAMING CONFLICT` | `finding` | `target: domain`, `wiki_impact: [domain]` |
-| System completeness: `MISSING JOURNEY`, `USABILITY GAP`, `MISSING LIFECYCLE`, `IMPLICIT PREREQUISITE` | `gap` | Body includes the UC candidate suggestion; target may be null |
+| Domain model: `MISSING CONCEPT`, `MISSING RELATIONSHIP`, `MISSING STATE`, `NAMING CONFLICT` | `finding` | `target: [domain]` |
+| System completeness: `MISSING JOURNEY`, `USABILITY GAP`, `MISSING LIFECYCLE`, `IMPLICIT PREREQUISITE` | `gap` | Body includes the UC candidate suggestion; `target:` may be `[]` |
 | Open questions surfaced during review | `question` | Target points at the owning UC or wiki page |
 
-## `wiki_impact` Rules
+## Wiki entries in `target:`
 
-Set when the resolution will require editing a wiki page:
+Append wiki basenames to `target:` when the resolution will require editing a wiki page:
 
-- Finding about an actor → `wiki_impact: [actors]`
-- Finding about a domain concept / relationship / state → `wiki_impact: [domain]`
-- Finding about problem framing or scope → `wiki_impact: [context]`
-- Finding about NFRs → `wiki_impact: [nfr]`
-- Pure per-UC edits (flow, outcome, validation) → `wiki_impact: []`
+- Finding about an actor → add `actors`
+- Finding about a domain concept / relationship / state → add `domain`
+- Finding about problem framing or scope → add `context`
+- Finding about NFRs → add `nfr`
+- Pure per-UC edits (flow, outcome, validation) → no wiki entry needed
 
-The close-guard at session-end checks these before closing.
+The close-guard at session-end checks each wiki entry in `target:` before closing.
 
 ## Id Allocation
 

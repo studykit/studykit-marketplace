@@ -15,14 +15,10 @@ id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
 kind: spike
 status: open | pending | progress | complete | failing | discarded
-implements: []         # usually empty for spike (exploratory)
 depends_on: []         # list of paths to other tasks
-spec: []               # populated when the spike is triggered by a spec's open questions
 related: []            # catchall for cross-references
 files: []              # paths under artifacts/task/spike/<id>-<slug>/ — never project source tree
-cycle: 1               # implementation cycle number
 labels: []             # free-form tags
-milestone: <optional>  # milestone name
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -30,11 +26,11 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `kind: spike` is fixed for files under `a4/task/spike/`. Every task must declare the kind explicitly.
-- `implements:` is **usually empty** — a spike is exploratory, not a deliverable. Populate only when the PoC validates a hypothesis directly tied to a UC's flow.
-- `spec:` lists `spec/<id>-<slug>` paths the spike investigates. Most spikes are spec-triggered; populate this when applicable.
+- `implements:` is **not allowed** on spike (a4 v6.0.0) — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `feature` task with `implements: [usecase/<id>-<slug>]` and link the spike from its `<description>` body.
+- `spec:` is **not allowed** on spike (a4 v6.0.0). Cite the triggering spec from the spike's `<description>` body via a markdown link — the frontmatter forward link is reserved for `feature` and `bug` tasks.
 - `files:` paths must live under `artifacts/task/spike/<id>-<slug>/...` (or `artifacts/task/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `<files>` section, not in frontmatter.
-- `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
-- `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
+- `cycle:` is **not allowed** on spike (a4 v6.0.0); the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
+- `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### Lifecycle and writer ownership
 
@@ -53,7 +49,7 @@ Per-status meaning:
 - `pending` — In the work queue, awaiting an implementer.
 - `progress` — A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume).
 - `complete` — Spike succeeded; hypothesis validated.
-- `failing` — Spike could not validate the hypothesis on this iteration. Resumed via `failing → progress` (immediate retry) or deferred via `failing → pending` (next cycle).
+- `failing` — Spike could not validate the hypothesis on this iteration. Resumed via `failing → progress` (immediate retry) or deferred via `failing → pending` (re-attempt without a cycle bump — there is no `cycle:` on spike).
 - `discarded` — Abandoned. Terminal. Reached via an explicit task-discard (a spike whose hypothesis is no longer worth testing).
 
 Writer rules (task-specific):
@@ -130,7 +126,8 @@ Cross-kind conventions for the artifact directory — what to keep vs. drop, own
 
 ## Don't (spike-task-specific)
 
-- **Don't put `implemented_by:` on a task.** It is a UC reverse-link, auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
+- **Don't put `implements:`, `cycle:`, or `spec:` on a spike.** All three are forbidden on `kind: spike` (a4 v6.0.0). Spikes are exploratory; if the outcome warrants UC delivery, author a follow-up `kind: feature` task that declares `implements:` and `spec:` as needed.
+- **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a spike stays enqueued or moves forward / out.
 - **Don't omit `kind:`.** Every task declares `feature | spike | bug | research`.

@@ -23,7 +23,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `spec` | Records a spec reached through conversation as `a4/spec/<id>-<slug>.md`; soft-links related research tasks via standard markdown body links + optional `related:` frontmatter; nudges affected wiki pages |
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
-| `drift` | Wiki-drift detector; emits review items with `wiki_impact` |
+| `drift` | Wiki-drift detector; emits review items whose `target:` includes the affected wiki basenames |
 | `validate` | Runs frontmatter-schema, body-convention, and cross-file status-consistency validators over `a4/` |
 | `idea` | Quick-capture a one-line idea as `a4/idea/<id>-<slug>.md` |
 | `web-design-mock` | Web design mock generation |
@@ -31,12 +31,11 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 
 ### Hooks
 
-Four hook flows share the same events, dispatched through a single Python entry point:
+Three hook flows share the same events, dispatched through a single Python entry point:
 
 1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; exit 2 on frontmatter violations so Claude retries.
 2. **Cross-file status consistency** (non-blocking) — scan `a4/` on SessionStart and after each edit; inject findings as `additionalContext` so the LLM sees mismatches on the next turn without a retry loop.
-3. **`implemented_by` reconciliation** (non-blocking) — refresh UC `implemented_by:` reverse-links on SessionStart so drift from cross-branch edits or manual task edits is healed before work begins.
-4. **Issue-id resolution** (non-blocking) — scan UserPromptSubmit for `#<id>` references; inject the resolved `a4/<type>/<id>-<slug>.md` path so Claude reads the file directly instead of searching. Per-session dedupe — once an id has been announced, repeats stay silent.
+3. **Issue-id resolution** (non-blocking) — scan UserPromptSubmit for `#<id>` references; inject the resolved `a4/<type>/<id>-<slug>.md` path so Claude reads the file directly instead of searching. Per-session dedupe — once an id has been announced, repeats stay silent.
 
 | Event | Script | Purpose |
 |-------|--------|---------|
@@ -44,7 +43,7 @@ Four hook flows share the same events, dispatched through a single Python entry 
 | `Stop` | `scripts/a4_hook.py stop` | Run `validate_frontmatter.py` on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
 | `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record files (`a4-edited-<sid>.txt`, `a4-resolved-ids-<sid>.txt`). Always exits 0. |
 | `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan record files from crashed sessions where SessionEnd never fired. Always exits 0. |
-| `SessionStart` | `scripts/a4_hook.py session-start` | Refresh UC `implemented_by:` reverse-links (write; emits `systemMessage` + `additionalContext` when UCs change), then run `validate_status_consistency.py` and inject workspace-wide mismatches as `additionalContext`. Non-blocking; silent on clean. |
+| `SessionStart` | `scripts/a4_hook.py session-start` | Run `validate_status_consistency.py` and inject workspace-wide mismatches as `additionalContext`. Non-blocking; silent on clean. |
 | `UserPromptSubmit` | `scripts/a4_hook.py user-prompt` | Match `#<id>` tokens in the prompt (`(?<![\w#])#(\d+)\b`); for each, glob `a4/{usecase,task,review,spec,idea}/<id>-*.md` and `a4/archive/**/<id>-*.md`; inject resolved paths as `additionalContext`. Skips ids already resolved this session via `a4-resolved-ids-<sid>.txt`. Non-blocking; silent on no match. |
 
 **Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` manually for a full workspace sweep. Status consistency, by contrast, always scans workspace-wide — cross-file by definition.
@@ -102,34 +101,34 @@ Four hook flows share the same events, dispatched through a single Python entry 
 ### Wiki vs. issues
 
 - **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, plan, bootstrap) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
-- **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels`, `milestone` in frontmatter — "what's open?" is answerable without reading prose.
+- **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
 - **Spike vs. feature vs. research task** — every task carries `kind: feature | spike | bug | research`. `feature` is the default (regular implementation work); `spike` is time-boxed exploration whose throwaway code lives at project-root `artifacts/task/spike/<id>-<slug>/` (outside `a4/`); `bug` is a defect fix; `research` is a written investigation whose body is the deliverable (sources consulted, findings, options). Any kind may opt in to an `artifacts/task/<kind>/<id>-<slug>/` sibling directory for byproducts that need to live alongside the task — see `plugins/a4/references/frontmatter-schema.md#task-artifacts-convention` for what each kind typically stores there. Closed spikes are archived by manual `git mv` to `artifacts/task/spike/archive/<id>-<slug>/`. Full rationale: `plugins/a4/spec/archive/2026-04-24-experiments-slot.decide.md`.
-- **Task kind = subfolder.** Task files live under `a4/task/<kind>/<id>-<slug>.md`, where `<kind>` matches the `kind:` frontmatter (one of `feature` / `bug` / `spike` / `research`). The kind subfolder is the path scope that lets the matching per-kind authoring rule (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`, `a4-task-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
+- **Task kind = subfolder.** Task files live under `a4/task/<kind>/<id>-<slug>.md`, where `<kind>` matches the `kind:` frontmatter (one of `feature` / `bug` / `spike` / `research`). The kind subfolder is the path scope that lets the matching per-kind authoring rule (`a4-task-feature-authoring.md`, `a4-task-bug-authoring.md`, `a4-task-spike-authoring.md`, `a4-task-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 ### Conventions
 
 - **Ids are globally monotonic integers** (GitHub issue semantics) — unique across all folders. Allocator: `scripts/allocate_id.py` computes `max(existing ids) + 1`.
 - **Filenames are `<id>-<slug>.md`.** Folder indicates type; no `uc-`/`task-`/`rev-`/`d-` prefix.
 - **Obsidian markdown throughout.** Body uses `[[wikilinks]]` and `![[embeds]]`; frontmatter paths are plain strings (no brackets, no extension) for dataview compatibility.
-- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `wiki_impact`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `implemented_by`, `children`, …) are computed by dataview.
+- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `children`, UC ↔ task, …) are computed on demand (dataview, `search.py`, roadmap surfaces).
 
 ### Wiki update protocol
 
 Wiki pages carry no lifecycle but are continuously updated. All edits flow through **review items** as the unified conduit:
 
 1. Modified sections carry sequential footnote markers (`[^1]`, `[^2]`, …) inline; a `## Changes` section at page bottom resolves each to `YYYY-MM-DD — [[causing-issue]]`.
-2. Three entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items with `wiki_impact` set; bulk-generation skills invoke `/a4:drift` as a final step.
-3. **Close guard** — a review item with non-empty `wiki_impact` warns on close if any referenced wiki page lacks a footnote pointing back to the causing issue (warning + override; user retains final say).
+2. Three entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items whose `target:` lists the affected wiki basenames; bulk-generation skills invoke `/a4:drift` as a final step.
+3. **Close guard** — a review item whose `target:` lists one or more wiki basenames warns on close if any referenced wiki page lacks a footnote pointing back to the review item itself (warning + override; user retains final say).
 
 ### Derived views
 
-Use Case Diagram, authorization matrix, open-issue lists, milestone progress — all **rendered from source on demand**, never hand-maintained. Obsidian dataview can render these directly inside the vault; the `workspace-assistant` agent (snapshot mode) renders a parallel plain-markdown view to stdout for sessions that aren't using Obsidian.
+Use Case Diagram, authorization matrix, open-issue lists, roadmap milestone narrative — all **rendered from source on demand**, never hand-maintained. Obsidian dataview can render these directly inside the vault; the `workspace-assistant` agent (snapshot mode) renders a parallel plain-markdown view to stdout for sessions that aren't using Obsidian.
 
 ### Workspace dashboard
 
-The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Drift alerts, Open reviews, Active tasks, Blocked items, Milestones, Recent activity, Open ideas, Open sparks. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
+The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Drift alerts, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open sparks. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
 
 ### Archive
 

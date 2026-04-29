@@ -17,13 +17,9 @@ id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
 status: draft | ready | implementing | revising | shipped | superseded | discarded | blocked
 actors: [<slug>, ...]    # actor slugs as defined in actors.md
-depends_on: []           # list of paths to other use cases
-spec: []                 # list of paths, e.g. [spec/8-caching-strategy]
 supersedes: []           # list of paths to prior UCs this one replaces
-implemented_by: []       # AUTO-MAINTAINED — do not hand-edit
 related: []              # catchall for cross-references
 labels: []               # free-form tags (incl. group slugs like screen-dashboard)
-milestone: <optional>    # milestone name (e.g., v1.0)
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -31,10 +27,10 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s `<roster>` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
-- `depends_on:` lists `usecase/<id>-<slug>` paths the UC needs first (lifecycle blocker). Reverse direction `blocks` is derived on demand.
-- `spec:` lists `spec/<id>-<slug>` paths that govern this UC.
+- UC-to-UC ordering is **not** carried in frontmatter (a4 v6.0.0). Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `<dependencies>` body prose with markdown links.
+- UC-to-spec ties are **not** carried in frontmatter (a4 v6.0.0). When a spec governs the UC, cite it from `<situation>` / `<validation>` / `<error-handling>` / `<dependencies>` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
 - `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
-- `implemented_by:` is **auto-maintained** by `../scripts/refresh_implemented_by.py` (back-scan of `task.implements:`). **Never hand-edit.** Used by the `ready → implementing` status gate.
+- The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `search.py` and roadmap surfaces — there is no stored UC field for it.
 - `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as markdown links in the body, not here.
 
 ### Lifecycle and writer ownership
@@ -67,8 +63,7 @@ Writer rules (UC-specific):
 - **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
 - **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
 - **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited, and the ready-gate re-approves `revising → ready`.
-- **`ready → implementing` requires `implemented_by:` non-empty.** The UC must have at least one task declaring `implements: [usecase/<this>]`.
-- **`implementing → shipped` requires every task in `implemented_by:` to be `complete`.** Enforced by `transition_status.py`.
+- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are complete; staging readiness and ship verdicts are author-driven (typically validated through `/a4:run` and roadmap surfaces, not the writer).
 - `shipped → superseded` is **automatic** — fires when a successor UC with `supersedes: [<this>]` reaches `shipped`. Do not flip by hand.
 
 ## Body shape
@@ -86,7 +81,7 @@ Writer rules (UC-specific):
 
 - `<validation>` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
 - `<error-handling>` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
-- `<dependencies>` — narrative on why this UC depends on others (prose backing the `depends_on:` frontmatter list).
+- `<dependencies>` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
 - `<change-logs>` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
 - `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — the first status flip writes the first entry. **Never write into `<log>` directly.**
 
@@ -108,7 +103,7 @@ When applying an in-situ wiki edit:
 2. Append a dated bullet to the page's `<change-logs>` section (creating the section if absent), with a markdown link to the causing UC.
 3. Bump the wiki page's `updated:` frontmatter to today.
 
-When deferring, open a review item with `kind: gap`, `source: self`, `target: <causing UC path>`, `wiki_impact: [<basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
+When deferring, open a review item with `kind: gap`, `source: self`, `target: [<causing UC path>, <affected wiki basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
 
 ## Splitting a UC — preserve traceability
 
@@ -118,20 +113,19 @@ When a UC turns out to be too large, the protocol is:
 2. Allocate new ids for each child UC.
 3. Write each child UC file at `status: draft`.
 4. Either delete the parent UC file, or keep it at `status: blocked` with `related: [<child paths>]` if the split history matters (the supersede chain is reserved for shipped predecessors).
-5. Update any UC that referenced the parent via `depends_on` or `related` to point at the appropriate child.
+5. Update any UC that referenced the parent via `related` (or in `<dependencies>` body prose) to point at the appropriate child.
 
 Splits do **not** flow through the supersede mechanism — supersession presumes the predecessor was at one point shipped.
 
 ## Common mistakes (UC-specific)
 
 - **Required section missing** (`<goal>`, `<situation>`, `<flow>`, `<expected-outcome>`).
-- **Hand-edited `implemented_by:`** → not a validator error per se, but the next `refresh_implemented_by.py` run silently overwrites the field. Never depend on hand-written values.
+- **Stray `implemented_by:` field** → the field was retired (a4 v6.0.0); the reverse view of `task.implements:` is now derived on demand. Validators ignore the field, but it should not be re-introduced.
 
 (Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (UC-specific)
 
-- **Don't hand-edit `implemented_by:`.** Auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
 - **Don't manually flip cascade-driven statuses.** UC `shipped` → predecessor's `superseded`, UC `discarded` → cascading task / review discards, UC `revising` → task `pending`-reset are all the writer's job.
 - **Don't write internal mechanics into the body.** Storage choices, service names, queue strategies, library calls — those live in `architecture.md` or specs. UC body stays at the user level.
 - **Don't author a UC for a routine framework-mandated behavior.** UCs describe user-visible interactions; if the only thing to say is "the framework does X," there is no UC there.

@@ -62,7 +62,7 @@ Frontmatter fields that reference other files (`depends_on`, `implements`, `targ
 - **Plain strings.** No brackets — `usecase/3-search-history`, not `[usecase/3-search-history]`. Plain strings keep frontmatter machine-parseable.
 - **No `.md` extension.** Spark brainstorm files keep the `.brainstorm` suffix because it is part of the filename base, not the extension — e.g., `spark/2026-04-23-2119-caching-strategy.brainstorm`.
 - **Folder-prefixed when cross-folder.** `usecase/3-search-history`, `task/5-render-markdown`, `review/6-missing-validation`, `spec/8-caching-strategy`, `spark/<base>`. Bare basename (`3-search-history`) resolves correctly because ids are globally unique, but folder-prefixed form is preferred for readability.
-- **Wiki targets use bare basename.** `wiki_impact: [architecture, domain]`, not `wiki_impact: [architecture.md]`.
+- **Wiki targets use bare basename.** A review item naming a wiki page writes `target: [architecture, domain]`, not `target: [architecture.md]`. Issue-folder paths and wiki basenames may be mixed in a single `target:` list.
 
 Body links use a different form — standard markdown `[text](relative/path.md)`. See `body-conventions.md`.
 
@@ -77,30 +77,21 @@ Empty lists may be written as `[]` or omitted entirely. Both are semantically eq
 
 ### Relationships
 
-The schema fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are normally **derived on demand** (grep, script back-scan) rather than stored.
-
-**Stored-reverse exception.** A reverse direction may be stored as a frontmatter field when a script owns writes for it and a concrete consumer benefits from frontmatter-direct access. The current case:
-
-- `usecase.implemented_by` — stored, auto-maintained by `scripts/refresh_implemented_by.py` (back-scan of `task.implements:`), consumed by the `usecase.ready → implementing` status gate in `transition_status.py` (which requires `implemented_by:` non-empty).
-
-Hand-editing stored-reverse fields is forbidden.
-
-Adding a new stored reverse link follows the same bar: a script must own writes, and there must be a concrete consumer (status gate, validator, hot query) that justifies bypassing derive-on-demand. Otherwise prefer derived.
+The schema fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are **derived on demand** (grep, script back-scan) rather than stored. There is currently no stored-reverse field; if a future need arises (a status gate, validator, or hot query that justifies bypassing derive-on-demand), a script must own writes for the field and the rationale must be documented here before the field is introduced.
 
 | Forward (stored) | Reverse | Storage |
 |------------------|---------|---------|
 | `depends_on` | `blocks` | derived |
-| `implements` | `implemented_by` | **stored — auto-maintained by `refresh_implemented_by.py`** |
+| `implements` | (UC → tasks) | derived |
 | `supersedes` | `superseded_by` | derived |
 | `parent` | `children` | derived |
-| `target` | (review backlinks) | derived |
-| `wiki_impact` | (wiki backlinks) | derived |
+| `target` | (review backlinks; wiki-page backlinks) | derived |
 | `promoted` | (spark → pipeline backlinks) | derived |
 | `related` | (symmetric; no reverse) | — |
 
 ### Unknown fields
 
-Unknown fields are **not errors**. The validator in lenient mode reports them as informational only. Skills may carry additional fields (e.g., `tags`, `labels`, `milestone`) per the per-type tables below; anything outside the known set is treated as extension metadata.
+Unknown fields are **not errors**. The validator in lenient mode reports them as informational only. Skills may carry additional fields (e.g., `tags`, `labels`) per the per-type tables below; anything outside the known set is treated as extension metadata.
 
 ### Status writers
 
@@ -119,11 +110,10 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 
 | Field | Applies to | Points at | Meaning |
 |-------|-----------|-----------|---------|
-| `depends_on` | issue | issue | Items that must complete before this one (lifecycle blocker) |
+| `depends_on` | task | task | Tasks that must complete before this one (lifecycle blocker) |
 | `implements` | task | usecase | Use cases delivered by this task |
-| `target` | review | any issue or wiki | What this review item is about |
-| `wiki_impact` | review, issue | wiki basename(s) | Wiki pages requiring update when this item resolves |
-| `spec` | any issue | spec | Specs that govern this item |
+| `target` | review | any issue path(s) and/or wiki basename(s) | What this review item is about and which wiki pages must record the resolution; mixed lists are allowed |
+| `spec` | task (`feature` / `bug` only) | spec | Specs that govern this task |
 | `supersedes` | spec, usecase | prior spec(s) / usecase(s) | This item replaces the referenced item(s) of the same family |
 | `promoted` | spark/brainstorm, idea | spec, usecase, task, spark/brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
 | `parent` | any issue | same-type issue | Parent in a decomposition hierarchy |
@@ -160,13 +150,9 @@ The `type` value must match the file basename (e.g., `type: architecture` requir
 | `title` | yes | string | human-readable |
 | `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `revising` \| `shipped` \| `superseded` \| `discarded` \| `blocked` |
 | `actors` | no | list of strings | actor names as defined in `actors.md` |
-| `depends_on` | no | list of paths | other use cases this UC needs first |
-| `spec` | no | list of paths | Specs governing this UC |
 | `supersedes` | no | list of paths | prior use cases this UC replaces (see §Status writers) |
-| `implemented_by` | no | list of paths | reverse link to tasks that implement this UC. **Auto-maintained** by `scripts/refresh_implemented_by.py` — never hand-write |
 | `related` | no | list of paths | catchall |
 | `labels` | no | list of strings | free-form tags |
-| `milestone` | no | string | milestone name (e.g., `v1.0`) |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
@@ -203,12 +189,11 @@ Notable rules:
 - **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
 - **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
 - **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited, and a re-approval ready-gate flips `revising → ready`.
-- **`ready → implementing` requires `implemented_by:` non-empty.** The UC must have at least one task declaring `implements: [usecase/<this>]`.
-- **`implementing → shipped` requires every task in `implemented_by:` to be `complete`.** `transition_status.py` enforces this.
+- **`ready → implementing` and `implementing → shipped` carry no mechanical task gate.** The writer flips `status:` regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are complete. Authors decide when a UC has enough work staged or has truly shipped; `/a4:run` and roadmap surfaces are the load-bearing checks, not the writer.
 
 ## Task (`a4/task/<kind>/<id>-<slug>.md`)
 
-Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, defect work, and investigation; lifecycle is identical across kinds. The kind subfolder (`feature/`, `bug/`, `spike/`, `research/`) is part of the file path. Reference forms in frontmatter (`implements`, `depends_on`, `target`, `implemented_by`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
+Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, defect work, and investigation; lifecycle is identical across kinds. The kind subfolder (`feature/`, `bug/`, `spike/`, `research/`) is part of the file path. Reference forms in frontmatter (`implements`, `depends_on`, `target`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -217,15 +202,14 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `title` | yes | string | human-readable |
 | `kind` | yes | enum | `feature` \| `spike` \| `bug` \| `research` |
 | `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
-| `implements` | no | list of paths | use cases delivered (typically empty for `spike` / `research`) |
+| `implements` | no | list of paths | use cases delivered. **Forbidden on `kind: spike`** (spikes are exploratory, never UC deliverables). Typically empty for `kind: research` as well. |
 | `depends_on` | no | list of paths | other tasks this one needs first |
-| `spec` | no | list of paths | Specs governing this task |
+| `spec` | no | list of paths | Specs governing this task. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research` (cite via body markdown links instead). |
 | `files` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `<files>` section, **not** in this frontmatter field. |
 | `mode` | conditional | enum | `comparative` \| `single` — required when `kind: research` |
 | `options` | conditional | list of strings | option names — required when `kind: research` and `mode: comparative` |
-| `cycle` | no | int | implementation cycle number |
+| `cycle` | no | int | implementation cycle number. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research`. |
 | `labels` | no | list of strings | free-form tags |
-| `milestone` | no | string | milestone name |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
@@ -323,16 +307,14 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 | `id` | yes | int | monotonic global integer |
 | `kind` | yes | enum | `finding` \| `gap` \| `question` |
 | `status` | yes | enum | `open` \| `in-progress` \| `resolved` \| `discarded` |
-| `target` | no | path | what this review is about (omit for cross-cutting) |
+| `target` | no | list of paths | issue paths (e.g., `usecase/3-search`) and/or wiki basenames (e.g., `architecture`) this review is about. May mix both. Empty list / omitted is allowed for cross-cutting items. |
 | `source` | yes | enum \| string | `self` \| `drift-detector` \| `<reviewer-agent-name>` (e.g., `usecase-reviewer-r2`) |
-| `wiki_impact` | no | list of wiki basenames | wiki pages needing update when this resolves |
 | `priority` | no | enum | `high` \| `medium` \| `low` |
 | `labels` | no | list of strings | free-form; drift-detector uses `drift:<kind>` and `drift-cause:<slug>` |
-| `milestone` | no | string | milestone name |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-**Close guard.** A review item with non-empty `wiki_impact` cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `<change-logs>` section with a markdown link to the causing issue (`target`). Enforcement is a warning with override — the drift detector re-surfaces violations.
+**Close guard.** When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `<change-logs>` section with a markdown link to the review item itself. Enforcement is a warning with override — the drift detector re-surfaces violations.
 
 ## Spec (`a4/spec/<id>-<slug>.md`)
 
@@ -350,7 +332,6 @@ The spec body is **prescriptive**: it captures the chosen shape that downstream 
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | spec title |
 | `status` | yes | enum | `draft` \| `active` \| `deprecated` \| `superseded` |
-| `decision` | no | string | one-line shape summary |
 | `supersedes` | no | list of paths | prior specs replaced |
 | `related` | no | list of paths | catchall (use this slot for soft cross-references including any informing research task) |
 | `labels` | no | list of strings | free-form tags |
@@ -407,7 +388,6 @@ Boundary with `review/`: **idea = independent possibility, captured raw; review 
 - `source` — ideas are effectively always `self`; no information content.
 - `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
 - `kind` — only one kind of idea (unlike `review/` which unifies finding/gap/question).
-- `milestone` — ideas are not scheduled.
 
 Body is largely free — only optional sections per the authoring contract. Quick-capture ideas are typically empty or just a short `<notes>` block; longer ideas may add `<why-this-matters>`.
 
@@ -495,7 +475,6 @@ Every rule violation is an error; the validator exits `2` on any violation and `
 | Value outside enum for a known field | error |
 | Path-reference format (brackets, `.md` extension) | error |
 | `type` on wiki page disagrees with filename | error |
-| `wiki_impact` entry not in the wiki-type enum | error |
 | Id collision across issue folders | error |
 | File in an issue/spark folder has no frontmatter | error |
 
@@ -508,7 +487,6 @@ Several enum values are semantically derived from cross-file state rather than b
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
 | `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
-| `usecase.implemented_by` | list of tasks | Tasks in `a4/task/*/*.md` (recursing through `feature/`/`bug/`/`spike/`/`research/`) carry `implements: [usecase/<this>]` | `refresh_implemented_by.py` (back-scan; invoked from task-authoring writers and from `scripts/a4_hook.py session-start`). Emits the bare `task/<id>-<slug>` form (no kind segment) so refs stay stable across kind moves. |
 | `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
 | `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
@@ -542,6 +520,5 @@ When these land, update this document **and** the validator simultaneously — t
 - **Id allocator:** `../scripts/allocate_id.py`.
 - **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal/in-progress/active classifications, kind enums. Imported by the writer, validators, workspace state, and search; the prose tables in this document mirror the same data.
 - **Status transition writer:** `../scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain).
-- **Implemented-by back-link refresher:** `../scripts/refresh_implemented_by.py` — back-scans `task.implements:` into `usecase.implemented_by:`.
 - **Drift detector (uses wiki / review schemas):** `../scripts/drift_detector.py`.
 - **Cross-file status consistency validator:** `../scripts/validate_status_consistency.py` — reports mismatches between `status:` and the cross-file state that should derive it (superseded, promoted, discarded cascade).

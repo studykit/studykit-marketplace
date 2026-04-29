@@ -1,6 +1,6 @@
 """Shared helpers for a4 scripts.
 
-Imported by sibling scripts (validators, refresh_implemented_by, ...) and
+Imported by sibling scripts (validators, transition_status, search, ...) and
 transitively by the hook dispatcher `a4_hook.py`. Contains pure,
 behavior-identical extractions of helpers that were previously duplicated
 across multiple scripts. Markdown parsing (frontmatter split, parsed

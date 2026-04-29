@@ -4,10 +4,7 @@ Skill-specific addendum on top of the shared iterate mechanics in `../../../docs
 
 ## Backlog filter
 
-Open review items where:
-
-- `target: architecture`, OR
-- `architecture` appears in `wiki_impact`.
+Open review items whose `target:` list contains `architecture`.
 
 ## Architecture-specific staleness signals
 

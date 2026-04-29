@@ -23,7 +23,7 @@ Every review criterion exists because failing it forces the developer to guess. 
 Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before writing review items:
 
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, id allocation, path-form, tag form, cross-stage feedback).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape (`kind:`, `target:`, `wiki_impact:`, `source:`, `priority:` fields and required body sections).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape (`kind:`, `target:`, `source:`, `priority:` fields and required body sections).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md` — what makes the architecture wiki "complete" (anchor stability, required body sections, change-logs discipline).
 
 ## What You Receive
@@ -158,9 +158,8 @@ id: <allocated id>
 title: "<short finding title>"
 kind: finding | gap | question
 status: open
-target: architecture
+target: [architecture]
 source: arch-reviewer
-wiki_impact: [architecture]
 priority: high | medium | low
 labels: [<optional, e.g. "coverage", "contract", "test-strategy">]
 created: <YYYY-MM-DD>
@@ -182,15 +181,15 @@ updated: <YYYY-MM-DD>
 </description>
 ```
 
-### Target / wiki_impact Mapping
+### Target Mapping
 
-| Finding category | `target` | `wiki_impact` |
-|------------------|----------|----------------|
-| Architecture section itself (stack, components, contracts, test strategy) | `architecture` | `[architecture]` |
-| Domain term conflict surfaced by arch | `architecture` | `[architecture, domain]` |
-| Actor mismatch surfaced by arch Information Flow | `architecture` | `[architecture, actors]` |
-| UC that's genuinely incomplete (not an arch gap) | `usecase/<id>-<slug>` | `[]` (invite usecase to revisit) |
-| NFR coverage gap | `architecture` | `[architecture, nfr]` |
+| Finding category | `target:` (list) |
+|------------------|------------------|
+| Architecture section itself (stack, components, contracts, test strategy) | `[architecture]` |
+| Domain term conflict surfaced by arch | `[architecture, domain]` |
+| Actor mismatch surfaced by arch Information Flow | `[architecture, actors]` |
+| UC that's genuinely incomplete (not an arch gap) | `[usecase/<id>-<slug>]` (invite usecase to revisit) |
+| NFR coverage gap | `[architecture, nfr]` |
 
 Prefer `kind: finding` for arch-coverage issues and `kind: gap` for "missing coverage area" complaints (e.g., missing test tier, missing NFR response).
 

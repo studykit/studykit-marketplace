@@ -60,13 +60,7 @@ If the task's `kind:` is `spike` and `<project-root>/artifacts/task/spike/<id>-<
 
 If the directory does not exist, skip this step silently.
 
-## D5. Reverse-link refresh
-
-`refresh_implemented_by.py` does **not** filter by status, so a discarded task with non-empty `implements:` will remain in its UCs' `implemented_by:` list. This is consistent with current behavior (the script back-scans the task tree as-is). Skip the script — `implements:` did not change.
-
-If the user later wants the discarded task removed from UC reverse links, that is a separate concern (either delete the task file outright via `git rm`, or filter discarded entries in a future revision of `refresh_implemented_by.py`).
-
-## D6. Report
+## D5. Report
 
 Tell the user:
 

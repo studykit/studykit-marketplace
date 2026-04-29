@@ -107,10 +107,8 @@ id: <allocated>
 title: <short title>
 status: draft
 actors: [<slug>, …]                        # must reference rows in actors.md
-depends_on: []                             # path form, e.g. usecase/1-share-summary
 related: []
 labels: [<optional>]
-milestone:                                 # omit in auto-usecase output
 created: <today>
 updated: <today>
 ---
@@ -181,7 +179,7 @@ Source attribution lives inline at the start of `<situation>` as a blockquote �
 ### 4. Relationships
 
 After composing the UC set, analyze:
-- **Dependencies** — populate `depends_on:` in each dependent UC's frontmatter.
+- **Dependencies** — capture cross-UC ordering as narrative in each dependent UC's `<dependencies>` body section, with markdown links (`[<title>](../usecase/<id>-<slug>.md)`). UC frontmatter does not carry an `depends_on:` field (a4 v6.0.0); implementation ordering is on tasks via `task.depends_on:`.
 - **Reinforcements / soft ties** — populate `related:` or leave as body markdown links.
 - **Groups** — use `labels:` with a shared group slug (e.g., `group:dashboard`).
 
@@ -218,9 +216,8 @@ id: <allocated>
 title: "<short question>"
 kind: question
 status: open
-target: <usecase/<id>-<slug> | context | null>
+target: [<usecase/<id>-<slug> and/or context — empty list for cross-cutting>]
 source: usecase-composer
-wiki_impact: []
 priority: medium | low
 labels: [autonomous-choice]
 created: <today>

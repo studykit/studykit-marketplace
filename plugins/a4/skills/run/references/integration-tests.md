@@ -17,9 +17,8 @@ a4/review/<id>-<slug>.md via allocate_id.py with:
 
   kind: finding
   status: open
-  target: <task/<id>-<slug> if the failure is traceable to a task; otherwise roadmap>
+  target: [<task/<id>-<slug> if the failure is traceable to a task; otherwise roadmap>]
   source: test-runner
-  wiki_impact: []
   priority: high | medium
   labels: [test-failure, cycle-<N>]
 

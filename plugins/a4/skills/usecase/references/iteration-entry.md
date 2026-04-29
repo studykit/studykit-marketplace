@@ -15,7 +15,7 @@ List the current state. Do **not** read every UC up front — read on demand.
 
 ## 2. Backlog (per the mechanics)
 
-Filter open review items to this stage's mailbox: `target: usecase/*` OR `target: context` OR `target: actors` OR `target: nfr` OR same in `wiki_impact`. Present as the priority backlog per [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md) §1–§2. The writer-call protocol for **pick → in-progress** and **resolve → resolved** is in §3 of that document.
+Filter open review items to this stage's mailbox: items whose `target:` list contains any of `usecase/*`, `context`, `actors`, `nfr`. Present as the priority backlog per [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md) §1–§2. The writer-call protocol for **pick → in-progress** and **resolve → resolved** is in §3 of that document.
 
 ### Revising-UC priority
 
@@ -49,9 +49,9 @@ Present a brief status:
 - **Resolve review items** — pick from the backlog; for each, read the target UC and wiki pages and walk through the resolution.
 - **Add new use cases** — resume the Discovery Loop. Each new UC gets a fresh id from the allocator.
 - **Refine actors** — edit `actors.md`; add footnote markers for changes.
-- **Split oversized UCs** — allocate new ids per child, write new UC files, adjust `depends_on` / `related` in other UCs that referenced the parent.
+- **Split oversized UCs** — allocate new ids per child, write new UC files, adjust `related` (and `<dependencies>` body links) in other UCs that referenced the parent.
 - **Extend the domain model** — handed off to `/a4:domain` (cross-cutting concept extraction is its own skill, not part of usecase).
-- **Re-analyze relationships** — update `depends_on` / `related` / `labels` across UC files.
+- **Re-analyze relationships** — update `related` / `labels` across UC files; cross-UC ordering goes into the `<dependencies>` body section.
 
 ## Usecase-specific iteration rules
 

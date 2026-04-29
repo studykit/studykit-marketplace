@@ -50,7 +50,7 @@ For each review item id in the input list:
 
 ### 1. Read the Review Item
 
-Read `a4/review/<id>-<slug>.md`. Extract `target`, `kind`, `wiki_impact`, and the Evidence + Suggestion sections.
+Read `a4/review/<id>-<slug>.md`. Extract `target` (list of issue paths and/or wiki basenames), `kind`, and the Evidence + Suggestion sections.
 
 If the item is already `status: resolved` or `status: discarded`, skip it.
 
@@ -59,11 +59,11 @@ If the item is already `status: resolved` or `status: discarded`, skip it.
 Follow the item's Suggestion. Typical patterns:
 
 - **UC quality issue (`target: usecase/<id>-<slug>`)** — edit the UC file per the Suggestion (tighten Situation, add Validation, rewrite a Flow step, etc.). Preserve the rest of the UC.
-- **SPLIT (UC too large)** — allocate ids for each child UC. Write new `a4/usecase/<child-id>-<slug>.md` files. Delete the parent UC file or retain it with `status: blocked`, `related: [<child paths>]`. Update any other UC's `depends_on:` / `related:` that pointed at the parent to point at the appropriate child.
+- **SPLIT (UC too large)** — allocate ids for each child UC. Write new `a4/usecase/<child-id>-<slug>.md` files. Delete the parent UC file or retain it with `status: blocked`, `related: [<child paths>]`. Update any other UC's `related:` (or `<dependencies>` body links) that pointed at the parent to point at the appropriate child.
 - **Actor issue (`target: actors`)** — edit `a4/actors.md`: add / correct rows, bump `updated:`.
-- **Domain model gap (`target: domain`, `wiki_impact: [domain]`)** — edit `a4/domain.md`: add glossary entries, extend relationships, update state diagrams.
+- **Domain model gap (`target:` includes `domain`)** — edit `a4/domain.md`: add glossary entries, extend relationships, update state diagrams.
 - **Completeness gap (`kind: gap`)** — compose the UC candidate suggested in the body. Allocate a UC id, write the UC file with a source-attribution blockquote inside `<situation>` like `> Source: implicit — from gap review item [review/<id>-<slug>](../review/<id>-<slug>.md)`. Do not create a new review item for the new UC.
-- **Cross-reference dead link (`kind: finding`, stale relationship)** — update the offending UC's `depends_on:` / `related:` to the correct target.
+- **Cross-reference dead link (`kind: finding`, stale relationship)** — update the offending UC's `related:` (or `<dependencies>` body links) to the correct target.
 
 **Wiki update protocol.** When any wiki page is edited in this pass:
 1. Append a dated bullet to the page's `<change-logs>` section: `- <today> — [<causing-issue>](<relative-path>.md)` — typically the UC the review item targets, or the review item itself for gap/question resolutions. Create the section if absent.

@@ -8,9 +8,8 @@ Single-pass scan over the a4/ workspace (wiki pages + issue folders +
 spark/), applying the requested filters and printing matching records.
 
 Reverse lookups are computed by back-scanning forward relation fields on
-every file. The stored-reverse field `implemented_by` is intentionally
-ignored so the result is always consistent with the forward edges, even
-when `refresh_implemented_by.py` is stale.
+every file — there is no stored-reverse field, so results are always
+consistent with the forward edges.
 
 Usage:
     uv run search.py <a4-dir> [filters...]
@@ -21,9 +20,6 @@ Examples:
     # All open review items
     uv run search.py <a4-dir> --folder review --status open
 
-    # Tasks of kind feature in milestone v1.0
-    uv run search.py <a4-dir> --folder task --kind feature --milestone v1.0
-
     # Everything that references usecase/3-search-history
     uv run search.py <a4-dir> --references usecase/3-search-history
 
@@ -32,7 +28,7 @@ Examples:
         --references-via implements
 
     # Reviews touching the architecture wiki, JSON output
-    uv run search.py <a4-dir> --folder review --wiki-impact architecture --json
+    uv run search.py <a4-dir> --folder review --target architecture --json
 
     # Custom frontmatter field — exact match (NAME=VALUE form)
     uv run search.py <a4-dir> --field source=drift-detector
@@ -89,7 +85,6 @@ FORWARD_FIELDS: tuple[str, ...] = (
     "implements",
     "spec",
     "target",
-    "wiki_impact",
     "supersedes",
     "promoted",
     "parent",
@@ -159,10 +154,6 @@ class Record:
         # Schema uses `labels:` on usecase/task/review/idea and
         # `tags:` on spec/spark. Treat them as one logical field.
         return _str_list(self.fm.get("labels")) + _str_list(self.fm.get("tags"))
-
-    @property
-    def milestone(self) -> str | None:
-        return _str(self.fm.get("milestone"))
 
 
 def _str(v: Any) -> str | None:
@@ -295,11 +286,9 @@ def filter_records(
     ids: list[int] | None,
     slug_substr: str | None,
     labels: list[str],
-    milestone: str | None,
     updated_since: date | None,
     updated_until: date | None,
     target: str | None,
-    wiki_impact: str | None,
     references: str | None,
     references_field: str | None,
     field_filters: list[tuple[str, str]],
@@ -321,8 +310,6 @@ def filter_records(
             rec_labels = set(r.labels)
             if not all(label in rec_labels for label in labels):
                 continue
-        if milestone and r.milestone != milestone:
-            continue
         if updated_since or updated_until:
             u = r.updated
             if not u:
@@ -337,19 +324,17 @@ def filter_records(
                 continue
         if target is not None:
             t_raw = r.fm.get("target")
-            t_norm = normalize_ref(t_raw) if isinstance(t_raw, str) else None
-            if t_norm is None:
-                continue
             target_bare = _bare_ref(target)
-            t_bare = _bare_ref(t_norm)
-            if t_norm != target and t_bare != target_bare:
-                continue
-        if wiki_impact is not None:
-            wi = r.fm.get("wiki_impact")
-            if not isinstance(wi, list):
-                continue
-            wi_norm = {normalize_ref(x) for x in wi if isinstance(x, str)}
-            if wiki_impact not in wi_norm:
+            entries: list[str] = []
+            if isinstance(t_raw, str):
+                entries.append(t_raw)
+            elif isinstance(t_raw, list):
+                entries.extend(x for x in t_raw if isinstance(x, str))
+            normalized = [normalize_ref(e) for e in entries]
+            normalized = [n for n in normalized if n]
+            if not any(
+                n == target or _bare_ref(n) == target_bare for n in normalized
+            ):
                 continue
         if references is not None:
             if not _matches_references(r, references, references_field):
@@ -392,7 +377,6 @@ PROJECTED_FIELDS: frozenset[str] = frozenset(
         "created",
         "labels",
         "tags",
-        "milestone",
     }
     | set(FORWARD_FIELDS)
 )
@@ -412,7 +396,6 @@ def render_json(records: list[Record]) -> str:
             "updated": r.updated,
             "created": r.created,
             "labels": r.labels,
-            "milestone": r.milestone,
             "archived": r.archived,
         }
         for fld in FORWARD_FIELDS:
@@ -536,10 +519,6 @@ def main() -> None:
         help="require this label/tag (repeat → AND across labels; matches both `labels:` and `tags:`)",
     )
     parser.add_argument(
-        "--milestone",
-        help="exact milestone-name match",
-    )
-    parser.add_argument(
         "--updated-since",
         help="only items with updated >= YYYY-MM-DD",
     )
@@ -549,11 +528,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--target",
-        help="match review.target against this reference",
-    )
-    parser.add_argument(
-        "--wiki-impact",
-        help="bare wiki basename present in wiki_impact (e.g. architecture)",
+        help="match review.target list against this reference (issue path or wiki basename)",
     )
     parser.add_argument(
         "--references",
@@ -631,7 +606,6 @@ def main() -> None:
         sys.exit(2)
 
     target = normalize_ref(args.target) if args.target else None
-    wiki_impact = normalize_ref(args.wiki_impact) if args.wiki_impact else None
     references = normalize_ref(args.references) if args.references else None
 
     include_archived = args.include_archived or (
@@ -648,11 +622,9 @@ def main() -> None:
         ids=list(args.id) or None,
         slug_substr=args.slug,
         labels=list(args.label),
-        milestone=args.milestone,
         updated_since=updated_since,
         updated_until=updated_until,
         target=target,
-        wiki_impact=wiki_impact,
         references=references,
         references_field=args.references_via,
         field_filters=field_filters,

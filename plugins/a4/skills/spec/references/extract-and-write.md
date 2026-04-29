@@ -7,7 +7,7 @@ Two input modes:
 - **No argument.** Read recent conversation context. Identify the converged shape — what artifact it describes, the prescriptive rules, and any decisions explaining why the shape landed this way. If no clear shape emerged, ask the user which one to record.
 - **Short summary / title.** Use `$ARGUMENTS` as a seed; still draw the full content from recent conversation.
 
-Draft a scratch summary covering the fields and sections defined in `../../../references/spec-authoring.md` (`title`, `decision` one-liner, required `<context>` + `<specification>`, optional sections only when the conversation produced content for them, candidate `supersedes:` if the conversation referenced a predecessor). Do **not** emit placeholder sections.
+Draft a scratch summary covering the fields and sections defined in `../../../references/spec-authoring.md` (`title`, the chosen-shape one-liner that will land in `<context>` and the first `<decision-log>` entry, required `<context>` + `<specification>`, optional sections only when the conversation produced content for them, candidate `supersedes:` if the conversation referenced a predecessor). Do **not** emit placeholder sections.
 
 Present the draft to the user before proceeding. Iterate until the substance is confirmed.
 
@@ -48,7 +48,7 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
 3. File path: `<project-root>/a4/spec/<id>-<slug>.md`.
 
-4. Use the `Write` tool. Frontmatter shape, required body sections (`<context>`, `<specification>`), optional sections (`<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`), and tag-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`; `decision:` is the one-liner that Step 6 will quote in the activate transition. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [task/42-grpc-streaming]`), and add inline `[task/<id>-<slug>](../task/research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `<decision-log>` or `<rejected-alternatives>`).
+4. Use the `Write` tool. Frontmatter shape, required body sections (`<context>`, `<specification>`), optional sections (`<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`), and tag-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `<context>` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [task/42-grpc-streaming]`), and add inline `[task/<id>-<slug>](../task/research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `<decision-log>` or `<rejected-alternatives>`).
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
 

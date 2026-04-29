@@ -19,7 +19,7 @@ For each confirmed update:
 
 If the user defers the update, open a review item instead:
 
-1. Allocate id, write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: self`, `target: <causing issue path>`, and `wiki_impact: [<affected wiki basenames>]`.
+1. Allocate id, write `a4/review/<id>-<slug>.md` with `kind: gap`, `status: open`, `source: self`, `target: [<causing issue path>, <affected wiki basenames>]`.
 2. The wiki close guard (run at session close and by drift detection) surfaces the unresolved impact later.
 
 ## Skip rule

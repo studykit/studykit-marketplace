@@ -48,7 +48,7 @@ Read the task file first, then bootstrap.md's `<verify>` section (Verified Comma
    The script enforces:
    - Current status must be `ready`. If it is `draft`, **refuse to start** — return failure with the UC reference and instruct the user to finalize via `/a4:usecase` (ready-gate). The script reports this as an illegal-transition error; surface it in `issues:`.
    - `implementing`, `shipped`, `superseded`, `revising`, `discarded`, `blocked` → the script reports already-at-target or illegal. Do not force, do not continue on that UC.
-   - Mechanical validation (`implemented_by:` non-empty, `actors:` non-empty, no placeholders in `title:`). If validation fails, return failure surfacing the reported issues. Do **not** pass `--force`.
+   - The writer enforces no mechanical task gate on `ready → implementing` (a4 v6.0.0). Confirm before flipping that the current task you are about to start declares `implements: [usecase/<this>]` — the agent owns this check, not the writer.
 
    Do this **before** beginning implementation so the workspace reflects active work.
 

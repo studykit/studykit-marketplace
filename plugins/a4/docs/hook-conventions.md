@@ -36,10 +36,10 @@ Typical markers:
 - Must always be internally consistent, regardless of which session (if
   any) is active.
 
-Example: `a4/usecase/*.md` frontmatter field `implemented_by:` — a property
-of the UC document that must be kept correct relative to `a4/task/*/*.md`
-`implements:` reverse-links (the back-scan recurses through `feature/`,
-`bug/`, `spike/` subfolders).
+Example: spec `supersedes:` chains in `a4/spec/*.md` — when a successor
+spec reaches `active`, every predecessor it lists must end up at
+`superseded`. The chain must remain consistent regardless of which
+session (if any) was active when the successor was authored.
 
 ### Discriminator
 
@@ -76,14 +76,15 @@ invariant) does NOT need a SessionEnd/Stop counterpart. Instead it MUST be
 **idempotent**: re-running on the post-run state yields no further changes.
 
 Why no counterpart: the write is not a session effect to be undone. The
-invariant it restores (e.g., `implemented_by:` ↔ `implements:` consistency)
-must hold regardless of whether any session is active. Undoing it at
-SessionEnd would actively break the invariant.
+invariant it restores must hold regardless of whether any session is
+active. Undoing it at SessionEnd would actively break the invariant.
 
-Example: `refresh_implemented_by.py` rewrites `a4/usecase/*.md` frontmatter
-`implemented_by:` during SessionStart. It is idempotent — a second run on
-the same workspace produces no further changes. No SessionEnd counterpart
-exists or is needed.
+Example: `transition_status.py --sweep` recovers spec / UC supersedes
+chains. It is idempotent — a second run on the same workspace produces
+no further changes. No SessionEnd counterpart exists or is needed. (The
+historical `refresh_implemented_by.py` SessionStart writer fit this
+shape too; it was retired in a4 v6.0.0 along with the
+`usecase.implemented_by:` field.)
 
 ---
 
@@ -209,9 +210,11 @@ hook's JSON payload:
 ### Usage rule
 
 - **Both channels together** when a hook affects workspace state the user
-  should be aware of (e.g., the SessionStart `refresh-implemented-by`
-  hook: `systemMessage = "refreshed implemented_by on N UC(s)"`,
-  `additionalContext` = per-UC diff).
+  should be aware of (e.g., a SessionStart workspace reconciliation that
+  rewrote frontmatter: `systemMessage = "<short summary>"`,
+  `additionalContext` = per-file diff). No such hook is currently active
+  — the original `refresh-implemented-by` example was retired in a4
+  v6.0.0.
 - **`additionalContext` only** for informational reports where no
   user-visible notice is warranted (e.g., the PostToolUse status-
   consistency report — inline context for the LLM, no pop-up needed).

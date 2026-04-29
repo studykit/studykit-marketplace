@@ -113,7 +113,7 @@ Update a wiki page when an issue change affects its content:
 - **New UC, actor, or concept** — the affected wiki page (typically `actors.md`, `domain.md`, `context.md`) needs a section entry.
 - **UC refinement** — may change framing in `context.md` or a concept definition in `domain.md`.
 - **Architectural decision or component revision** — updates `architecture.md` (and occasionally `domain.md` when terminology shifts).
-- **Resolved review item with non-empty `wiki_impact:`** — triggers the close guard below.
+- **Resolved review item whose `target:` list contains a wiki basename** — triggers the close guard below.
 
 Skip: typo fixes, metadata-only tweaks, internal notes that don't change semantics.
 
@@ -133,13 +133,12 @@ If the user chooses not to update the wiki page immediately, open a review item 
    - `kind: gap`
    - `status: open`
    - `source: self`
-   - `target: <causing-issue-path>`
-   - `wiki_impact: [<affected wiki basenames>]`
+   - `target: [<causing-issue-path>, <affected wiki basenames>]`
 3. The wiki close guard (at session close) and drift detection (between sessions) re-surface the unresolved impact.
 
 ### Close guard
 
-Before a session ends, for each review item that transitioned to `status: resolved` with non-empty `wiki_impact`, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the causing issue. Warn + allow override when missing. The drift detector at `../scripts/drift_detector.py` re-surfaces violations between sessions.
+Before a session ends, for each review item that transitioned to `status: resolved` whose `target:` list contains one or more wiki basenames, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the review item itself. Warn + allow override when missing. The drift detector at `../scripts/drift_detector.py` re-surfaces violations between sessions.
 
 ## Bumping `updated:`
 
@@ -152,5 +151,5 @@ Before a session ends, for each review item that transitioned to `status: resolv
 - `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting required vs optional sections per type (no runtime validator consumes them).
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
-- `../scripts/drift_detector.py` — reads `wiki_impact` to surface unresolved `<change-logs>` and close-guard violations.
+- `../scripts/drift_detector.py` — scans `target:` for wiki basenames to surface unresolved `<change-logs>` and close-guard violations.
 - `../scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums).

@@ -25,7 +25,7 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 
 - `<plan>` — the entire roadmap content lives in this single section, organized internally with H3+ headings:
   - **Milestone narrative.** What each milestone delivers, in user terms (links to the UCs it ships).
-  - **Dependency graph.** Which milestones depend on which (mermaid or table form). Reflects UC `depends_on:` and architecture Shared Integration Points.
+  - **Dependency graph.** Which milestones depend on which (mermaid or table form). Derived from each UC's `<dependencies>` body narrative, `task.depends_on:` chains, and architecture Shared Integration Points.
   - **Shared Integration Points.** Architecture interfaces that multiple milestones touch — typically named with markdown links into `architecture.md` `<components>`.
   - **Launch & Verify pointer.** A one-line link pointing at `bootstrap.md` (`See [bootstrap](bootstrap.md) for environment setup, build commands, and the verified smoke test.`). **No Launch & Verify content lives here** — `bootstrap.md` is the single source of truth.
 
@@ -50,7 +50,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 </change-logs>
 ```
 
-Create the section if absent. The wiki close guard surfaces missing bullets when a review item with `wiki_impact: [roadmap]` transitions to `resolved`.
+Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `roadmap` transitions to `resolved`.
 
 ## Common mistakes
 

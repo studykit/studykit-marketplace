@@ -62,7 +62,7 @@ Check project structure, conventions, test setup, build configuration. File path
 
 ### Step 3: Generate roadmap + tasks
 
-Procedure: `references/generate.md`. Covers implementation strategy selection, milestones, per-task derivation, shared integration points, file writing, and the `refresh_implemented_by.py` reverse-link refresh.
+Procedure: `references/generate.md`. Covers implementation strategy selection, milestones, per-task derivation, shared integration points, and file writing.
 
 ### Step 4: Roadmap verification
 
@@ -96,7 +96,7 @@ When the user ends the roadmap-authoring session:
 ## Non-Goals
 
 - Do not split the roadmap into per-milestone files. `roadmap.md` holds all milestone narrative in one file.
-- Do not add a `phase:` frontmatter field to tasks. `milestone:` covers phase semantics.
+- Do not add a `phase:` or `milestone:` frontmatter field to tasks (a4 v6.0.0 retired `milestone:` from issue frontmatter). Milestone grouping lives in `roadmap.md`'s `<plan>` narrative.
 - Do not maintain a separate `roadmap.history.md`.
 - Do not emit aggregated roadmap-review reports. All findings are per-review-item files.
 - Do not track per-source SHAs on `roadmap.md`.

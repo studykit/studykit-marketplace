@@ -9,8 +9,7 @@ report:
 
     validate_frontmatter           YAML schema, enum values, field types,
                                     path-reference format, wiki `type:`
-                                    matches filename, `wiki_impact`
-                                    targets, id uniqueness.
+                                    matches filename, id uniqueness.
     validate_status_consistency    cross-file derived status
                                     (`superseded`, `promoted`, cascaded
                                     `discarded`). Workspace-only; skipped

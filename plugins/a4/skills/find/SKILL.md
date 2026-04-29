@@ -1,6 +1,6 @@
 ---
 name: find
-description: "This skill should be used when the user wants to search, list, or query individual items in the a4/ workspace by frontmatter — for example: open review items, tasks for a specific milestone, everything that references a given use case, items touching the architecture wiki, items with a custom frontmatter field, or items updated since a date. Triggers: 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', 'what touches the X wiki', 'find by tag', 'find by label', 'find by milestone', 'items with field X', 'items updated since'. Translates the user's natural-language query into a single `scripts/search.py` invocation and surfaces the result. Reverse lookups (e.g. tasks implementing a UC, items depending on something) are computed by forward-field back-scan so results are always consistent even when stored-reverse fields are stale. Does NOT search body text — frontmatter only. ROUTING: for body grep, use Grep directly. For workspace-wide aggregate state (counts, sections, milestone progress, recent activity), delegate to the `workspace-assistant` agent (snapshot mode). For 'what should I do next' or pipeline navigation, use `/a4:compass` instead."
+description: "This skill should be used when the user wants to search, list, or query individual items in the a4/ workspace by frontmatter — for example: open review items, tasks of a given kind, everything that references a given use case, items touching the architecture wiki, items with a custom frontmatter field, or items updated since a date. Triggers: 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', 'what touches the X wiki', 'find by tag', 'find by label', 'items with field X', 'items updated since'. Translates the user's natural-language query into a single `scripts/search.py` invocation and surfaces the result. Reverse lookups (e.g. tasks implementing a UC, items depending on something) are computed by forward-field back-scan so results are always consistent even when stored-reverse fields are stale. Does NOT search body text — frontmatter only. ROUTING: for body grep, use Grep directly. For workspace-wide aggregate state (counts, sections, recent activity), delegate to the `workspace-assistant` agent (snapshot mode). For 'what should I do next' or pipeline navigation, use `/a4:compass` instead."
 argument-hint: <natural-language query, or raw search.py flags>
 disable-model-invocation: true
 context: fork
@@ -34,11 +34,9 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 | `--id <int>` | numeric id |
 | `--slug <substr>` | case-sensitive substring on filename stem |
 | `--label <value>` | matches both `labels:` and `tags:` |
-| `--milestone <name>` | exact milestone-name match |
 | `--updated-since YYYY-MM-DD` / `--updated-until YYYY-MM-DD` | date-range filter on `updated:` |
-| `--target <ref>` | review.target equals this |
-| `--wiki-impact <basename>` | bare wiki basename present in `wiki_impact` |
-| `--references <ref>` | back-scan all forward relation fields (`depends_on`, `implements`, `spec`, `target`, `wiki_impact`, `supersedes`, `promoted`, `parent`, `related`, `research`) for items pointing at `<ref>` |
+| `--target <ref>` | match review.target list against this reference (issue path or wiki basename) |
+| `--references <ref>` | back-scan all forward relation fields (`depends_on`, `implements`, `spec`, `target`, `supersedes`, `promoted`, `parent`, `related`, `research`) for items pointing at `<ref>` |
 | `--references-via <field>` | restrict `--references` to a single forward field |
 | `--field NAME=VALUE` | exact match on any frontmatter field, including custom/unknown ones; for list values, any element matches |
 | `--has-field NAME` | require a frontmatter field to be present and non-null |
@@ -48,10 +46,9 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 **Translation guide for natural-language queries:**
 
 - "open reviews" → `--folder review --status open`
-- "tasks for v1.0" → `--folder task --milestone v1.0`
 - "what implements usecase/3-search-history" → `--references usecase/3-search-history --references-via implements`
 - "what references usecase/3" or "what depends on it" → `--references usecase/3-...` (omit `--references-via` for any-direction back-scan)
-- "reviews touching the architecture wiki" → `--folder review --wiki-impact architecture`
+- "reviews touching the architecture wiki" → `--folder review --target architecture`
 - "items tagged perf" → `--label perf`
 - "items updated since 2026-04-01" → `--updated-since 2026-04-01`
 - "items with custom field source set to drift-detector" → `--field source=drift-detector`
@@ -81,5 +78,5 @@ If the result is `(no matches)`, optionally suggest a relaxed query (e.g. drop a
 
 - This skill is read-only. It never writes a file or mutates frontmatter.
 - Body text is **not** searched. Use `Grep` directly for body grep.
-- Reverse lookups always recompute from forward fields; the stored-reverse field `implemented_by` is intentionally ignored so results stay consistent even when `refresh_implemented_by.py` has not run.
-- For workspace-wide aggregate state (counts, drift alerts, blocked items, milestone progress), delegate to the `workspace-assistant` agent (snapshot mode).
+- Reverse lookups always recompute from forward fields; there is no stored-reverse field, so results are always consistent with current state.
+- For workspace-wide aggregate state (counts, drift alerts, blocked items, recent activity), delegate to the `workspace-assistant` agent (snapshot mode).

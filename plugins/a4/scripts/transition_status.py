@@ -12,7 +12,8 @@ the desired new status. The script:
   2. Checks the current → new transition is legal per the family's
      transition table.
   3. Runs mechanical validation for that specific transition (e.g.,
-     `implemented_by:` non-empty for `ready → implementing`).
+     `actors:` non-empty and `title:` placeholder check for
+     `revising → ready` re-approval).
   4. Writes `status:` and `updated:` in the frontmatter, appends a
      `## Log` entry describing the transition.
   5. Runs cascades — cross-file status changes that are semantically
@@ -299,14 +300,8 @@ def validate_transition(
     """
     issues: list[str] = []
     if family == "usecase":
-        if from_status == "ready" and to_status == "implementing":
-            _validate_ready_to_implementing(a4_dir, rel_path, fm, issues)
-            return issues
         if from_status == "revising" and to_status == "ready":
             _validate_revising_to_ready(a4_dir, rel_path, fm, issues)
-            return issues
-        if from_status == "implementing" and to_status == "shipped":
-            _validate_implementing_to_shipped(a4_dir, rel_path, fm, issues)
             return issues
         return issues
     if family == "spec":
@@ -317,32 +312,10 @@ def validate_transition(
     return issues
 
 
-def _validate_ready_to_implementing(
-    a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
-) -> None:
-    implemented_by = fm.get("implemented_by")
-    if not _is_non_empty_list(implemented_by):
-        issues.append(
-            "`implemented_by:` is empty — no task file declares "
-            "`implements: [usecase/<this>]`. Run `/a4:roadmap` to create tasks "
-            "before flipping to `implementing`."
-        )
-    actors = fm.get("actors")
-    if not _is_non_empty_list(actors):
-        issues.append("`actors:` is empty — UC has no actors declared.")
-    for field_name in ("title",):
-        placeholder = _placeholder_in(fm.get(field_name))
-        if placeholder:
-            issues.append(
-                f"`{field_name}:` contains placeholder `{placeholder}`."
-            )
-
-
 def _validate_revising_to_ready(
     a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
 ) -> None:
-    # Same shape checks as ready→implementing, since revising→ready is a
-    # re-approval after spec edit.
+    # Re-approval shape checks after a `revising` spec edit.
     actors = fm.get("actors")
     if not _is_non_empty_list(actors):
         issues.append("`actors:` is empty — UC has no actors declared.")
@@ -352,34 +325,6 @@ def _validate_revising_to_ready(
             issues.append(
                 f"`{field_name}:` contains placeholder `{placeholder}`."
             )
-
-
-def _validate_implementing_to_shipped(
-    a4_dir: Path, uc_rel: str, fm: dict, issues: list[str]
-) -> None:
-    uc_ref = uc_rel.removesuffix(".md")
-    tasks = find_tasks_implementing(a4_dir, uc_ref)
-    if not tasks:
-        issues.append(
-            f"no tasks in a4/task/ declare `implements: [{uc_ref}]`. "
-            "Cannot ship without implemented tasks."
-        )
-        return
-    incomplete: list[str] = []
-    for t in tasks:
-        fmt, _, _ = _parse(t)
-        if fmt is None:
-            incomplete.append(
-                f"task/{t.stem} (unreadable frontmatter)"
-            )
-            continue
-        status = fmt.get("status")
-        if status != "complete":
-            incomplete.append(f"task/{t.stem} (status={status!r})")
-    if incomplete:
-        issues.append(
-            "not all tasks are `complete`: " + ", ".join(incomplete)
-        )
 
 
 def _validate_draft_to_active(

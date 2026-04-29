@@ -22,7 +22,6 @@ related: []            # catchall for cross-references
 files: []              # artifact paths under artifacts/task/bug/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
-milestone: <optional>  # milestone name
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -35,7 +34,7 @@ updated: YYYY-MM-DD
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.
 - `files:` is artifact-only — paths must point under `artifacts/task/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `<files>` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
-- `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
+- `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### Lifecycle and writer ownership
 
@@ -129,7 +128,7 @@ Cross-kind conventions for the artifact directory — what to keep vs. drop, own
 
 ## Don't (bug-task-specific)
 
-- **Don't put `implemented_by:` on a task.** It is a UC reverse-link, auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
+- **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a task stays enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded` is the writer's job.

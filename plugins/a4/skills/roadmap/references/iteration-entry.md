@@ -4,11 +4,7 @@ Skill-specific addendum on top of `../../../docs/iterate-mechanics.md`. Read tha
 
 ## Backlog filter
 
-Open review items where:
-
-- `target: roadmap`, OR
-- `target: task/*`, OR
-- the same in `wiki_impact`.
+Open review items whose `target:` list contains `roadmap` or any `task/*` path.
 
 ## Roadmap-specific work between writer calls
 

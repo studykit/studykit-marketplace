@@ -22,15 +22,15 @@ Stage-specific **work** — the impact rules, drift checks, cycle counters, scop
 
 ## 1. Filter the backlog
 
-A review item belongs to a given iterate flow when its `target:` (or its `wiki_impact:`) names that stage's wiki page or issue type. Typical filter expressions per stage:
+A review item belongs to a given iterate flow when any entry in its `target:` list names that stage's wiki page or issue type. Typical filter expressions per stage:
 
 | Stage | Filter |
 |---|---|
-| usecase iterate | `target: usecase/*` OR `target: context` OR `target: actors` OR `target: nfr` OR same in `wiki_impact` |
-| domain iterate | `target: domain` OR `domain` in `wiki_impact` |
-| arch iterate | `target: architecture` OR `architecture` in `wiki_impact` |
-| roadmap iterate | `target: roadmap` OR `target: task/*` OR same in `wiki_impact` |
-| run iterate | `target: task/*` OR `target: roadmap` (typically from prior cycle's test-runner) |
+| usecase iterate | `target` contains any of `usecase/*`, `context`, `actors`, `nfr` |
+| domain iterate | `target` contains `domain` |
+| arch iterate | `target` contains `architecture` |
+| roadmap iterate | `target` contains `roadmap` or `task/*` |
+| run iterate | `target` contains `task/*` or `roadmap` (typically from prior cycle's test-runner) |
 
 Always restrict to `status: open` (and `in-progress` for resume cases). Exclude `resolved` and `discarded`.
 
@@ -90,7 +90,7 @@ The writer writes `status:`, bumps `updated:`, and appends a `<log>` entry. Do n
 When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `roadmap.md`, `bootstrap.md`):
 
 - Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
-- The wiki close guard warns at resolve-time when `wiki_impact:` is non-empty but the referenced page lacks a `<change-logs>` bullet pointing at the causing issue.
+- The wiki close guard warns at resolve-time when `target:` lists wiki basenames but the referenced page lacks a `<change-logs>` bullet pointing at the review item.
 
 Full `<change-logs>` formatting rules: [`body-conventions.md`](./body-conventions.md).
 
@@ -100,4 +100,4 @@ Full `<change-logs>` formatting rules: [`body-conventions.md`](./body-convention
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.
-- **Preserve cross-references.** When renaming or splitting, update `depends_on:`, `related:`, `target:`, `wiki_impact:` consistently across affected files (validators check this).
+- **Preserve cross-references.** When renaming or splitting, update `depends_on:`, `related:`, `target:` (the list now subsumes the old `wiki_impact:` semantics) consistently across affected files (validators check this).

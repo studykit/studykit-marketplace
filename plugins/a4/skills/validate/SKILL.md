@@ -10,7 +10,7 @@ allowed-tools: Bash, Read
 
 Runs two category validators against `<project-root>/a4/` through a single aggregator `validate.py`:
 
-- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, `wiki_impact` names a known wiki type, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
+- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
 - **status consistency** — cross-file status consistency. Flags specs where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Workspace-only — skipped in single-file mode. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
 
 Body shape (section tags, required vs optional sections, blank-line discipline) is documented in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` and the per-type authoring contracts under `${CLAUDE_PLUGIN_ROOT}/references/`. There is no runtime body validator — the per-type reference schemas under `${CLAUDE_PLUGIN_ROOT}/scripts/body_schemas/` are reference material only.

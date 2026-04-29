@@ -18,12 +18,10 @@ type: review
 id: <int — globally monotonic across the workspace>
 kind: finding | gap | question
 status: open | in-progress | resolved | discarded
-target: <path>            # what this review is about; omit for cross-cutting
+target: []                # issue paths and/or wiki basenames; empty for cross-cutting
 source: self | drift-detector | <reviewer-agent-name>
-wiki_impact: []           # list of wiki basenames needing update on resolve
 priority: high | medium | low
 labels: []                # free-form; drift uses drift:<kind>, drift-cause:<slug>
-milestone: <optional>
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -34,17 +32,16 @@ updated: YYYY-MM-DD
   - `finding` body explains what is wrong and where.
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
-- `target:` points at the artifact this review is about. Accepts any issue path (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `spec/<id>-<slug>`) or a wiki basename (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). **Omit `target:` entirely when the concern is cross-cutting** — do not invent a placeholder.
+- `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
 - `source:` records who emitted the item. The validator currently accepts any string, but the conventional set is `self`, `drift-detector`, and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
-- `wiki_impact:` lists **wiki basenames** (no `.md`, no folder prefix) whose `<change-logs>` must record the resolution. Used by the close guard at resolve-time. Empty list when no wiki page is affected.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low). Drift items at `priority: high` lead.
 - `labels:` are free-form. The drift detector reserves `drift`, `drift:<kind>`, and `drift-cause:<slug>` for dedup; do not reuse these prefixes for unrelated tags.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
 - Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; the writer bumps it on status flips.
 
-### Cascade — `target: usecase/X` discarded chain
+### Cascade — `target:` includes a UC that flips to `discarded`
 
-When a UC at `target:` flips to `discarded`, **every open review item** with that `target:` automatically cascades to `discarded` via `../scripts/transition_status.py`. Do not flip these by hand. The cascade does not apply to `target: <wiki>` (wiki pages have no `discarded` state) or `target: task/...` (task discards are independent).
+When a UC referenced inside a review's `target:` list flips to `discarded`, **every open review item** containing that UC path automatically cascades to `discarded` via `../scripts/transition_status.py`. Do not flip these by hand. Wiki basenames in `target:` do not participate (wiki pages have no `discarded` state); task paths inside `target:` are independent (task discards do not cascade reviews).
 
 ### Lifecycle and writer ownership
 
@@ -57,9 +54,9 @@ discarded   → (terminal)
 
 Per-status meaning:
 
-- `open` — Item is in the inbox. Default initial status. Picked up by the iterate flow whose filter matches `target:` / `wiki_impact:`.
+- `open` — Item is in the inbox. Default initial status. Picked up by the iterate flow whose filter matches an entry in `target:`.
 - `in-progress` — Item selected from the iterate backlog. Active resolution.
-- `resolved` — Fix landed. The artifact named in `target:` (and any wiki page in `wiki_impact:`) reflects the resolution. Terminal.
+- `resolved` — Fix landed. Every artifact named in `target:` (issue paths and any wiki basenames) reflects the resolution. Terminal.
 - `discarded` — No longer applicable (e.g., the underlying UC was discarded, the finding was re-evaluated as not-a-bug, the question was overtaken by events). Terminal.
 
 Writer rules:
@@ -68,11 +65,11 @@ Writer rules:
 - All status changes after the initial create flow through `../scripts/transition_status.py`. Never write `status:` directly post-create.
 - `open → in-progress` is the iterate-flow's "user picked this item" flip; `in-progress → resolved` (or `→ discarded`) closes it.
 - `open → discarded` is allowed for items that are dismissed without being picked (e.g., obvious duplicate, inapplicable on second look).
-- The drift detector **dedups** against open / in-progress / discarded items with matching `(kind, target, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).
+- The drift detector **dedups** against open / in-progress / discarded items with matching `(kind, target-wiki, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).
 
-### Close guard — `wiki_impact:` must be honored on resolve
+### Close guard — wiki entries in `target:` must be honored on resolve
 
-A review item with **non-empty `wiki_impact:`** cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `<change-logs>` section with a markdown link to the causing issue (the review's `target:`, when present, or the review item itself). Enforcement is a **warning with override** — `transition_status.py` proceeds, but the drift detector re-surfaces violations as fresh `close-guard` review items.
+When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `<change-logs>` section with a markdown link to the review item itself. Enforcement is a **warning with override** — `transition_status.py` proceeds, but the drift detector re-surfaces violations as fresh `close-guard` review items.
 
 When resolving, append the bullet to each affected wiki:
 
@@ -116,14 +113,14 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - **Inline or attribute-bearing tags**. Open and close lines must be on column 0; no attributes; no self-closing.
 - **Same-tag nesting**. Sections do not nest; every section sits at the body's top level.
 - **H1 in body**.
-- **`wiki_impact:` entry not in the wiki-type enum** → frontmatter validator error. Use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`).
+- **Wiki basenames in `target:` written with `.md` or a folder prefix** → use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`). The validator's path-format check already catches the `.md` suffix.
 
 ## Don't
 
 - **Don't hand-edit `status:`.** Use `transition_status.py` (typically via the iterate flow that owns the item's `target:`).
 - **Don't hand-edit `<log>`.** Writer-owned. Every entry comes from `transition_status.py`.
 - **Don't delete a review item file.** `discarded` is the writer-managed terminal state. Deleting orphans the cascade bookkeeping and breaks drift dedup.
-- **Don't invent placeholder `target:` values.** When the concern is cross-cutting, omit `target:` entirely.
+- **Don't invent placeholder `target:` values.** When the concern is cross-cutting, leave `target:` empty (`[]` or omit the field).
 - **Don't hand-flip the discarded cascade.** When a UC flips to `discarded`, the writer cascades open review items pointing at it.
 - **Don't reuse `drift`, `drift:<kind>`, `drift-cause:<slug>` labels** for non-drift items. Those prefixes are reserved for the drift detector's dedup fingerprint.
 - **Don't pack multiple findings / gaps / questions into one review item.** Re-emit one per concern; iterate flows process items individually.

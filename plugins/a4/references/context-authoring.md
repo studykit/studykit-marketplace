@@ -48,7 +48,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 </change-logs>
 ```
 
-Create the section if absent. The wiki close guard surfaces missing bullets when a review item with `wiki_impact: [context]` transitions to `resolved`.
+Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `context` transitions to `resolved`.
 
 ## Common mistakes
 

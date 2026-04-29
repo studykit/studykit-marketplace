@@ -145,9 +145,8 @@ id: <allocated id>
 title: "<short finding title>"
 kind: finding | gap | question
 status: open
-target: domain
+target: [domain]
 source: domain-reviewer
-wiki_impact: [domain]
 priority: high | medium | low
 labels: [<optional, e.g. "concept", "relationship", "state", "naming", "abstraction">]
 created: <YYYY-MM-DD>
@@ -169,15 +168,15 @@ updated: <YYYY-MM-DD>
 </description>
 ```
 
-### Target / wiki_impact Mapping
+### Target Mapping
 
-| Finding category | `target` | `wiki_impact` |
-|------------------|----------|----------------|
-| Domain section itself (glossary, relationships, state, abstraction) | `domain` | `[domain]` |
-| Naming conflict where the UC text is the problem | `usecase/<id>-<slug>` | `[]` (invite usecase to revisit; or `[domain]` if domain still needs rename) |
-| Naming conflict where architecture is the problem | `architecture` | `[architecture]` |
-| Actor confusion (an actor appearing as a concept) | `domain` | `[domain, actors]` |
-| Stale `Referenced By` to a deleted UC | `domain` | `[domain]` |
+| Finding category | `target:` (list) |
+|------------------|------------------|
+| Domain section itself (glossary, relationships, state, abstraction) | `[domain]` |
+| Naming conflict where the UC text is the problem | `[usecase/<id>-<slug>]` (invite usecase to revisit; add `domain` if a domain rename is still needed) |
+| Naming conflict where architecture is the problem | `[architecture]` |
+| Actor confusion (an actor appearing as a concept) | `[domain, actors]` |
+| Stale `Referenced By` to a deleted UC | `[domain]` |
 
 Prefer `kind: finding` for issues with the existing `domain.md` content; `kind: gap` for "missing coverage area" complaints (e.g., a stateful concept with no state diagram, a UC noun never lifted into the glossary).
 

@@ -29,12 +29,9 @@ mode: comparative | single
 options: [name-a, name-b, name-c]   # only when mode: comparative
 implements: []                       # usually empty (research is not a deliverable)
 depends_on: []                       # other tasks this one needs first
-spec: []                             # specs whose open question triggered this research
 related: []                          # catchall — e.g., other research tasks on adjacent topics
 files: []                            # typically empty; if used, paths under artifacts/task/research/<id>-<slug>/
-cycle: 1
 labels: []                           # free-form tags
-milestone: <optional>
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -45,10 +42,10 @@ updated: YYYY-MM-DD
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `<options>` section will cover, one subsection per option.
 - `implements:` is **usually empty** — research is investigation, not delivery. Populate only if the research is scoped to a specific UC's open question.
-- `spec:` is populated when the research was triggered by a spec's `<open-questions>` or `<rejected-alternatives>` discussion.
+- `spec:` is **not allowed** on research (a4 v6.0.0). Cite the triggering spec via a markdown link inside `<context>` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
 - `files:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/task/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `files:` (they belong in body links).
-- `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
-- `implemented_by:` is **not** a task field — it is a UC reverse-link written by `refresh_implemented_by.py`. Do not put it on a task.
+- `cycle:` is **not allowed** on research (a4 v6.0.0); investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
+- `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### Lifecycle and writer ownership
 
@@ -152,7 +149,8 @@ Reverse lookups (which specs cite a research task) are derived on demand via gre
 
 ## Don't (research-task-specific)
 
-- **Don't put `implemented_by:` on a task.** It is a UC reverse-link, auto-maintained by `refresh_implemented_by.py` from `task.implements:`.
+- **Don't put `cycle:` or `spec:` on a research task.** Both are forbidden on `kind: research` (a4 v6.0.0). Cite triggering specs via markdown links in `<context>` body prose.
+- **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a research task stays enqueued or moves forward / out.
 - **Don't omit `kind:` or `mode:`.** Both are required on research tasks.

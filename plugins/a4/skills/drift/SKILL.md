@@ -8,7 +8,7 @@ allowed-tools: Bash, Read
 
 # Drift Detection (a4 plugin)
 
-> **Authoring contract:** review items the detector emits follow [`references/review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md) — `kind`, `source`, `target`, `wiki_impact`, `labels` (drift dedup prefixes), lifecycle, close guard.
+> **Authoring contract:** review items the detector emits follow [`references/review-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md) — `kind`, `source`, `target` (list of issue paths and/or wiki basenames), `labels` (drift dedup prefixes), lifecycle, close guard.
 
 Runs the shared drift detector against `<project-root>/a4/` and reports any wiki↔issue inconsistencies as new review items in `a4/review/`. Findings carry `source: drift-detector`.
 
@@ -56,12 +56,12 @@ Do not edit wiki pages or issue files yourself; the iteration skills are respons
 
 ## Detection Rules (reference)
 
-The detector emits one review item per drift, with `target: <wiki>` and `wiki_impact: [<wiki>]` set. Drift kinds and the labels they carry:
+The detector emits one review item per drift, with `target: [<wiki>]`. Drift kinds and the labels they carry:
 
 | Kind | Review kind | Priority | Trigger |
 |------|-------------|----------|---------|
-| `close-guard` | gap | high | Resolved review item declares `wiki_impact: [<wiki>]` but `<wiki>.md` has no `<change-logs>` bullet citing the causing issue. |
-| `missing-wiki-page` | gap | high | A `wiki_impact` entry names a wiki page that does not exist at `a4/` root. |
+| `close-guard` | gap | high | Resolved review item lists `<wiki>` in `target:` but `<wiki>.md` has no `<change-logs>` bullet citing the review item. |
+| `missing-wiki-page` | gap | high | A wiki basename inside `target:` does not exist at `a4/` root. |
 | `stale-link` | finding | medium | A body markdown link in a `<change-logs>` bullet resolves to a non-existent issue or wiki page. |
 
 Each emitted review item carries `labels: [drift, drift:<kind>, drift-cause:<cause-slug>?]` for downstream filtering and dedup.

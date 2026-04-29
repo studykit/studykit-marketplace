@@ -4,10 +4,7 @@ Skill-specific addendum on top of the shared iterate mechanics in `../../../docs
 
 ## Backlog filter
 
-Open review items where:
-
-- `target: domain`, OR
-- `domain` appears in `wiki_impact`.
+Open review items whose `target:` list contains `domain`.
 
 ## Domain-specific staleness signals
 

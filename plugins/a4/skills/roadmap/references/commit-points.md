@@ -4,13 +4,13 @@ All commit subjects follow `../../../references/commit-message-convention.md`.
 
 ## Roadmap generation
 
-Commit `a4/roadmap.md` + all new `a4/task/feature/*.md` files + UCs updated by `refresh_implemented_by.py` together once the user confirms.
+Commit `a4/roadmap.md` + all new `a4/task/feature/*.md` files together once the user confirms.
 
 ```
-#<uc-ids> #<task-ids> docs(a4): roadmap for <milestone-or-scope>
+#<task-ids> docs(a4): roadmap for <milestone-or-scope>
 ```
 
-(List the UC ids first, then task ids; the description names the milestone or feature scope, not the file count.)
+(The description names the milestone or feature scope, not the file count.)
 
 ## Roadmap revision during verification
 

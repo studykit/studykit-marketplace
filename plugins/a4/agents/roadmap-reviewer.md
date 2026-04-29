@@ -139,10 +139,10 @@ Verdicts: `OK` | `CONFLICT`.
 ### 9. Milestone Coherence — `all`
 
 Per milestone section in `roadmap.md`:
-- Does its Scope reference tasks that actually exist and have matching `milestone:` frontmatter?
+- Does its Scope reference tasks that actually exist (via the markdown links to `task/<id>-<slug>`)?
 - Does its Success Criteria translate into checkable outcomes from the constituent tasks' Acceptance Criteria?
 
-Verdicts: `OK` | `MILESTONE DRIFT` (scope links vs task frontmatter disagree) | `WEAK MILESTONE CRITERIA`.
+Verdicts: `OK` | `MILESTONE DRIFT` (scope links point at tasks that no longer exist or whose status no longer fits the milestone narrative) | `WEAK MILESTONE CRITERIA`.
 
 ## Output — Per-Finding Review Item Files
 
@@ -169,9 +169,8 @@ id: <allocated id>
 title: "<short finding title>"
 kind: finding | gap
 status: open
-target: <roadmap | task/<id>-<slug> | architecture | usecase/<id>-<slug>>
+target: [<one or more of: roadmap, task/<id>-<slug>, architecture, usecase/<id>-<slug>, domain, ...>]
 source: roadmap-reviewer
-wiki_impact: [<wiki basenames when the resolution edits a wiki page; [] for per-task edits>]
 priority: high | medium | low
 labels: [<e.g. "coverage", "dependencies", "tests">]
 created: <YYYY-MM-DD>
@@ -195,15 +194,15 @@ updated: <YYYY-MM-DD>
 
 ### Target Mapping
 
-| Finding category | `target` | `wiki_impact` |
-|------------------|----------|----------------|
-| Roadmap-level strategy, milestones, dependency graph, integration points | `roadmap` | `[roadmap]` |
-| Roadmap authored Launch & Verify content (should be a link to bootstrap) | `roadmap` | `[roadmap]` (also flag for `bootstrap` review if commands diverge) |
-| Task-level scope, files, tests, acceptance | `task/<id>-<slug>` | `[]` |
-| Architecture gap surfaced during roadmap review | `architecture` | `[architecture]` |
-| UC gap surfaced during roadmap review | `usecase/<id>-<slug>` | `[]` |
-| Domain model conflict | `architecture` (or `task/...` if task is the offender) | `[domain]` |
-| Milestone drift | `roadmap` | `[roadmap]` |
+| Finding category | `target:` (list) |
+|------------------|------------------|
+| Roadmap-level strategy, milestones, dependency graph, integration points | `[roadmap]` |
+| Roadmap authored Launch & Verify content (should be a link to bootstrap) | `[roadmap]` (add `bootstrap` if commands diverge) |
+| Task-level scope, files, tests, acceptance | `[task/<id>-<slug>]` |
+| Architecture gap surfaced during roadmap review | `[architecture]` |
+| UC gap surfaced during roadmap review | `[usecase/<id>-<slug>]` |
+| Domain model conflict | `[architecture, domain]` (or `[task/..., domain]` if a task is the offender) |
+| Milestone drift | `[roadmap]` |
 
 `kind: gap` is preferred for "missing coverage area" findings (missing UC / component / tier / milestone criteria). `kind: finding` for quality issues on existing content.
 

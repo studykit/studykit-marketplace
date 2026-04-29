@@ -11,7 +11,6 @@ Enforces the per-type schema defined in plugins/a4/references/frontmatter-schema
   - Field types are correct (int, date, list, string).
   - Path references use plain string form (no wikilink brackets, no .md extension).
   - `type:` on wiki pages matches the file basename.
-  - `wiki_impact` entries name a known wiki type.
   - Ids are unique across all issue folders in the workspace.
 
 Unknown frontmatter fields are ignored — validation is strict on known rules
@@ -58,7 +57,6 @@ class Schema:
     date_fields: frozenset[str] = frozenset()
     path_list_fields: frozenset[str] = frozenset()
     path_scalar_fields: frozenset[str] = frozenset()
-    wiki_ref_list_fields: frozenset[str] = frozenset()
 
 
 SCHEMAS: dict[str, Schema] = {
@@ -77,9 +75,7 @@ SCHEMAS: dict[str, Schema] = {
         },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
-        path_list_fields=frozenset(
-            {"depends_on", "spec", "related", "supersedes", "implemented_by"}
-        ),
+        path_list_fields=frozenset({"related", "supersedes"}),
     ),
     "task": Schema(
         name="task",
@@ -108,8 +104,7 @@ SCHEMAS: dict[str, Schema] = {
         },
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
-        path_scalar_fields=frozenset({"target"}),
-        wiki_ref_list_fields=frozenset({"wiki_impact"}),
+        path_list_fields=frozenset({"target"}),
     ),
     "spec": Schema(
         name="spec",
@@ -278,40 +273,43 @@ def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
                         Violation(rel_str, "path-format", fld, f"{fld}[{i}]: {err}")
                     )
 
-    for fld in schema.wiki_ref_list_fields:
-        if fld in fm and fm[fld] is not None:
-            val = fm[fld]
-            if not isinstance(val, list):
+    if ftype == "task":
+        kind = fm.get("kind")
+        if kind == "spike":
+            impl = fm.get("implements")
+            if isinstance(impl, list) and any(
+                isinstance(x, str) and x.strip() for x in impl
+            ):
                 violations.append(
                     Violation(
                         rel_str,
-                        "type-mismatch",
-                        fld,
-                        f"`{fld}` must be a list, got {type(val).__name__}",
+                        "kind-field-forbidden",
+                        "implements",
+                        "`implements:` is forbidden on `kind: spike` (a4 v6.0.0).",
                     )
                 )
-                continue
-            for i, item in enumerate(val):
-                if not isinstance(item, str):
-                    violations.append(
-                        Violation(
-                            rel_str,
-                            "type-mismatch",
-                            fld,
-                            f"{fld}[{i}]: expected string, got {type(item).__name__}",
-                        )
+        if kind in {"spike", "research"} and fm.get("cycle") is not None:
+            violations.append(
+                Violation(
+                    rel_str,
+                    "kind-field-forbidden",
+                    "cycle",
+                    f"`cycle:` is forbidden on `kind: {kind}` (a4 v6.0.0).",
+                )
+            )
+        if kind in {"spike", "research"}:
+            spec_val = fm.get("spec")
+            if isinstance(spec_val, list) and any(
+                isinstance(x, str) and x.strip() for x in spec_val
+            ):
+                violations.append(
+                    Violation(
+                        rel_str,
+                        "kind-field-forbidden",
+                        "spec",
+                        f"`spec:` is forbidden on `kind: {kind}` (a4 v6.0.0); cite via body markdown link.",
                     )
-                    continue
-                if item not in WIKI_TYPES:
-                    violations.append(
-                        Violation(
-                            rel_str,
-                            "wiki-ref-unknown",
-                            fld,
-                            f"{fld}[{i}]: `{item}` is not a known wiki type "
-                            f"(expected one of {sorted(WIKI_TYPES)})",
-                        )
-                    )
+                )
 
     if ftype == "wiki":
         declared = fm.get("type")
