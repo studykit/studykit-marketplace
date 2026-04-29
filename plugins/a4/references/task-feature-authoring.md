@@ -30,9 +30,9 @@ updated: YYYY-MM-DD
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `kind: feature` is fixed for files under `a4/task/feature/`. Every task must declare the kind explicitly.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it whenever the project is UC-driven.
-- `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `<specification>` body + relevant `architecture.md` section becomes the AC source).
+- `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `## Specification` body + relevant `architecture.md` section becomes the AC source).
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.
-- `files:` is artifact-only — paths must point under `artifacts/task/feature/<id>-<slug>/...`. The list is typically empty for feature work that ships only production source. Production source paths the task writes or modifies are documented in the body `<files>` section, not in this frontmatter field. See "Artifacts directory" below for when to use the artifact directory.
+- `files:` is artifact-only — paths must point under `artifacts/task/feature/<id>-<slug>/...`. The list is typically empty for feature work that ships only production source. Production source paths the task writes or modifies are documented in the body `## Files` section, not in this frontmatter field. See "Artifacts directory" below for when to use the artifact directory.
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
@@ -75,45 +75,43 @@ Writer rules (task-specific):
 When the chosen initial status is `complete`, the work is asserted to already be shipped. Verify before writing:
 
 1. For each path in `files:`, confirm it exists in the working tree. If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
-2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
-3. After writing the file, append an explicit `<log>` block recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
+2. Required sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
+3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (the section is optional and hand-maintained):
 
    ```markdown
-   <log>
+   ## Log
 
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; code shipped prior to task authorship)
-
-   </log>
    ```
 
-   This is the **only** case where `<log>` is written directly — every subsequent entry must come from `transition_status.py`.
+   `transition_status.py` does not touch `## Log`; the section is purely an author convenience.
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
-- `<description>` — what and why.
-- `<files>` — action / path / change table. Lists production source paths the task writes or modifies, plus any artifact paths under `artifacts/task/feature/<id>-<slug>/` when the task uses an artifact directory.
-- `<unit-test-strategy>` — scenarios + isolation strategy + test file paths.
-- `<acceptance-criteria>` — checklist. AC source:
+- `## Description` — what and why.
+- `## Files` — action / path / change table. Lists production source paths the task writes or modifies, plus any artifact paths under `artifacts/task/feature/<id>-<slug>/` when the task uses an artifact directory.
+- `## Unit Test Strategy` — scenarios + isolation strategy + test file paths.
+- `## Acceptance Criteria` — checklist. AC source:
 
   | Shape | AC source |
   |---|---|
-  | `implements: [usecase/...]` | UC `<flow>` / `<validation>` / `<error-handling>` |
-  | `spec: [spec/...]` (UC-less) | spec `<specification>` body + relevant `architecture.md` section |
+  | `implements: [usecase/...]` | UC `## Flow` / `## Validation` / `## Error Handling` |
+  | `spec: [spec/...]` (UC-less) | spec `## Specification` body + relevant `architecture.md` section |
 
-  AC source is a documentation convention. The `<acceptance-criteria>` section must exist regardless.
+  AC source is a documentation convention. The `## Acceptance Criteria` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
-- `<interface-contracts>` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../../architecture.md#sessionservice)`). For UC-less work, link to the spec or relevant `architecture.md` section.
-- `<change-logs>` — append-only audit trail when the task body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — `status: pending` is the implicit creation entry, written by the writer on first transition. **Never write into `<log>` directly**, except for the documented post-hoc-`complete` case above.
-- `<why-discarded>` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture beyond the `<log>` line.
+- `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../../architecture.md#sessionservice)`). For UC-less work, link to the spec or relevant `architecture.md` section.
+- `## Change Logs` — append-only audit trail when the task body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
+- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ## Artifacts directory (optional)
 
@@ -125,7 +123,7 @@ A feature task may have a sibling artifact directory at `<project-root>/artifact
   artifacts/task/feature/<id>-<slug>/        # comparison samples, outputs, mockups (opt-in)
 ```
 
-Optional and the exception, not the default — most feature tasks have no artifact directory. Use it only when the artifacts themselves need to be preserved (before/after screenshots that anchor a UC's expected outcome, sample inputs/outputs proving a parser change). Production source the feature ships goes in the body `<files>` table; frontmatter `files:` lists artifact paths only.
+Optional and the exception, not the default — most feature tasks have no artifact directory. Use it only when the artifacts themselves need to be preserved (before/after screenshots that anchor a UC's expected outcome, sample inputs/outputs proving a parser change). Production source the feature ships goes in the body `## Files` table; frontmatter `files:` lists artifact paths only.
 
 No archive convention — closed feature tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
@@ -133,12 +131,12 @@ Cross-kind conventions for the artifact directory — what to keep vs. drop, own
 
 ## Common mistakes (task-specific)
 
-- **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
+- **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/feature/` must declare `kind: feature`. Mismatched declarations are a folder-routing error and should be re-located.
-- **Production source paths in frontmatter `files:`** — `files:` is artifact-only. Production source belongs in the body `<files>` section.
+- **Production source paths in frontmatter `files:`** — `files:` is artifact-only. Production source belongs in the body `## Files` section.
 
-(Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
+(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (feature-task-specific)
 

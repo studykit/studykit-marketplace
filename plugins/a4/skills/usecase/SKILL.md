@@ -45,7 +45,7 @@ Run this **immediately before** writing a new UC, review item, etc. Ids are mono
 
 ## Body Conventions
 
-Body tag form, link form, `<change-logs>` audit trail, and the Wiki Update Protocol live in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`.
+Body heading form, link form, `## Change Logs` audit trail, and the Wiki Update Protocol live in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`.
 
 ## Modes
 
@@ -88,7 +88,7 @@ Domain Model extraction is **out of scope** for this skill — it lives in `/a4:
 Restate the idea back in one sentence to confirm understanding. Then immediately:
 
 1. Run `mkdir -p a4/usecase a4/review`.
-2. Write `a4/context.md` with frontmatter `type: context`, `updated: <today>`, an `<original-idea>` section quoting the user's input, and a `<problem-framing>` section stub to be filled in as the interview progresses.
+2. Write `a4/context.md` with frontmatter `type: context`, `updated: <today>`, an `## Original Idea` section quoting the user's input, and a `## Problem Framing` section stub to be filled in as the interview progresses.
 3. Tell the user: "I've started `a4/context.md`. UC and wiki files will appear as we confirm them."
 4. Mark "Step 1" completed. Mark "Discovery: Use cases" in_progress.
 

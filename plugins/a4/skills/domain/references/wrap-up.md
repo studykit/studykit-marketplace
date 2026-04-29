@@ -6,8 +6,8 @@ Domain extraction ends only when the user says so. When the user indicates they'
 
 Read `domain.md` end-to-end. Confirm:
 
-- Every concept in `<relationships>` exists in `<concepts>`.
-- Every state-diagram concept in `<state-transitions>` exists in `<concepts>`.
+- Every concept in `## Relationships` exists in `## Concepts`.
+- Every state-diagram concept in `## State Transitions` exists in `## Concepts`.
 - Every UC referenced from `Referenced By` is an existing UC file.
 
 Resolve obvious gaps before launching the reviewer.
@@ -31,13 +31,13 @@ The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.
 
 For each emitted review item, ordered by priority then id, present to the user and resolve or defer:
 
-- **Fix now** — edit `domain.md` (and any cross-referenced file). Flip the review item `status: resolved` via `transition_status.py`, and add a dated `<change-logs>` bullet on each modified wiki page.
+- **Fix now** — edit `domain.md` (and any cross-referenced file). Flip the review item `status: resolved` via `transition_status.py`, and add a dated `## Change Logs` bullet on each modified wiki page.
 - **Defer** — leave `status: open`. Capture the deferral reason in conversation notes / handoff.
 - **Discard** — set `status: discarded` via `scripts/transition_status.py`.
 
 ## 4. Wiki close guard
 
-For each item that transitioned to `resolved` whose `target:` lists one or more wiki basenames, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the review item itself. Warn + allow override when missing.
+For each item that transitioned to `resolved` whose `target:` lists one or more wiki basenames, verify each referenced wiki page contains a `## Change Logs` bullet whose markdown link points at the review item itself. Warn + allow override when missing.
 
 ## 5. Report
 

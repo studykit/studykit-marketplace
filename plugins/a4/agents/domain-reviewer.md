@@ -106,7 +106,7 @@ Verdicts: `OK` | `NAMING CONFLICT` | `ACTOR-AS-CONCEPT`.
 - **Glossary ↔ Class diagram** — every concept in the diagram exists in the Glossary; every Glossary concept central to the system appears in the diagram (singletons may be omitted).
 - **Class diagram ↔ State diagrams** — every concept with a state diagram exists in the class diagram.
 - **Referenced By ↔ UCs** — every UC named in `Referenced By` is an existing UC file.
-- **`<change-logs>` ↔ wiki nudges** — for every dated bullet in `<change-logs>`, a corresponding section in the body actually reflects the change described.
+- **`## Change Logs` ↔ wiki nudges** — for every dated bullet in `## Change Logs`, a corresponding section in the body actually reflects the change described.
 
 Verdicts: `OK` | `CONFLICT`.
 
@@ -115,7 +115,7 @@ Verdicts: `OK` | `CONFLICT`.
 *Only when `architecture.md` exists.*
 
 Per `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3, arch may edit `domain.md` directly for simple changes (add concept, 1:1 rename, definition wording). Verify those edits are well-formed:
-- Each `<change-logs>` bullet citing `[architecture#<section>](architecture.md#<section>)` corresponds to an actual edit in `<concepts>` (definition wording or new entry), not in `<relationships>` or `<state-transitions>`.
+- Each `## Change Logs` bullet citing `[architecture#<section>](architecture.md#<section>)` corresponds to an actual edit in `## Concepts` (definition wording or new entry), not in `## Relationships` or `## State Transitions`.
 - Structural changes (split / merge / relationship / state) should never appear inline from arch — they should be open review items with `target: domain`. Flag any such inline edit as a structural-edit-bypass.
 
 Verdicts: `OK` | `STRUCTURAL EDIT BYPASS` | `ORPHAN CHANGE-LOG ENTRY`.
@@ -153,7 +153,7 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-<description>
+## Description
 
 > Review run: <YYYY-MM-DD HH:mm>
 
@@ -164,8 +164,6 @@ updated: <YYYY-MM-DD>
 **Impact.** What downstream work (architecture, implementation, future UCs) would have to invent or re-decide because of this gap.
 
 **Suggestion.** Concrete direction for the fix. For `MISSING CONCEPT`, name the concept and suggest a one-line definition. For `NAMING CONFLICT`, name both terms and suggest which to canonicalize. Do not rewrite `domain.md` — suggest the edit.
-
-</description>
 ```
 
 ### Target Mapping

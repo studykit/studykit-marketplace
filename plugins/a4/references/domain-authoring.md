@@ -15,54 +15,52 @@ updated: YYYY-MM-DD
 
 - `type:` must be exactly `domain`.
 - `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `<log>`, no lifecycle.
+- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Concepts`, `## Relationships`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
 **Required:**
 
-- `<concepts>` — glossary of the domain entities, value objects, and significant terms. Each entry includes a name, a one-paragraph definition, and (optionally) examples or invariants. Concepts are the terms UC bodies, spec bodies, and architecture component names must use consistently.
+- `## Concepts` — glossary of the domain entities, value objects, and significant terms. Each entry includes a name, a one-paragraph definition, and (optionally) examples or invariants. Concepts are the terms UC bodies, spec bodies, and architecture component names must use consistently.
 
 **Optional, emit only when applicable:**
 
-- `<relationships>` — how concepts relate (associations, compositions, aggregates). Skip when concepts are independent and the relationship is obvious from definitions alone.
-- `<state-transitions>` — for concepts whose lifecycle has named states, the transition graph (state, allowed next states, trigger). Common for entities tracked by the workspace (a `Session`'s state, a `Document`'s revision).
-- `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Relationships` — how concepts relate (associations, compositions, aggregates). Skip when concepts are independent and the relationship is obvious from definitions alone.
+- `## State Transitions` — for concepts whose lifecycle has named states, the transition graph (state, allowed next states, trigger). Common for entities tracked by the workspace (a `Session`'s state, a `Document`'s revision).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ### Body-link form
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Concept definitions often link back to the UCs that introduced them (`[usecase/3-search-history](usecase/3-search-history.md)`).
 
-## `<change-logs>` discipline
+## `## Change Logs` discipline
 
 ```markdown
-<change-logs>
+## Change Logs
 
 - YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added concept Foo
 - YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — renamed Conversation → Session
-
-</change-logs>
 ```
 
-Create the section if absent. The drift detector checks for `domain` ↔ `architecture` term consistency: if a concept appears in `architecture.md` `<components>` but is missing from `domain.md` `<concepts>`, a `kind: gap` review item is emitted.
+Create the section if absent. The drift detector checks for `domain` ↔ `architecture` term consistency: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
 
 ## Common mistakes
 
-- **Stray content outside section blocks**.
-- **Required section missing** (`<concepts>`).
-- **Inline or attribute-bearing tags**.
-- **Same-tag nesting**.
-- **H1 in body**. Page name is the file basename.
+- **Stray content above the first H2 heading**.
+- **Required section missing** (`## Concepts`).
+- **H2 not in column 0 or not Title Case**.
+- **Sections nested inside other sections** — every section sits at the body's top level.
+- **H1 in body**. Page name is the file basename; title is frontmatter-only.
 - **`type:` mismatch** with filename → frontmatter validator error.
 
 ## Don't
 
-- **Don't put architecture component definitions here.** Components live in `architecture.md`'s `<components>` section. Concepts are the user-domain vocabulary; components are the runtime shape.
+- **Don't put architecture component definitions here.** Components live in `architecture.md`'s `## Components` section. Concepts are the user-domain vocabulary; components are the runtime shape.
 - **Don't put framework-mandated terms here.** "Controller", "Repository", "DAO" are framework constructs, not domain concepts. They belong in `architecture.md`.
 - **Don't rename a concept silently.** Renames cascade to UCs, specs, architecture, and code. Open a review item to manage the cascade if the rename surface is large.
-- **Don't append `<change-logs>` bullets without a markdown link.** The link is what powers drift detection.
+- **Don't append `## Change Logs` bullets without a markdown link.** The link is what powers drift detection.
 - **Don't pack relationship or state diagrams inline as long prose.** Use mermaid / ASCII / table form; keep prose to invariants the diagram does not capture.

@@ -69,38 +69,36 @@ Writer rules:
 
 ### Close guard — wiki entries in `target:` must be honored on resolve
 
-When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `<change-logs>` section with a markdown link to the review item itself. Enforcement is a **warning with override** — `transition_status.py` proceeds, but the drift detector re-surfaces violations as fresh `close-guard` review items.
+When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a **warning with override** — `transition_status.py` proceeds, but the drift detector re-surfaces violations as fresh `close-guard` review items.
 
 When resolving, append the bullet to each affected wiki:
 
 ```markdown
-<change-logs>
+## Change Logs
 
 - YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>
-
-</change-logs>
 ```
 
-Create the `<change-logs>` section if it does not yet exist.
+Create the `## Change Logs` section if it does not yet exist.
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+The body is a sequence of column-0 `## Title Case` H2 headings, with free-form markdown content from one heading to the next (per `./body-conventions.md`). H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
 Review item bodies are **deliberately minimal** — they hold a single observation, not a long-form artifact.
 
 **Required:**
 
-- `<description>` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise. The body of a review item is a hand-off note, not an essay.
+- `## Description` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise. The body of a review item is a hand-off note, not an essay.
 
 **Optional, emit only when applicable:**
 
-- `<change-logs>` — append-only audit trail when the review item body is materially edited post-create (rare; usually the original description is the final word).
-- `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent; the first status flip writes the first entry. **Never write into `<log>` directly.**
+- `## Change Logs` — append-only audit trail when the review item body is materially edited post-create (rare; usually the original description is the final word).
+- `## Log` — optional, hand-maintained status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** write into `## Log`; append bullets manually if you want a body audit trail.
 
-Unknown kebab-case tags are tolerated — useful for embedding `<diff>`, `<repro>`, or `<context>` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `<description>` is usually enough.
+Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `## Repro`, or `## Context` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `## Description` is usually enough.
 
-There is no standalone "title" body section — the file's frontmatter carries no `title:` field either. The slug + first line of `<description>` serves as the human-readable name in iterate backlogs.
+There is no standalone "title" body section — the file's frontmatter carries no `title:` field either. The slug + first line of `## Description` serves as the human-readable name in iterate backlogs.
 
 ### Body-link form
 
@@ -108,17 +106,17 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 ## Common mistakes
 
-- **Stray content outside section blocks**. Anything in the body that is not whitespace must live inside a `<tag>...</tag>` block.
-- **`<description>` missing**. The only required body section.
-- **Inline or attribute-bearing tags**. Open and close lines must be on column 0; no attributes; no self-closing.
-- **Same-tag nesting**. Sections do not nest; every section sits at the body's top level.
+- **Stray content above the first heading**. Anything in the body that is not whitespace must live under a `## Heading`.
+- **`## Description` missing**. The only required body section.
+- **Heading not on column 0**. The H2 marker (`## `) must be at the start of the line; indented headings do not register as section boundaries.
+- **Sections nested**. Sections do not nest; every section sits at the body's top level under its own `## Heading`.
 - **H1 in body**.
 - **Wiki basenames in `target:` written with `.md` or a folder prefix** → use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`). The validator's path-format check already catches the `.md` suffix.
 
 ## Don't
 
 - **Don't hand-edit `status:`.** Use `transition_status.py` (typically via the iterate flow that owns the item's `target:`).
-- **Don't hand-edit `<log>`.** Writer-owned. Every entry comes from `transition_status.py`.
+- **`## Log` is optional and hand-maintained.** `transition_status.py` does not write to it; if you want a body audit trail, append bullets yourself.
 - **Don't delete a review item file.** `discarded` is the writer-managed terminal state. Deleting orphans the cascade bookkeeping and breaks drift dedup.
 - **Don't invent placeholder `target:` values.** When the concern is cross-cutting, leave `target:` empty (`[]` or omit the field).
 - **Don't hand-flip the discarded cascade.** When a UC flips to `discarded`, the writer cascades open review items pointing at it.

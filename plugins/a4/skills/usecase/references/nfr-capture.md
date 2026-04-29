@@ -7,7 +7,7 @@ Ask the user once:
 If yes, write `a4/nfr.md` with:
 
 - frontmatter `type: nfr`, `updated: <today>`
-- a `<requirements>` section containing a table:
+- a `## Requirements` section containing a table:
   - Description
   - Affected UCs (via markdown links)
   - Measurable criteria

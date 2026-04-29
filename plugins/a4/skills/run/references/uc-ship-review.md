@@ -22,8 +22,8 @@ If the candidate set is empty, skip to wrap-up.
 
 For each candidate X, read:
 
-- The UC body — `<flow>`, `<validation>`, `<error-handling>`, `<expected-outcome>`.
-- The `<log>` entries of its implementing tasks.
+- The UC body — `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`.
+- The `## Log` entries of its implementing tasks (if hand-maintained).
 - The test-runner return summary from Step 3 (passed-test names relevant to X).
 
 Compose a **two- to four-sentence** verdict covering:
@@ -59,7 +59,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
 
 The script:
 
-- Writes `status: shipped`, bumps `updated:`, appends the `<log>` entry. The writer applies no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `complete` before invoking the flip.
+- Writes `status: shipped` and bumps `updated:`. The writer applies no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `complete` before invoking the flip.
 - If the UC has a non-empty `supersedes:` list, cascades each supersedes target from `shipped` to `superseded` with a back-pointer log entry.
 
 Do **not** hand-edit UC frontmatter or supersedes targets.

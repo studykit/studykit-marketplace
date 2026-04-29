@@ -15,24 +15,24 @@ updated: YYYY-MM-DD
 
 - `type:` must be exactly `nfr`.
 - `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `<log>`, no lifecycle.
+- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Requirements`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
 **Required:**
 
-- `<requirements>` — the NFR table. One row per requirement with these columns:
+- `## Requirements` — the NFR table. One row per requirement with these columns:
   - **Description** — the requirement in prose (e.g., "Cold-start response under 200 ms p95").
   - **Affected UCs** — markdown links to UCs the requirement constrains (e.g., `[usecase/3-search-history](usecase/3-search-history.md)`). Use `(all)` when the requirement applies workspace-wide.
   - **Measurable criteria** — the concrete threshold or check (timing, error rate, compliance standard reference). Avoid aspirational phrasing — NFRs only earn their slot when they have a measurable shape.
 
 **Optional:**
 
-- `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ### Body-link form
 
@@ -48,31 +48,29 @@ Architecture footnote annotations may attach to an existing NFR row to point at 
 
 The footnote points at the architecture decision that satisfies the NFR. Do not introduce footnotes that edit the requirement text itself.
 
-## `<change-logs>` discipline
+## `## Change Logs` discipline
 
 ```markdown
-<change-logs>
+## Change Logs
 
 - YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added latency NFR
 - YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — refined p95 threshold
-
-</change-logs>
 ```
 
 Create the section if absent.
 
 ## Common mistakes
 
-- **Stray content outside section blocks**.
-- **Required section missing** (`<requirements>`).
-- **Inline or attribute-bearing tags**.
-- **Same-tag nesting**.
-- **H1 in body**. Page name is the file basename.
+- **Stray content above the first H2 heading**.
+- **Required section missing** (`## Requirements`).
+- **H2 not in column 0 or not Title Case**.
+- **Sections nested inside other sections** — every section sits at the body's top level.
+- **H1 in body**. Page name is the file basename; title is frontmatter-only.
 - **`type:` mismatch** with filename → frontmatter validator error.
 
 ## Don't
 
 - **Don't write aspirational requirements without a measurable criterion.** "Should be fast" is not an NFR. "p95 < 200 ms" is.
-- **Don't list functional behavior here.** Functional requirements belong in UCs (`<flow>`, `<validation>`, `<error-handling>`). NFRs are cross-cutting properties.
+- **Don't list functional behavior here.** Functional requirements belong in UCs (`## Flow`, `## Validation`, `## Error Handling`). NFRs are cross-cutting properties.
 - **Don't put implementation strategies here.** "We will use Redis for caching" belongs in `architecture.md`. The NFR is the target; the architecture page records the response.
-- **Don't append `<change-logs>` bullets without a markdown link.**
+- **Don't append `## Change Logs` bullets without a markdown link.**

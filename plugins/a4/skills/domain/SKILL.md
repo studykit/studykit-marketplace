@@ -85,7 +85,7 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 
 ## File Writing Rules
 
-- **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter and the confirmed `<concepts>` section.
+- **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter and the confirmed `## Concepts` section.
 - **Update** at each phase transition using `Edit` where possible. `Write` only for full rewrites.
 - **Change-log entries** — append a dated bullet citing the causing UC / spec / review item.
 - **`updated:`** — bump on every phase transition or reflected resolution.
@@ -94,7 +94,7 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 
 `/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. The decision table is in `${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md` §Authorship.
 
-When iterating after arch has run, expect to see `<change-logs>` entries citing `[architecture#<section>](architecture.md#<section>)`. Treat them as authoritative.
+When iterating after arch has run, expect to see `## Change Logs` entries citing `[architecture#<section>](architecture.md#<section>)`. Treat them as authoritative.
 
 ## Agent Usage
 
@@ -106,6 +106,6 @@ Context is passed via file paths, not agent memory.
 
 - Do not author UCs. UC creation is `/a4:usecase`'s exclusive role.
 - Do not edit `architecture.md`. Architectural decisions live there; this skill writes domain only.
-- Do not maintain a `domain.history.md`. Per-issue `<log>` sections plus `<change-logs>` and git history cover audit needs.
+- Do not maintain a `domain.history.md`. Per-issue `## Log` sections plus `## Change Logs` and git history cover audit needs.
 - Do not track per-source SHAs on `domain.md`.
 - Do not emit aggregated reviewer reports. All findings are per-review-item files.

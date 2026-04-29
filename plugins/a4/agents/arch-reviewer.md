@@ -22,7 +22,7 @@ Every review criterion exists because failing it forces the developer to guess. 
 
 Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, id allocation, path-form, tag form, cross-stage feedback).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, id allocation, path-form, heading form, cross-stage feedback).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape (`kind:`, `target:`, `source:`, `priority:` fields and required body sections).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md` — what makes the architecture wiki "complete" (anchor stability, required body sections, change-logs discipline).
 
@@ -61,7 +61,7 @@ Verdicts: `OK` | `MISSING` | `INCOMPLETE`.
 ### 2. UC Coverage — "Does the architecture cover every Use Case?"
 
 For each file in `a4/usecase/`:
-- Is there at least one Information Flow subsection inside `architecture.md`'s `<components>` that references the UC via a markdown link (e.g., `[usecase/<id>-<slug>](usecase/<id>-<slug>.md)`)?
+- Is there at least one Information Flow subsection inside `architecture.md`'s `## Components` that references the UC via a markdown link (e.g., `[usecase/<id>-<slug>](usecase/<id>-<slug>.md)`)?
 - Are the UC's `actors:` mapped to component interactions in that flow?
 
 Verdict per UC: `OK` | `UNMAPPED UC`.
@@ -166,7 +166,7 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-<description>
+## Description
 
 > Review run: <YYYY-MM-DD HH:mm>
 
@@ -177,8 +177,6 @@ updated: <YYYY-MM-DD>
 **Impact.** What a developer would have to guess or re-decide when implementing this architecture as-is.
 
 **Suggestion.** Concrete direction for the fix. Do not rewrite `architecture.md` — suggest the edit. For coverage gaps, name the missing UC / component / tier explicitly.
-
-</description>
 ```
 
 ### Target Mapping

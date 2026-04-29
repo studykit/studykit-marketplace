@@ -53,7 +53,7 @@ Include these paths in each subagent prompt.
 
 ## Source Attribution on UCs
 
-Each UC body records source attribution (`input`, `research — <systems>`, `code — <path>`, or `implicit`) as a one-line note inside the relevant required section (typically the start of `<situation>`). Definitions and rationale: `references/source-attribution.md`.
+Each UC body records source attribution (`input`, `research — <systems>`, `code — <path>`, or `implicit`) as a one-line note inside the relevant required section (typically the start of `## Situation`). Definitions and rationale: `references/source-attribution.md`.
 
 ## Flow
 
@@ -85,5 +85,5 @@ Apply the rules in `references/autonomous-decision-rules.md` consistently across
 
 - Do not write an aggregated `a4/<topic>.usecase.md` file. All output is per-UC + wiki pages.
 - Do not maintain per-topic or per-slug file naming. `a4/` is a single workspace — filenames carry no topic.
-- Do not write a `history.md` file. Per-UC `<log>` sections plus git history cover audit needs.
+- Do not write a `history.md` file. Per-UC `## Log` sections plus git history cover audit needs.
 - Do not create GitHub Issues — `a4/` replaces that role.

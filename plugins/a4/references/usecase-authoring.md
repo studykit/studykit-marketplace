@@ -1,6 +1,6 @@
 # a4 — usecase authoring
 
-A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `<flow>` / `<validation>` / `<error-handling>` close enough to drive AC for tasks.
+A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
 
 Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), `./body-conventions.md`.
 
@@ -26,9 +26,9 @@ updated: YYYY-MM-DD
 ```
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- `actors:` lists slug identifiers defined as rows in `actors.md`'s `<roster>` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
-- UC-to-UC ordering is **not** carried in frontmatter (a4 v6.0.0). Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `<dependencies>` body prose with markdown links.
-- UC-to-spec ties are **not** carried in frontmatter (a4 v6.0.0). When a spec governs the UC, cite it from `<situation>` / `<validation>` / `<error-handling>` / `<dependencies>` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
+- `actors:` lists slug identifiers defined as rows in `actors.md`'s `## Roster` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
+- UC-to-UC ordering is **not** carried in frontmatter (a4 v6.0.0). Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
+- UC-to-spec ties are **not** carried in frontmatter (a4 v6.0.0). When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
 - `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
 - The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `search.py` and roadmap surfaces — there is no stored UC field for it.
 - `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as markdown links in the body, not here.
@@ -68,39 +68,39 @@ Writer rules (UC-specific):
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
-- `<goal>` — what the actor wants to accomplish, framed at the user level (the *why*).
-- `<situation>` — the trigger / current context. When does this UC apply? What's already happened? Concrete, not abstract.
-- `<flow>` — numbered list of user-visible steps. The actor's actions and the system's user-facing responses, **not** internal mechanics.
-- `<expected-outcome>` — what success looks like in user-observable terms (timing, content, state change). Used as one input to AC for any task that `implements:` this UC.
+- `## Goal` — what the actor wants to accomplish, framed at the user level (the *why*).
+- `## Situation` — the trigger / current context. When does this UC apply? What's already happened? Concrete, not abstract.
+- `## Flow` — numbered list of user-visible steps. The actor's actions and the system's user-facing responses, **not** internal mechanics.
+- `## Expected Outcome` — what success looks like in user-observable terms (timing, content, state change). Used as one input to AC for any task that `implements:` this UC.
 
 **Optional, emit only when there is content for them:**
 
-- `<validation>` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
-- `<error-handling>` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
-- `<dependencies>` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
-- `<change-logs>` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — the first status flip writes the first entry. **Never write into `<log>` directly.**
+- `## Validation` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
+- `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
+- `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
+- `## Change Logs` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
+- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ## In-situ wiki nudge — when a UC change implies a wiki edit
 
 Authoring or revising a UC frequently has side-effects on wiki pages:
 
-- New actor in `actors:` → `actors.md` `<roster>` row.
-- Concept used across 3+ UCs → `domain.md` `<concepts>` glossary entry.
-- Scope broadening (problem framing changes) → `context.md` `<problem-framing>` refinement.
-- New screen group → `context.md` `<screens>` section + UC `labels:`.
-- New non-functional requirement → `nfr.md` `<requirements>` row.
+- New actor in `actors:` → `actors.md` `## Roster` row.
+- Concept used across 3+ UCs → `domain.md` `## Concepts` glossary entry.
+- Scope broadening (problem framing changes) → `context.md` `## Problem Framing` refinement.
+- New screen group → `context.md` `## Screens` section + UC `labels:`.
+- New non-functional requirement → `nfr.md` `## Requirements` row.
 
 When applying an in-situ wiki edit:
 
-1. Edit the relevant section tag.
-2. Append a dated bullet to the page's `<change-logs>` section (creating the section if absent), with a markdown link to the causing UC.
+1. Edit the relevant section.
+2. Append a dated bullet to the page's `## Change Logs` section (creating the section if absent), with a markdown link to the causing UC.
 3. Bump the wiki page's `updated:` frontmatter to today.
 
 When deferring, open a review item with `kind: gap`, `source: self`, `target: [<causing UC path>, <affected wiki basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
@@ -113,16 +113,16 @@ When a UC turns out to be too large, the protocol is:
 2. Allocate new ids for each child UC.
 3. Write each child UC file at `status: draft`.
 4. Either delete the parent UC file, or keep it at `status: blocked` with `related: [<child paths>]` if the split history matters (the supersede chain is reserved for shipped predecessors).
-5. Update any UC that referenced the parent via `related` (or in `<dependencies>` body prose) to point at the appropriate child.
+5. Update any UC that referenced the parent via `related` (or in `## Dependencies` body prose) to point at the appropriate child.
 
 Splits do **not** flow through the supersede mechanism — supersession presumes the predecessor was at one point shipped.
 
 ## Common mistakes (UC-specific)
 
-- **Required section missing** (`<goal>`, `<situation>`, `<flow>`, `<expected-outcome>`).
+- **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
 - **Stray `implemented_by:` field** → the field was retired (a4 v6.0.0); the reverse view of `task.implements:` is now derived on demand. Validators ignore the field, but it should not be re-introduced.
 
-(Universal validator catches — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
+(Universal validator catches — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (UC-specific)
 

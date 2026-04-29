@@ -11,7 +11,7 @@ allowed-tools: Bash, Write, Read, Edit, Glob
 Two modes:
 
 - **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for pre-pipeline possibilities.
-- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `<change-logs>` bullet.
+- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `## Change Logs` bullet.
 
 ## Context
 
@@ -64,14 +64,14 @@ Captured as idea #12 → /abs/path/to/a4/idea/12-콜그래프에-주석-렌더�
 
 If the idea warrants expansion, mention one-line follow-up options:
 
-- Edit the file directly to add rationale inside a `<why-this-matters>` or `<notes>` section (both optional per the XSD).
+- Edit the file directly to add rationale inside a `## Why This Matters` or `## Notes` section (both optional per the XSD).
 - When ready to pursue it, change `status:` to `promoted` and set `promoted: [<target-path>]` pointing at the new artifact (usecase / task / spark session).
 
 Do not propose auto-promotion or auto-commit.
 
 ## Discard mode
 
-Procedure: `references/discard-flow.md`. Covers target resolution (D1), status check (D2), in-place edit + `<change-logs>` append (D3), report (D4).
+Procedure: `references/discard-flow.md`. Covers target resolution (D1), status check (D2), in-place edit + `## Change Logs` append (D3), report (D4).
 
 ## Non-Goals
 

@@ -60,9 +60,9 @@ The detector emits one review item per drift, with `target: [<wiki>]`. Drift kin
 
 | Kind | Review kind | Priority | Trigger |
 |------|-------------|----------|---------|
-| `close-guard` | gap | high | Resolved review item lists `<wiki>` in `target:` but `<wiki>.md` has no `<change-logs>` bullet citing the review item. |
+| `close-guard` | gap | high | Resolved review item lists `<wiki>` in `target:` but `<wiki>.md` has no `## Change Logs` bullet citing the review item. |
 | `missing-wiki-page` | gap | high | A wiki basename inside `target:` does not exist at `a4/` root. |
-| `stale-link` | finding | medium | A body markdown link in a `<change-logs>` bullet resolves to a non-existent issue or wiki page. |
+| `stale-link` | finding | medium | A body markdown link in a `## Change Logs` bullet resolves to a non-existent issue or wiki page. |
 
 Each emitted review item carries `labels: [drift, drift:<kind>, drift-cause:<cause-slug>?]` for downstream filtering and dedup.
 

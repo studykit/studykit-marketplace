@@ -30,7 +30,7 @@ promoted: []        # paths populated when status → promoted (e.g., [spec/<id>
 tags: []
 ---
 
-<ideas>
+## Ideas
 
 ### Context
 
@@ -48,8 +48,6 @@ Key turning points, rejected directions and why, how the conversation arrived at
 ### Theme: <theme name>
 
 - **<Idea title>**: <1-2 sentence description>
-
-</ideas>
 ```
 
-Brainstorm body shape requires the `<ideas>` section; `<notes>` and `<change-logs>` are optional. Research findings, TODOs, Constraints, Open Questions, etc. are H3+ headings inside `<ideas>` (or `<notes>` if you prefer to separate them). H1 (`# Title`) is forbidden in body — the topic lives in frontmatter.
+Brainstorm body shape requires the `## Ideas` section; `## Notes` and `## Change Logs` are optional. Research findings, TODOs, Constraints, Open Questions, etc. are H3+ headings inside `## Ideas` (or `## Notes` if you prefer to separate them). H1 (`# Title`) is forbidden in body — the topic lives in frontmatter.

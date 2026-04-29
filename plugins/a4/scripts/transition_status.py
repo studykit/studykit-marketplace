@@ -14,8 +14,9 @@ the desired new status. The script:
   3. Runs mechanical validation for that specific transition (e.g.,
      `actors:` non-empty and `title:` placeholder check for
      `revising → ready` re-approval).
-  4. Writes `status:` and `updated:` in the frontmatter, appends a
-     `## Log` entry describing the transition.
+  4. Writes `status:` and `updated:` in the frontmatter. The body is
+     left untouched — the `## Log` body section, when present, is
+     hand-maintained by authors and is not written by this script.
   5. Runs cascades — cross-file status changes that are semantically
      implied by the primary transition:
 
@@ -56,8 +57,6 @@ from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any
-
-import re
 
 from common import iter_issue_files, normalize_ref
 from markdown import parse
@@ -124,49 +123,6 @@ def rewrite_frontmatter_scalar(raw_fm: str, field_name: str, new_value: str) -> 
         lines.pop()
     lines.append(f"{field_name}: {new_value}")
     return "\n".join(lines)
-
-
-_LOG_BLOCK_RE = re.compile(
-    r"^<log>\s*\n(.*?)\n^</log>\s*$",
-    re.MULTILINE | re.DOTALL,
-)
-
-
-def _format_log_block(entries: list[str]) -> str:
-    """Render the canonical `<log>` block: blank lines around bulleted entries."""
-    bullets = "\n".join(f"- {e}" for e in entries)
-    return f"<log>\n\n{bullets}\n\n</log>"
-
-
-def append_log_entry(body: str, log_line: str) -> str:
-    """Append a bullet entry to the body's `<log>` section.
-
-    If the section exists (as a column-0 ``<log>...</log>`` block, per
-    the body XML convention), prior bullet entries are preserved and the
-    new entry is appended. The whole block is re-rendered with the
-    canonical blank-line discipline so re-runs are idempotent.
-
-    If the section is missing, a new `<log>` block is appended at the
-    end of the body, separated from any preceding content by a blank
-    line.
-
-    Non-bullet content inside an existing ``<log>`` block (e.g.,
-    free-form prose between bullets) is dropped — the section
-    convention is bullets only.
-    """
-    match = _LOG_BLOCK_RE.search(body)
-    if match:
-        existing: list[str] = []
-        for line in match.group(1).splitlines():
-            stripped = line.strip()
-            if stripped.startswith("- "):
-                existing.append(stripped[2:])
-        existing.append(log_line)
-        new_block = _format_log_block(existing)
-        return body[: match.start()] + new_block + body[match.end():]
-    trimmed = body.rstrip("\n")
-    sep = "\n\n" if trimmed else ""
-    return f"{trimmed}{sep}{_format_log_block([log_line])}\n"
 
 
 def write_file(path: Path, raw_fm: str, body: str) -> None:
@@ -352,6 +308,13 @@ def _apply_status_change(
     dry_run: bool,
     today: str,
 ) -> None:
+    """Rewrite ``status:`` and ``updated:`` in frontmatter; leave body untouched.
+
+    The ``## Log`` body section, when present, is hand-maintained — this
+    writer never reads or rewrites it. ``log_reason`` is preserved on
+    the in-memory ``Change`` record so the report can surface it; it
+    has no on-disk effect.
+    """
     if dry_run:
         return
     fm, raw_fm, body = _parse(path)
@@ -359,18 +322,7 @@ def _apply_status_change(
         raise RuntimeError(f"{path}: unreadable frontmatter")
     new_fm = rewrite_frontmatter_scalar(raw_fm, "status", to_status)
     new_fm = rewrite_frontmatter_scalar(new_fm, "updated", today)
-    log_line = _format_log_line(today, from_status, to_status, log_reason)
-    new_body = append_log_entry(body, log_line)
-    write_file(path, new_fm, new_body)
-
-
-def _format_log_line(
-    today: str, from_status: str, to_status: str, reason: str
-) -> str:
-    core = f"{today} — {from_status} → {to_status}"
-    if reason:
-        core += f" — {reason}"
-    return core
+    write_file(path, new_fm, body)
 
 
 def _cascade_uc_revising(
@@ -779,8 +731,8 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
       - spec @ `active` → flip same-family targets
         `{active|deprecated} → superseded`.
 
-    Used when edits bypassed the script (e.g., manual git checkout) and
-    `## Log` back-pointers may have been lost. Idempotent.
+    Used when edits bypassed the script (e.g., manual git checkout) so
+    a derived `superseded` flip never landed. Idempotent.
     """
     reports: list[Report] = []
     today = date.today().isoformat()
@@ -905,7 +857,10 @@ def main() -> None:
     )
     parser.add_argument(
         "--reason", type=str, default=None,
-        help="one-line rationale recorded in the `## Log` entry",
+        help=(
+            "one-line rationale captured in the report. The body's `## Log` "
+            "section is hand-maintained — this script does not write to it."
+        ),
     )
     parser.add_argument(
         "--validate", action="store_true",

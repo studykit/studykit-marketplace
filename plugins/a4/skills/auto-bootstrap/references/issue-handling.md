@@ -22,7 +22,7 @@ If the same fix fails twice, stop and emit a review item rather than retrying fu
 
 Allocate ids via `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
 
-Review body shape (per `references/review-authoring.md`) requires `<description>`; `<log>` and `<change-logs>` are optional.
+Review body shape (per `references/review-authoring.md`) requires `## Description`; `## Log` and `## Change Logs` are optional.
 
 ### Architecture issue
 
@@ -41,15 +41,13 @@ created: <today>
 updated: <today>
 ---
 
-<description>
+## Description
 
 **Summary.** What was attempted; what failed.
 
 **Evidence.** Build / run / test output, truncated.
 
 **Suggestion.** Re-evaluate <component / test-tier / dependency> choice in architecture.md. Concrete alternative: <proposed fix>. Run `/a4:arch iterate` to address.
-
-</description>
 ````
 
 ### Environment issue (auto-fixed)
@@ -69,21 +67,17 @@ created: <today>
 updated: <today>
 ---
 
-<description>
+## Description
 
 **Summary.** What went wrong.
 
 **Fix applied.** What was done, citing [research/bootstrap-<label>](../../research/bootstrap-<label>.md) if a research report informed the fix.
 
-</description>
-
-<log>
+## Log
 
 - <today> — resolved at bootstrap time
-
-</log>
 ````
 
 ### Environment issue (unresolved)
 
-Same as auto-fixed but `status: open` and the `<description>` carries a `**Suggestion.**` paragraph with concrete next-step guidance for the user instead of `**Fix applied.**`.
+Same as auto-fixed but `status: open` and the `## Description` carries a `**Suggestion.**` paragraph with concrete next-step guidance for the user instead of `**Fix applied.**`.

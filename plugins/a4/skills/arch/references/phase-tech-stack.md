@@ -1,6 +1,6 @@
 # Phase 1: Technology Stack
 
-Select language, framework, platform, and key libraries for `<technology-stack>` in `architecture.md`.
+Select language, framework, platform, and key libraries for `## Technology Stack` in `architecture.md`.
 
 ## Procedure
 
@@ -12,7 +12,7 @@ Select language, framework, platform, and key libraries for `<technology-stack>`
 
 3. **Codebase detection.** If a codebase already exists, detect the stack from project files (package.json, pyproject.toml, Cargo.toml, lockfiles, framework configs) and confirm with the user before recording.
 
-4. **Write the initial `architecture.md`** at the end of Phase 1 with frontmatter, `<overview>` stub, and the confirmed `<technology-stack>` content.
+4. **Write the initial `architecture.md`** at the end of Phase 1 with frontmatter, `## Overview` stub, and the confirmed `## Technology Stack` content.
 
 ## Output checklist
 

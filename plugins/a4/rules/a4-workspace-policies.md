@@ -11,6 +11,6 @@ These pointers apply to **every** file under `a4/`, regardless of type or locati
 ## Cross-cutting contracts
 
 - `../references/frontmatter-schema.md` — full field schema, lifecycle tables, validator behavior, writer-owned fields.
-- `../references/body-conventions.md` — body tag form, blank-line discipline, link form, frontmatter vs body path-reference form, `<change-logs>` / `<log>` rules, wiki update protocol.
+- `../references/body-conventions.md` — body heading form, blank-line discipline, link form, frontmatter vs body path-reference form, `## Change Logs` / `## Log` rules, wiki update protocol.
 - `../docs/iterate-mechanics.md` — review-item walk procedure (filter, transition, close guard).
 - `../references/commit-message-convention.md` — `#<id>` commit subject form.

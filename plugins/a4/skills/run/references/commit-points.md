@@ -16,7 +16,7 @@ Per successfully-implemented task. Serial mode skips this step (task-implementer
 
 ## Per-cycle test results
 
-After Step 3, commit the emitted test-runner review items + updated task `<log>` entries as one commit:
+After Step 3, commit the emitted test-runner review items + updated task frontmatter as one commit:
 
 ```
 #<r1> #<r2> ... chore(a4): cycle <N> test-runner findings

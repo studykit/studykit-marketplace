@@ -108,7 +108,7 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
 
 ## Transition Workflow
 
-`scripts/transition_status.py` is the single writer for `usecase` / `task` / `review` / `spec` status changes. It validates the transition, writes `status:` + `updated:` + a `<log>` entry, and runs cascades (UC `revising` task reset, `discarded` cascade, `shipped → superseded` chain, spec `active → superseded` chain). See [`references/frontmatter-schema.md §Status writers`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+`scripts/transition_status.py` is the single writer for `usecase` / `task` / `review` / `spec` status changes. It validates the transition, writes `status:` and bumps `updated:`, and runs cascades (UC `revising` task reset, `discarded` cascade, `shipped → superseded` chain, spec `active → superseded` chain). The writer does **not** write into `## Log` — that section is optional and hand-maintained. See [`references/frontmatter-schema.md §Status writers`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
 
 **Caller-explicit-only contract.** Run a transition only when the caller has supplied **both** the target file and the desired status. If the caller asks vaguely ("clean up finished tasks"), you respond by listing candidates with citations and ask the caller to confirm the exact `(file, status)` pair before executing. You never pick a status yourself.
 
@@ -121,7 +121,7 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
    uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "$ROOT/a4" \
      --file <resolved-file> --to <status> [--reason "<one-liner>"] [--json]
    ```
-4. **Surface the result.** On success, report the new status, the `<log>` entry that was written, and any cascade-affected files (one line per file). On failure, surface stderr verbatim and stop — do not retry, do not `--force`.
+4. **Surface the result.** On success, report the new status (old → new), the `--reason` text passed to the writer, and any cascade-affected files (one line per file). On failure, surface stderr verbatim and stop — do not retry, do not `--force`.
 
 **Forbidden:**
 
@@ -147,7 +147,7 @@ Different per mode:
 
 **Transition mode:**
 
-- Surface only the diff: old status → new status, the `<log>` entry, cascade-affected files (one line per file). Do not paste the full file body. No editorial framing.
+- Surface only the diff: old status → new status, the `--reason` text passed to the writer, cascade-affected files (one line per file). Do not paste the full file body. No editorial framing.
 
 ## Schema Awareness
 

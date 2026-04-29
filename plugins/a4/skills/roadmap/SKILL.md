@@ -24,7 +24,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 **Outputs:**
 
-- `a4/roadmap.md` — single wiki page covering Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points (all H3+ headings inside `<plan>`). Launch & Verify is a one-line pointer to `bootstrap.md`, not authored content.
+- `a4/roadmap.md` — single wiki page covering Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points (all H3+ headings inside `## Plan`). Launch & Verify is a one-line pointer to `bootstrap.md`, not authored content.
 - `a4/task/feature/<id>-<slug>.md` — one per executable unit of work. The roadmap generator always emits `kind: feature`; spike / bug tasks come through `/a4:task`.
 - `a4/review/<id>-<slug>.md` — findings from roadmap-reviewer.
 
@@ -74,7 +74,7 @@ After Step 4 closes:
 
 > Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks (spike / bug / spec-justified feature) can be added at any time via `/a4:task`.
 
-`/a4:run` reads `a4/bootstrap.md` directly. Make sure `bootstrap.md` exists and its `<verify>` content is correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
+`/a4:run` reads `a4/bootstrap.md` directly. Make sure `bootstrap.md` exists and its `## Verify` content is correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
 
 ## Commit Points
 
@@ -96,7 +96,7 @@ When the user ends the roadmap-authoring session:
 ## Non-Goals
 
 - Do not split the roadmap into per-milestone files. `roadmap.md` holds all milestone narrative in one file.
-- Do not add a `phase:` or `milestone:` frontmatter field to tasks (a4 v6.0.0 retired `milestone:` from issue frontmatter). Milestone grouping lives in `roadmap.md`'s `<plan>` narrative.
+- Do not add a `phase:` or `milestone:` frontmatter field to tasks (a4 v6.0.0 retired `milestone:` from issue frontmatter). Milestone grouping lives in `roadmap.md`'s `## Plan` narrative.
 - Do not maintain a separate `roadmap.history.md`.
 - Do not emit aggregated roadmap-review reports. All findings are per-review-item files.
 - Do not track per-source SHAs on `roadmap.md`.

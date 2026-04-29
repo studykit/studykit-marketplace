@@ -14,7 +14,7 @@ A research task is the right slot when:
 - The output should be **citable** by a later spec, feature task, or design conversation.
 - The investigation has a **bounded scope** — a question, a topic, or a fixed set of options to compare.
 
-If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `<decision-log>` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `kind: spike` task with an `artifacts/task/spike/<id>-<slug>/` directory.
+If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `## Decision Log` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `kind: spike` task with an `artifacts/task/spike/<id>-<slug>/` directory.
 
 ## Frontmatter contract (do not deviate)
 
@@ -40,9 +40,9 @@ updated: YYYY-MM-DD
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `kind: research` is fixed for files under `a4/task/research/`. Every task must declare the kind explicitly.
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
-- `options:` is required when `mode: comparative` — list the option names that the body's `<options>` section will cover, one subsection per option.
+- `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option.
 - `implements:` is **usually empty** — research is investigation, not delivery. Populate only if the research is scoped to a specific UC's open question.
-- `spec:` is **not allowed** on research (a4 v6.0.0). Cite the triggering spec via a markdown link inside `<context>` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
+- `spec:` is **not allowed** on research (a4 v6.0.0). Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
 - `files:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/task/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `files:` (they belong in body links).
 - `cycle:` is **not allowed** on research (a4 v6.0.0); investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
@@ -78,42 +78,40 @@ Writer rules (task-specific):
 
 When the chosen initial status is `complete`, the investigation is asserted to already be captured in the body. Verify before writing:
 
-1. Required body sections (`<context>`, plus `<options>` for `comparative` mode or `<findings>` for `single` mode) must be present and non-empty.
-2. After writing the file, append an explicit `<log>` block recording the post-hoc origin (the writer never logged a `progress → complete` transition for this task):
+1. Required sections (`## Context`, plus `## Options` for `comparative` mode or `## Findings` for `single` mode) must be present and non-empty.
+2. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (the section is optional and hand-maintained):
 
    ```markdown
-   <log>
+   ## Log
 
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; investigation captured in this conversation)
-
-   </log>
    ```
 
-   This is the **only** case where `<log>` is written directly — every subsequent entry must come from `transition_status.py`.
+   `transition_status.py` does not touch `## Log`; the section is purely an author convenience.
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
-- `<context>` — why the research is needed. The specific question or comparison purpose. 1–3 sentences.
+- `## Context` — why the research is needed. The specific question or comparison purpose. 1–3 sentences.
 
 **Required by mode (one of these, never both):**
 
-- `<options>` — for `mode: comparative`. One H3 subsection per option name listed in `options:` frontmatter. Each subsection contains:
+- `## Options` — for `mode: comparative`. One H3 subsection per option name listed in `options:` frontmatter. Each subsection contains:
   - **Sources consulted** — bullet list of URLs, document paths, or explicit search queries.
   - **Key findings** — paragraph(s) with inline citations to the sources.
   - **Raw excerpts** — concrete evidence (quotes, benchmark numbers, API signatures), preferably wrapped in `<details><summary>Raw excerpts</summary>...</details>` so the section folds cleanly.
-- `<findings>` — for `mode: single`. The same structure (Sources consulted / Key findings / Raw excerpts) but flat — no per-option split.
+- `## Findings` — for `mode: single`. The same structure (Sources consulted / Key findings / Raw excerpts) but flat — no per-option split.
 
 **Optional:**
 
-- `<change-logs>` — append-only audit trail when the body is materially edited post-create.
-- `<log>` — append-only writer-owned status-transition trail. Never write into `<log>` directly except for the documented post-hoc-`complete` case above.
-- `<why-discarded>` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture beyond the `<log>` line.
+- `## Change Logs` — append-only audit trail when the body is materially edited post-create.
+- `## Log` — optional, hand-maintained status-transition narrative. `transition_status.py` does not touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Why Discarded` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture.
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ## Artifacts directory
 
@@ -142,18 +140,18 @@ Use `/a4:research-review` to walk a structured quality pass over the task body. 
 
 Citations are **soft** — there is no stored-reverse contract. Two paths:
 
-- **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `<decision-log>` or `<rejected-alternatives>`): `[task/<id>-<slug>](../task/research/<id>-<slug>.md)`. Optionally add the task path to the spec's `related:` frontmatter list for frontmatter-level discoverability.
-- **From a feature task body.** Same — link inside `<description>` or `<interface-contracts>` and optionally add to `related:`.
+- **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `[task/<id>-<slug>](../task/research/<id>-<slug>.md)`. Optionally add the task path to the spec's `related:` frontmatter list for frontmatter-level discoverability.
+- **From a feature task body.** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
 
 Reverse lookups (which specs cite a research task) are derived on demand via grep / `search.py`; they are not stored on the research task.
 
 ## Don't (research-task-specific)
 
-- **Don't put `cycle:` or `spec:` on a research task.** Both are forbidden on `kind: research` (a4 v6.0.0). Cite triggering specs via markdown links in `<context>` body prose.
+- **Don't put `cycle:` or `spec:` on a research task.** Both are forbidden on `kind: research` (a4 v6.0.0). Cite triggering specs via markdown links in `## Context` body prose.
 - **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a research task stays enqueued or moves forward / out.
 - **Don't omit `kind:` or `mode:`.** Both are required on research tasks.
-- **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `<decision-log>` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
-- **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `<decision-log>`.
+- **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
+- **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
 - **Don't author a `kind: feature` / `spike` / `bug` task here.** Move them to `a4/task/feature/`, `a4/task/spike/`, or `a4/task/bug/` so the matching per-kind authoring contract applies.

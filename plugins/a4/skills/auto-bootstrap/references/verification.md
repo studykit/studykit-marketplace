@@ -1,6 +1,6 @@
 # Verification Checklist
 
-Run each check and record the outcome in `bootstrap.md`'s `<verify>` section:
+Run each check and record the outcome in `bootstrap.md`'s `## Verify` section:
 
 - **Build** — build command exits 0.
 - **Run** — launch command starts the app without error; clean up.

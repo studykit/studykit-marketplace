@@ -15,15 +15,15 @@ updated: YYYY-MM-DD
 
 - `type:` must be exactly `actors`.
 - `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `<log>`, no lifecycle.
+- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Roster`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
 **Required:**
 
-- `<roster>` — the actor table. One row per actor with these columns:
+- `## Roster` — the actor table. One row per actor with these columns:
   - **Slug** — kebab-case identifier (e.g., `meeting-organizer`, `team-member`, `platform`). This is what UC frontmatter `actors: [<slug>]` references.
   - **Type** — `person` or `system`.
   - **Role / privileges** — what this actor is allowed to do; the privilege level relative to other actors.
@@ -31,9 +31,9 @@ The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + 
 
 **Optional:**
 
-- `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ### Slug discipline
 
@@ -49,31 +49,29 @@ A new actor's slug should:
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained (e.g., the description column may link to representative UCs: `[usecase/3-search-history](usecase/3-search-history.md)`).
 
-## `<change-logs>` discipline
+## `## Change Logs` discipline
 
 ```markdown
-<change-logs>
+## Change Logs
 
 - YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added actor team-member
 - YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — renamed admin → workspace-admin
-
-</change-logs>
 ```
 
 Create the section if absent. Drift detection cross-checks UC `actors:` lists against the roster — a UC referencing an unknown slug emits a `kind: finding` review item.
 
 ## Common mistakes
 
-- **Stray content outside section blocks**.
-- **Required section missing** (`<roster>`).
-- **Inline or attribute-bearing tags**.
-- **Same-tag nesting**.
-- **H1 in body**. Page name is the file basename.
+- **Stray content above the first H2 heading**.
+- **Required section missing** (`## Roster`).
+- **H2 not in column 0 or not Title Case**.
+- **Sections nested inside other sections** — every section sits at the body's top level.
+- **H1 in body**. Page name is the file basename; title is frontmatter-only.
 - **`type:` mismatch** with filename → frontmatter validator error.
 
 ## Don't
 
 - **Don't rename a slug without a review item** when the cascade touches more than one or two UCs.
-- **Don't put authorization rules here as prose.** The roster carries privilege levels; per-UC authorization is encoded in UC `<flow>` / `<validation>` (and in `architecture.md` for technical enforcement details).
-- **Don't pack actor backstories.** The description column is one paragraph. Longer narratives belong in `context.md`'s `<problem-framing>`.
-- **Don't append `<change-logs>` bullets without a markdown link.**
+- **Don't put authorization rules here as prose.** The roster carries privilege levels; per-UC authorization is encoded in UC `## Flow` / `## Validation` (and in `architecture.md` for technical enforcement details).
+- **Don't pack actor backstories.** The description column is one paragraph. Longer narratives belong in `context.md`'s `## Problem Framing`.
+- **Don't append `## Change Logs` bullets without a markdown link.**

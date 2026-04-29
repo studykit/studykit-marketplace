@@ -10,5 +10,5 @@ When **authoring or editing** `a4/bootstrap.md`, read these first.
 
 ## Required reading before authoring
 
-- `../references/bootstrap-authoring.md` — purpose, frontmatter, body shape (incl. why `<verify>` lives only here), common mistakes, "Don't" list.
+- `../references/bootstrap-authoring.md` — purpose, frontmatter, body shape (incl. why `## Verify` lives only here), common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).

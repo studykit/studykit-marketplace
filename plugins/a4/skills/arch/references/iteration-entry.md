@@ -10,8 +10,8 @@ Open review items whose `target:` list contains `architecture`.
 
 Surface alongside the backlog:
 
-1. **New or changed UCs.** Compare `architecture.md`'s `<change-logs>` entries against current UC files. UCs not yet cited in any change-log entry are "needs coverage" candidates.
-2. **UC ↔ actor / domain drift.** For each `<components>` Information Flow subsection in `architecture.md`, check that the referenced UCs and components still exist as current files / component sections.
+1. **New or changed UCs.** Compare `architecture.md`'s `## Change Logs` entries against current UC files. UCs not yet cited in any change-log entry are "needs coverage" candidates.
+2. **UC ↔ actor / domain drift.** For each `## Components` Information Flow subsection in `architecture.md`, check that the referenced UCs and components still exist as current files / component sections.
 
 ## Architecture impact propagation rule
 

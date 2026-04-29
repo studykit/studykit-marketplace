@@ -10,7 +10,7 @@ Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for
 a4/ path: <absolute path>
 Cycle: <current integer>
 
-Use bootstrap.md's <verify> section (verified commands, smoke scenario, test isolation
+Use bootstrap.md's ## Verify section (verified commands, smoke scenario, test isolation
 flags) for build / run / test commands. Run integration and smoke tests as defined
 there. For each failing test, emit one review item at
 a4/review/<id>-<slug>.md via allocate_id.py with:

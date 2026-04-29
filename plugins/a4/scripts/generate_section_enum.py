@@ -9,6 +9,11 @@ Source of truth is ``body_schemas/<type>.xsd``. Each schema has a root
 sections; ``minOccurs="0"`` (or absence of ``minOccurs``) decides whether
 the section is optional or required.
 
+XSD element names use lowercase kebab-case (XML grammar forbids spaces
+in element names). The rule file lists the same sections in the body's
+authored form — H2 markdown headings in Title Case with spaces, e.g.
+``## Change Logs`` — by mapping kebab-case → Title Case.
+
 The rule file ships a sentinel-bracketed block::
 
     <!-- BEGIN section-enum -->
@@ -84,9 +89,19 @@ def _sections_for(type_: str) -> tuple[list[str], list[str]]:
     return required, optional
 
 
+def _heading_form(slug: str) -> str:
+    """Map a kebab-case XSD element name to its body heading form.
+
+    `change-logs` -> `## Change Logs`, `context` -> `## Context`,
+    `unit-test-strategy` -> `## Unit Test Strategy`.
+    """
+    parts = [p for p in slug.split("-") if p]
+    return "## " + " ".join(p.capitalize() for p in parts)
+
+
 def _format_bullet(type_: str, required: list[str], optional: list[str], pad: int) -> str:
-    req = ", ".join(required)
-    opt = ", ".join(optional)
+    req = ", ".join(_heading_form(s) for s in required)
+    opt = ", ".join(_heading_form(s) for s in optional)
     return f"- {type_.ljust(pad)}  R{{{req}}} O{{{opt}}}"
 
 

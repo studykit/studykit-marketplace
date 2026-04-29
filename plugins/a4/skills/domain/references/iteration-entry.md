@@ -10,7 +10,7 @@ Open review items whose `target:` list contains `domain`.
 
 Surface alongside the backlog:
 
-1. **New or changed UCs since last update.** Compare `domain.md`'s `<change-logs>` entries against current UC files. UCs not yet reflected in any domain entry are "needs concept review" candidates. The drift detector emits `kind: gap` review items for staleness.
+1. **New or changed UCs since last update.** Compare `domain.md`'s `## Change Logs` entries against current UC files. UCs not yet reflected in any domain entry are "needs concept review" candidates. The drift detector emits `kind: gap` review items for staleness.
 2. **Stale concept signal.** If `a4/domain.md`'s `updated:` is older than the most recent UC file's `updated:` by ≥ 3 UC additions, surface this as a likely review trigger even when no review item exists.
 
 ## Domain impact propagation rule

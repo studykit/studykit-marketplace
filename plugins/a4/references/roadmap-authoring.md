@@ -15,50 +15,48 @@ updated: YYYY-MM-DD
 
 - `type:` must be exactly `roadmap`.
 - `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `<log>`, no lifecycle.
+- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
 
 ## Body shape
 
-The body is a sequence of column-0 `<section>...</section>` blocks (lowercase + kebab-case), with markdown content between the open and close lines. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Plan`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
 **Required:**
 
-- `<plan>` — the entire roadmap content lives in this single section, organized internally with H3+ headings:
+- `## Plan` — the entire roadmap content lives in this single section, organized internally with H3+ headings:
   - **Milestone narrative.** What each milestone delivers, in user terms (links to the UCs it ships).
-  - **Dependency graph.** Which milestones depend on which (mermaid or table form). Derived from each UC's `<dependencies>` body narrative, `task.depends_on:` chains, and architecture Shared Integration Points.
-  - **Shared Integration Points.** Architecture interfaces that multiple milestones touch — typically named with markdown links into `architecture.md` `<components>`.
+  - **Dependency graph.** Which milestones depend on which (mermaid or table form). Derived from each UC's `## Dependencies` body narrative, `task.depends_on:` chains, and architecture Shared Integration Points.
+  - **Shared Integration Points.** Architecture interfaces that multiple milestones touch — typically named with markdown links into `architecture.md` `## Components`.
   - **Launch & Verify pointer.** A one-line link pointing at `bootstrap.md` (`See [bootstrap](bootstrap.md) for environment setup, build commands, and the verified smoke test.`). **No Launch & Verify content lives here** — `bootstrap.md` is the single source of truth.
 
 **Optional:**
 
-- `<change-logs>` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ### Body-link form
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Every UC reference in the milestone narrative and every architecture component reference in Shared Integration Points uses this form.
 
-## `<change-logs>` discipline
+## `## Change Logs` discipline
 
 ```markdown
-<change-logs>
+## Change Logs
 
 - YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — milestone-2 reshaped after arch fix
 - YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added to milestone-3
-
-</change-logs>
 ```
 
 Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `roadmap` transitions to `resolved`.
 
 ## Common mistakes
 
-- **Stray content outside section blocks**.
-- **Required section missing** (`<plan>`).
-- **Inline or attribute-bearing tags**.
-- **Same-tag nesting**.
-- **H1 in body**. Page name is the file basename.
+- **Stray content above the first H2 heading**.
+- **Required section missing** (`## Plan`).
+- **H2 not in column 0 or not Title Case**.
+- **Sections nested inside other sections** — every section sits at the body's top level.
+- **H1 in body**. Page name is the file basename; title is frontmatter-only.
 - **`type:` mismatch** with filename → frontmatter validator error.
 
 ## Don't
@@ -67,4 +65,4 @@ Create the section if absent. The wiki close guard surfaces missing bullets when
 - **Don't define new architecture components here.** Components live in `architecture.md`. The roadmap references them.
 - **Don't author tasks here.** Tasks live in `a4/task/<id>-<slug>.md`. The roadmap names milestones; tasks deliver them.
 - **Don't pack architecture rationale.** Decisions belong in specs; the architecture page records the *current* shape; the roadmap records the *delivery sequence*.
-- **Don't append `<change-logs>` bullets without a markdown link.**
+- **Don't append `## Change Logs` bullets without a markdown link.**

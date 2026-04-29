@@ -5,7 +5,7 @@ Single source of truth for the **formal procedure** every iterate flow follows w
 **Mental model.** Treat each iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when starting, archive (resolve / discard) when done. The mechanics here are the mailbox protocol.
 
 Companion to:
-- [`body-conventions.md`](./body-conventions.md) — body tag form, `<change-logs>` and `<log>` rules, link form.
+- [`body-conventions.md`](./body-conventions.md) — body heading form, `## Change Logs` and `## Log` rules, link form.
 - [`frontmatter-schema.md`](./frontmatter-schema.md) — review-item frontmatter contract.
 
 ## Scope
@@ -15,7 +15,7 @@ This document covers the **mechanics** shared across iterate flows:
 1. Filter the review backlog to the items this stage owns.
 2. Present the backlog as a selectable priority table.
 3. Transition status via the writer at every step.
-4. Record wiki edits as `<change-logs>` bullets.
+4. Record wiki edits as `## Change Logs` bullets.
 5. Honor the never-hand-edit / never-renumber discipline.
 
 Stage-specific **work** — the impact rules, drift checks, cycle counters, scope-handling, and re-runs that each iterate mode adds on top — sits outside this mechanics doc.
@@ -50,11 +50,11 @@ Show the filtered set as a priority-ordered table. Use this shape:
 
 Order by `priority` (High → Medium → Low), then by `created:`. Drift-detector items (`source: drift-detector`) with `priority: high` lead.
 
-If a stage detects **staleness signals** (e.g., domain page's `updated:` predates recent UC additions, arch page's `<change-logs>` misses recent UC files) and no review item exists yet, the stage may surface them as "likely review triggers" alongside the backlog.
+If a stage detects **staleness signals** (e.g., domain page's `updated:` predates recent UC additions, arch page's `## Change Logs` misses recent UC files) and no review item exists yet, the stage may surface them as "likely review triggers" alongside the backlog.
 
 ## 3. Transition status via the writer
 
-Every status change goes through `transition_status.py`. Never hand-edit `status:`, `updated:`, or `<log>` on a review item.
+Every status change goes through `transition_status.py`. Never hand-edit `status:` or `updated:` on a review item. The writer flips status and bumps `updated:` but does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet to `## Log` by hand.
 
 **Pick → in-progress** (when an item is selected for work):
 
@@ -83,20 +83,20 @@ uv run "../scripts/transition_status.py" \
   --reason "<short — why discarded>"
 ```
 
-The writer writes `status:`, bumps `updated:`, and appends a `<log>` entry. Do not write any of those fields directly.
+The writer writes `status:` and bumps `updated:`. It does **not** write into `## Log` — that section is optional and hand-maintained. Do not write `status:` or `updated:` directly.
 
 ## 4. Record wiki edits
 
 When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `roadmap.md`, `bootstrap.md`):
 
-- Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
-- The wiki close guard warns at resolve-time when `target:` lists wiki basenames but the referenced page lacks a `<change-logs>` bullet pointing at the review item.
+- Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
+- The wiki close guard warns at resolve-time when `target:` lists wiki basenames but the referenced page lacks a `## Change Logs` bullet pointing at the review item.
 
-Full `<change-logs>` formatting rules: [`body-conventions.md`](./body-conventions.md).
+Full `## Change Logs` formatting rules: [`body-conventions.md`](./body-conventions.md).
 
 ## 5. Discipline (always-hold rules)
 
-- **Never hand-edit** `status:` / `updated:` / `<log>` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](./frontmatter-schema.md).
+- **Never hand-edit** `status:` / `updated:` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](./frontmatter-schema.md). The optional `## Log` body section is hand-maintained — the writer does not touch it.
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.

@@ -23,15 +23,15 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 
 From the invoking `roadmap` / `run` skill:
 
-- **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify: the `<verify>` section, with verified commands, smoke scenario, and test isolation flags as H3+ subsections).
+- **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify: the `## Verify` section, with verified commands, smoke scenario, and test isolation flags as H3+ subsections).
 - **`a4/` path** — absolute path to the workspace, so you can enumerate tasks (`ls a4/task/*/*.md` — task files live under `feature/`, `bug/`, or `spike/` subfolders), identify task-to-test mappings, and write review items into `a4/review/`.
 - **Cycle** — integer identifying this test cycle (1, 2, 3…). Used as a `labels:` entry on emitted review items (`cycle-<N>`).
 
 ## What You Do
 
-1. **Build** — run the build command from `bootstrap.md`'s `<verify>` section (Verified Commands subsection). On build failure, emit one review item with `target: bootstrap` (unless the error is clearly isolated to one task's files, in which case target that task).
-2. **Run integration tests** — using the integration-test command from the `<verify>` section's Verified Commands and the flags from its Test Isolation Flags subsection.
-3. **Run smoke tests** — execute the scenario described in the `<verify>` section's Smoke Scenario subsection.
+1. **Build** — run the build command from `bootstrap.md`'s `## Verify` section (Verified Commands subsection). On build failure, emit one review item with `target: bootstrap` (unless the error is clearly isolated to one task's files, in which case target that task).
+2. **Run integration tests** — using the integration-test command from the `## Verify` section's Verified Commands and the flags from its Test Isolation Flags subsection.
+3. **Run smoke tests** — execute the scenario described in the `## Verify` section's Smoke Scenario subsection.
 4. **For each failure**, emit one review item (see Output below).
 5. **Return** a concise summary.
 
@@ -70,7 +70,7 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-<description>
+## Description
 
 > Cycle: <N>
 > Tier: integration | smoke
@@ -86,8 +86,6 @@ updated: <YYYY-MM-DD>
 ```
 
 **Probable Pointer.** Non-classifying observation — e.g., "assertion on response.status failed in `tests/integration/auth.test.ts:42`". Do NOT speculate whether the fix belongs in roadmap, arch, or usecase.
-
-</description>
 ````
 
 ### Target Mapping
@@ -97,8 +95,8 @@ updated: <YYYY-MM-DD>
 
 ## Rules
 
-- Use bootstrap.md's `<verify>` section (Verified Commands subsection) for build/run/test commands — do not auto-detect.
-- Apply test isolation flags from bootstrap.md's `<verify>` section (Test Isolation Flags subsection) — e.g., `--disable-extensions`, clean profile dir.
+- Use bootstrap.md's `## Verify` section (Verified Commands subsection) for build/run/test commands — do not auto-detect.
+- Apply test isolation flags from bootstrap.md's `## Verify` section (Test Isolation Flags subsection) — e.g., `--disable-extensions`, clean profile dir.
 - Record factual results only.
 - Do not commit the review items; the invoking skill commits them as part of its cycle commit.
 - Never edit roadmap, tasks, architecture, or UCs. Findings go into review items only.

@@ -51,7 +51,7 @@ related: []
 labels: []
 ```
 
-Body sections (per `references/usecase-authoring.md` — required: `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>`; optional: `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>`).
+Body sections (per `references/usecase-authoring.md` — required: `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation`; optional: `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation`).
 
 ## Review Criteria
 
@@ -164,7 +164,7 @@ Findings set `target: [actors]`, or `target: [<uc-path>]` when the UC text is th
 ### Relationship Consistency (Cross-UC)
 
 Derived diagram views depend on UC frontmatter:
-- A UC referenced by any `related:` (or by `<dependencies>` body links) should still exist. Dead references → `STALE RELATIONSHIP`.
+- A UC referenced by any `related:` (or by `## Dependencies` body links) should still exist. Dead references → `STALE RELATIONSHIP`.
 
 ### System Completeness
 
@@ -213,7 +213,7 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-<description>
+## Description
 
 > Review run: <YYYY-MM-DD HH:mm>
 
@@ -222,8 +222,6 @@ updated: <YYYY-MM-DD>
 **Evidence.** Quote the specific UC lines, actor row, or wiki section demonstrating the issue. Reference the target via standard markdown link — `[<target>](../<target>.md)`.
 
 **Suggestion.** Concrete, user-level suggestion for the fix. For `SPLIT` findings, include the full proposed child UCs. For `MISSING PRECISION`, list the specific validation/error scenarios to add. Do not rewrite the UC body — direction, not replacement.
-
-</description>
 ```
 
 ### Target Mapping

@@ -24,7 +24,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies.
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md` — what makes the roadmap wiki "complete" (`<plan>` H3 subsections: milestone narrative, dependency graph, Shared Integration Points, L&V pointer).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md` — what makes the roadmap wiki "complete" (`## Plan` H3 subsections: milestone narrative, dependency graph, Shared Integration Points, L&V pointer).
 - The per-kind task contracts: `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md` (frontmatter, body sections, AC source per kind). Roadmap-derived tasks are always `kind: feature` and live under `a4/task/feature/`; spike / bug entries authored via `/a4:task` live under their respective subfolders.
 
 ## What You Receive
@@ -110,7 +110,7 @@ Verdicts: `OK` | `NO TEST STRATEGY` | `VAGUE TESTS` | `MISSING ERROR TESTS` | `N
 ### 6. File Mapping — `files`
 
 Per task:
-- Is a `<files>` section (or frontmatter `files:`) populated?
+- Is a `## Files` section (or frontmatter `files:`) populated?
 - Are paths specific enough (`src/services/auth.service.ts`, not "a service file")?
 - For modifications to existing files, is the change scope described (added fields, modified signatures)?
 - Do file paths respect the codebase's existing conventions (check via `a4/bootstrap.md` and direct codebase exploration)?
@@ -177,7 +177,7 @@ created: <YYYY-MM-DD>
 updated: <YYYY-MM-DD>
 ---
 
-<description>
+## Description
 
 > Review run: <YYYY-MM-DD HH:mm>
 
@@ -188,8 +188,6 @@ updated: <YYYY-MM-DD>
 **Impact.** What a developer would guess or re-decide when implementing this roadmap as-is.
 
 **Suggestion.** Concrete direction for the fix. For coverage gaps, name the missing UC / component / tier. For granularity issues, propose the split / merge. For source conflicts, state which side should be corrected and why.
-
-</description>
 ```
 
 ### Target Mapping

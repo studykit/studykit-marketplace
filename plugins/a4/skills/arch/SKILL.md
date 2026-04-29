@@ -92,7 +92,7 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 
 ## File Writing Rules
 
-- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter, `<overview>` stub, and the confirmed `<technology-stack>` content.
+- **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter, `## Overview` stub, and the confirmed `## Technology Stack` content.
 - **Update** at each phase transition using `Edit` where possible. `Write` only for full rewrites.
 - **Change-log entries** — append a dated bullet citing the causing UC / spec / review item.
 - **`updated:`** — bump on every phase transition or reflected resolution.

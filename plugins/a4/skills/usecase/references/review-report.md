@@ -22,10 +22,10 @@ updated: <YYYY-MM-DD>
 ---
 ```
 
-Body structure (per `references/review-authoring.md` — `<description>` required, `<log>` and `<change-logs>` optional):
+Body structure (per `references/review-authoring.md` — `## Description` required, `## Log` and `## Change Logs` optional):
 
 ```markdown
-<description>
+## Description
 
 > Review run: <YYYY-MM-DD HH:mm>
 
@@ -34,8 +34,6 @@ Body structure (per `references/review-authoring.md` — `<description>` require
 **Evidence.** Quote the specific UC lines, actor table row, or wiki section that demonstrate the issue. Reference the target via standard markdown link — `[usecase/<id>-<slug>](../usecase/<id>-<slug>.md)`.
 
 **Suggestion.** Concrete, user-level suggestion for the fix. Do not rewrite the UC body — suggest direction and let the facilitator/author apply the edit.
-
-</description>
 ```
 
 ## Kind Mapping

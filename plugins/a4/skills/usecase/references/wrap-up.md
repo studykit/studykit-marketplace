@@ -14,7 +14,7 @@ When the user indicates they're done, mark the in-progress phase task `completed
 
 4. **Walk findings** — for each emitted review item, present to the user. Resolve in place (edit the target UC / wiki page, set `status: resolved` in the review item via `transition_status.py`) or defer (leave `status: open`).
 
-5. **Wiki close guard** — for each resolved review item whose `target:` lists one or more wiki basenames, verify each referenced wiki page has a `<change-logs>` bullet whose markdown link points at the review item itself. Warn + allow override when missing.
+5. **Wiki close guard** — for each resolved review item whose `target:` lists one or more wiki basenames, verify each referenced wiki page has a `## Change Logs` bullet whose markdown link points at the review item itself. Warn + allow override when missing.
 
 6. **Ready-gate.** Per-UC ask the user whether each UC at `status: draft` or `status: revising` is ready to hand off. Accept natural-language answers:
    - yes / ok / 확정 / `"mark ready"` → call the writer:

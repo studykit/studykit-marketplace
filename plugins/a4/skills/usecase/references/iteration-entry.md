@@ -49,9 +49,9 @@ Present a brief status:
 - **Resolve review items** — pick from the backlog; for each, read the target UC and wiki pages and walk through the resolution.
 - **Add new use cases** — resume the Discovery Loop. Each new UC gets a fresh id from the allocator.
 - **Refine actors** — edit `actors.md`; add footnote markers for changes.
-- **Split oversized UCs** — allocate new ids per child, write new UC files, adjust `related` (and `<dependencies>` body links) in other UCs that referenced the parent.
+- **Split oversized UCs** — allocate new ids per child, write new UC files, adjust `related` (and `## Dependencies` body links) in other UCs that referenced the parent.
 - **Extend the domain model** — handed off to `/a4:domain` (cross-cutting concept extraction is its own skill, not part of usecase).
-- **Re-analyze relationships** — update `related` / `labels` across UC files; cross-UC ordering goes into the `<dependencies>` body section.
+- **Re-analyze relationships** — update `related` / `labels` across UC files; cross-UC ordering goes into the `## Dependencies` body section.
 
 ## Usecase-specific iteration rules
 
@@ -59,4 +59,4 @@ Most discipline is shared (see [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/do
 
 - **Show before/after on UC modifications** — when modifying an existing UC body, present the before/after to the user before writing.
 - **Preserve allocator gaps** — when adding new UCs after iteration, gaps from earlier discards/renumbers stay; do not compact ids.
-- **Wiki edits inside iterate** still flow through `<change-logs>` per the shared rules; no usecase-specific override.
+- **Wiki edits inside iterate** still flow through `## Change Logs` per the shared rules; no usecase-specific override.

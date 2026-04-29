@@ -55,9 +55,9 @@ For each new review item from the reviewer (ordered by priority then id), read t
 
 **Fix now** — edit the target (UC file or wiki page). On success:
 1. Flip the review item via the writer: `scripts/transition_status.py --file review/<id>-<slug>.md --to resolved --reason "resolved by editing <target path>"`.
-2. If the edit touched a wiki page and the review item's `target:` listed a wiki basename, append a dated bullet with a markdown link to the review item itself inside the page's `<change-logs>` section per the Wiki Update Protocol.
+2. If the edit touched a wiki page and the review item's `target:` listed a wiki basename, append a dated bullet with a markdown link to the review item itself inside the page's `## Change Logs` section per the Wiki Update Protocol.
 
-**Defer** — leave the review item `status: open`. The writer appends the deferral reason to the `<log>` section when called for any subsequent transition; for a pure-defer pause, the `<log>` is unchanged and the deferral is captured in conversation notes / handoff.
+**Defer** — leave the review item `status: open`. For a pure-defer pause the deferral reason is captured in conversation notes / handoff; if the user wants it inscribed in the issue body, append it by hand to the optional `## Log` section.
 
 **Discard** — call `scripts/transition_status.py --file review/<id>-<slug>.md --to discarded --reason "<why>"`; the writer records the reason.
 
@@ -65,7 +65,7 @@ Common finding types the reviewer emits (mirrored from `${CLAUDE_SKILL_DIR}/refe
 
 - **UC quality issues** — `size/split`, `vague actor`, `unclear goal`, `vague situation`, `incomplete flow`, `implementation leak`, `weak outcome`, `missing precision`, `overlap`.
 - **Actor findings** — `orphan actor`, `incomplete actor`, `privilege split`, `type mismatch`, `role mismatch`, `implicit actor`, `missing system actor`.
-- **Cross-UC findings** — `stale relationship`, `missing UC/actor in diagram` (diagram is now derived, so this becomes "missing from frontmatter `actors:` or from the UC's `<dependencies>` body section").
+- **Cross-UC findings** — `stale relationship`, `missing UC/actor in diagram` (diagram is now derived, so this becomes "missing from frontmatter `actors:` or from the UC's `## Dependencies` body section").
 - **Domain model findings** — `missing concept`, `missing relationship`, `missing state`, `naming conflict`.
 - **System completeness findings** — `missing journey`, `usability gap`, `missing lifecycle`, `implicit prerequisite`. These become `kind: gap` review items with UC candidates in the body.
 
@@ -78,8 +78,8 @@ Mark "Wiki close guard" `in_progress`.
 For each review item that transitioned to `resolved` in this session whose `target:` lists one or more wiki basenames:
 
 1. For each wiki basename in `target:` (e.g., `domain`), read `a4/<basename>.md`.
-2. Check whether the page's `<change-logs>` section contains a bullet whose markdown link points at the resolved review item.
-3. If missing, warn the user: `"<basename>.md has no change-log entry for <causing issue>. Resolve anyway?"`. On override, accept and proceed. On correction, edit the wiki page to add the bullet (creating `<change-logs>` if absent).
+2. Check whether the page's `## Change Logs` section contains a bullet whose markdown link points at the resolved review item.
+3. If missing, warn the user: `"<basename>.md has no change-log entry for <causing issue>. Resolve anyway?"`. On override, accept and proceed. On correction, edit the wiki page to add the bullet (creating `## Change Logs` if absent).
 
 Mark "Wiki close guard" completed.
 

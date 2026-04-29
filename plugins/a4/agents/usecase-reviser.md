@@ -59,14 +59,14 @@ If the item is already `status: resolved` or `status: discarded`, skip it.
 Follow the item's Suggestion. Typical patterns:
 
 - **UC quality issue (`target: usecase/<id>-<slug>`)** — edit the UC file per the Suggestion (tighten Situation, add Validation, rewrite a Flow step, etc.). Preserve the rest of the UC.
-- **SPLIT (UC too large)** — allocate ids for each child UC. Write new `a4/usecase/<child-id>-<slug>.md` files. Delete the parent UC file or retain it with `status: blocked`, `related: [<child paths>]`. Update any other UC's `related:` (or `<dependencies>` body links) that pointed at the parent to point at the appropriate child.
+- **SPLIT (UC too large)** — allocate ids for each child UC. Write new `a4/usecase/<child-id>-<slug>.md` files. Delete the parent UC file or retain it with `status: blocked`, `related: [<child paths>]`. Update any other UC's `related:` (or `## Dependencies` body links) that pointed at the parent to point at the appropriate child.
 - **Actor issue (`target: actors`)** — edit `a4/actors.md`: add / correct rows, bump `updated:`.
 - **Domain model gap (`target:` includes `domain`)** — edit `a4/domain.md`: add glossary entries, extend relationships, update state diagrams.
-- **Completeness gap (`kind: gap`)** — compose the UC candidate suggested in the body. Allocate a UC id, write the UC file with a source-attribution blockquote inside `<situation>` like `> Source: implicit — from gap review item [review/<id>-<slug>](../review/<id>-<slug>.md)`. Do not create a new review item for the new UC.
-- **Cross-reference dead link (`kind: finding`, stale relationship)** — update the offending UC's `related:` (or `<dependencies>` body links) to the correct target.
+- **Completeness gap (`kind: gap`)** — compose the UC candidate suggested in the body. Allocate a UC id, write the UC file with a source-attribution blockquote inside `## Situation` like `> Source: implicit — from gap review item [review/<id>-<slug>](../review/<id>-<slug>.md)`. Do not create a new review item for the new UC.
+- **Cross-reference dead link (`kind: finding`, stale relationship)** — update the offending UC's `related:` (or `## Dependencies` body links) to the correct target.
 
 **Wiki update protocol.** When any wiki page is edited in this pass:
-1. Append a dated bullet to the page's `<change-logs>` section: `- <today> — [<causing-issue>](<relative-path>.md)` — typically the UC the review item targets, or the review item itself for gap/question resolutions. Create the section if absent.
+1. Append a dated bullet to the page's `## Change Logs` section: `- <today> — [<causing-issue>](<relative-path>.md)` — typically the UC the review item targets, or the review item itself for gap/question resolutions. Create the section if absent.
 2. Bump the wiki page's `updated:` to today.
 
 ### 3. Close the Review Item
@@ -79,11 +79,11 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --reason "resolved by editing <target path>; <one-line description>"
 ```
 
-The script writes `status: resolved`, bumps `updated:`, and appends the `<log>` entry. Do not hand-edit the frontmatter.
+The script writes `status: resolved` and bumps `updated:`. It does **not** write into `## Log` — that section is optional and hand-maintained. Do not hand-edit the frontmatter.
 
 ### 4. Defer When Ambiguous
 
-If applying the Suggestion requires information you don't have (e.g., reviewer suggested adding validation but the actual constraints aren't knowable from the workspace), leave the review item `status: open`. Surface the deferral reason verbatim in the return summary so the calling skill can carry it forward to the user — do not write into `<log>` directly (the writer owns it).
+If applying the Suggestion requires information you don't have (e.g., reviewer suggested adding validation but the actual constraints aren't knowable from the workspace), leave the review item `status: open`. Surface the deferral reason verbatim in the return summary so the calling skill can carry it forward to the user — do not append a `## Log` bullet on a deferral; that section is hand-maintained and reserved for resolved transitions.
 
 Do not guess. Do not close the item without a substantive fix.
 
@@ -97,7 +97,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --reason "finding incorrect: <rationale>"
 ```
 
-The script writes `status:`, bumps `updated:`, and appends the `<log>` entry.
+The script writes `status:` and bumps `updated:`. It does **not** write into `## Log` — that section is optional and hand-maintained.
 
 ## Return Summary
 
@@ -117,6 +117,6 @@ wiki_pages_touched: [context, actors, domain, nfr]
 
 - Do not emit new review items. This agent only closes / defers / dismisses existing ones (plus side-effect UC creation for splits and gap resolutions).
 - Preserve UC ids. Never renumber; ids are globally monotonic and immutable.
-- Every closed item gets its `<log>` entry from `transition_status.py`. Pass a concrete `--reason` so the writer captures the change.
+- Every closed item is flipped via `transition_status.py` with a concrete `--reason` so the audit trail (status + updated + reason captured by the writer) is meaningful. The optional `## Log` body section is hand-maintained — append a bullet there only when you want a body-level audit entry.
 - Apply the wiki update protocol on every wiki page edit.
 - If the reviewer Suggestion introduces an implementation leak (banned term) into a UC body, transform to user-level language per `abstraction-guard.md` before writing.

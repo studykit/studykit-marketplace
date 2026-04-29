@@ -33,7 +33,7 @@ Identify any file appearing in 3+ tasks' file lists. Define the integration patt
 
 Exit plan mode.
 
-**`a4/roadmap.md` body** — write `<plan>` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per `../../../references/roadmap-authoring.md` §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `<change-logs>` bullet citing the driving wiki/issue.
+**`a4/roadmap.md` body** — write `## Plan` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per `../../../references/roadmap-authoring.md` §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `## Change Logs` bullet citing the driving wiki/issue.
 
 **Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/feature/<id>-<slug>.md` per `../../../references/task-feature-authoring.md` (`kind: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `feature/<id>-<slug>.md`.
 

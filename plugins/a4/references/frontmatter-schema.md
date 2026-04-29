@@ -2,7 +2,7 @@
 
 Consolidated frontmatter reference for every file under the `a4/` workspace. This document is the **single source of truth for validators and authoring contracts**.
 
-Body-side conventions (tag form, blank-line discipline, change-log and log section format, link form) live in `body-conventions.md`. The two should be read together.
+Body-side conventions (heading form, blank-line discipline, change-log and log section format, link form) live in `body-conventions.md`. The two should be read together.
 
 ## Scope
 
@@ -18,25 +18,25 @@ Every markdown file under `a4/` carries YAML frontmatter. Files split into three
 
 These apply to every family.
 
-### `type:` field — body root tag
+### `type:` field
 
-Every markdown file declares a `type:` field in frontmatter. The value names the **body root tag** and corresponds to a per-type reference XSD at `../scripts/body_schemas/<type>.xsd`. The XSD documents which `<tag>` sections are required vs optional in the body. **Reference-only**: no runtime validator consumes the XSDs; authoring contracts under `plugins/a4/references/` are the binding source.
+Every markdown file declares a `type:` field in frontmatter. The value selects the per-type reference XSD at `../scripts/body_schemas/<type>.xsd`, which documents which body sections are required vs optional. **Reference-only**: no runtime validator consumes the XSDs; authoring contracts under `plugins/a4/references/` are the binding source. The XSD element names use lowercase kebab-case (an XML grammar artifact); the body itself uses Title Case H2 headings (`## Heading`) per `body-conventions.md`.
 
-| Family | `type:` value | Body root tag |
-|--------|--------------|---------------|
-| Wiki — actors | `actors` | `<actors>` content |
-| Wiki — architecture | `architecture` | `<architecture>` content |
-| Wiki — bootstrap | `bootstrap` | `<bootstrap>` content |
-| Wiki — context | `context` | `<context>` content |
-| Wiki — domain | `domain` | `<domain>` content |
-| Wiki — nfr | `nfr` | `<nfr>` content |
-| Wiki — roadmap | `roadmap` | `<roadmap>` content |
-| Issue — usecase | `usecase` | — |
-| Issue — task | `task` | — |
-| Issue — review | `review` | — |
-| Issue — spec | `spec` | — |
-| Issue — idea | `idea` | — |
-| Spark — brainstorm | `brainstorm` | — |
+| Family | `type:` value |
+|--------|--------------|
+| Wiki — actors | `actors` |
+| Wiki — architecture | `architecture` |
+| Wiki — bootstrap | `bootstrap` |
+| Wiki — context | `context` |
+| Wiki — domain | `domain` |
+| Wiki — nfr | `nfr` |
+| Wiki — roadmap | `roadmap` |
+| Issue — usecase | `usecase` |
+| Issue — task | `task` |
+| Issue — review | `review` |
+| Issue — spec | `spec` |
+| Issue — idea | `idea` |
+| Spark — brainstorm | `brainstorm` |
 
 For wiki pages, `type:` doubles as the file-kind discriminator (e.g., `type: architecture` requires the file to be at `a4/architecture.md`). For issues and spark files, `type:` is the body schema selector — the file family is already implied by the folder.
 
@@ -45,9 +45,9 @@ Validator rules:
 - Missing `type:` → frontmatter validator error.
 - Wiki page `type:` not matching the file basename (e.g., `type: domain` in `architecture.md`) → frontmatter validator error.
 
-### Body section tags
+### Body section headings
 
-Body sections are column-0 `<tag>...</tag>` blocks (lowercase + kebab-case) with markdown content between the open and close lines. The set of recommended tags per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Authoring contracts list required and optional sections; unknown kebab-case tags are tolerated. See `body-conventions.md` for the full tag-form rules and [§Body sections per type](#body-sections-per-type) below for the per-type required/optional split.
+Body sections are column-0 H2 markdown headings in Title Case with spaces (`## Context`, `## Specification`, `## Change Logs`, …). The recommended set per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Authoring contracts list required and optional sections; unknown Title Case headings are tolerated. See `body-conventions.md` for the full heading-form rules (including the kebab-case → Title Case mapping that aligns XSD element names with body headings) and [§Body sections per type](#body-sections-per-type) below for the per-type required/optional split.
 
 ### Ids
 
@@ -95,14 +95,14 @@ Unknown fields are **not errors**. The validator in lenient mode reports them as
 
 ### Status writers
 
-Every status change on `usecase`, `task`, `review`, and `spec` files flows through the single writer at [`../scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition, writes `status:` + `updated:` + a `<log>` entry, and runs any cascade:
+Every status change on `usecase`, `task`, `review`, and `spec` files flows through the single writer at [`../scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition and writes `status:` + `updated:`, then runs any cascade:
 
 - Task reset on UC `revising` (tasks at `progress`/`failing` → `pending`).
 - Task / review discard cascade on UC `discarded`.
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 
-`status:` and `<log>` are **never hand-edited** after file creation. The fallback `validate_status_consistency.py` reports drift between `status:` and supporting cross-references for cases the writer cannot mechanically reach (`idea`/`brainstorm` `promoted`).
+`transition_status.py` does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. `status:` is **never hand-edited** after file creation. The fallback `validate_status_consistency.py` reports drift between `status:` and supporting cross-references for cases the writer cannot mechanically reach (`idea`/`brainstorm` `promoted`).
 
 ## Structural relationship fields
 
@@ -139,7 +139,7 @@ updated: 2026-04-24
 ---
 ```
 
-The `type` value must match the file basename (e.g., `type: architecture` requires `architecture.md`). Cross-references live as standard markdown links in body prose plus the `<change-logs>` section; they are **not** in frontmatter.
+The `type` value must match the file basename (e.g., `type: architecture` requires `architecture.md`). Cross-references live as standard markdown links in body prose plus the `## Change Logs` section; they are **not** in frontmatter.
 
 ## Use case (`a4/usecase/<id>-<slug>.md`)
 
@@ -205,7 +205,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `implements` | no | list of paths | use cases delivered. **Forbidden on `kind: spike`** (spikes are exploratory, never UC deliverables). Typically empty for `kind: research` as well. |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | Specs governing this task. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research` (cite via body markdown links instead). |
-| `files` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `<files>` section, **not** in this frontmatter field. |
+| `files` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. |
 | `mode` | conditional | enum | `comparative` \| `single` — required when `kind: research` |
 | `options` | conditional | list of strings | option names — required when `kind: research` and `mode: comparative` |
 | `cycle` | no | int | implementation cycle number. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research`. |
@@ -254,7 +254,7 @@ Three initial states are allowed on task file create:
 
 - `open` (default) — backlog capture.
 - `pending` — author intends the implement loop to pick it up immediately. Batch authoring (e.g., from a roadmap) writes new tasks at `pending`.
-- `complete` — post-hoc documentation: code already shipped, task file added for traceability. The writer must verify every path in `files:` exists at create time and append an explicit `<log>` entry noting the post-hoc origin (since no `progress → complete` transition was logged by the writer). For `kind: research`, a task may be authored directly at `complete` when the investigation is captured in one shot.
+- `complete` — post-hoc documentation: code already shipped, task file added for traceability. The writer must verify every path in `files:` exists at create time. If the author wants the post-hoc origin recorded in the body, append a manual bullet to the optional `## Log` section. For `kind: research`, a task may be authored directly at `complete` when the investigation is captured in one shot.
 
 `progress` and `failing` are never used as initial states; only the writer (`transition_status.py`) produces them as a result of transitions.
 
@@ -278,7 +278,7 @@ Per-kind expectations:
 | `feature` | Test samples, execution outputs for feature comparison, design mockups, migration dry-run results | Optional — only when artifacts have evidentiary or comparative value |
 | `bug` | Reproduction repos, crash logs, screenshots, traces | Optional — only when reproduction or evidence is itself worth keeping |
 
-Frontmatter `task.files:` lists artifact paths only — production source paths the task writes or modifies belong in the body `<files>` section, not in frontmatter. For `kind: spike`, `files:` may also point under `artifacts/task/spike/archive/<id>-<slug>/` once the directory has been archived.
+Frontmatter `task.files:` lists artifact paths only — production source paths the task writes or modifies belong in the body `## Files` section, not in frontmatter. For `kind: spike`, `files:` may also point under `artifacts/task/spike/archive/<id>-<slug>/` once the directory has been archived.
 
 When a spike completes (or fails), the user manually `git mv`s the directory to `artifacts/task/spike/archive/<id>-<slug>/` and updates the task's `files:` paths to match. The archive convention applies to `spike` only; `feature`, `bug`, and `research` artifact directories are not archived (closed task markdown moves to `a4/archive/` independently). The move is **never automated**; same-precedent reasoning as `idea/` promotion (deferred until manual cost surfaces as pain).
 
@@ -314,17 +314,17 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-**Close guard.** When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `<change-logs>` section with a markdown link to the review item itself. Enforcement is a warning with override — the drift detector re-surfaces violations.
+**Close guard.** When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a warning with override — the drift detector re-surfaces violations.
 
 ## Spec (`a4/spec/<id>-<slug>.md`)
 
-A spec is a **living specification** — the canonical, prescriptive description of a format, protocol, schema, renderer rule, CLI surface, or other artifact whose exact shape the project commits to. Specs are recorded into `a4/spec/<id>-<slug>.md` after the shape converges through conversation. Supporting investigation, when needed, lives in a sibling `kind: research` task at `a4/task/research/<id>-<slug>.md` and is referenced from the spec body via standard markdown links. A wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with a `<change-logs>` entry, or opening a review-item fallback) is performed at record time.
+A spec is a **living specification** — the canonical, prescriptive description of a format, protocol, schema, renderer rule, CLI surface, or other artifact whose exact shape the project commits to. Specs are recorded into `a4/spec/<id>-<slug>.md` after the shape converges through conversation. Supporting investigation, when needed, lives in a sibling `kind: research` task at `a4/task/research/<id>-<slug>.md` and is referenced from the spec body via standard markdown links. A wiki nudge (updating `architecture.md` / `context.md` / `domain.md` / `actors.md` / `nfr.md` with a `## Change Logs` entry, or opening a review-item fallback) is performed at record time.
 
-**Body structure.** Two sections are typically present: `<context>` (why this spec exists — the problem or scope it covers) and `<specification>` (the prescriptive content — grammar, fields, rules, examples). Beyond those two, additional sections may be added when the session content warrants them — common examples include `<decision-log>`, `<open-questions>`, `<rejected-alternatives>`, `<consequences>`, `<examples>`. See [§Body sections per type](#body-sections-per-type) for the full list.
+**Body structure.** Two sections are typically present: `## Context` (why this spec exists — the problem or scope it covers) and `## Specification` (the prescriptive content — grammar, fields, rules, examples). Beyond those two, additional sections may be added when the session content warrants them — common examples include `## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`. See [§Body sections per type](#body-sections-per-type) for the full list.
 
-**`<decision-log>` absorbs ADR-style notes.** The previous a4 model carried ADRs as a separate family; that role now lives inside the spec body as an optional `<decision-log>` section. Each entry is a short note (date + what was chosen + why), so the chain of design decisions that shaped a particular spec is co-located with the spec itself rather than scattered across decision records. Entries are append-only — earlier entries are never edited or removed; corrections are added as new entries that supersede the prior reasoning. This is the only sanctioned location for "decision rationale" content; do not introduce a separate `decisions/` slot, do not split decisions into their own files.
+**`## Decision Log` absorbs ADR-style notes.** The previous a4 model carried ADRs as a separate family; that role now lives inside the spec body as an optional `## Decision Log` section. Each entry is a short note (date + what was chosen + why), so the chain of design decisions that shaped a particular spec is co-located with the spec itself rather than scattered across decision records. Entries are append-only — earlier entries are never edited or removed; corrections are added as new entries that supersede the prior reasoning. This is the only sanctioned location for "decision rationale" content; do not introduce a separate `decisions/` slot, do not split decisions into their own files.
 
-The spec body is **prescriptive**: it captures the chosen shape that downstream code, validators, and review items must conform to. Implementation tasks reference the spec via the forward `task.spec:` field; the reverse view is derived on demand and never rendered into the spec body. A `<migration-plan>` section is not used — migration work lives in `task/<id>-<slug>.md`.
+The spec body is **prescriptive**: it captures the chosen shape that downstream code, validators, and review items must conform to. Implementation tasks reference the spec via the forward `task.spec:` field; the reverse view is derived on demand and never rendered into the spec body. A `## Migration Plan` section is not used — migration work lives in `task/<id>-<slug>.md`.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -389,7 +389,7 @@ Boundary with `review/`: **idea = independent possibility, captured raw; review 
 - `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
 - `kind` — only one kind of idea (unlike `review/` which unifies finding/gap/question).
 
-Body is largely free — only optional sections per the authoring contract. Quick-capture ideas are typically empty or just a short `<notes>` block; longer ideas may add `<why-this-matters>`.
+Body is largely free — only optional sections per the authoring contract. Quick-capture ideas are typically empty or just a short `## Notes` section; longer ideas may add `## Why This Matters`.
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 
@@ -406,47 +406,47 @@ Pre-pipeline idea capture. Lifecycle tracks whether ideas graduated into pipelin
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `<decision-log>` absorbing the rationale that previously lived in standalone decision records). No spark-family file carries `type: decide` anymore.
+**Note on the former spark-decide slot.** Historically `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `## Decision Log` absorbing the rationale that previously lived in standalone decision records). No spark-family file carries `type: decide` anymore.
 
 ## Body sections per type
 
-The per-type authoring contracts under `plugins/a4/references/` are the source of truth for the body shape. The reference XSDs at `../scripts/body_schemas/<type>.xsd` mirror them for human readers but are no longer consumed by any runtime validator. The tables below summarise the recommended split. Each `<tag>` listed is a column-0 markdown section block; "required" tags should appear in every file of that type, "optional" tags may appear, and unknown kebab-case tags are tolerated.
+The per-type authoring contracts under `plugins/a4/references/` are the source of truth for the body shape. The reference XSDs at `../scripts/body_schemas/<type>.xsd` mirror them for human readers but are no longer consumed by any runtime validator. The tables below summarise the recommended split. Each entry is a Title Case H2 heading (`## Heading`); "required" headings should appear in every file of that type, "optional" headings may appear, and unknown Title Case headings are tolerated.
 
 Two universal optional sections appear on most types:
 
-- **`<change-logs>`** — append-only audit trail of why this file was edited. Bullet entries dated `YYYY-MM-DD` with a markdown link to the causing issue or spec. See `body-conventions.md`. Replaces the prior `[^N]` footnote + `## Changes` mechanism.
-- **`<log>`** — append-only status-transition trail written by `transition_status.py`. Bullet entries `YYYY-MM-DD — <from> → <to> — <reason>`. Authors should never write into `<log>` directly except for the documented post-hoc-`complete` task case.
+- **`## Change Logs`** — append-only audit trail of why this file was edited. Bullet entries dated `YYYY-MM-DD` with a markdown link to the causing issue or spec. See `body-conventions.md`. Replaces the prior `[^N]` footnote + `## Changes` mechanism.
+- **`## Log`** — optional, hand-maintained status-transition trail. Bullet entries `YYYY-MM-DD — <from> → <to> — <reason>` are a common shape. `transition_status.py` flips `status:` and bumps `updated:` but does **not** write to `## Log`; append bullets manually if you want a body audit trail.
 
 ### Wiki pages
 
-| `type:` | Required tags | Optional tags |
+| `type:` | Required sections | Optional sections |
 |---|---|---|
-| `actors` | `<roster>` | `<change-logs>` |
-| `architecture` | `<components>`, `<overview>`, `<technology-stack>`, `<test-strategy>` | `<change-logs>`, `<component-diagram>`, `<external-dependencies>` |
-| `bootstrap` | `<environment>`, `<launch>`, `<verify>` | `<change-logs>` |
-| `context` | `<original-idea>`, `<problem-framing>` | `<change-logs>`, `<screens>` |
-| `domain` | `<concepts>` | `<change-logs>`, `<relationships>`, `<state-transitions>` |
-| `nfr` | `<requirements>` | `<change-logs>` |
-| `roadmap` | `<plan>` | `<change-logs>` |
+| `actors` | `## Roster` | `## Change Logs` |
+| `architecture` | `## Components`, `## Overview`, `## Technology Stack`, `## Test Strategy` | `## Change Logs`, `## Component Diagram`, `## External Dependencies` |
+| `bootstrap` | `## Environment`, `## Launch`, `## Verify` | `## Change Logs` |
+| `context` | `## Original Idea`, `## Problem Framing` | `## Change Logs`, `## Screens` |
+| `domain` | `## Concepts` | `## Change Logs`, `## Relationships`, `## State Transitions` |
+| `nfr` | `## Requirements` | `## Change Logs` |
+| `roadmap` | `## Plan` | `## Change Logs` |
 
 ### Issues
 
-| `type:` | Kind | Required tags | Optional tags |
+| `type:` | Kind | Required sections | Optional sections |
 |---|---|---|---|
-| `usecase` | — | `<expected-outcome>`, `<flow>`, `<goal>`, `<situation>` | `<change-logs>`, `<dependencies>`, `<error-handling>`, `<log>`, `<validation>` |
-| `task` | `feature`, `spike`, `bug` | `<acceptance-criteria>`, `<description>`, `<files>`, `<unit-test-strategy>` | `<change-logs>`, `<interface-contracts>`, `<log>`, `<why-discarded>` |
-| `task` | `research` | `<context>` | `<change-logs>`, `<findings>`, `<options>`, `<log>`, `<why-discarded>` |
-| `review` | — | `<description>` | `<change-logs>`, `<log>` |
-| `spec` | — | `<context>`, `<specification>` | `<change-logs>`, `<consequences>`, `<decision-log>`, `<examples>`, `<log>`, `<open-questions>`, `<rejected-alternatives>` |
-| `idea` | — | (none) | `<change-logs>`, `<log>`, `<notes>`, `<why-this-matters>` |
+| `usecase` | — | `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation` | `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation` |
+| `task` | `feature`, `spike`, `bug` | `## Acceptance Criteria`, `## Description`, `## Files`, `## Unit Test Strategy` | `## Change Logs`, `## Interface Contracts`, `## Log`, `## Why Discarded` |
+| `task` | `research` | `## Context` | `## Change Logs`, `## Findings`, `## Options`, `## Log`, `## Why Discarded` |
+| `review` | — | `## Description` | `## Change Logs`, `## Log` |
+| `spec` | — | `## Context`, `## Specification` | `## Change Logs`, `## Consequences`, `## Decision Log`, `## Examples`, `## Log`, `## Open Questions`, `## Rejected Alternatives` |
+| `idea` | — | (none) | `## Change Logs`, `## Log`, `## Notes`, `## Why This Matters` |
 
 ### Spark
 
-| `type:` | Required tags | Optional tags |
+| `type:` | Required sections | Optional sections |
 |---|---|---|
-| `brainstorm` | `<ideas>` | `<change-logs>`, `<notes>` |
+| `brainstorm` | `## Ideas` | `## Change Logs`, `## Notes` |
 
-Section ordering does not matter. Authors place sections in any order; the contract only requires presence of required tags. Adding new declared tags is a documentation change in the per-type authoring reference; the reference XSDs may be updated in parallel for human reference.
+Section ordering does not matter. Authors place sections in any order; the contract only requires presence of required headings. Adding a new section is a documentation change in the per-type authoring reference; the reference XSDs may be updated in parallel for human reference.
 
 ## Reference XSDs
 
@@ -455,7 +455,7 @@ The XSDs under `../scripts/body_schemas/` are **reference material only** — no
 - Declare `vc:minVersion="1.1"` (XSD 1.1 features).
 - Define a single root element matching the `type:` value (or, for `task`, a single `task` root that covers all kinds).
 - List required and optional sections inside `<xs:all>` (children typed as `markdownContent`).
-- Wrap the children in `<xs:openContent mode="interleave">` to permit unknown tags.
+- Wrap the children in `<xs:openContent mode="interleave">` to permit unknown elements (the XML reflection of the body's "unknown Title Case headings tolerated" rule).
 
 Edit a section list by hand-editing both the per-type authoring contract under `plugins/a4/references/` and the matching XSD so the two stay in sync.
 
@@ -505,7 +505,7 @@ Two modes:
 
 These are schema items deliberately left softened until a follow-up round.
 
-1. **Issue `<log>` entry format.** Body-level `<log>` convention is referenced throughout but the exact entry format (prefix, timestamp granularity, author attribution) is not yet locked.
+1. **Issue `## Log` entry format.** Body-level `## Log` is hand-maintained when authors choose to populate it; the exact entry format (prefix, timestamp granularity, author attribution) is not yet locked.
 2. **Exact YAML grammar for path references.** Plain string is the current rule; whether to allow alternative forms (list-of-maps for typed references, etc.) is not yet decided.
 3. **Stricter enums.** Several fields are currently open strings (`source` on review items) because the full value set has not been enumerated.
 4. **`task.files:` artifact-path enforcement.** The artifact-only contract on `task.files:` is documented (this round) but not yet enforced by `validate_frontmatter.py`. Pending validator work: per-kind prefix check (`artifacts/task/<kind>/<id>-<slug>/...` for `spike` is required, optional for the other kinds; `spike` paths may also start with `artifacts/task/spike/archive/<id>-<slug>/`), plus a task-id-vs-path consistency check (the `<id>-<slug>` segment must match the file's own id and slug). Until then, frontmatter `files:` paths that still point at production source or a foreign id are tolerated.
@@ -515,7 +515,7 @@ When these land, update this document **and** the validator simultaneously — t
 
 ## Cross-references
 
-- **Body-level conventions:** `body-conventions.md` — tag form (column-0, kebab-case, no attributes), blank-line discipline, `<change-logs>` and `<log>` entry format, body link form (standard markdown).
+- **Body-level conventions:** `body-conventions.md` — heading form (column-0 H2, Title Case, kebab → Title Case mapping), blank-line discipline, `## Change Logs` and `## Log` entry format, body link form (standard markdown).
 - **Reference XSDs:** `../scripts/body_schemas/<type>.xsd` — documentation of recommended body shape; not consumed by any runtime validator.
 - **Id allocator:** `../scripts/allocate_id.py`.
 - **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal/in-progress/active classifications, kind enums. Imported by the writer, validators, workspace state, and search; the prose tables in this document mirror the same data.

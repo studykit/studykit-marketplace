@@ -26,9 +26,9 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `kind: spike` is fixed for files under `a4/task/spike/`. Every task must declare the kind explicitly.
-- `implements:` is **not allowed** on spike (a4 v6.0.0) — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `feature` task with `implements: [usecase/<id>-<slug>]` and link the spike from its `<description>` body.
-- `spec:` is **not allowed** on spike (a4 v6.0.0). Cite the triggering spec from the spike's `<description>` body via a markdown link — the frontmatter forward link is reserved for `feature` and `bug` tasks.
-- `files:` paths must live under `artifacts/task/spike/<id>-<slug>/...` (or `artifacts/task/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `<files>` section, not in frontmatter.
+- `implements:` is **not allowed** on spike (a4 v6.0.0) — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `feature` task with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
+- `spec:` is **not allowed** on spike (a4 v6.0.0). Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `feature` and `bug` tasks.
+- `files:` paths must live under `artifacts/task/spike/<id>-<slug>/...` (or `artifacts/task/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `## Files` section, not in frontmatter.
 - `cycle:` is **not allowed** on spike (a4 v6.0.0); the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
@@ -64,38 +64,36 @@ Writer rules (task-specific):
 When the chosen initial status is `complete`, the spike is asserted to already be done. Verify before writing:
 
 1. For each path in `files:`, confirm it exists under `artifacts/task/spike/<id>-<slug>/` (or `artifacts/task/spike/archive/<id>-<slug>/`). If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
-2. Required body sections (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
-3. After writing the file, append an explicit `<log>` block recording the post-hoc origin:
+2. Required sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
+3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (the section is optional and hand-maintained):
 
    ```markdown
-   <log>
+   ## Log
 
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; PoC done prior to task authorship)
-
-   </log>
    ```
 
-   This is the **only** case where `<log>` is written directly — every subsequent entry must come from `transition_status.py`.
+   `transition_status.py` does not touch `## Log`; the section is purely an author convenience.
 
 ## Body shape
 
-(Tag form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
-- `<description>` — the question being explored and why a spike (vs. going straight to a feature task). State the hypothesis and the decision the spike's outcome will inform.
-- `<files>` — action / path / change table. Artifact paths under `artifacts/task/spike/<id>-<slug>/` for files the spike creates; production source paths the spike may probe or temporarily touch may also appear here for reader context. (Frontmatter `files:` is artifact-only.)
-- `<unit-test-strategy>` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). The section is still required.
-- `<acceptance-criteria>` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question. The `<acceptance-criteria>` section must exist regardless.
+- `## Description` — the question being explored and why a spike (vs. going straight to a feature task). State the hypothesis and the decision the spike's outcome will inform.
+- `## Files` — action / path / change table. Artifact paths under `artifacts/task/spike/<id>-<slug>/` for files the spike creates; production source paths the spike may probe or temporarily touch may also appear here for reader context. (Frontmatter `files:` is artifact-only.)
+- `## Unit Test Strategy` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). The section is still required.
+- `## Acceptance Criteria` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question. The `## Acceptance Criteria` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
-- `<interface-contracts>` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../../architecture.md#sessionservice)`). May be omitted for self-contained spikes.
-- `<change-logs>` — append-only audit trail when the task body is materially edited post-create.
-- `<log>` — append-only writer-owned status-transition trail (`YYYY-MM-DD — <from> → <to> — <reason>`). Starts absent — `status: pending` is the implicit creation entry, written by the writer on first transition. **Never write into `<log>` directly**, except for the documented post-hoc-`complete` case above.
-- `<why-discarded>` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture beyond the `<log>` line.
+- `## Interface Contracts` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../../architecture.md#sessionservice)`). May be omitted for self-contained spikes.
+- `## Change Logs` — append-only audit trail when the task body is materially edited post-create.
+- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
-Unknown kebab-case tags are tolerated.
+Unknown H2 headings are tolerated.
 
 ## Artifacts directory
 
@@ -117,12 +115,12 @@ Cross-kind conventions for the artifact directory — what to keep vs. drop, own
 
 ## Common mistakes (task-specific)
 
-- **Required section missing** (`<description>`, `<files>`, `<unit-test-strategy>`, `<acceptance-criteria>`).
+- **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Missing `kind:` frontmatter field** → frontmatter validator error. `kind` has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/spike/` must declare `kind: spike`. Mismatched declarations are a folder-routing error and should be re-located.
-- **`files:` paths under the project source tree, not under `artifacts/task/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths belong in the body `<files>` section.
+- **`files:` paths under the project source tree, not under `artifacts/task/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths belong in the body `## Files` section.
 
-(Universal body conventions — stray body content, attribute-bearing tags, same-tag nesting, H1 in body — are documented in `./body-conventions.md`.)
+(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (spike-task-specific)
 

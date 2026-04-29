@@ -1,51 +1,82 @@
 # a4 Body Conventions
 
-Body-level rules for every file under the `a4/` workspace. Covers section tag form, blank-line discipline, link form, and the `<change-logs>` / `<log>` audit-trail conventions.
+Body-level rules for every file under the `a4/` workspace. Covers section heading form, blank-line discipline, link form, and the `## Change Logs` / `## Log` audit-trail conventions.
 
 Frontmatter-side rules (path format inside YAML, required fields, enums, the universal `type:` field) live in `frontmatter-schema.md`. The two should be read together.
 
 ## Scope
 
-Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter matching the body root tag. The recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`; reference XSDs at `../scripts/body_schemas/<type>.xsd` mirror the same shape for human readers but are not consumed by any runtime validator.
+Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Reference XSDs at `../scripts/body_schemas/<type>.xsd` indicate which sections are expected for that type, but they are pure human reference — no runtime validator consumes them, and the XML element names inside the XSD (lowercase kebab-case) are an artifact of XML grammar, not an authoring requirement. The binding form in the file body is the markdown heading defined below.
 
-## Section tag form
+## Section heading form
 
-A body section is a column-0 `<tag>...</tag>` block.
+A body section is an **H2 markdown heading** in Title Case with spaces, followed by free-form markdown content until the next H2 (or end of file).
 
 ```markdown
-<situation>
+## Situation
 
 A meeting just ended; absent teammates need the outcome.
 
-</situation>
+## Flow
+
+1. Open the meeting record.
+2. Click "share summary".
+3. Confirm the channel.
 ```
 
 Rules:
 
-- **Open and close lines on column 0**, each on its own line. `<tag>` and `</tag>` cannot be inline.
-- **Tag names** match the regex `^[a-z][a-z0-9-]*$` — lowercase ASCII, kebab-case, starting with a letter.
-- **No attributes, no self-closing.** `<tag attr="x">` and `<tag/>` are rejected by the convention.
-- **No nesting of the same tag** within itself. Different declared tags do not nest either — every section sits at the body's top level.
-- **Unknown tags are tolerated** (so authors can drop in `<benchmarks>` or any supplemental block), provided the tag name is well-formed and the section is otherwise valid.
-- **Anything outside a section block** that is not whitespace is stray content. H1 (`# Title`) is forbidden in body — title belongs to frontmatter `title:`.
+- **Section boundary is `## Heading`** — column-0 H2, on its own line. The section ends at the next column-0 H2 or end of file.
+- **Heading text is Title Case** — each word capitalised, words separated by single spaces. Examples: `## Context`, `## Specification`, `## Change Logs`, `## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Acceptance Criteria`, `## Why This Matters`. Map the kebab-case slug from the per-type authoring contract to Title Case by replacing hyphens with spaces and capitalising each word.
+- **No H1 in the body.** Title belongs to frontmatter `title:`. (Use of H1 is reserved; do not author one.)
+- **Use H3+ for inner structure.** Inside a section, paragraphs, lists, code fences, tables, blockquotes, and `###`/`####`/… subheadings are all permitted. Section boundaries only fire on H2.
+- **Sections do not nest.** Every declared section sits at the body's top level; you cannot place a recognised section inside another.
+- **Unknown H2 headings are tolerated.** Authors may add supplemental sections (`## Benchmarks`, `## Migration Notes`, …) provided the heading is well-formed Title Case.
+- **No stray content above the first section.** Anything in the body that is not whitespace must live under an H2 heading.
 
-Inside a section, content is opaque markdown. Use H3+ headings (`###`, `####`) freely, paragraphs, lists, code fences, tables, blockquotes, PlantUML — anything CommonMark or its extensions support. Fenced code blocks are passed through verbatim.
+Inside a section, content is opaque markdown. Fenced code blocks are passed through verbatim — section detection only inspects the first character of column-0 H2 lines, and lines inside a fenced block (` ``` ` or `~~~`) are not treated as section boundaries.
+
+### Heading-name mapping
+
+The per-type authoring contracts and the reference XSDs use kebab-case slugs (`change-logs`, `decision-log`, `unit-test-strategy`, …) because XML element names cannot contain spaces. The body uses the Title Case form. Apply the mapping mechanically:
+
+| Kebab-case slug | Body heading |
+|-----------------|--------------|
+| `change-logs` | `## Change Logs` |
+| `decision-log` | `## Decision Log` |
+| `unit-test-strategy` | `## Unit Test Strategy` |
+| `acceptance-criteria` | `## Acceptance Criteria` |
+| `open-questions` | `## Open Questions` |
+| `rejected-alternatives` | `## Rejected Alternatives` |
+| `expected-outcome` | `## Expected Outcome` |
+| `error-handling` | `## Error Handling` |
+| `interface-contracts` | `## Interface Contracts` |
+| `why-discarded` | `## Why Discarded` |
+| `why-this-matters` | `## Why This Matters` |
+| `original-idea` | `## Original Idea` |
+| `problem-framing` | `## Problem Framing` |
+| `state-transitions` | `## State Transitions` |
+| `external-dependencies` | `## External Dependencies` |
+| `component-diagram` | `## Component Diagram` |
+| `technology-stack` | `## Technology Stack` |
+| `test-strategy` | `## Test Strategy` |
+| (single-word slugs) | `## <Slug>` (capitalised), e.g., `context` → `## Context`, `flow` → `## Flow` |
 
 ### Blank-line discipline
 
-Writers emit blank lines around tags so the file renders predictably:
+Writers leave one blank line above each H2 (except the very first heading in the body) and one blank line between heading and content for predictable rendering:
 
 ```markdown
-<flow>
+## Flow
 
 1. Open the meeting record.
 2. Click "share summary".
 3. Confirm the channel.
 
-</flow>
+## Validation
 ```
 
-The blank lines are convention rather than enforced syntax, but renderers depend on them — without them, the content immediately under `<flow>` may merge with the open tag for some markdown processors. Keep the blank-line frame consistent.
+The blank lines are convention rather than enforced syntax, but renderers depend on them — without a blank line between an H2 and the content beneath, some processors merge the heading line into the following paragraph.
 
 ## Link form (body)
 
@@ -53,29 +84,27 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 
 | Form | Example |
 |------|---------|
-| Cross-file reference | `[usecase/3-search-history](../usecase/3-search-history.md)` |
+| Cross-file reference | `[usecase/3-share-summary](../usecase/3-share-summary.md)` |
 | Section anchor on a wiki page | `[architecture#sessionservice](../architecture.md#sessionservice)` |
 | Sibling-folder reference | `[task/42-grpc-streaming](../task/research/42-grpc-streaming.md)` (from `a4/spec/`) |
 | External URL | `[the spec text](https://example.com/spec)` |
 
-Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text.
+Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text (so `## Decision Log` resolves to `#decision-log`).
 
 Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `frontmatter-schema.md`.
 
-## `<change-logs>` audit trail
+## `## Change Logs` audit trail
 
-Every wiki page (and every issue file that supports it) carries a `<change-logs>` section once a substantive edit has happened. The section is optional in every authoring contract — only emit it once it has content.
+Every wiki page (and every issue file that supports it) carries a `## Change Logs` section once a substantive edit has happened. The section is optional in every authoring contract — only emit it once it has content.
 
 Format:
 
 ```markdown
-<change-logs>
+## Change Logs
 
 - 2026-04-23 — [usecase/1-share-summary](usecase/1-share-summary.md)
 - 2026-04-24 — [usecase/3-search-history](usecase/3-search-history.md)
 - 2026-04-24 — [spec/8-caching-strategy](spec/8-caching-strategy.md)
-
-</change-logs>
 ```
 
 Rules:
@@ -85,22 +114,18 @@ Rules:
 - The link points to the **causing issue** — a UC, task, spec, or architecture-section anchor. Never a review item; review items are the surface where the user *picks* an edit to apply, but the change-log records *why* a wiki page changed and that "why" is the underlying issue.
 - Bullets are append-only. Do not reorder, edit, or remove old entries; corrections accrete as new entries.
 
-## `<log>` (writer-owned)
+## `## Log`
 
-Every issue file (`usecase`, `task`, `review`, `spec`) gets an optional `<log>` section that the status writer (`scripts/transition_status.py`) maintains. Never write into `<log>` directly except for the one documented post-hoc-`complete` task case (a single creation entry, see [`frontmatter-schema.md §Task / Initial status policy`](frontmatter-schema.md)).
-
-Format (one bullet per transition, written by the writer):
+Issue files (`usecase`, `task`, `review`, `spec`) may carry an optional `## Log` section as a manual audit trail of status transitions or other notable edits. Format is the author's choice — a common shape is one bullet per transition:
 
 ```markdown
-<log>
+## Log
 
 - 2026-04-24 — draft → active — committed to current shape
 - 2026-04-26 — active → superseded — replaced by spec/12
-
-</log>
 ```
 
-Bullets are append-only. The writer rebuilds the block from existing bullets plus the new entry on every status change, with stable blank-line discipline.
+`../scripts/transition_status.py` flips `status:` and bumps `updated:`, but **does not write into `## Log`**. If you want a transition recorded in the body, append the bullet by hand. The section is optional and may be omitted entirely.
 
 ## Wiki Update Protocol
 
@@ -119,8 +144,8 @@ Skip: typo fixes, metadata-only tweaks, internal notes that don't change semanti
 
 ### How to update
 
-1. Edit the affected `<section>` content.
-2. Append a dated bullet to the page's `<change-logs>` section: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)`. Create the section if it does not yet exist.
+1. Edit the affected `## <Section>` content.
+2. Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)`. Create the section if it does not yet exist.
 3. Bump the wiki page's frontmatter `updated:` to today.
 
 ### Deferring the update
@@ -138,18 +163,18 @@ If the user chooses not to update the wiki page immediately, open a review item 
 
 ### Close guard
 
-Before a session ends, for each review item that transitioned to `status: resolved` whose `target:` list contains one or more wiki basenames, verify each referenced wiki page contains a `<change-logs>` bullet whose markdown link points at the review item itself. Warn + allow override when missing. The drift detector at `../scripts/drift_detector.py` re-surfaces violations between sessions.
+Before a session ends, for each review item that transitioned to `status: resolved` whose `target:` list contains one or more wiki basenames, verify each referenced wiki page contains a `## Change Logs` bullet whose markdown link points at the review item itself. Warn + allow override when missing. The drift detector at `../scripts/drift_detector.py` re-surfaces violations between sessions.
 
 ## Bumping `updated:`
 
-- **Wiki pages** — bump `updated:` to today on every substantive change (any edit that produces a `<change-logs>` bullet). Metadata-only tweaks (whitespace, comment fixes) do not bump.
+- **Wiki pages** — bump `updated:` to today on every substantive change (any edit that produces a `## Change Logs` bullet). Metadata-only tweaks (whitespace, comment fixes) do not bump.
 - **Issue files** — bump `updated:` on every status transition (the writer does this) or body change that is not a typo fix.
 
 ## Cross-references
 
 - `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
-- `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting required vs optional sections per type (no runtime validator consumes them).
+- `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting which sections each `type:` is expected to carry. Pure human reference; no runtime validator consumes them. Element names inside the XSD use lowercase kebab-case (an XML constraint); the body itself uses the Title Case heading form per the table above.
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
-- `../scripts/drift_detector.py` — scans `target:` for wiki basenames to surface unresolved `<change-logs>` and close-guard violations.
-- `../scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums).
+- `../scripts/drift_detector.py` — scans `target:` for wiki basenames to surface unresolved `## Change Logs` and close-guard violations.
+- `../scripts/validate_frontmatter.py` — enforces the frontmatter side (path-reference format, required fields, enums). Body shape is documentation-only; nothing validates section presence at runtime.

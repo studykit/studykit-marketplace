@@ -26,14 +26,12 @@ Edit the file in-place via the `Edit` tool:
 
 1. Change the frontmatter `status:` value from `open` to `discarded`.
 2. Update the frontmatter `updated:` to today's date.
-3. If a reason was provided (any tokens after `<id-or-slug>`), append a `<change-logs>` bullet (creating the section if not already present):
+3. If a reason was provided (any tokens after `<id-or-slug>`), append a `## Change Logs` bullet (creating the section if not already present):
 
    ```markdown
-   <change-logs>
+   ## Change Logs
 
    - <YYYY-MM-DD> discarded — <reason text>
-
-   </change-logs>
    ```
 
    Use the reason verbatim — no re-wording. If the section already exists, append a new dated bullet.

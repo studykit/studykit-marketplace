@@ -12,7 +12,7 @@ If yes, present the candidate updates and ask the user to confirm.
 
 For each confirmed update:
 
-1. Edit the affected wiki page — update the relevant `<section>` content, then append a dated bullet to the page's `<change-logs>` section with a markdown link to the causing issue. Create the `<change-logs>` section if it does not yet exist.
+1. Edit the affected wiki page — update the relevant `## <Section>` content, then append a dated bullet to the page's `## Change Logs` section with a markdown link to the causing issue. Create the `## Change Logs` section if it does not yet exist.
 2. Bump the wiki page's `updated:` frontmatter to today.
 
 ## Defer path

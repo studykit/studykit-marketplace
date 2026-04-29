@@ -32,13 +32,11 @@ mode: comparative
 options: [name-a, name-b, name-c]
 ---
 
-<context>
+## Context
 
 Why this research is needed. The specific question or comparison purpose.
 
-</context>
-
-<options>
+## Options
 
 ### name-a
 
@@ -54,8 +52,6 @@ Why this research is needed. The specific question or comparison purpose.
 
 ### name-b
 ...
-
-</options>
 ```
 
 **Single mode** (`mode: single`):
@@ -70,13 +66,11 @@ status: progress | complete
 mode: single
 ---
 
-<context>
+## Context
 
 The specific question to answer.
 
-</context>
-
-<findings>
+## Findings
 
 **Sources consulted**
 - ...
@@ -87,8 +81,6 @@ The specific question to answer.
 <details><summary>Raw excerpts</summary>
 ...
 </details>
-
-</findings>
 ```
 
 ## Review Criteria
@@ -138,7 +130,7 @@ Verdict: `OK` | `BIAS DETECTED` (name the bias, quote the evidence, suggest how 
 ### 5. Completeness — Does the report answer the stated question?
 
 Check that:
-- The `<context>` section names a specific question or comparison purpose.
+- The `## Context` section names a specific question or comparison purpose.
 - The findings actually address that question — not a tangentially related one.
 - No glaring dimensions are unresearched (e.g., a database comparison with no mention of licensing or operational cost).
 - Known unknowns are declared explicitly (e.g., "Benchmark for X workload not available in any public source.") rather than silently omitted.

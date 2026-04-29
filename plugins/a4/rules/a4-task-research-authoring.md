@@ -10,7 +10,7 @@ When **authoring or editing** any research task file, read these first.
 
 ## Required reading before authoring
 
-- `../references/task-research-authoring.md` — purpose, mode/options frontmatter, lifecycle, body shape (`<context>` + `<options>` for comparative or `<findings>` for single), common mistakes, "Don't" list.
+- `../references/task-research-authoring.md` — purpose, mode/options frontmatter, lifecycle, body shape (`## Context` + `## Options` for comparative or `## Findings` for single), common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Sibling rules

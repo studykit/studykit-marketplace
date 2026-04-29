@@ -1,8 +1,8 @@
 # bootstrap.md Template (auto-bootstrap Step 6)
 
-Use the `Write` tool with this scaffold for fresh runs. On incremental bootstrap, use `Edit` to touch only the sections that changed and append a `<change-logs>` bullet citing what drove the update (typically `[architecture](architecture.md)` when architectural changes triggered re-bootstrap).
+Use the `Write` tool with this scaffold for fresh runs. On incremental bootstrap, use `Edit` to touch only the sections that changed and append a `## Change Logs` bullet citing what drove the update (typically `[architecture](architecture.md)` when architectural changes triggered re-bootstrap).
 
-`references/bootstrap-authoring.md` requires `<environment>`, `<launch>`, `<verify>`. `<change-logs>` is optional but written whenever a change cites a causing wiki/issue.
+`references/bootstrap-authoring.md` requires `## Environment`, `## Launch`, `## Verify`. `## Change Logs` is optional but written whenever a change cites a causing wiki/issue.
 
 ````markdown
 ---
@@ -10,7 +10,7 @@ type: bootstrap
 updated: <today>
 ---
 
-<environment>
+## Environment
 
 Verifies the dev environment for the architecture in [architecture](architecture.md).
 
@@ -30,18 +30,14 @@ Verifies the dev environment for the architecture in [architecture](architecture
 | Integration | @vscode/test-electron | 2.5 | `.vscode-test.js` | `tests/integration/activate.test.ts` | PASS |
 | E2E | WebdriverIO + wdio-vscode-service | 8.x | `wdio.conf.ts` | `tests/e2e/panel.test.ts` | PASS |
 
-</environment>
-
-<launch>
+## Launch
 
 | Command | Purpose | Status |
 |---------|---------|--------|
 | `npm run build` | Build | PASS |
 | `npm run dev` | Launch app | PASS |
 
-</launch>
-
-<verify>
+## Verify
 
 ### Verified Commands
 
@@ -71,11 +67,7 @@ Verifies the dev environment for the architecture in [architecture](architecture
 - Environment issues (`status: resolved`): [review/<id>-<slug>](review/<id>-<slug>.md) × M
 - Environment issues (`status: open`): [review/<id>-<slug>](review/<id>-<slug>.md) × K
 
-</verify>
-
-<change-logs>
+## Change Logs
 
 - <today> — [architecture](architecture.md)
-
-</change-logs>
 ````

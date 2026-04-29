@@ -7,7 +7,7 @@ After UCs are confirmed, group UI-related UCs by screen.
 For each screen:
 
 1. Propose a group label (e.g., `screen-dashboard`) and add it to `labels:` in the involved UCs.
-2. Record the screen-navigation narrative inside `context.md`'s `<screens>` section (creating the section if absent — it is optional per `references/context-authoring.md`), with markdown links back to the participating UCs.
+2. Record the screen-navigation narrative inside `context.md`'s `## Screens` section (creating the section if absent — it is optional per `references/context-authoring.md`), with markdown links back to the participating UCs.
 
 ## Mock generation (optional)
 
