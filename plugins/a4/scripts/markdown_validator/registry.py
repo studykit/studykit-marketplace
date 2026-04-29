@@ -97,6 +97,28 @@ def _from_mismatch(m) -> Issue:
     )
 
 
+def _transitions_workspace(a4_dir: Path) -> list[Issue]:
+    from . import transitions as vtr
+
+    return [_from_transition(v) for v in vtr.run_workspace(a4_dir)]
+
+
+def _transitions_file(a4_dir: Path, file: Path) -> list[Issue]:
+    from . import transitions as vtr
+
+    return [_from_transition(v) for v in vtr.run_file(a4_dir, file)]
+
+
+def _from_transition(v) -> Issue:
+    return Issue(
+        category="transitions",
+        path=v.path,
+        rule=v.rule,
+        message=v.message,
+        field=v.field,
+    )
+
+
 CHECKS: dict[str, Check] = {
     "frontmatter": Check(
         name="frontmatter",
@@ -117,5 +139,17 @@ CHECKS: dict[str, Check] = {
         supports_file_scope=True,
         run_workspace=_status_workspace,
         run_file=_status_file,
+    ),
+    "transitions": Check(
+        name="transitions",
+        description=(
+            "Status transition legality — diff working tree against HEAD "
+            "via git and reject `status:` jumps not allowed by the "
+            "family transition table. Safety net for hand edits that "
+            "bypass `transition_status.py`."
+        ),
+        supports_file_scope=True,
+        run_workspace=_transitions_workspace,
+        run_file=_transitions_file,
     ),
 }

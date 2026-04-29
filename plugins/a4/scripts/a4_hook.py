@@ -10,8 +10,10 @@ Subcommands:
                  status-consistency mismatches within the edited file's
                  connected component.
   stop           Stop. Validate all a4/*.md edited in this session against
-                 frontmatter schema. rc=2 on violations (forces Claude
-                 retry); rc=0 on clean or any internal failure.
+                 (1) the frontmatter schema and (2) status-transition
+                 legality (HEAD vs working tree, via git). rc=2 on
+                 violations (forces Claude retry); rc=0 on clean or any
+                 internal failure.
   user-prompt    UserPromptSubmit. Scan the prompt for `#<id>` references
                  and inject resolved `a4/<type>/<id>-<slug>.md` paths as
                  `additionalContext` so Claude reads the file directly
@@ -228,6 +230,7 @@ def _stop() -> int:
 
     try:
         from markdown_validator import frontmatter as vfm
+        from markdown_validator import transitions as vtr
         from markdown import extract_preamble
     except ImportError as e:
         sys.stderr.write(
@@ -236,6 +239,7 @@ def _stop() -> int:
         return 0
 
     fm_violations: list = []
+    tr_violations: list = []
 
     try:
         from markdown_validator.refs import RefIndex
@@ -254,26 +258,43 @@ def _stop() -> int:
         for v in vfm.validate_id_uniqueness(a4_dir):
             if v.path in edited_rel:
                 fm_violations.append(v)
+        tr_violations = vtr.check_files(a4_dir, [Path(f) for f in edited])
     except Exception as e:
         sys.stderr.write(
             f"a4_hook.py stop: validator error ({e}) — skipping validation\n"
         )
         return 0
 
-    if not fm_violations:
+    if not fm_violations and not tr_violations:
         _unlink_silent(record_file)
         return 0
 
     out_lines = ["a4/ validators found issues in files edited this session:"]
-    fm_file_count = len({v.path for v in fm_violations})
-    out_lines.append("")
-    out_lines.append("--- markdown_validator.frontmatter ---")
-    out_lines.append(
-        f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
-    )
-    for v in fm_violations:
-        loc = v.path + (f" [{v.field}]" if v.field else "")
-        out_lines.append(f"  {loc} ({v.rule}): {v.message}")
+    if fm_violations:
+        fm_file_count = len({v.path for v in fm_violations})
+        out_lines.append("")
+        out_lines.append("--- markdown_validator.frontmatter ---")
+        out_lines.append(
+            f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
+        )
+        for v in fm_violations:
+            loc = v.path + (f" [{v.field}]" if v.field else "")
+            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
+    if tr_violations:
+        tr_file_count = len({v.path for v in tr_violations})
+        out_lines.append("")
+        out_lines.append("--- markdown_validator.transitions ---")
+        out_lines.append(
+            f"{len(tr_violations)} violation(s) across {tr_file_count} file(s):"
+        )
+        for v in tr_violations:
+            loc = v.path + (f" [{v.field}]" if v.field else "")
+            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
+        out_lines.append(
+            "Use scripts/transition_status.py to flip status — direct edits "
+            "of `status:` are allowed only when the transition is in "
+            "FAMILY_TRANSITIONS (status_model.py)."
+        )
     out_lines.append("")
     out_lines.append(
         "Fix the issues above before stopping. "

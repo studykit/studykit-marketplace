@@ -7,6 +7,9 @@ Library home for the validator categories:
     uniqueness).
   - ``status_consistency`` — cross-file derived status (``superseded``,
     ``promoted``, cascaded ``discarded``).
+  - ``transitions`` — git-diff-based status transition legality (HEAD
+    vs working tree). Safety net for hand edits that bypass
+    ``transition_status.py``.
 
 Plus a shared resolver:
 
@@ -22,7 +25,7 @@ directly when it needs category-specific output shapes.
 
 from __future__ import annotations
 
-from . import frontmatter, refs, registry, status_consistency
+from . import frontmatter, refs, registry, status_consistency, transitions
 from .refs import RefIndex, ResolvedRef
 from .registry import CHECKS, Check, Issue
 
@@ -30,6 +33,7 @@ __all__ = [
     "frontmatter",
     "refs",
     "status_consistency",
+    "transitions",
     "registry",
     "CHECKS",
     "Check",

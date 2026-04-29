@@ -11,9 +11,10 @@ Public surface:
       Heading         ATX heading discovered inside a Body.
 
     Functions
-      parse(path)              -> Markdown
-      extract_preamble(path)   -> Preamble
-      extract_body(path)       -> Body
+      parse(path)                    -> Markdown
+      extract_preamble(path)         -> Preamble
+      extract_preamble_from_text(s)  -> Preamble
+      extract_body(path)             -> Body
 
     Methods
       Body.extract_headings()  -> list[Heading]
@@ -208,6 +209,16 @@ def parse(path: Path) -> Markdown:
 def extract_preamble(path: Path) -> Preamble:
     """Parse only the preamble of a markdown file."""
     text = path.read_text(encoding="utf-8")
+    return extract_preamble_from_text(text)
+
+
+def extract_preamble_from_text(text: str) -> Preamble:
+    """Parse only the preamble of an in-memory markdown text.
+
+    Used when the source is not a file on disk — for example, the output
+    of ``git show HEAD:<path>`` when comparing a working-tree file
+    against its committed version.
+    """
     located = _locate_preamble(text)
     if located is None:
         return Preamble(fm=None, raw="")

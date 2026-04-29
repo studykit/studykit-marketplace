@@ -112,6 +112,8 @@ Every status change on `usecase`, `task`, `review`, and `spec` files flows throu
 
 `transition_status.py` does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. `status:` is **never hand-edited** after file creation. For cases the writer cannot mechanically reach (`idea` / `brainstorm` `promoted`), drift between `status:` and the supporting cross-references is surfaced as a separate consistency check.
 
+A direct hand edit of `status:` is enforced as an error at stop time only when the resulting jump is **not** in `FAMILY_TRANSITIONS` (e.g. `shipped → ready`). Legal jumps slip past the legality check but still bypass the writer's cascades — the static cross-file consistency checks (`task.pending` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain) re-surface any cascade work the writer would have performed. The transition-legality safety net is implemented in [`../scripts/markdown_validator/transitions.py`](../scripts/markdown_validator/transitions.py) and runs on the Stop hook against the working-tree-vs-HEAD git diff.
+
 ## Structural relationship fields
 
 Shared across all issue types. Omit fields that are empty, or use `[]`.
@@ -281,6 +283,7 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | UC `status >= ready` with empty `actors:` | error (`missing-actors-post-draft`) |
 | `title:` contains placeholder (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`) when UC is `>= ready` or spec is `>= active` | error (`placeholder-in-title`) |
 | File in an issue / spark folder has no frontmatter | error |
+| `status:` jump (HEAD → working tree) outside `FAMILY_TRANSITIONS` for `usecase` / `task` / `review` / `spec` | error (`illegal-transition`) — Stop hook safety net for direct edits that bypass `transition_status.py` |
 
 How violations are surfaced (block, notify, ignore) is the surfacing layer's concern, not the schema's.
 
@@ -318,3 +321,4 @@ When these land, update this document **and** the enforcement layer simultaneous
 - **Id allocator:** `../scripts/allocate_id.py`.
 - **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal / in-progress / active classifications, kind enums. Imported by the writer, workspace state, and search; the prose tables in this document mirror the same data.
 - **Status transition writer:** `../scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain).
+- **Status transition safety net:** `../scripts/markdown_validator/transitions.py` — Stop-hook check that diffs working-tree `status:` against HEAD via git and rejects transitions outside `FAMILY_TRANSITIONS`. Catches direct hand edits that bypass the writer above; the writer is still the recommended path because it also runs cascades.
