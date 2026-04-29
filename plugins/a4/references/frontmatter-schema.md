@@ -278,6 +278,8 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | `type` on wiki page disagrees with filename | error |
 | Filename leading id disagrees with `id:` field | error (`id-filename-mismatch`) |
 | Id collision across issue folders | error |
+| UC `status >= ready` with empty `actors:` | error (`missing-actors-post-draft`) |
+| `title:` contains placeholder (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`) when UC is `>= ready` or spec is `>= active` | error (`placeholder-in-title`) |
 | File in an issue / spark folder has no frontmatter | error |
 
 How violations are surfaced (block, notify, ignore) is the surfacing layer's concern, not the schema's.

@@ -10,6 +10,10 @@ Enforces the per-type schema defined in
     ``.md`` extension).
   - ``type:`` on wiki pages matches the file basename.
   - Ids are unique across all issue folders in the workspace.
+  - Post-draft authoring invariants: UC at ``status >= ready`` has
+    non-empty ``actors:``; ``title:`` is free of placeholder tokens
+    (``TBD``, ``???``, ``<placeholder>``, ``<todo>``, ``TODO:``) once UC
+    reaches ``ready`` or spec reaches ``active``.
 
 Unknown frontmatter fields are ignored — validation is strict on known
 rules and lenient about extension. Pure library — no stdout / stderr /
@@ -40,6 +44,38 @@ from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER
 from .refs import RefIndex
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+
+# Statuses past the initial draft phase. Once a file reaches one of these
+# values, post-draft authoring invariants apply continuously (not only at
+# the transition moment).
+POST_DRAFT_STATUSES: dict[str, frozenset[str]] = {
+    "usecase": frozenset({"ready", "implementing", "shipped", "superseded"}),
+    "spec": frozenset({"active", "deprecated", "superseded"}),
+}
+
+PLACEHOLDER_TOKENS: tuple[str, ...] = (
+    "TBD",
+    "???",
+    "<placeholder>",
+    "<todo>",
+    "TODO:",
+)
+
+
+def _placeholder_token(value: Any) -> str | None:
+    if not isinstance(value, str):
+        return None
+    upper = value.upper()
+    for token in PLACEHOLDER_TOKENS:
+        if token.upper() in upper:
+            return token
+    return None
+
+
+def _is_non_empty_str_list(value: Any) -> bool:
+    return isinstance(value, list) and any(
+        isinstance(x, str) and x.strip() for x in value
+    )
 
 
 @dataclass(frozen=True)
@@ -373,6 +409,31 @@ def validate_file(
                         "id-filename-mismatch",
                         "id",
                         f"filename leading id `{head}` does not match `id: {raw_id}`",
+                    )
+                )
+
+    if ftype in POST_DRAFT_STATUSES:
+        status = fm.get("status")
+        if isinstance(status, str) and status in POST_DRAFT_STATUSES[ftype]:
+            if ftype == "usecase" and not _is_non_empty_str_list(fm.get("actors")):
+                violations.append(
+                    Violation(
+                        rel_str,
+                        "missing-actors-post-draft",
+                        "actors",
+                        f"status={status!r} requires non-empty `actors:` "
+                        "(post-draft authoring invariant)",
+                    )
+                )
+            placeholder = _placeholder_token(fm.get("title"))
+            if placeholder:
+                violations.append(
+                    Violation(
+                        rel_str,
+                        "placeholder-in-title",
+                        "title",
+                        f"status={status!r} but `title:` contains placeholder "
+                        f"{placeholder!r}",
                     )
                 )
 
