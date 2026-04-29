@@ -34,19 +34,18 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 Three hook flows share the same events, dispatched through a single Python entry point:
 
 1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; exit 2 on frontmatter violations so Claude retries.
-2. **Cross-file status consistency** (non-blocking) — scan `a4/` on SessionStart and after each edit; inject findings as `additionalContext` so the LLM sees mismatches on the next turn without a retry loop.
+2. **Cross-file status consistency** (non-blocking) — after each edit, run the `status` check on the edited file's connected component and inject findings as `additionalContext`. Workspace-wide sweeps are manual via `/a4:validate`; SessionStart no longer fires status reporting.
 3. **Issue-id resolution** (non-blocking) — scan UserPromptSubmit for `#<id>` references; inject the resolved `a4/<type>/<id>-<slug>.md` path so Claude reads the file directly instead of searching. Per-session dedupe — once an id has been announced, repeats stay silent.
 
 | Event | Script | Purpose |
 |-------|--------|---------|
-| `PostToolUse` (`Write\|Edit\|MultiEdit`) | `scripts/a4_hook.py post-edit` | Record the edited `$project/a4/**/*.md` path to a session-scoped file, then run `validate_status_consistency.py --file <edited>` and inject mismatches in that file's connected component as `additionalContext`. Non-blocking. |
-| `Stop` | `scripts/a4_hook.py stop` | Run `validate_frontmatter.py` on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
+| `PostToolUse` (`Write\|Edit\|MultiEdit`) | `scripts/a4_hook.py post-edit` | Record the edited `$project/a4/**/*.md` path to a session-scoped file, then run the `status` check in file mode (connected component reached via `supersedes:`) and inject mismatches as `additionalContext`. Non-blocking. |
+| `Stop` | `scripts/a4_hook.py stop` | Run the `frontmatter` check on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
 | `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record files (`a4-edited-<sid>.txt`, `a4-resolved-ids-<sid>.txt`). Always exits 0. |
 | `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan record files from crashed sessions where SessionEnd never fired. Always exits 0. |
-| `SessionStart` | `scripts/a4_hook.py session-start` | Run `validate_status_consistency.py` and inject workspace-wide mismatches as `additionalContext`. Non-blocking; silent on clean. |
 | `UserPromptSubmit` | `scripts/a4_hook.py user-prompt` | Match `#<id>` tokens in the prompt (`(?<![\w#])#(\d+)\b`); for each, glob `a4/{usecase,task,review,spec,idea}/<id>-*.md` and `a4/archive/**/<id>-*.md`; inject resolved paths as `additionalContext`. Skips ids already resolved this session via `a4-resolved-ids-<sid>.txt`. Non-blocking; silent on no match. |
 
-**Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` manually for a full workspace sweep. Status consistency, by contrast, always scans workspace-wide — cross-file by definition.
+**Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` for a full workspace sweep — status-consistency reporting is now manual rather than firing on SessionStart.
 
 **Design principles.** See `docs/hook-conventions.md` for state classification, lifecycle symmetry, language choice, in-event ordering, non-blocking policy, and output channel usage.
 
@@ -111,16 +110,16 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 - **Ids are globally monotonic integers** (GitHub issue semantics) — unique across all folders. Allocator: `scripts/allocate_id.py` computes `max(existing ids) + 1`.
 - **Filenames are `<id>-<slug>.md`.** Folder indicates type; no `uc-`/`task-`/`rev-`/`d-` prefix.
-- **Obsidian markdown throughout.** Body uses `[[wikilinks]]` and `![[embeds]]`; frontmatter paths are plain strings (no brackets, no extension) for dataview compatibility.
-- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `children`, UC ↔ task, …) are computed on demand (dataview, `search.py`, roadmap surfaces).
+- **Standard markdown links throughout.** Body uses `[text](relative/path.md)` (renderable by GitHub, VSCode, any markdown viewer); frontmatter paths are plain strings (no brackets, no extension) for stable machine parsing.
+- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `children`, UC ↔ task, …) are computed on demand (`search.py`, roadmap surfaces).
 
 ### Wiki update protocol
 
 Wiki pages carry no lifecycle but are continuously updated. All edits flow through **review items** as the unified conduit:
 
-1. Modified sections carry sequential footnote markers (`[^1]`, `[^2]`, …) inline; a `## Changes` section at page bottom resolves each to `YYYY-MM-DD — [[causing-issue]]`.
-2. Three entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items whose `target:` lists the affected wiki basenames; bulk-generation skills invoke `/a4:drift` as a final step.
-3. **Close guard** — a review item whose `target:` lists one or more wiki basenames warns on close if any referenced wiki page lacks a footnote pointing back to the review item itself (warning + override; user retains final say).
+1. Each substantive wiki edit appends a `## Change Logs` bullet — `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` — pointing at the issue that drove the change. See `references/body-conventions.md §## Change Logs audit trail`.
+2. Two entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items whose `target:` lists the affected wiki basenames.
+3. **Close guard (advisory)** — when a review with one or more wiki targets transitions to `resolved`, ensure each referenced wiki page records the change in its `## Change Logs`. There is no automated re-surfacer at this point; re-run `/a4:validate` after wiki edits if you need a sweep.
 
 ### Derived views
 
@@ -128,7 +127,7 @@ Use Case Diagram, authorization matrix, open-issue lists, roadmap milestone narr
 
 ### Workspace dashboard
 
-The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Drift alerts, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open sparks. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
+The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open sparks. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
 
 ### Archive
 

@@ -1,76 +1,61 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0"]
-# ///
-"""Validate cross-file status consistency across an a4/ workspace.
+"""Cross-file status consistency validator (library).
 
 Some status enum values are semantically derived from cross-file state:
 
-  - spec.status = "superseded" iff another spec/*.md at
-    `status: active` declares `supersedes: [<this-path>]`.
-  - usecase.status = "superseded" iff another usecase/*.md at
-    `status: shipped` declares `supersedes: [<this-path>]`.
-  - task.status = "discarded" iff every UC in the task's `implements:`
-    is at `status: discarded`.
-  - review.status = "discarded" iff the review's `target:` points at a
-    usecase with `status: discarded`.
-  - idea.status = "promoted" iff the idea's own `promoted:` list is
+  - ``spec.status = "superseded"`` iff another ``spec/*.md`` at
+    ``status: active`` declares ``supersedes: [<this-path>]``.
+  - ``usecase.status = "superseded"`` iff another ``usecase/*.md`` at
+    ``status: shipped`` declares ``supersedes: [<this-path>]``.
+  - ``task.status = "discarded"`` iff every UC in the task's
+    ``implements:`` is at ``status: discarded``.
+  - ``review.status = "discarded"`` iff the review's ``target:`` points
+    at a usecase with ``status: discarded``.
+  - ``idea.status = "promoted"`` iff own ``promoted:`` list is
     non-empty.
-  - spark/*.brainstorm.md status = "promoted" iff own `promoted:` is
-    non-empty.
+  - ``spark/*.brainstorm.md`` ``status = "promoted"`` iff own
+    ``promoted:`` list is non-empty.
 
-These are normally materialized by active writers:
-  - `scripts/transition_status.py` cascades UC `shipped → superseded`
-    (on successor ship), UC `discarded` → task/review discard,
-    UC `revising` → task reset, and spec `active → superseded`
-    (on successor activation). It is the single writer across
-    usecase / task / review / spec.
-
+These are normally materialized by ``scripts/transition_status.py``.
 This validator is the safety net — it catches drift left behind if a
 writer was skipped, bypassed, or ran before the successor reached its
 terminal-active state. Report-only; no file is mutated.
 
 Two modes:
 
-  Workspace mode (default) — scan every spec/usecase/idea/brainstorm
-  file and report all mismatches. Used by SessionStart and `/a4:validate`.
+  Workspace mode — scan every spec/usecase/idea/brainstorm file and
+  report all mismatches.
 
-  File-scoped mode (`--file <path>`) — report only mismatches involving
-  the given file's "related set":
-    - idea/<id>-<slug>.md        → that file only (self-contained rule)
-    - spark/<...>.brainstorm.md  → that file only (self-contained rule)
-    - spec/<id>-<slug>.md        → that file + files it supersedes +
-                                   files that supersede it (connected
-                                   component via `supersedes:`)
-    - usecase/<id>-<slug>.md     → same as spec, walked via
-                                   usecase-to-usecase `supersedes:`
-    - anything else              → no output (no consistency rule applies)
-  Used by the PostToolUse hook so edits do not re-surface unrelated
-  legacy mismatches elsewhere in the workspace.
+  File-scoped mode — report only mismatches involving the given file's
+  "related set":
 
-Exit 2 on any reported mismatch, 0 on clean run.
+    - ``idea/<id>-<slug>.md``       — that file only.
+    - ``spark/<...>.brainstorm.md`` — that file only.
+    - ``spec/<id>-<slug>.md``       — that file + files it supersedes
+                                      + files that supersede it
+                                      (connected component via
+                                      ``supersedes:``).
+    - ``usecase/<id>-<slug>.md``    — same as spec, walked via
+                                      usecase-to-usecase
+                                      ``supersedes:``.
+    - anything else                 — no output.
 
-Usage:
-    uv run validate_status_consistency.py <a4-dir>
-    uv run validate_status_consistency.py <a4-dir> --json
-    uv run validate_status_consistency.py <a4-dir> --file <path>
-    uv run validate_status_consistency.py <a4-dir> --file <path> --json
+Pure library — no stdout / stderr / exit. The unified CLI
+``scripts/validate.py`` adapts ``run`` output to ``Issue`` via
+``markdown_validator.registry`` and owns presentation / exit codes.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
-import sys
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from pathlib import Path
 
 from common import (
     is_non_empty_list as _is_non_empty_list,
     iter_issue_files,
-    normalize_ref as _normalize_ref,
 )
 from markdown import extract_preamble
+
+from .refs import RefIndex
 
 
 @dataclass(frozen=True)
@@ -95,11 +80,12 @@ SUPERSEDES_FAMILIES: dict[str, str] = {
 
 
 def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
-    """Map `<family>/<id>-<slug>` → frontmatter for every .md in folder.
+    """Map ``<family>/<id>-<slug>`` → frontmatter for every .md in folder.
 
-    For nested issue folders (e.g. `task/{feature,bug,spike}/`), descends
-    into kind subfolders. The reference-key form drops the kind segment
-    so refs stay stable when a task is moved between kinds.
+    For nested issue folders (e.g. ``task/{feature,bug,spike}/``),
+    descends into kind subfolders. The reference-key form drops the
+    kind segment so refs stay stable when a task is moved between
+    kinds.
     """
     out: dict[str, dict] = {}
     for p in iter_issue_files(a4_dir, family):
@@ -112,16 +98,17 @@ def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
 
 
 def collect_specs(a4_dir: Path) -> dict[str, dict]:
-    """Back-compat alias for `collect_family(a4_dir, "spec")`."""
+    """Back-compat alias for ``collect_family(a4_dir, "spec")``."""
     return collect_family(a4_dir, "spec")
 
 
 def collect_with_promoted(
     a4_dir: Path, subfolder: str, file_glob: str
 ) -> list[tuple[str, dict]]:
-    """Return (rel_ref, frontmatter) for items in a folder.
+    """Return ``(rel_ref, frontmatter)`` for items in a folder.
 
-    `rel_ref` is the reference form (folder/<basename-without-.md>).
+    ``rel_ref`` is the reference form
+    (``folder/<basename-without-.md>``).
     """
     out: list[tuple[str, dict]] = []
     folder = a4_dir / subfolder
@@ -135,22 +122,28 @@ def collect_with_promoted(
     return out
 
 
-def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
+def check_superseded(
+    items: dict[str, dict], family: str, index: RefIndex
+) -> list[Mismatch]:
     """Check supersedes-↔-status consistency within a single family.
 
-    A target artifact is expected to be at `status: superseded` iff it is
-    named in the `supersedes:` list of another artifact in the same family
-    that is itself at its terminal-active status (spec=active,
-    usecase=shipped). Draft/implementing successors do NOT yet render
-    their targets superseded.
+    A target artifact is expected to be at ``status: superseded`` iff
+    it is named in the ``supersedes:`` list of another artifact in the
+    same family that is itself at its terminal-active status
+    (spec=active, usecase=shipped). Draft/implementing successors do
+    NOT yet render their targets superseded.
+
+    All ref comparisons go through ``index.canonical`` so the new
+    short forms (``#<id>``, ``<folder>/<id>``) match the canonical
+    ``<folder>/<id>-<slug>`` keys in ``items``.
     """
     mismatches: list[Mismatch] = []
     terminal_active = SUPERSEDES_FAMILIES.get(family)
     if terminal_active is None:
         return mismatches
 
-    # Build: for each target key, the list of live-successor keys
-    # that claim to supersede it.
+    # Build: for each target key (canonical), the list of live-successor
+    # keys that claim to supersede it.
     superseded_by: dict[str, list[str]] = {}
     for key, fm in items.items():
         supersedes = fm.get("supersedes")
@@ -160,10 +153,10 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
         if successor_status != terminal_active:
             continue
         for entry in supersedes:
-            norm = _normalize_ref(entry)
-            if norm is None:
+            canon = index.canonical(entry)
+            if canon is None:
                 continue
-            superseded_by.setdefault(norm, []).append(key)
+            superseded_by.setdefault(canon, []).append(key)
 
     for key, fm in items.items():
         status = fm.get("status")
@@ -200,16 +193,19 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
         if not isinstance(supersedes, list):
             continue
         for entry in supersedes:
-            norm = _normalize_ref(entry)
-            if norm is None:
-                continue
-            if norm not in items:
+            canon = index.canonical(entry)
+            if canon is None or canon not in items:
+                # Show the original entry in the message so the user can
+                # find it; canonical may be None when the ref does not
+                # resolve at all (also caught by frontmatter
+                # `unresolved-ref`).
+                shown = canon if canon is not None else entry
                 mismatches.append(
                     Mismatch(
                         path=f"{key}.md",
                         rule=f"superseded-target-missing-{family}",
                         message=(
-                            f"`supersedes: [{norm}]` points at a {family} "
+                            f"`supersedes: [{shown}]` points at a {family} "
                             "that does not exist in the workspace"
                         ),
                     )
@@ -221,13 +217,15 @@ def check_superseded(items: dict[str, dict], family: str) -> list[Mismatch]:
 def check_discarded_cascade(
     a4_dir: Path,
     usecases: dict[str, dict],
+    index: RefIndex,
 ) -> list[Mismatch]:
-    """Flag drift when a UC is `discarded` but its cascades did not run.
+    """Flag drift when a UC is ``discarded`` but its cascades did not run.
 
-    - task: each task with `implements: [usecase/<discarded>]` where all
-      implemented UCs are discarded is expected at `discarded` too.
-    - review: each review with `target: usecase/<discarded>` at `open`
-      or `in-progress` is expected at `discarded`.
+    - task: each task with ``implements: [usecase/<discarded>]`` where
+      all implemented UCs are discarded is expected at ``discarded``
+      too.
+    - review: each review with ``target:`` containing a discarded UC at
+      ``open`` or ``in-progress`` is expected at ``discarded``.
     """
     mismatches: list[Mismatch] = []
     discarded_uc_keys = {
@@ -246,9 +244,7 @@ def check_discarded_cascade(
             implements = fm.get("implements") or []
             if not isinstance(implements, list) or not implements:
                 continue
-            implemented_keys = {
-                _normalize_ref(x) for x in implements
-            }
+            implemented_keys = {index.canonical(x) for x in implements}
             implemented_keys.discard(None)
             if not implemented_keys or not implemented_keys.issubset(discarded_uc_keys):
                 continue
@@ -272,8 +268,16 @@ def check_discarded_cascade(
         fm = _fm(p)
         if fm is None:
             continue
-        target = _normalize_ref(fm.get("target"))
-        if target is None or target not in discarded_uc_keys:
+        target_raw = fm.get("target")
+        target_entries: list = []
+        if isinstance(target_raw, list):
+            target_entries = target_raw
+        elif isinstance(target_raw, str):
+            target_entries = [target_raw]
+        canon_targets = {index.canonical(t) for t in target_entries}
+        canon_targets.discard(None)
+        hit = canon_targets & discarded_uc_keys
+        if not hit:
             continue
         status = fm.get("status")
         if status in {"discarded", "resolved"}:
@@ -283,7 +287,7 @@ def check_discarded_cascade(
                 path=f"review/{p.stem}.md",
                 rule="missing-discarded-status-review",
                 message=(
-                    f"status={status!r} but target {target!r} is "
+                    f"status={status!r} but target {sorted(hit)!r} is "
                     f"discarded. Expected status=discarded — "
                     "transition_status.py should have cascaded."
                 ),
@@ -325,7 +329,11 @@ def check_promoted(items: list[tuple[str, dict]], kind: str) -> list[Mismatch]:
     return mismatches
 
 
-def collect_workspace_mismatches(a4_dir: Path) -> list[Mismatch]:
+def collect_workspace_mismatches(
+    a4_dir: Path, index: RefIndex | None = None
+) -> list[Mismatch]:
+    if index is None:
+        index = RefIndex(a4_dir)
     ideas = collect_with_promoted(a4_dir, "idea", "*.md")
     brainstorms = collect_with_promoted(a4_dir, "spark", "*.brainstorm.md")
 
@@ -333,43 +341,41 @@ def collect_workspace_mismatches(a4_dir: Path) -> list[Mismatch]:
     usecases: dict[str, dict] = {}
     for family in SUPERSEDES_FAMILIES:
         items = collect_family(a4_dir, family)
-        mismatches.extend(check_superseded(items, family))
+        mismatches.extend(check_superseded(items, family, index))
         if family == "usecase":
             usecases = items
     if usecases:
-        mismatches.extend(check_discarded_cascade(a4_dir, usecases))
+        mismatches.extend(check_discarded_cascade(a4_dir, usecases, index))
     mismatches.extend(check_promoted(ideas, "idea"))
     mismatches.extend(check_promoted(brainstorms, "brainstorm"))
     return mismatches
 
 
-def _supersedes_component(items: dict[str, dict], key: str) -> set[str]:
+def _supersedes_component(
+    items: dict[str, dict], key: str, index: RefIndex
+) -> set[str]:
     """Walk the supersedes chain within a single family, both directions."""
     component = {key}
     fm = items.get(key)
     if fm is not None:
         for entry in fm.get("supersedes") or []:
-            norm = _normalize_ref(entry)
-            if norm:
-                component.add(norm)
+            canon = index.canonical(entry)
+            if canon:
+                component.add(canon)
     for other_key, other_fm in items.items():
         for entry in other_fm.get("supersedes") or []:
-            if _normalize_ref(entry) == key:
+            if index.canonical(entry) == key:
                 component.add(other_key)
                 break
     return component
 
 
-# Back-compat alias used by older callers.
-def _spec_component(specs: dict[str, dict], key: str) -> set[str]:
-    return _supersedes_component(specs, key)
-
-
 def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
-    """Return mismatches in the connected component of `rel_file`.
+    """Return mismatches in the connected component of ``rel_file``.
 
-    `rel_file` is workspace-relative: `spec/1-x.md`, `idea/3-y.md`,
-    `spark/2026-04-24-1200-z.brainstorm.md`. Anything else returns [].
+    ``rel_file`` is workspace-relative: ``spec/1-x.md``,
+    ``idea/3-y.md``, ``spark/2026-04-24-1200-z.brainstorm.md``.
+    Anything else returns ``[]``.
     """
     parts = rel_file.split("/", 1)
     if len(parts) < 2:
@@ -401,14 +407,15 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
     if folder in SUPERSEDES_FAMILIES:
         if not basename.endswith(".md"):
             return []
+        index = RefIndex(a4_dir)
         items = collect_family(a4_dir, folder)
         stem = basename[:-3]
         key = f"{folder}/{stem}"
-        component = _supersedes_component(items, key)
+        component = _supersedes_component(items, key, index)
         component_paths = {f"{k}.md" for k in component}
         return [
             m
-            for m in check_superseded(items, folder)
+            for m in check_superseded(items, folder, index)
             if m.path in component_paths
         ]
 
@@ -418,75 +425,10 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
 def run(a4_dir: Path, file: str | None = None) -> list[Mismatch]:
     """Library API: workspace or file-scoped consistency check.
 
-    When `file` is given, restrict to the connected component of that
-    workspace-relative path (same semantics as the `--file` CLI flag).
-    Pure — no stdout/stderr/exit.
+    When ``file`` is given, restrict to the connected component of that
+    workspace-relative path (file-scope semantics in
+    ``markdown_validator.registry``). Pure — no stdout/stderr/exit.
     """
     if file:
         return collect_file_mismatches(a4_dir, file)
     return collect_workspace_mismatches(a4_dir)
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Validate cross-file status consistency in an a4/ workspace."
-    )
-    parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
-    parser.add_argument(
-        "--file",
-        dest="file",
-        type=str,
-        default=None,
-        help=(
-            "restrict to the connected component of this file "
-            "(absolute or workspace-relative path)"
-        ),
-    )
-    parser.add_argument(
-        "--json", action="store_true", help="emit structured JSON to stdout"
-    )
-    args = parser.parse_args()
-
-    a4_dir = args.a4_dir.resolve()
-    if not a4_dir.is_dir():
-        print(f"Error: {a4_dir} is not a directory", file=sys.stderr)
-        sys.exit(1)
-
-    file_rel: str | None = None
-    if args.file:
-        raw = Path(args.file)
-        abs_path = raw if raw.is_absolute() else (a4_dir / raw)
-        try:
-            file_rel = str(abs_path.resolve().relative_to(a4_dir))
-        except ValueError:
-            print(
-                f"Error: --file {args.file} is not inside {a4_dir}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-
-    mismatches = run(a4_dir, file_rel)
-
-    if args.json:
-        out = {
-            "a4_dir": str(a4_dir),
-            "mismatches": [asdict(m) for m in mismatches],
-        }
-        print(json.dumps(out, indent=2, ensure_ascii=False))
-        sys.exit(2 if mismatches else 0)
-
-    if not mismatches:
-        print("OK — no status-consistency mismatches.")
-        sys.exit(0)
-
-    print(
-        f"{len(mismatches)} status-consistency mismatch(es):",
-        file=sys.stderr,
-    )
-    for m in mismatches:
-        print(f"  {m.path} ({m.rule}): {m.message}", file=sys.stderr)
-    sys.exit(2)
-
-
-if __name__ == "__main__":
-    main()

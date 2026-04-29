@@ -67,8 +67,7 @@ If the request is ambiguous between the three, ask one clarifying question befor
 | `stage-progress` | mixed-axis view of usecase / arch / bootstrap / roadmap / impl |
 | `issue-counts` | per folder × {active, in_progress, terminal, total}, plus by-kind for review/task |
 | `usecases-by-source` | UC `source:` distribution (Reverse-only detection) |
-| `drift-alerts` | open / in-progress reviews with `source: drift-detector`, sorted by priority then id desc |
-| `open-reviews` | open / in-progress non-drift reviews, sorted by priority then created then id |
+| `open-reviews` | open / in-progress reviews, sorted by priority then created then id |
 | `active-tasks` | tasks with status in {pending, progress, failing} |
 | `blocked-items` | any issue with status: blocked, with depends_on chain |
 | `recent-activity` | top 10 issue items by `updated:` desc |
@@ -80,7 +79,6 @@ If the request is ambiguous between the three, ask one clarifying question befor
 **Translation guide for natural-language requests:**
 
 - empty / "dashboard" / "workspace status" / "show a4 state" → no section args (full dashboard)
-- "show drift" / "any drift" → `drift-alerts`
 - "active tasks" / "what's running" → `active-tasks`
 - "what's blocked" → `blocked-items`
 - "open reviews" / "review queue" → `open-reviews`
@@ -91,7 +89,7 @@ If the request is ambiguous between the three, ask one clarifying question befor
 - "open ideas" → `open-ideas`
 - "open sparks" → `open-sparks`
 - "usecase sources" → `usecases-by-source`
-- combined ("drift and blocked") → multiple identifiers: `drift-alerts blocked-items`
+- combined ("reviews and blocked") → multiple identifiers: `open-reviews blocked-items`
 
 If the request asks for per-item search by frontmatter ("what implements usecase/3", "spec items tagged perf"), do not run snapshot — answer per the find workflow instead. For "what should I do next" / recommendation requests, see Non-goals.
 

@@ -65,6 +65,8 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 
 Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text (so `## Decision Log` resolves to `#decision-log`).
 
+Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is also acceptable in prose. It renders as plain text in local markdown viewers but is auto-linked as a cross-issue reference in GitHub Issues / Pull Requests when an `a4/` workspace is mirrored into a tracker. Use it for shorthand mentions; use the markdown-link form when local navigation matters.
+
 Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `frontmatter-schema.md`.
 
 ## `## Change Logs` audit trail
@@ -137,7 +139,7 @@ If the user chooses not to update the wiki page immediately, open a review item 
 
 ### Close guard
 
-Before a session ends, for each review item that transitioned to `status: resolved` whose `target:` list contains one or more wiki basenames, verify each referenced wiki page contains a `## Change Logs` bullet whose markdown link points at the review item itself. Warn + allow override when missing. The drift detector at `../scripts/drift_detector.py` re-surfaces violations between sessions.
+When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose markdown link points at the review item itself. This is an authoring invariant rather than an enforced check at the moment — there is no automated guard or cross-session re-surfacer. Run `/a4:validate` after wiki edits if you need a sweep, and consider adding a registered check under `markdown_validator.registry` if the gap matters.
 
 ## Bumping `updated:`
 
@@ -149,5 +151,4 @@ Before a session ends, for each review item that transitioned to `status: resolv
 - `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
-- `../scripts/drift_detector.py` — scans `target:` for wiki basenames to surface unresolved `## Change Logs` and close-guard violations.
 - Body shape is documentation-only; nothing validates section presence at runtime.

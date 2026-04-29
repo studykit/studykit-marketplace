@@ -129,9 +129,10 @@ via `import`**, not via nested `uv run` subprocesses. The dispatcher
 prepends its own directory to `sys.path` and declares the combined
 dependency set (currently `pyyaml>=6.0`) in its own PEP-723 header, so a
 single `uv run` pays the interpreter/venv startup once per hook event
-instead of once per script call. Standalone CLI use of those scripts
-(`uv run validate_frontmatter.py ...`) remains supported and unchanged —
-each keeps its own PEP-723 header for that path.
+instead of once per script call. Standalone CLI use of the validator
+(`uv run validate.py <a4-dir> [<file> ...] [--only ...]`) remains
+supported in parallel — `validate.py` keeps its own PEP-723 header for
+that path.
 
 ### Shared modules
 
@@ -167,14 +168,11 @@ in **write/cleanup → read/report** order:
   describe the *post-reconciliation* state.
 - Read-only reports run last.
 
-Current SessionStart entries illustrate the pattern:
-
-1. `sweep-old-edited-a4.sh` — safety-net cleanup (bash).
-2. `a4_hook.py session-start` — refresh (write) + status-consistency
-   report (read), in that order internally.
-
-When a new hook is added, place it according to the rule; if the rule is
-ambiguous for the new hook, extend this section rather than improvising.
+SessionStart currently has only one entry — `sweep-old-edited-a4.sh`,
+the safety-net cleanup (bash). When new SessionStart hooks are added,
+place them according to the rule above (cleanup → reconciliation →
+read-only reports); if the rule is ambiguous, extend this section
+rather than improvising.
 
 ---
 

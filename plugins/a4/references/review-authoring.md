@@ -6,7 +6,7 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 - `gap` — something is missing that ought to exist (a UC that no spec covers, an architectural choice nobody recorded, a wiki page that has not been updated to reflect a confirmed change).
 - `question` — an open question the conversation could not resolve in place (deferred decision, unclear constraint).
 
-Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents, by `../scripts/drift_detector.py` (`source: drift-detector`), and by single-edit defer paths (`source: self`).
+Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents and by single-edit defer paths (`source: self`).
 
 Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), `./body-conventions.md`.
 
@@ -19,9 +19,9 @@ id: <int — globally monotonic across the workspace>
 kind: finding | gap | question
 status: open | in-progress | resolved | discarded
 target: []                # issue paths and/or wiki basenames; empty for cross-cutting
-source: self | drift-detector | <reviewer-agent-name>
+source: self | <reviewer-agent-name>
 priority: high | medium | low
-labels: []                # free-form; drift uses drift:<kind>, drift-cause:<slug>
+labels: []                # free-form
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
@@ -33,9 +33,9 @@ updated: YYYY-MM-DD
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self`, `drift-detector`, and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
-- `priority:` drives ordering in iterate backlog presentation (High → Medium → Low). Drift items at `priority: high` lead.
-- `labels:` are free-form. The drift detector reserves `drift`, `drift:<kind>`, and `drift-cause:<slug>` for dedup; do not reuse these prefixes for unrelated tags.
+- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
+- `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
+- `labels:` are free-form.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
 - Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; the writer bumps it on status flips.
 

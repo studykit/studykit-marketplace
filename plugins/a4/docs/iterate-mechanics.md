@@ -48,7 +48,7 @@ Show the filtered set as a priority-ordered table. Use this shape:
 >
 > Which items would you like to address?
 
-Order by `priority` (High → Medium → Low), then by `created:`. Drift-detector items (`source: drift-detector`) with `priority: high` lead.
+Order by `priority` (High → Medium → Low), then by `created:`.
 
 If a stage detects **staleness signals** (e.g., domain page's `updated:` predates recent UC additions, arch page's `## Change Logs` misses recent UC files) and no review item exists yet, the stage may surface them as "likely review triggers" alongside the backlog.
 

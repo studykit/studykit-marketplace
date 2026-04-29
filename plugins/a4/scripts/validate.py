@@ -4,30 +4,44 @@
 # ///
 """Unified validator entrypoint for an a4/ workspace.
 
-Runs the two category validators in one process and emits a combined
-report:
+Runs every registered check in ``markdown_validator.registry.CHECKS``
+against the workspace (or against a specific file set) and emits a
+combined report.
 
-    validate_frontmatter           YAML schema, enum values, field types,
-                                    path-reference format, wiki `type:`
-                                    matches filename, id uniqueness.
-    validate_status_consistency    cross-file derived status
-                                    (`superseded`, `promoted`, cascaded
-                                    `discarded`). Workspace-only; skipped
-                                    in single-file mode (same convention
-                                    as `/a4:validate`).
+Selectors:
 
-Per-category CLI entrypoints remain available and unchanged — users
-wanting a single class of check can still run `validate_frontmatter.py`
-or `validate_status_consistency.py` directly.
+  - No flag  — run every registered check.
+  - --only A,B  — run only the named checks.
+  - --skip A    — run every check except those named.
+  - --list-checks — list registered checks and exit.
 
-Exit code is 2 if any category reports violations, else 0. Exit 1 for
-usage errors (missing workspace, file not inside workspace).
+File scope:
+
+  - 0 files     — workspace mode for every enabled check.
+  - 1+ files    — file-scope mode for checks that support it; checks
+                  that do not support file scope are skipped silently.
+                  Issues are deduplicated when multiple files share a
+                  connected component (e.g. specs in a supersedes
+                  chain).
+
+Designed to be drop-in usable for a git pre-commit hook: the hook
+passes the staged ``a4/**/*.md`` paths after ``<a4-dir>`` and lets the
+selector flags scope the work. ``--json`` produces machine-readable
+output for CI parsing.
+
+Exit code:
+  0  — all enabled checks clean.
+  1  — semantic usage error (missing workspace dir, file outside the
+       workspace, missing file).
+  2  — at least one issue reported, or argparse-detected malformed CLI
+       (unknown flag, unknown check name, etc.).
 
 Usage:
     uv run validate.py <a4-dir>
-    uv run validate.py <a4-dir> <file>
-    uv run validate.py <a4-dir> --json
-    uv run validate.py <a4-dir> <file> --json
+    uv run validate.py <a4-dir> <file> [<file> ...]
+    uv run validate.py <a4-dir> --only frontmatter
+    uv run validate.py <a4-dir> --skip status --json
+    uv run validate.py --list-checks
 """
 
 from __future__ import annotations
@@ -38,117 +52,178 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 
-import validate_frontmatter
-import validate_status_consistency
+# Ensure the package is importable when run via `uv run script.py`.
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from markdown_validator import CHECKS, Issue  # noqa: E402
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(
         description=(
-            "Run all a4 validators (frontmatter + status consistency) in "
-            "one pass."
-        )
+            "Run a4 workspace validators (frontmatter + status consistency "
+            "by default)."
+        ),
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog=(
+            "Examples:\n"
+            "  validate.py path/to/a4\n"
+            "  validate.py path/to/a4 path/to/a4/spec/8-x.md\n"
+            "  validate.py path/to/a4 --only frontmatter\n"
+            "  validate.py path/to/a4 --skip status --json\n"
+            "  validate.py --list-checks\n"
+        ),
     )
-    parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
     parser.add_argument(
-        "file", type=Path, nargs="?", help="validate a single file only"
+        "a4_dir", type=Path, nargs="?", help="path to the a4/ workspace"
+    )
+    parser.add_argument(
+        "files",
+        type=Path,
+        nargs="*",
+        help="restrict to these files (file-scope checks only)",
+    )
+    parser.add_argument(
+        "--only",
+        type=str,
+        default=None,
+        help=f"comma-separated subset of {sorted(CHECKS)}",
+    )
+    parser.add_argument(
+        "--skip",
+        type=str,
+        default=None,
+        help=f"comma-separated subset of {sorted(CHECKS)} to skip",
+    )
+    parser.add_argument(
+        "--list-checks",
+        action="store_true",
+        help="list registered checks and exit",
     )
     parser.add_argument(
         "--json", action="store_true", help="emit structured JSON to stdout"
     )
     args = parser.parse_args()
 
+    if args.list_checks:
+        for name, check in CHECKS.items():
+            scope = "workspace+file" if check.supports_file_scope else "workspace-only"
+            print(f"{name} [{scope}] — {check.description}")
+        sys.exit(0)
+
+    if args.a4_dir is None:
+        parser.error("a4_dir is required (unless --list-checks)")
+
     a4_dir = args.a4_dir.resolve()
     if not a4_dir.is_dir():
         print(f"Error: {a4_dir} is not a directory", file=sys.stderr)
         sys.exit(1)
 
-    target: Path | None = None
-    file_rel: str | None = None
-    if args.file:
-        resolved = args.file.resolve()
+    files: list[Path] = []
+    for raw in args.files:
+        resolved = raw.resolve()
+        if not resolved.is_file():
+            print(f"Error: {resolved} is not a file", file=sys.stderr)
+            sys.exit(1)
         try:
-            file_rel = str(resolved.relative_to(a4_dir))
+            resolved.relative_to(a4_dir)
         except ValueError:
             print(f"Error: {resolved} is not inside {a4_dir}", file=sys.stderr)
             sys.exit(1)
-        target = resolved
+        files.append(resolved)
 
-    fm_violations, fm_scanned = validate_frontmatter.run(a4_dir, target)
+    enabled = _resolve_selection(parser, args.only, args.skip)
 
-    # Cross-file consistency is global — single-file mode skips it so the
-    # user gets a stable workspace-scoped verdict from `/a4:validate`. A
-    # --connected-component mode on the status validator exists (`--file`)
-    # but is intentionally not surfaced here; run
-    # `validate_status_consistency.py --file X` directly if needed.
-    if target is None:
-        status_mismatches = validate_status_consistency.run(a4_dir, None)
-        status_skipped = False
-    else:
-        status_mismatches: list[validate_status_consistency.Mismatch] = []
-        status_skipped = True
+    file_rels = [str(f.relative_to(a4_dir)) for f in files]
+    results: dict[str, list[Issue]] = {}
+    skipped: list[str] = []
 
-    total = len(fm_violations) + len(status_mismatches)
+    for name in CHECKS:  # preserve registration order
+        if name not in enabled:
+            continue
+        check = CHECKS[name]
+        if files:
+            if not check.supports_file_scope:
+                skipped.append(name)
+                results[name] = []
+                continue
+            seen: set[tuple[str, str, str | None, str]] = set()
+            collected: list[Issue] = []
+            for f in files:
+                for issue in check.run_file(a4_dir, f):
+                    key = (issue.path, issue.rule, issue.field, issue.message)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    collected.append(issue)
+            results[name] = collected
+        else:
+            results[name] = check.run_workspace(a4_dir)
+
+    total = sum(len(v) for v in results.values())
     exit_code = 2 if total else 0
 
     if args.json:
         out = {
             "a4_dir": str(a4_dir),
-            "file": file_rel,
-            "frontmatter": {
-                "scanned": [str(p.relative_to(a4_dir)) for p in fm_scanned],
-                "violations": [asdict(v) for v in fm_violations],
-            },
-            "status_consistency": {
-                "skipped": status_skipped,
-                "mismatches": [asdict(m) for m in status_mismatches],
+            "files": file_rels,
+            "enabled": sorted(enabled),
+            "skipped_workspace_only": skipped,
+            "checks": {
+                name: [asdict(i) for i in issues]
+                for name, issues in results.items()
             },
         }
         print(json.dumps(out, indent=2, ensure_ascii=False))
         sys.exit(exit_code)
 
-    _print_frontmatter(fm_violations, fm_scanned)
-    _print_status(status_mismatches, status_skipped)
+    for name in CHECKS:
+        if name not in enabled:
+            continue
+        print(f"=== {name} ===")
+        if name in skipped:
+            print(
+                "  skipped (workspace-only check; rerun without file args "
+                "for this category)"
+            )
+            continue
+        issues = results[name]
+        if not issues:
+            print("OK — no issues.")
+            continue
+        file_count = len({i.path for i in issues})
+        print(
+            f"{len(issues)} issue(s) across {file_count} file(s):",
+            file=sys.stderr,
+        )
+        for i in issues:
+            loc = i.path + (f" [{i.field}]" if i.field else "")
+            print(f"  {loc} ({i.rule}): {i.message}", file=sys.stderr)
 
     sys.exit(exit_code)
 
 
-def _print_frontmatter(
-    violations: list[validate_frontmatter.Violation], scanned: list[Path]
-) -> None:
-    print("=== frontmatter ===")
-    if not violations:
-        print(f"OK — {len(scanned)} file(s) scanned, no violations.")
-        return
-    file_count = len({v.path for v in violations})
-    print(
-        f"{len(violations)} violation(s) across {file_count} file(s):",
-        file=sys.stderr,
-    )
-    for v in violations:
-        loc = v.path + (f" [{v.field}]" if v.field else "")
-        print(f"  {loc} ({v.rule}): {v.message}", file=sys.stderr)
-
-
-def _print_status(
-    mismatches: list[validate_status_consistency.Mismatch], skipped: bool
-) -> None:
-    print("=== status consistency ===")
-    if skipped:
-        print(
-            "  skipped (single-file mode; re-run without [file] for the "
-            "workspace-wide check)"
-        )
-        return
-    if not mismatches:
-        print("OK — no status-consistency mismatches.")
-        return
-    print(
-        f"{len(mismatches)} status-consistency mismatch(es):",
-        file=sys.stderr,
-    )
-    for m in mismatches:
-        print(f"  {m.path} ({m.rule}): {m.message}", file=sys.stderr)
+def _resolve_selection(
+    parser: argparse.ArgumentParser, only: str | None, skip: str | None
+) -> set[str]:
+    enabled = set(CHECKS.keys())
+    if only:
+        names = {x.strip() for x in only.split(",") if x.strip()}
+        unknown = names - set(CHECKS)
+        if unknown:
+            parser.error(f"unknown check(s) in --only: {sorted(unknown)}")
+        enabled = names
+    if skip:
+        names = {x.strip() for x in skip.split(",") if x.strip()}
+        unknown = names - set(CHECKS)
+        if unknown:
+            parser.error(f"unknown check(s) in --skip: {sorted(unknown)}")
+        enabled -= names
+    if not enabled:
+        parser.error("no checks enabled after applying --only / --skip")
+    return enabled
 
 
 if __name__ == "__main__":

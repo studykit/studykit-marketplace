@@ -51,7 +51,7 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 - "reviews touching the architecture wiki" → `--folder review --target architecture`
 - "items tagged perf" → `--label perf`
 - "items updated since 2026-04-01" → `--updated-since 2026-04-01`
-- "items with custom field source set to drift-detector" → `--field source=drift-detector`
+- "items emitted by the usecase reviewer" → `--field source=usecase-reviewer-r2`
 - "all specs" → `--folder spec`
 - If the user just wants raw output and passes flags directly (e.g. `/a4:find --folder task --status pending`), pass `$ARGUMENTS` through verbatim.
 

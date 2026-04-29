@@ -26,19 +26,14 @@ Carry the detected shape into the diagnosis report (Step 3.4) so the user sees t
 - `domain.md` exists, `architecture.md` missing → recommend `/a4:arch`.
 - `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
 - `bootstrap.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
-- Any review item's `target:` references a non-existent wiki page — the drift detector emits this as a high-priority `missing-wiki-page` finding; pick it up in Layer 2.
-
-**Layer 2 — Drift alerts.** Any open `review/*.md` with `source: drift-detector`?
-- High priority first (`close-guard`, `missing-wiki-page`). Each item's `target:` list tells you which iteration skill owns the fix: `architecture`/`domain`/etc. → `/a4:arch iterate`; `usecase/*` → `/a4:usecase iterate`; `task/*` → `/a4:roadmap iterate` or `/a4:run iterate`.
-
-**Layer 3 — Open review items (non-drift).** Any other open review items?
+**Layer 2 — Open review items.** Any open `review/*.md`?
 - Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target entries: `architecture` → `/a4:arch iterate`; `domain` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
 
-**Layer 4 — Active tasks.** Any `task/*/*.md` (recursing through `feature/`, `bug/`, `spike/`) with `status: pending | progress | failing`?
+**Layer 3 — Active tasks.** Any `task/*/*.md` (recursing through `feature/`, `bug/`, `spike/`) with `status: pending | progress | failing`?
 - Yes → recommend `/a4:run iterate` (resume implementation).
 
-**Layer 5 — Blocked items.** Any item with `status: blocked`?
+**Layer 4 — Blocked items.** Any item with `status: blocked`?
 - Read its `depends_on` chain to find the nearest unblocked predecessor; recommend the skill that owns that predecessor.
 
-**Layer 6 — Completion.** Everything `done` / `complete` / `resolved` / `final`?
-- Suggest either a new iteration (fresh UCs for the next milestone) or per-item archive of any targeted closed item (see SKILL.md Step 3.5).
+**Layer 5 — Completion.** Everything `done` / `complete` / `resolved` / `final`?
+- Suggest either a new iteration (fresh UCs for the next milestone) or per-item archive of any targeted closed item (see SKILL.md Step 3.4).

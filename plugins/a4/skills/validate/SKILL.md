@@ -1,31 +1,26 @@
 ---
 name: validate
-description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the shared frontmatter and cross-file status-consistency validators against the project's a4/ workspace and reports any schema or consistency violations. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
-argument-hint: "[file] [--json]"
+description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the registered markdown_validator checks (frontmatter + cross-file status consistency by default) against the project's a4/ workspace and reports any violations. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
+argument-hint: "[file ...] [--only <list>] [--skip <list>] [--json]"
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---
 
 # Workspace Validation (a4 plugin)
 
-Runs two category validators against `<project-root>/a4/` through a single aggregator `validate.py`:
+Runs the registered checks in `markdown_validator.registry.CHECKS` through the unified `validate.py` entrypoint. Two checks ship today:
 
 - **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
-- **status consistency** — cross-file status consistency. Flags specs where `status = superseded` disagrees with which file actually declares `supersedes:`, and ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list. Workspace-only — skipped in single-file mode. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
+- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
 
 Body shape (section tags, required vs optional sections, blank-line discipline) is documented in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` and the per-type authoring contracts under `${CLAUDE_PLUGIN_ROOT}/references/`. There is no runtime body validator — body shape is documentation-only.
 
-These checks cover **different** inconsistencies than `/a4:drift`:
+Invocation: `/a4:validate [file ...] [--only <list>] [--skip <list>] [--json]`.
 
-| Check | Owner |
-|-------|-------|
-| close-guard / missing-wiki-page / stale-link | `/a4:drift` (cross-session wiki↔issue drift) |
-| Frontmatter schema, id uniqueness, path format | `/a4:validate` (this skill) |
-| Cross-file status consistency (`superseded`, `promoted`) | `/a4:validate` (this skill) |
-
-Invocation: `/a4:validate [file] [--json]`. With a file path, the per-file checks run only on that file; cross-file status consistency is skipped because it is a global property of the workspace. With `--json`, the aggregator emits a single combined structured report to stdout.
-
-Per-category CLI entrypoints (`validate_frontmatter.py`, `validate_status_consistency.py`) remain available and unchanged — use them directly when you want a single class of check.
+- No file args — every enabled check runs in workspace mode.
+- One or more file paths — file-scope-capable checks restrict to those files (frontmatter validates each file; status walks each file's connected component). Workspace-only checks are skipped silently.
+- `--only A,B` runs only the named checks; `--skip A` runs every check except those named. The list of registered checks is `validate.py --list-checks`.
+- `--json` emits a single combined structured report to stdout for CI / pre-commit consumers.
 
 ## Context
 
@@ -39,28 +34,28 @@ If the project root resolved to `NOT_A_GIT_REPO`, abort with a clear message. Th
 
 Check that `<project-root>/a4/` exists and is a directory. If not, tell the user that no `a4/` workspace was found and stop — there is nothing to validate.
 
-### 2. Run the aggregator
+### 2. Run the validator
 
-Pass `$ARGUMENTS` straight through so callers can use `[file]` and `--json` without the skill needing to parse each flag:
+Pass `$ARGUMENTS` straight through so callers can use file paths and selector flags (`--only`, `--skip`, `--json`) without the skill needing to parse each flag:
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/validate.py" \
     "<project-root>/a4" $ARGUMENTS
 ```
 
-Exit code 0 when no violations across all categories, 2 when any category reports violations, 1 for usage errors (missing workspace, file not inside workspace). Capture both stdout and stderr — human-readable violation bodies are on stderr; category section headers (`=== frontmatter ===` / `=== status consistency ===`) and `OK` lines are on stdout; `--json` output goes entirely to stdout.
+Exit code 0 when every enabled check is clean, 2 when any check reports issues, 1 for usage errors (missing workspace, file not inside workspace, unknown check name in `--only` / `--skip`). Capture both stdout and stderr — human-readable issue bodies are on stderr; category section headers (`=== frontmatter ===` / `=== status ===`) and `OK` lines are on stdout; `--json` output goes entirely to stdout.
 
 ### 3. Surface the result
 
-Relay the aggregator's output verbatim — the section labels are already present. Do **not** suppress one category because another succeeded; users need the full picture in one pass.
+Relay the validator output verbatim — the section labels are already present. Do **not** suppress one category because another succeeded; users need the full picture in one pass.
 
 Report the aggregate status as one of:
 
-- **All clean** — "OK — frontmatter and status-consistency validators report no violations."
-- **Only one reports violations** — list them, note the other is clean, and point at the canonical reference doc for the reported class (frontmatter-schema or frontmatter-schema §Cross-file status consistency).
-- **Both report violations** — list each labelled set, then: "Fix frontmatter first — consistency checks may resolve in passing once schema issues are fixed (path references and enum values are shared inputs)."
+- **All clean** — "OK — every enabled check reports no issues."
+- **One category reports issues** — list them, note the other is clean, and point at the canonical reference doc for the reported class (frontmatter-schema or frontmatter-schema §Cross-file status consistency).
+- **Multiple categories report issues** — list each labelled set, then: "Fix frontmatter first — consistency checks may resolve in passing once schema issues are fixed (path references and enum values are shared inputs)."
 
-Single-file mode adds one nuance: the consistency check was skipped (the aggregator emits this explicitly); remind the user to re-run the skill workspace-wide before handoff.
+When file arguments are passed, workspace-only checks (none today, but possible in the future) print a `skipped` line; remind the user to re-run the skill workspace-wide before handoff in that case.
 
 ### 4. Suggest a follow-up
 
@@ -71,6 +66,5 @@ Single-file mode adds one nuance: the consistency check was skipped (the aggrega
 ## Non-Goals
 
 - Do not fix violations here. The skill only reports; the user or an iteration skill fixes.
-- Do not run the drift detector. `/a4:drift` covers a different class of inconsistency (cross-session wiki↔issue drift); running both is the user's choice.
 - Do not commit anything. Validators are read-only.
 - Do not invoke this skill autonomously. It is user-triggered; iteration skills and bulk-generation skills do not need to call it.

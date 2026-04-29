@@ -107,6 +107,6 @@ Context is passed via file paths, not agent memory.
 ## Non-Goals
 
 - Do not write a separate `design.md` wiki page. The spec explicitly rejects it — `architecture.md` covers design content (stack, components, interfaces, test strategy).
-- Do not track per-UC / per-source SHAs in `architecture.md`. The wiki update protocol's footnote + drift-detector flow handles cross-reference consistency without SHA bookkeeping.
+- Do not track per-UC / per-source SHAs in `architecture.md`. The wiki update protocol's `## Change Logs` audit trail (standard markdown link to the causing issue) handles cross-reference consistency without SHA bookkeeping.
 - Do not create a research-index file. Use grep over body links.
 - Do not emit aggregated review reports. All findings are per-review-item files.

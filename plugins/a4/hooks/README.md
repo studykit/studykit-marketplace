@@ -12,7 +12,8 @@ independent filesystem operations:
 All other hook logic (JSON parsing, script wrapping, structured output
 shaping) lives in the Python dispatcher: **`../scripts/a4_hook.py`**,
 invoked from `hooks.json` with subcommands `post-edit`, `stop`,
-`session-start`.
+`user-prompt`. SessionStart no longer fires the python dispatcher —
+the only SessionStart entry is `sweep-old-edited-a4.sh` above.
 
 Design principles — language choice, lifecycle symmetry, ordering,
 non-blocking, output channels — are documented in

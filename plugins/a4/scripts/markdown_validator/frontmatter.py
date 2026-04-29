@@ -1,35 +1,27 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0"]
-# ///
-"""Validate frontmatter across an a4/ workspace.
+"""Frontmatter schema validator (library).
 
-Enforces the per-type schema defined in plugins/a4/references/frontmatter-schema.md:
+Enforces the per-type schema defined in
+``plugins/a4/references/frontmatter-schema.md``:
 
   - Required fields are present and non-empty.
   - Enum values are in their allowed set.
   - Field types are correct (int, date, list, string).
-  - Path references use plain string form (no wikilink brackets, no .md extension).
-  - `type:` on wiki pages matches the file basename.
+  - Path references use plain string form (no wikilink brackets, no
+    ``.md`` extension).
+  - ``type:`` on wiki pages matches the file basename.
   - Ids are unique across all issue folders in the workspace.
 
-Unknown frontmatter fields are ignored — validation is strict on known rules
-and lenient about extension. All violations are errors; exit code is 2 if any
-violation is found, else 0.
-
-Usage:
-    uv run validate_frontmatter.py <a4-dir>              # scan whole workspace
-    uv run validate_frontmatter.py <a4-dir> <file>       # validate one file
-    uv run validate_frontmatter.py <a4-dir> --json       # structured JSON output
+Unknown frontmatter fields are ignored — validation is strict on known
+rules and lenient about extension. Pure library — no stdout / stderr /
+exit. The unified CLI ``scripts/validate.py`` adapts ``run`` output to
+``Issue`` via ``markdown_validator.registry`` and owns presentation /
+exit codes.
 """
 
 from __future__ import annotations
 
-import argparse
-import json
 import re
-import sys
-from dataclasses import asdict, dataclass, field
+from dataclasses import dataclass, field
 from datetime import date
 from pathlib import Path
 from typing import Any
@@ -44,6 +36,8 @@ from common import (
 )
 from markdown import extract_preamble
 from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER
+
+from .refs import RefIndex
 
 DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
 
@@ -172,14 +166,31 @@ def detect_type(rel: Path, fm: dict) -> str | None:
 
 
 def _validate_path_ref(value: Any) -> str | None:
+    """Format-only check; existence is checked separately via RefIndex.
+
+    Accepted forms (post-strip, sans `.md`):
+
+      - ``#<int>`` short form
+      - ``<folder>/<id>`` or ``<folder>/<id>-<slug>``
+      - bare ``<id>-<slug>`` (id is workspace-globally unique)
+      - wiki basename, spark stem
+    """
     if not isinstance(value, str):
         return f"expected string, got {type(value).__name__}"
     if value.startswith("[[") or value.endswith("]]"):
         return "wikilink brackets not allowed in frontmatter path references"
     if value.endswith(".md"):
         return ".md extension not allowed in frontmatter path references"
-    if value.strip() == "":
+    s = value.strip()
+    if s == "":
         return "empty path reference"
+    if s.startswith("#"):
+        tail = s[1:]
+        if not tail or not tail.isdigit():
+            return (
+                f"`#<id>` short form requires a positive integer id, "
+                f"got {value!r}"
+            )
     return None
 
 
@@ -191,7 +202,12 @@ def _validate_date(value: Any) -> str | None:
     return f"expected YYYY-MM-DD date, got {value!r}"
 
 
-def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
+def validate_file(
+    path: Path,
+    a4_dir: Path,
+    fm: dict,
+    index: RefIndex | None = None,
+) -> list[Violation]:
     violations: list[Violation] = []
     rel = path.relative_to(a4_dir)
     rel_str = str(rel)
@@ -252,6 +268,16 @@ def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
                 violations.append(
                     Violation(rel_str, "path-format", fld, f"{fld}: {err}")
                 )
+            elif index is not None and index.resolve(fm[fld]) is None:
+                violations.append(
+                    Violation(
+                        rel_str,
+                        "unresolved-ref",
+                        fld,
+                        f"{fld}: reference {fm[fld]!r} does not resolve to "
+                        "any file in the workspace",
+                    )
+                )
 
     for fld in schema.path_list_fields:
         if fld in fm and fm[fld] is not None:
@@ -271,6 +297,17 @@ def validate_file(path: Path, a4_dir: Path, fm: dict) -> list[Violation]:
                 if err:
                     violations.append(
                         Violation(rel_str, "path-format", fld, f"{fld}[{i}]: {err}")
+                    )
+                    continue
+                if index is not None and index.resolve(item) is None:
+                    violations.append(
+                        Violation(
+                            rel_str,
+                            "unresolved-ref",
+                            fld,
+                            f"{fld}[{i}]: reference {item!r} does not resolve "
+                            "to any file in the workspace",
+                        )
                     )
 
     if ftype == "task":
@@ -375,12 +412,21 @@ def run(
     """Library API: scan the workspace (or a single file) and return
     violations plus the files scanned.
 
-    Pure — no stdout/stderr/exit. Callers (main, validate.py aggregator)
-    own presentation and exit codes. `a4_dir` must be a resolved
-    directory; `file`, if given, must be a resolved path inside `a4_dir`
-    (caller-enforced).
+    Pure — no stdout/stderr/exit. Callers (registry adapter, hook
+    dispatcher) own presentation and exit codes. ``a4_dir`` must be a
+    resolved directory; ``file``, if given, must be a resolved path
+    inside ``a4_dir`` (caller-enforced).
+
+    A workspace-wide ``RefIndex`` is built once per call so each file's
+    path-reference fields can be checked for existence in addition to
+    format. File-scope mode still scans the entire workspace to build
+    the index (the resolution check needs the global id map), so callers
+    that want raw format-only checks should not rely on file-scope mode
+    for hot paths.
     """
     files = [file] if file else discover_files(a4_dir)
+
+    index = RefIndex(a4_dir)
 
     violations: list[Violation] = []
     for path in files:
@@ -390,70 +436,9 @@ def run(
             if missing:
                 violations.append(missing)
             continue
-        violations.extend(validate_file(path, a4_dir, preamble.fm))
+        violations.extend(validate_file(path, a4_dir, preamble.fm, index))
 
     if file is None:
         violations.extend(validate_id_uniqueness(a4_dir))
 
     return violations, files
-
-
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Validate frontmatter across an a4/ workspace."
-    )
-    parser.add_argument("a4_dir", type=Path, help="path to the a4/ workspace")
-    parser.add_argument(
-        "file", type=Path, nargs="?", help="validate a single file only"
-    )
-    parser.add_argument(
-        "--json", action="store_true", help="emit structured JSON to stdout"
-    )
-    args = parser.parse_args()
-
-    a4_dir = args.a4_dir.resolve()
-    if not a4_dir.is_dir():
-        print(f"Error: {a4_dir} is not a directory", file=sys.stderr)
-        sys.exit(1)
-
-    target: Path | None = None
-    if args.file:
-        resolved = args.file.resolve()
-        try:
-            resolved.relative_to(a4_dir)
-        except ValueError:
-            print(
-                f"Error: {resolved} is not inside {a4_dir}",
-                file=sys.stderr,
-            )
-            sys.exit(1)
-        target = resolved
-
-    violations, files = run(a4_dir, target)
-
-    if args.json:
-        out = {
-            "a4_dir": str(a4_dir),
-            "scanned": [str(p.relative_to(a4_dir)) for p in files],
-            "violations": [asdict(v) for v in violations],
-        }
-        print(json.dumps(out, indent=2, ensure_ascii=False))
-        sys.exit(2 if violations else 0)
-
-    if not violations:
-        print(f"OK — {len(files)} file(s) scanned, no violations.")
-        sys.exit(0)
-
-    file_count = len({v.path for v in violations})
-    print(
-        f"{len(violations)} violation(s) across {file_count} file(s):",
-        file=sys.stderr,
-    )
-    for v in violations:
-        loc = v.path + (f" [{v.field}]" if v.field else "")
-        print(f"  {loc} ({v.rule}): {v.message}", file=sys.stderr)
-    sys.exit(2)
-
-
-if __name__ == "__main__":
-    main()

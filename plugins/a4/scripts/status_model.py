@@ -3,10 +3,10 @@
 Defines per-family status enums, allowed transitions, terminal /
 in-progress / active classifications, and kind enums. Imported by:
 
-  - transition_status.py    — allowed transitions, family states
-  - validate_frontmatter.py — enum membership per schema
-  - workspace_state.py      — terminal / in-progress / active sets
-  - search.py               — CLI flag validation
+  - transition_status.py        — allowed transitions, family states
+  - markdown_validator.frontmatter — enum membership per schema
+  - workspace_state.py          — terminal / in-progress / active sets
+  - search.py                   — CLI flag validation
 
 Authority: this file is canonical. The prose schema reference at
 plugins/a4/references/frontmatter-schema.md mirrors this data for human
@@ -55,7 +55,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
 # Only families with a mechanical writer (transition_status.py) appear
 # here. `idea` and `spark` transitions are user-driven and not enforced
 # by the writer; cross-file consistency is reported by
-# validate_status_consistency.py instead.
+# markdown_validator.status_consistency instead.
 #
 # States absent as keys have no outgoing transitions (terminal).
 

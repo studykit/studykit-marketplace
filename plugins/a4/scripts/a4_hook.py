@@ -12,12 +12,14 @@ Subcommands:
   stop           Stop. Validate all a4/*.md edited in this session against
                  frontmatter schema. rc=2 on violations (forces Claude
                  retry); rc=0 on clean or any internal failure.
-  session-start  SessionStart. Report workspace-wide status-consistency
-                 mismatches.
   user-prompt    UserPromptSubmit. Scan the prompt for `#<id>` references
                  and inject resolved `a4/<type>/<id>-<slug>.md` paths as
                  `additionalContext` so Claude reads the file directly
                  instead of searching for it.
+
+SessionStart no longer triggers workspace-wide status-consistency
+reporting — that sweep moved to manual invocation via `/a4:validate`
+(or `validate.py`).
 
 Conventions (state classification, lifecycle symmetry, language/invocation,
 in-event ordering, non-blocking policy, output channel usage) live in
@@ -26,9 +28,9 @@ in-event ordering, non-blocking policy, output channel usage) live in
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
 
-Sibling scripts (`validate_frontmatter.py`, `validate_status_consistency.py`)
-are called in-process via `import` rather than `uv run` subprocess, so
-per-invocation interpreter startup is paid once — not once per validator call.
+The `markdown_validator` package next to this file is imported in-process
+rather than shelled out via `uv run`, so per-invocation interpreter
+startup is paid once — not once per validator call.
 
 Every subcommand exits 0 except `stop`, which may exit 2 on validation
 violations. Internal failures (missing env, missing modules, library
@@ -59,8 +61,6 @@ def main() -> int:
         return _post_edit()
     if sub == "stop":
         return _stop()
-    if sub == "session-start":
-        return _session_start()
     if sub == "user-prompt":
         return _user_prompt()
     return 0
@@ -127,7 +127,7 @@ def _report_status_consistency_post(
     a4_dir: Path, file_path: str, project_dir: str
 ) -> None:
     try:
-        import validate_status_consistency as vsc
+        from markdown_validator import status_consistency as vsc
     except ImportError:
         return
 
@@ -227,7 +227,7 @@ def _stop() -> int:
         return 0
 
     try:
-        import validate_frontmatter as vfm
+        from markdown_validator import frontmatter as vfm
         from markdown import extract_preamble
     except ImportError as e:
         sys.stderr.write(
@@ -260,7 +260,7 @@ def _stop() -> int:
     out_lines = ["a4/ validators found issues in files edited this session:"]
     fm_file_count = len({v.path for v in fm_violations})
     out_lines.append("")
-    out_lines.append("--- validate_frontmatter.py ---")
+    out_lines.append("--- markdown_validator.frontmatter ---")
     out_lines.append(
         f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
     )
@@ -284,75 +284,6 @@ def _unlink_silent(path: Path) -> None:
         path.unlink()
     except OSError:
         pass
-
-
-# --------------------------- session-start --------------------------------
-
-
-def _session_start() -> int:
-    """Report workspace-wide status-consistency mismatches."""
-    import os
-
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
-    if not project_dir:
-        return 0
-    a4_dir = Path(project_dir) / "a4"
-    if not a4_dir.is_dir():
-        return 0
-
-    report_ctx = _report_status_consistency_session_start(a4_dir)
-    if not report_ctx:
-        return 0
-
-    _emit(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "SessionStart",
-                "additionalContext": report_ctx,
-            }
-        }
-    )
-    return 0
-
-
-def _report_status_consistency_session_start(a4_dir: Path) -> str:
-    """Return additional_context_md or empty string."""
-    try:
-        import validate_status_consistency as vsc
-    except ImportError:
-        return ""
-
-    try:
-        mismatches = vsc.collect_workspace_mismatches(a4_dir)
-    except Exception:
-        return ""
-
-    if not mismatches:
-        return ""
-
-    body_lines = [f"{len(mismatches)} status-consistency mismatch(es):"]
-    for m in mismatches:
-        body_lines.append(f"  {m.path} ({m.rule}): {m.message}")
-    body = "\n".join(body_lines)
-
-    return (
-        "## a4/ status consistency (SessionStart check)\n\n"
-        "The following cross-file status inconsistencies exist in the "
-        "current `a4/` workspace. They are informational only — no "
-        "immediate action is required, but surface them when the user "
-        "works on related files.\n\n"
-        "```\n"
-        f"{body}\n"
-        "```\n\n"
-        "Rules checked:\n"
-        "- `spec.status = superseded` iff another spec at `active` declares "
-        "`supersedes: [<this>]`.\n"
-        "- `idea.status = promoted` iff own `promoted:` list is non-empty.\n"
-        "- `spark/*.brainstorm.md` `status = promoted` iff own `promoted:` "
-        "is non-empty.\n\n"
-        "See `plugins/a4/references/frontmatter-schema.md` for the "
-        "underlying schema."
-    )
 
 
 # -------------------------- user-prompt (UserPromptSubmit) ----------------

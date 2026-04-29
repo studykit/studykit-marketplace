@@ -31,7 +31,7 @@ Examples:
     uv run search.py <a4-dir> --folder review --target architecture --json
 
     # Custom frontmatter field — exact match (NAME=VALUE form)
-    uv run search.py <a4-dir> --field source=drift-detector
+    uv run search.py <a4-dir> --field source=usecase-reviewer-r2
 
     # Custom frontmatter field — list membership (any list element matches)
     uv run search.py <a4-dir> --field tags=experimental
@@ -52,6 +52,7 @@ from typing import Any
 
 from common import ISSUE_FOLDERS, iter_issue_files, normalize_ref
 from markdown import extract_preamble
+from markdown_validator.refs import RefIndex
 from status_model import (
     KIND_BY_FOLDER as _MODEL_KIND_BY_FOLDER,
     STATUS_BY_FOLDER,
@@ -195,6 +196,24 @@ def _bare_ref(ref: str) -> str:
     return ref
 
 
+def _refs_equal(index: RefIndex, a: Any, b: Any) -> bool:
+    """True if two raw refs point at the same artifact.
+
+    Prefers canonical-form equality through the resolver — so ``#3``,
+    ``usecase/3``, and ``usecase/3-search-history`` all match each
+    other. Falls back to plain string equality (after stripping ``.md``)
+    when either ref does not resolve, so unresolved refs still match
+    themselves and remain searchable while their target is missing.
+    """
+    a_canon = index.canonical(a)
+    b_canon = index.canonical(b)
+    if a_canon is not None and b_canon is not None:
+        return a_canon == b_canon
+    a_str = normalize_ref(a)
+    b_str = normalize_ref(b)
+    return a_str is not None and a_str == b_str
+
+
 def discover(a4_dir: Path, include_archived: bool) -> list[Record]:
     out: list[Record] = []
 
@@ -225,16 +244,19 @@ def discover(a4_dir: Path, include_archived: bool) -> list[Record]:
     return out
 
 
-def _matches_references(record: Record, target: str, field_name: str | None) -> bool:
-    """True if `record` has a forward-relation field pointing at `target`.
+def _matches_references(
+    record: Record,
+    target_raw: str,
+    field_name: str | None,
+    index: RefIndex,
+) -> bool:
+    """True if `record` has a forward-relation field pointing at `target_raw`.
 
-    `target` is a normalized reference. Comparison is tolerant of the
-    folder-prefixed (`usecase/3-search-history`) and bare (`3-search-history`)
-    forms — both are valid per the path-reference rule, so a back-scan must
-    accept either.
+    Comparison flows through ``_refs_equal`` so any accepted form on
+    either side (``#<id>``, ``<folder>/<id>``, ``<folder>/<id>-<slug>``,
+    bare ``<id>-<slug>``, wiki basename) matches.
     """
     fields = (field_name,) if field_name else FORWARD_FIELDS
-    target_bare = _bare_ref(target)
 
     for f in fields:
         raw = record.fm.get(f)
@@ -246,10 +268,7 @@ def _matches_references(record: Record, target: str, field_name: str | None) -> 
         else:
             continue
         for entry in entries:
-            n = normalize_ref(entry)
-            if n is None:
-                continue
-            if n == target or n == target_bare or _bare_ref(n) == target_bare:
+            if _refs_equal(index, entry, target_raw):
                 return True
     return False
 
@@ -280,6 +299,7 @@ def _matches_field(fm: dict, name: str, value: str) -> bool:
 def filter_records(
     records: list[Record],
     *,
+    index: RefIndex,
     folders: list[str] | None,
     statuses: list[str] | None,
     kinds: list[str] | None,
@@ -324,20 +344,15 @@ def filter_records(
                 continue
         if target is not None:
             t_raw = r.fm.get("target")
-            target_bare = _bare_ref(target)
-            entries: list[str] = []
+            entries: list[Any] = []
             if isinstance(t_raw, str):
                 entries.append(t_raw)
             elif isinstance(t_raw, list):
-                entries.extend(x for x in t_raw if isinstance(x, str))
-            normalized = [normalize_ref(e) for e in entries]
-            normalized = [n for n in normalized if n]
-            if not any(
-                n == target or _bare_ref(n) == target_bare for n in normalized
-            ):
+                entries.extend(t_raw)
+            if not any(_refs_equal(index, e, target) for e in entries):
                 continue
         if references is not None:
-            if not _matches_references(r, references, references_field):
+            if not _matches_references(r, references, references_field, index):
                 continue
         if field_filters:
             if not all(_matches_field(r.fm, n, v) for n, v in field_filters):
@@ -605,17 +620,19 @@ def main() -> None:
         print(f"Error: {e}", file=sys.stderr)
         sys.exit(2)
 
-    target = normalize_ref(args.target) if args.target else None
-    references = normalize_ref(args.references) if args.references else None
+    target = args.target if args.target else None
+    references = args.references if args.references else None
 
     include_archived = args.include_archived or (
         folders is not None and "archive" in folders
     )
 
     records = discover(a4_dir, include_archived=include_archived)
+    index = RefIndex(a4_dir)
 
     matched = filter_records(
         records,
+        index=index,
         folders=folders,
         statuses=list(args.status) or None,
         kinds=list(args.kind) or None,

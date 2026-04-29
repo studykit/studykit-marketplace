@@ -47,8 +47,10 @@ If you find yourself duplicating substance across `rules/` and `references/`, yo
 All Python in `scripts/` is invoked via `uv run` — never `python` directly. Examples:
 
 ```bash
-uv run scripts/validate_frontmatter.py <file>
-uv run scripts/validate.py
+uv run scripts/validate.py <a4-dir>                       # all checks
+uv run scripts/validate.py <a4-dir> <file> [<file> ...]   # file-scoped
+uv run scripts/validate.py <a4-dir> --only frontmatter    # one category
+uv run scripts/validate.py --list-checks                  # registered checks
 uv run scripts/transition_status.py <file> <target_status>
 uv run scripts/search.py <query>
 ```

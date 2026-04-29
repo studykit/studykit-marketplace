@@ -60,18 +60,7 @@ If `a4/bootstrap.md` already exists, archive it before proceeding: copy to `a4/a
 | 4 | Verification checklist | `references/verification.md` |
 | 5 | Handle issues (architecture vs environment classification) | `references/issue-handling.md` |
 | 6 | Write bootstrap.md (template + edit/write rule) | `references/bootstrap-md-template.md` |
-| 7 | Drift detection | see below |
-| 8 | Commit | `references/commit.md` |
-
-### Step 7: Drift Detection
-
-Before committing, run the shared drift detector against `a4/`:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/drift_detector.py" "$(git rev-parse --show-toplevel)/a4"
-```
-
-It deduplicates against existing open / in-progress / discarded `source: drift-detector` items, so re-running is safe. Findings list the affected wiki page in `target:` (e.g., `target: [architecture]`), entering the unified review-item flow alongside Step 5 items. Use `--dry-run` to inspect before writing.
+| 7 | Commit | `references/commit.md` |
 
 ## Session Management
 

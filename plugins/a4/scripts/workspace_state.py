@@ -24,10 +24,8 @@ Sections (kebab-case identifier on the left):
   issue-counts        per folder × {active, in_progress, terminal, total}
                       plus by-kind for review/task.
   usecases-by-source  UC `source:` distribution (Reverse-only detection).
-  drift-alerts        open / in-progress reviews with `source: drift-detector`,
-                      sorted by priority then id desc.
-  open-reviews        open / in-progress non-drift reviews, sorted by
-                      priority then created then id.
+  open-reviews        open / in-progress reviews, sorted by priority
+                      then created then id.
   active-tasks        tasks with status in {pending, progress, failing}.
   blocked-items       any issue with status: blocked, with depends_on chain.
   recent-activity     top 10 issue items by `updated:` desc.
@@ -39,8 +37,8 @@ documented inline below).
 
 Usage:
     uv run workspace_state.py <a4-dir>                      # full dashboard (all sections, with header)
-    uv run workspace_state.py <a4-dir> drift-alerts         # one section, no header
-    uv run workspace_state.py <a4-dir> drift-alerts active-tasks blocked-items
+    uv run workspace_state.py <a4-dir> active-tasks         # one section, no header
+    uv run workspace_state.py <a4-dir> active-tasks blocked-items recent-activity
                                                             # multiple sections, in the order requested
     uv run workspace_state.py --list-sections               # print section identifiers and exit
 
@@ -341,36 +339,13 @@ def render_usecases_by_source(usecases: list[IssueItem]) -> str:
     return "## Use cases by source\n\n" + " · ".join(parts)
 
 
-def render_drift_alerts(reviews: list[IssueItem]) -> str:
-    alerts = [
-        r
-        for r in reviews
-        if r.source == "drift-detector" and r.status in {"open", "in-progress"}
-    ]
-    heading = f"## Drift alerts ({len(alerts)})"
-    if not alerts:
-        return f"{heading}\n\n*No open drift alerts.*"
-    alerts.sort(
-        key=lambda r: (PRIORITY_ORDER.get(r.priority or "", 3), -(r.id_ or 0))
-    )
-    lines = [heading, ""]
-    for r in alerts:
-        target = ", ".join(r.target) if r.target else "—"
-        lines.append(
-            f"- {r.ref} — {r.priority or '—'} {r.kind or '—'} — {r.title} (target=`{target}`)"
-        )
-    return "\n".join(lines)
-
-
 def render_open_reviews(reviews: list[IssueItem]) -> str:
     open_items = [
-        r
-        for r in reviews
-        if r.source != "drift-detector" and r.status in {"open", "in-progress"}
+        r for r in reviews if r.status in {"open", "in-progress"}
     ]
     heading = f"## Open reviews ({len(open_items)})"
     if not open_items:
-        return f"{heading}\n\n*No open non-drift reviews.*"
+        return f"{heading}\n\n*No open reviews.*"
     open_items.sort(
         key=lambda r: (
             PRIORITY_ORDER.get(r.priority or "", 3),
@@ -478,7 +453,6 @@ SECTION_RENDERERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "usecases-by-source": lambda ctx: render_usecases_by_source(
         ctx["issues"]["usecase"]
     ),
-    "drift-alerts": lambda ctx: render_drift_alerts(ctx["issues"]["review"]),
     "open-reviews": lambda ctx: render_open_reviews(ctx["issues"]["review"]),
     "active-tasks": lambda ctx: render_active_tasks(ctx["issues"]["task"]),
     "blocked-items": lambda ctx: render_blocked_items(ctx["issues"]),
