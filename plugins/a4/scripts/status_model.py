@@ -1,10 +1,15 @@
 """Single source of truth for the a4 status model.
 
 Defines per-family status enums, allowed transitions, terminal /
-in-progress / active classifications, and kind enums. Imported by:
+in-progress / active classifications, kind enums, cascade-target data,
+and a small predicate API for legality checks. Imported by:
 
-  - transition_status.py        — allowed transitions, family states
-  - markdown_validator.frontmatter — enum membership per schema
+  - transition_status.py        — allowed transitions, family states,
+                                  cascade-target data, legality predicates
+  - markdown_validator.frontmatter         — enum membership per schema
+  - markdown_validator.transitions         — legality predicates
+  - markdown_validator.status_consistency  — supersedes trigger map,
+                                             cascade-target data
   - workspace_state.py          — terminal / in-progress / active sets
   - search.py                   — CLI flag validation
 
@@ -136,3 +141,61 @@ KIND_BY_FOLDER: dict[str, frozenset[str]] = {
     "task": frozenset({"feature", "spike", "bug", "research"}),
     "review": frozenset({"finding", "gap", "question"}),
 }
+
+
+# ---------------------------------------------------------------------------
+# Cascade-target data
+# ---------------------------------------------------------------------------
+#
+# Used by ``transition_status.py`` (writer that performs cascades) and by
+# ``markdown_validator.status_consistency`` (reader that flags drift when
+# cascades did not run). Holding both sides' data here keeps the writer
+# and the safety-net reader in lockstep.
+
+# Per-family terminal-active status that triggers a supersedes cascade
+# when reached by a successor. A successor at this status causes its
+# same-family ``supersedes:`` targets to flip to ``superseded``.
+SUPERSEDES_TRIGGER_STATUS: dict[str, str] = {
+    "spec": "active",
+    "usecase": "shipped",
+}
+
+# Per-family target statuses from which a supersedes cascade is willing
+# to flip the target to ``superseded``. Targets outside this set are
+# skipped (already-superseded, mid-flight implementing/draft, etc.).
+SUPERSEDABLE_FROM_STATUSES: dict[str, frozenset[str]] = {
+    "spec": frozenset({"active", "deprecated"}),
+    "usecase": frozenset({"shipped"}),
+}
+
+# When a usecase transitions to ``revising``, every task whose
+# ``implements:`` lists the UC and is currently in one of these
+# statuses gets reset to ``TASK_RESET_TARGET``.
+TASK_RESET_ON_REVISING: frozenset[str] = frozenset({"progress", "failing"})
+TASK_RESET_TARGET: str = "pending"
+
+# When a UC discard cascade looks at a review item, items already in one
+# of these terminal statuses are skipped (no flip).
+REVIEW_TERMINAL: frozenset[str] = frozenset({"resolved", "discarded"})
+
+
+# ---------------------------------------------------------------------------
+# Predicates
+# ---------------------------------------------------------------------------
+
+
+def is_transition_legal(family: str, from_status: str, to_status: str) -> bool:
+    """True iff ``family`` allows ``from_status → to_status``."""
+    return to_status in FAMILY_TRANSITIONS.get(family, {}).get(
+        from_status, frozenset()
+    )
+
+
+def legal_targets_from(family: str, from_status: str) -> frozenset[str]:
+    """Allowed outgoing targets from ``from_status``; empty if terminal."""
+    return FAMILY_TRANSITIONS.get(family, {}).get(from_status, frozenset())
+
+
+def is_terminal(family: str, status: str) -> bool:
+    """True iff ``status`` is in the family's terminal set."""
+    return status in TERMINAL_STATUSES.get(family, frozenset())

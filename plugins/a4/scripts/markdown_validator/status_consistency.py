@@ -56,6 +56,11 @@ from common import (
     iter_issue_files,
 )
 from markdown import extract_preamble
+from status_model import (
+    REVIEW_TERMINAL,
+    SUPERSEDES_TRIGGER_STATUS as SUPERSEDES_FAMILIES,
+    TASK_RESET_ON_REVISING,
+)
 
 from .refs import RefIndex
 
@@ -69,16 +74,6 @@ class Mismatch:
 
 def _fm(path: Path) -> dict | None:
     return extract_preamble(path).fm
-
-
-# Families for which a `superseded` status is actively materialized by
-# transition_status.py when a successor reaches its terminal-active
-# state. Both sides must be same-family — a spec does not supersede
-# a usecase and vice versa.
-SUPERSEDES_FAMILIES: dict[str, str] = {
-    "spec": "active",
-    "usecase": "shipped",
-}
 
 
 def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
@@ -282,7 +277,7 @@ def check_discarded_cascade(
         if not hit:
             continue
         status = fm.get("status")
-        if status in {"discarded", "resolved"}:
+        if status in REVIEW_TERMINAL:
             continue
         mismatches.append(
             Mismatch(
@@ -332,7 +327,7 @@ def check_revising_cascade(
         if not (implemented_keys & revising_uc_keys):
             continue
         status = fm.get("status")
-        if status not in {"progress", "failing"}:
+        if status not in TASK_RESET_ON_REVISING:
             continue
         mismatches.append(
             Mismatch(

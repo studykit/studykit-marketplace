@@ -62,7 +62,14 @@ from common import iter_issue_files, normalize_ref
 from markdown import parse
 from status_model import (
     FAMILY_TRANSITIONS,
+    REVIEW_TERMINAL,
     STATUS_BY_FOLDER as FAMILY_STATES,
+    SUPERSEDABLE_FROM_STATUSES,
+    SUPERSEDES_TRIGGER_STATUS,
+    TASK_RESET_ON_REVISING,
+    TASK_RESET_TARGET,
+    is_transition_legal,
+    legal_targets_from,
 )
 
 
@@ -340,7 +347,7 @@ def _cascade_uc_revising(
             report.errors.append(f"{task_path}: unreadable frontmatter")
             continue
         current = fm.get("status")
-        if current not in {"progress", "failing"}:
+        if current not in TASK_RESET_ON_REVISING:
             report.skipped.append(
                 {
                     "path": f"task/{task_path.stem}",
@@ -353,7 +360,7 @@ def _cascade_uc_revising(
         _apply_status_change(
             task_path,
             str(current),
-            "pending",
+            TASK_RESET_TARGET,
             f"revising cascade: {uc_ref}",
             dry_run,
             today,
@@ -362,7 +369,7 @@ def _cascade_uc_revising(
             Change(
                 path=rel_str,
                 from_status=str(current),
-                to_status="pending",
+                to_status=TASK_RESET_TARGET,
                 reason=f"revising cascade: {uc_ref}",
             )
         )
@@ -414,7 +421,7 @@ def _cascade_uc_discarded(
             report.errors.append(f"{review_path}: unreadable frontmatter")
             continue
         current = fm.get("status")
-        if current in {"resolved", "discarded"}:
+        if current in REVIEW_TERMINAL:
             report.skipped.append(
                 {
                     "path": f"review/{review_path.stem}",
@@ -491,18 +498,19 @@ def _cascade_uc_shipped(
                 {"path": f"{norm}.md", "reason": "already-superseded"}
             )
             continue
-        if tstatus != "shipped":
+        if tstatus not in SUPERSEDABLE_FROM_STATUSES["usecase"]:
+            expected = sorted(SUPERSEDABLE_FROM_STATUSES["usecase"])
             report.skipped.append(
                 {
                     "path": f"{norm}.md",
                     "reason": "not-terminal-active",
-                    "detail": f"status={tstatus!r}, expected 'shipped'",
+                    "detail": f"status={tstatus!r}, expected one of {expected}",
                 }
             )
             continue
         _apply_status_change(
             target_path,
-            "shipped",
+            str(tstatus),
             "superseded",
             f"superseded by {uc_ref}",
             dry_run,
@@ -511,7 +519,7 @@ def _cascade_uc_shipped(
         report.cascades.append(
             Change(
                 path=f"{norm}.md",
-                from_status="shipped",
+                from_status=str(tstatus),
                 to_status="superseded",
                 reason=f"superseded by {uc_ref}",
             )
@@ -566,14 +574,13 @@ def _cascade_spec_active(
                 {"path": f"{norm}.md", "reason": "already-superseded"}
             )
             continue
-        if tstatus not in {"active", "deprecated"}:
+        if tstatus not in SUPERSEDABLE_FROM_STATUSES["spec"]:
+            expected = sorted(SUPERSEDABLE_FROM_STATUSES["spec"])
             report.skipped.append(
                 {
                     "path": f"{norm}.md",
                     "reason": "not-supersedable",
-                    "detail": (
-                        f"status={tstatus!r}, expected 'active' or 'deprecated'"
-                    ),
+                    "detail": f"status={tstatus!r}, expected one of {expected}",
                 }
             )
             continue
@@ -660,8 +667,8 @@ def transition(
         report.ok = True
         return report
 
-    allowed = FAMILY_TRANSITIONS.get(family, {}).get(current, set())
-    if new_status not in allowed:
+    if not is_transition_legal(family, current, new_status):
+        allowed = legal_targets_from(family, current)
         report.errors.append(
             f"illegal transition for {family}: `{current}` → `{new_status}`. "
             f"Allowed from `{current}`: {sorted(allowed) if allowed else 'none (terminal)'}."
@@ -737,11 +744,14 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     reports: list[Report] = []
     today = date.today().isoformat()
 
+    uc_trigger = SUPERSEDES_TRIGGER_STATUS["usecase"]
+    spec_trigger = SUPERSEDES_TRIGGER_STATUS["spec"]
+
     for p in iter_issue_files(a4_dir, "usecase"):
         fm, _, _ = _parse(p)
         if fm is None:
             continue
-        if fm.get("status") != "shipped":
+        if fm.get("status") != uc_trigger:
             continue
         supersedes = fm.get("supersedes")
         if not isinstance(supersedes, list) or not supersedes:
@@ -751,8 +761,8 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
             a4_dir=str(a4_dir),
             file=rel,
             family="usecase",
-            current_status="shipped",
-            target_status="shipped",
+            current_status=uc_trigger,
+            target_status=uc_trigger,
             dry_run=dry_run,
         )
         _cascade_uc_shipped(
@@ -766,7 +776,7 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
         fm, _, _ = _parse(p)
         if fm is None:
             continue
-        if fm.get("status") != "active":
+        if fm.get("status") != spec_trigger:
             continue
         supersedes = fm.get("supersedes")
         if not isinstance(supersedes, list) or not supersedes:
@@ -776,8 +786,8 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
             a4_dir=str(a4_dir),
             file=rel,
             family="spec",
-            current_status="active",
-            target_status="active",
+            current_status=spec_trigger,
+            target_status=spec_trigger,
             dry_run=dry_run,
         )
         _cascade_spec_active(
@@ -953,16 +963,16 @@ def main() -> None:
                 )
             else:
                 current = fm.get("status")
-                allowed = FAMILY_TRANSITIONS.get(family, {}).get(
-                    str(current), set()
-                )
                 issues: list[str] = []
                 errors: list[str] = []
                 if args.to_status not in FAMILY_STATES.get(family, set()):
                     errors.append(
                         f"`{args.to_status}` is not a valid {family} status"
                     )
-                elif args.to_status not in allowed:
+                elif not is_transition_legal(
+                    family, str(current), args.to_status
+                ):
+                    allowed = legal_targets_from(family, str(current))
                     errors.append(
                         f"illegal transition: `{current}` → `{args.to_status}`. "
                         f"Allowed from `{current}`: "

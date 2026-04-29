@@ -37,7 +37,11 @@ from pathlib import Path
 
 from common import ISSUE_FOLDERS, discover_files
 from markdown import extract_preamble, extract_preamble_from_text
-from status_model import FAMILY_TRANSITIONS
+from status_model import (
+    FAMILY_TRANSITIONS,
+    is_transition_legal,
+    legal_targets_from,
+)
 
 
 @dataclass(frozen=True)
@@ -131,11 +135,12 @@ def _check_one(
     if old_status == new_status:
         return None
 
-    table = FAMILY_TRANSITIONS[folder]
     rel_str = str(rel_to_a4)
+    if is_transition_legal(folder, old_status, new_status):
+        return None
 
-    allowed = table.get(old_status)
-    if allowed is None:
+    allowed = legal_targets_from(folder, old_status)
+    if not allowed:
         return Violation(
             path=rel_str,
             rule="illegal-transition",
@@ -145,19 +150,16 @@ def _check_one(
                 f"({folder}: {old_status!r} has no outgoing transitions)"
             ),
         )
-    if new_status not in allowed:
-        sorted_allowed = sorted(allowed)
-        return Violation(
-            path=rel_str,
-            rule="illegal-transition",
-            field="status",
-            message=(
-                f"transition {old_status!r} → {new_status!r} not allowed "
-                f"({folder}: from {old_status!r}, allowed targets are "
-                f"{sorted_allowed})"
-            ),
-        )
-    return None
+    return Violation(
+        path=rel_str,
+        rule="illegal-transition",
+        field="status",
+        message=(
+            f"transition {old_status!r} → {new_status!r} not allowed "
+            f"({folder}: from {old_status!r}, allowed targets are "
+            f"{sorted(allowed)})"
+        ),
+    )
 
 
 def _git_show_head(repo_root: Path, rel: str) -> str | None:
