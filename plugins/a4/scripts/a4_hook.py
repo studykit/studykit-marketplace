@@ -238,6 +238,10 @@ def _stop() -> int:
     fm_violations: list = []
 
     try:
+        from markdown_validator.refs import RefIndex
+
+        index = RefIndex(a4_dir)
+        edited_rel = {str(Path(f).resolve().relative_to(a4_dir.resolve())) for f in edited}
         for f in edited:
             path = Path(f)
             preamble = extract_preamble(path)
@@ -246,7 +250,10 @@ def _stop() -> int:
                 if missing is not None:
                     fm_violations.append(missing)
             else:
-                fm_violations.extend(vfm.validate_file(path, a4_dir, preamble.fm))
+                fm_violations.extend(vfm.validate_file(path, a4_dir, preamble.fm, index))
+        for v in vfm.validate_id_uniqueness(a4_dir):
+            if v.path in edited_rel:
+                fm_violations.append(v)
     except Exception as e:
         sys.stderr.write(
             f"a4_hook.py stop: validator error ({e}) — skipping validation\n"

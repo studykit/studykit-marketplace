@@ -276,6 +276,7 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | Path-reference format (brackets, `.md` extension, malformed `#<id>`) | error |
 | Path reference does not resolve to any workspace file | error (`unresolved-ref`) |
 | `type` on wiki page disagrees with filename | error |
+| Filename leading id disagrees with `id:` field | error (`id-filename-mismatch`) |
 | Id collision across issue folders | error |
 | File in an issue / spark folder has no frontmatter | error |
 

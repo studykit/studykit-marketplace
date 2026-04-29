@@ -361,6 +361,21 @@ def validate_file(
                 )
             )
 
+    if ftype in ISSUE_FOLDERS:
+        m = re.match(r"^(\d+)-", path.stem)
+        raw_id = fm.get("id")
+        if m and _is_int(raw_id):
+            head = int(m.group(1))
+            if head != raw_id:
+                violations.append(
+                    Violation(
+                        rel_str,
+                        "id-filename-mismatch",
+                        "id",
+                        f"filename leading id `{head}` does not match `id: {raw_id}`",
+                    )
+                )
+
     return violations
 
 
