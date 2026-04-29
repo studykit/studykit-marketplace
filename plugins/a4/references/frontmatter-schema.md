@@ -314,7 +314,7 @@ Unified conduit for findings, gaps, and questions. The `kind:` field distinguish
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-**Close guard.** When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a warning with override — the drift detector re-surfaces violations.
+Lifecycle, cascade rules, close guard, and authoring guidance live in [`review-authoring.md`](./review-authoring.md).
 
 ## Spec (`a4/spec/<id>-<slug>.md`)
 
