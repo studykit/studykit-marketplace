@@ -366,9 +366,7 @@ Notable rules:
 
 ## Idea (`a4/idea/<id>-<slug>.md`)
 
-Pre-pipeline quick-capture slot — Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family.
-
-Boundary with `review/`: **idea = independent possibility, captured raw; review = gap in current spec, bound to progress.** If ignoring the input blocks or degrades current spec work it is a review item; otherwise it is an idea.
+Pre-pipeline quick-capture slot — Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Boundary with `review/`: idea = independent possibility, captured raw; review = gap in current spec, bound to progress.
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
@@ -382,14 +380,7 @@ Boundary with `review/`: **idea = independent possibility, captured raw; review 
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-**Deliberately excluded fields** (see the prior decision archive for full rationale):
-
-- `priority` — ideas are pre-prioritization; prioritization attaches to the graduation target.
-- `source` — ideas are effectively always `self`; no information content.
-- `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
-- `kind` — only one kind of idea (unlike `review/` which unifies finding/gap/question).
-
-Body is largely free — only optional sections per the authoring contract. Quick-capture ideas are typically empty or just a short `## Notes` section; longer ideas may add `## Why This Matters`.
+Lifecycle, body shape, deliberately excluded fields, and authoring guidance live in [`idea-authoring.md`](./idea-authoring.md).
 
 ## Spark brainstorm (`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md`)
 
