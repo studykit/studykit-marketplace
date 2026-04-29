@@ -215,3 +215,4 @@ session-tree.lock
 .obsidian/workspace-mobile.json
 .obsidian/plugins/*/data.json
 .obsidian/backlink.json
+*.lock
