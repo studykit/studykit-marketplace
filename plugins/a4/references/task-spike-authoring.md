@@ -111,7 +111,7 @@ Spike-specific notes:
 - The directory is the spike's primary deliverable while exploration is underway. Most active spikes have one.
 - When the spike completes (or fails), `git mv` it to `artifacts/task/spike/archive/<id>-<slug>/` and update `files:` paths to match. The move is **never automated**.
 
-Cross-kind conventions for the artifact directory — what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./frontmatter-schema.md#task-artifacts-convention`](./frontmatter-schema.md#task-artifacts-convention) and apply to `kind: spike` as written there.
+Cross-kind conventions for the artifact directory — per-kind expectations, the `task.files:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: spike` as written there.
 
 ## Common mistakes (task-specific)
 

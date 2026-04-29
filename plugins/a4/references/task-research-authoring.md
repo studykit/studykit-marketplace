@@ -130,7 +130,7 @@ Research-specific notes:
 - When `files:` is non-empty, every entry must point under `artifacts/task/research/<id>-<slug>/...`. Empty list stays the typical default.
 - No archive convention — closed research tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
-Cross-kind conventions for the artifact directory — what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./frontmatter-schema.md#task-artifacts-convention`](./frontmatter-schema.md#task-artifacts-convention) and apply to `kind: research` as written there.
+Cross-kind conventions for the artifact directory — per-kind expectations, the `task.files:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: research` as written there.
 
 ## Reviewing a research task
 
