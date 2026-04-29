@@ -20,7 +20,7 @@ These apply to every family.
 
 ### `type:` field
 
-Every markdown file declares a `type:` field in frontmatter. The value selects the per-type reference XSD at `../scripts/body_schemas/<type>.xsd`, which documents which body sections are required vs optional. **Reference-only**: the XSDs are not consumed at runtime; authoring contracts under `plugins/a4/references/` are the binding source. The XSD element names use lowercase kebab-case (an XML grammar artifact); the body itself uses Title Case H2 headings (`## Heading`) per `body-conventions.md`.
+Every markdown file declares a `type:` field in frontmatter. The value selects the per-type authoring contract at `plugins/a4/references/<type>-authoring.md`, which lists the body sections required vs optional for that type. The body uses Title Case H2 headings (`## Heading`) per `body-conventions.md`.
 
 | Family | `type:` value |
 |--------|--------------|
@@ -38,7 +38,7 @@ Every markdown file declares a `type:` field in frontmatter. The value selects t
 | Issue — idea | `idea` |
 | Spark — brainstorm | `brainstorm` |
 
-For wiki pages, `type:` doubles as the file-kind discriminator (e.g., `type: architecture` requires the file to be at `a4/architecture.md`). For issues and spark files, `type:` is the body schema selector — the file family is already implied by the folder.
+For wiki pages, `type:` doubles as the file-kind discriminator (e.g., `type: architecture` requires the file to be at `a4/architecture.md`). For issues and spark files, `type:` selects the per-type authoring contract — the file family is already implied by the folder.
 
 Rules:
 
@@ -47,7 +47,7 @@ Rules:
 
 ### Body section headings
 
-Body sections are column-0 H2 markdown headings in Title Case with spaces (`## Context`, `## Specification`, `## Change Logs`, …). The recommended set per `type:` lives in the per-type authoring contracts under `plugins/a4/references/<type>-authoring.md` (or, for the wiki pages, `<type>-authoring.md` for each wiki type), each of which lists required / optional sections and tolerates unknown Title Case headings. See `body-conventions.md` for the full heading-form rules (including the kebab-case → Title Case mapping that aligns XSD element names with body headings).
+Body sections are column-0 H2 markdown headings in Title Case with spaces (`## Context`, `## Specification`, `## Change Logs`, …). The recommended set per `type:` lives in the per-type authoring contracts under `plugins/a4/references/<type>-authoring.md` (or, for the wiki pages, `<type>-authoring.md` for each wiki type), each of which lists required / optional sections and tolerates unknown Title Case headings. See `body-conventions.md` for the full heading-form rules.
 
 ### Ids
 
@@ -255,17 +255,6 @@ Pre-pipeline idea-capture session. Lifecycle tracks whether ideas graduated into
 
 Lifecycle, body shape, the retired `spark-decide` slot history, and authoring guidance live in [`brainstorm-authoring.md`](./brainstorm-authoring.md).
 
-## Reference XSDs
-
-The XSDs under `../scripts/body_schemas/` are **reference material only** — they are not consumed at runtime. They:
-
-- Declare `vc:minVersion="1.1"` (XSD 1.1 features).
-- Define a single root element matching the `type:` value (or, for `task`, a single `task` root that covers all kinds).
-- List required and optional sections inside `<xs:all>` (children typed as `markdownContent`).
-- Wrap the children in `<xs:openContent mode="interleave">` to permit unknown elements (the XML reflection of the body's "unknown Title Case headings tolerated" rule).
-
-Edit a section list by hand-editing both the per-type authoring contract under `plugins/a4/references/` and the matching XSD so the two stay in sync.
-
 ## Schema enforcement
 
 Body shape is documentation-only; frontmatter rules below are binding.
@@ -314,7 +303,6 @@ When these land, update this document **and** the enforcement layer simultaneous
 ## Cross-references
 
 - **Body-level conventions:** `body-conventions.md` — heading form (column-0 H2, Title Case, kebab → Title Case mapping), blank-line discipline, `## Change Logs` and `## Log` entry format, body link form (standard markdown).
-- **Reference XSDs:** `../scripts/body_schemas/<type>.xsd` — documentation of recommended body shape; not consumed at runtime.
 - **Id allocator:** `../scripts/allocate_id.py`.
 - **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal / in-progress / active classifications, kind enums. Imported by the writer, workspace state, and search; the prose tables in this document mirror the same data.
 - **Status transition writer:** `../scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain).

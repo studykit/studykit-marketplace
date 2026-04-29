@@ -6,7 +6,7 @@ Frontmatter-side rules (path format inside YAML, required fields, enums, the uni
 
 ## Scope
 
-Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. Reference XSDs at `../scripts/body_schemas/<type>.xsd` indicate which sections are expected for that type, but they are pure human reference — they are not consumed at runtime, and the XML element names inside the XSD (lowercase kebab-case) are an artifact of XML grammar, not an authoring requirement. The binding form in the file body is the markdown heading defined below.
+Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. The binding form in the file body is the markdown heading defined below.
 
 ## Section heading form
 
@@ -35,32 +35,6 @@ Rules:
 - **No stray content above the first section.** Anything in the body that is not whitespace must live under an H2 heading.
 
 Inside a section, content is opaque markdown. Fenced code blocks are passed through verbatim — section detection only inspects the first character of column-0 H2 lines, and lines inside a fenced block (` ``` ` or `~~~`) are not treated as section boundaries.
-
-### Heading-name mapping
-
-The per-type authoring contracts and the reference XSDs use kebab-case slugs (`change-logs`, `decision-log`, `unit-test-strategy`, …) because XML element names cannot contain spaces. The body uses the Title Case form. Apply the mapping mechanically:
-
-| Kebab-case slug | Body heading |
-|-----------------|--------------|
-| `change-logs` | `## Change Logs` |
-| `decision-log` | `## Decision Log` |
-| `unit-test-strategy` | `## Unit Test Strategy` |
-| `acceptance-criteria` | `## Acceptance Criteria` |
-| `open-questions` | `## Open Questions` |
-| `rejected-alternatives` | `## Rejected Alternatives` |
-| `expected-outcome` | `## Expected Outcome` |
-| `error-handling` | `## Error Handling` |
-| `interface-contracts` | `## Interface Contracts` |
-| `why-discarded` | `## Why Discarded` |
-| `why-this-matters` | `## Why This Matters` |
-| `original-idea` | `## Original Idea` |
-| `problem-framing` | `## Problem Framing` |
-| `state-transitions` | `## State Transitions` |
-| `external-dependencies` | `## External Dependencies` |
-| `component-diagram` | `## Component Diagram` |
-| `technology-stack` | `## Technology Stack` |
-| `test-strategy` | `## Test Strategy` |
-| (single-word slugs) | `## <Slug>` (capitalised), e.g., `context` → `## Context`, `flow` → `## Flow` |
 
 ### Blank-line discipline
 
@@ -173,7 +147,6 @@ Before a session ends, for each review item that transitioned to `status: resolv
 ## Cross-references
 
 - `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
-- `../scripts/body_schemas/<type>.xsd` — reference XSDs documenting which sections each `type:` is expected to carry. Pure human reference; not consumed at runtime. Element names inside the XSD use lowercase kebab-case (an XML constraint); the body itself uses the Title Case heading form per the table above.
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - `../scripts/drift_detector.py` — scans `target:` for wiki basenames to surface unresolved `## Change Logs` and close-guard violations.

@@ -64,7 +64,7 @@ Captured as idea #12 → /abs/path/to/a4/idea/12-콜그래프에-주석-렌더�
 
 If the idea warrants expansion, mention one-line follow-up options:
 
-- Edit the file directly to add rationale inside a `## Why This Matters` or `## Notes` section (both optional per the XSD).
+- Edit the file directly to add rationale inside a `## Why This Matters` or `## Notes` section (both optional per the authoring contract).
 - When ready to pursue it, change `status:` to `promoted` and set `promoted: [<target-path>]` pointing at the new artifact (usecase / task / spark session).
 
 Do not propose auto-promotion or auto-commit.
