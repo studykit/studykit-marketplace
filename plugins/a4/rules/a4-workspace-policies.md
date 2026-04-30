@@ -10,7 +10,9 @@ These pointers apply to **every** file under `a4/`, regardless of type or locati
 
 ## Cross-cutting contracts
 
-- `../references/frontmatter-schema.md` — full field schema, schema enforcement, writer-owned fields.
+- `../references/frontmatter-universals.md` — universal frontmatter contract: `type:` field, ids, path-reference format, dates, status writers, structural relationship fields.
+- `../references/<type>-authoring.md` — per-type field tables and lifecycles (one file per `type:` value).
+- `../references/validator-rules.md` — schema enforcement and cross-file status consistency tables.
 - `../references/body-conventions.md` — body heading form, blank-line discipline, link form, frontmatter vs body path-reference form, `## Change Logs` / `## Log` rules, wiki update protocol.
 - `../docs/iterate-mechanics.md` — review-item walk procedure (filter, transition, close guard).
 - `../references/commit-message-convention.md` — `#<id>` commit subject form.

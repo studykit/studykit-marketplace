@@ -2,7 +2,7 @@
 
 A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code and review items must conform to. Design rationale for the chosen shape lives inline as `## Decision Log` entries in the same file.
 
-Companion to [`./frontmatter-schema.md §Spec`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## When a spec is warranted
 
@@ -49,6 +49,19 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `spec` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | spec title |
+| `status` | yes | enum | `draft` \| `active` \| `deprecated` \| `superseded` |
+| `supersedes` | no | list of paths | prior specs replaced |
+| `related` | no | list of paths | catchall (use this slot for soft cross-references including any informing research task) |
+| `labels` | no | list of strings | free-form tags |
+| `tags` | no | list of strings | free-form (alias of `labels`; either is accepted) |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | no | date | `YYYY-MM-DD` (bump when the spec is revised) |
 
 - `id` is allocated by `../scripts/allocate_id.py` (workspace-global, monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.

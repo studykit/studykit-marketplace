@@ -1,7 +1,10 @@
 """Frontmatter schema validator (library).
 
-Enforces the per-type schema defined in
-``plugins/a4/references/frontmatter-schema.md``:
+Enforces the per-type schemas defined in
+``plugins/a4/references/<type>-authoring.md`` (per-type field tables) and
+the cross-cutting rules in
+``plugins/a4/references/frontmatter-universals.md`` and
+``plugins/a4/references/validator-rules.md``:
 
   - Required fields are present and non-empty.
   - Enum values are in their allowed set.

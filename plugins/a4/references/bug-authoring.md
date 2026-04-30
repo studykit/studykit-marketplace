@@ -4,7 +4,7 @@ A bug at `a4/bug/<id>-<slug>.md` is a **defect fix** — production code change 
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
-Companion to [`./frontmatter-schema.md §Bug task`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -25,6 +25,21 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `bug` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `implements` | no | list of paths | use cases delivered (often empty for bug work that does not implement a UC) |
+| `depends_on` | no | list of paths | other tasks this one needs first |
+| `spec` | no | list of paths | specs governing this task |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/bug/<id>-<slug>/` (typically empty — repro/logs/screenshots only when worth keeping) |
+| `cycle` | no | int | implementation cycle number |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `type: bug` is fixed for files under `a4/bug/`. There is no `kind:` field — the type *is* the kind.

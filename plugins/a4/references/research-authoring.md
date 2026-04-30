@@ -4,7 +4,7 @@ A research item at `a4/research/<id>-<slug>.md` is a **time-boxed investigation*
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
-Companion to [`./frontmatter-schema.md §Research task`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## When a research task is warranted
 
@@ -34,6 +34,23 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `research` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `mode` | yes | enum | `comparative` \| `single` |
+| `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
+| `depends_on` | no | list of paths | other tasks this one needs first |
+| `related` | no | list of paths | soft links — typically the spec(s) or task(s) this research informs |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/research/<id>-<slug>/` (typically empty — research output lives in the body) |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
+`implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error.
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `type: research` is fixed for files under `a4/research/`. There is no `kind:` field — the type *is* the kind.

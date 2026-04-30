@@ -2,7 +2,7 @@
 
 A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
 
-Companion to [`./frontmatter-schema.md §Use case`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## Abstraction discipline
 
@@ -24,6 +24,19 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `usecase` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `revising` \| `shipped` \| `superseded` \| `discarded` \| `blocked` |
+| `actors` | no | list of strings | actor names as defined in `actors.md` |
+| `supersedes` | no | list of paths | prior use cases this UC replaces |
+| `related` | no | list of paths | catchall |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s `## Roster` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.

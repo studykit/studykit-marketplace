@@ -2,7 +2,7 @@
 
 Body-level rules for every file under the `a4/` workspace. Covers section heading form, blank-line discipline, link form, and the `## Change Logs` / `## Log` audit-trail conventions.
 
-Frontmatter-side rules (path format inside YAML, required fields, enums, the universal `type:` field) live in `frontmatter-schema.md`. The two should be read together.
+Frontmatter-side rules live in `frontmatter-universals.md` (universal contract: `type:`, ids, path-reference format, dates, status writers, structural relationship fields), `validator-rules.md` (enforcement and cross-file consistency), and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables).
 
 ## Scope
 
@@ -67,7 +67,7 @@ Relative paths are computed from the file containing the link to the target. Use
 
 Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is also acceptable in prose. It renders as plain text in local markdown viewers but is auto-linked as a cross-issue reference in GitHub Issues / Pull Requests when an `a4/` workspace is mirrored into a tracker. Use it for shorthand mentions; use the markdown-link form when local navigation matters.
 
-Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `frontmatter-schema.md`.
+Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `frontmatter-universals.md §Path references`.
 
 ## `## Change Logs` audit trail
 
@@ -148,7 +148,8 @@ When a review item transitions to `status: resolved` and its `target:` list cont
 
 ## Cross-references
 
-- `frontmatter-schema.md` — frontmatter field rules, the universal `type:` field, per-type body section enums.
-- `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape).
+- `frontmatter-universals.md` — universal frontmatter rules (the universal `type:` field, ids, path references, dates, status writers, structural relationship fields).
+- `validator-rules.md` — schema enforcement and cross-file status consistency tables.
+- `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape and the per-type field table).
 - `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
 - Body shape is documentation-only; nothing validates section presence at runtime.

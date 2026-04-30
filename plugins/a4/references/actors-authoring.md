@@ -2,7 +2,7 @@
 
 `a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it.
 
-Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
 
 ## Frontmatter contract (do not deviate)
 

@@ -298,7 +298,9 @@ def _stop() -> int:
     out_lines.append("")
     out_lines.append(
         "Fix the issues above before stopping. "
-        "See plugins/a4/references/frontmatter-schema.md."
+        "See plugins/a4/references/validator-rules.md (enforcement rules) "
+        "and plugins/a4/references/frontmatter-universals.md "
+        "(universal frontmatter contract)."
     )
     out_lines.append(
         "For a full workspace sweep (id uniqueness etc.), run /a4:validate."

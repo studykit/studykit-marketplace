@@ -4,7 +4,7 @@ A spike at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a 
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
-Companion to [`./frontmatter-schema.md §Spike task`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -22,6 +22,20 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `spike` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `depends_on` | no | list of paths | other tasks this one needs first |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at the project's production source tree — production paths the spike may also touch are documented in the body `## Files` section. |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
+`implements` / `spec` / `cycle` are not part of the spike schema — declaring them is an error.
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `type: spike` is fixed for files under `a4/spike/`. There is no `kind:` field — the type *is* the kind.

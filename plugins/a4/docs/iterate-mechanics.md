@@ -5,8 +5,9 @@ Single source of truth for the **formal procedure** every iterate flow follows w
 **Mental model.** Treat each iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when starting, archive (resolve / discard) when done. The mechanics here are the mailbox protocol.
 
 Companion to:
-- [`body-conventions.md`](./body-conventions.md) — body heading form, `## Change Logs` and `## Log` rules, link form.
-- [`frontmatter-schema.md`](./frontmatter-schema.md) — review-item frontmatter contract.
+- [`../references/body-conventions.md`](../references/body-conventions.md) — body heading form, `## Change Logs` and `## Log` rules, link form.
+- [`../references/review-authoring.md`](../references/review-authoring.md) — review-item frontmatter contract and lifecycle.
+- [`../references/frontmatter-universals.md`](../references/frontmatter-universals.md) — universal frontmatter rules including writer-owned fields.
 
 ## Scope
 
@@ -92,11 +93,11 @@ When resolving an item involves editing a wiki page (`context.md`, `actors.md`, 
 - Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
 - The wiki close guard warns at resolve-time when `target:` lists wiki basenames but the referenced page lacks a `## Change Logs` bullet pointing at the review item.
 
-Full `## Change Logs` formatting rules: [`body-conventions.md`](./body-conventions.md).
+Full `## Change Logs` formatting rules: [`../references/body-conventions.md`](../references/body-conventions.md).
 
 ## 5. Discipline (always-hold rules)
 
-- **Never hand-edit** `status:` / `updated:` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`frontmatter-schema.md`](./frontmatter-schema.md). The optional `## Log` body section is hand-maintained — the writer does not touch it.
+- **Never hand-edit** `status:` / `updated:` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`../references/frontmatter-universals.md §Status writers`](../references/frontmatter-universals.md). The optional `## Log` body section is hand-maintained — the writer does not touch it.
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.

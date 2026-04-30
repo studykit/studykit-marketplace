@@ -10,8 +10,8 @@ allowed-tools: Bash, Read
 
 Runs the registered checks in `markdown_validator.registry.CHECKS` through the unified `validate.py` entrypoint. Two checks ship today:
 
-- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders. Canonical schema: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md`.
-- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Rules: `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md §Cross-file status consistency`.
+- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders. Canonical rules: `${CLAUDE_PLUGIN_ROOT}/references/validator-rules.md` (enforcement) and `${CLAUDE_PLUGIN_ROOT}/references/frontmatter-universals.md` (universal contract); per-type field tables in `${CLAUDE_PLUGIN_ROOT}/references/<type>-authoring.md`.
+- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Rules: `${CLAUDE_PLUGIN_ROOT}/references/validator-rules.md §Cross-file status consistency`.
 
 Body shape (section tags, required vs optional sections, blank-line discipline) is documented in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` and the per-type authoring contracts under `${CLAUDE_PLUGIN_ROOT}/references/`. There is no runtime body validator — body shape is documentation-only.
 
@@ -52,7 +52,7 @@ Relay the validator output verbatim — the section labels are already present. 
 Report the aggregate status as one of:
 
 - **All clean** — "OK — every enabled check reports no issues."
-- **One category reports issues** — list them, note the other is clean, and point at the canonical reference doc for the reported class (frontmatter-schema or frontmatter-schema §Cross-file status consistency).
+- **One category reports issues** — list them, note the other is clean, and point at the canonical reference doc for the reported class (validator-rules / frontmatter-universals / the relevant `<type>-authoring.md` for frontmatter; validator-rules §Cross-file status consistency for status).
 - **Multiple categories report issues** — list each labelled set, then: "Fix frontmatter first — consistency checks may resolve in passing once schema issues are fixed (path references and enum values are shared inputs)."
 
 When file arguments are passed, workspace-only checks (none today, but possible in the future) print a `skipped` line; remind the user to re-run the skill workspace-wide before handoff in that case.

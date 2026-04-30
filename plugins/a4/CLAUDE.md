@@ -29,7 +29,7 @@ If you find yourself duplicating substance across `rules/` and `references/`, yo
 
 ## Required reading before editing
 
-- **Anything touching frontmatter** → [`references/frontmatter-schema.md`](references/frontmatter-schema.md). The project-root [`CLAUDE.md`](../../CLAUDE.md) calls this out as a hard prerequisite.
+- **Anything touching frontmatter** → [`references/frontmatter-universals.md`](references/frontmatter-universals.md) (universal rules), the matching [`references/<type>-authoring.md`](references/) (per-type field table and lifecycle), and [`references/validator-rules.md`](references/validator-rules.md) (enforcement). The project-root [`CLAUDE.md`](../../CLAUDE.md) calls these out as a hard prerequisite.
 - **Anything touching body sections, tag form, change-logs, or links** → [`references/body-conventions.md`](references/body-conventions.md).
 - **A new or modified skill** → [`docs/skill-modes.md`](docs/skill-modes.md), [`docs/pipeline-shapes.md`](docs/pipeline-shapes.md), [`docs/wiki-authorship.md`](docs/wiki-authorship.md). Skills must conform to wiki-authorship; if a `SKILL.md` disagrees, the doc wins and the skill is updated.
 - **A new or modified hook** → [`docs/hook-conventions.md`](docs/hook-conventions.md). Covers state classification, lifecycle symmetry, in-event ordering, blocking vs non-blocking policy, output-channel choice.

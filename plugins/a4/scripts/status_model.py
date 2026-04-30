@@ -15,9 +15,11 @@ Imported by:
   - workspace_state.py          — terminal / in-progress / active sets
   - search.py                   — CLI flag validation
 
-Authority: this file is canonical. The prose schema reference at
-plugins/a4/references/frontmatter-schema.md mirrors this data for human
-readers and must be kept in sync when the model changes.
+Authority: this file is canonical. The prose schema references at
+plugins/a4/references/frontmatter-universals.md (status writers,
+universal contract) and plugins/a4/references/<type>-authoring.md
+(per-type lifecycle blocks) mirror this data for human readers and must
+be kept in sync when the model changes.
 
 Keys are folder names under `<a4-dir>/`: `usecase`, the four issue
 families that share the task lifecycle (`task`, `bug`, `spike`,

@@ -106,7 +106,7 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
 
 ## Transition Workflow
 
-`scripts/transition_status.py` is the single writer for `usecase` / `task` / `review` / `spec` status changes. It validates the transition, writes `status:` and bumps `updated:`, and runs cascades (UC `revising` task reset, `discarded` cascade, `shipped → superseded` chain, spec `active → superseded` chain). The writer does **not** write into `## Log` — that section is optional and hand-maintained. See [`references/frontmatter-schema.md §Status writers`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md).
+`scripts/transition_status.py` is the single writer for `usecase` / `task` / `review` / `spec` status changes. It validates the transition, writes `status:` and bumps `updated:`, and runs cascades (UC `revising` task reset, `discarded` cascade, `shipped → superseded` chain, spec `active → superseded` chain). The writer does **not** write into `## Log` — that section is optional and hand-maintained. See [`references/frontmatter-universals.md §Status writers`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-universals.md).
 
 **Caller-explicit-only contract.** Run a transition only when the caller has supplied **both** the target file and the desired status. If the caller asks vaguely ("clean up finished tasks"), you respond by listing candidates with citations and ask the caller to confirm the exact `(file, status)` pair before executing. You never pick a status yourself.
 
@@ -148,7 +148,7 @@ Different per mode:
 
 ## Schema Awareness
 
-The frontmatter contract — required fields, enums, status meanings, allowed transitions, reverse-link semantics, path-reference format — lives in [`references/frontmatter-schema.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-schema.md). Read it on first invocation that needs more than a trivial filter or any transition, then rely on it for filter validity, transition legality, and result interpretation.
+The frontmatter contract — required fields, enums, status meanings, allowed transitions, reverse-link semantics, path-reference format — lives across [`references/frontmatter-universals.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-universals.md) (universal rules), [`references/<type>-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/) (per-type field tables and lifecycles), and [`references/validator-rules.md`](${CLAUDE_PLUGIN_ROOT}/references/validator-rules.md) (enforcement rules). Read them on first invocation that needs more than a trivial filter or any transition, then rely on them for filter validity, transition legality, and result interpretation.
 
 ## Non-goals
 

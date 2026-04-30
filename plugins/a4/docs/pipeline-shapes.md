@@ -5,7 +5,8 @@ The a4 pipeline is not one shape. Three named shapes describe how a workspace fl
 Companion to:
 - [`skill-modes.md`](./skill-modes.md) — interactive vs autonomous, forward vs reverse axes for individual skills.
 - [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
-- [`frontmatter-schema.md`](./frontmatter-schema.md) — field-level rules.
+- [`../references/frontmatter-universals.md`](../references/frontmatter-universals.md) — universal frontmatter rules.
+- [`../references/<type>-authoring.md`](../references/) — per-type field tables and lifecycles.
 
 ## Why name the shapes
 

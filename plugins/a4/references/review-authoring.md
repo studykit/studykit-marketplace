@@ -8,7 +8,7 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 
 Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents and by single-edit defer paths (`source: self`).
 
-Companion to [`./frontmatter-schema.md §Review item`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -27,13 +27,26 @@ updated: YYYY-MM-DD
 ---
 ```
 
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `review` |
+| `id` | yes | int | monotonic global integer |
+| `kind` | yes | enum | `finding` \| `gap` \| `question` |
+| `status` | yes | enum | `open` \| `in-progress` \| `resolved` \| `discarded` |
+| `target` | no | list of paths | issue paths (e.g., `usecase/3-search`) and/or wiki basenames (e.g., `architecture`) this review is about. May mix both. Empty list / omitted is allowed for cross-cutting items. |
+| `source` | yes | enum \| string | `self` \| `<reviewer-agent-name>` (e.g., `usecase-reviewer-r2`) |
+| `priority` | no | enum | `high` \| `medium` \| `low` |
+| `labels` | no | list of strings | free-form |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
 - `id` is allocated by `../scripts/allocate_id.py` (workspace-global, monotonic). Never invent or reuse an id.
 - `kind` is **required** — `finding`, `gap`, or `question`. The three share lifecycle but signal different content shapes:
   - `finding` body explains what is wrong and where.
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `bug/<id>-<slug>`, `spike/<id>-<slug>`, `research/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without updating `./frontmatter-schema.md`.
+- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without updating `./validator-rules.md`.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).

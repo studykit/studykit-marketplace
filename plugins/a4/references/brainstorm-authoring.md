@@ -2,7 +2,7 @@
 
 A brainstorm at `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
 
-Companion to [`./frontmatter-schema.md §Spark brainstorm`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -18,6 +18,17 @@ created: YYYY-MM-DD
 updated: YYYY-MM-DD
 ---
 ```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `brainstorm` |
+| `pipeline` | yes | literal | `spark` |
+| `topic` | yes | string | session topic |
+| `status` | yes | enum | `open` \| `promoted` \| `discarded` |
+| `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[spec/<id>-<slug>, usecase/<id>-<slug>]`) |
+| `tags` | no | list of strings | free-form |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
 
 - `type:` is the literal `brainstorm`. The filename always carries the `.brainstorm` suffix as part of the basename (not the extension); the file extension stays `.md`.
 - `pipeline:` is the literal `spark` for every brainstorm file. Reserved for future spark-family extensions.

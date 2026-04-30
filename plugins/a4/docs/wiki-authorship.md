@@ -2,7 +2,7 @@
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
-Companion to [`frontmatter-schema.md`](./frontmatter-schema.md) (field-level rules), [`body-conventions.md`](./body-conventions.md) (heading form, `## Change Logs` / `## Log` rules, link form), [`skill-modes.md`](./skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), and [`pipeline-shapes.md`](./pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
+Companion to [`../references/frontmatter-universals.md`](../references/frontmatter-universals.md) (universal frontmatter rules), [`../references/<type>-authoring.md`](../references/) (per-type field tables and lifecycles), [`../references/body-conventions.md`](../references/body-conventions.md) (heading form, `## Change Logs` / `## Log` rules, link form), [`skill-modes.md`](./skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), and [`pipeline-shapes.md`](./pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
 
 ## Wiki page authorship
 
