@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Run Loop
 
-> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md`. This skill never writes those files directly — `transition_status.py` and the test-runner agent do.
+> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md`. This skill writes status flips by editing `status:` directly; the PostToolUse cascade hook handles `updated:` and any cross-file cascade. The `task-implementer` and `test-runner` agents do their own writes (code + tests, review items).
 
 Two stages over the tasks already authored under the four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`):
 
@@ -34,7 +34,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 **Outputs:**
 
 - `a4/review/<id>-<slug>.md` — test-runner findings; gap items emitted during ship-review when the user defers.
-- Per-task `status:` / `updated:` flips via `scripts/transition_status.py` on every status change.
+- Per-task `status:` flips via direct frontmatter edit on every status change; `updated:` is refreshed automatically by the PostToolUse cascade hook.
 - Per-task implementation commits authored by `task-implementer` agents.
 
 ## Launch & Verify Source
@@ -113,4 +113,4 @@ Context is passed via file paths, not agent memory.
 - Do not split task-implementer / test-runner into sub-skills.
 - Do not split post-loop review (Step 4) into a separate skill, and do not delegate failure classification or UC ship to an agent.
 - Do not emit aggregated test reports. All findings are per-review-item files.
-- Do not flip UC status without going through `transition_status.py`.
+- Do not hand-edit `updated:` — only edit `status:` and let the PostToolUse cascade hook refresh `updated:`.

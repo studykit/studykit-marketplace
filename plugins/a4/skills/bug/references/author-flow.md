@@ -48,12 +48,12 @@ Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4
 
 Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:`) are defined in `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial status.
+Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 
 ## Step 5: Hand-off
 
 Branch the message by initial status:
 
-- **`open`** — *Bug `bug/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` via `transition_status.py` when ready to schedule it.*
+- **`open`** — *Bug `bug/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` by editing `status:` directly when ready to schedule it (the PostToolUse cascade hook refreshes `updated:`).*
 - **`pending`** — *Bug `bug/<id>-<slug>` written at `status: pending`. Run `/a4:run` to start the regression-test + fix loop.*
 - **`complete`** — *Bug `bug/<id>-<slug>` written at `status: complete` (post-hoc documentation; fix already shipped). No `/a4:run` action needed.*

@@ -8,16 +8,7 @@ When the user asks to edit a UC that is currently `status: implementing` (e.g., 
 
    > UC X is currently `implementing`. Edit in-place means flipping to `revising` (pauses code work; resets `progress`/`failing` tasks to `pending`; `complete` tasks stay). OK?
 
-2. **On user confirmation, call the writer:**
-
-   ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-     "$(git rev-parse --show-toplevel)/a4" \
-     --file "usecase/<id>-<slug>.md" --to revising \
-     --reason "user-triggered spec edit"
-   ```
-
-   The script cascades task status automatically.
+2. **On user confirmation, edit the UC's `status:`** from `implementing` to `revising` directly with the `Edit` tool. The PostToolUse cascade hook detects the transition, refreshes `updated:` on the UC, and resets `progress` / `failing` tasks across the four issue families (`task` / `bug` / `spike` / `research`) back to `pending`. Surface the hook's `additionalContext` to the user so they can see which tasks were reset.
 
 3. **Walk through the edit with the user** (Flow, actors, Validation, Error handling) — same protocol as iteration on a `draft` UC. When the user indicates the spec is done, the wrap-up ready-gate flips `revising → ready`.
 

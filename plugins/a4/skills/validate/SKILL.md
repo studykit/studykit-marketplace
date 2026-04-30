@@ -1,7 +1,7 @@
 ---
 name: validate
-description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the registered markdown_validator checks (frontmatter + cross-file status consistency by default) against the project's a4/ workspace and reports any violations. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
-argument-hint: "[file ...] [--only <list>] [--skip <list>] [--json]"
+description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the registered markdown_validator checks (frontmatter + cross-file status consistency by default) against the project's a4/ workspace and reports any violations. With --fix, also runs the supersedes-chain recovery sweep for edits that bypassed the PostToolUse cascade hook. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
+argument-hint: "[file ...] [--only <list>] [--skip <list>] [--fix [--dry-run]] [--json]"
 disable-model-invocation: true
 allowed-tools: Bash, Read
 ---
@@ -15,11 +15,12 @@ Runs the registered checks in `markdown_validator.registry.CHECKS` through the u
 
 Body shape (section tags, required vs optional sections, blank-line discipline) is documented in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md` and the per-type authoring contracts under `${CLAUDE_PLUGIN_ROOT}/references/`. There is no runtime body validator — body shape is documentation-only.
 
-Invocation: `/a4:validate [file ...] [--only <list>] [--skip <list>] [--json]`.
+Invocation: `/a4:validate [file ...] [--only <list>] [--skip <list>] [--fix [--dry-run]] [--json]`.
 
 - No file args — every enabled check runs in workspace mode.
 - One or more file paths — file-scope-capable checks restrict to those files (frontmatter validates each file; status walks each file's connected component). Workspace-only checks are skipped silently.
 - `--only A,B` runs only the named checks; `--skip A` runs every check except those named. The list of registered checks is `validate.py --list-checks`.
+- `--fix` (workspace-only — incompatible with file args) runs the **supersedes-chain recovery sweep** before reporting checks. The sweep walks usecase @ `shipped` and spec @ `active` files carrying `supersedes:` and flips same-family predecessors to `superseded`. Idempotent. Combine with `--dry-run` to preview without writing. Use this when edits bypassed the PostToolUse cascade hook (manual `git checkout`, external editors, scripts that wrote frontmatter directly). Reverse-link cascades (revising / discarded) are not part of `--fix` — preview them with `search.py --references <ref> --references-via implements` and re-edit `status:` to let the hook reapply them.
 - `--json` emits a single combined structured report to stdout for CI / pre-commit consumers.
 
 ## Context
@@ -59,12 +60,13 @@ When file arguments are passed, workspace-only checks (none today, but possible 
 
 ### 4. Suggest a follow-up
 
-- Do **not** auto-fix. Validators are read-only; the user or the relevant `/a4:*` iteration skill owns the fix.
+- For schema and reverse-link issues, do **not** auto-fix. The relevant `/a4:*` iteration skill owns the fix.
 - If many violations cluster under a single file, suggest the iteration skill that owns that file (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:roadmap iterate`) to drive the fix through normal review-item flow.
 - For id uniqueness violations, recommend using `${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py` when renaming — never hand-pick an id.
+- For status mismatches that look like missed `superseded` flips on a supersedes chain, suggest re-running with `--fix` (or `--fix --dry-run` first) to apply the recovery sweep.
 
 ## Non-Goals
 
-- Do not fix violations here. The skill only reports; the user or an iteration skill fixes.
-- Do not commit anything. Validators are read-only.
+- Do not fix anything other than the supersedes-chain recovery sweep enabled by `--fix`. Schema, reverse-link, and transition issues stay the user's / iteration skill's job.
+- Do not commit anything. The recovery sweep writes files in place; the user owns the commit.
 - Do not invoke this skill autonomously. It is user-triggered; iteration skills and bulk-generation skills do not need to call it.

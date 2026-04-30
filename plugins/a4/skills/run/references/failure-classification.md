@@ -8,14 +8,14 @@ This document is the routing table the SKILL.md references. Cross-stage stop/con
 
 | Category | What it means | Action | Routing |
 |---|---|---|---|
-| **task / roadmap** | Coding error, missing logic, or roadmap-level oversight (task scope wrong, depends_on missing, AC ambiguous within the task body) | Revise the affected task file(s): update `## Description` / `## Files` / `## Acceptance Criteria` / `depends_on`. Reset the task `status: pending` via `transition_status.py` (citing the review item in `--reason`). Increment `cycle:`. Reset transitively-affected downstream tasks to `pending`. Re-run roadmap-reviewer on the revised tasks (single scoped round). If it passes, return to Step 1. | continue (next cycle) |
+| **task / roadmap** | Coding error, missing logic, or roadmap-level oversight (task scope wrong, depends_on missing, AC ambiguous within the task body) | Revise the affected task file(s): update `## Description` / `## Files` / `## Acceptance Criteria` / `depends_on`. Reset the task `status: pending` by editing the frontmatter directly (the PostToolUse cascade hook refreshes `updated:`). Increment `cycle:`. Reset transitively-affected downstream tasks to `pending`. Re-run roadmap-reviewer on the revised tasks (single scoped round). If it passes, return to Step 1. | continue (next cycle) |
 | **architecture** | Wrong contract, missing component, or test-strategy gap | Update or create the test-runner review item with `target: architecture`. **Stop** the run. Recommend `/a4:arch iterate`. On resume, the new arch-targeted review items drive the fix. | stop, route to `/a4:arch iterate` |
 | **usecase** | Ambiguous flow / validation / error handling (only for UC-driven tasks; UC-less tasks cannot produce this) | Retarget the review item to `usecase/<id>-<slug>`. **Stop** the run. Recommend `/a4:usecase iterate`. | stop, route to `/a4:usecase iterate` |
 
 ## Cycle bound
 
-If 3 cycles complete and failures remain after each `task / roadmap` revision attempt: halt the run. Flip affected tasks `status: failing` via `transition_status.py` (citing the failure cycle in `--reason`), leave all test-runner review items `open`. Report the state to the user and transition to `conversational`. The user can resume via `/a4:run iterate` after addressing the underlying issue.
+If 3 cycles complete and failures remain after each `task / roadmap` revision attempt: halt the run. Flip affected tasks `status: failing` by editing the frontmatter directly, leave all test-runner review items `open`. Report the state to the user and transition to `conversational`. The user can resume via `/a4:run iterate` after addressing the underlying issue.
 
 ## Status writer reminder
 
-All `status:` mutations on `<type>/<id>-<slug>.md` (where `<type>` ∈ `{task, bug, spike, research}`) go through `scripts/transition_status.py`. Never hand-edit `status:` / `updated:` — the writer owns them.
+All `status:` mutations on `<type>/<id>-<slug>.md` (where `<type>` ∈ `{task, bug, spike, research}`) are direct frontmatter edits; the PostToolUse cascade hook refreshes `updated:` and runs any cross-file cascade. Never hand-edit `updated:` — the hook owns it. Add a one-line bullet to the optional `## Log` section *before* flipping `status:` if you want a body-level audit trail (the hook does not write `## Log`).

@@ -54,12 +54,12 @@ Mark "Walk findings and open review items" `in_progress`.
 For each new review item from the reviewer (ordered by priority then id), read the file, present the finding to the user, and walk through resolution. Resolution paths:
 
 **Fix now** — edit the target (UC file or wiki page). On success:
-1. Flip the review item via the writer: `scripts/transition_status.py --file review/<id>-<slug>.md --to resolved --reason "resolved by editing <target path>"`.
+1. Edit the review item's `status:` to `resolved` directly. The PostToolUse cascade hook refreshes `updated:`.
 2. If the edit touched a wiki page and the review item's `target:` listed a wiki basename, append a dated bullet with a markdown link to the review item itself inside the page's `## Change Logs` section per the Wiki Update Protocol.
 
 **Defer** — leave the review item `status: open`. For a pure-defer pause the deferral reason is captured in conversation notes / handoff; if the user wants it inscribed in the issue body, append it by hand to the optional `## Log` section.
 
-**Discard** — call `scripts/transition_status.py --file review/<id>-<slug>.md --to discarded --reason "<why>"`; the writer records the reason.
+**Discard** — append the rationale to the review item's optional `## Log` section first (one-line dated bullet), then edit `status:` to `discarded` directly. The PostToolUse cascade hook refreshes `updated:`.
 
 Common finding types the reviewer emits (mirrored from `${CLAUDE_SKILL_DIR}/references/review-report.md`):
 

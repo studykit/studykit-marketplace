@@ -22,7 +22,7 @@ The user wants to extend or amend a live spec.
 - `$ARGUMENTS` references an `active` spec; or
 - the conversation produced a refinement or new rule for an existing spec.
 
-The skill edits the spec body in place and appends a `## Decision Log` entry with today's date and the substance of the change. The frontmatter is left at `status: active` — `transition_status.py` is not invoked.
+The skill edits the spec body in place and appends a `## Decision Log` entry with today's date and the substance of the change. The frontmatter is left at `status: active` — no transition is needed (the cascade hook only fires on a `status:` change).
 
 ## (c) New record (default)
 

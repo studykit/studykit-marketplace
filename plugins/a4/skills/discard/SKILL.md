@@ -1,20 +1,20 @@
 ---
 name: discard
-description: "This skill should be used when the user wants to discard an existing task across any of the four issue families (task / bug / spike / research). Common triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. The skill flips the task's `status:` to `discarded` via `transition_status.py` and optionally appends a `## Why Discarded` body note. UC-cascade discards (when a UC flips to `discarded` and the writer auto-discards related tasks) are not in scope — they are handled by the writer automatically. Authoring is the matching `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research` skill."
+description: "This skill should be used when the user wants to discard an existing task across any of the four issue families (task / bug / spike / research). Common triggers: 'discard task <id>', 'drop task <id>', 'abandon this task', 'task <id> is no longer needed'. The skill flips the task's `status:` to `discarded` via direct frontmatter edit (the PostToolUse cascade hook refreshes `updated:`) and optionally appends a `## Why Discarded` body note. UC-cascade discards (when a UC flips to `discarded` and the cascade hook auto-discards related tasks) are not in scope — they are handled by the hook automatically. Authoring is the matching `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research` skill."
 argument-hint: "<id-or-slug> [reason]"
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Single Task Discard
 
-Discard one task at `a4/<type>/<id>-<slug>.md` (where `<type>` is one of `task`, `bug`, `spike`, `research`). Flips `status:` → `discarded` via `transition_status.py` and records the reason.
+Discard one task at `a4/<type>/<id>-<slug>.md` (where `<type>` is one of `task`, `bug`, `spike`, `research`). Flips `status:` → `discarded` by editing the frontmatter directly and records the reason in an optional `## Why Discarded` body block.
 
 Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** flipping an existing task's `status: → discarded` via `transition_status.py`, appending an optional `## Why Discarded` note, advising on the spike artifact directory (no auto-delete).
-- **Out:** UC-cascade discards (handled automatically by `transition_status.py` when a UC flips to `discarded`), authoring (use `/a4:task` / `/a4:bug` / `/a4:spike` / `/a4:research`), implement / test loop (`/a4:run`). No commit.
+- **In:** flipping an existing task's `status: → discarded` by editing the frontmatter directly, appending an optional `## Why Discarded` note, advising on the spike artifact directory (no auto-delete).
+- **Out:** UC-cascade discards (handled automatically by the PostToolUse cascade hook when a UC flips to `discarded`), authoring (use `/a4:task` / `/a4:bug` / `/a4:spike` / `/a4:research`), implement / test loop (`/a4:run`). No commit.
 
 ## Pre-flight
 
@@ -26,7 +26,7 @@ Seed: **$ARGUMENTS**
 
 ## Procedure
 
-Apply the steps in `references/discard.md`: resolve the target task by id / `<type>/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), flip via `transition_status.py --to discarded` and append an optional `## Why Discarded` block (D3), advise on the spike artifact directory without auto-deleting (D4), and report (D5).
+Apply the steps in `references/discard.md`: resolve the target task by id / `<type>/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), append an optional `## Why Discarded` block first and then edit `status:` to `discarded` (D3), advise on the spike artifact directory without auto-deleting (D4), and report (D5).
 
 ## Commit Points
 

@@ -52,12 +52,12 @@ Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4
 
 Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:`) are defined in `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial status — file creation at `status: open | pending | complete` is the writer's idle state for that initial value.
+Write the file with `Write`. The initial `status:` is set by the Write itself; the cascade hook does not fire on file creation (no pre-status snapshot exists).
 
 ## Step 5: Hand-off
 
 Branch the message by initial status:
 
-- **`open`** — *Task `task/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` via `transition_status.py` when ready to schedule it.*
+- **`open`** — *Task `task/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` by editing `status:` directly when ready to schedule it (the PostToolUse cascade hook refreshes `updated:`).*
 - **`pending`** — *Task `task/<id>-<slug>` written at `status: pending`. Run `/a4:run` to start the implement + test loop.*
 - **`complete`** — *Task `task/<id>-<slug>` written at `status: complete` (post-hoc documentation). No `/a4:run` action needed.*

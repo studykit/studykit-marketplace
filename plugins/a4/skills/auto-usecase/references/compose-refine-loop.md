@@ -73,9 +73,10 @@ Repeat up to 3 rounds. Each round:
    Shared refs: <paths>
 
    For each review item (status: open, source: usecase-reviewer): read it, apply
-   the Suggestion to the target UC / wiki page, flip status: resolved via
-   transition_status.py, and append a ## Change Logs bullet on each modified
-   wiki page whose basename appears in the review's target: list.
+   the Suggestion to the target UC / wiki page, edit the review item's `status:`
+   to `resolved` directly (the PostToolUse cascade hook refreshes `updated:`),
+   and append a ## Change Logs bullet on each modified wiki page whose basename
+   appears in the review's target: list.
    If a finding cannot be applied (e.g., ambiguous), leave status: open and
    capture the reason in conversation notes for the main session to surface.
 

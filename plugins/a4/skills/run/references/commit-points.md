@@ -34,7 +34,7 @@ Commit revised task files + status resets + review item linkages as one commit b
 
 ## UC ship-transitions (Step 4b)
 
-Commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by `transition_status.py` are part of the same working-tree change and belong in the same commit:
+Commit the UC files confirmed `shipped` together in one commit, separate from task commits. Predecessor UC files auto-flipped to `superseded` by the PostToolUse cascade hook are part of the same working-tree change and belong in the same commit:
 
 ```
 #<uc-id1> [#<uc-id2> ...] docs(a4): ship UC <slug1> [<slug2> ...]

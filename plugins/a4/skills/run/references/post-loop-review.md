@@ -11,13 +11,13 @@ This skill follows the **stop on strong upstream dependency** policy at `../../.
 
 ## 4a. Failure path — classify findings
 
-For each open test-runner review item, the user picks one of three categories: **task / roadmap**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and `transition_status.py` calls — is in `./failure-classification.md`.
+For each open test-runner review item, the user picks one of three categories: **task / roadmap**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and direct status edits — is in `./failure-classification.md`.
 
 Cycle bound: if 3 cycles complete and failures remain, halt as described in that reference.
 
 ## 4b. Ship path — confirm UCs to ship
 
-For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and writer call are in `./uc-ship-review.md`.
+For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and the direct-edit ship procedure are in `./uc-ship-review.md`.
 
 The ship unit varies by **pipeline shape** (see `../../../docs/pipeline-shapes.md`). Per-task vs per-UC ship is `task.implements:`-driven, not invocation-driven:
 

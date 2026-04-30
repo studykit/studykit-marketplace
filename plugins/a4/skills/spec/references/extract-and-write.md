@@ -52,16 +52,10 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
 
-## Step 6: Activate via writer (if signal was `active`)
+## Step 6: Activate (if signal was `active`)
 
 Invoke only when the user signaled `active` in Step 4, or the whole invocation is in activate-existing mode.
 
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "<project-root>/a4" \
-  --file spec/<id>-<slug>.md \
-  --to active \
-  --reason "<one-line shape summary>" \
-  --json
-```
+Edit the spec file's frontmatter `status:` from `draft` to `active` directly (use the `Edit` tool). The PostToolUse cascade hook (`${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`) detects the transition, refreshes `updated:`, and runs the supersedes-chain cascade — every same-family entry in `supersedes:` currently at `active` or `deprecated` is flipped to `superseded` automatically.
 
-The writer's lifecycle / supersedes-cascade behavior is defined in `../../../references/spec-authoring.md` §Lifecycle. On `ok: true`, report the primary flip plus any cascades. On `exit 2`, surface `errors` verbatim and return to Step 5 — the writer rejects only legality violations, so re-author the spec instead of retrying. Post-draft authoring invariants (placeholder tokens etc.) are caught by the frontmatter validator at the Stop hook.
+The supersedes-cascade behavior is defined in `../../../references/spec-authoring.md` §Lifecycle. After the edit, surface the hook's `additionalContext` to the user (it lists each cascaded predecessor). If the resulting jump is illegal (e.g., `draft → superseded`), the cascade hook silently skips and the Stop-hook safety net surfaces the violation — return to Step 5 and re-author. Post-draft authoring invariants (placeholder tokens etc.) are caught by the frontmatter validator at the Stop hook.

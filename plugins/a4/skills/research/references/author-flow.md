@@ -45,7 +45,7 @@ Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4
 
 Frontmatter shape, allowed initial statuses, and the `complete` preflight (body-section presence) are defined in `${CLAUDE_PLUGIN_ROOT}/references/research-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial status.
+Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 
 ## Step 4: Hand-off
 

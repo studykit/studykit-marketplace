@@ -20,7 +20,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, change-logs, cross-stage feedback).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — per-UC contract.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item lifecycle (resolved / discarded transitions via `transition_status.py`).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item lifecycle (resolved / discarded transitions; edit `status:` directly — the PostToolUse cascade hook handles `updated:` and any cross-file flips).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md` / `a4-actors-authoring.md` / `a4-nfr-authoring.md` — when the Suggestion targets one of those wikis.
 
 ## Shared References
@@ -71,15 +71,7 @@ Follow the item's Suggestion. Typical patterns:
 
 ### 3. Close the Review Item
 
-On successful fix, flip the review item to `resolved` via the status writer:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-  "<workspace path>" --file "review/<id>-<slug>.md" --to resolved \
-  --reason "resolved by editing <target path>; <one-line description>"
-```
-
-The script writes `status: resolved` and bumps `updated:`. It does **not** write into `## Log` — that section is optional and hand-maintained. Do not hand-edit the frontmatter.
+On successful fix, edit the review item's `status:` field directly to `resolved` (use the `Edit` tool against `a4/review/<id>-<slug>.md`'s frontmatter). The PostToolUse cascade hook detects the transition, refreshes `updated:`, and runs any cross-file cascade — do not hand-edit `updated:`. The hook does **not** write into `## Log` — that section is optional and hand-maintained. If you want a body-level audit pointer, append a one-line bullet to `## Log` *before* flipping `status:`, so the file is consistent at any read point.
 
 ### 4. Defer When Ambiguous
 
@@ -89,15 +81,7 @@ Do not guess. Do not close the item without a substantive fix.
 
 ### 5. Discard When Wrong
 
-If the reviewer's finding is clearly incorrect (e.g., cites an implementation leak that isn't one; asserts a duplicate that isn't), flip the review item to `status: discarded` via:
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-  "<workspace path>" --file "review/<id>-<slug>.md" --to discarded \
-  --reason "finding incorrect: <rationale>"
-```
-
-The script writes `status:` and bumps `updated:`. It does **not** write into `## Log` — that section is optional and hand-maintained.
+If the reviewer's finding is clearly incorrect (e.g., cites an implementation leak that isn't one; asserts a duplicate that isn't), edit the review item's `status:` field directly to `discarded`. The PostToolUse cascade hook refreshes `updated:` automatically — do not hand-edit `updated:`. The hook does **not** write into `## Log`; that section is optional and hand-maintained.
 
 ## Return Summary
 
@@ -117,6 +101,6 @@ wiki_pages_touched: [context, actors, domain, nfr]
 
 - Do not emit new review items. This agent only closes / defers / dismisses existing ones (plus side-effect UC creation for splits and gap resolutions).
 - Preserve UC ids. Never renumber; ids are globally monotonic and immutable.
-- Every closed item is flipped via `transition_status.py` with a concrete `--reason` so the audit trail (status + updated + reason captured by the writer) is meaningful. The optional `## Log` body section is hand-maintained — append a bullet there only when you want a body-level audit entry.
+- Every closed item is flipped by editing `status:` directly; the PostToolUse cascade hook bumps `updated:` and runs any cross-file cascade. For an audit trail (status + reason), append a one-line bullet to the optional `## Log` body section *before* flipping `status:` — that section is hand-maintained, never written by the hook.
 - Apply the wiki update protocol on every wiki page edit.
 - If the reviewer Suggestion introduces an implementation leak (banned term) into a UC body, transform to user-level language per `abstraction-guard.md` before writing.

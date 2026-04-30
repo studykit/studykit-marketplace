@@ -22,15 +22,8 @@ Return: result (pass/fail), summary of changes, any issues encountered.
 
 ## Status flips around the agent call
 
-Before spawning, flip the task via the writer:
+Before spawning, flip the task `status:` from `pending` to `progress` by editing the task file's frontmatter directly. The PostToolUse cascade hook refreshes `updated:` automatically.
 
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file "<type>/<id>-<slug>.md" --to progress \
-  --reason "/a4:run Step 2 spawning task-implementer"
-```
-
-Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, call the writer with `--to complete` or `--to failing` based on the return value (include a `--reason` naming the cycle and outcome). Do not hand-edit `status:` / `updated:` — the writer owns them.
+Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, edit `status:` to `complete` or `failing` based on the return value. Do not hand-edit `updated:` — the cascade hook owns it.
 
 The agent commits in its current working tree, which is transparently the worktree — the agent does not need to know it is isolated. Worktree return-value shape, branch naming, and cleanup commands live in `./parallel-isolation.md`.

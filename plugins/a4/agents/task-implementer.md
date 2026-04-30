@@ -16,7 +16,7 @@ You are a task implementation agent. Your job is to implement one task and write
 
 Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies, especially §9 commit message form (`#<task-id> <type>(a4): <description>`) and §1 writer-owned fields (status flips go through `transition_status.py`; never hand-edit `status:` / `updated:`; the optional `## Log` section is hand-maintained, not written by the writer).
+- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies, especially §9 commit message form (`#<task-id> <type>(a4): <description>`) and §1 status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`; the optional `## Log` section is hand-maintained, not written by the hook).
 - The per-family task contract that matches the task you were assigned: `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-spike-authoring.md`, or `${CLAUDE_PLUGIN_ROOT}/rules/a4-research-authoring.md` (you do not author task files but you read them and your commits cite their ids; the rule is also auto-loaded when you read the task file).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — when flipping UC `ready → implementing`; do not modify UC bodies.
 
@@ -34,21 +34,13 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
 
 ## What You Do
 
-1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, run the status writer to flip `ready → implementing`:
+1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, edit the UC file's `status:` from `ready` to `implementing` directly with the `Edit` tool. The PostToolUse cascade hook refreshes `updated:` automatically — do not hand-edit `updated:`.
 
-   ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-     "$(git rev-parse --show-toplevel)/a4" \
-     --file "<uc-relative-path>" \
-     --to implementing \
-     --reason "task-implementer starting <type>/<id>-<slug>" \
-     --json
-   ```
-
-   The script enforces:
-   - Current status must be `ready`. If it is `draft`, **refuse to start** — return failure with the UC reference and instruct the user to finalize via `/a4:usecase` (ready-gate). The script reports this as an illegal-transition error; surface it in `issues:`.
-   - `implementing`, `shipped`, `superseded`, `revising`, `discarded`, `blocked` → the script reports already-at-target or illegal. Do not force, do not continue on that UC.
-   - The writer enforces no mechanical task gate on `ready → implementing` (a4 v6.0.0). Confirm before flipping that the current task you are about to start declares `implements: [usecase/<this>]` — the agent owns this check, not the writer.
+   You enforce:
+   - Current status must be `ready`. If it is `draft`, **refuse to start** — return failure with the UC reference and instruct the user to finalize via `/a4:usecase` (ready-gate). Surface this in `issues:` without touching the UC.
+   - `implementing`, `shipped`, `superseded`, `revising`, `discarded`, `blocked` → already-at-target or illegal jump. Do not force, do not continue on that UC.
+   - There is no mechanical task gate on `ready → implementing` (a4 v6.0.0). Confirm before flipping that the current task declares `implements: [usecase/<this>]`.
+   - Illegal jumps you write are surfaced by the Stop hook's transition-legality safety net (and the cascade hook silently ignores them); never write a status that isn't in `FAMILY_TRANSITIONS[ready]`.
 
    Do this **before** beginning implementation so the workspace reflects active work.
 
@@ -68,17 +60,7 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 
 1. **Stop coding.** Do not guess at the missing spec.
 2. **Open a review item** for the ambiguity. Allocate an id via `scripts/allocate_id.py` and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: finding`, `status: open`, `target: usecase/<X>`, `source: task-implementer`, and a `## Description` section describing exactly what is ambiguous and what clarification is needed.
-3. **Flip the UC** via the status writer:
-
-   ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-     "$(git rev-parse --show-toplevel)/a4" \
-     --file "usecase/<X>.md" \
-     --to revising \
-     --reason "task-implementer: see review/<id>-<slug>"
-   ```
-
-   The script cascades `progress`/`failing` tasks back to `pending` and logs the back-pointer.
+3. **Flip the UC** to `revising` by editing its `status:` field directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress`/`failing` tasks (across `task` / `bug` / `spike` / `research`) back to `pending`, refreshing `updated:` on every flipped file. Add a one-line bullet to the UC's optional `## Log` section if you want a body-level audit pointer to the new review item — the hook does not write `## Log`.
 4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
 
 ### Architecture-choice exit — halt + spec-gap
@@ -95,8 +77,8 @@ This exit is parallel to the spec-ambiguity exit — same halt + review-item sha
 
 - Implement only the assigned task.
 - Do not modify other task files, `roadmap.md`, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
-- **UC files**: every status change goes through `scripts/transition_status.py`. You never hand-edit UC frontmatter — the writer owns `status:` and `updated:`. The writer does **not** write into `## Log`; that body section is optional and hand-maintained. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message.
-- A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable; the writer will reject the flip. Return failure instead of starting.
+- **UC files**: edit `status:` directly to flip lifecycle. Do **not** hand-edit `updated:` — the PostToolUse cascade hook refreshes it. The hook does **not** write into `## Log`; that body section is optional and hand-maintained. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message instead of writing.
+- A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable. Return failure instead of starting; do not write any status onto that UC.
 - Record **factual results only** — do not classify issues as roadmap / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.
 - All unit tests must pass before declaring success.

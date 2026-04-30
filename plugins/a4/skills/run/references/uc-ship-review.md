@@ -42,31 +42,25 @@ Transition to `conversational`. For each candidate X, show the verdict and ask:
 
 Accept natural-language answers:
 
-- **Confirm** (`yes`, `ok`, `맞아요`, `확정`, `mark shipped`, `ship it`) → flip `implementing → shipped` via the writer.
+- **Confirm** (`yes`, `ok`, `맞아요`, `확정`, `mark shipped`, `ship it`) → flip `implementing → shipped` by editing `status:` directly.
 - **Defer without reason** (`not yet`, `아직`, `let me verify`, `hold`) → leave `implementing`. The next `/a4:run iterate` will re-offer.
 - **Defer with reason** (`no — X is incomplete because…`) → leave `implementing` and emit a fresh review item targeting `usecase/X` with `kind: gap`, `source: self`, body containing the user's reason.
 
-## Confirmed → shipped (writer call)
+## Confirmed → shipped
 
-For every UC the user confirmed:
+For every UC the user confirmed, edit the UC file's frontmatter `status:` from `implementing` to `shipped` directly with the `Edit` tool. The PostToolUse cascade hook (`${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`) then:
 
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file "usecase/<id>-<slug>.md" --to shipped \
-  --reason "/a4:run cycle <N>; tests <list>; user confirmed"
-```
+- Refreshes `updated:` on the UC.
+- Runs the supersedes-chain cascade — if the UC has a non-empty `supersedes:` list, every same-family target currently at `shipped` is flipped to `superseded` with a `superseded by usecase/<id>` reason recorded on the cascade report.
+- Surfaces an `additionalContext` block listing the cascade flips; relay those to the user.
 
-The script:
+There is no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `complete` before flipping. Illegal jumps (e.g., `shipped → ready`) are silently ignored by the cascade hook and surfaced by the Stop-hook safety net — fix the source rather than retry.
 
-- Writes `status: shipped` and bumps `updated:`. The writer applies no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `complete` before invoking the flip.
-- If the UC has a non-empty `supersedes:` list, cascades each supersedes target from `shipped` to `superseded` with a back-pointer log entry.
-
-Do **not** hand-edit UC frontmatter or supersedes targets.
+Do **not** hand-edit `updated:` or supersedes-target frontmatter — the cascade hook owns those writes.
 
 ## Commit
 
-Commit all UC ship-transitions together as one commit, separate from task commits. Predecessor UCs auto-flipped to `superseded` by the writer land in the same working-tree change and belong in the same commit.
+Commit all UC ship-transitions together as one commit, separate from task commits. Predecessor UCs auto-flipped to `superseded` by the cascade hook land in the same working-tree change and belong in the same commit.
 
 Suggested message prefix: `docs(a4): ship UC <ids>`.
 
@@ -74,7 +68,7 @@ Suggested message prefix: `docs(a4): ship UC <ids>`.
 
 If a UC needs revision later, either:
 
-- Create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`. When that new UC eventually ships, the writer flips the old one to `superseded`.
-- Or flip `shipped → discarded` via the writer when the code is being removed.
+- Create a new UC via `/a4:usecase` with `supersedes: [usecase/<old-id>-<slug>]`. When that new UC eventually ships, the cascade hook flips the old one to `superseded`.
+- Or flip `shipped → discarded` (edit `status:` directly) when the code is being removed.
 
 Never try to move a UC back from `shipped` to `implementing` or `draft`.

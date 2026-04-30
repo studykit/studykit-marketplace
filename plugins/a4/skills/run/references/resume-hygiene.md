@@ -1,13 +1,6 @@
 # Resume Hygiene
 
-At session start, for every task with `status: progress`, reset to `pending` via the writer (a `progress` status at session-start means the prior session crashed mid-work):
-
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file "<type>/<id>-<slug>.md" --to pending \
-  --reason "session-start hygiene: previous session terminated"
-```
+At session start, for every task with `status: progress`, edit the frontmatter `status:` from `progress` to `pending` directly (a `progress` status at session-start means the prior session crashed mid-work). The PostToolUse cascade hook refreshes `updated:` automatically.
 
 ## Orphaned worktrees
 

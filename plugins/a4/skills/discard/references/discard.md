@@ -1,6 +1,6 @@
 # Task Discard Procedure
 
-Loaded by `/a4:discard`. The remainder after the first whitespace is parsed as: `<id-or-slug> [reason]`. UC-cascade discards (when a UC flips to `discarded`) are handled automatically by `transition_status.py` — this procedure is for **explicit one-off task discards** that are not driven by a UC cascade.
+Loaded by `/a4:discard`. The remainder after the first whitespace is parsed as: `<id-or-slug> [reason]`. UC-cascade discards (when a UC flips to `discarded`) are handled automatically by the PostToolUse cascade hook — this procedure is for **explicit one-off task discards** that are not driven by a UC cascade.
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) live in separate top-level folders. Resolution walks all four.
 
@@ -16,7 +16,7 @@ If no file resolves, abort with: "No task file found for `<target>`. List candid
 
 ## D2. Check current status
 
-Read the resolved file's frontmatter. The writer (`transition_status.py` `ISSUE_FAMILY_TRANSITIONS`) allows `discarded` from `open | pending | progress | complete | failing`:
+Read the resolved file's frontmatter. `ISSUE_FAMILY_TRANSITIONS` allows `discarded` from `open | pending | progress | complete | failing`:
 
 - Any of those five → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.
@@ -25,20 +25,9 @@ Surface the task's `type:` and `implements:` / `spec:` to the user before flippi
 
 ## D3. Apply the discard
 
-Compose the reason: every token after `<id-or-slug>` joined by a single space. If empty, use `"discarded via /a4:discard"` as the writer's reason — `transition_status.py` requires a non-empty `--reason`.
+Compose the reason: every token after `<id-or-slug>` joined by a single space. If empty, use `"discarded via /a4:discard"` as a default. The reason is captured in the body's `## Why Discarded` section (see below) — there is no CLI to pass it to.
 
-```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file <type>/<id>-<slug>.md \
-  --to discarded \
-  --reason "<reason>" \
-  --json
-```
-
-The writer flips `status:` and bumps `updated:`. If exit code is non-zero, surface the writer's stderr verbatim and stop — the writer rejects only legality violations, so re-check the file's current status rather than retrying.
-
-If the user supplied a reason explicit enough to deserve narrative capture, append (or extend) a `## Why Discarded` body section via `Edit`:
+If the user supplied a reason worth narrative capture, append (or extend) a `## Why Discarded` body section via `Edit` **before flipping `status:`**, so the file is consistent at any read point:
 
 ```markdown
 ## Why Discarded
@@ -46,7 +35,9 @@ If the user supplied a reason explicit enough to deserve narrative capture, appe
 - <YYYY-MM-DD> — <reason text>
 ```
 
-Append a new dated bullet if the section already exists. Skip this step entirely when no reason was supplied — the `--reason` argument passed to the writer is sufficient.
+Append a new dated bullet if the section already exists.
+
+Then edit the file's frontmatter `status:` to `discarded` directly. The PostToolUse cascade hook detects the legal transition, refreshes `updated:`, and runs no cross-file cascade for task-family discards (they don't propagate). If the resulting jump is illegal (already-`discarded` etc.), the cascade hook silently skips and the Stop-hook safety net surfaces the violation. Skip the discard if D2 returned `discarded`; never write the same status twice.
 
 ## D4. Spike artifact directory advisory (if `type: spike`)
 

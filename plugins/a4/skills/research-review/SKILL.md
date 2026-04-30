@@ -72,8 +72,8 @@ Use the `Edit` tool to apply accepted changes to the task body. Preserve all con
 
 Once the user confirms the review pass is done:
 
-1. Bump `updated:` to today (if any revisions landed).
-2. Offer next-step status flips via `transition_status.py`:
+1. If revisions landed but no status flip is offered, edit `updated:` directly (no cascade hook fires when `status:` doesn't change).
+2. Offer next-step status flips by editing `status:` directly (the PostToolUse cascade hook refreshes `updated:` when status changes):
    - If the task is at `progress` and the user is satisfied: offer `progress → complete`.
    - If the task is at `complete` and revisions landed: no flip needed (the task is already terminal-active).
    - If the user wants to defer the open follow-ups: offer `progress → failing` so a later cycle picks it up.
@@ -89,5 +89,5 @@ If the review surfaces unresolved trade-offs that suggest a downstream design de
 
 - Do not write a decision. If the research is meant to feed a decision, tell the user to invoke `/a4:spec` next.
 - Do not extend the research unilaterally. If the reviewer finds gaps, propose extension points; the user decides whether to fill them now or defer.
-- Do not flip `status:` directly — always go through `transition_status.py`.
+- Do not hand-edit `updated:` when `status:` is also changing — the PostToolUse cascade hook owns `updated:` on a status flip.
 - Do not commit. Leave files in the working tree.

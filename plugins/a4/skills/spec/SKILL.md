@@ -15,7 +15,7 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** writing the spec file at `status: draft`, activating an existing draft via `transition_status.py`, soft-linking research tasks (`a4/research/<id>-<slug>.md`) via standard markdown body links and optional `related:` frontmatter entries, recording append-only `## Decision Log` entries, performing the in-situ wiki nudge, setting `status` via dialogue.
+- **In:** writing the spec file at `status: draft`, activating an existing draft by editing `status:` to `active` (the PostToolUse cascade hook flips predecessor specs to `superseded` automatically), soft-linking research tasks (`a4/research/<id>-<slug>.md`) via standard markdown body links and optional `related:` frontmatter entries, recording append-only `## Decision Log` entries, performing the in-situ wiki nudge, setting `status` via dialogue.
 - **Out:** no investigation (use `/a4:research` first if research is needed). No reviewer for the spec *content itself*. No commit.
 
 ## Pre-flight
@@ -32,7 +32,7 @@ Three modes (new record, activate existing, revise existing): `references/mode-d
 
 ### Steps 2–6: Extract, discover research, decide status, write, activate
 
-Procedure: `references/extract-and-write.md`. Covers extracting the converged shape, discovering related research tasks, deciding `draft` vs `active` from dialogue, allocating id + writing the file (with optional `related:` entries pointing at the research tasks and inline body links), and activating via `transition_status.py`.
+Procedure: `references/extract-and-write.md`. Covers extracting the converged shape, discovering related research tasks, deciding `draft` vs `active` from dialogue, allocating id + writing the file (with optional `related:` entries pointing at the research tasks and inline body links), and activating by editing `status:` directly.
 
 ### Step 7: In-situ wiki nudge
 
@@ -43,7 +43,7 @@ Apply per `references/wiki-nudge.md`: map the spec scope to the affected wiki pa
 Summarize to the user:
 
 - Spec path and id.
-- Final status (`draft` or `active`), and if activated this invocation, any supersedes cascades the writer performed.
+- Final status (`draft` or `active`), and if activated this invocation, any supersedes cascades the PostToolUse hook performed.
 - Research tasks linked in body / `related:` (list of relative-path links, if any).
 - Wiki pages updated or deferred review items opened (with ids).
 - Reminder: the file (and any cascaded supersedes-target edits) is left in the working tree — commit at the user's convenience.
@@ -53,6 +53,6 @@ Summarize to the user:
 - **Do not research.** If the spec needs more investigation, stop and tell the user to run `/a4:research <topic>` first.
 - **Do not review whether the shape is correct.** Whether the chosen shape is the right one is the user's own thinking; no machine critique pass exists.
 - **Do not commit.** Leave files in the working tree.
-- **Do not auto-populate `supersedes:`** or retire specs unprompted. The user sets `supersedes:` in Step 2; `→ deprecated` is a manual user call via `transition_status.py`.
+- **Do not auto-populate `supersedes:`** or retire specs unprompted. The user sets `supersedes:` in Step 2; `→ deprecated` is a manual user call (edit `status:` directly).
 
 (Frontmatter / body / lifecycle / writer-only field rules — including the `## Decision Log` append-only invariant and the `status:` writer-only rule — live in the spec authoring reference, not here.)

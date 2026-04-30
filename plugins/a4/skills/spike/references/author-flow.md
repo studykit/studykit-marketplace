@@ -49,7 +49,7 @@ Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4
 
 Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:` under `artifacts/spike/<id>-<slug>/` or `artifacts/spike/archive/<id>-<slug>/`) are defined in `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
-Write the file with `Write`. Do **not** call `transition_status.py` for the initial status.
+Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 
 ## Step 5: Create the artifact directory (if confirmed in Step 3)
 
@@ -63,6 +63,6 @@ Suggest (do not auto-create) a `README.md` inside it pointing back to the task f
 
 Branch the message by initial status:
 
-- **`open`** — *Spike `spike/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` via `transition_status.py` when ready.*
+- **`open`** — *Spike `spike/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued for `/a4:run`. Transition `open → pending` by editing `status:` directly when ready (the PostToolUse cascade hook refreshes `updated:`).*
 - **`pending`** — *Spike `spike/<id>-<slug>` written at `status: pending`. Run `/a4:run` to start exploration.*
 - **`complete`** — *Spike `spike/<id>-<slug>` written at `status: complete` (post-hoc documentation; PoC already done).*
