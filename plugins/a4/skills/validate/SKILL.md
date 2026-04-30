@@ -11,7 +11,7 @@ allowed-tools: Bash, Read
 Runs the registered checks in `markdown_validator.registry.CHECKS` through the unified `validate.py` entrypoint. Two checks ship today:
 
 - **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders. Canonical rules: `${CLAUDE_PLUGIN_ROOT}/authoring/validator-rules.md` (enforcement) and `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (universal contract); per-type field tables in `${CLAUDE_PLUGIN_ROOT}/authoring/<type>-authoring.md`.
-- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / spark brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Rules: `${CLAUDE_PLUGIN_ROOT}/authoring/validator-rules.md §Cross-file status consistency`.
+- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Rules: `${CLAUDE_PLUGIN_ROOT}/authoring/validator-rules.md §Cross-file status consistency`.
 
 Body shape (section tags, required vs optional sections, blank-line discipline) is documented in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` and the per-type authoring contracts under `${CLAUDE_PLUGIN_ROOT}/authoring/`. There is no runtime body validator — body shape is documentation-only.
 

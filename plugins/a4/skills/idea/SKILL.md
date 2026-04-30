@@ -65,7 +65,7 @@ Captured as idea #12 → /abs/path/to/a4/idea/12-콜그래프에-주석-렌더�
 If the idea warrants expansion, mention one-line follow-up options:
 
 - Edit the file directly to add rationale inside a `## Why This Matters` or `## Notes` section (both optional per the authoring contract).
-- When ready to pursue it, change `status:` to `promoted` and set `promoted: [<target-path>]` pointing at the new artifact (usecase / task / spark session).
+- When ready to pursue it, change `status:` to `promoted` and set `promoted: [<target-path>]` pointing at the new artifact (usecase / task / brainstorm).
 
 Do not propose auto-promotion or auto-commit.
 
@@ -77,7 +77,7 @@ Procedure: `references/discard-flow.md`. Covers target resolution (D1), status c
 
 - Do not commit the new file. Leave it in the working tree.
 - Do not propose a target artifact at capture time. Ideas are independent by definition; graduation is a separate, later decision.
-- Do not launch a brainstorm or research session off the back of a capture. If the user wants that, they invoke `/a4:spark-brainstorm` or `/a4:research` with the idea path as input themselves.
+- Do not launch a brainstorm or research session off the back of a capture. If the user wants that, they invoke `/a4:brainstorm` or `/a4:research` with the idea path as input themselves.
 - Do not surface existing `a4/idea/` open count or nudge the user about prior ideas. Capture is capture; review is separate.
 - Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; the Stop hook catches any collision on next stop.
 

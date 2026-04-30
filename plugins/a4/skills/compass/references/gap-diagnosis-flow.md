@@ -4,7 +4,7 @@ The workspace has existing wiki pages or issues. Read state, locate the gap, and
 
 ## 3.1 Read workspace state
 
-`scripts/workspace_state.py` renders workspace state as markdown to stdout, with an optional section filter. Compass requests only the sections its layered diagnosis (3.2) and presentation (3.3) need — `recent-activity`, `open-ideas`, `open-sparks` are snapshot-only and skipped:
+`scripts/workspace_state.py` renders workspace state as markdown to stdout, with an optional section filter. Compass requests only the sections its layered diagnosis (3.2) and presentation (3.3) need — `recent-activity`, `open-ideas`, `open-brainstorms` are snapshot-only and skipped:
 
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/workspace_state.py" "$ROOT/a4" \

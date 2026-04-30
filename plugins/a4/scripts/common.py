@@ -33,6 +33,7 @@ ISSUE_FOLDERS: tuple[str, ...] = (
     "review",
     "spec",
     "idea",
+    "brainstorm",
 )
 
 
@@ -51,16 +52,13 @@ def iter_issue_files(a4_dir: Path, folder: str) -> list[Path]:
 def discover_files(a4_dir: Path) -> list[Path]:
     """All a4/*.md files the validators should scan.
 
-    Top-level wiki pages + every file in each issue folder + every file
-    in `spark/`. Order is deterministic: wiki pages first, then issue
-    folders in ISSUE_FOLDERS order, then sparks.
+    Top-level wiki pages + every file in each issue folder. Order is
+    deterministic: wiki pages first, then issue folders in
+    ISSUE_FOLDERS order.
     """
     out: list[Path] = list(sorted(a4_dir.glob("*.md")))
     for folder in ISSUE_FOLDERS:
         out.extend(iter_issue_files(a4_dir, folder))
-    spark = a4_dir / "spark"
-    if spark.is_dir():
-        out.extend(sorted(spark.glob("*.md")))
     return out
 
 

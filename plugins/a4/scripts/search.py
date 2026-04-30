@@ -4,8 +4,8 @@
 # ///
 """Filter a4/ workspace files by frontmatter fields.
 
-Single-pass scan over the a4/ workspace (wiki pages + issue folders +
-spark/), applying the requested filters and printing matching records.
+Single-pass scan over the a4/ workspace (wiki pages + issue folders),
+applying the requested filters and printing matching records.
 
 Reverse lookups are computed by back-scanning forward relation fields on
 every file — there is no stored-reverse field, so results are always
@@ -106,7 +106,7 @@ ALL_FOLDERS: tuple[str, ...] = (
     "review",
     "spec",
     "idea",
-    "spark",
+    "brainstorm",
     "wiki",
     "archive",
 )
@@ -168,8 +168,8 @@ class Record:
     @property
     def labels(self) -> list[str]:
         # Schema uses `labels:` on usecase / the four task issue
-        # families / review / idea, and `tags:` on spec / spark. Treat
-        # them as one logical field.
+        # families / review / idea, and `tags:` on spec / brainstorm.
+        # Treat them as one logical field.
         return _str_list(self.fm.get("labels")) + _str_list(self.fm.get("tags"))
 
 
@@ -243,12 +243,6 @@ def discover(a4_dir: Path, include_archived: bool) -> list[Record]:
         for md in iter_issue_files(a4_dir, folder):
             fm = extract_preamble(md).fm or {}
             out.append(Record(folder=folder, path=md, fm=fm))
-
-    spark_dir = a4_dir / "spark"
-    if spark_dir.is_dir():
-        for md in sorted(spark_dir.glob("*.md")):
-            fm = extract_preamble(md).fm or {}
-            out.append(Record(folder="spark", path=md, fm=fm))
 
     if include_archived:
         archive_dir = a4_dir / "archive"

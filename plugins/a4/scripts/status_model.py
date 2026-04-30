@@ -26,8 +26,7 @@ be kept in sync when the model changes.
 
 Keys are folder names under `<a4-dir>/`: `usecase`, the four issue
 families that share the task lifecycle (`task`, `bug`, `spike`,
-`research`), `review`, `spec`, `idea`, `spark`. The validator's
-`spark_brainstorm` schema maps to the `spark` folder key.
+`research`), `review`, `spec`, `idea`, `brainstorm`.
 
 a4 v12.0.0 split the previous combined `task` folder (with a `kind:`
 discriminator) into four sibling top-level folders that share the same
@@ -83,7 +82,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
     "review": frozenset({"open", "in-progress", "resolved", "discarded"}),
     "spec": frozenset({"draft", "active", "deprecated", "superseded"}),
     "idea": frozenset({"open", "promoted", "discarded"}),
-    "spark": frozenset({"open", "promoted", "discarded"}),
+    "brainstorm": frozenset({"open", "promoted", "discarded"}),
 }
 
 
@@ -92,8 +91,8 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
 # ---------------------------------------------------------------------------
 #
 # Only families with a mechanical writer (the PostToolUse cascade hook
-# / status_cascade.py) appear here. `idea` and `spark` transitions are
-# user-driven and not enforced by the cascade engine; cross-file
+# / status_cascade.py) appear here. `idea` and `brainstorm` transitions
+# are user-driven and not enforced by the cascade engine; cross-file
 # consistency is reported by markdown_validator.status_consistency
 # instead.
 #
@@ -155,7 +154,7 @@ TERMINAL_STATUSES: dict[str, frozenset[str]] = {
     "review": frozenset({"resolved", "discarded"}),
     "spec": frozenset({"deprecated", "superseded"}),
     "idea": frozenset({"promoted", "discarded"}),
-    "spark": frozenset({"promoted", "discarded"}),
+    "brainstorm": frozenset({"promoted", "discarded"}),
 }
 
 IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
@@ -167,7 +166,7 @@ IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
     "review": frozenset({"in-progress"}),
     "spec": frozenset(),
     "idea": frozenset(),
-    "spark": frozenset(),
+    "brainstorm": frozenset(),
 }
 
 BLOCKED_STATUSES: frozenset[str] = frozenset({"blocked"})

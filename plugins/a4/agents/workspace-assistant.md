@@ -69,7 +69,7 @@ If the request is ambiguous between the two, ask one clarifying question before 
 | `blocked-items` | any issue with status: blocked, with depends_on chain |
 | `recent-activity` | top 10 issue items by `updated:` desc |
 | `open-ideas` | non-terminal `idea/*.md` |
-| `open-sparks` | non-terminal `spark/*.md` |
+| `open-brainstorms` | non-terminal `brainstorm/*.md` |
 
 `--list-sections` prints the identifiers and exits.
 
@@ -84,7 +84,7 @@ If the request is ambiguous between the two, ask one clarifying question before 
 - "issue counts" / "how many tasks/reviews" → `issue-counts`
 - "stage progress" / "where are we" → `stage-progress`
 - "open ideas" → `open-ideas`
-- "open sparks" → `open-sparks`
+- "open brainstorms" → `open-brainstorms`
 - "usecase sources" → `usecases-by-source`
 - combined ("reviews and blocked") → multiple identifiers: `open-reviews blocked-items`
 

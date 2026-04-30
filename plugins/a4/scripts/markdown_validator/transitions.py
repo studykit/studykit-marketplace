@@ -14,8 +14,9 @@ Scope rules:
   - Files newly added in the working tree (no HEAD copy) are skipped
     here — initial-status validation belongs to the static frontmatter
     check.
-  - The ``idea`` / ``spark`` families have no mechanical writer and are
-    intentionally absent from ``FAMILY_TRANSITIONS``; they are skipped.
+  - The ``idea`` / ``brainstorm`` families have no mechanical writer
+    and are intentionally absent from ``FAMILY_TRANSITIONS``; they are
+    skipped.
   - Wiki pages and any other non-issue file are skipped.
   - When ``old_status == new_status`` there is no transition.
   - When ``status:`` is missing or non-string in either side, the file

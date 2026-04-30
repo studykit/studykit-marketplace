@@ -15,8 +15,8 @@ Some status enum values are semantically derived from cross-file state:
     at a usecase with ``status: discarded``.
   - ``idea.status = "promoted"`` iff own ``promoted:`` list is
     non-empty.
-  - ``spark/*.brainstorm.md`` ``status = "promoted"`` iff own
-    ``promoted:`` list is non-empty.
+  - ``brainstorm.status = "promoted"`` iff own ``promoted:`` list is
+    non-empty.
 
 These are normally materialized by the PostToolUse cascade hook
 (``scripts/a4_hook.py``); the supersedes-chain class is also reachable
@@ -34,7 +34,7 @@ Two modes:
   "related set":
 
     - ``idea/<id>-<slug>.md``       — that file only.
-    - ``spark/<...>.brainstorm.md`` — that file only.
+    - ``brainstorm/<id>-<slug>.md`` — that file only.
     - ``spec/<id>-<slug>.md``       — that file + files it supersedes
                                       + files that supersede it
                                       (connected component via
@@ -369,7 +369,7 @@ def collect_workspace_mismatches(
     if index is None:
         index = RefIndex(a4_dir)
     ideas = collect_with_promoted(a4_dir, "idea", "*.md")
-    brainstorms = collect_with_promoted(a4_dir, "spark", "*.brainstorm.md")
+    brainstorms = collect_with_promoted(a4_dir, "brainstorm", "*.md")
 
     mismatches: list[Mismatch] = []
     usecases: dict[str, dict] = {}
@@ -409,8 +409,8 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
     """Return mismatches in the connected component of ``rel_file``.
 
     ``rel_file`` is workspace-relative: ``spec/1-x.md``,
-    ``idea/3-y.md``, ``spark/2026-04-24-1200-z.brainstorm.md``.
-    Anything else returns ``[]``.
+    ``idea/3-y.md``, ``brainstorm/12-z.md``. Anything else returns
+    ``[]``.
     """
     parts = rel_file.split("/", 1)
     if len(parts) < 2:
@@ -428,8 +428,8 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
             return []
         return check_promoted([(f"idea/{abs_path.stem}", fm)], "idea")
 
-    if folder == "spark":
-        if not basename.endswith(".brainstorm.md"):
+    if folder == "brainstorm":
+        if not basename.endswith(".md"):
             return []
         abs_path = a4_dir / rel_file
         if not abs_path.is_file():
@@ -437,7 +437,7 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
         fm = read_fm(abs_path)
         if fm is None:
             return []
-        return check_promoted([(f"spark/{abs_path.stem}", fm)], "brainstorm")
+        return check_promoted([(f"brainstorm/{abs_path.stem}", fm)], "brainstorm")
 
     if folder in SUPERSEDES_FAMILIES:
         if not basename.endswith(".md"):

@@ -10,9 +10,8 @@ Files under `<project-root>/a4/` declare `type:` in YAML frontmatter, and that v
 
 **Folder ↔ type:**
 
-- `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `spec/`, `review/`, `idea/`, `archive/` — folder name = `type:`.
+- `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `spec/`, `review/`, `idea/`, `brainstorm/`, `archive/` — folder name = `type:`.
 - Wiki pages (`actors.md`, `architecture.md`, `bootstrap.md`, `context.md`, `domain.md`, `nfr.md`, `roadmap.md`) — basename = `type:` (e.g., `actors.md` → `type: actors`).
-- `spark/<…>.brainstorm.md` → `type: brainstorm`.
 
 After a4 v12.0.0 the four task issue families (`task` / `bug` / `spike` / `research`) are flat sibling folders under `a4/` — there is no `kind:` field on tasks; the folder + `type:` together encode the kind. The `task` family is the default (regular implementation work), equivalent to Jira's "Task" issue type alongside Bug / Story.
 

@@ -33,4 +33,4 @@ Two thin shell wrappers in `../hooks/` (`cleanup-edited-a4.sh`, `sweep-old-edite
 
 ## Allocator
 
-- **Id allocator:** `../scripts/allocate_id.py` — workspace-global, monotonic id allocation. Computes `max(existing ids in a4/) + 1`. Skills invoke it before writing any new issue file. Wiki pages and spark files do not carry an `id:`.
+- **Id allocator:** `../scripts/allocate_id.py` — workspace-global, monotonic id allocation. Computes `max(existing ids in a4/) + 1`. Skills invoke it before writing any new issue file. Wiki pages do not carry an `id:`.

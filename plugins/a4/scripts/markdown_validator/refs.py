@@ -12,7 +12,6 @@ A frontmatter path reference may take any of these forms:
   - ``<folder>/<id>-<slug>``          folder-prefixed, slug present
   - ``<id>-<slug>``                   bare slug-ful (id is global, so unique)
   - ``<wiki-basename>``               wiki page (no id)
-  - ``spark/<datetime>-<slug>.brainstorm``  spark file (no id)
 
 All forms are accepted on input. The slug part is a hint — when an id
 resolves to a file whose stem differs from the supplied slug, the id
@@ -41,10 +40,10 @@ class ResolvedRef:
     """Canonical resolution of a frontmatter path reference."""
 
     folder: str         # one of ISSUE_FOLDERS (`usecase`, `task`, `bug`,
-                        # `spike`, `research`, `review`, `spec`, `idea`),
-                        # or `wiki` / `spark` for the non-issue families
+                        # `spike`, `research`, `review`, `spec`, `idea`,
+                        # `brainstorm`), or `wiki` for the non-issue family
     stem: str           # filename stem without `.md`
-    id: int | None      # numeric id when the file has one; None for wiki / spark
+    id: int | None      # numeric id when the file has one; None for wiki
     path: Path          # absolute path on disk
 
     @property
@@ -81,7 +80,6 @@ class RefIndex:
         self._by_canonical: dict[str, ResolvedRef] = {}
         self._by_folder_id: dict[tuple[str, int], ResolvedRef] = {}
         self._wiki_by_name: dict[str, ResolvedRef] = {}
-        self._spark_by_stem: dict[str, ResolvedRef] = {}
         self._build()
 
     def _build(self) -> None:
@@ -106,13 +104,6 @@ class RefIndex:
                 if id_int is not None:
                     self._by_id.setdefault(id_int, ref)
                     self._by_folder_id.setdefault((folder, id_int), ref)
-
-        spark_dir = self.a4_dir / "spark"
-        if spark_dir.is_dir():
-            for p in sorted(spark_dir.glob("*.md")):
-                ref = ResolvedRef(folder="spark", stem=p.stem, id=None, path=p)
-                self._spark_by_stem[p.stem] = ref
-                self._by_canonical[f"spark/{p.stem}"] = ref
 
     def resolve(self, ref: object) -> ResolvedRef | None:
         """Resolve any supported reference form to its file.
@@ -142,9 +133,6 @@ class RefIndex:
 
         if s in self._wiki_by_name:
             return self._wiki_by_name[s]
-
-        if s.startswith("spark/"):
-            return self._spark_by_stem.get(s[len("spark/"):])
 
         if "/" in s:
             folder, _, rest = s.partition("/")
@@ -181,8 +169,6 @@ class RefIndex:
         if s.startswith("#"):
             return s[1:].isdigit()
         if s in self._wiki_by_name:
-            return False
-        if s.startswith("spark/"):
             return False
         if "/" in s:
             folder, _, rest = s.partition("/")

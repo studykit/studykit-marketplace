@@ -15,7 +15,7 @@ Plus a shared resolver:
 
   - ``refs`` — translate any accepted reference form (``#<id>``,
     ``<folder>/<id>``, ``<folder>/<id>-<slug>``, bare ``<id>-<slug>``,
-    wiki basename, spark stem) into a single ``ResolvedRef``.
+    wiki basename) into a single ``ResolvedRef``.
 
 The unified CLI lives at ``scripts/validate.py`` and dispatches via the
 ``CHECKS`` registry exported from ``markdown_validator.registry``. The

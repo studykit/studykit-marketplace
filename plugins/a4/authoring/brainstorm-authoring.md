@@ -2,7 +2,7 @@
 
 > **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
 
-A brainstorm at `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
+A brainstorm at `a4/brainstorm/<id>-<slug>.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
@@ -11,7 +11,8 @@ Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 ```yaml
 ---
 type: brainstorm
-pipeline: spark
+id: <int — globally monotonic across the workspace>
+title: "<short, human-readable phrase>"
 topic: "<short string — the session's framing question>"
 status: open | promoted | discarded
 promoted: []          # populated when status → promoted (e.g., [spec/8-caching, usecase/5-search])
@@ -24,19 +25,19 @@ updated: YYYY-MM-DD
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
 | `type` | yes | literal | `brainstorm` |
-| `pipeline` | yes | literal | `spark` |
-| `topic` | yes | string | session topic |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | short human-readable phrase (distinct from `topic`) |
+| `topic` | yes | string | the session's framing question or theme |
 | `status` | yes | enum | `open` \| `promoted` \| `discarded` |
 | `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[spec/<id>-<slug>, usecase/<id>-<slug>]`) |
 | `tags` | no | list of strings | free-form |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `type:` is the literal `brainstorm`. The filename always carries the `.brainstorm` suffix as part of the basename (not the extension); the file extension stays `.md`.
-- `pipeline:` is the literal `spark` for every brainstorm file. Reserved for future spark-family extensions.
-- `topic:` is the session's framing question or theme — a short string, not a UUID or slug.
+- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
+- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
 - `promoted:` lists pipeline artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
-- Brainstorm files do not carry `id:` — they have no issue-tracker identity.
 - Path values are plain strings without `.md` and without brackets.
 - Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision.
 
@@ -56,7 +57,7 @@ Per-status meaning:
 
 Writer rules (brainstorm-specific):
 
-- `open` is the **only** initial status.
+- `open` is the **only** initial status. New brainstorms are always born at `open`.
 - The brainstorm family has **no cascade** — the PostToolUse cascade hook doesn't flip related files for it (the family is absent from `FAMILY_TRANSITIONS`). `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
 - Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal.
@@ -78,9 +79,8 @@ Unknown H2 headings are tolerated.
 
 ## Common mistakes
 
-- **Required-field omission** (`type`, `pipeline`, `topic`, `status`, `created`, `updated`).
+- **Required-field omission** (`type`, `id`, `title`, `topic`, `status`, `created`, `updated`).
 - **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — surfaced as a consistency check.
-- **Adding `id:`** — brainstorm files do not carry an id.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
@@ -89,7 +89,3 @@ Unknown H2 headings are tolerated.
 - **Don't expand a brainstorm idea inline.** When an idea grows beyond a one-liner, promote it: capture the substance in a spec, usecase, or task and link it from the brainstorm bullet.
 - **Don't pre-populate `promoted:`.** The list is filled when an idea actually graduates.
 - **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; drift is reported separately but does not mutate files.
-
-## Historical note: retired `spark-decide` slot
-
-`a4/spark/<YYYY-MM-DD-HHmm>-<slug>.decide.md` was historically a separate "pre-pipeline decision" slot. It was retired in favor of direct `a4/spec/<id>-<slug>.md` records (with `## Decision Log` absorbing the rationale that previously lived in standalone decision records). No spark-family file carries `type: decide` anymore.

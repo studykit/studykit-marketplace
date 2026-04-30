@@ -31,7 +31,7 @@ Sections (kebab-case identifier on the left):
   blocked-items       any issue with status: blocked, with depends_on chain.
   recent-activity     top 10 issue items by `updated:` desc.
   open-ideas          non-terminal `idea/*.md`.
-  open-sparks         non-terminal `spark/*.md`.
+  open-brainstorms    non-terminal `brainstorm/*.md`.
 
 Status vocabularies follow `status_model.py` (terminal / in-progress sets
 documented inline below).
@@ -79,13 +79,6 @@ WIKI_KINDS: tuple[str, ...] = (
     "bootstrap",
 )
 
-# Spark flavor → terminal set. Distinct from TERMINAL_STATUSES["spark"]
-# because the file-flavor key (`brainstorm`) does not equal the folder
-# key (`spark`).
-SPARK_TERMINAL: dict[str, frozenset[str]] = {
-    "brainstorm": TERMINAL_STATUSES["spark"],
-}
-
 PRIORITY_ORDER: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
 RECENT_ACTIVITY_LIMIT = 10
 
@@ -119,24 +112,6 @@ class WikiPage:
     kind: str
     path: Path | None
     updated: str | None = None
-
-
-@dataclass
-class SparkItem:
-    path: Path
-    status: str
-    updated: str | None
-
-    @property
-    def stem(self) -> str:
-        return self.path.stem
-
-    @property
-    def flavor(self) -> str:
-        # Only `.brainstorm` is supported in spark/ today.
-        if self.path.stem.endswith(".brainstorm"):
-            return "brainstorm"
-        return ""
 
 
 def _fm(path: Path) -> dict:
@@ -201,23 +176,6 @@ def discover_issues(a4_dir: Path) -> dict[str, list[IssueItem]]:
                 )
             )
     return out
-
-
-def discover_sparks(a4_dir: Path) -> list[SparkItem]:
-    sub = a4_dir / "spark"
-    if not sub.is_dir():
-        return []
-    items: list[SparkItem] = []
-    for md in sorted(sub.glob("*.md")):
-        fm = _fm(md)
-        items.append(
-            SparkItem(
-                path=md,
-                status=str(fm.get("status") or "open").strip() or "open",
-                updated=_display_date(fm.get("updated") or fm.get("date")),
-            )
-        )
-    return items
 
 
 # ---------- Section renderers ----------------------------------------------
@@ -428,19 +386,17 @@ def render_open_ideas(ideas: list[IssueItem]) -> str:
     return "\n".join(lines)
 
 
-def render_open_sparks(sparks: list[SparkItem]) -> str:
-    open_sparks = [
-        s for s in sparks if s.status not in SPARK_TERMINAL.get(s.flavor, set())
-    ]
-    heading = f"## Open sparks ({len(open_sparks)})"
-    if not open_sparks:
-        return f"{heading}\n\n*No open sparks.*"
-    open_sparks.sort(key=lambda s: s.stem)
+def render_open_brainstorms(brainstorms: list[IssueItem]) -> str:
+    terminal = TERMINAL_STATUSES.get("brainstorm", frozenset())
+    open_items = [b for b in brainstorms if b.status not in terminal]
+    heading = f"## Open brainstorms ({len(open_items)})"
+    if not open_items:
+        return f"{heading}\n\n*No open brainstorms.*"
+    open_items.sort(key=lambda b: (b.updated or "", b.id_ or 0), reverse=True)
     lines = [heading, ""]
-    for s in open_sparks:
-        flavor = f" · {s.flavor}" if s.flavor else ""
-        updated = f" · updated {s.updated}" if s.updated else ""
-        lines.append(f"- spark/{s.stem}{flavor}{updated}")
+    for b in open_items:
+        updated = f" · updated {b.updated}" if b.updated else ""
+        lines.append(f"- {b.ref} — {b.title}{updated}")
     return "\n".join(lines)
 
 
@@ -462,7 +418,9 @@ SECTION_RENDERERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "blocked-items": lambda ctx: render_blocked_items(ctx["issues"]),
     "recent-activity": lambda ctx: render_recent_activity(ctx["issues"]),
     "open-ideas": lambda ctx: render_open_ideas(ctx["issues"]["idea"]),
-    "open-sparks": lambda ctx: render_open_sparks(ctx["sparks"]),
+    "open-brainstorms": lambda ctx: render_open_brainstorms(
+        ctx["issues"]["brainstorm"]
+    ),
 }
 
 SECTION_NAMES: tuple[str, ...] = tuple(SECTION_RENDERERS.keys())
@@ -474,7 +432,6 @@ def _build_context(a4_dir: Path) -> dict[str, Any]:
         "pages": pages,
         "pages_by_kind": {p.kind: p for p in pages},
         "issues": discover_issues(a4_dir),
-        "sparks": discover_sparks(a4_dir),
     }
 
 

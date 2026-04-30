@@ -475,8 +475,8 @@ def _report_status_consistency_post(
         "- `spec.status = superseded` iff another spec at `active` declares "
         "`supersedes: [<this>]`.\n"
         "- `idea.status = promoted` iff own `promoted:` list is non-empty.\n"
-        "- `spark/*.brainstorm.md` `status = promoted` iff own `promoted:` "
-        "is non-empty."
+        "- `brainstorm.status = promoted` iff own `promoted:` list is "
+        "non-empty."
     )
     _emit(
         {

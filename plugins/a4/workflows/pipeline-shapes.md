@@ -24,7 +24,7 @@ Treating Full as the only shape forces brownfield and one-off work into routing 
 
 The single condition that decides whether *any* shape applies is **the presence of `a4/bootstrap.md`**.
 
-`/a4:run` requires `bootstrap.md` for Launch & Verify and halts to compass when it is absent. Every shape — Full, Reverse-then-forward, Minimal — therefore terminates in `/a4:run` and requires `bootstrap.md` somewhere in the path. If `bootstrap.md` does not exist and the user has only written specs, research artifacts, sparks, or hand-edited wiki pages, **no shape applies** — see "No shape" below.
+`/a4:run` requires `bootstrap.md` for Launch & Verify and halts to compass when it is absent. Every shape — Full, Reverse-then-forward, Minimal — therefore terminates in `/a4:run` and requires `bootstrap.md` somewhere in the path. If `bootstrap.md` does not exist and the user has only written specs, research artifacts, brainstorms, or hand-edited wiki pages, **no shape applies** — see "No shape" below.
 
 What `bootstrap.md` does **not** depend on:
 
@@ -132,14 +132,14 @@ specs do not have a shape entry of their own. `/a4:spec` is shape-independent �
 
 ## No shape
 
-When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research tasks, sparks, or hand-editing wiki pages — but `/a4:run` cannot execute and no task → ship flow is in motion.
+When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research tasks, brainstorms, or hand-editing wiki pages — but `/a4:run` cannot execute and no task → ship flow is in motion.
 
 This is a normal state, not an error. Workspaces in this state typically use:
 
 - `/a4:spec` — record specs standalone before any implementation work.
 - `/a4:research` — investigate options or topics, producing `a4/research/<id>-<slug>.md`.
 - `/a4:research-review` — audit a research task for source quality and bias.
-- `/a4:spark-brainstorm` — capture ideas before they take shape.
+- `/a4:brainstorm` — capture ideas before they take shape.
 - Direct wiki edits on `context.md` / `domain.md` for purely descriptive purposes.
 
 A No-shape workspace becomes a shaped workspace the moment `bootstrap.md` is created — typically by `/a4:auto-bootstrap` (which itself requires `architecture.md`, dragging the workspace into Full or Reverse-then-forward) or by direct authoring (Minimal).

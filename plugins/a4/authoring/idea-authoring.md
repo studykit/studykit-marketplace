@@ -2,7 +2,7 @@
 
 > **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
 
-An idea at `a4/idea/<id>-<slug>.md` is a **pre-pipeline quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or spark brainstorm via the `promoted:` field.
+An idea at `a4/idea/<id>-<slug>.md` is a **pre-pipeline quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or brainstorm via the `promoted:` field.
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
@@ -35,7 +35,7 @@ updated: YYYY-MM-DD
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable one-liner |
 | `status` | yes | enum | `open` \| `promoted` \| `discarded` |
-| `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[usecase/5-search, spark/2026-04-24-1730-idea-x.brainstorm]`) |
+| `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[usecase/5-search, brainstorm/12-cache-options]`) |
 | `related` | no | list of paths | soft links to other artifacts |
 | `labels` | no | list of strings | free-form tags |
 | `created` | yes | date | `YYYY-MM-DD` |
@@ -43,7 +43,7 @@ updated: YYYY-MM-DD
 
 - `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, spark/2026-04-24-1730-idea-x.brainstorm]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
+- `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.
 - Path values are plain strings without `.md` and without brackets.
 - Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision.

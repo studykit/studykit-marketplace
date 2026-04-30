@@ -207,16 +207,16 @@ SCHEMAS: dict[str, Schema] = {
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted", "related"}),
     ),
-    "spark_brainstorm": Schema(
-        name="spark_brainstorm",
+    "brainstorm": Schema(
+        name="brainstorm",
         required=frozenset(
-            {"type", "pipeline", "topic", "status", "created", "updated"}
+            {"type", "id", "title", "topic", "status", "created", "updated"}
         ),
         enums={
             "type": frozenset({"brainstorm"}),
-            "pipeline": frozenset({"spark"}),
-            "status": STATUS_BY_FOLDER["spark"],
+            "status": STATUS_BY_FOLDER["brainstorm"],
         },
+        int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted"}),
     ),
@@ -243,10 +243,6 @@ def detect_type(rel: Path, fm: dict) -> str | None:
     folder = rel.parts[0]
     if folder in ISSUE_FOLDERS:
         return folder
-    if folder == "spark":
-        t = fm.get("type")
-        if t == "brainstorm":
-            return "spark_brainstorm"
     return None
 
 
@@ -258,7 +254,7 @@ def _validate_path_ref(value: Any) -> str | None:
       - ``<id>`` (positive YAML integer) — id-only short form
       - ``<folder>/<id>`` or ``<folder>/<id>-<slug>``
       - bare ``<id>-<slug>`` (id is workspace-globally unique)
-      - wiki basename, spark stem
+      - wiki basename
 
     The legacy ``#<id>`` string short form was removed in a4 v11.0.0;
     write the bare integer id instead.
@@ -668,12 +664,12 @@ def check_missing_frontmatter(path: Path, a4_dir: Path) -> Violation | None:
         rel = path.relative_to(a4_dir)
     except ValueError:
         return None
-    if len(rel.parts) >= 2 and rel.parts[0] in (*ISSUE_FOLDERS, "spark"):
+    if len(rel.parts) >= 2 and rel.parts[0] in ISSUE_FOLDERS:
         return Violation(
             str(rel),
             "missing-frontmatter",
             None,
-            "file in an issue/spark folder has no frontmatter",
+            "file in an issue folder has no frontmatter",
         )
     return None
 

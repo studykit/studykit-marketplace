@@ -18,7 +18,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `roadmap` | Implementation roadmap creation and review |
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
-| `spark-brainstorm` | Structured brainstorming sessions |
+| `brainstorm` | Structured brainstorming sessions |
 | `task` / `bug` / `spike` / `research` | Single ad-hoc task authoring per issue family — writes `a4/<type>/<id>-<slug>.md` under the matching folder |
 | `discard` | Discard a task across any of the four issue families by id / path / slug fragment |
 | `research-review` | Reviews a `type: research` task body via the `research-reviewer` agent; applies accepted revisions |
@@ -87,8 +87,8 @@ Three hook flows share the same events, dispatched through a single Python entry
     review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
     spec/<id>-<slug>.md                       # specs
     idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
+    brainstorm/<id>-<slug>.md                 # Pre-pipeline brainstorming sessions
 
-    spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md
     archive/                                  # Closed items; folder = archived flag
 
   artifacts/                                # Task artifact directories (sibling of a4/)
@@ -129,7 +129,7 @@ Use Case Diagram, authorization matrix, open-issue lists, roadmap milestone narr
 
 ### Workspace dashboard
 
-The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open sparks. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
+The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open brainstorms. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
 
 ### Archive
 

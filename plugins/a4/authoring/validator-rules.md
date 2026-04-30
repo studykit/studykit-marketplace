@@ -23,7 +23,7 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | Id collision across issue folders | error |
 | UC `status >= ready` with empty `actors:` | error (`missing-actors-post-draft`) |
 | `title:` contains placeholder (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`) when UC is `>= ready` or spec is `>= active` | error (`placeholder-in-title`) |
-| File in an issue / spark folder has no frontmatter | error |
+| File in an issue folder has no frontmatter | error |
 | `status:` jump (HEAD → working tree) outside `FAMILY_TRANSITIONS` for `usecase` / `task` / `review` / `spec` | error (`illegal-transition`) — Stop hook safety net; the PostToolUse cascade hook silently skips illegal jumps, so this surfaces them |
 
 How violations are surfaced (block, notify, ignore) is the surfacing layer's concern, not the schema's.
@@ -40,7 +40,7 @@ Several enum values are semantically derived from cross-file state rather than b
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | PostToolUse cascade hook |
 | `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | PostToolUse cascade hook (fires during successor's `→ active` transition); `../scripts/validate.py --fix` for recovery |
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
-| `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
+| `brainstorm.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 
 Both directions of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference) are reported. Reporting is non-mutating — no file is changed automatically.
 
