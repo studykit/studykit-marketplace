@@ -440,7 +440,7 @@ def validate_file(
     if ftype == "task":
         violations.extend(_validate_task_files(rel_str, fm, path))
         violations.extend(
-            _validate_research_complete_artifacts(rel_str, fm, path, a4_dir)
+            _validate_complete_artifacts_present(rel_str, fm, path, a4_dir)
         )
 
     return violations
@@ -503,22 +503,32 @@ def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
     return violations
 
 
-def _validate_research_complete_artifacts(
+_COMPLETE_ARTIFACT_KINDS = ("research", "feature", "bug")
+
+
+def _validate_complete_artifacts_present(
     rel_str: str, fm: dict, path: Path, a4_dir: Path
 ) -> list[Violation]:
-    """Preflight: research at ``status: complete`` must have its listed
-    artifacts present on disk.
+    """Preflight: ``research`` / ``feature`` / ``bug`` tasks at
+    ``status: complete`` must have their listed artifacts present on disk.
 
     Layered on top of the static ``task-files-bad-artifact-path`` rule —
     this one assumes the prefix is well-formed and only checks the
     filesystem. Entries that do not start with the expected
-    ``artifacts/task/research/<id>-<slug>/`` prefix are skipped so the
+    ``artifacts/task/<kind>/<id>-<slug>/`` prefix are skipped so the
     shape rule remains the single source of truth for that error.
     Malformed ``kind`` / ``id`` / filename id-slug also defers as in the
     shape rule. ``artifacts/`` lives at project root (``a4_dir.parent``)
     per ``references/task-artifacts.md``.
+
+    ``kind: spike`` is intentionally excluded: at ``status: complete``
+    the directory may still live at the original prefix until the user
+    `git mv`s it to ``artifacts/task/spike/archive/<id>-<slug>/`` and
+    rewrites ``files:``, so an existence check would race the archive
+    transition.
     """
-    if fm.get("kind") != "research":
+    kind = fm.get("kind")
+    if kind not in _COMPLETE_ARTIFACT_KINDS:
         return []
     if fm.get("status") != "complete":
         return []
@@ -534,7 +544,7 @@ def _validate_research_complete_artifacts(
         return []
     id_slug = path.stem
 
-    expected_prefix = f"artifacts/task/research/{id_slug}/"
+    expected_prefix = f"artifacts/task/{kind}/{id_slug}/"
     project_root = a4_dir.parent
 
     violations: list[Violation] = []
@@ -554,7 +564,7 @@ def _validate_research_complete_artifacts(
                     "task-files-missing-artifact",
                     "files",
                     f"files[{i}]: artifact {entry!r} does not exist on disk "
-                    f"(research at status=complete must have all listed "
+                    f"(kind={kind} at status=complete must have all listed "
                     "artifact files present)",
                 )
             )
