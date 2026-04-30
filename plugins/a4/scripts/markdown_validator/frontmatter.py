@@ -557,7 +557,7 @@ def _validate_task_artifacts(
         violations.append(
             Violation(
                 rel_str,
-                "task-artifacts-bad-path",
+                "artifacts-bad-path",
                 "artifacts",
                 f"artifacts[{i}]: {entry!r} must start with "
                 f"{expected_prefix!r}{suffix}",
@@ -575,7 +575,7 @@ def _validate_complete_artifacts_present(
     """Preflight: ``research`` / ``task`` / ``bug`` issues at
     ``status: complete`` must have their listed artifacts present on disk.
 
-    Layered on top of the static ``task-artifacts-bad-path`` rule —
+    Layered on top of the static ``artifacts-bad-path`` rule —
     this one assumes the prefix is well-formed and only checks the
     filesystem. Entries that do not start with the expected
     ``artifacts/<type>/<id>-<slug>/`` prefix are skipped so the shape
@@ -623,7 +623,7 @@ def _validate_complete_artifacts_present(
             violations.append(
                 Violation(
                     rel_str,
-                    "task-artifacts-missing-file",
+                    "artifacts-missing-file",
                     "artifacts",
                     f"artifacts[{i}]: artifact {entry!r} does not exist on disk "
                     f"(type={ftype} at status=complete must have all listed "

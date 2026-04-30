@@ -467,7 +467,7 @@ def _run_cascade(
             skip_when=lambda s: (
                 None
                 if s in TASK_RESET_ON_REVISING
-                else ("task-not-in-reset-state", f"status={s!r}")
+                else ("not-in-reset-state", f"status={s!r}")
             ),
             to_status=TASK_RESET_TARGET,
             reason_text=f"revising cascade: {uc_ref}",
