@@ -90,7 +90,7 @@ updated: <YYYY-MM-DD>
 
 ### Target Mapping
 
-- **Task attribution possible** — the failing test is declared in a task's `artifacts:` (unit tests are run by task-implementer; integration/smoke sit at the roadmap level, but individual integration tests often cite a specific task's component). Set `target: task/<id>-<slug>`.
+- **Task attribution possible** — the failing test is declared in a task's `artifacts:` (unit tests are run by coder; integration/smoke sit at the roadmap level, but individual integration tests often cite a specific task's component). Set `target: task/<id>-<slug>`.
 - **Task attribution ambiguous** — integration tests that cross multiple tasks, or smoke tests. Set `target: roadmap`.
 
 ## Rules

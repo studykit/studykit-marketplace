@@ -62,7 +62,7 @@ Per-status meaning:
 
 - `open` — Backlog. Captured but not yet committed to the work queue. Not picked up by the implement loop; transition `open → pending` to enqueue.
 - `pending` — In the work queue, awaiting an implementer.
-- `progress` — A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume).
+- `progress` — A `coder` agent is working (or crashed mid-work — reset to `pending` on session resume).
 - `complete` — Spike succeeded; hypothesis validated.
 - `failing` — Spike could not validate the hypothesis on this iteration. Resumed via `failing → progress` (immediate retry) or deferred via `failing → pending` (re-attempt without a cycle bump — there is no `cycle:` on spike).
 - `discarded` — Abandoned. Terminal. Reached via an explicit task-discard (a spike whose hypothesis is no longer worth testing).
@@ -71,7 +71,7 @@ Writer rules (spike-specific):
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; PoC already done).
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
-- `open → progress` is allowed (e.g., a `task-implementer` spawned outside the batch loop).
+- `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop).
 - There is **no `pending → open` reverse** — once enqueued, a spike stays enqueued or moves forward / out.
 
 ### `complete` initial-status preflight

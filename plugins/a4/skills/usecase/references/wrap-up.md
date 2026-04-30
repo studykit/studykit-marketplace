@@ -20,7 +20,7 @@ When the user indicates they're done, mark the in-progress phase task `completed
    - yes / ok / 확정 / `"mark ready"` → edit the UC file's frontmatter `status:` to `ready` directly (the PostToolUse cascade hook refreshes `updated:`).
    - no / `"아직"` / `"still iterating"` / silence → leave at current status.
 
-   Only `draft` and `revising` UCs are offered. UCs at `ready`, `implementing`, `shipped`, `superseded`, `discarded`, or `blocked` are skipped. `task-implementer` refuses to start on a UC at any status other than `ready`, so this gate is the hand-off point between spec work and coding.
+   Only `draft` and `revising` UCs are offered. UCs at `ready`, `implementing`, `shipped`, `superseded`, `discarded`, or `blocked` are skipped. `coder` refuses to start on a UC at any status other than `ready`, so this gate is the hand-off point between spec work and coding.
 
 7. **Report a summary**: UCs confirmed, UCs flipped to `ready`, wiki pages written, review items opened/resolved.
 

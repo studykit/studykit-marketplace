@@ -73,7 +73,7 @@ Per-status meaning:
 
 - `open` — Backlog (kanban "todo"). Captured but not yet committed to the work queue. Not picked up by the implement loop; transition `open → pending` to enqueue.
 - `pending` — In the work queue, awaiting an implementer. Default ready-set entry for the implement loop.
-- `progress` — A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume).
+- `progress` — A `coder` agent is working (or crashed mid-work — reset to `pending` on session resume).
 - `complete` — Unit tests passed. **Not** a forward-path terminal — UC `revising` cascade can return tasks to `pending` for re-implementation.
 - `failing` — Unit tests red. Resumed via `failing → progress` (immediate retry, same cycle) or deferred via `failing → pending` (next cycle, `cycle:` bumps).
 - `discarded` — Abandoned. Terminal. Reached via UC `discarded` cascade or an explicit task-discard.
@@ -82,7 +82,7 @@ Writer rules (task-specific):
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; code already shipped). Batch-authored tasks (e.g., from a roadmap) use `pending`.
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
-- `open → progress` is allowed (e.g., a `task-implementer` spawned outside the batch loop). The `pending` step expresses queue intent; skip it when the queue is not the entry path.
+- `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop). The `pending` step expresses queue intent; skip it when the queue is not the entry path.
 - There is **no `pending → open` reverse** — once enqueued, a task cannot be returned to backlog.
 - UC-cascade automatic flips: when a UC flips to `discarded`, all related tasks across the four issue families → `discarded`. When a UC flips to `revising`, tasks at `progress`/`failing` reset to `pending`; `open`/`pending`/`complete` tasks stay. Do not flip these by hand.
 

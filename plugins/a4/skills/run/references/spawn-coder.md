@@ -1,9 +1,9 @@
-# Step 2: Spawn task-implementer
+# Step 2: Spawn coder
 
 For each ready task, spawn one agent **with worktree isolation** (omit `isolation: "worktree"` only in `serial` mode):
 
 ```
-Agent(subagent_type: "a4:task-implementer", isolation: "worktree", prompt: """
+Agent(subagent_type: "a4:coder", isolation: "worktree", prompt: """
 Task file: <absolute path to a4/<type>/<id>-<slug>.md, where <type> ∈ {task, bug, spike, research}>
 Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
 Architecture file: <absolute path to a4/architecture.md>

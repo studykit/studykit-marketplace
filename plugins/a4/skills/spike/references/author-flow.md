@@ -35,7 +35,7 @@ Ask the user once:
 > Spike code will live at `artifacts/spike/<allocated-id>-<slug>/`. Create the directory now?
 
 - **Yes** → create after Step 4 (id is needed for the path). `mkdir -p <project-root>/artifacts/spike/<id>-<slug>`. Optionally drop a `.gitkeep` so the empty directory is committable.
-- **No** → leave the path in the task's `## Files` table for the user (or task-implementer) to create later.
+- **No** → leave the path in the task's `## Files` table for the user (or coder) to create later.
 
 Do not auto-create archive paths or scaffolding files. The artifact directory is opt-in scratch space; only the task markdown is mandatory.
 

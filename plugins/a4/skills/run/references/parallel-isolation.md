@@ -8,7 +8,7 @@ Commit message form for the merge commits is governed by [`commit-message-conven
 
 | Aspect | Rule |
 |---|---|
-| Isolation | `Agent({ isolation: "worktree" })` per `task-implementer`; one worktree per parallel ready task |
+| Isolation | `Agent({ isolation: "worktree" })` per `coder`; one worktree per parallel ready task |
 | Pre-flight | At Step 1 entry, halt if local `HEAD ≠ origin/HEAD`. User pushes (or runs `git remote set-head origin -a`) before re-invoking. Worktrees branch from `origin/HEAD`, so any local-only commits would be invisible to spawned agents |
 | Merge primitive | `git merge --no-ff -m "<conv-msg>"` per task branch — preserves task-commit hash, marks integration boundary, supports `git log --first-parent` traversal |
 | Merge order | Ascending `task.id` (deterministic, reproducible across re-runs) |

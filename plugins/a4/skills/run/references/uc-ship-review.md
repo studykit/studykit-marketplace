@@ -12,7 +12,7 @@ If no task in this run has a non-empty `implements:` (UC-less project, or every 
 
 A UC X is a ship candidate when **all** hold:
 
-- `X.status` is `implementing` (flipped by `task-implementer` at work-start per its protocol).
+- `X.status` is `implementing` (flipped by `coder` at work-start per its protocol).
 - Every task with `implements: [usecase/X]` in its frontmatter now has `status: complete`.
 - No review item with `target: usecase/X` is `open` or `in-progress` (all `resolved` or `discarded`).
 

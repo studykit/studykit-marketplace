@@ -1,5 +1,5 @@
 ---
-name: task-implementer
+name: coder
 description: Internal agent used by a4 plugin skills. Do not invoke directly.
 model: sonnet
 color: blue
@@ -59,7 +59,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
 If, during implementation, you discover spec ambiguity that cannot be resolved from the UC body / domain / architecture alone (missing Flow branch, undefined error-display, actor referenced but not declared in `actors:`, etc.):
 
 1. **Stop coding.** Do not guess at the missing spec.
-2. **Open a review item** for the ambiguity. Allocate an id via `scripts/allocate_id.py` and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: finding`, `status: open`, `target: usecase/<X>`, `source: task-implementer`, and a `## Description` section describing exactly what is ambiguous and what clarification is needed.
+2. **Open a review item** for the ambiguity. Allocate an id via `scripts/allocate_id.py` and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: finding`, `status: open`, `target: usecase/<X>`, `source: coder`, and a `## Description` section describing exactly what is ambiguous and what clarification is needed.
 3. **Flip the UC** to `revising` by editing its `status:` field directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress`/`failing` tasks (across `task` / `bug` / `spike` / `research`) back to `pending`, refreshing `updated:` on every flipped file. Add a one-line bullet to the UC's optional `## Log` section if you want a body-level audit pointer to the new review item — the hook does not write `## Log`.
 4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
 
@@ -68,7 +68,7 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 Distinct from spec ambiguity: the UC is clear, but implementation surfaces an architectural choice (multiple viable options, non-trivial trade-off) that no existing spec or `architecture.md` section captures. Do **not** classify the situation, do **not** invent the choice, and do **not** flip the UC's status — the UC isn't the gap.
 
 1. **Stop coding.**
-2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: gap`, `status: open`, `source: task-implementer`, and a `## Description` section describing the choice surfaced and the alternatives considered. Use `target: spec/` only when a specific spec id applies; otherwise omit `target:` (cross-cutting).
+2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: gap`, `status: open`, `source: coder`, and a `## Description` section describing the choice surfaced and the alternatives considered. Use `target: spec/` only when a specific spec id applies; otherwise omit `target:` (cross-cutting).
 3. **Return failure** naming the review item id. Do not commit partial code. The user authors the spec via `/a4:spec`; `/a4:run iterate` resumes after the spec lands.
 
 This exit is parallel to the spec-ambiguity exit — same halt + review-item shape — but the UC's lifecycle is untouched. Suppress the exit when the choice is routine (variable names, file layout), framework-mandated (no real alternative), or post-hoc (the code is already written and the conversation is just explaining what's there).

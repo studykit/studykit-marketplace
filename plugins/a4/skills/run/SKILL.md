@@ -1,17 +1,17 @@
 ---
 name: run
-description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/{task,bug,spike,research}/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'task-implementer', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
+description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/{task,bug,spike,research}/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'coder', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
 argument-hint: <optional: 'iterate' to resume after a halt, 'serial' to opt out of parallel worktree isolation; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Implementation Run Loop
 
-> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`. This skill writes status flips by editing `status:` directly; the PostToolUse cascade hook handles `updated:` and any cross-file cascade. The `task-implementer` and `test-runner` agents do their own writes (code + tests, review items).
+> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`. This skill writes status flips by editing `status:` directly; the PostToolUse cascade hook handles `updated:` and any cross-file cascade. The `coder` and `test-runner` agents do their own writes (code + tests, review items).
 
 Two stages over the tasks already authored under the four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`):
 
-1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
+1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `coder` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
 Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`; `roadmap.md` only links to it).
@@ -35,7 +35,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 - `a4/review/<id>-<slug>.md` — test-runner findings; gap items emitted during ship-review when the user defers.
 - Per-task `status:` flips via direct frontmatter edit on every status change; `updated:` is refreshed automatically by the PostToolUse cascade hook.
-- Per-task implementation commits authored by `task-implementer` agents.
+- Per-task implementation commits authored by `coder` agents.
 
 ## Launch & Verify Source
 
@@ -68,7 +68,7 @@ Crash recovery + orphaned worktree handling: `references/resume-hygiene.md`.
 | Step | Focus | Procedure |
 |------|-------|-----------|
 | 1 | Pick ready tasks (+ pre-flight) | `references/ready-set.md` |
-| 2 | Spawn task-implementer (worktree isolation) | `references/spawn-implementer.md` |
+| 2 | Spawn coder (worktree isolation) | `references/spawn-coder.md` |
 | 2.5 | Merge sweep (parallel mode) | `references/merge-sweep.md` |
 | 3 | Integration + smoke tests via test-runner | `references/integration-tests.md` |
 | 4 | Post-loop review (failure path / ship path) | `references/post-loop-review.md` |
@@ -93,7 +93,7 @@ When all tasks are `complete` and all tests pass (or when the user ends the sess
 
 Context is passed via file paths, not agent memory.
 
-- **`task-implementer`** — `Agent(subagent_type: "a4:task-implementer")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
+- **`coder`** — `Agent(subagent_type: "a4:coder")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
 
 `roadmap-reviewer` is **not** invoked from `/a4:run` directly.
@@ -103,14 +103,14 @@ Context is passed via file paths, not agent memory.
 - **Authoring** — task files, roadmap.md, specs, UCs are written elsewhere. `/a4:run` only reads them.
 - **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** Auto-detection of commands is intentionally out of scope.
 - **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline.
-- **Per-cycle parallelism beyond independent ready tasks** — task-implementer parallelism is bounded by the dependency graph.
+- **Per-cycle parallelism beyond independent ready tasks** — coder parallelism is bounded by the dependency graph.
 - **Auto-fall-back to `serial` mode** — opt-in via the `serial` arg only.
 - **Auto-resolution of merge conflicts** — Step 2.5 conflicts halt for the user.
 
 ## Non-Goals
 
 - Do not rebuild Phase 1. `/a4:roadmap` owns roadmap authoring; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` own single-task authoring.
-- Do not split task-implementer / test-runner into sub-skills.
+- Do not split coder / test-runner into sub-skills.
 - Do not split post-loop review (Step 4) into a separate skill, and do not delegate failure classification or UC ship to an agent.
 - Do not emit aggregated test reports. All findings are per-review-item files.
 - Do not hand-edit `updated:` — only edit `status:` and let the PostToolUse cascade hook refresh `updated:`.

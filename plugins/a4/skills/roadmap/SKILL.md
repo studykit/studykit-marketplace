@@ -91,7 +91,7 @@ When the user ends the roadmap-authoring session:
 
 - **`roadmap-reviewer`** — `Agent(subagent_type: "a4:roadmap-reviewer")`. Reviews the roadmap + tasks against architecture / UCs; emits per-finding review items.
 
-`task-implementer` and `test-runner` are `/a4:run`'s agents — not invoked from this skill.
+`coder` and `test-runner` are `/a4:run`'s agents — not invoked from this skill.
 
 ## Non-Goals
 

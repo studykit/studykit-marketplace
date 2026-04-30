@@ -25,7 +25,7 @@ A spec offer is warranted when these appear in dialogue:
 - **B2 — trade-off language:** "we trade X for Y", "the cost of Z is …", "장단점이 있다".
 - **B3 — uncertainty markers:** "not sure", "torn between", "더 생각해봐야". Clarify first whether it is decision-pending (→ spec) or evidence-pending (→ `type: research` task) — leave `## Open Questions` open if neither resolves quickly.
 - **B4 — prior-spec references:** "we decided X before, but now…". This is a **supersede candidate** — author with `supersedes: [spec/<prior-id>-<slug>]` populated; do not edit the prior spec body.
-- **B5 — task-implementer architectural-choice exit:** mid-task implementation surfaces a design alternative not yet captured. Halt, emit a `kind: gap` review item with `target: spec/`, return failure naming the review id.
+- **B5 — coder architectural-choice exit:** mid-task implementation surfaces a design alternative not yet captured. Halt, emit a `kind: gap` review item with `target: spec/`, return failure naming the review id.
 - **B6 — mid-implementation architecture-impacting choice:** same exit shape as B5 from the human-driven side.
 
 ### Anti-patterns — do **not** author a spec for these

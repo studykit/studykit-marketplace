@@ -19,7 +19,7 @@ Filter open review items to this stage's mailbox: items whose `target:` list con
 
 ### Revising-UC priority
 
-If the iterate session is scoped to a specific UC (e.g., the user said "fix UC-5" and UC-5 is `status: implementing` / `revising`), first present review items where `target: usecase/<that-uc>` and `source: task-implementer` (these describe the blocking ambiguity) before the general backlog. When editing begins, flip the UC's `status:` to `revising` by editing the frontmatter directly. The PostToolUse cascade hook detects `implementing → revising`, refreshes `updated:` on the UC, and resets `progress` / `failing` tasks (across `task` / `bug` / `spike` / `research`) back to `pending`. At session end, Step 6 ready-gate flips `revising → ready`.
+If the iterate session is scoped to a specific UC (e.g., the user said "fix UC-5" and UC-5 is `status: implementing` / `revising`), first present review items where `target: usecase/<that-uc>` and `source: coder` (these describe the blocking ambiguity) before the general backlog. When editing begins, flip the UC's `status:` to `revising` by editing the frontmatter directly. The PostToolUse cascade hook detects `implementing → revising`, refreshes `updated:` on the UC, and resets `progress` / `failing` tasks (across `task` / `bug` / `spike` / `research`) back to `pending`. At session end, Step 6 ready-gate flips `revising → ready`.
 
 ## 3. Unreflected research / exploration reports
 

@@ -12,6 +12,6 @@ When the user asks to edit a UC that is currently `status: implementing` (e.g., 
 
 3. **Walk through the edit with the user** (Flow, actors, Validation, Error handling) — same protocol as iteration on a `draft` UC. When the user indicates the spec is done, the wrap-up ready-gate flips `revising → ready`.
 
-## task-implementer-triggered revisions
+## coder-triggered revisions
 
-If `task-implementer` previously triggered the flip (a review item with `source: task-implementer` exists for this UC), walk those review items first — they describe exactly what ambiguity blocked implementation.
+If `coder` previously triggered the flip (a review item with `source: coder` exists for this UC), walk those review items first — they describe exactly what ambiguity blocked implementation.

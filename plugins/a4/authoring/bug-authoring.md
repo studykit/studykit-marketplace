@@ -67,7 +67,7 @@ Per-status meaning:
 
 - `open` — Backlog. Captured but not yet committed to the work queue. Not picked up by the implement loop; transition `open → pending` to enqueue.
 - `pending` — In the work queue, awaiting an implementer.
-- `progress` — A `task-implementer` agent is working (or crashed mid-work — reset to `pending` on session resume).
+- `progress` — A `coder` agent is working (or crashed mid-work — reset to `pending` on session resume).
 - `complete` — Unit tests passed. The fix is in.
 - `failing` — Unit tests red. Resumed via `failing → progress` (immediate retry) or deferred via `failing → pending` (next cycle, `cycle:` bumps).
 - `discarded` — Abandoned. Terminal.
@@ -76,7 +76,7 @@ Writer rules (bug-specific):
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; fix already shipped).
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
-- `open → progress` is allowed (e.g., a `task-implementer` spawned outside the batch loop). The `pending` step expresses queue intent; skip it when the queue is not the entry path.
+- `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop). The `pending` step expresses queue intent; skip it when the queue is not the entry path.
 - There is **no `pending → open` reverse** — once enqueued, a task cannot be returned to backlog.
 
 ### `complete` initial-status preflight

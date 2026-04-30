@@ -39,7 +39,7 @@ Steps procedure: `references/author-flow.md`. Covers capture intent (observed vs
 When the task file is written:
 
 1. Summarize: task id / title, observed vs expected behavior, `implements:` / `spec:` references (or "none").
-2. Suggest the next step: `pending` → `/a4:run` (which spawns a `task-implementer` to write the regression test, then the fix).
+2. Suggest the next step: `pending` → `/a4:run` (which spawns a `coder` to write the regression test, then the fix).
 3. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
 
 ## Non-Goals

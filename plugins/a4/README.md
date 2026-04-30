@@ -59,7 +59,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 | `arch-reviewer` | Review architecture designs |
 | `research-reviewer` | Review research artifacts for source quality, option balance, bias, and decision neutrality |
 | `domain-reviewer` | Review `domain.md` against UCs and architecture; emit per-finding review items |
-| `task-implementer` | Implement tasks and write unit tests |
+| `coder` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
 | `roadmap-reviewer` | Review implementation roadmaps |
 | `test-runner` | Run tests and produce reports |
