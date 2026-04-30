@@ -1,7 +1,7 @@
 ---
 name: research-reviewer
 description: >
-  Review research tasks (a4/task/research/<id>-<slug>.md, kind: research) for quality:
+  Review research tasks (a4/research/<id>-<slug>.md, type: research) for quality:
   whether sources are cited and authoritative, options are investigated with equal
   rigor (in comparative mode), claims are grounded in evidence, and the report is
   free from confirmation / anchoring bias. Returns a structured review report.
@@ -17,16 +17,15 @@ You are a research report reviewer. Your job is to evaluate whether a research t
 
 ## What You Receive
 
-A markdown file at `a4/task/research/<id>-<slug>.md` whose frontmatter declares `type: task`, `kind: research`, and `mode: comparative | single`. Body shape per `${CLAUDE_PLUGIN_ROOT}/references/task-research-authoring.md`:
+A markdown file at `a4/research/<id>-<slug>.md` whose frontmatter declares `type: research` and `mode: comparative | single`. Body shape per `${CLAUDE_PLUGIN_ROOT}/references/research-authoring.md`:
 
 **Comparative mode** (`mode: comparative`):
 
 ```
 ---
-type: task
+type: research
 id: 42
 title: "<topic>"
-kind: research
 status: progress | complete
 mode: comparative
 options: [name-a, name-b, name-c]
@@ -58,10 +57,9 @@ Why this research is needed. The specific question or comparison purpose.
 
 ```
 ---
-type: task
+type: research
 id: 42
 title: "<topic>"
-kind: research
 status: progress | complete
 mode: single
 ---

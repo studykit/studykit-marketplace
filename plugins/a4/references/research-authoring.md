@@ -1,10 +1,10 @@
 # a4 — research task authoring
 
-A research task at `a4/task/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or feature tasks may cite the research as input via `related:` or via standard markdown body links.
+A research task at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or feature tasks may cite the research as input via `related:` or via standard markdown body links.
 
-Lifecycle is identical across task kinds (`feature` / `bug` / `spike` / `research`).
+After a4 v12.0.0 the four task families (`feature`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
-Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-schema.md §Research task`](./frontmatter-schema.md), `./body-conventions.md`.
 
 ## When a research task is warranted
 
@@ -14,23 +14,21 @@ A research task is the right slot when:
 - The output should be **citable** by a later spec, feature task, or design conversation.
 - The investigation has a **bounded scope** — a question, a topic, or a fixed set of options to compare.
 
-If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `## Decision Log` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `kind: spike` task with an `artifacts/task/spike/<id>-<slug>/` directory.
+If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `## Decision Log` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `type: spike` task with an `artifacts/spike/<id>-<slug>/` directory.
 
 ## Frontmatter contract (do not deviate)
 
 ```yaml
 ---
-type: task
+type: research
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-kind: research
 status: open | pending | progress | complete | failing | discarded
 mode: comparative | single
 options: [name-a, name-b, name-c]   # only when mode: comparative
-implements: []                       # usually empty (research is not a deliverable)
 depends_on: []                       # other tasks this one needs first
-related: []                          # catchall — e.g., other research tasks on adjacent topics
-artifacts: []                        # typically empty; if used, paths under artifacts/task/research/<id>-<slug>/
+related: []                          # catchall — typically the spec(s) or feature(s) this research informs
+artifacts: []                        # typically empty; if used, paths under artifacts/research/<id>-<slug>/
 labels: []                           # free-form tags
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -38,13 +36,13 @@ updated: YYYY-MM-DD
 ```
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- `kind: research` is fixed for files under `a4/task/research/`. Every task must declare the kind explicitly.
+- `type: research` is fixed for files under `a4/research/`. There is no `kind:` field — the type *is* the kind.
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
-- `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option.
-- `implements:` is **usually empty** — research is investigation, not delivery. Populate only if the research is scoped to a specific UC's open question.
-- `spec:` is **not allowed** on research (a4 v6.0.0). Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
-- `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/task/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
-- `cycle:` is **not allowed** on research (a4 v6.0.0); investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
+- `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.
+- `implements:` is **forbidden** on research — research is investigation, not delivery. If a research task is scoped to a specific UC's open question, link the UC from `## Context` body prose instead.
+- `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
+- `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
+- `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### Lifecycle and writer ownership
@@ -115,22 +113,22 @@ Unknown H2 headings are tolerated.
 
 ## Artifacts directory
 
-A research task may have a sibling artifact directory at `<project-root>/artifacts/task/research/<id>-<slug>/` for ancillary artifacts that don't belong in the body — comparison raw data, charts, evaluation scripts, downloaded sources too large or binary to embed:
+A research task may have a sibling artifact directory at `<project-root>/artifacts/research/<id>-<slug>/` for ancillary artifacts that don't belong in the body — comparison raw data, charts, evaluation scripts, downloaded sources too large or binary to embed:
 
 ```
 <project-root>/
-  a4/task/research/<id>-<slug>.md             # task markdown — kind: research
-  artifacts/task/research/<id>-<slug>/        # raw data, scripts, charts (opt-in)
+  a4/research/<id>-<slug>.md             # task markdown — type: research
+  artifacts/research/<id>-<slug>/        # raw data, scripts, charts (opt-in)
     *.csv *.png *.py ...
 ```
 
 Research-specific notes:
 
 - The directory is **opt-in**. Most research tasks need none — the body is the deliverable. Add the directory only when raw evidence cited from the body needs to live alongside the task.
-- When `artifacts:` is non-empty, every entry must point under `artifacts/task/research/<id>-<slug>/...`. Empty list stays the typical default.
+- When `artifacts:` is non-empty, every entry must point under `artifacts/research/<id>-<slug>/...`. Empty list stays the typical default.
 - No archive convention — closed research tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
-Cross-kind conventions for the artifact directory — per-kind expectations, the `task.artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: research` as written there.
+Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./artifacts.md`](./artifacts.md) and apply to `type: research` as written there.
 
 ## Reviewing a research task
 
@@ -140,18 +138,18 @@ Use `/a4:research-review` to walk a structured quality pass over the task body. 
 
 Citations are **soft** — there is no stored-reverse contract. Two paths:
 
-- **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `[task/<id>-<slug>](../task/research/<id>-<slug>.md)`. Optionally add the task path to the spec's `related:` frontmatter list for frontmatter-level discoverability.
+- **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `[research/<id>-<slug>](../research/<id>-<slug>.md)`. Optionally add the task path to the spec's `related:` frontmatter list for frontmatter-level discoverability.
 - **From a feature task body.** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
 
 Reverse lookups (which specs cite a research task) are derived on demand via grep / `search.py`; they are not stored on the research task.
 
 ## Don't (research-task-specific)
 
-- **Don't put `cycle:` or `spec:` on a research task.** Both are forbidden on `kind: research` (a4 v6.0.0). Cite triggering specs via markdown links in `## Context` body prose.
+- **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden on `type: research`. Cite triggering specs via markdown links in `## Context` body prose; record the implementing UC the same way if applicable.
 - **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a research task stays enqueued or moves forward / out.
-- **Don't omit `kind:` or `mode:`.** Both are required on research tasks.
+- **Don't write `kind:` in research frontmatter.** The field was retired in a4 v12.0.0; `mode:` (comparative / single) is the only research-specific discriminator.
 - **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
 - **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
-- **Don't author a `kind: feature` / `spike` / `bug` task here.** Move them to `a4/task/feature/`, `a4/task/spike/`, or `a4/task/bug/` so the matching per-kind authoring contract applies.
+- **Don't author a different task family here.** Move features to `a4/feature/`, spikes to `a4/spike/`, and bugs to `a4/bug/` so the matching authoring contract applies.

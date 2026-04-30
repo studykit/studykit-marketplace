@@ -1,13 +1,13 @@
 ---
 name: research-review
-description: "This skill should be used when the user has a research task at `a4/task/research/<id>-<slug>.md` (a `kind: research` task whose body is the investigation deliverable) and wants to review its quality before relying on it for a downstream decision. Runs the `research-reviewer` agent, walks the flagged issues with the user one at a time, applies accepted revisions, and bumps `updated:`. Triggers: 'review this research', 'check the research task', 'is this research sound', 'research review', or after finishing a `kind: research` task body."
-argument-hint: <task id or path to a4/task/research/<id>-<slug>.md>
+description: "This skill should be used when the user has a research task at `a4/research/<id>-<slug>.md` (a `type: research` task whose body is the investigation deliverable) and wants to review its quality before relying on it for a downstream decision. Runs the `research-reviewer` agent, walks the flagged issues with the user one at a time, applies accepted revisions, and bumps `updated:`. Triggers: 'review this research', 'check the research task', 'is this research sound', 'research review', or after finishing a `type: research` task body."
+argument-hint: <task id or path to a4/research/<id>-<slug>.md>
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob
 ---
 
 # Research Review & Revise
 
-Wraps the `research-reviewer` agent into a quality pass for a `kind: research` task. Use after the body of `a4/task/research/<id>-<slug>.md` has been authored (status `progress` or `complete`) and before downstream work cites the findings.
+Wraps the `research-reviewer` agent into a quality pass for a `type: research` task. Use after the body of `a4/research/<id>-<slug>.md` has been authored (status `progress` or `complete`) and before downstream work cites the findings.
 
 Target: **$ARGUMENTS**
 
@@ -21,11 +21,11 @@ Target: **$ARGUMENTS**
 1. Resolve the project root: `git rev-parse --show-toplevel`. If not a git repo, abort with a clear message.
 2. Verify `<project-root>/a4/` exists. If not, abort — this skill is workspace-scoped.
 3. Resolve `$ARGUMENTS` to an existing file:
-   - Bare integer (`#42`, `42`) → search `<project-root>/a4/task/research/` for `<n>-*.md`.
-   - Path containing `task/research/` → use as-is (relative to project root if not absolute).
-   - Bare slug → try `<project-root>/a4/task/research/*<slug>*.md` (single match required).
-4. If the argument is empty or the path does not resolve, abort with usage hint: "Provide the research task id or path, e.g., `/a4:research-review 42` or `/a4:research-review a4/task/research/42-grpc-streaming.md`."
-5. Read the file. Confirm `type: task`, `kind: research`, and that `mode:` is present (sanity check). If `status: complete` already, ask: "This research task is already `complete`. Re-run review anyway?" Proceed only on confirmation.
+   - Bare integer (`#42`, `42`) → search `<project-root>/a4/research/` for `<n>-*.md`.
+   - Path containing `research/` → use as-is (relative to project root if not absolute).
+   - Bare slug → try `<project-root>/a4/research/*<slug>*.md` (single match required).
+4. If the argument is empty or the path does not resolve, abort with usage hint: "Provide the research task id or path, e.g., `/a4:research-review 42` or `/a4:research-review a4/research/42-grpc-streaming.md`."
+5. Read the file. Confirm `type: research` and that `mode:` is present (sanity check). If `status: complete` already, ask: "This research task is already `complete`. Re-run review anyway?" Proceed only on confirmation.
 
 ## Step 1: Run research-reviewer
 

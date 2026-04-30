@@ -22,7 +22,8 @@ Sections (kebab-case identifier on the left):
   wiki-pages          presence + last-updated for the 7 canonical wiki kinds.
   stage-progress      mixed-axis view of usecase/arch/bootstrap/roadmap/impl.
   issue-counts        per folder × {active, in_progress, terminal, total}
-                      plus by-kind for review/task.
+                      plus by-kind for review and per-family rows for
+                      the four task families.
   usecases-by-source  UC `source:` distribution (Reverse-only detection).
   open-reviews        open / in-progress reviews, sorted by priority
                       then created then id.
@@ -62,6 +63,7 @@ from status_model import (
     ACTIVE_TASK_STATUSES,
     BLOCKED_STATUSES,
     IN_PROGRESS_STATUSES,
+    TASK_FAMILY_TYPES,
     TERMINAL_STATUSES,
 )
 
@@ -229,6 +231,17 @@ def render_wiki_pages(pages: list[WikiPage]) -> str:
     return "\n".join(lines)
 
 
+def _all_tasks(issues: dict[str, list[IssueItem]]) -> list[IssueItem]:
+    """Concatenate the four task-family folders into a single list.
+
+    Order follows ``TASK_FAMILY_TYPES`` so a deterministic display.
+    """
+    out: list[IssueItem] = []
+    for fam in TASK_FAMILY_TYPES:
+        out.extend(issues.get(fam, []))
+    return out
+
+
 def render_stage_progress(
     pages_by_kind: dict[str, WikiPage],
     usecases: list[IssueItem],
@@ -279,7 +292,7 @@ def render_stage_progress(
         f"| Arch | {wiki_row('architecture')} |",
         f"| Bootstrap | {wiki_row('bootstrap')} |",
         f"| Roadmap | {roadmap_row} |",
-        f"| Impl | {status_summary('task', tasks)} |",
+        f"| Impl | {status_summary('feature', tasks)} |",
     ]
     return "\n".join(lines)
 
@@ -300,7 +313,10 @@ def render_issue_counts(issues: dict[str, list[IssueItem]]) -> str:
         return f"| {label} | {active} | {in_prog} | {terminal} | {total} |"
 
     lines.append(row("usecase", issues["usecase"], "usecase"))
-    lines.append(row("task", issues["task"], "task"))
+    for fam in TASK_FAMILY_TYPES:
+        fam_items = issues.get(fam, [])
+        if fam_items:
+            lines.append(row(fam, fam_items, fam))
 
     reviews = issues["review"]
     for kind in ("finding", "gap", "question"):
@@ -314,20 +330,6 @@ def render_issue_counts(issues: dict[str, list[IssueItem]]) -> str:
     lines.append(row("spec", issues["spec"], "spec"))
     lines.append(row("idea", issues["idea"], "idea"))
 
-    tasks = issues["task"]
-    task_kinds = sorted({t.kind for t in tasks if t.kind})
-    if task_kinds:
-        lines.append("")
-        lines.append("Task by kind:")
-        for kind in task_kinds:
-            kind_items = [t for t in tasks if t.kind == kind]
-            terminal = sum(1 for i in kind_items if i.status in TERMINAL_STATUSES["task"])
-            in_prog = sum(1 for i in kind_items if i.status in IN_PROGRESS_STATUSES["task"])
-            total = len(kind_items)
-            active = total - terminal - in_prog
-            lines.append(
-                f"- {kind}: {active} active · {in_prog} in-progress · {terminal} terminal · {total} total"
-            )
     return "\n".join(lines)
 
 
@@ -372,8 +374,10 @@ def render_active_tasks(tasks: list[IssueItem]) -> str:
     lines = [heading, ""]
     for t in active:
         deps = f" depends_on={t.depends_on}" if t.depends_on else ""
-        kind = f" {t.kind}" if t.kind else ""
-        lines.append(f"- {t.ref} — {t.status}{kind} — {t.title}{deps}")
+        # `folder` doubles as the kind label after the v12 split (one
+        # folder per task family).
+        kind_label = f" {t.folder}" if t.folder in TASK_FAMILY_TYPES else ""
+        lines.append(f"- {t.ref} — {t.status}{kind_label} — {t.title}{deps}")
     return "\n".join(lines)
 
 
@@ -447,14 +451,14 @@ def render_open_sparks(sparks: list[SparkItem]) -> str:
 SECTION_RENDERERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "wiki-pages": lambda ctx: render_wiki_pages(ctx["pages"]),
     "stage-progress": lambda ctx: render_stage_progress(
-        ctx["pages_by_kind"], ctx["issues"]["usecase"], ctx["issues"]["task"]
+        ctx["pages_by_kind"], ctx["issues"]["usecase"], _all_tasks(ctx["issues"])
     ),
     "issue-counts": lambda ctx: render_issue_counts(ctx["issues"]),
     "usecases-by-source": lambda ctx: render_usecases_by_source(
         ctx["issues"]["usecase"]
     ),
     "open-reviews": lambda ctx: render_open_reviews(ctx["issues"]["review"]),
-    "active-tasks": lambda ctx: render_active_tasks(ctx["issues"]["task"]),
+    "active-tasks": lambda ctx: render_active_tasks(_all_tasks(ctx["issues"])),
     "blocked-items": lambda ctx: render_blocked_items(ctx["issues"]),
     "recent-activity": lambda ctx: render_recent_activity(ctx["issues"]),
     "open-ideas": lambda ctx: render_open_ideas(ctx["issues"]["idea"]),

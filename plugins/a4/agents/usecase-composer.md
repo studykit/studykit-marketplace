@@ -124,8 +124,8 @@ One sentence.
 Concrete trigger — specific moment, not a generic condition.
 
 > Source: input — "<quoted idea fragment>"
-> *(or)* research — <systems> (ref: [task/<id>-<slug>](../task/research/<id>-<slug>.md))
-> *(or)* code — <path> (ref: [task/<id>-code-analysis-<label>](../task/research/<id>-code-analysis-<label>.md))
+> *(or)* research — <systems> (ref: [research/<id>-<slug>](../research/<id>-<slug>.md))
+> *(or)* code — <path> (ref: [research/<id>-code-analysis-<label>](../research/<id>-code-analysis-<label>.md))
 > *(or)* implicit — surfaced during completeness analysis
 
 ## Flow

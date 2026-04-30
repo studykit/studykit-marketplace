@@ -39,7 +39,7 @@ from common import (
     iter_issue_files,
 )
 from markdown import extract_preamble
-from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER
+from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER, TASK_FAMILY_TYPES
 
 from .refs import RefIndex
 
@@ -87,6 +87,11 @@ class Schema:
     date_fields: frozenset[str] = frozenset()
     path_list_fields: frozenset[str] = frozenset()
     path_scalar_fields: frozenset[str] = frozenset()
+    # Fields that must not appear (or must be empty) for this schema. Used
+    # by ``spike`` / ``research`` to forbid ``implements`` / ``spec`` /
+    # ``cycle`` — what was previously a kind-conditional check is now a
+    # structural per-type rule.
+    forbidden_fields: frozenset[str] = frozenset()
 
 
 SCHEMAS: dict[str, Schema] = {
@@ -107,19 +112,60 @@ SCHEMAS: dict[str, Schema] = {
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"related", "supersedes"}),
     ),
-    "task": Schema(
-        name="task",
+    "feature": Schema(
+        name="feature",
         required=frozenset(
-            {"type", "id", "title", "kind", "status", "created", "updated"}
+            {"type", "id", "title", "status", "created", "updated"}
         ),
         enums={
-            "type": frozenset({"task"}),
-            "kind": KIND_BY_FOLDER["task"],
-            "status": STATUS_BY_FOLDER["task"],
+            "type": frozenset({"feature"}),
+            "status": STATUS_BY_FOLDER["feature"],
         },
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"implements", "depends_on", "spec"}),
+    ),
+    "bug": Schema(
+        name="bug",
+        required=frozenset(
+            {"type", "id", "title", "status", "created", "updated"}
+        ),
+        enums={
+            "type": frozenset({"bug"}),
+            "status": STATUS_BY_FOLDER["bug"],
+        },
+        int_fields=frozenset({"id", "cycle"}),
+        date_fields=frozenset({"created", "updated"}),
+        path_list_fields=frozenset({"implements", "depends_on", "spec"}),
+    ),
+    "spike": Schema(
+        name="spike",
+        required=frozenset(
+            {"type", "id", "title", "status", "created", "updated"}
+        ),
+        enums={
+            "type": frozenset({"spike"}),
+            "status": STATUS_BY_FOLDER["spike"],
+        },
+        int_fields=frozenset({"id"}),
+        date_fields=frozenset({"created", "updated"}),
+        path_list_fields=frozenset({"depends_on"}),
+        forbidden_fields=frozenset({"implements", "spec", "cycle"}),
+    ),
+    "research": Schema(
+        name="research",
+        required=frozenset(
+            {"type", "id", "title", "status", "mode", "created", "updated"}
+        ),
+        enums={
+            "type": frozenset({"research"}),
+            "status": STATUS_BY_FOLDER["research"],
+            "mode": frozenset({"comparative", "single"}),
+        },
+        int_fields=frozenset({"id"}),
+        date_fields=frozenset({"created", "updated"}),
+        path_list_fields=frozenset({"depends_on", "related"}),
+        forbidden_fields=frozenset({"implements", "spec", "cycle"}),
     ),
     "review": Schema(
         name="review",
@@ -353,41 +399,53 @@ def validate_file(
                         )
                     )
 
-    if ftype == "task":
-        kind = fm.get("kind")
-        if kind == "spike":
-            impl = fm.get("implements")
-            if isinstance(impl, list) and any(
-                isinstance(x, str) and x.strip() for x in impl
-            ):
+    for fld in sorted(schema.forbidden_fields):
+        val = fm.get(fld)
+        if val is None:
+            continue
+        # Empty list is treated as absent — authors may keep the field
+        # explicitly empty for shape parity with other types. Any list
+        # with at least one element (string id ref, integer id ref, etc.)
+        # is a populated value and triggers the forbidden-field
+        # violation; entry-level shape errors are surfaced separately by
+        # path-format / unresolved-ref rules.
+        if isinstance(val, list) and len(val) == 0:
+            continue
+        if isinstance(val, str) and not val.strip():
+            continue
+        violations.append(
+            Violation(
+                rel_str,
+                "type-field-forbidden",
+                fld,
+                f"`{fld}:` is not allowed on `type: {ftype}` (a4 v12.0.0).",
+            )
+        )
+
+    if ftype == "research":
+        mode = fm.get("mode")
+        opts = fm.get("options")
+        if mode == "comparative":
+            if not _is_non_empty_str_list(opts):
                 violations.append(
                     Violation(
                         rel_str,
-                        "kind-field-forbidden",
-                        "implements",
-                        "`implements:` is forbidden on `kind: spike` (a4 v6.0.0).",
+                        "missing-required",
+                        "options",
+                        "`options:` must be a non-empty list of strings when "
+                        "`mode: comparative`.",
                     )
                 )
-        if kind in {"spike", "research"} and fm.get("cycle") is not None:
-            violations.append(
-                Violation(
-                    rel_str,
-                    "kind-field-forbidden",
-                    "cycle",
-                    f"`cycle:` is forbidden on `kind: {kind}` (a4 v6.0.0).",
-                )
-            )
-        if kind in {"spike", "research"}:
-            spec_val = fm.get("spec")
-            if isinstance(spec_val, list) and any(
-                isinstance(x, str) and x.strip() for x in spec_val
+        elif mode == "single":
+            if isinstance(opts, list) and any(
+                isinstance(x, str) and x.strip() for x in opts
             ):
                 violations.append(
                     Violation(
                         rel_str,
-                        "kind-field-forbidden",
-                        "spec",
-                        f"`spec:` is forbidden on `kind: {kind}` (a4 v6.0.0); cite via body markdown link.",
+                        "type-field-forbidden",
+                        "options",
+                        "`options:` is not allowed when `mode: single`.",
                     )
                 )
 
@@ -444,32 +502,30 @@ def validate_file(
                     )
                 )
 
-    if ftype == "task":
-        violations.extend(_validate_task_artifacts(rel_str, fm, path))
+    if ftype in TASK_FAMILY_TYPES:
+        violations.extend(_validate_task_artifacts(rel_str, fm, path, ftype))
         violations.extend(
-            _validate_complete_artifacts_present(rel_str, fm, path, a4_dir)
+            _validate_complete_artifacts_present(rel_str, fm, path, a4_dir, ftype)
         )
 
     return violations
 
 
-def _validate_task_artifacts(rel_str: str, fm: dict, path: Path) -> list[Violation]:
-    """Enforce the artifact-only contract on ``task.artifacts:``.
+def _validate_task_artifacts(
+    rel_str: str, fm: dict, path: Path, ftype: str
+) -> list[Violation]:
+    """Enforce the artifact-only contract on ``<task>.artifacts:``.
 
-    Every entry must start with
-    ``artifacts/task/<kind>/<id>-<slug>/`` — and for ``kind: spike``
-    only, ``artifacts/task/spike/archive/<id>-<slug>/`` is also accepted
-    (post-archive paths). Empty list is fine for any kind. The check
-    skips when ``kind`` / ``id`` / filename's ``<id>-<slug>`` are
+    Every entry must start with ``artifacts/<type>/<id>-<slug>/`` — and
+    for ``type: spike`` only, ``artifacts/spike/archive/<id>-<slug>/``
+    is also accepted (post-archive paths). Empty list is fine for any
+    type. The check skips when ``id`` / filename's ``<id>-<slug>`` are
     malformed — those drift modes are surfaced by other rules.
     """
     artifacts = fm.get("artifacts")
     if not isinstance(artifacts, list) or not artifacts:
         return []
 
-    kind = fm.get("kind")
-    if not isinstance(kind, str) or not kind:
-        return []
     raw_id = fm.get("id")
     if not _is_int(raw_id):
         return []
@@ -478,11 +534,11 @@ def _validate_task_artifacts(rel_str: str, fm: dict, path: Path) -> list[Violati
         return []
     id_slug = path.stem
 
-    expected_prefix = f"artifacts/task/{kind}/{id_slug}/"
-    spike_archive_prefix = f"artifacts/task/spike/archive/{id_slug}/"
+    expected_prefix = f"artifacts/{ftype}/{id_slug}/"
+    spike_archive_prefix = f"artifacts/spike/archive/{id_slug}/"
     accepted = (
         (expected_prefix, spike_archive_prefix)
-        if kind == "spike"
+        if ftype == "spike"
         else (expected_prefix,)
     )
 
@@ -496,7 +552,7 @@ def _validate_task_artifacts(rel_str: str, fm: dict, path: Path) -> list[Violati
         if any(e.startswith(p) for p in accepted):
             continue
         suffix = (
-            f" or {spike_archive_prefix!r}" if kind == "spike" else ""
+            f" or {spike_archive_prefix!r}" if ftype == "spike" else ""
         )
         violations.append(
             Violation(
@@ -510,11 +566,11 @@ def _validate_task_artifacts(rel_str: str, fm: dict, path: Path) -> list[Violati
     return violations
 
 
-_COMPLETE_ARTIFACT_KINDS = ("research", "feature", "bug")
+_COMPLETE_ARTIFACT_TYPES: frozenset[str] = frozenset({"research", "feature", "bug"})
 
 
 def _validate_complete_artifacts_present(
-    rel_str: str, fm: dict, path: Path, a4_dir: Path
+    rel_str: str, fm: dict, path: Path, a4_dir: Path, ftype: str
 ) -> list[Violation]:
     """Preflight: ``research`` / ``feature`` / ``bug`` tasks at
     ``status: complete`` must have their listed artifacts present on disk.
@@ -522,20 +578,19 @@ def _validate_complete_artifacts_present(
     Layered on top of the static ``task-artifacts-bad-path`` rule —
     this one assumes the prefix is well-formed and only checks the
     filesystem. Entries that do not start with the expected
-    ``artifacts/task/<kind>/<id>-<slug>/`` prefix are skipped so the
-    shape rule remains the single source of truth for that error.
-    Malformed ``kind`` / ``id`` / filename id-slug also defers as in the
-    shape rule. ``artifacts/`` lives at project root (``a4_dir.parent``)
-    per ``references/task-artifacts.md``.
+    ``artifacts/<type>/<id>-<slug>/`` prefix are skipped so the shape
+    rule remains the single source of truth for that error. Malformed
+    ``id`` / filename id-slug also defers as in the shape rule.
+    ``artifacts/`` lives at project root (``a4_dir.parent``) per
+    ``references/artifacts.md``.
 
-    ``kind: spike`` is intentionally excluded: at ``status: complete``
+    ``type: spike`` is intentionally excluded: at ``status: complete``
     the directory may still live at the original prefix until the user
-    `git mv`s it to ``artifacts/task/spike/archive/<id>-<slug>/`` and
-    rewrites ``artifacts:``, so an existence check would race the archive
+    `git mv`s it to ``artifacts/spike/archive/<id>-<slug>/`` and rewrites
+    ``artifacts:``, so an existence check would race the archive
     transition.
     """
-    kind = fm.get("kind")
-    if kind not in _COMPLETE_ARTIFACT_KINDS:
+    if ftype not in _COMPLETE_ARTIFACT_TYPES:
         return []
     if fm.get("status") != "complete":
         return []
@@ -551,7 +606,7 @@ def _validate_complete_artifacts_present(
         return []
     id_slug = path.stem
 
-    expected_prefix = f"artifacts/task/{kind}/{id_slug}/"
+    expected_prefix = f"artifacts/{ftype}/{id_slug}/"
     project_root = a4_dir.parent
 
     violations: list[Violation] = []
@@ -571,7 +626,7 @@ def _validate_complete_artifacts_present(
                     "task-artifacts-missing-file",
                     "artifacts",
                     f"artifacts[{i}]: artifact {entry!r} does not exist on disk "
-                    f"(kind={kind} at status=complete must have all listed "
+                    f"(type={ftype} at status=complete must have all listed "
                     "artifact files present)",
                 )
             )

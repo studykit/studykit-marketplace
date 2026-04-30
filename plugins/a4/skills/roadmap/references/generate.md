@@ -15,11 +15,11 @@ Group tasks into named deliverable sets (`v1.0`, `beta`, `phase-1`). Milestones 
 - Derive from architecture components + UC flows.
 - Size: covers 1–5 related UCs, touches 1–3 components, independently testable, ≤ ~500 lines.
 - File mapping (source files + unit test files following the bootstrap/codebase convention).
-- Dependencies (`depends_on:` using plain `task/<id>-<slug>` strings).
+- Dependencies (`depends_on:` using plain `<type>/<id>-<slug>` strings, where `<type>` is the dependent task's family — typically `feature/<id>-<slug>` for the batch path).
 - Unit test scenarios + isolation strategy.
 - Acceptance criteria derived from UC flows, validation, error handling.
 - Milestone assignment is captured in the roadmap milestone narrative (links from each milestone to the UCs it ships); tasks themselves do not carry a `milestone:` field.
-- `kind: feature` (the batch generator emits feature for UC-derived work).
+- `type: feature` (the batch generator emits feature for UC-derived work).
 
 ## 4. Shared Integration Points
 
@@ -35,6 +35,6 @@ Exit plan mode.
 
 **`a4/roadmap.md` body** — write `## Plan` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per `../../../references/roadmap-authoring.md` §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `## Change Logs` bullet citing the driving wiki/issue.
 
-**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/feature/<id>-<slug>.md` per `../../../references/task-feature-authoring.md` (`kind: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `feature/<id>-<slug>.md`.
+**Per-task files** — allocate ids via `allocate_id.py`, write `a4/feature/<id>-<slug>.md` per `../../../references/feature-authoring.md` (`type: feature`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `feature/<id>-<slug>.md`.
 
 The UC ↔ task reverse view (which tasks implement a UC) is computed on demand by `search.py` and roadmap surfaces — there is no UC frontmatter field to refresh.

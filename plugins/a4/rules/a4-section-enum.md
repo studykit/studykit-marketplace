@@ -10,10 +10,11 @@ Files under `<project-root>/a4/` declare `type:` in YAML frontmatter, and that v
 
 **Folder ↔ type:**
 
-- `usecase/`, `task/`, `spec/`, `review/`, `idea/`, `archive/` — folder name = `type:`.
+- `usecase/`, `feature/`, `bug/`, `spike/`, `research/`, `spec/`, `review/`, `idea/`, `archive/` — folder name = `type:`.
 - Wiki pages (`actors.md`, `architecture.md`, `bootstrap.md`, `context.md`, `domain.md`, `nfr.md`, `roadmap.md`) — basename = `type:` (e.g., `actors.md` → `type: actors`).
 - `spark/<…>.brainstorm.md` → `type: brainstorm`.
-- `task/<kind>/` — kind subfolder is part of the path (`task/feature/`, `task/spike/`, `task/bug/`, `task/research/`); `type:` is `task` regardless of kind.
+
+After a4 v12.0.0 the four task families (`feature` / `bug` / `spike` / `research`) are flat sibling folders under `a4/` — there is no `kind:` field on tasks; the folder + `type:` together encode the kind.
 
 **Per-type sections** (R = required, O = optional; unknown Title Case headings are tolerated):
 
@@ -28,8 +29,8 @@ Files under `<project-root>/a4/` declare `type:` in YAML frontmatter, and that v
 - review        R{## Description} O{## Change Logs, ## Log}
 - roadmap       R{## Plan} O{## Change Logs}
 - spec          R{## Context, ## Specification} O{## Change Logs, ## Consequences, ## Decision Log, ## Examples, ## Log, ## Open Questions, ## Rejected Alternatives}
-- task (feature/spike/bug)  R{## Acceptance Criteria, ## Description, ## Files, ## Unit Test Strategy} O{## Change Logs, ## Interface Contracts, ## Log, ## Why Discarded}
-- task (research)           R{## Context} O{## Change Logs, ## Findings, ## Log, ## Options, ## Why Discarded}
+- feature, bug, spike  R{## Acceptance Criteria, ## Description, ## Files, ## Unit Test Strategy} O{## Change Logs, ## Interface Contracts, ## Log, ## Why Discarded}
+- research      R{## Context} O{## Change Logs, ## Findings, ## Log, ## Options, ## Why Discarded}
 - usecase       R{## Expected Outcome, ## Flow, ## Goal, ## Situation} O{## Change Logs, ## Dependencies, ## Error Handling, ## Log, ## Validation}
 
 ## Maintenance

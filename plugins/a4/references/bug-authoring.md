@@ -1,25 +1,24 @@
 # a4 — bug task authoring
 
-A bug task at `a4/task/bug/<id>-<slug>.md` is a **defect fix** — production code change against expected behavior. Not throwaway.
+A bug task at `a4/bug/<id>-<slug>.md` is a **defect fix** — production code change against expected behavior. Not throwaway.
 
-Lifecycle is identical across task kinds (`feature` / `bug` / `spike` / `research`).
+After a4 v12.0.0 the four task families (`feature`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
-Companion to [`./frontmatter-schema.md §Task`](./frontmatter-schema.md), `./body-conventions.md`.
+Companion to [`./frontmatter-schema.md §Bug task`](./frontmatter-schema.md), `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
 ```yaml
 ---
-type: task
+type: bug
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-kind: bug
 status: open | pending | progress | complete | failing | discarded
 implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
 related: []            # catchall for cross-references
-artifacts: []          # artifact paths under artifacts/task/bug/<id>-<slug>/ (typically empty)
+artifacts: []          # artifact paths under artifacts/bug/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
 created: YYYY-MM-DD
@@ -28,11 +27,11 @@ updated: YYYY-MM-DD
 ```
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- `kind: bug` is fixed for files under `a4/task/bug/`. Every task must declare the kind explicitly.
+- `type: bug` is fixed for files under `a4/bug/`. There is no `kind:` field — the type *is* the kind.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it when the bug is a regression against a spec's expected behavior.
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.
-- `artifacts:` is artifact-only — paths must point under `artifacts/task/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
+- `artifacts:` is artifact-only — paths must point under `artifacts/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
@@ -86,13 +85,13 @@ When the chosen initial status is `complete`, the fix is asserted to already be 
 **Required:**
 
 - `## Description` — what's broken and why the fix matters. State the observed behavior and the expected behavior.
-- `## Files` — action / path / change table. Lists production source paths the fix writes or modifies, plus any artifact paths under `artifacts/task/bug/<id>-<slug>/` when the task uses an artifact directory.
+- `## Files` — action / path / change table. Lists production source paths the fix writes or modifies, plus any artifact paths under `artifacts/bug/<id>-<slug>/` when the task uses an artifact directory.
 - `## Unit Test Strategy` — regression test scenarios + isolation strategy + test file paths. The bug must end with a test that fails before the fix and passes after.
 - `## Acceptance Criteria` — checklist. AC source: **reproduction scenario + fixed criteria** (the regression test pinning the expected behavior). The `## Acceptance Criteria` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
-- `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../../architecture.md#sessionservice)`).
+- `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`).
 - `## Change Logs` — append-only audit trail when the task body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
 - `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
@@ -101,25 +100,25 @@ Unknown H2 headings are tolerated.
 
 ## Artifacts directory (optional)
 
-A bug task may have a sibling artifact directory at `<project-root>/artifacts/task/bug/<id>-<slug>/` when reproduction or evidence is itself worth keeping — minimal repro repos, crash logs, screenshots, traces:
+A bug task may have a sibling artifact directory at `<project-root>/artifacts/bug/<id>-<slug>/` when reproduction or evidence is itself worth keeping — minimal repro repos, crash logs, screenshots, traces:
 
 ```
 <project-root>/
-  a4/task/bug/<id>-<slug>.md             # task markdown — kind: bug
-  artifacts/task/bug/<id>-<slug>/        # repro, logs, screenshots (opt-in)
+  a4/bug/<id>-<slug>.md             # task markdown — type: bug
+  artifacts/bug/<id>-<slug>/        # repro, logs, screenshots (opt-in)
 ```
 
 Optional — the production fix lives in the project's source tree (documented in body `## Files`), not here. Use the artifact directory only when reproduction artifacts have lasting value (a hard-to-reproduce data file, a heap dump that anchors the regression test). Frontmatter `artifacts:` lists artifact paths only.
 
 No archive convention — closed bug tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
-Cross-kind conventions for the artifact directory — per-kind expectations, the `task.artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: bug` as written there.
+Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./artifacts.md`](./artifacts.md) and apply to `type: bug` as written there.
 
-## Common mistakes (task-specific)
+## Common mistakes (bug-task-specific)
 
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
-- **Missing `kind:` frontmatter field** — `kind` is required and has no default.
-- **`kind:` value mismatched against folder** — a file under `a4/task/bug/` must declare `kind: bug`. Mismatched declarations are a folder-routing error and should be re-located.
+- **Wrong `type:` value or wrong folder.** A file under `a4/bug/` must declare `type: bug`. Mismatched declarations are a folder-routing error and should be re-located.
+- **`kind:` field present** — `kind:` was retired with the v12 split. The folder + `type:` together encode the kind.
 - **Production source paths in frontmatter `artifacts:`** — `artifacts:` is artifact-only. Production source belongs in the body `## Files` section.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
@@ -130,6 +129,6 @@ Cross-kind conventions for the artifact directory — per-kind expectations, the
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a task stays enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded` is the writer's job.
-- **Don't omit `kind:`.** Every task declares `feature | spike | bug | research`.
+- **Don't write `kind:` in bug frontmatter.** The field was retired in a4 v12.0.0.
 - **Don't ship a bug fix without a regression test.** The `## Unit Test Strategy` must include a scenario that pins the expected behavior; closing the task without it is the most common way the same bug returns.
-- **Don't author a `kind: feature` / `spike` / `research` task here.** Move them to the matching `a4/task/<kind>/` so the per-kind authoring contract applies.
+- **Don't author a different task family here.** Move features to `a4/feature/`, spikes to `a4/spike/`, and research to `a4/research/` so the matching authoring contract applies.

@@ -4,7 +4,7 @@ Skill-specific addendum on top of `../../../docs/iterate-mechanics.md`. Read tha
 
 ## Backlog filter
 
-Open review items whose `target:` list contains `roadmap` or any `task/*` path.
+Open review items whose `target:` list contains `roadmap` or any task path under one of the four task-family folders (`feature/`, `bug/`, `spike/`, `research/`).
 
 ## Roadmap-specific work between writer calls
 

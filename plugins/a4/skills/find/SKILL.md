@@ -1,6 +1,6 @@
 ---
 name: find
-description: "This skill should be used when the user wants to search, list, or query individual items in the a4/ workspace by frontmatter — for example: open review items, tasks of a given kind, everything that references a given use case, items touching the architecture wiki, items with a custom frontmatter field, or items updated since a date. Triggers: 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', 'what touches the X wiki', 'find by tag', 'find by label', 'items with field X', 'items updated since'. Translates the user's natural-language query into a single `scripts/search.py` invocation and surfaces the result. Reverse lookups (e.g. tasks implementing a UC, items depending on something) are computed by forward-field back-scan so results are always consistent even when stored-reverse fields are stale. Does NOT search body text — frontmatter only. ROUTING: for body grep, use Grep directly. For workspace-wide aggregate state (counts, sections, recent activity), delegate to the `workspace-assistant` agent (snapshot mode). For 'what should I do next' or pipeline navigation, use `/a4:compass` instead."
+description: "This skill should be used when the user wants to search, list, or query individual items in the a4/ workspace by frontmatter — for example: open review items, tasks of a given family (feature/bug/spike/research), everything that references a given use case, items touching the architecture wiki, items with a custom frontmatter field, or items updated since a date. Triggers: 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', 'what touches the X wiki', 'find by tag', 'find by label', 'items with field X', 'items updated since'. Translates the user's natural-language query into a single `scripts/search.py` invocation and surfaces the result. Reverse lookups (e.g. tasks implementing a UC, items depending on something) are computed by forward-field back-scan so results are always consistent even when stored-reverse fields are stale. Does NOT search body text — frontmatter only. ROUTING: for body grep, use Grep directly. For workspace-wide aggregate state (counts, sections, recent activity), delegate to the `workspace-assistant` agent (snapshot mode). For 'what should I do next' or pipeline navigation, use `/a4:compass` instead."
 argument-hint: <natural-language query, or raw search.py flags>
 disable-model-invocation: true
 context: fork
@@ -28,9 +28,9 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 
 | Flag | Meaning |
 |------|---------|
-| `--folder <name>` | usecase / task / review / spec / idea / spark / wiki / archive |
-| `--status <value>` | family-validated enum (e.g. task: `open`/`pending`/`progress`/`complete`/`failing`/`discarded`; usecase: `draft`/`ready`/`implementing`/`shipped`; spec: `draft`/`active`/`deprecated`/`superseded`) |
-| `--kind <value>` | task: feature/spike/bug · review: finding/gap/question · wiki: context/domain/architecture/actors/nfr/roadmap/bootstrap |
+| `--folder <name>` | usecase / feature / bug / spike / research / review / spec / idea / spark / wiki / archive |
+| `--status <value>` | family-validated enum (e.g. task family (feature/bug/spike/research): `open`/`pending`/`progress`/`complete`/`failing`/`discarded`; usecase: `draft`/`ready`/`implementing`/`shipped`; spec: `draft`/`active`/`deprecated`/`superseded`) |
+| `--kind <value>` | review: finding/gap/question · wiki: context/domain/architecture/actors/nfr/roadmap/bootstrap · task family folders accept their own folder name (e.g. `--kind feature` matches `a4/feature/`) |
 | `--id <int>` | numeric id |
 | `--slug <substr>` | case-sensitive substring on filename stem |
 | `--label <value>` | matches both `labels:` and `tags:` |
@@ -53,7 +53,7 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 - "items updated since 2026-04-01" → `--updated-since 2026-04-01`
 - "items emitted by the usecase reviewer" → `--field source=usecase-reviewer-r2`
 - "all specs" → `--folder spec`
-- If the user just wants raw output and passes flags directly (e.g. `/a4:find --folder task --status pending`), pass `$ARGUMENTS` through verbatim.
+- If the user just wants raw output and passes flags directly (e.g. `/a4:find --folder feature --status pending`), pass `$ARGUMENTS` through verbatim.
 
 If the query is ambiguous (e.g. "show me everything"), ask one clarifying question before running. Do not guess between mutually exclusive interpretations.
 

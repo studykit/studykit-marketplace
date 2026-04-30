@@ -17,14 +17,14 @@ You are a task implementation agent. Your job is to implement one task and write
 Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly:
 
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies, especially §9 commit message form (`#<task-id> <type>(a4): <description>`) and §1 writer-owned fields (status flips go through `transition_status.py`; never hand-edit `status:` / `updated:`; the optional `## Log` section is hand-maintained, not written by the writer).
-- The per-kind task contract that matches the task you were assigned: `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-feature-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-bug-authoring.md`, or `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-spike-authoring.md` (you do not author task files but you read them and your commits cite their ids; the rule is also auto-loaded when you read the task file).
+- The per-family task contract that matches the task you were assigned: `${CLAUDE_PLUGIN_ROOT}/rules/a4-feature-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-spike-authoring.md`, or `${CLAUDE_PLUGIN_ROOT}/rules/a4-research-authoring.md` (you do not author task files but you read them and your commits cite their ids; the rule is also auto-loaded when you read the task file).
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — when flipping UC `ready → implementing`; do not modify UC bodies.
 
 ## What You Receive
 
 From the invoking `roadmap` / `run` skill:
 
-- **Task file path** — absolute path to `a4/task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, or `spike/`; the path's kind segment must match the file's `kind:` frontmatter).
+- **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `feature/`, `bug/`, `spike/`, `research/`; the folder must match the file's `type:` frontmatter).
 - **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify).
 - **Roadmap file path** *(optional)* — absolute path to `a4/roadmap.md`. Read for Shared Integration Points only; L&V content there is a one-line link to bootstrap, not authoritative.
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
@@ -41,7 +41,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
      "$(git rev-parse --show-toplevel)/a4" \
      --file "<uc-relative-path>" \
      --to implementing \
-     --reason "task-implementer starting task/<kind>/<id>-<slug>" \
+     --reason "task-implementer starting <type>/<id>-<slug>" \
      --json
    ```
 
@@ -60,7 +60,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
    ```
    #<task-id> <type>(a4): <description>
    ```
-   `<type>` is `feat` for `kind: feature`, `fix` for `kind: bug`, `chore` for `kind: spike` (or `feat` if the spike produces user-visible scaffolding), `docs` for `kind: research`. The task's `id:` from the file's frontmatter is the only id in the subject — the agent does not enumerate touched UCs here. Never skip hooks, amend, or force-push.
+   `<type>` (commit-message type, distinct from frontmatter `type:`) is `feat` for `type: feature`, `fix` for `type: bug`, `chore` for `type: spike` (or `feat` if the spike produces user-visible scaffolding), `docs` for `type: research`. The task's `id:` from the file's frontmatter is the only id in the subject — the agent does not enumerate touched UCs here. Never skip hooks, amend, or force-push.
 
 ### Spec-ambiguity exit — `implementing → revising`
 

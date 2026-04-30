@@ -6,7 +6,7 @@ Skill-specific addendum on top of `../../../docs/iterate-mechanics.md`. Read tha
 
 Open review items where:
 
-- `target: task/*`, OR
+- `target: feature/*` / `target: bug/*` / `target: spike/*` / `target: research/*`, OR
 - `target: roadmap` (typically `source: test-runner` from the prior cycle).
 
 ## Run-specific work between writer calls

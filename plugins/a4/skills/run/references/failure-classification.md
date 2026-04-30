@@ -18,4 +18,4 @@ If 3 cycles complete and failures remain after each `task / roadmap` revision at
 
 ## Status writer reminder
 
-All `status:` mutations on `task/<kind>/<id>-<slug>.md` go through `scripts/transition_status.py`. Never hand-edit `status:` / `updated:` — the writer owns them.
+All `status:` mutations on `<type>/<id>-<slug>.md` (where `<type>` ∈ `{feature, bug, spike, research}`) go through `scripts/transition_status.py`. Never hand-edit `status:` / `updated:` — the writer owns them.

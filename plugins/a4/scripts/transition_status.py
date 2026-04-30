@@ -4,9 +4,10 @@
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
-All status changes on usecase, task, review, and spec files flow
-through this script. Skills and agents call it with the target file and
-the desired new status. The script:
+All status changes on usecase, the four task families (feature, bug,
+spike, research), review, and spec files flow through this script.
+Skills and agents call it with the target file and the desired new
+status. The script:
 
   1. Detects the family from the file path.
   2. Checks the current → new transition is legal per the family's
@@ -17,10 +18,13 @@ the desired new status. The script:
   4. Runs cascades — cross-file status changes that are semantically
      implied by the primary transition:
 
-        usecase implementing → revising        → related tasks reset:
+        usecase implementing → revising        → related tasks across the
+                                                  four task families reset:
                                                   progress/failing → pending
-        usecase * → discarded                  → related tasks → discarded
-                                                  related open reviews → discarded
+        usecase * → discarded                  → related tasks across the
+                                                  four task families →
+                                                  discarded; related open
+                                                  reviews → discarded
         usecase shipped → discarded            → same as above
         usecase → shipped                      → supersedes chain: each same-
                                                   family target currently
@@ -68,6 +72,7 @@ from status_model import (
     STATUS_BY_FOLDER as FAMILY_STATES,
     SUPERSEDABLE_FROM_STATUSES,
     SUPERSEDES_TRIGGER_STATUS,
+    TASK_FAMILY_TYPES,
     TASK_RESET_ON_REVISING,
     TASK_RESET_TARGET,
     cascade_for,
@@ -155,15 +160,21 @@ def find_tasks_implementing(
 
     ``uc_canonical`` is the UC's canonical ref form (``usecase/<stem>``).
     Each ``implements:`` entry is resolved through ``index`` so all
-    accepted ref forms — ``#<id>``, ``usecase/<id>``, ``usecase/<id>-<slug>``,
-    bare ``<id>-<slug>`` — match the same target. Recurses through
-    ``task/{feature,bug,spike}/`` kind subfolders via ``iter_family``.
+    accepted ref forms — ``#<id>``, ``<family>/<id>``,
+    ``<family>/<id>-<slug>``, bare ``<id>-<slug>`` — match the same
+    target. Walks the four task-family folders in ``TASK_FAMILY_TYPES``;
+    after a4 v12.0.0 each task lives directly under its family folder so
+    ``path.parent.name`` gives the family for cascade labeling.
     """
-    return [
-        p for p, fm in iter_family(a4_dir, "task")
-        if isinstance(fm.get("implements"), list)
-        and any(index.canonical(r) == uc_canonical for r in fm["implements"])
-    ]
+    out: list[Path] = []
+    for family in TASK_FAMILY_TYPES:
+        for p, fm in iter_family(a4_dir, family):
+            implements = fm.get("implements")
+            if not isinstance(implements, list):
+                continue
+            if any(index.canonical(r) == uc_canonical for r in implements):
+                out.append(p)
+    return out
 
 
 def find_reviews_targeting(
@@ -262,7 +273,6 @@ SkipDecision = tuple[str, str | None] | None
 def _apply_reverse_cascade(
     a4_dir: Path,
     targets: list[Path],
-    target_kind: str,
     skip_when: Callable[[Any], SkipDecision],
     to_status: str,
     reason_text: str,
@@ -277,13 +287,16 @@ def _apply_reverse_cascade(
     moves on; ``None`` triggers a status flip to ``to_status`` with
     ``reason_text`` and a ``Change`` row in the report.
 
-    ``target_kind`` ("task" or "review") prefixes the path label in
-    skipped/cascade rows. Unreadable frontmatter — surfaced either by
-    the pre-parse check or by ``_apply_status_change`` raising
-    ``RuntimeError`` at write time — is recorded as an error on the
-    report rather than crashing the script.
+    Path labels in skipped/cascade rows are derived from
+    ``path.parent.name`` — in the flat post-v12 layout that is the
+    family folder (``feature``/``bug``/``spike``/``research``/``review``).
+    Unreadable frontmatter — surfaced either by the pre-parse check or
+    by ``_apply_status_change`` raising ``RuntimeError`` at write time —
+    is recorded as an error on the report rather than crashing the
+    script.
     """
     for path in targets:
+        rel_label = f"{path.parent.name}/{path.stem}.md"
         fm, _, _ = _parse(path)
         if fm is None:
             report.errors.append(f"{path}: unreadable frontmatter")
@@ -293,7 +306,7 @@ def _apply_reverse_cascade(
         if skip is not None:
             reason, detail = skip
             entry: dict[str, Any] = {
-                "path": f"{target_kind}/{path.stem}.md",
+                "path": rel_label,
                 "reason": reason,
             }
             if detail is not None:
@@ -305,11 +318,11 @@ def _apply_reverse_cascade(
                 path, str(current), to_status, reason_text, dry_run, today
             )
         except RuntimeError as e:
-            report.errors.append(f"{target_kind}/{path.stem}.md: {e}")
+            report.errors.append(f"{rel_label}: {e}")
             continue
         report.cascades.append(
             Change(
-                path=f"{target_kind}/{path.stem}.md",
+                path=rel_label,
                 from_status=str(current),
                 to_status=to_status,
                 reason=reason_text,
@@ -450,7 +463,6 @@ def _run_cascade(
         _apply_reverse_cascade(
             a4_dir,
             find_tasks_implementing(a4_dir, uc_ref, index),
-            target_kind="task",
             skip_when=lambda s: (
                 None
                 if s in TASK_RESET_ON_REVISING
@@ -468,7 +480,6 @@ def _run_cascade(
         _apply_reverse_cascade(
             a4_dir,
             find_tasks_implementing(a4_dir, uc_ref, index),
-            target_kind="task",
             skip_when=lambda s: (
                 ("already-discarded", None) if s == "discarded" else None
             ),
@@ -481,7 +492,6 @@ def _run_cascade(
         _apply_reverse_cascade(
             a4_dir,
             find_reviews_targeting(a4_dir, uc_ref, index),
-            target_kind="review",
             skip_when=lambda s: (
                 ("review-terminal", f"status={s!r}")
                 if s in REVIEW_TERMINAL
@@ -520,7 +530,8 @@ def transition(
     if family is None:
         report.errors.append(
             f"cannot detect family from path {rel_path!r}. Expected "
-            "usecase/, task/, review/, or spec/ prefix."
+            "usecase/, feature/, bug/, spike/, research/, review/, or "
+            "spec/ prefix."
         )
         return report
     report.family = family

@@ -6,10 +6,11 @@ Some status enum values are semantically derived from cross-file state:
     ``status: active`` declares ``supersedes: [<this-path>]``.
   - ``usecase.status = "superseded"`` iff another ``usecase/*.md`` at
     ``status: shipped`` declares ``supersedes: [<this-path>]``.
-  - ``task.status = "discarded"`` iff every UC in the task's
-    ``implements:`` is at ``status: discarded``.
-  - ``task.status = "pending"`` (from ``progress``/``failing``) iff a UC
-    in the task's ``implements:`` is at ``status: revising``.
+  - ``<task-family>.status = "discarded"`` iff every UC in the task's
+    ``implements:`` is at ``status: discarded``. Applies across all four
+    task families (``feature`` / ``bug`` / ``spike`` / ``research``).
+  - ``<task-family>.status = "pending"`` (from ``progress``/``failing``)
+    iff a UC in the task's ``implements:`` is at ``status: revising``.
   - ``review.status = "discarded"`` iff the review's ``target:`` points
     at a usecase with ``status: discarded``.
   - ``idea.status = "promoted"`` iff own ``promoted:`` list is
@@ -60,6 +61,7 @@ from markdown import read_fm
 from status_model import (
     REVIEW_TERMINAL,
     SUPERSEDES_TRIGGER_STATUS as SUPERSEDES_FAMILIES,
+    TASK_FAMILY_TYPES,
     TASK_RESET_ON_REVISING,
 )
 
@@ -211,9 +213,8 @@ def check_discarded_cascade(
     if not discarded_uc_keys:
         return mismatches
 
-    task_files = iter_issue_files(a4_dir, "task")
-    if task_files:
-        for p in task_files:
+    for task_family in TASK_FAMILY_TYPES:
+        for p in iter_issue_files(a4_dir, task_family):
             fm = read_fm(p)
             if fm is None:
                 continue
@@ -229,11 +230,11 @@ def check_discarded_cascade(
                 continue
             mismatches.append(
                 Mismatch(
-                    path=f"task/{p.stem}.md",
-                    rule="missing-discarded-status-task",
+                    path=f"{task_family}/{p.stem}.md",
+                    rule=f"missing-discarded-status-{task_family}",
                     message=(
-                        f"status={status!r} but every UC this task "
-                        f"implements is discarded. Expected "
+                        f"status={status!r} but every UC this {task_family} "
+                        f"task implements is discarded. Expected "
                         "status=discarded — transition_status.py should "
                         "have cascaded from the UC discard."
                     ),
@@ -294,32 +295,33 @@ def check_revising_cascade(
         return []
 
     mismatches: list[Mismatch] = []
-    for p in iter_issue_files(a4_dir, "task"):
-        fm = read_fm(p)
-        if fm is None:
-            continue
-        implements = fm.get("implements") or []
-        if not isinstance(implements, list) or not implements:
-            continue
-        implemented_keys = {index.canonical(x) for x in implements}
-        implemented_keys.discard(None)
-        if not (implemented_keys & revising_uc_keys):
-            continue
-        status = fm.get("status")
-        if status not in TASK_RESET_ON_REVISING:
-            continue
-        mismatches.append(
-            Mismatch(
-                path=f"task/{p.stem}.md",
-                rule="missing-pending-status-task",
-                message=(
-                    f"status={status!r} but a UC this task implements is at "
-                    "'revising'. Expected status=pending — "
-                    "transition_status.py should have reset it; re-run the "
-                    "UC's revising transition."
-                ),
+    for task_family in TASK_FAMILY_TYPES:
+        for p in iter_issue_files(a4_dir, task_family):
+            fm = read_fm(p)
+            if fm is None:
+                continue
+            implements = fm.get("implements") or []
+            if not isinstance(implements, list) or not implements:
+                continue
+            implemented_keys = {index.canonical(x) for x in implements}
+            implemented_keys.discard(None)
+            if not (implemented_keys & revising_uc_keys):
+                continue
+            status = fm.get("status")
+            if status not in TASK_RESET_ON_REVISING:
+                continue
+            mismatches.append(
+                Mismatch(
+                    path=f"{task_family}/{p.stem}.md",
+                    rule=f"missing-pending-status-{task_family}",
+                    message=(
+                        f"status={status!r} but a UC this {task_family} "
+                        "task implements is at 'revising'. Expected "
+                        "status=pending — transition_status.py should "
+                        "have reset it; re-run the UC's revising transition."
+                    ),
+                )
             )
-        )
     return mismatches
 
 

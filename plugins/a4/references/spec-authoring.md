@@ -21,7 +21,7 @@ A spec offer is warranted when these appear in dialogue:
 
 - **B1 — multi-option enumeration:** "A or B", "REST vs GraphQL", "Postgres or Mongo".
 - **B2 — trade-off language:** "we trade X for Y", "the cost of Z is …", "장단점이 있다".
-- **B3 — uncertainty markers:** "not sure", "torn between", "더 생각해봐야". Clarify first whether it is decision-pending (→ spec) or evidence-pending (→ `kind: research` task) — leave `## Open Questions` open if neither resolves quickly.
+- **B3 — uncertainty markers:** "not sure", "torn between", "더 생각해봐야". Clarify first whether it is decision-pending (→ spec) or evidence-pending (→ `type: research` task) — leave `## Open Questions` open if neither resolves quickly.
 - **B4 — prior-spec references:** "we decided X before, but now…". This is a **supersede candidate** — author with `supersedes: [spec/<prior-id>-<slug>]` populated; do not edit the prior spec body.
 - **B5 — task-implementer architectural-choice exit:** mid-task implementation surfaces a design alternative not yet captured. Halt, emit a `kind: gap` review item with `target: spec/`, return failure naming the review id.
 - **B6 — mid-implementation architecture-impacting choice:** same exit shape as B5 from the human-driven side.
@@ -54,7 +54,7 @@ updated: YYYY-MM-DD
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - The chosen shape is summarized in the `## Context` body section (and recorded as the first `## Decision Log` entry on `→ active`); UC `decision:` frontmatter no longer exists (a4 v6.0.0).
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
-- `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `kind: research` task that informed this spec (e.g., `related: [task/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `search.py`.
+- `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `search.py`.
 - Path values are plain strings without `.md` and without brackets (e.g., `spec/8-caching-strategy`, not `[spec/8-caching-strategy.md]`).
 - Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; the writer bumps it on status flips.
 
@@ -83,7 +83,7 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 
 **Optional, emit only when there is content for them:**
 
-- `## Decision Log` — append-only, dated bullets summarizing what was chosen and why. **The only sanctioned slot for design rationale tied to this spec.** Earlier entries are never edited or removed; corrections are added as new entries that explain why prior reasoning no longer holds. Inline markdown links (e.g., `[task/42-grpc-streaming](../task/research/42-grpc-streaming.md)`) cite informing research tasks.
+- `## Decision Log` — append-only, dated bullets summarizing what was chosen and why. **The only sanctioned slot for design rationale tied to this spec.** Earlier entries are never edited or removed; corrections are added as new entries that explain why prior reasoning no longer holds. Inline markdown links (e.g., `[research/42-grpc-streaming](../research/42-grpc-streaming.md)`) cite informing research tasks.
 - `## Open Questions` — unresolved aspects the spec deliberately defers. Better than forcing premature closure.
 - `## Rejected Alternatives` — the options considered and why they lost. Pairs naturally with `## Decision Log`. Inline citations to research tasks land here too when the rejection rationale leans on the investigation.
 - `## Consequences` — downstream effects (positive, negative, or neutral) the spec creates.
@@ -91,7 +91,7 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 - `## Change Logs` — append-only audit trail of why this file was edited (dated bullets with markdown links to the causing issue).
 - `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 
-Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in `task/<id>-<slug>.md`.
+Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the task-family folders (`a4/feature/`, `a4/bug/`, etc.).
 
 ### Body-link form
 
@@ -113,4 +113,4 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `## Decision Log`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `## Decision Log`.
-- **Don't reach for a research artifact at project-root `./research/<slug>.md`.** That convention has been retired — research now lives as `kind: research` tasks under `a4/task/research/`. Cite them from `related:` and inline body links.
+- **Don't reach for a research artifact at project-root `./research/<slug>.md`.** That convention has been retired — research now lives as `type: research` tasks under `a4/research/`. Cite them from `related:` and inline body links.

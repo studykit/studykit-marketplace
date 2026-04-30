@@ -320,14 +320,14 @@ def _unlink_silent(path: Path) -> None:
 _MAX_IDS = 20
 _LOOKUP_FOLDERS: tuple[str, ...] = (
     "usecase",
-    "task",
+    "feature",
+    "bug",
+    "spike",
+    "research",
     "review",
     "spec",
     "idea",
 )
-# Folders that hold kind-scoped subfolders (e.g. `task/feature/`) — the
-# `#<id>` resolver must rglob into them to find the actual file.
-_NESTED_LOOKUP_FOLDERS: frozenset[str] = frozenset({"task"})
 
 
 def _user_prompt() -> int:
@@ -397,12 +397,7 @@ def _user_prompt() -> int:
             if not sub.is_dir():
                 continue
             pattern = f"{token}-*.md"
-            iter_paths = (
-                sub.rglob(pattern)
-                if folder in _NESTED_LOOKUP_FOLDERS
-                else sub.glob(pattern)
-            )
-            matches.extend(str(p) for p in sorted(iter_paths))
+            matches.extend(str(p) for p in sorted(sub.glob(pattern)))
         archive = a4_dir / "archive"
         if archive.is_dir():
             matches.extend(

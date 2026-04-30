@@ -13,8 +13,8 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | Skill | What it does |
 |-------|-------------|
 | `spark-brainstorm` | Generate ideas with structured creative techniques |
-| `task` (`kind=research`) | Investigate options or a topic; produces an investigation task at `a4/task/research/<id>-<slug>.md` whose body holds sources, findings, and (in comparative mode) per-option subsections |
-| `research-review` | Review a research task at `a4/task/research/<id>-<slug>.md` for source quality, option balance, bias, and neutrality |
+| `research` | Investigate options or a topic; produces an investigation task at `a4/research/<id>-<slug>.md` whose body holds sources, findings, and (in comparative mode) per-option subsections |
+| `research-review` | Review a research task at `a4/research/<id>-<slug>.md` for source quality, option balance, bias, and neutrality |
 | `spec` | Record a spec reached through conversation as `a4/spec/<id>-<slug>.md`, soft-link related research tasks, nudge affected wiki pages |
 
 ## Pipeline (interactive)
@@ -25,7 +25,8 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
 | `arch` | Design architecture — tech stack, components, interfaces, test strategy |
 | `roadmap` | Author the implementation roadmap and per-task files |
-| `task` | Author a single task (feature / spike / bug) — UC-derived or spec-justified |
+| `feature` / `bug` / `spike` / `research` | Author a single task in the matching family — UC-derived or spec-justified |
+| `discard` | Discard a task across any family by id / path / slug fragment |
 | `run` | Run the agent loop — implement and test until all pass |
 
 ## Pipeline (autonomous)

@@ -5,7 +5,7 @@ At session start, for every task with `status: progress`, reset to `pending` via
 ```bash
 uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   "$(git rev-parse --show-toplevel)/a4" \
-  --file "task/<kind>/<id>-<slug>.md" --to pending \
+  --file "<type>/<id>-<slug>.md" --to pending \
   --reason "session-start hygiene: previous session terminated"
 ```
 

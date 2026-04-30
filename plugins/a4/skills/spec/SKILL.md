@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "This skill should be used when the user has converged on the shape of an artifact (format, protocol, schema, renderer rule, CLI surface) and wants to commit it as a living specification. Writes the spec to `a4/spec/<id>-<slug>.md` with proper frontmatter and body, soft-links any related research tasks (a4/task/research/<id>-<slug>.md) via standard markdown body links and optional `related:` frontmatter entries, optionally records the decision rationale inline as `## Decision Log` entries, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'document this format', 'write up the spec', 'capture this shape', 'this is the spec', 'spec this out', or after the user and LLM converge on a prescriptive shape. Accepts either no argument (extract spec from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft spec to activate it. Requires an `a4/` workspace."
+description: "This skill should be used when the user has converged on the shape of an artifact (format, protocol, schema, renderer rule, CLI surface) and wants to commit it as a living specification. Writes the spec to `a4/spec/<id>-<slug>.md` with proper frontmatter and body, soft-links any related research tasks (a4/research/<id>-<slug>.md) via standard markdown body links and optional `related:` frontmatter entries, optionally records the decision rationale inline as `## Decision Log` entries, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'document this format', 'write up the spec', 'capture this shape', 'this is the spec', 'spec this out', or after the user and LLM converge on a prescriptive shape. Accepts either no argument (extract spec from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft spec to activate it. Requires an `a4/` workspace."
 argument-hint: <optional: short spec summary or title>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 ---
@@ -15,8 +15,8 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** writing the spec file at `status: draft`, activating an existing draft via `transition_status.py`, soft-linking research tasks (`a4/task/research/<id>-<slug>.md`) via standard markdown body links and optional `related:` frontmatter entries, recording append-only `## Decision Log` entries, performing the in-situ wiki nudge, setting `status` via dialogue.
-- **Out:** no investigation (use `/a4:task` with `kind=research` first if research is needed). No reviewer for the spec *content itself*. No commit.
+- **In:** writing the spec file at `status: draft`, activating an existing draft via `transition_status.py`, soft-linking research tasks (`a4/research/<id>-<slug>.md`) via standard markdown body links and optional `related:` frontmatter entries, recording append-only `## Decision Log` entries, performing the in-situ wiki nudge, setting `status` via dialogue.
+- **Out:** no investigation (use `/a4:research` first if research is needed). No reviewer for the spec *content itself*. No commit.
 
 ## Pre-flight
 
@@ -50,7 +50,7 @@ Summarize to the user:
 
 ## Non-goals
 
-- **Do not research.** If the spec needs more investigation, stop and tell the user to run `/a4:task kind=research <topic>` first.
+- **Do not research.** If the spec needs more investigation, stop and tell the user to run `/a4:research <topic>` first.
 - **Do not review whether the shape is correct.** Whether the chosen shape is the right one is the user's own thinking; no machine critique pass exists.
 - **Do not commit.** Leave files in the working tree.
 - **Do not auto-populate `supersedes:`** or retire specs unprompted. The user sets `supersedes:` in Step 2; `→ deprecated` is a manual user call via `transition_status.py`.

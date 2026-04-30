@@ -11,8 +11,10 @@ Every markdown file under `a4/` carries YAML frontmatter. Files split into three
 | Family | Examples | Location |
 |--------|----------|----------|
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `roadmap.md`, `bootstrap.md` | `a4/` root |
-| **Issue** | use case, task, review item, spec, idea | `a4/usecase/`, `a4/task/<kind>/` (`feature`/`bug`/`spike`/`research`), `a4/review/`, `a4/spec/`, `a4/idea/` |
+| **Issue** | use case, feature task, bug task, spike task, research task, review item, spec, idea | `a4/usecase/`, `a4/feature/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/review/`, `a4/spec/`, `a4/idea/` |
 | **Spark** | brainstorm output | `a4/spark/` |
+
+The four task-family folders (`feature`, `bug`, `spike`, `research`) are treated as siblings — they share the same status enum and lifecycle but each carries its own per-type schema and authoring contract. Cross-kind operations (UC cascades, status reset on revising) walk all four; single-kind authoring uses the matching folder only.
 
 ## Universal rules
 
@@ -32,7 +34,10 @@ Every markdown file declares a `type:` field in frontmatter. The value selects t
 | Wiki — nfr | `nfr` |
 | Wiki — roadmap | `roadmap` |
 | Issue — usecase | `usecase` |
-| Issue — task | `task` |
+| Issue — feature task | `feature` |
+| Issue — bug task | `bug` |
+| Issue — spike task | `spike` |
+| Issue — research task | `research` |
 | Issue — review | `review` |
 | Issue — spec | `spec` |
 | Issue — idea | `idea` |
@@ -59,8 +64,8 @@ Body sections are column-0 H2 markdown headings in Title Case with spaces (`## C
 
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following forms. All forms resolve to the same file, so they are interchangeable on input — pick whichever reads best in context.
 
-- **`<id>` integer short form.** Issue families only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/<kind>/`, `review/`, `spec/`, or `idea/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. (Renamed from the legacy `#<id>` string short form in a4 v11.0.0; the validator now rejects any path-ref entry beginning with `#`.)
-- **`<folder>/<id>` slug-less form.** Issue families only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug.
+- **`<id>` integer short form.** Issue families only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `feature/`, `bug/`, `spike/`, `research/`, `review/`, `spec/`, or `idea/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. (Renamed from the legacy `#<id>` string short form in a4 v11.0.0; the validator now rejects any path-ref entry beginning with `#`.)
+- **`<folder>/<id>` slug-less form.** Issue families only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`feature`, `bug`, `spike`, `research`, etc.) — the legacy `task/<id>` form was retired in a4 v12.0.0.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter that benefits from at-a-glance context. The slug part is a hint: when the file's actual stem differs (slug rename), the id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Resolves correctly because ids are globally unique. Permitted but folder-prefixed form is preferred for readability.
 - **Wiki basename.** `architecture`, `domain`, `nfr`, etc. Wiki pages have no id; reference them by file basename. A review item naming a wiki page writes `target: [architecture, domain]`, not `target: [architecture.md]`. Issue-folder paths and wiki basenames may be mixed in a single `target:` list.
@@ -103,10 +108,10 @@ Unknown fields are **not errors** — they are treated as extension metadata. Sk
 
 ### Status writers
 
-Every status change on `usecase`, `task`, `review`, and `spec` files flows through the single writer at [`../scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition and writes `status:` + `updated:`, then runs any cascade:
+Every status change on `usecase`, the four task families (`feature` / `bug` / `spike` / `research`), `review`, and `spec` files flows through the single writer at [`../scripts/transition_status.py`](../scripts/transition_status.py), which validates the transition and writes `status:` + `updated:`, then runs any cascade:
 
-- Task reset on UC `revising` (tasks at `progress`/`failing` → `pending`).
-- Task / review discard cascade on UC `discarded`.
+- Task reset on UC `revising` — across all four task families, tasks at `progress`/`failing` → `pending`.
+- Task / review discard cascade on UC `discarded` — across all four task families.
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 
@@ -168,29 +173,90 @@ The `type` value must match the file basename (e.g., `type: architecture` requir
 
 Lifecycle (forward path, escape paths, cascade rules), abstraction discipline, body shape, and authoring guidance live in [`usecase-authoring.md`](./usecase-authoring.md).
 
-## Task (`a4/task/<kind>/<id>-<slug>.md`)
+## Task family (`a4/<kind>/<id>-<slug>.md`)
 
-Jira "task" semantics — a unit of executable work. The `kind:` field distinguishes regular implementation, time-boxed exploration, defect work, and investigation; lifecycle is identical across kinds. The kind subfolder (`feature/`, `bug/`, `spike/`, `research/`) is part of the file path. Reference forms in frontmatter (`implements`, `depends_on`, `target`, etc.) keep the bare `task/<id>-<slug>` shape (no kind segment) so refs stay stable when a task is moved between kinds.
+Jira "task" semantics — units of executable work — split across four sibling families: `feature`, `bug`, `spike`, `research`. They share the same status enum and lifecycle but each has its own per-type schema and authoring contract. The kind is encoded in `type:` and in the top-level folder; there is **no** `kind:` field. Path references use the actual folder (`feature/<id>-<slug>`, `bug/<id>-<slug>`, etc.) — the legacy `task/<id>-<slug>` shape was retired in a4 v12.0.0.
+
+The four families share the lifecycle defined by `TASK_TRANSITIONS` in `../scripts/status_model.py` and the cross-kind artifact contract documented in [`artifacts.md`](./artifacts.md). Cross-kind operations (UC `revising` / `discarded` cascades, the discard skill) walk all four folders via `TASK_FAMILY_TYPES`.
+
+### Feature task (`a4/feature/<id>-<slug>.md`)
 
 | Field | Required | Type | Values / format |
 |-------|----------|------|-----------------|
-| `type` | yes | literal | `task` |
+| `type` | yes | literal | `feature` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `kind` | yes | enum | `feature` \| `spike` \| `bug` \| `research` |
 | `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
-| `implements` | no | list of paths | use cases delivered. **Forbidden on `kind: spike`** (spikes are exploratory, never UC deliverables). Typically empty for `kind: research` as well. |
+| `implements` | no | list of paths | use cases delivered |
 | `depends_on` | no | list of paths | other tasks this one needs first |
-| `spec` | no | list of paths | Specs governing this task. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research` (cite via body markdown links instead). |
-| `artifacts` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. (Renamed from `files` in a4 v10.0.0.) |
-| `mode` | conditional | enum | `comparative` \| `single` — required when `kind: research` |
-| `options` | conditional | list of strings | option names — required when `kind: research` and `mode: comparative` |
-| `cycle` | no | int | implementation cycle number. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research`. |
+| `spec` | no | list of paths | specs governing this task |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/feature/<id>-<slug>/`. Empty list is the typical default — feature work that ships only production source. Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. |
+| `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-Kind semantics, lifecycle, initial-status policy, and per-kind authoring guidance live in [`task-feature-authoring.md`](./task-feature-authoring.md), [`task-bug-authoring.md`](./task-bug-authoring.md), [`task-spike-authoring.md`](./task-spike-authoring.md), and [`task-research-authoring.md`](./task-research-authoring.md). The cross-kind artifact directory contract (`artifacts/task/<kind>/<id>-<slug>/`, the `task.artifacts:` artifact-only rule, the spike archive convention, curation policy) lives in [`task-artifacts.md`](./task-artifacts.md).
+Lifecycle, initial-status policy, and authoring guidance live in [`feature-authoring.md`](./feature-authoring.md).
+
+### Bug task (`a4/bug/<id>-<slug>.md`)
+
+Schema identical to feature — same field set, same lifecycle. Only the folder, the `type:` literal, and the artifact directory prefix (`artifacts/bug/<id>-<slug>/`) differ.
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `bug` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `implements` | no | list of paths | use cases delivered (often empty for bug work that does not implement a UC) |
+| `depends_on` | no | list of paths | other tasks this one needs first |
+| `spec` | no | list of paths | specs governing this task |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/bug/<id>-<slug>/` (typically empty — repro/logs/screenshots only when worth keeping) |
+| `cycle` | no | int | implementation cycle number |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
+Lifecycle and authoring guidance live in [`bug-authoring.md`](./bug-authoring.md).
+
+### Spike task (`a4/spike/<id>-<slug>.md`)
+
+Time-boxed exploration to unblock a decision. Throwaway PoC code lives in the spike's artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`, **outside** the `a4/` workspace. `implements` / `spec` / `cycle` are forbidden — spikes are exploratory and never UC deliverables.
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `spike` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `depends_on` | no | list of paths | other tasks this one needs first |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at the project's production source tree — production paths the spike may also touch are documented in the body `## Files` section. |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
+`implements` / `spec` / `cycle` are not part of the spike schema — declaring them is an error. Lifecycle, archive convention, and authoring guidance live in [`spike-authoring.md`](./spike-authoring.md).
+
+### Research task (`a4/research/<id>-<slug>.md`)
+
+Time-boxed written investigation; the body itself is the deliverable. `implements` / `spec` / `cycle` are forbidden — research feeds downstream specs/features via `related:` and inline body links rather than directly delivering a UC.
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `research` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `mode` | yes | enum | `comparative` \| `single` |
+| `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
+| `depends_on` | no | list of paths | other tasks this one needs first |
+| `related` | no | list of paths | soft links — typically the spec(s) or feature(s) this research informs |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/research/<id>-<slug>/` (typically empty — research output lives in the body) |
+| `labels` | no | list of strings | free-form tags |
+| `created` | yes | date | `YYYY-MM-DD` |
+| `updated` | yes | date | `YYYY-MM-DD` |
+
+`implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error. Lifecycle and authoring guidance live in [`research-authoring.md`](./research-authoring.md).
 
 ## Review item (`a4/review/<id>-<slug>.md`)
 
@@ -294,8 +360,8 @@ Several enum values are semantically derived from cross-file state rather than b
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
 | `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
-| `task.status` | `discarded` | UC the task implements flips to `discarded` | `transition_status.py` cascade |
-| `task.status` | `pending` (from `implementing`/`failing`) | UC the task implements flips to `revising` | `transition_status.py` cascade |
+| `<task-family>.status` | `discarded` | UC the task implements flips to `discarded` (applies to `feature` / `bug` / `spike` / `research`) | `transition_status.py` cascade |
+| `<task-family>.status` | `pending` (from `progress`/`failing`) | UC the task implements flips to `revising` (applies to `feature` / `bug` / `spike` / `research`) | `transition_status.py` cascade |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
 | `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | `transition_status.py` cascade (fires during successor's `→ active` transition) |
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
@@ -317,6 +383,6 @@ When these land, update this document **and** the enforcement layer simultaneous
 
 - **Body-level conventions:** `body-conventions.md` — heading form (column-0 H2, Title Case, kebab → Title Case mapping), blank-line discipline, `## Change Logs` and `## Log` entry format, body link form (standard markdown).
 - **Id allocator:** `../scripts/allocate_id.py`.
-- **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal / in-progress / active classifications, kind enums, supersedes-trigger and supersedable-target maps (`SUPERSEDES_TRIGGER_STATUS`, `SUPERSEDABLE_FROM_STATUSES`), task / review cascade input sets (`TASK_RESET_ON_REVISING`, `TASK_RESET_TARGET`, `REVIEW_TERMINAL`), and legality predicates (`is_transition_legal`, `legal_targets_from`, `is_terminal`). Imported by the writer (`transition_status.py`), the workspace dashboard (`workspace_state.py`), the consistency checker (`markdown_validator.status_consistency`), the transition-legality safety net (`markdown_validator.transitions`), and search; the prose tables in this document mirror the same data.
+- **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal / in-progress / active classifications, the `TASK_FAMILY_TYPES` cross-kind grouping, kind enums (review only after a4 v12.0.0), supersedes-trigger and supersedable-target maps (`SUPERSEDES_TRIGGER_STATUS`, `SUPERSEDABLE_FROM_STATUSES`), task / review cascade input sets (`TASK_RESET_ON_REVISING`, `TASK_RESET_TARGET`, `REVIEW_TERMINAL`), and legality predicates (`is_transition_legal`, `legal_targets_from`, `is_terminal`). Imported by the writer (`transition_status.py`), the workspace dashboard (`workspace_state.py`), the consistency checker (`markdown_validator.status_consistency`), the transition-legality safety net (`markdown_validator.transitions`), and search; the prose tables in this document mirror the same data.
 - **Status transition writer:** `../scripts/transition_status.py` — single writer for usecase / task / review / spec status changes; runs cascades (revising task reset, discarded cascade, shipped → superseded chain, spec active → superseded chain).
 - **Status transition safety net:** `../scripts/markdown_validator/transitions.py` — Stop-hook check that diffs working-tree `status:` against HEAD via git and rejects transitions outside `FAMILY_TRANSITIONS`. Catches direct hand edits that bypass the writer above; the writer is still the recommended path because it also runs cascades.

@@ -57,21 +57,22 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 ## Shape 3: Minimal
 
-**Entry.** `/a4:task kind=<feature|spike|bug>`. No UC, domain, or architecture authoring required.
+**Entry.** One of `/a4:feature`, `/a4:bug`, `/a4:spike`, `/a4:research`. No UC, domain, or architecture authoring required.
 
 **Required wiki path.** `bootstrap.md` only. `domain.md`, `architecture.md`, `usecase/*.md`, `roadmap.md` are all skippable.
 
-**Required issue path.** `task/<kind>/<id>-<slug>.md` (under `feature/`, `bug/`, or `spike/`) → `/a4:run`.
+**Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/feature/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → `/a4:run`.
 
-**Acceptance Criteria source.** Set by task `kind`, mirroring the Jira-issue model that `/a4:task` is built on:
+**Acceptance Criteria source.** Set by task family, mirroring the Jira-issue model that the per-family authoring skills are built on:
 
-| `kind` | AC source |
+| Family | AC source |
 |---|---|
 | `feature` + `implements: [usecase/...]` | UC's `## Flow` / `## Validation` / `## Error Handling` (this is Full-shape AC reused inside Minimal) |
 | `feature` + `spec: [spec/...]` | spec's `## Specification` body + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
-| `feature` with neither | Smell — `/a4:task` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
-| `bug` | The bug description in the task body itself |
+| `feature` with neither | Smell — `/a4:feature` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
+| `bug` | The bug description in the task body itself (regression test pins the expected behavior) |
 | `spike` | The hypothesis stated in the task body itself |
+| `research` | The body itself is the deliverable; `/a4:research-review` is the quality pass before downstream consumption |
 
 `/a4:run` Step 4b ships **per task** when `task.implements:` is empty (no UC to ship); when `task.implements:` is non-empty, it falls back to per-UC ship as in Full shape. The branching is `task.implements:`-driven, not invocation-driven.
 
@@ -85,7 +86,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 | Channel | Where | Most common shape |
 |---|---|---|
-| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:task kind=research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
+| **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
 | **Production (secondary)** | `/a4:spec` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
 | **Consumption (primary)** | `architecture.md` `## Change Logs` bullet linking `[spec/N-...](spec/N-...md)` records why an architecture change happened. | Full |
 | **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
@@ -109,12 +110,12 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 - Task body prose (`## Description`, plus open questions captured inside `## Description` or `## Change Logs`) — explain why this task takes a particular approach, even when `spec:` is not set.
 - Review item body — clarify what decision a `kind: question` is asking about or what decision a `kind: finding` is violating.
-- Research tasks (`a4/task/research/<id>-<slug>.md`) — the task body's conclusion can forward-point to a spec that fixed its outcome via inline markdown links.
+- Research tasks (`a4/research/<id>-<slug>.md`) — the task body's conclusion can forward-point to a spec that fixed its outcome via inline markdown links.
 
 **Common omissions** that erode spec value:
 
 - Writing a spec but not adding the `architecture.md` `## Change Logs` bullet when arch was driven by it. The drift detector may eventually catch this; preferring to add the bullet in the same session avoids the drift entry.
-- Minimal-shape `feature` task with no UC and no spec — `/a4:task` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
+- Minimal-shape `feature` task with no UC and no spec — `/a4:feature` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
 - Reversing a decision without an explicit `superseded by` chain. Both specs end up live and ambiguous about which is current.
 
 **Anti-patterns** (do not write a spec for these):
@@ -133,7 +134,7 @@ When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may
 This is a normal state, not an error. Workspaces in this state typically use:
 
 - `/a4:spec` — record specs standalone before any implementation work.
-- `/a4:task kind=research` — investigate options or topics, producing `a4/task/research/<id>-<slug>.md`.
+- `/a4:research` — investigate options or topics, producing `a4/research/<id>-<slug>.md`.
 - `/a4:research-review` — audit a research task for source quality and bias.
 - `/a4:spark-brainstorm` — capture ideas before they take shape.
 - Direct wiki edits on `context.md` / `domain.md` for purely descriptive purposes.
@@ -149,7 +150,7 @@ For tools and skills that need to know which shape is running:
 | Signal | Implies |
 |---|---|
 | `bootstrap.md` absent | No shape |
-| `bootstrap.md` present + `usecase/*.md` absent | Minimal (entry was `/a4:task`) |
+| `bootstrap.md` present + `usecase/*.md` absent | Minimal (entry was one of `/a4:feature`, `/a4:bug`, `/a4:spike`, `/a4:research`) |
 | `bootstrap.md` present + `usecase/*.md` present + `domain.md` and `architecture.md` present | Full (or Reverse-then-forward — the two are indistinguishable from state alone) |
 | `usecase/*.md` present + every UC has `source: auto-usecase` frontmatter | Reverse start (could still be Reverse-only or Reverse-then-forward) |
 

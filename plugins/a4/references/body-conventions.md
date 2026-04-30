@@ -60,7 +60,7 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 |------|---------|
 | Cross-file reference | `[usecase/3-share-summary](../usecase/3-share-summary.md)` |
 | Section anchor on a wiki page | `[architecture#sessionservice](../architecture.md#sessionservice)` |
-| Sibling-folder reference | `[task/42-grpc-streaming](../task/research/42-grpc-streaming.md)` (from `a4/spec/`) |
+| Sibling-folder reference | `[research/42-grpc-streaming](../research/42-grpc-streaming.md)` (from `a4/spec/`) |
 | External URL | `[the spec text](https://example.com/spec)` |
 
 Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text (so `## Decision Log` resolves to `#decision-log`).

@@ -15,12 +15,12 @@ Present the draft to the user before proceeding. Iterate until the substance is 
 
 Offer two sources for soft links:
 
-1. **Auto-scan.** `Glob a4/task/research/*.md`. For each candidate, compare the file's `title:` frontmatter or slug to the spec's title/topic. Propose plausible matches.
+1. **Auto-scan.** `Glob a4/research/*.md`. For each candidate, compare the file's `title:` frontmatter or slug to the spec's title/topic. Propose plausible matches.
 2. **User-specified.** If the user named a research task during the conversation, include it verbatim.
 
 Confirm the final list with the user. Empty is fine — specs do not require prior research. The links land in two places (Step 5):
 
-- `related:` frontmatter list (e.g., `related: [task/42-grpc-streaming]`) for frontmatter-level discoverability.
+- `related:` frontmatter list (e.g., `related: [research/42-grpc-streaming]`) for frontmatter-level discoverability.
 - Inline standard markdown links inside whichever spec section the user wants the citation rendered in (typically `## Decision Log` or `## Rejected Alternatives`).
 
 There is no stored-reverse contract — the research task is not auto-modified, and reverse lookups are derived on demand via grep / `search.py`.
@@ -48,7 +48,7 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
 3. File path: `<project-root>/a4/spec/<id>-<slug>.md`.
 
-4. Use the `Write` tool. Frontmatter shape, required body sections (`## Context`, `## Specification`), optional sections (`## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`), and heading-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `## Context` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [task/42-grpc-streaming]`), and add inline `[task/<id>-<slug>](../task/research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `## Decision Log` or `## Rejected Alternatives`).
+4. Use the `Write` tool. Frontmatter shape, required body sections (`## Context`, `## Specification`), optional sections (`## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`), and heading-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `## Context` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [research/42-grpc-streaming]`), and add inline `[research/<id>-<slug>](../research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `## Decision Log` or `## Rejected Alternatives`).
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
 

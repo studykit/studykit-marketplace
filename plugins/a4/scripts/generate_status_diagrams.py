@@ -38,12 +38,16 @@ import status_model as sm
 
 
 # Families that have an ASCII block in the schema doc today.
-DOC_FAMILIES: tuple[str, ...] = ("usecase", "task", "spec")
+# After a4 v12.0.0 the four task families share TASK_TRANSITIONS, so
+# the "Task lifecycle" block is rendered from any one family key
+# (``feature`` is the canonical pick — all four produce the same
+# transitions table).
+DOC_FAMILIES: tuple[str, ...] = ("usecase", "feature", "spec")
 
 # Family key → heading text used in the schema doc.
 FAMILY_HEADING: dict[str, str] = {
     "usecase": "UC lifecycle",
-    "task": "Task lifecycle",
+    "feature": "Task lifecycle",
     "spec": "Spec lifecycle",
 }
 

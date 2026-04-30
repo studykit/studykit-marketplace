@@ -56,6 +56,7 @@ from markdown_validator.refs import RefIndex
 from status_model import (
     KIND_BY_FOLDER as _MODEL_KIND_BY_FOLDER,
     STATUS_BY_FOLDER,
+    TASK_FAMILY_TYPES,
 )
 
 
@@ -70,14 +71,18 @@ WIKI_KINDS_TUPLE: tuple[str, ...] = (
 )
 
 # Folder → set of valid `kind:` enum values for the `--kind` filter.
-# Issue-folder kinds come from the canonical model. Wiki pages declare
-# their identifier in the `type:` field (matching the file basename); the
-# `wiki` entry below makes `--kind <basename>` work for the wiki folder
-# by routing it through `Record.kind`, which reads `type:` for wiki
-# records.
+# Issue-folder kinds come from the canonical model (currently only
+# `review`). Wiki pages declare their identifier in the `type:` field
+# (matching the file basename); the `wiki` entry below makes
+# `--kind <basename>` work for the wiki folder by routing it through
+# `Record.kind`. The four task-family folders each map to a singleton
+# of their own name so `--kind feature` (etc.) is accepted by the
+# validator and `Record.kind` (which returns the folder for those
+# families post-v12) lights up.
 KIND_BY_FOLDER: dict[str, frozenset[str]] = {
     **_MODEL_KIND_BY_FOLDER,
     "wiki": frozenset(WIKI_KINDS_TUPLE),
+    **{fam: frozenset({fam}) for fam in TASK_FAMILY_TYPES},
 }
 
 # Forward relation fields that `--references` / `--references-via` can scan.
@@ -94,7 +99,10 @@ FORWARD_FIELDS: tuple[str, ...] = (
 
 ALL_FOLDERS: tuple[str, ...] = (
     "usecase",
-    "task",
+    "feature",
+    "bug",
+    "spike",
+    "research",
     "review",
     "spec",
     "idea",
@@ -134,8 +142,15 @@ class Record:
 
     @property
     def kind(self) -> str | None:
+        # Wiki: ``type:`` is the kind discriminator (matches basename).
+        # Review: ``kind:`` (finding/gap/question).
+        # Task families (feature/bug/spike/research): the folder doubles
+        # as the kind after the v12 split — there is no ``kind:`` field.
+        # Other folders: legacy ``kind:`` if present.
         if self.folder == "wiki":
             return _str(self.fm.get("type"))
+        if self.folder in TASK_FAMILY_TYPES:
+            return self.folder
         return _str(self.fm.get("kind"))
 
     @property
@@ -152,8 +167,9 @@ class Record:
 
     @property
     def labels(self) -> list[str]:
-        # Schema uses `labels:` on usecase/task/review/idea and
-        # `tags:` on spec/spark. Treat them as one logical field.
+        # Schema uses `labels:` on usecase / the four task families /
+        # review / idea, and `tags:` on spec / spark. Treat them as one
+        # logical field.
         return _str_list(self.fm.get("labels")) + _str_list(self.fm.get("tags"))
 
 

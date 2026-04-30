@@ -18,45 +18,40 @@ WIKI_TYPES = frozenset(
     {"context", "domain", "architecture", "actors", "nfr", "roadmap", "bootstrap"}
 )
 
+# Top-level issue folders under `<a4-dir>/`. a4 v12.0.0 split the former
+# `task/` folder (with a `kind:` discriminator) into four flat sibling
+# folders; iteration order matches a coarse topological flow
+# (UC → tasks → reviews → specs → ideas).
 ISSUE_FOLDERS: tuple[str, ...] = (
     "usecase",
-    "task",
+    "feature",
+    "bug",
+    "spike",
+    "research",
     "review",
     "spec",
     "idea",
 )
 
-# Issue folders that hold kind-scoped subfolders. Files live one level
-# deeper (e.g. `task/feature/<id>-<slug>.md`), so discovery and
-# back-scans must recurse rather than glob a flat `*.md`.
-NESTED_ISSUE_FOLDERS: frozenset[str] = frozenset({"task"})
-
-
-def issue_glob(folder: str) -> str:
-    """Glob pattern to enumerate `.md` files in an issue folder."""
-    return "**/*.md" if folder in NESTED_ISSUE_FOLDERS else "*.md"
-
 
 def iter_issue_files(a4_dir: Path, folder: str) -> list[Path]:
-    """Sorted `.md` files in an issue folder, recursing for kind subfolders.
+    """Sorted `.md` files in an issue folder.
 
-    Folders in `NESTED_ISSUE_FOLDERS` (currently `task`) descend into kind
-    subfolders (`task/feature/`, `task/bug/`, `task/spike/`); others stay
-    flat. Returns `[]` if the folder is absent.
+    All issue folders are flat after a4 v12.0.0. Returns `[]` if the
+    folder is absent.
     """
     sub = a4_dir / folder
     if not sub.is_dir():
         return []
-    return sorted(sub.glob(issue_glob(folder)))
+    return sorted(sub.glob("*.md"))
 
 
 def discover_files(a4_dir: Path) -> list[Path]:
     """All a4/*.md files the validators should scan.
 
-    Top-level wiki pages + every file in each issue folder (recursing into
-    kind subfolders for `NESTED_ISSUE_FOLDERS`) + every file in `spark/`.
-    Order is deterministic: wiki pages first, then issue folders in
-    ISSUE_FOLDERS order, then sparks.
+    Top-level wiki pages + every file in each issue folder + every file
+    in `spark/`. Order is deterministic: wiki pages first, then issue
+    folders in ISSUE_FOLDERS order, then sparks.
     """
     out: list[Path] = list(sorted(a4_dir.glob("*.md")))
     for folder in ISSUE_FOLDERS:
@@ -89,8 +84,7 @@ def iter_family(a4_dir: Path, family: str) -> list[tuple[Path, dict]]:
     """Walk a family folder, returning ``(path, fm)`` pairs.
 
     Skips files whose preamble is absent or malformed. Order matches
-    ``iter_issue_files`` (sorted, recursing into kind subfolders for
-    ``NESTED_ISSUE_FOLDERS``).
+    ``iter_issue_files`` (sorted, flat).
     """
     out: list[tuple[Path, dict]] = []
     for p in iter_issue_files(a4_dir, family):
@@ -102,12 +96,7 @@ def iter_family(a4_dir: Path, family: str) -> list[tuple[Path, dict]]:
 
 
 def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
-    """Map ``<family>/<id>-<slug>`` → frontmatter for parseable files.
-
-    For nested issue folders (``task/{feature,bug,spike}/``), descends
-    into kind subfolders. The reference-key form drops the kind segment
-    so refs stay stable when a task is moved between kinds.
-    """
+    """Map ``<family>/<id>-<slug>`` → frontmatter for parseable files."""
     return {f"{family}/{p.stem}": fm for p, fm in iter_family(a4_dir, family)}
 
 

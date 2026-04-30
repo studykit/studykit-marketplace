@@ -4,7 +4,7 @@ All commit subjects follow `../../../references/commit-message-convention.md`.
 
 ## Roadmap generation
 
-Commit `a4/roadmap.md` + all new `a4/task/feature/*.md` files together once the user confirms.
+Commit `a4/roadmap.md` + all new `a4/feature/*.md` files together once the user confirms.
 
 ```
 #<task-ids> docs(a4): roadmap for <milestone-or-scope>
