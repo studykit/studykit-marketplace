@@ -5,9 +5,12 @@ in-progress / active classifications, kind enums, cascade-target data,
 the cascade trigger map, and a small predicate API for legality checks.
 Imported by:
 
-  - transition_status.py        — allowed transitions, family states,
+  - status_cascade.py           — allowed transitions, family states,
                                   cascade-target data, cascade trigger
                                   map, legality predicates
+  - a4_hook.py                  — transitions / cascade trigger /
+                                  legality predicates for the live
+                                  PostToolUse cascade hook
   - markdown_validator.frontmatter         — enum membership per schema
   - markdown_validator.transitions         — legality predicates
   - markdown_validator.status_consistency  — supersedes trigger map,
@@ -88,10 +91,11 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
 # Allowed forward transitions
 # ---------------------------------------------------------------------------
 #
-# Only families with a mechanical writer (transition_status.py) appear
-# here. `idea` and `spark` transitions are user-driven and not enforced
-# by the writer; cross-file consistency is reported by
-# markdown_validator.status_consistency instead.
+# Only families with a mechanical writer (the PostToolUse cascade hook
+# / status_cascade.py) appear here. `idea` and `spark` transitions are
+# user-driven and not enforced by the cascade engine; cross-file
+# consistency is reported by markdown_validator.status_consistency
+# instead.
 #
 # States absent as keys have no outgoing transitions (terminal).
 
@@ -193,10 +197,12 @@ KIND_BY_FOLDER: dict[str, frozenset[str]] = {
 # Cascade-target data
 # ---------------------------------------------------------------------------
 #
-# Used by ``transition_status.py`` (writer that performs cascades) and by
-# ``markdown_validator.status_consistency`` (reader that flags drift when
-# cascades did not run). Holding both sides' data here keeps the writer
-# and the safety-net reader in lockstep.
+# Used by ``status_cascade.py`` (engine that performs cascades; called
+# by both the PostToolUse cascade hook and the ``validate.py --fix``
+# recovery sweep) and by ``markdown_validator.status_consistency``
+# (reader that flags drift when cascades did not run). Holding both
+# sides' data here keeps the writer and the safety-net reader in
+# lockstep.
 
 # Per-family terminal-active status that triggers a supersedes cascade
 # when reached by a successor. A successor at this status causes its
@@ -240,10 +246,11 @@ REVIEW_TERMINAL: frozenset[str] = frozenset({"resolved", "discarded"})
 # over the (family, None, to) entry, so callers can override a generic
 # rule with a specific one. Returns ``None`` when no cascade applies.
 #
-# Authoritative consumer: ``transition_status.transition()`` dispatches
-# off these names. ``markdown_validator.status_consistency`` checks the
-# observed reverse drift but does not consume this map directly — the
-# check direction is opposite to the dispatch direction.
+# Authoritative consumer: ``status_cascade.run_cascade()`` dispatches
+# off these names (called by the PostToolUse cascade hook).
+# ``markdown_validator.status_consistency`` checks the observed reverse
+# drift but does not consume this map directly — the check direction is
+# opposite to the dispatch direction.
 
 CASCADE_TRIGGERS: dict[tuple[str, str | None, str], str] = {
     ("usecase", "implementing", "revising"): "uc_revising",

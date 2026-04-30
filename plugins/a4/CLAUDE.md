@@ -53,10 +53,16 @@ All Python in `scripts/` is invoked via `uv run` — never `python` directly. Ex
 uv run scripts/validate.py <a4-dir>                       # all checks
 uv run scripts/validate.py <a4-dir> <file> [<file> ...]   # file-scoped
 uv run scripts/validate.py <a4-dir> --only frontmatter    # one category
+uv run scripts/validate.py <a4-dir> --fix [--dry-run]     # supersedes-chain recovery sweep
 uv run scripts/validate.py --list-checks                  # registered checks
-uv run scripts/transition_status.py <file> <target_status>
 uv run scripts/search.py <query>
 ```
+
+Status writes are not done by a CLI: edit `status:` directly and the
+PostToolUse cascade hook (`scripts/a4_hook.py`) handles related-file
+flips and `updated:` refresh. Cascade primitives live in
+`scripts/status_cascade.py`. Use `validate.py --fix` only as a
+recovery path for edits that bypassed the hook.
 
 Type hints are required on anything that is not a one-off script.
 

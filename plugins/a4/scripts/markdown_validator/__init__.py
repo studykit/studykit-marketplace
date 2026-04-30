@@ -8,8 +8,8 @@ Library home for the validator categories:
   - ``status_consistency`` — cross-file derived status (``superseded``,
     ``promoted``, cascaded ``discarded``).
   - ``transitions`` — git-diff-based status transition legality (HEAD
-    vs working tree). Safety net for hand edits that bypass
-    ``transition_status.py``.
+    vs working tree). Safety net for hand edits the PostToolUse
+    cascade hook silently skipped (illegal-jump branch).
 
 Plus a shared resolver:
 

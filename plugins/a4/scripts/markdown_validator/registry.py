@@ -145,8 +145,8 @@ CHECKS: dict[str, Check] = {
         description=(
             "Status transition legality — diff working tree against HEAD "
             "via git and reject `status:` jumps not allowed by the "
-            "family transition table. Safety net for hand edits that "
-            "bypass `transition_status.py`."
+            "family transition table. Safety net for hand edits the "
+            "cascade hook silently skipped (illegal-jump branch)."
         ),
         supports_file_scope=True,
         run_workspace=_transitions_workspace,

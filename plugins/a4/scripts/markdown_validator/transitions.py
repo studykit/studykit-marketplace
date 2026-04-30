@@ -4,11 +4,10 @@ Compares each issue file's working-tree ``status:`` against its HEAD
 counterpart and flags transitions that are not allowed by the family
 table in ``status_model.FAMILY_TRANSITIONS``.
 
-Acts as a stop-time **safety net**:
-``scripts/transition_status.py`` validates legality before writing on
-every authored flip, but if the LLM hand-edits ``status:`` directly
-(bypassing the writer), this validator surfaces illegal jumps before
-the agent stops.
+Acts as a stop-time **safety net**: the PostToolUse cascade hook
+(``scripts/a4_hook.py``) refuses to cascade off illegal transitions
+(it returns silently rather than fight a malformed edit), so this
+check is what surfaces such jumps before the agent stops.
 
 Scope rules:
 

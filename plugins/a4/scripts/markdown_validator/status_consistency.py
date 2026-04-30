@@ -18,7 +18,9 @@ Some status enum values are semantically derived from cross-file state:
   - ``spark/*.brainstorm.md`` ``status = "promoted"`` iff own
     ``promoted:`` list is non-empty.
 
-These are normally materialized by ``scripts/transition_status.py``.
+These are normally materialized by the PostToolUse cascade hook
+(``scripts/a4_hook.py``); the supersedes-chain class is also reachable
+via ``scripts/validate.py --fix``.
 This validator is the safety net — it catches drift left behind if a
 writer was skipped, bypassed, or ran before the successor reached its
 terminal-active state. Report-only; no file is mutated.
@@ -160,8 +162,8 @@ def check_superseded(
                     message=(
                         f"status={status!r} but superseded by {superseders} "
                         f"(each at {terminal_active!r}). Expected "
-                        "status=superseded — transition_status.py should "
-                        "have flipped this; re-run it against the successor."
+                        "status=superseded — the cascade hook should have "
+                        "flipped this. Run `validate.py --fix` to recover."
                     ),
                 )
             )
@@ -235,8 +237,9 @@ def check_discarded_cascade(
                     message=(
                         f"status={status!r} but every UC this {task_family} "
                         f"task implements is discarded. Expected "
-                        "status=discarded — transition_status.py should "
-                        "have cascaded from the UC discard."
+                        "status=discarded — the cascade hook should have "
+                        "cascaded from the UC discard. Re-edit the UC "
+                        "`status:` to retrigger the cascade."
                     ),
                 )
             )
@@ -265,8 +268,9 @@ def check_discarded_cascade(
                 rule="missing-discarded-status-review",
                 message=(
                     f"status={status!r} but target {sorted(hit)!r} is "
-                    f"discarded. Expected status=discarded — "
-                    "transition_status.py should have cascaded."
+                    f"discarded. Expected status=discarded — the cascade "
+                    "hook should have flipped this. Re-edit the target's "
+                    "`status:` to retrigger the cascade."
                 ),
             )
         )
@@ -283,9 +287,10 @@ def check_revising_cascade(
 
     When a UC flips to ``revising``, every task whose ``implements:`` list
     names that UC and is currently at ``progress`` or ``failing`` should
-    have been reset to ``pending`` by ``transition_status.py``. Tasks at
-    ``open`` (not yet started), ``pending`` (already reset), ``complete``
-    (already finished), or ``discarded`` are not part of the cascade.
+    have been reset to ``pending`` by the PostToolUse cascade hook.
+    Tasks at ``open`` (not yet started), ``pending`` (already reset),
+    ``complete`` (already finished), or ``discarded`` are not part of
+    the cascade.
     """
     revising_uc_keys = {
         key for key, fm in usecases.items()
@@ -317,8 +322,9 @@ def check_revising_cascade(
                     message=(
                         f"status={status!r} but a UC this {task_family} "
                         "task implements is at 'revising'. Expected "
-                        "status=pending — transition_status.py should "
-                        "have reset it; re-run the UC's revising transition."
+                        "status=pending — the cascade hook should have "
+                        "reset it. Re-edit the UC `status:` to "
+                        "retrigger the cascade."
                     ),
                 )
             )

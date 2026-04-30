@@ -67,7 +67,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 | `usecase-explorer` | Explore and discover usecases |
 | `usecase-reviewer` | Review usecase specifications |
 | `usecase-reviser` | Revise usecases based on feedback |
-| `workspace-assistant` | Forked-context delegate for workspace queries: find (body reading, multi-step lookup, summarization with `path:line` citations), snapshot (full or sectioned dashboard via `workspace_state.py`), and transition (executes caller-named `(file, target_status)` pairs via `transition_status.py`) |
+| `workspace-assistant` | Forked-context read-only delegate for workspace queries: find (body reading, multi-step lookup, summarization with `path:line` citations) and snapshot (full or sectioned dashboard via `workspace_state.py`). Does not perform status transitions — callers edit `status:` directly so the PostToolUse cascade hook can fire. |
 
 ## Document Layout (`a4/`)
 

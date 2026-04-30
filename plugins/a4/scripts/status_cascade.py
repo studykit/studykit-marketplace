@@ -1,4 +1,4 @@
-"""Status cascade primitives shared by the writer CLI and hook dispatcher.
+"""Status cascade primitives shared by the validator sweep and hook dispatcher.
 
 Holds the cascade engines that flip related files when a primary
 ``status:`` change occurs on a usecase / spec / issue-family file:
@@ -10,8 +10,8 @@ Holds the cascade engines that flip related files when a primary
 
 Two callers consume this module in-process:
 
-  - ``transition_status.py`` (CLI) — full path: legality check, primary
-    write, then cascade.
+  - ``validate.py --fix`` — supersedes-chain recovery sweep for edits
+    that bypassed the hook (manual git checkout, external editors).
   - ``a4_hook.py post-edit`` (PostToolUse hook) — primary write is the
     LLM's direct ``status:`` edit; the hook calls cascade primitives to
     flip related files and refresh ``updated:`` on the primary.
@@ -35,9 +35,11 @@ from common import iter_family, normalize_ref
 from markdown import parse
 from markdown_validator.refs import RefIndex
 from status_model import (
+    FAMILY_TRANSITIONS,
     ISSUE_FAMILY_TYPES,
     REVIEW_TERMINAL,
     SUPERSEDABLE_FROM_STATUSES,
+    SUPERSEDES_TRIGGER_STATUS,
     TASK_RESET_ON_REVISING,
     TASK_RESET_TARGET,
 )
@@ -72,6 +74,28 @@ class Report:
 
 
 SkipDecision = tuple[str, str | None] | None
+
+
+# ---------------------------------------------------------------------------
+# Family detection
+# ---------------------------------------------------------------------------
+
+
+def detect_family(rel_path: str) -> str | None:
+    """Return the family folder for an a4-workspace-relative path, or None.
+
+    Reads the leading path component (``usecase/`` / ``spec/`` /
+    ``task/`` / ...) and returns it only if it appears in
+    ``FAMILY_TRANSITIONS``. Used by the cascade hook (to gate cascade
+    on legal transitions) and the recovery sweep.
+    """
+    parts = rel_path.split("/", 1)
+    if len(parts) < 2:
+        return None
+    folder = parts[0]
+    if folder in FAMILY_TRANSITIONS:
+        return folder
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -438,3 +462,57 @@ def run_cascade(
             a4_dir, family, rel_path, today, dry_run, report, index
         )
         return
+
+
+# ---------------------------------------------------------------------------
+# Recovery sweep
+# ---------------------------------------------------------------------------
+
+
+def apply_supersedes_sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
+    """Walk all live-successor files and run the supersedes cascade.
+
+    Recovery path for edits that bypassed the PostToolUse cascade hook
+    (manual git checkout, external editor, scripts that wrote
+    frontmatter directly). Covers both families that carry
+    ``supersedes:``:
+
+      - usecase @ ``shipped`` → flip same-family targets
+        ``shipped → superseded``.
+      - spec @ ``active`` → flip same-family targets
+        ``{active|deprecated} → superseded``.
+
+    Idempotent — a second run on the same workspace produces no
+    further changes.
+    """
+    from datetime import date
+
+    reports: list[Report] = []
+    today = date.today().isoformat()
+    index = RefIndex(a4_dir)
+
+    for family in ("usecase", "spec"):
+        trigger = SUPERSEDES_TRIGGER_STATUS[family]
+        for p, fm in iter_family(a4_dir, family):
+            if fm.get("status") != trigger:
+                continue
+            supersedes = fm.get("supersedes")
+            if not isinstance(supersedes, list) or not supersedes:
+                continue
+            rel = f"{family}/{p.name}"
+            report = Report(
+                a4_dir=str(a4_dir),
+                file=rel,
+                family=family,
+                current_status=trigger,
+                target_status=trigger,
+                dry_run=dry_run,
+            )
+            apply_supersedes_chain(
+                a4_dir, family, rel, today, dry_run, report, index
+            )
+            report.ok = not report.errors
+            if report.cascades or report.errors:
+                reports.append(report)
+
+    return reports

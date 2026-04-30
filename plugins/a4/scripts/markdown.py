@@ -20,7 +20,7 @@ Public surface:
     Methods
       Body.extract_headings()  -> list[Heading]
 
-Imported by sibling scripts (validators, transition_status, search, ...)
+Imported by sibling scripts (validators, status_cascade, search, ...)
 and transitively by the hook dispatcher `a4_hook.py`. "Preamble" is the
 a4 term for YAML frontmatter.
 """

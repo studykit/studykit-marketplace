@@ -285,6 +285,7 @@ def _run_status_change_cascade(
             Change,
             Report,
             apply_status_change,
+            detect_family,
             run_cascade,
         )
         from status_model import (
@@ -292,7 +293,6 @@ def _run_status_change_cascade(
             cascade_for,
             is_transition_legal,
         )
-        from transition_status import detect_family
     except ImportError as e:
         sys.stderr.write(
             f"a4_hook.py post-edit: failed to import cascade modules ({e}) "
@@ -597,9 +597,10 @@ def _stop() -> int:
             loc = v.path + (f" [{v.field}]" if v.field else "")
             out_lines.append(f"  {loc} ({v.rule}): {v.message}")
         out_lines.append(
-            "Use scripts/transition_status.py to flip status — direct edits "
-            "of `status:` are allowed only when the transition is in "
-            "FAMILY_TRANSITIONS (status_model.py)."
+            "Edit `status:` directly — the PostToolUse cascade hook handles "
+            "related-file flips and `updated:` refresh. Direct edits are "
+            "allowed only when the transition is in FAMILY_TRANSITIONS "
+            "(status_model.py); illegal jumps land here."
         )
     out_lines.append("")
     out_lines.append(
