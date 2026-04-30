@@ -52,10 +52,11 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from common import (
+    collect_family,
     is_non_empty_list as _is_non_empty_list,
     iter_issue_files,
 )
-from markdown import extract_preamble
+from markdown import read_fm
 from status_model import (
     REVIEW_TERMINAL,
     SUPERSEDES_TRIGGER_STATUS as SUPERSEDES_FAMILIES,
@@ -70,28 +71,6 @@ class Mismatch:
     path: str
     rule: str
     message: str
-
-
-def _fm(path: Path) -> dict | None:
-    return extract_preamble(path).fm
-
-
-def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
-    """Map ``<family>/<id>-<slug>`` → frontmatter for every .md in folder.
-
-    For nested issue folders (e.g. ``task/{feature,bug,spike}/``),
-    descends into kind subfolders. The reference-key form drops the
-    kind segment so refs stay stable when a task is moved between
-    kinds.
-    """
-    out: dict[str, dict] = {}
-    for p in iter_issue_files(a4_dir, family):
-        fm = _fm(p)
-        if fm is None:
-            continue
-        key = f"{family}/{p.stem}"
-        out[key] = fm
-    return out
 
 
 def collect_specs(a4_dir: Path) -> dict[str, dict]:
@@ -112,7 +91,7 @@ def collect_with_promoted(
     if not folder.is_dir():
         return out
     for p in sorted(folder.glob(file_glob)):
-        fm = _fm(p)
+        fm = read_fm(p)
         if fm is None:
             continue
         out.append((f"{subfolder}/{p.stem}", fm))
@@ -235,7 +214,7 @@ def check_discarded_cascade(
     task_files = iter_issue_files(a4_dir, "task")
     if task_files:
         for p in task_files:
-            fm = _fm(p)
+            fm = read_fm(p)
             if fm is None:
                 continue
             implements = fm.get("implements") or []
@@ -262,7 +241,7 @@ def check_discarded_cascade(
             )
 
     for p in iter_issue_files(a4_dir, "review"):
-        fm = _fm(p)
+        fm = read_fm(p)
         if fm is None:
             continue
         target_raw = fm.get("target")
@@ -316,7 +295,7 @@ def check_revising_cascade(
 
     mismatches: list[Mismatch] = []
     for p in iter_issue_files(a4_dir, "task"):
-        fm = _fm(p)
+        fm = read_fm(p)
         if fm is None:
             continue
         implements = fm.get("implements") or []
@@ -436,7 +415,7 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
         abs_path = a4_dir / rel_file
         if not abs_path.is_file():
             return []
-        fm = _fm(abs_path)
+        fm = read_fm(abs_path)
         if fm is None:
             return []
         return check_promoted([(f"idea/{abs_path.stem}", fm)], "idea")
@@ -447,7 +426,7 @@ def collect_file_mismatches(a4_dir: Path, rel_file: str) -> list[Mismatch]:
         abs_path = a4_dir / rel_file
         if not abs_path.is_file():
             return []
-        fm = _fm(abs_path)
+        fm = read_fm(abs_path)
         if fm is None:
             return []
         return check_promoted([(f"spark/{abs_path.stem}", fm)], "brainstorm")

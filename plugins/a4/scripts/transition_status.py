@@ -59,7 +59,7 @@ from datetime import date
 from pathlib import Path
 from typing import Any, Callable
 
-from common import iter_issue_files, normalize_ref
+from common import iter_family, normalize_ref
 from markdown import parse
 from status_model import (
     FAMILY_TRANSITIONS,
@@ -150,21 +150,15 @@ def write_file(path: Path, raw_fm: str, body: str) -> None:
 def find_tasks_implementing(a4_dir: Path, uc_ref: str) -> list[Path]:
     """Tasks whose `implements:` list contains the given UC reference.
 
-    Recurses through `task/{feature,bug,spike}/` kind subfolders.
+    Recurses through `task/{feature,bug,spike}/` kind subfolders. Uses
+    the shared ``iter_family`` walker so the parse-and-skip-malformed
+    convention matches every other family-scoped consumer.
     """
-    matching: list[Path] = []
-    for p in iter_issue_files(a4_dir, "task"):
-        fm, _, _ = _parse(p)
-        if fm is None:
-            continue
-        implements = fm.get("implements")
-        if not isinstance(implements, list):
-            continue
-        for ref in implements:
-            if normalize_ref(ref) == uc_ref:
-                matching.append(p)
-                break
-    return matching
+    return [
+        p for p, fm in iter_family(a4_dir, "task")
+        if isinstance(fm.get("implements"), list)
+        and any(normalize_ref(r) == uc_ref for r in fm["implements"])
+    ]
 
 
 def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
@@ -174,37 +168,24 @@ def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
     matching the schema and ``status_consistency.check_discarded_cascade``.
     """
     matching: list[Path] = []
-    for p in iter_issue_files(a4_dir, "review"):
-        fm, _, _ = _parse(p)
-        if fm is None:
-            continue
+    for p, fm in iter_family(a4_dir, "review"):
         target = fm.get("target")
         if isinstance(target, str):
             if normalize_ref(target) == ref:
                 matching.append(p)
         elif isinstance(target, list):
-            for entry in target:
-                if normalize_ref(entry) == ref:
-                    matching.append(p)
-                    break
+            if any(normalize_ref(e) == ref for e in target):
+                matching.append(p)
     return matching
 
 
 def find_usecases_superseded_by(a4_dir: Path, ref: str) -> list[Path]:
     """Usecases whose `supersedes:` list contains the given UC reference."""
-    matching: list[Path] = []
-    for p in iter_issue_files(a4_dir, "usecase"):
-        fm, _, _ = _parse(p)
-        if fm is None:
-            continue
-        supersedes = fm.get("supersedes")
-        if not isinstance(supersedes, list):
-            continue
-        for entry in supersedes:
-            if normalize_ref(entry) == ref:
-                matching.append(p)
-                break
-    return matching
+    return [
+        p for p, fm in iter_family(a4_dir, "usecase")
+        if isinstance(fm.get("supersedes"), list)
+        and any(normalize_ref(e) == ref for e in fm["supersedes"])
+    ]
 
 
 # ---------------------------------------------------------------------------
@@ -610,10 +591,7 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
         ("usecase", uc_trigger),
         ("spec", spec_trigger),
     ):
-        for p in iter_issue_files(a4_dir, family):
-            fm, _, _ = _parse(p)
-            if fm is None:
-                continue
+        for p, fm in iter_family(a4_dir, family):
             if fm.get("status") != trigger:
                 continue
             supersedes = fm.get("supersedes")

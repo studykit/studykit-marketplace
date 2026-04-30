@@ -12,6 +12,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
+from markdown import read_fm
+
 WIKI_TYPES = frozenset(
     {"context", "domain", "architecture", "actors", "nfr", "roadmap", "bootstrap"}
 )
@@ -81,6 +83,32 @@ def is_non_empty_list(value: Any) -> bool:
     return isinstance(value, list) and any(
         isinstance(x, str) and x.strip() for x in value
     )
+
+
+def iter_family(a4_dir: Path, family: str) -> list[tuple[Path, dict]]:
+    """Walk a family folder, returning ``(path, fm)`` pairs.
+
+    Skips files whose preamble is absent or malformed. Order matches
+    ``iter_issue_files`` (sorted, recursing into kind subfolders for
+    ``NESTED_ISSUE_FOLDERS``).
+    """
+    out: list[tuple[Path, dict]] = []
+    for p in iter_issue_files(a4_dir, family):
+        fm = read_fm(p)
+        if fm is None:
+            continue
+        out.append((p, fm))
+    return out
+
+
+def collect_family(a4_dir: Path, family: str) -> dict[str, dict]:
+    """Map ``<family>/<id>-<slug>`` → frontmatter for parseable files.
+
+    For nested issue folders (``task/{feature,bug,spike}/``), descends
+    into kind subfolders. The reference-key form drops the kind segment
+    so refs stay stable when a task is moved between kinds.
+    """
+    return {f"{family}/{p.stem}": fm for p, fm in iter_family(a4_dir, family)}
 
 
 def normalize_ref(ref: Any) -> str | None:

@@ -15,6 +15,7 @@ Public surface:
       extract_preamble(path)         -> Preamble
       extract_preamble_from_text(s)  -> Preamble
       extract_body(path)             -> Body
+      read_fm(path)                  -> dict | None
 
     Methods
       Body.extract_headings()  -> list[Heading]
@@ -234,5 +235,16 @@ def extract_body(path: Path) -> Body:
         return Body(line_start=1, content=text)
     _, body_offset, line_start = located
     return Body(line_start=line_start, content=text[body_offset:])
+
+
+def read_fm(path: Path) -> dict | None:
+    """Convenience wrapper: ``extract_preamble(path).fm``.
+
+    Returns the parsed YAML mapping, or ``None`` when the preamble is
+    absent, malformed, or not a mapping. Use this when only the
+    frontmatter dict is needed and the raw fence text / body / line map
+    are not.
+    """
+    return extract_preamble(path).fm
 
 
