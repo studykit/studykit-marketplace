@@ -291,7 +291,7 @@ def _apply_reverse_cascade(
         if skip is not None:
             reason, detail = skip
             entry: dict[str, Any] = {
-                "path": f"{target_kind}/{path.stem}",
+                "path": f"{target_kind}/{path.stem}.md",
                 "reason": reason,
             }
             if detail is not None:
@@ -351,7 +351,7 @@ def _apply_supersedes_chain(
             if resolved.folder != family:
                 report.skipped.append(
                     {
-                        "path": resolved.canonical,
+                        "path": f"{resolved.canonical}.md",
                         "reason": "cross-family-supersedes",
                         "detail": f"ignored non-{family} target in {src_ref}",
                     }
@@ -366,7 +366,7 @@ def _apply_supersedes_chain(
             if not norm.startswith(family_prefix):
                 report.skipped.append(
                     {
-                        "path": norm,
+                        "path": f"{norm}.md",
                         "reason": "cross-family-supersedes",
                         "detail": f"ignored non-{family} target in {src_ref}",
                     }
