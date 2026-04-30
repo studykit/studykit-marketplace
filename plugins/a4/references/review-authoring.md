@@ -8,7 +8,7 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 
 Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents and by single-edit defer paths (`source: self`).
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 

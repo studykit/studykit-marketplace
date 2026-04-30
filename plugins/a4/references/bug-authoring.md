@@ -2,9 +2,9 @@
 
 A bug at `a4/bug/<id>-<slug>.md` is a **defect fix** — production code change against expected behavior. Not throwaway.
 
-After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
+After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -127,7 +127,7 @@ Optional — the production fix lives in the project's source tree (documented i
 
 No archive convention — closed bug tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
-Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./artifacts.md`](./artifacts.md) and apply to `type: bug` as written there.
+Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in `./artifacts.md` and apply to `type: bug` as written there.
 
 ## Common mistakes (bug-specific)
 

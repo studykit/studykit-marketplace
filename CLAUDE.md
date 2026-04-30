@@ -16,13 +16,17 @@ The `global/` directory manages rules, subagents, skills, hooks, and MCP configu
 
 **All documentation must be written in English.** When creating or editing markdown files, README files, CLAUDE.md files, or any other documentation, always use English.
 
+## Path References in Documentation
+
+Inside markdown documentation (CLAUDE.md, README.md, `plugins/a4/references/*.md`, `plugins/a4/docs/*.md`, etc.), reference plugin-internal files using **backticked relative paths** (`` `./file.md` ``, `` `../dir/file.md` ``, `` `plugins/a4/references/foo.md` ``) rather than markdown links (`[text](path)`). Reserve markdown link form for examples that demonstrate cross-reference syntax used inside `<project-root>/a4/` workspace files.
+
 ## a4 plugin frontmatter schema
 
 When modifying anything under `plugins/a4/` or anything that reads/writes `<project-root>/a4/` workspace files, always read the relevant a4 frontmatter contracts first:
 
-- [`plugins/a4/references/frontmatter-universals.md`](plugins/a4/references/frontmatter-universals.md) — universal rules (`type:` field, ids, path-reference format, dates, status writers, structural relationship fields).
-- [`plugins/a4/references/<type>-authoring.md`](plugins/a4/references/) — per-type field table and lifecycle for the `type:` you are editing.
-- [`plugins/a4/references/validator-rules.md`](plugins/a4/references/validator-rules.md) — schema enforcement and cross-file status consistency.
+- `plugins/a4/references/frontmatter-universals.md` — universal rules (`type:` field, ids, path-reference format, dates, status writers, structural relationship fields).
+- `plugins/a4/references/<type>-authoring.md` — per-type field table and lifecycle for the `type:` you are editing.
+- `plugins/a4/references/validator-rules.md` — schema enforcement and cross-file status consistency.
 
 Together they are the single source of truth for the a4 frontmatter contract — required fields, enum values, path-reference format, status writers, auto-maintained reverse links, and validator behavior. Do not edit a4 frontmatter, write new a4 skills/scripts, or change validators without consulting them.
 

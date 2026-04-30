@@ -2,7 +2,7 @@
 
 `a4/roadmap.md` is the **milestone narrative wiki**. It groups UCs into milestones, names the dependency graph between them, and records Shared Integration Points the architecture exposes.
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
 
 ## Frontmatter contract (do not deviate)
 

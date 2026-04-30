@@ -2,7 +2,7 @@
 
 A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code and review items must conform to. Design rationale for the chosen shape lives inline as `## Decision Log` entries in the same file.
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 ## When a spec is warranted
 

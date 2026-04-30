@@ -1,6 +1,6 @@
 # a4 plugin — contributor notes
 
-These notes apply to anyone editing files under `plugins/a4/`. End-user behavior is documented in [`README.md`](README.md); this file is for plugin developers.
+These notes apply to anyone editing files under `plugins/a4/`. End-user behavior is documented in `README.md`; this file is for plugin developers.
 
 `a4` ships an Obsidian-flavored wiki + issue tracker that lives in a user's `<project-root>/a4/` workspace. The plugin code itself is split across several directories that play distinct roles — keep edits in the right one.
 
@@ -29,11 +29,11 @@ If you find yourself duplicating substance across `rules/` and `references/`, yo
 
 ## Required reading before editing
 
-- **Anything touching frontmatter** → [`references/frontmatter-universals.md`](references/frontmatter-universals.md) (universal rules), the matching [`references/<type>-authoring.md`](references/) (per-type field table and lifecycle), and [`references/validator-rules.md`](references/validator-rules.md) (enforcement). The project-root [`CLAUDE.md`](../../CLAUDE.md) calls these out as a hard prerequisite.
-- **Anything touching body sections, tag form, change-logs, or links** → [`references/body-conventions.md`](references/body-conventions.md).
-- **A new or modified skill** → [`docs/skill-modes.md`](docs/skill-modes.md), [`docs/pipeline-shapes.md`](docs/pipeline-shapes.md), [`docs/wiki-authorship.md`](docs/wiki-authorship.md). Skills must conform to wiki-authorship; if a `SKILL.md` disagrees, the doc wins and the skill is updated.
-- **A new or modified hook** → [`docs/hook-conventions.md`](docs/hook-conventions.md). Covers state classification, lifecycle symmetry, in-event ordering, blocking vs non-blocking policy, output-channel choice.
-- **An iterate flow (review-item walks)** → [`docs/iterate-mechanics.md`](docs/iterate-mechanics.md).
+- **Anything touching frontmatter** → `references/frontmatter-universals.md` (universal rules), the matching `references/<type>-authoring.md` (per-type field table and lifecycle), and `references/validator-rules.md` (enforcement). The project-root `CLAUDE.md` calls these out as a hard prerequisite.
+- **Anything touching body sections, tag form, change-logs, or links** → `references/body-conventions.md`.
+- **A new or modified skill** → `docs/skill-modes.md`, `docs/pipeline-shapes.md`, `docs/wiki-authorship.md`. Skills must conform to wiki-authorship; if a `SKILL.md` disagrees, the doc wins and the skill is updated.
+- **A new or modified hook** → `docs/hook-conventions.md`. Covers state classification, lifecycle symmetry, in-event ordering, blocking vs non-blocking policy, output-channel choice.
+- **An iterate flow (review-item walks)** → `docs/iterate-mechanics.md`.
 
 ## Conventions
 
@@ -43,7 +43,7 @@ If you find yourself duplicating substance across `rules/` and `references/`, yo
   - Shell snippets (`uv run`, `bash` code blocks) anywhere ALWAYS use `${CLAUDE_PLUGIN_ROOT}` — they execute under the user's CWD, so relative paths from the file's location would break.
 - **`rules/*.md` carries `paths:` frontmatter** that targets `a4/**/*.md` (the user's workspace), not paths inside this plugin. The rule fires when the end user opens an `a4/<type>/*.md` file.
 - **Ids are globally monotonic.** Allocate via `scripts/allocate_id.py`; never reuse, never re-pack.
-- **Plugin version lives in `.claude-plugin/marketplace.json`**, not in `plugin.json`. Bump the entry when adding a feature (per the project-root [`CLAUDE.md`](../../CLAUDE.md)).
+- **Plugin version lives in `.claude-plugin/marketplace.json`**, not in `plugin.json`. Bump the entry when adding a feature (per the project-root `CLAUDE.md`).
 
 ## Running plugin scripts
 

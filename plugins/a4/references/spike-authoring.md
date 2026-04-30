@@ -2,9 +2,9 @@
 
 A spike at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives in the spike's artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `type: research` instead.
 
-After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
+After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -124,7 +124,7 @@ Spike-specific notes:
 - The directory is the spike's primary deliverable while exploration is underway. Most active spikes have one.
 - When the spike completes (or fails), `git mv` it to `artifacts/spike/archive/<id>-<slug>/` and update `artifacts:` paths to match. The move is **never automated**.
 
-Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./artifacts.md`](./artifacts.md) and apply to `type: spike` as written there.
+Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in `./artifacts.md` and apply to `type: spike` as written there.
 
 ## Common mistakes (spike-specific)
 

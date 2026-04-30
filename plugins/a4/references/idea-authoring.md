@@ -2,7 +2,7 @@
 
 An idea at `a4/idea/<id>-<slug>.md` is a **pre-pipeline quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or spark brainstorm via the `promoted:` field.
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 ## Boundary with `review/`
 

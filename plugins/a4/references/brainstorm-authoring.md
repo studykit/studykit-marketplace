@@ -2,7 +2,7 @@
 
 A brainstorm at `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
 
-Companion to [`./frontmatter-universals.md`](./frontmatter-universals.md), `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 ## Frontmatter contract (do not deviate)
 
