@@ -38,7 +38,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" \
   --json
 ```
 
-The writer flips `status:` and bumps `updated:`. If exit code is non-zero, surface the writer's stderr verbatim and stop — do not retry with `--force`.
+The writer flips `status:` and bumps `updated:`. If exit code is non-zero, surface the writer's stderr verbatim and stop — the writer rejects only legality violations, so re-check the file's current status rather than retrying.
 
 If the user supplied a reason explicit enough to deserve narrative capture, append (or extend) a `## Why Discarded` body section via `Edit`:
 

@@ -11,13 +11,10 @@ the desired new status. The script:
   1. Detects the family from the file path.
   2. Checks the current → new transition is legal per the family's
      transition table.
-  3. Runs mechanical validation for that specific transition (e.g.,
-     `actors:` non-empty and `title:` placeholder check for
-     `revising → ready` re-approval).
-  4. Writes `status:` and `updated:` in the frontmatter. The body is
+  3. Writes `status:` and `updated:` in the frontmatter. The body is
      left untouched — the `## Log` body section, when present, is
      hand-maintained by authors and is not written by this script.
-  5. Runs cascades — cross-file status changes that are semantically
+  4. Runs cascades — cross-file status changes that are semantically
      implied by the primary transition:
 
         usecase implementing → revising        → related tasks reset:
@@ -36,9 +33,13 @@ the desired new status. The script:
 All cascades happen in the same invocation so the caller only needs to
 commit the unstaged working-tree delta once.
 
+Authoring invariants beyond legality (e.g., UC `actors:` non-empty at
+`>= ready`, placeholder tokens in `title:`) are enforced statically by
+``markdown_validator.frontmatter`` at the Stop hook, not here.
+
 Exit codes:
   0 — clean run, transition applied (or dry-run validated)
-  2 — illegal transition, validation failure, or hard error
+  2 — illegal transition or hard error
 
 Usage:
     uv run transition_status.py <a4-dir> --file <path> --to <status>
@@ -56,7 +57,6 @@ import sys
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
-from typing import Any
 
 from common import iter_issue_files, normalize_ref
 from markdown import parse
@@ -230,92 +230,20 @@ class Report:
     cascades: list[Change] = field(default_factory=list)
     skipped: list[dict] = field(default_factory=list)
     errors: list[str] = field(default_factory=list)
-    validation_issues: list[str] = field(default_factory=list)
     dry_run: bool = False
     ok: bool = False
 
 
 # ---------------------------------------------------------------------------
-# Mechanical validation
-# ---------------------------------------------------------------------------
-
-
-PLACEHOLDER_TOKENS = ("TBD", "???", "<placeholder>", "<todo>", "TODO:")
-
-
-def _placeholder_in(value: Any) -> str | None:
-    if not isinstance(value, str):
-        return None
-    upper = value.upper()
-    for token in PLACEHOLDER_TOKENS:
-        if token.upper() in upper:
-            return token
-    return None
-
-
-def _is_non_empty_list(value: Any) -> bool:
-    return isinstance(value, list) and any(
-        isinstance(x, str) and x.strip() for x in value
-    )
-
-
-def validate_transition(
-    a4_dir: Path,
-    rel_path: str,
-    family: str,
-    fm: dict,
-    from_status: str,
-    to_status: str,
-) -> list[str]:
-    """Return mechanical validation issues for this transition.
-
-    Empty list means the transition may proceed. `--force` in the caller
-    bypasses these checks.
-    """
-    issues: list[str] = []
-    if family == "usecase":
-        if from_status == "revising" and to_status == "ready":
-            _validate_revising_to_ready(a4_dir, rel_path, fm, issues)
-            return issues
-        return issues
-    if family == "spec":
-        if from_status == "draft" and to_status == "active":
-            _validate_draft_to_active(a4_dir, rel_path, fm, issues)
-            return issues
-        return issues
-    return issues
-
-
-def _validate_revising_to_ready(
-    a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
-) -> None:
-    # Re-approval shape checks after a `revising` spec edit.
-    actors = fm.get("actors")
-    if not _is_non_empty_list(actors):
-        issues.append("`actors:` is empty — UC has no actors declared.")
-    for field_name in ("title",):
-        placeholder = _placeholder_in(fm.get(field_name))
-        if placeholder:
-            issues.append(
-                f"`{field_name}:` contains placeholder `{placeholder}`."
-            )
-
-
-def _validate_draft_to_active(
-    a4_dir: Path, rel_path: str, fm: dict, issues: list[str]
-) -> None:
-    """Spec draft → active: title placeholder check."""
-    for field_name in ("title",):
-        placeholder = _placeholder_in(fm.get(field_name))
-        if placeholder:
-            issues.append(
-                f"`{field_name}:` contains placeholder `{placeholder}`."
-            )
-
-
-# ---------------------------------------------------------------------------
 # Primary write + cascades
 # ---------------------------------------------------------------------------
+#
+# Post-draft authoring invariants (UC `actors:` non-empty at `>= ready`,
+# placeholder tokens in `title:`, etc.) live in
+# ``markdown_validator.frontmatter`` and are enforced statically at the
+# Stop hook. They are intentionally not duplicated here — the writer's
+# job is the legality table + atomic ``status:``/``updated:`` write +
+# cascades, not authoring shape.
 
 
 def _apply_status_change(
@@ -618,7 +546,6 @@ def transition(
     rel_path: str,
     new_status: str,
     reason: str | None,
-    force: bool,
     dry_run: bool,
 ) -> Report:
     today = date.today().isoformat()
@@ -683,16 +610,6 @@ def transition(
         report.errors.append(
             f"illegal transition for {family}: `{current}` → `{new_status}`. "
             f"Allowed from `{current}`: {sorted(allowed) if allowed else 'none (terminal)'}."
-        )
-        return report
-
-    issues = validate_transition(
-        a4_dir, rel_path, family, fm, current, new_status
-    )
-    report.validation_issues = list(issues)
-    if issues and not force:
-        report.errors.append(
-            "mechanical validation failed; pass --force to override."
         )
         return report
 
@@ -832,7 +749,6 @@ def _report_to_dict(report: Report) -> dict:
         "cascades": [asdict(c) for c in report.cascades],
         "skipped": report.skipped,
         "errors": report.errors,
-        "validation_issues": report.validation_issues,
         "dry_run": report.dry_run,
         "ok": report.ok,
     }
@@ -849,8 +765,6 @@ def _print_report_human(report: Report, dry_run: bool) -> None:
         print(f"{prefix}  cascade: {c.path}: {c.from_status} → {c.to_status}{tail}")
     for s in report.skipped:
         print(f"  skipped: {s.get('path', '?')} ({s.get('reason', '?')})")
-    for i in report.validation_issues:
-        print(f"  validation: {i}", file=sys.stderr)
     for e in report.errors:
         print(f"  error: {e}", file=sys.stderr)
 
@@ -882,8 +796,8 @@ def main() -> None:
         "--validate", action="store_true",
         help=(
             "validate only; do not write. Requires --file and --to. "
-            "Outputs the mechanical-validation verdict for the proposed "
-            "transition."
+            "Reports whether the proposed transition is legal per the "
+            "family transition table."
         ),
     )
     parser.add_argument(
@@ -896,10 +810,6 @@ def main() -> None:
     parser.add_argument(
         "--dry-run", action="store_true",
         help="report planned changes without writing",
-    )
-    parser.add_argument(
-        "--force", action="store_true",
-        help="bypass mechanical validation (e.g., emergency flip)",
     )
     parser.add_argument(
         "--json", action="store_true",
@@ -969,7 +879,6 @@ def main() -> None:
                 )
             else:
                 current = fm.get("status")
-                issues: list[str] = []
                 errors: list[str] = []
                 if args.to_status not in FAMILY_STATES.get(family, set()):
                     errors.append(
@@ -984,18 +893,12 @@ def main() -> None:
                         f"Allowed from `{current}`: "
                         f"{sorted(allowed) if allowed else 'none (terminal)'}"
                     )
-                else:
-                    issues = validate_transition(
-                        a4_dir, rel, family, fm,
-                        str(current), args.to_status,
-                    )
                 report = Report(
                     a4_dir=str(a4_dir), file=rel, family=family,
                     current_status=str(current) if current else None,
                     target_status=args.to_status,
-                    validation_issues=issues,
                     errors=errors,
-                    ok=not errors and not issues,
+                    ok=not errors,
                 )
         if args.json:
             print(json.dumps(_report_to_dict(report), indent=2, ensure_ascii=False))
@@ -1010,7 +913,6 @@ def main() -> None:
         rel_path=rel,
         new_status=args.to_status,
         reason=args.reason,
-        force=args.force,
         dry_run=args.dry_run,
     )
 

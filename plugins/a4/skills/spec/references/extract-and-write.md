@@ -64,4 +64,4 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "<project-root>/a4" 
   --json
 ```
 
-The writer's lifecycle / validation / supersedes-cascade behavior is defined in `../../../references/spec-authoring.md` §Lifecycle. On `ok: true`, report the primary flip plus any cascades. On `exit 2`, surface `validation_issues` verbatim and return to Step 5 — never retry with `--force`.
+The writer's lifecycle / supersedes-cascade behavior is defined in `../../../references/spec-authoring.md` §Lifecycle. On `ok: true`, report the primary flip plus any cascades. On `exit 2`, surface `errors` verbatim and return to Step 5 — the writer rejects only legality violations, so re-author the spec instead of retrying. Post-draft authoring invariants (placeholder tokens etc.) are caught by the frontmatter validator at the Stop hook.

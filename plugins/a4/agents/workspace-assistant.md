@@ -119,11 +119,10 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
    uv run "${CLAUDE_PLUGIN_ROOT}/scripts/transition_status.py" "$ROOT/a4" \
      --file <resolved-file> --to <status> [--reason "<one-liner>"] [--json]
    ```
-4. **Surface the result.** On success, report the new status (old → new), the `--reason` text passed to the writer, and any cascade-affected files (one line per file). On failure, surface stderr verbatim and stop — do not retry, do not `--force`.
+4. **Surface the result.** On success, report the new status (old → new), the `--reason` text passed to the writer, and any cascade-affected files (one line per file). On failure, surface stderr verbatim and stop — do not retry. If the writer rejects the transition, the legality table forbids it; the right answer is upstream (re-author the source file or pick a different target status), not retry.
 
 **Forbidden:**
 
-- Do not pass `--force` (mechanical-validation bypass) under any circumstances. If validation fails, report it and stop.
 - Do not pass `--sweep` (chain-cascade recovery walks the whole workspace; that is an operator-initiated maintenance command, not a delegation target).
 - Do not call `transition_status.py` for any file family other than `usecase` / `task` / `review` / `spec`.
 
