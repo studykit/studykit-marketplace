@@ -15,14 +15,10 @@ If the user agrees:
 1. Launch a research subagent via `Agent` with `run_in_background: true`.
 2. Prompt the subagent with the current Context and confirmed UC list — ask it to find comparable products and identify features not yet covered.
 3. **Continue the interview** — do not wait for research results. Notification arrives automatically when the agent completes.
-4. When notified, save the full results per `research-report.md` (in this references directory) with a descriptive label (e.g., `research-competitor-task-management.md`). Summarize findings at the next natural break:
+4. When notified, save the full results as `a4/research/<id>-<slug>.md` per `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`. Allocate `<id>` via `scripts/allocate_id.py`; set `type: research`, `mode: comparative`, and `related: [usecase/<id>-<slug>, ...]` pointing at the UCs that prompted the investigation. Summarize findings at the next natural break:
    > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
-5. **Update the research index** — append an entry to `a4/<topic-slug>.usecase.research-index.md`:
-   ```markdown
-   | # | File | Tags | Summary | Date |
-   |---|------|------|---------|------|
-   | 1 | research-competitor-task-management.md | Notion, Coda, Slite, collaboration, permissions | Feature comparison, 5 common patterns, user request summary from forums | 2026-04-10 |
-   ```
-6. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
-7. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
-8. If the user doesn't pick any, record the candidates in Open Questions for future reference.
+
+   Lookup of prior research tasks (to avoid re-running) is via `scripts/search.py --folder research` or `/a4:compass` — there is no separate index file.
+5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
+6. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
+7. If the user doesn't pick any, record the candidates in Open Questions for future reference.
