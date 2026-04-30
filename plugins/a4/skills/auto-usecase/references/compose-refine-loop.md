@@ -52,7 +52,7 @@ The composer writes directly. Do **not** read the files back in the main session
 
 Repeat up to 3 rounds. Each round:
 
-1. Spawn the reviewer per `usecase/authoring/review-report.md`. It writes per-finding review items into `a4/review/<id>-<slug>.md` (via `allocate_id.py`) and returns:
+1. Spawn the reviewer per `usecase/references/review-report.md`. It writes per-finding review items into `a4/review/<id>-<slug>.md` (via `allocate_id.py`) and returns:
 
    ```
    verdict: ALL_PASS | NEEDS_REVISION

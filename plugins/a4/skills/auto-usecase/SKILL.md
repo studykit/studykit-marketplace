@@ -45,9 +45,9 @@ Subagents read these directly — don't pull their contents into the main sessio
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — file layout, frontmatter schemas, wiki update protocol.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md` — banned implementation terms.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-splitting.md` — splitting guide.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-relationships.md` — relationship analysis.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/review-report.md` — review-item schema emitted by reviewers.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-splitting.md` — splitting guide.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-relationships.md` — relationship analysis.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/review-report.md` — review-item schema emitted by reviewers.
 
 Include these paths in each subagent prompt.
 

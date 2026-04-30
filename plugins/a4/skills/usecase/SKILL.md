@@ -99,13 +99,13 @@ Restate the idea back in one sentence to confirm understanding. Then immediately
 | 2 | Discovery loop (gaps + actor discovery) | `references/discovery-loop.md` |
 | 3 | Progressive UC extraction | `references/progressive-extraction.md` |
 | 3a | In-situ wiki nudge | `references/in-situ-wiki-nudge.md` |
-| 4 | UC splitting | `authoring/usecase-splitting.md` |
+| 4 | UC splitting | `references/usecase-splitting.md` |
 | 5 | Challenge mode shifts (Contrarian / Simplifier / Reframer) | `references/facilitation-techniques.md` |
-| 6 | Similar systems research (on request, after 3+ UCs) | `authoring/research-procedure.md` |
+| 6 | Similar systems research (on request, after 3+ UCs) | `references/research-procedure.md` |
 | 7 | Platform capabilities audit | `references/platform-capabilities-audit.md` |
-| 8 | UC relationship analysis (after 5+ UCs) | `authoring/usecase-relationships.md` |
+| 8 | UC relationship analysis (after 5+ UCs) | `references/usecase-relationships.md` |
 | 9 | UI screen grouping + (10) mock generation | `references/ui-screen-grouping.md` |
-| 11 | Non-functional requirements | `authoring/nfr-capture.md` |
+| 11 | Non-functional requirements | `references/nfr-capture.md` |
 
 ### Wrap Up
 

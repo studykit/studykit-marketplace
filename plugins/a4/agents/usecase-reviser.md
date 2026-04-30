@@ -26,7 +26,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 ## Shared References
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout, wiki update protocol.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-splitting.md` — splitting procedure.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-splitting.md` — splitting procedure.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md` — banned terms, conversion rules.
 
 ## Input
