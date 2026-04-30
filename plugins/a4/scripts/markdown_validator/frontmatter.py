@@ -437,6 +437,66 @@ def validate_file(
                     )
                 )
 
+    if ftype == "task":
+        violations.extend(_validate_task_files(rel_str, fm, path))
+
+    return violations
+
+
+def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
+    """Enforce the artifact-only contract on ``task.files:``.
+
+    Every entry must start with
+    ``artifacts/task/<kind>/<id>-<slug>/`` — and for ``kind: spike``
+    only, ``artifacts/task/spike/archive/<id>-<slug>/`` is also accepted
+    (post-archive paths). Empty list is fine for any kind. The check
+    skips when ``kind`` / ``id`` / filename's ``<id>-<slug>`` are
+    malformed — those drift modes are surfaced by other rules.
+    """
+    files = fm.get("files")
+    if not isinstance(files, list) or not files:
+        return []
+
+    kind = fm.get("kind")
+    if not isinstance(kind, str) or not kind:
+        return []
+    raw_id = fm.get("id")
+    if not _is_int(raw_id):
+        return []
+    m = re.match(r"^(\d+)-(.+)$", path.stem)
+    if not m or int(m.group(1)) != raw_id:
+        return []
+    id_slug = path.stem
+
+    expected_prefix = f"artifacts/task/{kind}/{id_slug}/"
+    spike_archive_prefix = f"artifacts/task/spike/archive/{id_slug}/"
+    accepted = (
+        (expected_prefix, spike_archive_prefix)
+        if kind == "spike"
+        else (expected_prefix,)
+    )
+
+    violations: list[Violation] = []
+    for i, entry in enumerate(files):
+        if not isinstance(entry, str):
+            continue
+        e = entry.strip()
+        if not e:
+            continue
+        if any(e.startswith(p) for p in accepted):
+            continue
+        suffix = (
+            f" or {spike_archive_prefix!r}" if kind == "spike" else ""
+        )
+        violations.append(
+            Violation(
+                rel_str,
+                "task-files-bad-artifact-path",
+                "files",
+                f"files[{i}]: {entry!r} must start with "
+                f"{expected_prefix!r}{suffix}",
+            )
+        )
     return violations
 
 
