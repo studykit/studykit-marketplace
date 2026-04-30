@@ -61,6 +61,7 @@ from typing import Any, Callable
 
 from common import iter_family, normalize_ref
 from markdown import parse
+from markdown_validator.refs import RefIndex
 from status_model import (
     FAMILY_TRANSITIONS,
     REVIEW_TERMINAL,
@@ -147,45 +148,43 @@ def write_file(path: Path, raw_fm: str, body: str) -> None:
 # ---------------------------------------------------------------------------
 
 
-def find_tasks_implementing(a4_dir: Path, uc_ref: str) -> list[Path]:
-    """Tasks whose `implements:` list contains the given UC reference.
+def find_tasks_implementing(
+    a4_dir: Path, uc_canonical: str, index: RefIndex
+) -> list[Path]:
+    """Tasks whose `implements:` list contains the given UC.
 
-    Recurses through `task/{feature,bug,spike}/` kind subfolders. Uses
-    the shared ``iter_family`` walker so the parse-and-skip-malformed
-    convention matches every other family-scoped consumer.
+    ``uc_canonical`` is the UC's canonical ref form (``usecase/<stem>``).
+    Each ``implements:`` entry is resolved through ``index`` so all
+    accepted ref forms — ``#<id>``, ``usecase/<id>``, ``usecase/<id>-<slug>``,
+    bare ``<id>-<slug>`` — match the same target. Recurses through
+    ``task/{feature,bug,spike}/`` kind subfolders via ``iter_family``.
     """
     return [
         p for p, fm in iter_family(a4_dir, "task")
         if isinstance(fm.get("implements"), list)
-        and any(normalize_ref(r) == uc_ref for r in fm["implements"])
+        and any(index.canonical(r) == uc_canonical for r in fm["implements"])
     ]
 
 
-def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
-    """Review items whose `target:` references the given path.
+def find_reviews_targeting(
+    a4_dir: Path, canonical: str, index: RefIndex
+) -> list[Path]:
+    """Review items whose `target:` references the given canonical ref.
 
     Accepts both string-scalar and list-of-strings shapes for ``target:``,
     matching the schema and ``status_consistency.check_discarded_cascade``.
+    Resolves each entry through ``index`` so short forms match.
     """
     matching: list[Path] = []
     for p, fm in iter_family(a4_dir, "review"):
         target = fm.get("target")
         if isinstance(target, str):
-            if normalize_ref(target) == ref:
+            if index.canonical(target) == canonical:
                 matching.append(p)
         elif isinstance(target, list):
-            if any(normalize_ref(e) == ref for e in target):
+            if any(index.canonical(e) == canonical for e in target):
                 matching.append(p)
     return matching
-
-
-def find_usecases_superseded_by(a4_dir: Path, ref: str) -> list[Path]:
-    """Usecases whose `supersedes:` list contains the given UC reference."""
-    return [
-        p for p, fm in iter_family(a4_dir, "usecase")
-        if isinstance(fm.get("supersedes"), list)
-        and any(normalize_ref(e) == ref for e in fm["supersedes"])
-    ]
 
 
 # ---------------------------------------------------------------------------
@@ -319,6 +318,7 @@ def _apply_supersedes_chain(
     today: str,
     dry_run: bool,
     report: Report,
+    index: RefIndex,
 ) -> None:
     """Supersedes-chain cascade engine for usecase / spec.
 
@@ -328,6 +328,12 @@ def _apply_supersedes_chain(
     files, already-superseded targets, and targets in non-supersedable
     statuses are surfaced as skips or errors. Idempotent — safe to call
     twice.
+
+    Each ``supersedes:`` entry is resolved through ``index`` so all
+    accepted ref forms (``#<id>``, ``<family>/<id>``,
+    ``<family>/<id>-<slug>``, ``<id>-<slug>``) reach the same file. An
+    entry the index cannot resolve falls back to path-form parsing so
+    cross-family-by-prefix skips and missing-file errors stay visible.
     """
     src_path = a4_dir / rel_path
     fm, _, _ = _parse(src_path)
@@ -340,22 +346,35 @@ def _apply_supersedes_chain(
     family_prefix = f"{family}/"
     supersedable_from = SUPERSEDABLE_FROM_STATUSES[family]
     for entry in supersedes:
-        norm = normalize_ref(entry)
-        if norm is None:
-            continue
-        if not norm.startswith(family_prefix):
-            report.skipped.append(
-                {
-                    "path": norm,
-                    "reason": "cross-family-supersedes",
-                    "detail": f"ignored non-{family} target in {src_ref}",
-                }
-            )
-            continue
-        target_path = a4_dir / f"{norm}.md"
-        if not target_path.is_file():
+        resolved = index.resolve(entry)
+        if resolved is not None:
+            if resolved.folder != family:
+                report.skipped.append(
+                    {
+                        "path": resolved.canonical,
+                        "reason": "cross-family-supersedes",
+                        "detail": f"ignored non-{family} target in {src_ref}",
+                    }
+                )
+                continue
+            target_path = resolved.path
+            canon = resolved.canonical
+        else:
+            norm = normalize_ref(entry)
+            if norm is None:
+                continue
+            if not norm.startswith(family_prefix):
+                report.skipped.append(
+                    {
+                        "path": norm,
+                        "reason": "cross-family-supersedes",
+                        "detail": f"ignored non-{family} target in {src_ref}",
+                    }
+                )
+                continue
             report.errors.append(f"supersedes target missing: {norm}.md")
             continue
+
         tfm, _, _ = _parse(target_path)
         if tfm is None:
             report.errors.append(
@@ -365,14 +384,14 @@ def _apply_supersedes_chain(
         tstatus = tfm.get("status")
         if tstatus == "superseded":
             report.skipped.append(
-                {"path": f"{norm}.md", "reason": "already-superseded"}
+                {"path": f"{canon}.md", "reason": "already-superseded"}
             )
             continue
         if tstatus not in supersedable_from:
             expected = sorted(supersedable_from)
             report.skipped.append(
                 {
-                    "path": f"{norm}.md",
+                    "path": f"{canon}.md",
                     "reason": "not-supersedable",
                     "detail": f"status={tstatus!r}, expected one of {expected}",
                 }
@@ -388,7 +407,7 @@ def _apply_supersedes_chain(
         )
         report.cascades.append(
             Change(
-                path=f"{norm}.md",
+                path=f"{canon}.md",
                 from_status=str(tstatus),
                 to_status="superseded",
                 reason=f"superseded by {src_ref}",
@@ -404,13 +423,14 @@ def _run_cascade(
     today: str,
     dry_run: bool,
     report: Report,
+    index: RefIndex,
 ) -> None:
     """Dispatch cascade by name. Drives both engines off ``CASCADE_TRIGGERS``."""
     if cascade_name == "uc_revising":
         uc_ref = rel_path.removesuffix(".md")
         _apply_reverse_cascade(
             a4_dir,
-            find_tasks_implementing(a4_dir, uc_ref),
+            find_tasks_implementing(a4_dir, uc_ref, index),
             target_kind="task",
             skip_when=lambda s: (
                 None
@@ -428,7 +448,7 @@ def _run_cascade(
         uc_ref = rel_path.removesuffix(".md")
         _apply_reverse_cascade(
             a4_dir,
-            find_tasks_implementing(a4_dir, uc_ref),
+            find_tasks_implementing(a4_dir, uc_ref, index),
             target_kind="task",
             skip_when=lambda s: (
                 ("already-discarded", None) if s == "discarded" else None
@@ -441,7 +461,7 @@ def _run_cascade(
         )
         _apply_reverse_cascade(
             a4_dir,
-            find_reviews_targeting(a4_dir, uc_ref),
+            find_reviews_targeting(a4_dir, uc_ref, index),
             target_kind="review",
             skip_when=lambda s: (
                 ("review-terminal", f"status={s!r}")
@@ -457,7 +477,7 @@ def _run_cascade(
         return
     if cascade_name in ("uc_supersedes_chain", "spec_supersedes_chain"):
         _apply_supersedes_chain(
-            a4_dir, family, rel_path, today, dry_run, report
+            a4_dir, family, rel_path, today, dry_run, report, index
         )
         return
 
@@ -556,8 +576,9 @@ def transition(
 
     cascade_name = cascade_for(family, current, new_status)
     if cascade_name is not None:
+        index = RefIndex(a4_dir)
         _run_cascade(
-            cascade_name, a4_dir, family, rel_path, today, dry_run, report
+            cascade_name, a4_dir, family, rel_path, today, dry_run, report, index
         )
 
     report.ok = not report.errors
@@ -583,6 +604,7 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     """
     reports: list[Report] = []
     today = date.today().isoformat()
+    index = RefIndex(a4_dir)
 
     uc_trigger = SUPERSEDES_TRIGGER_STATUS["usecase"]
     spec_trigger = SUPERSEDES_TRIGGER_STATUS["spec"]
@@ -606,7 +628,9 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
                 target_status=trigger,
                 dry_run=dry_run,
             )
-            _apply_supersedes_chain(a4_dir, family, rel, today, dry_run, report)
+            _apply_supersedes_chain(
+                a4_dir, family, rel, today, dry_run, report, index
+            )
             report.ok = not report.errors
             if report.cascades or report.errors:
                 reports.append(report)
