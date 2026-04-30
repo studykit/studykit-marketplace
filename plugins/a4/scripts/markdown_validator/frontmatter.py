@@ -439,6 +439,9 @@ def validate_file(
 
     if ftype == "task":
         violations.extend(_validate_task_files(rel_str, fm, path))
+        violations.extend(
+            _validate_research_complete_artifacts(rel_str, fm, path, a4_dir)
+        )
 
     return violations
 
@@ -497,6 +500,64 @@ def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
                 f"{expected_prefix!r}{suffix}",
             )
         )
+    return violations
+
+
+def _validate_research_complete_artifacts(
+    rel_str: str, fm: dict, path: Path, a4_dir: Path
+) -> list[Violation]:
+    """Preflight: research at ``status: complete`` must have its listed
+    artifacts present on disk.
+
+    Layered on top of the static ``task-files-bad-artifact-path`` rule —
+    this one assumes the prefix is well-formed and only checks the
+    filesystem. Entries that do not start with the expected
+    ``artifacts/task/research/<id>-<slug>/`` prefix are skipped so the
+    shape rule remains the single source of truth for that error.
+    Malformed ``kind`` / ``id`` / filename id-slug also defers as in the
+    shape rule. ``artifacts/`` lives at project root (``a4_dir.parent``)
+    per ``references/task-artifacts.md``.
+    """
+    if fm.get("kind") != "research":
+        return []
+    if fm.get("status") != "complete":
+        return []
+    files = fm.get("files")
+    if not isinstance(files, list) or not files:
+        return []
+
+    raw_id = fm.get("id")
+    if not _is_int(raw_id):
+        return []
+    m = re.match(r"^(\d+)-(.+)$", path.stem)
+    if not m or int(m.group(1)) != raw_id:
+        return []
+    id_slug = path.stem
+
+    expected_prefix = f"artifacts/task/research/{id_slug}/"
+    project_root = a4_dir.parent
+
+    violations: list[Violation] = []
+    for i, entry in enumerate(files):
+        if not isinstance(entry, str):
+            continue
+        e = entry.strip()
+        if not e:
+            continue
+        if not e.startswith(expected_prefix):
+            continue
+        full = project_root / e
+        if not full.is_file():
+            violations.append(
+                Violation(
+                    rel_str,
+                    "task-files-missing-artifact",
+                    "files",
+                    f"files[{i}]: artifact {entry!r} does not exist on disk "
+                    f"(research at status=complete must have all listed "
+                    "artifact files present)",
+                )
+            )
     return violations
 
 

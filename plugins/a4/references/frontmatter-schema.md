@@ -310,7 +310,6 @@ These are schema items deliberately left softened until a follow-up round.
 1. **Issue `## Log` entry format.** Body-level `## Log` is hand-maintained when authors choose to populate it; the exact entry format (prefix, timestamp granularity, author attribution) is not yet locked.
 2. **Exact YAML grammar for path references.** Plain string is the current rule; whether to allow alternative forms (list-of-maps for typed references, etc.) is not yet decided.
 3. **Stricter enums.** Several fields are currently open strings (`source` on review items) because the full value set has not been enumerated.
-4. **`research` `complete` initial-status preflight.** When `research` is authored at `status: complete` with non-empty `files:`, every artifact path is expected to exist under `artifacts/task/research/<id>-<slug>/` — the existence check is not yet wired in. The artifact-path *shape* check (rule `task-files-bad-artifact-path`) is enforced by the frontmatter validator at the Stop hook for every task `kind:`; it asserts the per-kind prefix `artifacts/task/<kind>/<id>-<slug>/...` (with `artifacts/task/spike/archive/<id>-<slug>/` also accepted for `kind: spike`) and pins the `<id>-<slug>` segment to the file's own id and slug.
 
 When these land, update this document **and** the enforcement layer simultaneously — the two must not drift.
 
