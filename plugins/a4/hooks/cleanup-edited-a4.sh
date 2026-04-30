@@ -17,6 +17,7 @@ record_dir="$project_dir/.claude/tmp/a4-edited"
 rm -f \
     "$record_dir/a4-edited-${session_id}.txt" \
     "$record_dir/a4-resolved-ids-${session_id}.txt" \
+    "$record_dir/a4-prestatus-${session_id}.json" \
     2>/dev/null || true
 
 exit 0

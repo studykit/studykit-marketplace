@@ -5,10 +5,19 @@
 """a4 hook dispatcher.
 
 Subcommands:
+  pre-edit       PreToolUse on Write|Edit|MultiEdit. Stash the on-disk
+                 ``status:`` of any a4/*.md the tool is about to modify
+                 into a session-scoped JSON map. Consumed by ``post-edit``
+                 to detect ``status:`` transitions precisely (pre vs
+                 post on disk, instead of HEAD vs working tree).
   post-edit      PostToolUse on Write|Edit|MultiEdit. Record the edited
-                 a4/*.md path (session-scoped) and report cross-file
+                 a4/*.md path (session-scoped), report cross-file
                  status-consistency mismatches within the edited file's
-                 connected component.
+                 connected component, and — if ``status:`` changed
+                 legally — run the cascade (supersedes / discarded /
+                 revising) on related files and refresh ``updated:`` on
+                 the primary. Cascade results surface as
+                 additionalContext + systemMessage.
   stop           Stop. Validate all a4/*.md edited in this session against
                  (1) the frontmatter schema and (2) status-transition
                  legality (HEAD vs working tree, via git). rc=2 on
@@ -59,6 +68,8 @@ def main() -> int:
     if len(sys.argv) < 2:
         return 0
     sub = sys.argv[1]
+    if sub == "pre-edit":
+        return _pre_edit()
     if sub == "post-edit":
         return _post_edit()
     if sub == "stop":
@@ -68,11 +79,126 @@ def main() -> int:
     return 0
 
 
+# ------------------------- prestatus stash IO -----------------------------
+#
+# Session-scoped state under `.claude/tmp/a4-edited/a4-prestatus-<sid>.json`:
+# a `{abs_path: pre_status}` map populated by `pre-edit` (PreToolUse) and
+# consumed by `post-edit` (PostToolUse) to detect `status:` transitions.
+# Per `docs/hook-conventions.md` §2 Rule A, paired cleanup runs at
+# SessionEnd (`hooks/cleanup-edited-a4.sh`) with a SessionStart safety-net
+# sweep (`hooks/sweep-old-edited-a4.sh`) for crashed sessions.
+
+
+def _prestatus_file(project_dir: str, session_id: str) -> "Path":
+    return (
+        Path(project_dir) / ".claude" / "tmp" / "a4-edited"
+        / f"a4-prestatus-{session_id}.json"
+    )
+
+
+def _read_prestatus(project_dir: str, session_id: str) -> dict:
+    import json
+
+    path = _prestatus_file(project_dir, session_id)
+    try:
+        return json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+
+
+def _write_prestatus(project_dir: str, session_id: str, data: dict) -> None:
+    import json
+
+    path = _prestatus_file(project_dir, session_id)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(data), encoding="utf-8")
+    except OSError:
+        return
+
+
+def _read_status_from_disk(path: "Path") -> str | None:
+    """Return the `status:` scalar from the file's frontmatter, or None if
+    absent / unreadable. Used by both pre-edit (snapshot) and post-edit
+    (compare) so they see the disk through the same lens.
+    """
+    try:
+        from markdown import extract_preamble
+    except ImportError:
+        return None
+    try:
+        preamble = extract_preamble(path)
+    except (OSError, ValueError):
+        return None
+    if preamble.fm is None:
+        return None
+    s = preamble.fm.get("status")
+    return s if isinstance(s, str) else None
+
+
+# -------------------------- pre-edit (PreToolUse) -------------------------
+
+
+def _pre_edit() -> int:
+    """Stash on-disk `status:` for the a4/*.md the tool is about to write.
+
+    Always exits 0. Files outside `a4/`, non-md files, missing
+    `status:`, and parse failures are all silent no-ops — the post-edit
+    consumer treats absence as "no transition to detect" and falls back
+    to its consistency-check-only path.
+    """
+    import json
+    import os
+
+    raw = sys.stdin.read()
+    if not raw:
+        return 0
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return 0
+
+    if payload.get("tool_name") not in ("Write", "Edit", "MultiEdit"):
+        return 0
+    file_path = (payload.get("tool_input") or {}).get("file_path") or ""
+    session_id = payload.get("session_id") or ""
+    if not file_path or not session_id or not file_path.endswith(".md"):
+        return 0
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return 0
+    a4_dir = Path(project_dir) / "a4"
+    a4_prefix = str(a4_dir) + os.sep
+    if not file_path.startswith(a4_prefix):
+        return 0
+
+    abs_path = Path(file_path)
+    if not abs_path.is_file():
+        # Write to a new file — no pre-status to capture. Post-edit will
+        # see no entry and skip cascade detection.
+        return 0
+    pre = _read_status_from_disk(abs_path)
+    if pre is None:
+        return 0
+
+    data = _read_prestatus(project_dir, session_id)
+    data[file_path] = pre
+    _write_prestatus(project_dir, session_id, data)
+    return 0
+
+
 # ------------------------- post-edit (PostToolUse) ------------------------
 
 
 def _post_edit() -> int:
-    """Record edited a4/*.md, then report status-consistency for it."""
+    """Record edited a4/*.md, run status-change cascade if applicable,
+    then report cross-file status-consistency.
+
+    Order matters: cascade runs *before* the consistency report so the
+    report describes the post-cascade workspace (otherwise cascaded
+    files would briefly look inconsistent and produce noise).
+    """
     import json
     import os
 
@@ -103,12 +229,192 @@ def _post_edit() -> int:
     # Step 1 — record (session-scoped, fail-open).
     _record_edited(project_dir, session_id, file_path)
 
-    # Step 2 — status-consistency report.
     if not a4_dir.is_dir():
         return 0
 
+    # Step 2 — status-change cascade (runs before consistency report).
+    _run_status_change_cascade(a4_dir, file_path, project_dir, session_id)
+
+    # Step 3 — status-consistency report on the (now post-cascade) state.
     _report_status_consistency_post(a4_dir, file_path, project_dir)
     return 0
+
+
+def _run_status_change_cascade(
+    a4_dir: Path, file_path: str, project_dir: str, session_id: str
+) -> None:
+    """Detect a `status:` transition on the edited file and run the
+    cascade engine on related files.
+
+    Pre-status comes from the `pre-edit` stash (PreToolUse snapshot of
+    on-disk frontmatter); post-status comes from the just-written file.
+    No stashed pre → silent skip (covers fresh writes, files outside
+    the family-transition table, and PreToolUse no-snapshot cases).
+
+    The hook never blocks an edit — illegal direct status edits stay
+    the responsibility of the Stop-hook safety net
+    (`markdown_validator.transitions`). Only legal transitions trigger
+    a cascade here.
+    """
+    pre_map = _read_prestatus(project_dir, session_id)
+    pre_status = pre_map.get(file_path)
+    if pre_status is None:
+        return
+
+    abs_path = Path(file_path)
+    post_status = _read_status_from_disk(abs_path)
+
+    # Drop the entry regardless of outcome — the next edit's PreToolUse
+    # will repopulate from disk, so we never act on a stale pre.
+    pre_map.pop(file_path, None)
+    _write_prestatus(project_dir, session_id, pre_map)
+
+    if post_status is None or post_status == pre_status:
+        return
+
+    try:
+        rel_path = str(abs_path.resolve().relative_to(a4_dir.resolve()))
+    except (OSError, ValueError):
+        return
+
+    try:
+        from datetime import date
+
+        from markdown_validator.refs import RefIndex
+        from status_cascade import (
+            Change,
+            Report,
+            apply_status_change,
+            run_cascade,
+        )
+        from status_model import (
+            FAMILY_TRANSITIONS,
+            cascade_for,
+            is_transition_legal,
+        )
+        from transition_status import detect_family
+    except ImportError as e:
+        sys.stderr.write(
+            f"a4_hook.py post-edit: failed to import cascade modules ({e}) "
+            "— skipping cascade\n"
+        )
+        return
+
+    family = detect_family(rel_path)
+    if family is None or family not in FAMILY_TRANSITIONS:
+        return
+    if not is_transition_legal(family, pre_status, post_status):
+        # Illegal direct edit — Stop hook will surface it. Don't cascade
+        # off an illegal transition.
+        return
+
+    today = date.today().isoformat()
+    report = Report(
+        a4_dir=str(a4_dir),
+        file=rel_path,
+        family=family,
+        current_status=pre_status,
+        target_status=post_status,
+        primary=Change(
+            path=rel_path,
+            from_status=pre_status,
+            to_status=post_status,
+            reason="direct edit",
+        ),
+    )
+
+    # Refresh `updated:` on the primary — the LLM wrote `status:` but
+    # may not have touched `updated:`. apply_status_change is idempotent
+    # on `status:` (already at post) and refreshes `updated:`.
+    try:
+        apply_status_change(
+            abs_path, pre_status, post_status, "direct edit",
+            dry_run=False, today=today,
+        )
+    except (RuntimeError, OSError) as e:
+        report.errors.append(f"{rel_path}: failed to refresh updated: {e}")
+
+    cascade_name = cascade_for(family, pre_status, post_status)
+    if cascade_name is not None:
+        try:
+            index = RefIndex(a4_dir)
+            run_cascade(
+                cascade_name, a4_dir, family, rel_path, today,
+                False, report, index,
+            )
+        except Exception as e:
+            sys.stderr.write(
+                f"a4_hook.py post-edit: cascade error ({e})\n"
+            )
+            return
+
+    if not report.cascades and not report.errors:
+        return
+
+    _emit_cascade_context(report, file_path, project_dir)
+
+
+def _emit_cascade_context(report, file_path: str, project_dir: str) -> None:
+    """Surface cascade results as additionalContext + systemMessage.
+
+    Per `docs/hook-conventions.md` §6: "both channels together" when a
+    hook affects workspace state the user should be aware of — cascades
+    rewrite related files, so a short systemMessage summary plus a
+    per-file additionalContext detail is the right shape.
+    """
+    display_rel = (
+        file_path[len(project_dir) + 1 :]
+        if file_path.startswith(project_dir + "/")
+        else file_path
+    )
+    n = len(report.cascades)
+    summary = (
+        f"a4 cascade: {report.primary.from_status} → "
+        f"{report.primary.to_status} on {display_rel} "
+        f"flipped {n} related file(s)"
+    )
+
+    body_lines: list[str] = []
+    if report.cascades:
+        body_lines.append(f"{n} cascade flip(s):")
+        for c in report.cascades:
+            tail = f" — {c.reason}" if c.reason else ""
+            body_lines.append(
+                f"  {c.path}: {c.from_status} → {c.to_status}{tail}"
+            )
+    if report.skipped:
+        body_lines.append("")
+        body_lines.append(f"{len(report.skipped)} skipped:")
+        for s in report.skipped:
+            body_lines.append(
+                f"  {s.get('path', '?')} ({s.get('reason', '?')})"
+            )
+    if report.errors:
+        body_lines.append("")
+        body_lines.append(f"{len(report.errors)} error(s):")
+        for e in report.errors:
+            body_lines.append(f"  {e}")
+    body = "\n".join(body_lines)
+
+    context = (
+        "## a4/ status cascade (post-edit)\n\n"
+        f"`{display_rel}` transitioned "
+        f"`{report.primary.from_status}` → `{report.primary.to_status}` "
+        f"({report.family}). Related files were flipped automatically:\n\n"
+        "```\n"
+        f"{body}\n"
+        "```\n\n"
+        "`updated:` on the primary file was refreshed to today. "
+        "No action required — surface this to the user when relevant."
+    )
+    payload: dict = {
+        "hookSpecificOutput": {
+            "hookEventName": "PostToolUse",
+            "additionalContext": context,
+        },
+        "systemMessage": summary,
+    }
+    _emit(payload)
 
 
 def _record_edited(project_dir: str, session_id: str, file_path: str) -> None:

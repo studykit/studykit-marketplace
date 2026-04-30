@@ -11,7 +11,9 @@ record_dir="$project_dir/.claude/tmp/a4-edited"
 [[ ! -d "$record_dir" ]] && exit 0
 
 find "$record_dir" -type f \
-    \( -name 'a4-edited-*.txt' -o -name 'a4-resolved-ids-*.txt' \) \
+    \( -name 'a4-edited-*.txt' \
+       -o -name 'a4-resolved-ids-*.txt' \
+       -o -name 'a4-prestatus-*.json' \) \
     -mtime +1 -delete 2>/dev/null || true
 
 exit 0
