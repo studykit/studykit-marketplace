@@ -16,6 +16,8 @@ Three distinct audiences read this plugin, and confusing them causes drift:
 
 Files clearly mark their audience with a `**Audience:**` banner near the top. If you find yourself reading a `dev/` doc while editing a workspace file or running a skill, you are probably overshooting — back off to `authoring/` or `workflows/`.
 
+Each of `authoring/`, `workflows/`, and `dev/` carries its own `CLAUDE.md` with directory-local contributor guardrails — citation rules, "when to add a file here / when not", and tone. Those auto-load alongside this file when you edit anything in the directory; consult them as the binding rule for that directory.
+
 ## Directory layout
 
 | Path | Role | Audience |
