@@ -278,8 +278,10 @@ def _apply_reverse_cascade(
     ``reason_text`` and a ``Change`` row in the report.
 
     ``target_kind`` ("task" or "review") prefixes the path label in
-    skipped/cascade rows. Unreadable frontmatter is recorded as an error
-    on the report rather than raising.
+    skipped/cascade rows. Unreadable frontmatter — surfaced either by
+    the pre-parse check or by ``_apply_status_change`` raising
+    ``RuntimeError`` at write time — is recorded as an error on the
+    report rather than crashing the script.
     """
     for path in targets:
         fm, _, _ = _parse(path)
@@ -298,9 +300,13 @@ def _apply_reverse_cascade(
                 entry["detail"] = detail
             report.skipped.append(entry)
             continue
-        _apply_status_change(
-            path, str(current), to_status, reason_text, dry_run, today
-        )
+        try:
+            _apply_status_change(
+                path, str(current), to_status, reason_text, dry_run, today
+            )
+        except RuntimeError as e:
+            report.errors.append(f"{target_kind}/{path.stem}.md: {e}")
+            continue
         report.cascades.append(
             Change(
                 path=f"{target_kind}/{path.stem}.md",
@@ -406,14 +412,18 @@ def _apply_supersedes_chain(
                 }
             )
             continue
-        _apply_status_change(
-            target_path,
-            str(tstatus),
-            "superseded",
-            f"superseded by {src_ref}",
-            dry_run,
-            today,
-        )
+        try:
+            _apply_status_change(
+                target_path,
+                str(tstatus),
+                "superseded",
+                f"superseded by {src_ref}",
+                dry_run,
+                today,
+            )
+        except RuntimeError as e:
+            report.errors.append(f"{canon}.md: {e}")
+            continue
         report.cascades.append(
             Change(
                 path=f"{canon}.md",
