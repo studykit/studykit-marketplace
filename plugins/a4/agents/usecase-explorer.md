@@ -19,7 +19,7 @@ You are a Use Case exploration agent. Your job is to look at an existing set of 
 Before exploring, read these for context and the rules UC candidates must follow:
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout and frontmatter schemas.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md` — banned implementation terms and conversion rules.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md` — banned implementation terms and conversion rules.
 
 ## Input
 

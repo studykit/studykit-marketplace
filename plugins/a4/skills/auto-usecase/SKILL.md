@@ -44,7 +44,7 @@ Subagents (composer, reviser, reviewer, explorer) each call the allocator themse
 Subagents read these directly — don't pull their contents into the main session.
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — file layout, frontmatter schemas, wiki update protocol.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md` — banned implementation terms.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md` — banned implementation terms.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-splitting.md` — splitting guide.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-relationships.md` — relationship analysis.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/review-report.md` — review-item schema emitted by reviewers.

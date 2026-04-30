@@ -10,6 +10,8 @@ Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
 Use cases stay at the **user level** — what the actor does, not what the system does internally. A UC that says "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
 
+Detailed enforcement — banned-term list, conversion table, and per-field application — lives in `./usecase-abstraction-guard.md`.
+
 ## Frontmatter contract (do not deviate)
 
 ```yaml

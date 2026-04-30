@@ -27,7 +27,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout, wiki update protocol.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-splitting.md` — splitting procedure.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md` — banned terms, conversion rules.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md` — banned terms, conversion rules.
 
 ## Input
 
@@ -103,4 +103,4 @@ wiki_pages_touched: [context, actors, domain, nfr]
 - Preserve UC ids. Never renumber; ids are globally monotonic and immutable.
 - Every closed item is flipped by editing `status:` directly; the PostToolUse cascade hook bumps `updated:` and runs any cross-file cascade. For an audit trail (status + reason), append a one-line bullet to the optional `## Log` body section *before* flipping `status:` — that section is hand-maintained, never written by the hook.
 - Apply the wiki update protocol on every wiki page edit.
-- If the reviewer Suggestion introduces an implementation leak (banned term) into a UC body, transform to user-level language per `abstraction-guard.md` before writing.
+- If the reviewer Suggestion introduces an implementation leak (banned term) into a UC body, transform to user-level language per `usecase-abstraction-guard.md` before writing.

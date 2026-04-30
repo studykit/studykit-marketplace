@@ -29,7 +29,7 @@ Subagents do not auto-inherit project-level path-scoped rules from the parent se
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout, wiki update protocol.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-splitting.md` — splitting guide.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-relationships.md` — relationship analysis.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md` — banned implementation terms.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md` — banned implementation terms.
 
 ## Input
 

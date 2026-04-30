@@ -1,6 +1,6 @@
 # Progressive Use Case Extraction
 
-When the conversation reveals enough context, draft a Use Case and present it to the user for confirmation. Every UC has five required fields: **Actor**, **Goal**, **Situation**, **Flow**, **Expected Outcome**. Abstraction must stay at the user level — the banned-term list and conversion examples are in `./abstraction-guard.md`.
+When the conversation reveals enough context, draft a Use Case and present it to the user for confirmation. Every UC has five required fields: **Actor**, **Goal**, **Situation**, **Flow**, **Expected Outcome**. Abstraction must stay at the user level — the banned-term list and conversion examples are in `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-abstraction-guard.md`.
 
 ## How to present
 
