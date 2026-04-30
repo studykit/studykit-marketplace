@@ -167,15 +167,25 @@ def find_tasks_implementing(a4_dir: Path, uc_ref: str) -> list[Path]:
 
 
 def find_reviews_targeting(a4_dir: Path, ref: str) -> list[Path]:
-    """Review items whose `target:` equals the given reference."""
+    """Review items whose `target:` references the given path.
+
+    Accepts both string-scalar and list-of-strings shapes for ``target:``,
+    matching the schema and ``status_consistency.check_discarded_cascade``.
+    """
     matching: list[Path] = []
     for p in iter_issue_files(a4_dir, "review"):
         fm, _, _ = _parse(p)
         if fm is None:
             continue
         target = fm.get("target")
-        if isinstance(target, str) and normalize_ref(target) == ref:
-            matching.append(p)
+        if isinstance(target, str):
+            if normalize_ref(target) == ref:
+                matching.append(p)
+        elif isinstance(target, list):
+            for entry in target:
+                if normalize_ref(entry) == ref:
+                    matching.append(p)
+                    break
     return matching
 
 
