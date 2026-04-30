@@ -141,7 +141,7 @@ If the user chooses not to update the wiki page immediately, open a review item 
 
 ### Close guard
 
-When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose markdown link points at the review item itself. This is an authoring invariant rather than an enforced check at the moment — there is no automated guard or cross-session re-surfacer. Run `/a4:validate` after wiki edits if you need a sweep, and consider adding a registered check under `markdown_validator.registry` if the gap matters.
+When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose markdown link points at the review item itself. This is an authoring invariant rather than an enforced check at the moment — there is no automated guard or cross-session re-surfacer. Run the validator (`../scripts/validate.py`) after wiki edits if you need a sweep, and consider extending the validator with a new check if the gap matters.
 
 ## Bumping `updated:`
 

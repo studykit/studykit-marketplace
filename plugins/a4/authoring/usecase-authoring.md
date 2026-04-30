@@ -45,7 +45,7 @@ updated: YYYY-MM-DD
 - UC-to-UC ordering is **not** carried in frontmatter (a4 v6.0.0). Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
 - UC-to-spec ties are **not** carried in frontmatter (a4 v6.0.0). When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
 - `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
-- The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `search.py` and roadmap surfaces — there is no stored UC field for it.
+- The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `../scripts/search.py` and roadmap surfaces — there is no stored UC field for it.
 - `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as markdown links in the body, not here.
 
 ### Lifecycle and writer ownership
@@ -78,7 +78,7 @@ Writer rules (UC-specific):
 - **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back to pre-spec-closed state. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
 - **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that new UC ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed from the code.
 - **`revising` is in-place.** No new UC is created for the paused spec; the same file is edited, and the ready-gate re-approves `revising → ready`.
-- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are complete; staging readiness and ship verdicts are author-driven (typically validated through `/a4:run` and roadmap surfaces, not the writer).
+- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are complete; staging readiness and ship verdicts are author-driven (typically validated through implementation runs and roadmap surfaces, not the writer).
 - `shipped → superseded` is **automatic** — fires when a successor UC with `supersedes: [<this>]` reaches `shipped`. Do not flip by hand.
 
 ## Body shape

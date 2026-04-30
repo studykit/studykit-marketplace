@@ -20,7 +20,7 @@ Subject form for every commit authored against an a4 workspace. Applies to any c
 
 ## Rules
 
-- `<id>` is the global monotonic id allocated by `scripts/allocate_id.py`. No type prefix on the id (ids are unique across all artifact families).
+- `<id>` is the issue file's frontmatter `id:` value (already allocated at file-creation time — see `./frontmatter-universals.md` §Ids). No type prefix on the id (ids are unique across all artifact families).
 - Multiple ids are space-separated and appear together before the Conventional Commits type prefix.
 - `<type>` ∈ `feat | fix | docs | refactor | chore | test | merge`.
 - `merge(a4)` is a4-specific, used only for `--no-ff` integration commits that fold a worktree branch into local main during the implement loop.

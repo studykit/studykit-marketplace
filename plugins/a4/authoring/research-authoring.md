@@ -79,7 +79,7 @@ Per-status meaning:
 
 - `open` — Backlog. Captured but not yet committed to the work queue.
 - `pending` — In the work queue, awaiting an investigator.
-- `progress` — Investigation underway (the user, an agent, or a `/a4:run`-driven loop).
+- `progress` — Investigation underway (the user, an agent, or an implementation loop).
 - `complete` — Investigation finalized; sources cited, findings written. Downstream callers may now cite this task.
 - `failing` — Investigation could not produce usable findings on this iteration (e.g., sources inaccessible, scope mis-framed). Resumed via `failing → progress` or deferred via `failing → pending`.
 - `discarded` — Abandoned. Terminal. Reached via an explicit task-discard when the question is no longer relevant.
@@ -151,7 +151,7 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 ## Reviewing a research task
 
-Use `/a4:research-review` to walk a structured quality pass over the task body. The reviewer checks source quality, option balance (in comparative mode), claim grounding, bias, completeness, and decision neutrality. Output is advisory; the user accepts, modifies, or dismisses each finding before the task flips to `complete`.
+A structured quality pass walks the task body before it flips to `complete`. The review checks source quality, option balance (in comparative mode), claim grounding, bias, completeness, and decision neutrality. Output is advisory; the user accepts, modifies, or dismisses each finding.
 
 ## Citing a research task from a spec or task
 
@@ -160,7 +160,7 @@ Citations are **soft** — there is no stored-reverse contract. Two paths:
 - **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `[research/<id>-<slug>](../research/<id>-<slug>.md)`. Optionally add the task path to the spec's `related:` frontmatter list for frontmatter-level discoverability.
 - **From a task body (regular implementation work).** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
 
-Reverse lookups (which specs cite a research task) are derived on demand via grep / `search.py`; they are not stored on the research task.
+Reverse lookups (which specs cite a research task) are derived on demand via grep / `../scripts/search.py`; they are not stored on the research task.
 
 ## Don't (research-specific)
 

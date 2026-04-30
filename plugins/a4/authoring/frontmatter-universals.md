@@ -49,8 +49,16 @@ Rules:
 ## Ids
 
 - Ids are **monotonically increasing integers, global to the workspace**. Unique across all issue folders in a given `a4/` (GitHub-issue semantics).
-- Next id is computed as `max(existing ids in a4/) + 1` by the id allocator (skills invoke it before writing a new issue file).
+- Next id is computed as `max(existing ids in a4/) + 1` by the id allocator (`../scripts/allocate_id.py`). Allocate before writing a new issue file; never invent or reuse.
 - Wiki pages and spark files do **not** carry an `id:` field — they have no issue-tracker identity.
+
+Allocate the next id:
+
+```bash
+uv run ../scripts/allocate_id.py <absolute path to a4/>
+```
+
+The script prints the next available id to stdout.
 
 ## Path references
 
@@ -114,7 +122,7 @@ Edge cases:
 - **Illegal jumps** (e.g. `shipped → ready`, outside `FAMILY_TRANSITIONS`) — the cascade hook silently skips them; the Stop-hook transition-legality safety net (working-tree-vs-HEAD git diff) surfaces them as errors.
 - **Legal jumps that bypass the hook** (edits via `git checkout`, external editors, direct script writes) — related files are left unflipped. The cross-file consistency checks (`task.pending` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain) re-surface the missing cascade work.
 - **Recovery** —
-  - Supersedes-chain: `/a4:validate --fix` (workspace-wide, idempotent).
+  - Supersedes-chain: `../scripts/validate.py --fix` (workspace-wide, idempotent).
   - Reverse-link (revising / discarded cascades): re-edit the UC's `status:` to retrigger the hook.
 
 ## Structural relationship fields

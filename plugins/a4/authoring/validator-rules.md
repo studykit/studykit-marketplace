@@ -4,7 +4,7 @@
 
 Frontmatter validation contract — what the validator rejects, what it ignores, and how cross-file status consistency is checked. Per-type field shapes (required vs optional, enum values, types) live in each `./<type>-authoring.md`. Universal frontmatter rules (path-reference format, status writers, ids) live in `./frontmatter-universals.md`.
 
-This document is the canonical reference for the `/a4:validate` skill — what it rejects, ignores, and reports.
+This document is the canonical reference for the validator — what it rejects, ignores, and reports.
 
 ## Schema enforcement
 
@@ -34,11 +34,11 @@ Several enum values are semantically derived from cross-file state rather than b
 
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
-| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | PostToolUse cascade hook (fires during successor's `→ shipped` transition); `validate.py --fix` for recovery |
+| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | PostToolUse cascade hook (fires during successor's `→ shipped` transition); `../scripts/validate.py --fix` for recovery |
 | `<task-family>.status` | `discarded` | UC the task implements flips to `discarded` (applies to `task` / `bug` / `spike` / `research`) | PostToolUse cascade hook |
 | `<task-family>.status` | `pending` (from `progress`/`failing`) | UC the task implements flips to `revising` (applies to `task` / `bug` / `spike` / `research`) | PostToolUse cascade hook |
 | `review.status` | `discarded` | UC named by `target:` flips to `discarded` | PostToolUse cascade hook |
-| `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | PostToolUse cascade hook (fires during successor's `→ active` transition); `validate.py --fix` for recovery |
+| `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | PostToolUse cascade hook (fires during successor's `→ active` transition); `../scripts/validate.py --fix` for recovery |
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 | `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 
