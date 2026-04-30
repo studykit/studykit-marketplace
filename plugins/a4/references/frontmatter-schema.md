@@ -59,7 +59,7 @@ Body sections are column-0 H2 markdown headings in Title Case with spaces (`## C
 
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following forms. All forms resolve to the same file, so they are interchangeable on input — pick whichever reads best in context.
 
-- **`#<id>` short form.** Issue families only. `#3` resolves to whichever file under `usecase/`, `task/<kind>/`, `review/`, `spec/`, or `idea/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. Renders as a GitHub-issue cross-link in synced trackers.
+- **`<id>` integer short form.** Issue families only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/<kind>/`, `review/`, `spec/`, or `idea/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. (Renamed from the legacy `#<id>` string short form in a4 v11.0.0; the validator now rejects any path-ref entry beginning with `#`.)
 - **`<folder>/<id>` slug-less form.** Issue families only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter that benefits from at-a-glance context. The slug part is a hint: when the file's actual stem differs (slug rename), the id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Resolves correctly because ids are globally unique. Permitted but folder-prefixed form is preferred for readability.
@@ -70,7 +70,7 @@ Universal rules:
 
 - **Plain strings.** No brackets — `usecase/3-search-history`, not `[usecase/3-search-history]`. Plain strings keep frontmatter machine-parseable.
 - **No `.md` extension.** The validator rejects any reference ending in `.md`.
-- **Existence is checked.** Each reference must resolve to a file in the workspace; unresolved refs surface as a `unresolved-ref` violation. Format-only references (e.g., a typo in `#99` where 99 has no file) are treated as authoring errors, not extension metadata.
+- **Existence is checked.** Each reference must resolve to a file in the workspace; unresolved refs surface as a `unresolved-ref` violation. Format-only references (e.g., a typo in `99` where no file with `id: 99` exists) are treated as authoring errors, not extension metadata.
 
 Body links use a different form — standard markdown `[text](relative/path.md)`, plus plain `#<id>` text where GitHub-issue cross-link rendering is desired. See `body-conventions.md`.
 
@@ -275,7 +275,7 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | Missing required frontmatter field | error |
 | Wrong type for a known field | error |
 | Value outside enum for a known field | error |
-| Path-reference format (brackets, `.md` extension, malformed `#<id>`) | error |
+| Path-reference format (brackets, `.md` extension, non-positive integer, legacy `#<id>` string) | error |
 | Path reference does not resolve to any workspace file | error (`unresolved-ref`) |
 | `type` on wiki page disagrees with filename | error |
 | Filename leading id disagrees with `id:` field | error (`id-filename-mismatch`) |

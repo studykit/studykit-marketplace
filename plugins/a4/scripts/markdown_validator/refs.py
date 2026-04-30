@@ -2,7 +2,12 @@
 
 A frontmatter path reference may take any of these forms:
 
-  - ``#<id>``                         id-only short form (issue families)
+  - ``<id>`` (YAML integer)           id-only short form (issue families;
+                                      a4 v11.0.0+ — replaces ``#<id>``)
+  - ``#<id>`` (legacy string)         legacy short form, still accepted
+                                      by the resolver for non-FM input
+                                      (search, hooks); FM authoring no
+                                      longer accepts this form
   - ``<folder>/<id>``                 folder-prefixed, slug omitted
   - ``<folder>/<id>-<slug>``          folder-prefixed, slug present
   - ``<id>-<slug>``                   bare slug-ful (id is global, so unique)
@@ -113,6 +118,10 @@ class RefIndex:
         Returns None when the input is malformed or the target does not
         exist in the workspace.
         """
+        if isinstance(ref, bool):
+            return None
+        if isinstance(ref, int):
+            return self._by_id.get(ref) if ref > 0 else None
         if not isinstance(ref, str):
             return None
         s = ref.strip()
@@ -156,6 +165,10 @@ class RefIndex:
 
     def is_id_bearing(self, ref: object) -> bool:
         """True if the input form names an issue (carries or implies an id)."""
+        if isinstance(ref, bool):
+            return False
+        if isinstance(ref, int):
+            return ref > 0
         if not isinstance(ref, str):
             return False
         s = ref.strip()

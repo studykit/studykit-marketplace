@@ -206,13 +206,22 @@ def _validate_path_ref(value: Any) -> str | None:
 
     Accepted forms (post-strip, sans `.md`):
 
-      - ``#<int>`` short form
+      - ``<id>`` (positive YAML integer) — id-only short form
       - ``<folder>/<id>`` or ``<folder>/<id>-<slug>``
       - bare ``<id>-<slug>`` (id is workspace-globally unique)
       - wiki basename, spark stem
+
+    The legacy ``#<id>`` string short form was removed in a4 v11.0.0;
+    write the bare integer id instead.
     """
+    if isinstance(value, bool):
+        return f"expected string or positive integer, got {type(value).__name__}"
+    if isinstance(value, int):
+        if value <= 0:
+            return f"id-only short form must be a positive integer, got {value!r}"
+        return None
     if not isinstance(value, str):
-        return f"expected string, got {type(value).__name__}"
+        return f"expected string or positive integer, got {type(value).__name__}"
     if value.startswith("[[") or value.endswith("]]"):
         return "wikilink brackets not allowed in frontmatter path references"
     if value.endswith(".md"):
@@ -221,12 +230,10 @@ def _validate_path_ref(value: Any) -> str | None:
     if s == "":
         return "empty path reference"
     if s.startswith("#"):
-        tail = s[1:]
-        if not tail or not tail.isdigit():
-            return (
-                f"`#<id>` short form requires a positive integer id, "
-                f"got {value!r}"
-            )
+        return (
+            f"legacy `#<id>` short form removed in a4 v11.0.0; "
+            f"write the bare integer id instead, got {value!r}"
+        )
     return None
 
 
