@@ -261,14 +261,18 @@ def _apply_status_change(
     writer never reads or rewrites it. ``log_reason`` is preserved on
     the in-memory ``Change`` record so the report can surface it; it
     has no on-disk effect.
+
+    ``dry_run`` skips only the final disk write — parsing and rewriting
+    still run, so a true preview surfaces any parse / rewrite failure
+    that a real run would hit.
     """
-    if dry_run:
-        return
     fm, raw_fm, body = _parse(path)
     if fm is None:
         raise RuntimeError(f"{path}: unreadable frontmatter")
     new_fm = rewrite_frontmatter_scalar(raw_fm, "status", to_status)
     new_fm = rewrite_frontmatter_scalar(new_fm, "updated", today)
+    if dry_run:
+        return
     write_file(path, new_fm, body)
 
 
