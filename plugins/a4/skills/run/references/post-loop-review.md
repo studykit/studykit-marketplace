@@ -21,8 +21,8 @@ For each ship-candidate UC, compose a short verdict and ask the user `mark shipp
 
 The ship unit varies by **pipeline shape** (see `../../../docs/pipeline-shapes.md`). Per-task vs per-UC ship is `task.implements:`-driven, not invocation-driven:
 
-- **Per-UC ship** — when `task.implements:` is non-empty (Full shape, or Minimal-feature-with-UC). Multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
-- **Per-task ship** — when `task.implements:` is empty (Minimal shape's bug / spike / spec-justified feature). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely. That is the normal case for those shapes, not an error.
+- **Per-UC ship** — when `task.implements:` is non-empty (Full shape, or Minimal-task-with-UC). Multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
+- **Per-task ship** — when `task.implements:` is empty (Minimal shape's bug / spike / spec-justified task). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely. That is the normal case for those shapes, not an error.
 
 A run can mix both unit types in one invocation (e.g., a UC-driven task and a spec-justified bug fix shipping in the same cycle); each task's `implements:` field decides which branch its ship verdict takes.
 

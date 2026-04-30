@@ -161,7 +161,7 @@ Shape is not stored as a workspace flag. Skills that branch on it derive shape f
 Two skills branch on shape and therefore cite this document:
 
 - **`auto-bootstrap`** — Step 1 Codebase Assessment scope is shape-aware: Full requires architecture.md as the source of truth; Minimal may have no architecture.md and works directly from the existing codebase. The fresh / incremental branch is project-state-driven; the scope-of-work branch is shape-driven.
-- **`run`** — Step 4b ship-review unit varies by shape: per-UC when tasks declare `implements:` (Full or Minimal-feature-with-UC), per-task when `task.implements:` is empty (Minimal-spec / spike / bug). Branching is `task.implements:`-driven, which is the shape signal at task level.
+- **`run`** — Step 4b ship-review unit varies by shape: per-UC when tasks declare `implements:` (Full or Minimal-task-with-UC), per-task when `task.implements:` is empty (Minimal-spec / spike / bug). Branching is `task.implements:`-driven, which is the shape signal at task level.
 
 Skills that **do not** cite this document, by design:
 

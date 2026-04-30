@@ -21,7 +21,7 @@ A task is **ready** when all of:
 - every `depends_on` entry resolves to a task with `status: complete`
 - one of:
   - `implements:` is non-empty AND every UC in `implements:` has `status ∈ {ready, implementing}` (so `revising` / `discarded` / `blocked` / `superseded` / `shipped` UCs' tasks are skipped), OR
-  - `implements:` is empty (UC-less task — spec-justified feature, spike, or bug). Ready conditions vacuously pass; UC status checks do not apply.
+  - `implements:` is empty (UC-less task — spec-justified task, spike, or bug). Ready conditions vacuously pass; UC status checks do not apply.
 
 Build the ready set by reading task + UC frontmatter.
 
