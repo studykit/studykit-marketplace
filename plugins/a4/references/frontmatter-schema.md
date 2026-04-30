@@ -177,7 +177,7 @@ Lifecycle (forward path, escape paths, cascade rules), abstraction discipline, b
 
 Jira "task" semantics — units of executable work — split across four sibling issue families: `task`, `bug`, `spike`, `research`. They share the same status enum and lifecycle but each has its own per-type schema and authoring contract. The kind is encoded in `type:` and in the top-level folder; there is **no** `kind:` field. Path references use the actual folder (`task/<id>-<slug>`, `bug/<id>-<slug>`, etc.) — the legacy `task/<kind>/<id>-<slug>` shape (with a kind subfolder) was retired in a4 v12.0.0.
 
-The four families share the lifecycle defined by `TASK_TRANSITIONS` in `../scripts/status_model.py` and the cross-family artifact contract documented in [`artifacts.md`](./artifacts.md). Cross-family operations (UC `revising` / `discarded` cascades, the discard skill) walk all four folders via `ISSUE_FAMILY_TYPES`.
+The four families share the lifecycle defined by `ISSUE_FAMILY_TRANSITIONS` in `../scripts/status_model.py` and the cross-family artifact contract documented in [`artifacts.md`](./artifacts.md). Cross-family operations (UC `revising` / `discarded` cascades, the discard skill) walk all four folders via `ISSUE_FAMILY_TYPES`.
 
 ### Task (`a4/task/<id>-<slug>.md`)
 

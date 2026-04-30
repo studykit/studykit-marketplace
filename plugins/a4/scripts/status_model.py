@@ -42,10 +42,10 @@ from __future__ import annotations
 # Family groupings
 # ---------------------------------------------------------------------------
 
-# The four issue families that share TASK_TRANSITIONS / shared status
-# enum. Order is the canonical iteration order for cross-family walks.
-# The `task` member is the default kind (regular implementation work);
-# `bug` / `spike` / `research` are specialized variants.
+# The four issue families that share ISSUE_FAMILY_TRANSITIONS / shared
+# status enum. Order is the canonical iteration order for cross-family
+# walks. The `task` member is the default kind (regular implementation
+# work); `bug` / `spike` / `research` are specialized variants.
 ISSUE_FAMILY_TYPES: tuple[str, ...] = ("task", "bug", "spike", "research")
 
 
@@ -102,7 +102,7 @@ UC_TRANSITIONS: dict[str, frozenset[str]] = {
     "shipped": frozenset({"superseded", "discarded"}),
 }
 
-TASK_TRANSITIONS: dict[str, frozenset[str]] = {
+ISSUE_FAMILY_TRANSITIONS: dict[str, frozenset[str]] = {
     "open": frozenset({"pending", "progress", "discarded"}),
     "pending": frozenset({"progress", "discarded"}),
     "progress": frozenset({"complete", "failing", "pending", "discarded"}),
@@ -124,10 +124,10 @@ SPEC_TRANSITIONS: dict[str, frozenset[str]] = {
 
 FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
     "usecase": UC_TRANSITIONS,
-    "task": TASK_TRANSITIONS,
-    "bug": TASK_TRANSITIONS,
-    "spike": TASK_TRANSITIONS,
-    "research": TASK_TRANSITIONS,
+    "task": ISSUE_FAMILY_TRANSITIONS,
+    "bug": ISSUE_FAMILY_TRANSITIONS,
+    "spike": ISSUE_FAMILY_TRANSITIONS,
+    "research": ISSUE_FAMILY_TRANSITIONS,
     "review": REVIEW_TRANSITIONS,
     "spec": SPEC_TRANSITIONS,
 }

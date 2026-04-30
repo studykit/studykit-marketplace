@@ -16,7 +16,7 @@ If no file resolves, abort with: "No task file found for `<target>`. List candid
 
 ## D2. Check current status
 
-Read the resolved file's frontmatter. The writer (`transition_status.py` `TASK_TRANSITIONS`) allows `discarded` from `open | pending | progress | complete | failing`:
+Read the resolved file's frontmatter. The writer (`transition_status.py` `ISSUE_FAMILY_TRANSITIONS`) allows `discarded` from `open | pending | progress | complete | failing`:
 
 - Any of those five → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.
