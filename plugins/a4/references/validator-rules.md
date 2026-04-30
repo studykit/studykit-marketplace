@@ -22,7 +22,7 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | UC `status >= ready` with empty `actors:` | error (`missing-actors-post-draft`) |
 | `title:` contains placeholder (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`) when UC is `>= ready` or spec is `>= active` | error (`placeholder-in-title`) |
 | File in an issue / spark folder has no frontmatter | error |
-| `status:` jump (HEAD → working tree) outside `FAMILY_TRANSITIONS` for `usecase` / `task` / `review` / `spec` | error (`illegal-transition`) — Stop hook safety net for direct edits that bypass `transition_status.py` |
+| `status:` jump (HEAD → working tree) outside `FAMILY_TRANSITIONS` for `usecase` / `task` / `review` / `spec` | error (`illegal-transition`) — Stop hook safety net; the PostToolUse cascade hook silently skips illegal jumps, so this surfaces them |
 
 How violations are surfaced (block, notify, ignore) is the surfacing layer's concern, not the schema's.
 
@@ -32,11 +32,11 @@ Several enum values are semantically derived from cross-file state rather than b
 
 | Field | Derived value | Condition | Materialized by |
 |-------|--------------|-----------|-----------------|
-| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | `transition_status.py` cascade (fires during successor's `→ shipped` transition) |
-| `<task-family>.status` | `discarded` | UC the task implements flips to `discarded` (applies to `task` / `bug` / `spike` / `research`) | `transition_status.py` cascade |
-| `<task-family>.status` | `pending` (from `progress`/`failing`) | UC the task implements flips to `revising` (applies to `task` / `bug` / `spike` / `research`) | `transition_status.py` cascade |
-| `review.status` | `discarded` | UC named by `target:` flips to `discarded` | `transition_status.py` cascade |
-| `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | `transition_status.py` cascade (fires during successor's `→ active` transition) |
+| `usecase.status` | `superseded` | A newer `usecase/*.md` with `supersedes: [<this>]` has `status: shipped` | PostToolUse cascade hook (fires during successor's `→ shipped` transition); `validate.py --fix` for recovery |
+| `<task-family>.status` | `discarded` | UC the task implements flips to `discarded` (applies to `task` / `bug` / `spike` / `research`) | PostToolUse cascade hook |
+| `<task-family>.status` | `pending` (from `progress`/`failing`) | UC the task implements flips to `revising` (applies to `task` / `bug` / `spike` / `research`) | PostToolUse cascade hook |
+| `review.status` | `discarded` | UC named by `target:` flips to `discarded` | PostToolUse cascade hook |
+| `spec.status` | `superseded` | Another `spec/*.md` declares `supersedes: [<this>]` and has `status: active` | PostToolUse cascade hook (fires during successor's `→ active` transition); `validate.py --fix` for recovery |
 | `idea.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 | `spark/*.brainstorm.md` `status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 

@@ -74,7 +74,7 @@ Per-status meaning:
 Writer rules (idea-specific):
 
 - `open` is the **only** initial status. New ideas are always born at `open`.
-- The idea family does **not** flow through `../scripts/transition_status.py` — there is no cascade work for ideas. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
+- The idea family has **no cascade** — the PostToolUse cascade hook doesn't flip related files for it (the family is absent from `FAMILY_TRANSITIONS`). `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
 - Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch (the idea has graduated but the status was not flipped); empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal. To revive a discarded idea, author a fresh idea (and reference the prior via `related:` if the lineage matters).
 

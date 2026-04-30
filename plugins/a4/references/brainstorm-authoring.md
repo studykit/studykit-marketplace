@@ -55,7 +55,7 @@ Per-status meaning:
 Writer rules (brainstorm-specific):
 
 - `open` is the **only** initial status.
-- The brainstorm family does **not** flow through `../scripts/transition_status.py` — there is no cascade work. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
+- The brainstorm family has **no cascade** — the PostToolUse cascade hook doesn't flip related files for it (the family is absent from `FAMILY_TRANSITIONS`). `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
 - Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal.
 

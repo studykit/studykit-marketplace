@@ -80,7 +80,7 @@ deprecated → superseded
 superseded → (terminal)
 ```
 
-- All status changes flow through `../scripts/transition_status.py`. Never write `status:` directly after the initial create.
+- Edit `status:` directly. The PostToolUse cascade hook (`../scripts/a4_hook.py`) detects the transition, refreshes `updated:`, and runs any cross-file cascade.
 - `draft → superseded` is **disallowed** — supersession presumes the predecessor was at one point live.
 - `active → superseded` is **automatic** — it fires when a successor spec with `supersedes: [<this>]` reaches `active`. Do not flip it by hand.
 - `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.
@@ -102,7 +102,7 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 - `## Consequences` — downstream effects (positive, negative, or neutral) the spec creates.
 - `## Examples` — concrete cases that pin down the prescriptive rules.
 - `## Change Logs` — append-only audit trail of why this file was edited (dated bullets with markdown links to the causing issue).
-- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). The PostToolUse cascade hook refreshes `updated:` and flips related files but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 
 Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders (`a4/task/`, `a4/bug/`, etc.).
 
@@ -120,9 +120,8 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 ## Don't
 
-- **Don't hand-edit `status:`.** Use `transition_status.py`.
 - **Don't auto-populate `supersedes:`.** It is an explicit user decision in the authoring conversation.
-- **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the writer cascades the prior spec's status automatically.
+- **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the cascade hook flips the prior spec's status automatically when the successor reaches `active`.
 - **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `## Decision Log`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `## Decision Log`.

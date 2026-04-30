@@ -53,38 +53,17 @@ Order by `priority` (High → Medium → Low), then by `created:`.
 
 If a stage detects **staleness signals** (e.g., domain page's `updated:` predates recent UC additions, arch page's `## Change Logs` misses recent UC files) and no review item exists yet, the stage may surface them as "likely review triggers" alongside the backlog.
 
-## 3. Transition status via the writer
+## 3. Transition status
 
-Every status change goes through `transition_status.py`. Never hand-edit `status:` or `updated:` on a review item. The writer flips status and bumps `updated:` but does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet to `## Log` by hand.
+Edit `status:` directly on the review item file. The PostToolUse cascade hook (`../scripts/a4_hook.py`) detects the pre→post transition, refreshes `updated:`, and runs any cross-file cascade — never hand-edit `updated:`. The hook does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet by hand. If the rationale is worth keeping in the review's `## Log`, write that *first*, then flip `status:` last so the file is consistent at any read point.
 
-**Pick → in-progress** (when an item is selected for work):
+**Pick → in-progress** (when an item is selected for work): set `status: in-progress`.
 
-```bash
-uv run "../scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file "review/<id>-<slug>.md" --to in-progress \
-  --reason "iterate: user picked for resolution"
-```
+**Resolve → resolved** (when the fix is applied): set `status: resolved`. If `target:` includes a UC that just flipped to `discarded`, the cascade hook will already have flipped this item to `discarded` first — surface that to the user instead of resolving.
 
-**Resolve → resolved** (when the fix is applied):
+**Discard → discarded** (when the item is no longer applicable): set `status: discarded`.
 
-```bash
-uv run "../scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file "review/<id>-<slug>.md" --to resolved \
-  --reason "<short — what was fixed>"
-```
-
-**Discard → discarded** (when the item is no longer applicable):
-
-```bash
-uv run "../scripts/transition_status.py" \
-  "$(git rev-parse --show-toplevel)/a4" \
-  --file "review/<id>-<slug>.md" --to discarded \
-  --reason "<short — why discarded>"
-```
-
-The writer writes `status:` and bumps `updated:`. It does **not** write into `## Log` — that section is optional and hand-maintained. Do not write `status:` or `updated:` directly.
+Illegal direct edits (jumps not in `FAMILY_TRANSITIONS`) are surfaced by the Stop hook safety net, not the cascade hook. The cascade hook silently skips illegal jumps so it never amplifies a malformed edit.
 
 ## 4. Record wiki edits
 

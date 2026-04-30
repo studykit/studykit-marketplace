@@ -56,7 +56,7 @@ The choice is determined by **whether this stage's output is valid before the up
 
 When `/a4:arch iterate` resolves a review whose `target:` lists `architecture`:
 
-1. `architecture.md` is edited; the resolved review item's `status:` and `updated:` are flipped by `transition_status.py` (the writer does not touch `## Log` — that section is optional and hand-maintained); a new bullet in `architecture.md`'s `## Change Logs` cites the resolved item.
+1. `architecture.md` is edited; the resolved review item's `status:` is edited directly to `resolved`, the PostToolUse cascade hook refreshes `updated:` and runs any cross-file cascade (the hook does not touch `## Log` — that section is optional and hand-maintained); a new bullet in `architecture.md`'s `## Change Logs` cites the resolved item.
 2. The wiki close guard (per `body-conventions.md`) ensures the change-log bullet is well-formed.
 3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, `roadmap`, related `task/*/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
 4. `compass` Layer 2 / Layer 3 routes the user to the correct downstream `iterate` skill based on the new review-item targets.

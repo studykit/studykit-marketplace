@@ -101,7 +101,7 @@ Issue files (`usecase`, `task`, `review`, `spec`) may carry an optional `## Log`
 - 2026-04-26 — active → superseded — replaced by spec/12
 ```
 
-`../scripts/transition_status.py` flips `status:` and bumps `updated:`, but **does not write into `## Log`**. If you want a transition recorded in the body, append the bullet by hand. The section is optional and may be omitted entirely.
+The PostToolUse cascade hook (`../scripts/a4_hook.py`) refreshes `updated:` on the primary edit and flips related files, but **does not write into `## Log`**. If you want a transition recorded in the body, append the bullet by hand. The section is optional and may be omitted entirely.
 
 ## Wiki Update Protocol
 

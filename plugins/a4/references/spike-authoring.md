@@ -86,7 +86,7 @@ When the chosen initial status is `complete`, the spike is asserted to already b
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; PoC done prior to task authorship)
    ```
 
-   `transition_status.py` does not touch `## Log`; the section is purely an author convenience.
+   The PostToolUse cascade hook does not touch `## Log`; the section is purely an author convenience.
 
 ## Body shape
 
@@ -103,7 +103,7 @@ When the chosen initial status is `complete`, the spike is asserted to already b
 
 - `## Interface Contracts` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). May be omitted for self-contained spikes.
 - `## Change Logs` — append-only audit trail when the task body is materially edited post-create.
-- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). The PostToolUse cascade hook refreshes `updated:` and flips related files but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

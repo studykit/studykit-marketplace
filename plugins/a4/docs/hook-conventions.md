@@ -23,8 +23,15 @@ meaningless outside that session. Typical markers:
 - Lives under `.claude/tmp/` (not tracked by git).
 - Re-creatable from scratch on each new session.
 
-Example: `.claude/tmp/a4-edited/a4-edited-<session_id>.txt` — this session's
-list of edited `a4/*.md` files, consumed by the `stop` hook.
+Examples:
+
+- `.claude/tmp/a4-edited/a4-edited-<session_id>.txt` — this session's
+  list of edited `a4/*.md` files, consumed by the `stop` hook.
+- `.claude/tmp/a4-edited/a4-prestatus-<session_id>.json` — pre-edit
+  on-disk `status:` snapshot keyed by absolute path, populated by the
+  `pre-edit` hook (PreToolUse) and consumed by `post-edit`
+  (PostToolUse) to detect the precise pre→post transition before
+  running cascades.
 
 ### Permanent workspace state
 
@@ -79,12 +86,13 @@ Why no counterpart: the write is not a session effect to be undone. The
 invariant it restores must hold regardless of whether any session is
 active. Undoing it at SessionEnd would actively break the invariant.
 
-Example: `transition_status.py --sweep` recovers spec / UC supersedes
-chains. It is idempotent — a second run on the same workspace produces
-no further changes. No SessionEnd counterpart exists or is needed. (The
-historical `refresh_implemented_by.py` SessionStart writer fit this
-shape too; it was retired in a4 v6.0.0 along with the
-`usecase.implemented_by:` field.)
+Example: `validate.py --fix` recovers spec / UC supersedes chains for
+edits that bypassed the live cascade hook. It is idempotent — a second
+run on the same workspace produces no further changes. No SessionEnd
+counterpart exists or is needed. (The historical
+`refresh_implemented_by.py` SessionStart writer fit this shape too; it
+was retired in a4 v6.0.0 along with the `usecase.implemented_by:`
+field.)
 
 ---
 
@@ -208,11 +216,13 @@ hook's JSON payload:
 ### Usage rule
 
 - **Both channels together** when a hook affects workspace state the user
-  should be aware of (e.g., a SessionStart workspace reconciliation that
-  rewrote frontmatter: `systemMessage = "<short summary>"`,
-  `additionalContext` = per-file diff). No such hook is currently active
-  — the original `refresh-implemented-by` example was retired in a4
-  v6.0.0.
+  should be aware of. The live example is the `post-edit` cascade
+  hook: when a legal `status:` transition fires a cross-file cascade,
+  it emits `systemMessage = "a4 cascade: <from> → <to> on <path>
+  flipped N related file(s)"` for the user-facing one-liner, and
+  `additionalContext` carrying the per-file flip table for the LLM.
+  Silent on cosmetic edits (no transition) and on illegal jumps (which
+  the Stop-hook safety net surfaces instead).
 - **`additionalContext` only** for informational reports where no
   user-visible notice is warranted (e.g., the PostToolUse status-
   consistency report — inline context for the LLM, no pop-up needed).

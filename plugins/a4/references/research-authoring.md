@@ -102,7 +102,7 @@ When the chosen initial status is `complete`, the investigation is asserted to a
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; investigation captured in this conversation)
    ```
 
-   `transition_status.py` does not touch `## Log`; the section is purely an author convenience.
+   The PostToolUse cascade hook does not touch `## Log`; the section is purely an author convenience.
 
 ## Body shape
 
@@ -123,7 +123,7 @@ When the chosen initial status is `complete`, the investigation is asserted to a
 **Optional:**
 
 - `## Change Logs` — append-only audit trail when the body is materially edited post-create.
-- `## Log` — optional, hand-maintained status-transition narrative. `transition_status.py` does not touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Log` — optional, hand-maintained status-transition narrative. The PostToolUse cascade hook does not touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 - `## Why Discarded` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

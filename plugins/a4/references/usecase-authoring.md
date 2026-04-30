@@ -96,7 +96,7 @@ Writer rules (UC-specific):
 - `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
 - `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
 - `## Change Logs` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). The PostToolUse cascade hook refreshes `updated:` and flips related files but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 
 Unknown H2 headings are tolerated.
 
