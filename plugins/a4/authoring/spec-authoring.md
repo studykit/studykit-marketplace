@@ -1,5 +1,7 @@
 # a4 — spec authoring
 
+> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
+
 A spec at `a4/spec/<id>-<slug>.md` is a **living, prescriptive specification** of an artifact the project commits to — a format, protocol, schema, renderer rule, CLI surface, or any shape downstream code and review items must conform to. Design rationale for the chosen shape lives inline as `## Decision Log` entries in the same file.
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.

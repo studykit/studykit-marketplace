@@ -1,5 +1,7 @@
 # a4 — brainstorm authoring
 
+> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
+
 A brainstorm at `a4/spark/<YYYY-MM-DD-HHmm>-<slug>.brainstorm.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.

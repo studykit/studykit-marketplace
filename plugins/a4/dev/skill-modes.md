@@ -1,5 +1,7 @@
 # Skill Modes — Interactive vs Autonomous, Forward vs Reverse
 
+> **Audience:** a4 plugin contributors editing `plugins/a4/` itself. Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead.
+
 Why each a4 pipeline stage has the mode it has, and why the missing interactive/autonomous pairs are intentional rather than gaps.
 
 Companion to:

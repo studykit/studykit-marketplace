@@ -1,5 +1,7 @@
 # a4 Commit Message Convention
 
+> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
+
 Subject form for every commit authored against an a4 workspace. Applies to any commit touching `a4/` artifacts. Does not apply to other plugins or to user-project work unrelated to `a4/`.
 
 ## Forms

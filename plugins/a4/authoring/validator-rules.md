@@ -1,5 +1,7 @@
 # a4 Validator Rules
 
+> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
+
 Frontmatter validation contract — what the validator rejects, what it ignores, and how cross-file status consistency is checked. Per-type field shapes (required vs optional, enum values, types) live in each `./<type>-authoring.md`. Universal frontmatter rules (path-reference format, status writers, ids) live in `./frontmatter-universals.md`.
 
 This document is the canonical reference for `../scripts/markdown_validator/*.py` and the `/a4:validate` skill.

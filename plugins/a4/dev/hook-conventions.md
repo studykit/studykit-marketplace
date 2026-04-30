@@ -1,5 +1,7 @@
 # a4/ hook conventions
 
+> **Audience:** a4 plugin contributors editing `plugins/a4/` itself. Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead.
+
 Design principles and policies for hooks under `../hooks/` and the
 dispatcher `../scripts/a4_hook.py`.
 

@@ -1,5 +1,7 @@
 # a4 Body Conventions
 
+> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
+
 Body-level rules for every file under the `a4/` workspace. Covers section heading form, blank-line discipline, link form, and the `## Change Logs` / `## Log` audit-trail conventions.
 
 Frontmatter-side rules live in `frontmatter-universals.md` (universal contract: `type:`, ids, path-reference format, dates, status writers, structural relationship fields), `validator-rules.md` (enforcement and cross-file consistency), and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables).
