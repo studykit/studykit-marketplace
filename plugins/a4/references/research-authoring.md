@@ -1,6 +1,6 @@
-# a4 — research task authoring
+# a4 — research authoring
 
-A research task at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or tasks may cite the research as input via `related:` or via standard markdown body links.
+A research item at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or tasks may cite the research as input via `related:` or via standard markdown body links.
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
@@ -40,7 +40,7 @@ updated: YYYY-MM-DD
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.
 - `implements:` is **forbidden** on research — research is investigation, not delivery. If a research task is scoped to a specific UC's open question, link the UC from `## Context` body prose instead.
-- `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `task` and `bug` tasks.
+- `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
 - `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
@@ -65,7 +65,7 @@ Per-status meaning:
 - `failing` — Investigation could not produce usable findings on this iteration (e.g., sources inaccessible, scope mis-framed). Resumed via `failing → progress` or deferred via `failing → pending`.
 - `discarded` — Abandoned. Terminal. Reached via an explicit task-discard when the question is no longer relevant.
 
-Writer rules (task-specific):
+Writer rules (research-specific):
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; investigation captured in one shot during the same conversation).
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
@@ -134,7 +134,7 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 Use `/a4:research-review` to walk a structured quality pass over the task body. The reviewer checks source quality, option balance (in comparative mode), claim grounding, bias, completeness, and decision neutrality. Output is advisory; the user accepts, modifies, or dismisses each finding before the task flips to `complete`.
 
-## Citing a research task from a spec or feature
+## Citing a research task from a spec or task
 
 Citations are **soft** — there is no stored-reverse contract. Two paths:
 
@@ -143,7 +143,7 @@ Citations are **soft** — there is no stored-reverse contract. Two paths:
 
 Reverse lookups (which specs cite a research task) are derived on demand via grep / `search.py`; they are not stored on the research task.
 
-## Don't (research-task-specific)
+## Don't (research-specific)
 
 - **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden on `type: research`. Cite triggering specs via markdown links in `## Context` body prose; record the implementing UC the same way if applicable.
 - **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.

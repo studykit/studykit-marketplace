@@ -1,6 +1,6 @@
-# a4 — spike task authoring
+# a4 — spike authoring
 
-A spike task at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives in the spike's artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `type: research` instead.
+A spike at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. The accompanying code lives in the spike's artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `type: research` instead.
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
@@ -25,8 +25,8 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `type: spike` is fixed for files under `a4/spike/`. There is no `kind:` field — the type *is* the kind.
-- `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `task` task with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
-- `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `task` and `bug` tasks.
+- `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
+- `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
 - `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/...` (or `artifacts/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `## Files` section, not in frontmatter.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
@@ -51,7 +51,7 @@ Per-status meaning:
 - `failing` — Spike could not validate the hypothesis on this iteration. Resumed via `failing → progress` (immediate retry) or deferred via `failing → pending` (re-attempt without a cycle bump — there is no `cycle:` on spike).
 - `discarded` — Abandoned. Terminal. Reached via an explicit task-discard (a spike whose hypothesis is no longer worth testing).
 
-Writer rules (task-specific):
+Writer rules (spike-specific):
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; PoC already done).
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
@@ -112,7 +112,7 @@ Spike-specific notes:
 
 Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./artifacts.md`](./artifacts.md) and apply to `type: spike` as written there.
 
-## Common mistakes (spike-task-specific)
+## Common mistakes (spike-specific)
 
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Wrong `type:` value or wrong folder.** A file under `a4/spike/` must declare `type: spike`. Mismatched declarations are a folder-routing error and should be re-located.
@@ -121,13 +121,13 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
-## Don't (spike-task-specific)
+## Don't (spike-specific)
 
-- **Don't put `implements:`, `cycle:`, or `spec:` on a spike.** All three are forbidden on `type: spike`. Spikes are exploratory; if the outcome warrants UC delivery, author a follow-up `task` task that declares `implements:` and `spec:` as needed.
+- **Don't put `implements:`, `cycle:`, or `spec:` on a spike.** All three are forbidden on `type: spike`. Spikes are exploratory; if the outcome warrants UC delivery, author a follow-up `type: task` that declares `implements:` and `spec:` as needed.
 - **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a spike stays enqueued or moves forward / out.
 - **Don't write `kind:` in spike frontmatter.** The field was retired in a4 v12.0.0.
 - **Don't auto-delete or auto-archive `artifacts/spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
-- **Don't write production source from a spike.** `artifacts:` paths staying under `artifacts/spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the spike's outcome warrants production work, follow up with a `feature` task.
+- **Don't write production source from a spike.** `artifacts:` paths staying under `artifacts/spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the spike's outcome warrants production work, follow up with a `task` (the default issue family).
 - **Don't author a different issue family here.** Move tasks to `a4/task/`, bugs to `a4/bug/`, and research to `a4/research/` so the matching authoring contract applies.

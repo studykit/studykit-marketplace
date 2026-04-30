@@ -1,6 +1,6 @@
-# a4 — bug task authoring
+# a4 — bug authoring
 
-A bug task at `a4/bug/<id>-<slug>.md` is a **defect fix** — production code change against expected behavior. Not throwaway.
+A bug at `a4/bug/<id>-<slug>.md` is a **defect fix** — production code change against expected behavior. Not throwaway.
 
 After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
@@ -55,7 +55,7 @@ Per-status meaning:
 - `failing` — Unit tests red. Resumed via `failing → progress` (immediate retry) or deferred via `failing → pending` (next cycle, `cycle:` bumps).
 - `discarded` — Abandoned. Terminal.
 
-Writer rules (task-specific):
+Writer rules (bug-specific):
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; fix already shipped).
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
@@ -114,7 +114,7 @@ No archive convention — closed bug tasks archive their markdown to `a4/archive
 
 Cross-family conventions for the artifact directory — per-type expectations, the `artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`./artifacts.md`](./artifacts.md) and apply to `type: bug` as written there.
 
-## Common mistakes (bug-task-specific)
+## Common mistakes (bug-specific)
 
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Wrong `type:` value or wrong folder.** A file under `a4/bug/` must declare `type: bug`. Mismatched declarations are a folder-routing error and should be re-located.
@@ -123,7 +123,7 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
-## Don't (bug-task-specific)
+## Don't (bug-specific)
 
 - **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
