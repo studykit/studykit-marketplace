@@ -10,5 +10,5 @@ When **authoring or editing** any spec file, read these first.
 
 ## Required reading before authoring
 
-- `../authoring/spec-authoring.md` — when a spec is warranted, conversational triggers, anti-patterns, frontmatter, lifecycle, body shape, common mistakes, "Don't" list.
+- `../authoring/spec-authoring.md` — when a spec is warranted, anti-patterns, frontmatter, lifecycle, body shape, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
