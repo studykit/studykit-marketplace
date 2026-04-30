@@ -1,13 +1,13 @@
 ---
 name: roadmap
-description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files at a4/feature/<id>-<slug>.md. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks come through /a4:feature, /a4:bug, /a4:spike, /a4:research."
+description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files at a4/task/<id>-<slug>.md. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 
 # Implementation Roadmap Builder
 
-> **Authoring contracts:** `a4/roadmap.md` — `${CLAUDE_PLUGIN_ROOT}/references/roadmap-authoring.md`. Per-task files (always `type: feature` for the batch path): `${CLAUDE_PLUGIN_ROOT}/references/feature-authoring.md`. This skill orchestrates the batch.
+> **Authoring contracts:** `a4/roadmap.md` — `${CLAUDE_PLUGIN_ROOT}/references/roadmap-authoring.md`. Per-task files (always `type: task` for the batch path): `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`. This skill orchestrates the batch.
 
 Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and authors the implementation roadmap plus per-task files. The agent-driven implement + test loop lives in `/a4:run`.
 
@@ -25,7 +25,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 **Outputs:**
 
 - `a4/roadmap.md` — single wiki page covering Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points (all H3+ headings inside `## Plan`). Launch & Verify is a one-line pointer to `bootstrap.md`, not authored content.
-- `a4/feature/<id>-<slug>.md` — one per executable unit of work. The roadmap generator always emits `type: feature`; spike / bug / research tasks come through their dedicated authoring skills.
+- `a4/task/<id>-<slug>.md` — one per executable unit of work. The roadmap generator always emits `type: task`; spike / bug / research tasks come through their dedicated authoring skills.
 - `a4/review/<id>-<slug>.md` — findings from roadmap-reviewer.
 
 Derived views (dependency graph, open-task dashboard, milestone progress) are produced on demand by `/a4:compass` or by grep over frontmatter — no separate files.
@@ -38,17 +38,17 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 ## Modes
 
-- **Roadmap mode** — `a4/roadmap.md` absent OR all four task-family folders (`a4/feature/`, `a4/bug/`, `a4/spike/`, `a4/research/`) are empty. Run Steps 1 → 4.
+- **Roadmap mode** — `a4/roadmap.md` absent OR all four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) are empty. Run Steps 1 → 4.
 - **Iterate mode** — open review items target `roadmap` or a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
 
 Mode detection at session start:
 
 ```bash
-ls a4/feature/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any tasks?
-ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: feature/\|target: bug/\|target: spike/\|target: research/'
+ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any tasks?
+ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/\|target: bug/\|target: spike/\|target: research/'
 ```
 
-If `a4/feature/` already has the full set and the user's intent is to run the implement loop, redirect them to `/a4:run`.
+If `a4/task/` already has the full set and the user's intent is to run the implement loop, redirect them to `/a4:run`.
 
 ## Workflow
 
@@ -72,7 +72,7 @@ Procedure: `references/verification.md`. Spawn `roadmap-reviewer`, walk findings
 
 After Step 4 closes:
 
-> Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks can be added at any time via `/a4:feature`, `/a4:bug`, `/a4:spike`, or `/a4:research`.
+> Roadmap ready. Run `/a4:run` to start the implement + test loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`.
 
 `/a4:run` reads `a4/bootstrap.md` directly. Make sure `bootstrap.md` exists and its `## Verify` content is correct before handing off — re-run `/a4:auto-bootstrap` if architecture changed.
 

@@ -1,7 +1,7 @@
 ---
 name: roadmap-reviewer
 description: >
-  Review a4/roadmap.md and the four task-family folders (a4/feature/, a4/bug/, a4/spike/, a4/research/) against a4/architecture.md and the use-case
+  Review a4/roadmap.md and the four issue family folders (a4/task/, a4/bug/, a4/spike/, a4/research/) against a4/architecture.md and the use-case
   set in a4/usecase/. Emit one review item file per finding into
   a4/review/<id>-<slug>.md. Findings cover UC coverage, component coverage,
   dependency validity, task granularity, test strategy, file mapping,
@@ -25,7 +25,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies.
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape.
 - `${CLAUDE_PLUGIN_ROOT}/rules/a4-roadmap-authoring.md` — what makes the roadmap wiki "complete" (`## Plan` H3 subsections: milestone narrative, dependency graph, Shared Integration Points, L&V pointer).
-- The per-family task contracts: `${CLAUDE_PLUGIN_ROOT}/rules/a4-feature-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-spike-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-research-authoring.md` (frontmatter, body sections, AC source per family). Roadmap-derived tasks are always `type: feature` and live under `a4/feature/`; spike / bug / research entries authored via the matching `/a4:<type>` skill live under their respective folders.
+- The per-family task contracts: `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-spike-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-research-authoring.md` (frontmatter, body sections, AC source per family). Roadmap-derived tasks are always `type: task` and live under `a4/task/`; spike / bug / research entries authored via the matching `/a4:<type>` skill live under their respective folders.
 
 ## What You Receive
 
@@ -40,7 +40,7 @@ From the invoking skill:
 Inside `a4/`:
 
 - `a4/roadmap.md` — the roadmap wiki page.
-- `a4/feature/*.md`, `a4/bug/*.md`, `a4/spike/*.md`, `a4/research/*.md` — every task file across the four task-family folders.
+- `a4/task/*.md`, `a4/bug/*.md`, `a4/spike/*.md`, `a4/research/*.md` — every task file across the four issue family folders.
 - `a4/architecture.md` — the authoritative architecture.
 - `a4/usecase/*.md` — every Use Case (task `implements:` references resolve here).
 - `a4/domain.md`, `a4/actors.md`, `a4/nfr.md`, `a4/context.md` — supporting wiki pages (may be absent).
@@ -183,7 +183,7 @@ updated: <YYYY-MM-DD>
 
 **Summary.** One paragraph describing the issue.
 
-**Evidence.** Quote the roadmap / task / architecture / UC lines demonstrating the issue. Reference the offending file via markdown link — `[<type>/<id>-<slug>](../<type>/<id>-<slug>.md)` where `<type>` ∈ `{feature, bug, spike, research}`.
+**Evidence.** Quote the roadmap / task / architecture / UC lines demonstrating the issue. Reference the offending file via markdown link — `[<type>/<id>-<slug>](../<type>/<id>-<slug>.md)` where `<type>` ∈ `{task, bug, spike, research}`.
 
 **Impact.** What a developer would guess or re-decide when implementing this roadmap as-is.
 

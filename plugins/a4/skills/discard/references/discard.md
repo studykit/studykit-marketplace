@@ -2,17 +2,17 @@
 
 Loaded by `/a4:discard`. The remainder after the first whitespace is parsed as: `<id-or-slug> [reason]`. UC-cascade discards (when a UC flips to `discarded`) are handled automatically by `transition_status.py` — this procedure is for **explicit one-off task discards** that are not driven by a UC cascade.
 
-After a4 v12.0.0 the four task families (`feature`, `bug`, `spike`, `research`) live in separate top-level folders. Resolution walks all four.
+After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) live in separate top-level folders. Resolution walks all four.
 
 ## D1. Resolve the task file
 
 Accept three forms and resolve in this order:
 
-1. **Numeric id** (e.g., `42`) — glob `<project-root>/a4/{feature,bug,spike,research}/<id>-*.md`. Exactly one match expected; error if zero or multiple.
-2. **Folder-prefixed path** — `feature/<id>-<slug>`, `bug/<id>-<slug>`, `spike/<id>-<slug>`, or `research/<id>-<slug>`. Resolve as `<project-root>/a4/<path>.md`.
-3. **Slug fragment** (any other non-empty token) — glob `<project-root>/a4/{feature,bug,spike,research}/*<fragment>*.md`. If exactly one matches, use it; if multiple match, list them with `<type>/<id>-<title>` and ask which.
+1. **Numeric id** (e.g., `42`) — glob `<project-root>/a4/{task,bug,spike,research}/<id>-*.md`. Exactly one match expected; error if zero or multiple.
+2. **Folder-prefixed path** — `task/<id>-<slug>`, `bug/<id>-<slug>`, `spike/<id>-<slug>`, or `research/<id>-<slug>`. Resolve as `<project-root>/a4/<path>.md`.
+3. **Slug fragment** (any other non-empty token) — glob `<project-root>/a4/{task,bug,spike,research}/*<fragment>*.md`. If exactly one matches, use it; if multiple match, list them with `<type>/<id>-<title>` and ask which.
 
-If no file resolves, abort with: "No task file found for `<target>`. List candidates with `ls a4/feature/ a4/bug/ a4/spike/ a4/research/`."
+If no file resolves, abort with: "No task file found for `<target>`. List candidates with `ls a4/task/ a4/bug/ a4/spike/ a4/research/`."
 
 ## D2. Check current status
 

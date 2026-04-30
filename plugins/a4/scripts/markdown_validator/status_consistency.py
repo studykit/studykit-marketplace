@@ -8,7 +8,7 @@ Some status enum values are semantically derived from cross-file state:
     ``status: shipped`` declares ``supersedes: [<this-path>]``.
   - ``<task-family>.status = "discarded"`` iff every UC in the task's
     ``implements:`` is at ``status: discarded``. Applies across all four
-    task families (``feature`` / ``bug`` / ``spike`` / ``research``).
+    task issue families (``task`` / ``bug`` / ``spike`` / ``research``).
   - ``<task-family>.status = "pending"`` (from ``progress``/``failing``)
     iff a UC in the task's ``implements:`` is at ``status: revising``.
   - ``review.status = "discarded"`` iff the review's ``target:`` points
@@ -59,9 +59,9 @@ from common import (
 )
 from markdown import read_fm
 from status_model import (
+    ISSUE_FAMILY_TYPES,
     REVIEW_TERMINAL,
     SUPERSEDES_TRIGGER_STATUS as SUPERSEDES_FAMILIES,
-    TASK_FAMILY_TYPES,
     TASK_RESET_ON_REVISING,
 )
 
@@ -213,7 +213,7 @@ def check_discarded_cascade(
     if not discarded_uc_keys:
         return mismatches
 
-    for task_family in TASK_FAMILY_TYPES:
+    for task_family in ISSUE_FAMILY_TYPES:
         for p in iter_issue_files(a4_dir, task_family):
             fm = read_fm(p)
             if fm is None:
@@ -295,7 +295,7 @@ def check_revising_cascade(
         return []
 
     mismatches: list[Mismatch] = []
-    for task_family in TASK_FAMILY_TYPES:
+    for task_family in ISSUE_FAMILY_TYPES:
         for p in iter_issue_files(a4_dir, task_family):
             fm = read_fm(p)
             if fm is None:

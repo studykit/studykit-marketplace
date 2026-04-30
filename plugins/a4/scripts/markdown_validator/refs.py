@@ -40,7 +40,7 @@ from markdown import extract_preamble
 class ResolvedRef:
     """Canonical resolution of a frontmatter path reference."""
 
-    folder: str         # one of ISSUE_FOLDERS (`usecase`, `feature`, `bug`,
+    folder: str         # one of ISSUE_FOLDERS (`usecase`, `task`, `bug`,
                         # `spike`, `research`, `review`, `spec`, `idea`),
                         # or `wiki` / `spark` for the non-issue families
     stem: str           # filename stem without `.md`

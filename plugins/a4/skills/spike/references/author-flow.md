@@ -10,13 +10,13 @@ Two input modes:
 Draft a scratch summary (do not write to disk yet):
 
 - **Title** — short, human-readable phrase naming the question being explored.
-- **Description** — what is being explored, why a spike (vs. going straight to a feature task), the hypothesis, and the decision this informs.
+- **Description** — what is being explored, why a spike (vs. going straight to a regular task), the hypothesis, and the decision this informs.
 - **Initial status** — `open` (default; backlog), `pending` (enqueue immediately for `/a4:run`), or `complete` (post-hoc; PoC already done). Default to `pending` when the user wants to start exploring now.
 - **Artifacts** — frontmatter `artifacts:` lists artifact paths under `artifacts/spike/<id>-<slug>/`. **Never** under the project source tree. Empty list is fine for a freshly authored spike.
 - **Dependencies** — `depends_on:` paths (other tasks); spikes typically have none.
 - **Labels** — free-form.
 
-`implements:` / `spec:` / `cycle:` are **not** part of the spike schema. If the spike traces to a UC or spec, mention them in `## Description` body prose with markdown links. If the user asks for them, redirect to `/a4:feature` or `/a4:bug`.
+`implements:` / `spec:` / `cycle:` are **not** part of the spike schema. If the spike traces to a UC or spec, mention them in `## Description` body prose with markdown links. If the user asks for them, redirect to `/a4:task` or `/a4:bug`.
 
 Present this draft to the user and iterate until the substance is right. One question per turn.
 

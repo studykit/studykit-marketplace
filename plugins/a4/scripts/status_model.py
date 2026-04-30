@@ -19,16 +19,20 @@ Authority: this file is canonical. The prose schema reference at
 plugins/a4/references/frontmatter-schema.md mirrors this data for human
 readers and must be kept in sync when the model changes.
 
-Keys are folder names under `<a4-dir>/`: `usecase`, the four task-family
-folders (`feature`, `bug`, `spike`, `research`), `review`, `spec`,
-`idea`, `spark`. The validator's `spark_brainstorm` schema maps to the
-`spark` folder key.
+Keys are folder names under `<a4-dir>/`: `usecase`, the four issue
+families that share the task lifecycle (`task`, `bug`, `spike`,
+`research`), `review`, `spec`, `idea`, `spark`. The validator's
+`spark_brainstorm` schema maps to the `spark` folder key.
 
-a4 v12.0.0 split the previous `task` family with a `kind:` discriminator
-into four sibling families that share the same status enum and
-transitions but live in flat folders. ``TASK_FAMILY_TYPES`` lists them
-for callers that still need the cross-kind grouping (e.g., UC cascades
-that touch every implementing task regardless of kind).
+a4 v12.0.0 split the previous combined `task` folder (with a `kind:`
+discriminator) into four sibling top-level folders that share the same
+status enum and transitions but each have their own type literal and
+authoring contract. ``ISSUE_FAMILY_TYPES`` lists them for callers that
+still need the cross-family grouping (e.g., UC cascades that touch
+every implementing task regardless of family). The `task` member is the
+default — equivalent to Jira's "Task" issue type alongside "Bug",
+"Story", etc. The other three (`bug`, `spike`, `research`) carry
+specialized authoring contracts.
 """
 
 from __future__ import annotations
@@ -39,8 +43,10 @@ from __future__ import annotations
 # ---------------------------------------------------------------------------
 
 # The four issue families that share TASK_TRANSITIONS / shared status
-# enum. Order is the canonical iteration order for cross-kind walks.
-TASK_FAMILY_TYPES: tuple[str, ...] = ("feature", "bug", "spike", "research")
+# enum. Order is the canonical iteration order for cross-family walks.
+# The `task` member is the default kind (regular implementation work);
+# `bug` / `spike` / `research` are specialized variants.
+ISSUE_FAMILY_TYPES: tuple[str, ...] = ("task", "bug", "spike", "research")
 
 
 # ---------------------------------------------------------------------------
@@ -65,7 +71,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
             "blocked",
         }
     ),
-    "feature": _TASK_STATUSES,
+    "task": _TASK_STATUSES,
     "bug": _TASK_STATUSES,
     "spike": _TASK_STATUSES,
     "research": _TASK_STATUSES,
@@ -118,7 +124,7 @@ SPEC_TRANSITIONS: dict[str, frozenset[str]] = {
 
 FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
     "usecase": UC_TRANSITIONS,
-    "feature": TASK_TRANSITIONS,
+    "task": TASK_TRANSITIONS,
     "bug": TASK_TRANSITIONS,
     "spike": TASK_TRANSITIONS,
     "research": TASK_TRANSITIONS,
@@ -136,7 +142,7 @@ _TASK_IN_PROGRESS: frozenset[str] = frozenset({"progress"})
 
 TERMINAL_STATUSES: dict[str, frozenset[str]] = {
     "usecase": frozenset({"shipped", "superseded", "discarded"}),
-    "feature": _TASK_TERMINAL,
+    "task": _TASK_TERMINAL,
     "bug": _TASK_TERMINAL,
     "spike": _TASK_TERMINAL,
     "research": _TASK_TERMINAL,
@@ -148,7 +154,7 @@ TERMINAL_STATUSES: dict[str, frozenset[str]] = {
 
 IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
     "usecase": frozenset({"implementing", "revising"}),
-    "feature": _TASK_IN_PROGRESS,
+    "task": _TASK_IN_PROGRESS,
     "bug": _TASK_IN_PROGRESS,
     "spike": _TASK_IN_PROGRESS,
     "research": _TASK_IN_PROGRESS,
@@ -174,7 +180,7 @@ ACTIVE_TASK_STATUSES: frozenset[str] = frozenset({"pending", "progress", "failin
 #
 # After a4 v12.0.0 only `review` carries an in-file `kind:` discriminator.
 # The former `task` kind set was promoted to top-level family folders;
-# see TASK_FAMILY_TYPES.
+# see ISSUE_FAMILY_TYPES.
 
 KIND_BY_FOLDER: dict[str, frozenset[str]] = {
     "review": frozenset({"finding", "gap", "question"}),
@@ -207,8 +213,8 @@ SUPERSEDABLE_FROM_STATUSES: dict[str, frozenset[str]] = {
 }
 
 # When a usecase transitions to ``revising``, every task across the
-# four task families (``feature`` / ``bug`` / ``spike`` / ``research``;
-# see TASK_FAMILY_TYPES) whose ``implements:`` lists the UC and is
+# four issue families (``task`` / ``bug`` / ``spike`` / ``research``;
+# see ISSUE_FAMILY_TYPES) whose ``implements:`` lists the UC and is
 # currently in one of these statuses gets reset to ``TASK_RESET_TARGET``.
 TASK_RESET_ON_REVISING: frozenset[str] = frozenset({"progress", "failing"})
 TASK_RESET_TARGET: str = "pending"

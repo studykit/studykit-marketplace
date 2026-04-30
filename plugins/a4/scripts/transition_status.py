@@ -4,7 +4,7 @@
 # ///
 """Single writer for status transitions across the a4/ workspace.
 
-All status changes on usecase, the four task families (feature, bug,
+All status changes on usecase, the four task issue families (task, bug,
 spike, research), review, and spec files flow through this script.
 Skills and agents call it with the target file and the desired new
 status. The script:
@@ -19,10 +19,10 @@ status. The script:
      implied by the primary transition:
 
         usecase implementing → revising        → related tasks across the
-                                                  four task families reset:
+                                                  four issue families reset:
                                                   progress/failing → pending
         usecase * → discarded                  → related tasks across the
-                                                  four task families →
+                                                  four issue families →
                                                   discarded; related open
                                                   reviews → discarded
         usecase shipped → discarded            → same as above
@@ -68,11 +68,11 @@ from markdown import parse
 from markdown_validator.refs import RefIndex
 from status_model import (
     FAMILY_TRANSITIONS,
+    ISSUE_FAMILY_TYPES,
     REVIEW_TERMINAL,
     STATUS_BY_FOLDER as FAMILY_STATES,
     SUPERSEDABLE_FROM_STATUSES,
     SUPERSEDES_TRIGGER_STATUS,
-    TASK_FAMILY_TYPES,
     TASK_RESET_ON_REVISING,
     TASK_RESET_TARGET,
     cascade_for,
@@ -162,12 +162,13 @@ def find_tasks_implementing(
     Each ``implements:`` entry is resolved through ``index`` so all
     accepted ref forms — ``#<id>``, ``<family>/<id>``,
     ``<family>/<id>-<slug>``, bare ``<id>-<slug>`` — match the same
-    target. Walks the four task-family folders in ``TASK_FAMILY_TYPES``;
-    after a4 v12.0.0 each task lives directly under its family folder so
-    ``path.parent.name`` gives the family for cascade labeling.
+    target. Walks the four task issue family folders in
+    ``ISSUE_FAMILY_TYPES``; after a4 v12.0.0 each task lives directly
+    under its family folder so ``path.parent.name`` gives the family
+    for cascade labeling.
     """
     out: list[Path] = []
-    for family in TASK_FAMILY_TYPES:
+    for family in ISSUE_FAMILY_TYPES:
         for p, fm in iter_family(a4_dir, family):
             implements = fm.get("implements")
             if not isinstance(implements, list):
@@ -289,7 +290,7 @@ def _apply_reverse_cascade(
 
     Path labels in skipped/cascade rows are derived from
     ``path.parent.name`` — in the flat post-v12 layout that is the
-    family folder (``feature``/``bug``/``spike``/``research``/``review``).
+    family folder (``task``/``bug``/``spike``/``research``/``review``).
     Unreadable frontmatter — surfaced either by the pre-parse check or
     by ``_apply_status_change`` raising ``RuntimeError`` at write time —
     is recorded as an error on the report rather than crashing the
@@ -530,7 +531,7 @@ def transition(
     if family is None:
         report.errors.append(
             f"cannot detect family from path {rel_path!r}. Expected "
-            "usecase/, feature/, bug/, spike/, research/, review/, or "
+            "usecase/, task/, bug/, spike/, research/, review/, or "
             "spec/ prefix."
         )
         return report

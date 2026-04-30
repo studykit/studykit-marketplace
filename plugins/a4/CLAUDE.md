@@ -23,7 +23,7 @@ The split between these folders is recent — consult `git log --oneline plugins
 
 - `4e6e826` — split `references/` (data) from `docs/` (workflow); slimmed `rules/` to pointers.
 - `04ca63a` — slimmed `SKILL.md` files to orchestration; moved skill procedures into `skills/<name>/references/`.
-- `a014618` — moved per-type authoring guides (`spec-authoring.md`, `feature-authoring.md`, …) from `rules/` to `references/`.
+- `a014618` — moved per-type authoring guides (`spec-authoring.md`, `task-authoring.md`, …) from `rules/` to `references/`.
 
 If you find yourself duplicating substance across `rules/` and `references/`, you are undoing one of these refactors — push the substance into `references/` and leave `rules/` as the pointer.
 

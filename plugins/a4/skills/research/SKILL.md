@@ -47,6 +47,6 @@ When the task file is written:
 - Do not declare `implements:`, `spec:`, or `cycle:` on a research task — all three are forbidden.
 - Do not run a reviewer agent inline. `/a4:research-review` is a separate quality pass.
 - Do not author multiple research tasks in one invocation.
-- Do not author non-research tasks here — use `/a4:feature`, `/a4:bug`, or `/a4:spike`.
+- Do not author non-research tasks here — use `/a4:task`, `/a4:bug`, or `/a4:spike`.
 - Do not flip task status beyond the initial `open` / `pending` / `complete` write.
 - Do not make the decision in the research body. Research describes evidence; the decision belongs in a spec's `## Decision Log`.

@@ -1,13 +1,13 @@
-# feature Commit Points
+# task Commit Points
 
 All commit subjects follow `${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md`.
 
 ## Author mode
 
-Single commit covers the new feature task file. Suggest the commit when the user confirms; do not auto-commit.
+Single commit covers the new task file. Suggest the commit when the user confirms; do not auto-commit.
 
 ```
-#<task-id> docs(a4): author feature <slug>
+#<task-id> docs(a4): author task <slug>
 ```
 
 (The slug is the new task's slug.)

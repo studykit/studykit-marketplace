@@ -22,7 +22,7 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 
 `domain.md` is downstream of UCs and upstream of arch. Term churn is normal — concept rename happens often during arch work, and forcing every rename through a review item is too much friction. Hence the b3 split (simple inline / structural deferred).
 
-`architecture.md` is the **most depended-on wiki**: `bootstrap`, `roadmap`, every `task/*/*.md` (across `feature/`/`bug/`/`spike/`), and `run` all read it directly. Allowing in-situ edits from other stages would let contract drift propagate before review. Architecture changes therefore stay single-author; the cost of a review-item round trip is justified by the size of the dependent surface.
+`architecture.md` is the **most depended-on wiki**: `bootstrap`, `roadmap`, every task across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`), and `run` all read it directly. Allowing in-situ edits from other stages would let contract drift propagate before review. Architecture changes therefore stay single-author; the cost of a review-item round trip is justified by the size of the dependent surface.
 
 ### Why bootstrap, roadmap have a single in-situ owner
 

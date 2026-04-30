@@ -19,8 +19,8 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
 | `spark-brainstorm` | Structured brainstorming sessions |
-| `feature` / `bug` / `spike` / `research` | Single ad-hoc task authoring per family — writes `a4/<type>/<id>-<slug>.md` under the matching task-family folder |
-| `discard` | Discard a task across any of the four task families by id / path / slug fragment |
+| `task` / `bug` / `spike` / `research` | Single ad-hoc task authoring per issue family — writes `a4/<type>/<id>-<slug>.md` under the matching folder |
+| `discard` | Discard a task across any of the four issue families by id / path / slug fragment |
 | `research-review` | Reviews a `type: research` task body via the `research-reviewer` agent; applies accepted revisions |
 | `spec` | Records a spec reached through conversation as `a4/spec/<id>-<slug>.md`; soft-links related research tasks via standard markdown body links + optional `related:` frontmatter; nudges affected wiki pages |
 | `compass` | Project direction and next-step guidance |
@@ -80,8 +80,8 @@ Three hook flows share the same events, dispatched through a single Python entry
     actors.md nfr.md roadmap.md bootstrap.md # one file per cross-cutting concern
 
     usecase/<id>-<slug>.md                    # Use Cases
-    feature/<id>-<slug>.md                    # Executable work units (Jira sense) — flat
-    bug/<id>-<slug>.md                        #   sibling folders, one per task family
+    task/<id>-<slug>.md                       # Executable work units (Jira sense) — flat
+    bug/<id>-<slug>.md                        #   sibling folders, one per issue family
     spike/<id>-<slug>.md                      #   (per-family authoring rules auto-load
     research/<id>-<slug>.md                   #    on read/edit). Body is the deliverable for research.
     review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
@@ -95,7 +95,7 @@ Three hook flows share the same events, dispatched through a single Python entry
     spike/<id>-<slug>/                      # Active spike — PoC code, data, scratch notes
     spike/archive/<id>-<slug>/              # Archived after spike completes (manual git mv)
     research/<id>-<slug>/                   # Optional — raw data, charts, eval scripts
-    feature/<id>-<slug>/                    # Optional — comparison samples, execution outputs
+    task/<id>-<slug>/                       # Optional — comparison samples, execution outputs
     bug/<id>-<slug>/                        # Optional — repro, logs, screenshots
 ```
 
@@ -105,8 +105,8 @@ Three hook flows share the same events, dispatched through a single Python entry
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
-- **Four task families.** After a4 v12.0.0 the previous single `task/` folder with a `kind:` discriminator was promoted to four sibling top-level folders that each have their own `type:` literal: `feature` (regular implementation work), `bug` (defect fix), `spike` (time-boxed exploration whose throwaway code lives at project-root `artifacts/spike/<id>-<slug>/` outside `a4/`), `research` (written investigation whose body is the deliverable). The four share the same lifecycle / status enum but each carries its own per-type schema and authoring contract. Any family may opt in to an `artifacts/<type>/<id>-<slug>/` sibling directory for byproducts that need to live alongside the task — see `plugins/a4/references/artifacts.md` for what each family typically stores. Closed spikes are archived by manual `git mv` to `artifacts/spike/archive/<id>-<slug>/`.
-- **Task family = top-level folder.** Task files live under `a4/<type>/<id>-<slug>.md`, where `<type>` matches the `type:` frontmatter (one of `feature` / `bug` / `spike` / `research`). The family folder is the path scope that lets the matching per-family authoring rule (`a4-feature-authoring.md`, `a4-bug-authoring.md`, `a4-spike-authoring.md`, `a4-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, etc.) use the actual family folder (e.g., `feature/<id>-<slug>`) — the legacy `task/<id>-<slug>` shape was retired in v12.
+- **Four task issue families.** After a4 v12.0.0 the previous single `task/` folder with a `kind:` discriminator was kept-named-`task` for the default kind and joined by three sibling top-level folders that each have their own `type:` literal: `task` (regular implementation work — Jira's "Task" issue type), `bug` (defect fix), `spike` (time-boxed exploration whose throwaway code lives at project-root `artifacts/spike/<id>-<slug>/` outside `a4/`), `research` (written investigation whose body is the deliverable). The four share the same lifecycle / status enum but each carries its own per-type schema and authoring contract. Any family may opt in to an `artifacts/<type>/<id>-<slug>/` sibling directory for byproducts that need to live alongside the task — see `plugins/a4/references/artifacts.md` for what each family typically stores. Closed spikes are archived by manual `git mv` to `artifacts/spike/archive/<id>-<slug>/`.
+- **Issue family = top-level folder.** Task files live under `a4/<type>/<id>-<slug>.md`, where `<type>` matches the `type:` frontmatter (one of `task` / `bug` / `spike` / `research`). The family folder is the path scope that lets the matching per-family authoring rule (`a4-task-authoring.md`, `a4-bug-authoring.md`, `a4-spike-authoring.md`, `a4-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, etc.) use the actual family folder (e.g., `task/<id>-<slug>`) — the legacy `task/<kind>/<id>-<slug>` shape (with a kind subfolder) was retired in v12.
 
 ### Conventions
 

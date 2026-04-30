@@ -39,7 +39,7 @@ from common import (
     iter_issue_files,
 )
 from markdown import extract_preamble
-from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER, TASK_FAMILY_TYPES
+from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER, ISSUE_FAMILY_TYPES
 
 from .refs import RefIndex
 
@@ -112,14 +112,14 @@ SCHEMAS: dict[str, Schema] = {
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"related", "supersedes"}),
     ),
-    "feature": Schema(
-        name="feature",
+    "task": Schema(
+        name="task",
         required=frozenset(
             {"type", "id", "title", "status", "created", "updated"}
         ),
         enums={
-            "type": frozenset({"feature"}),
-            "status": STATUS_BY_FOLDER["feature"],
+            "type": frozenset({"task"}),
+            "status": STATUS_BY_FOLDER["task"],
         },
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
@@ -502,7 +502,7 @@ def validate_file(
                     )
                 )
 
-    if ftype in TASK_FAMILY_TYPES:
+    if ftype in ISSUE_FAMILY_TYPES:
         violations.extend(_validate_task_artifacts(rel_str, fm, path, ftype))
         violations.extend(
             _validate_complete_artifacts_present(rel_str, fm, path, a4_dir, ftype)
@@ -566,13 +566,13 @@ def _validate_task_artifacts(
     return violations
 
 
-_COMPLETE_ARTIFACT_TYPES: frozenset[str] = frozenset({"research", "feature", "bug"})
+_COMPLETE_ARTIFACT_TYPES: frozenset[str] = frozenset({"research", "task", "bug"})
 
 
 def _validate_complete_artifacts_present(
     rel_str: str, fm: dict, path: Path, a4_dir: Path, ftype: str
 ) -> list[Violation]:
-    """Preflight: ``research`` / ``feature`` / ``bug`` tasks at
+    """Preflight: ``research`` / ``task`` / ``bug`` issues at
     ``status: complete`` must have their listed artifacts present on disk.
 
     Layered on top of the static ``task-artifacts-bad-path`` rule —

@@ -5,7 +5,7 @@
 """Compute the next globally-unique id for an a4/ workspace.
 
 Scans all issue files across the canonical issue folders (usecase/,
-feature/, bug/, spike/, research/, review/, spec/, idea/) for their
+task/, bug/, spike/, research/, review/, spec/, idea/) for their
 `id:` frontmatter field and returns max(id) + 1. No state file,
 always computed fresh — this is the semantic guarantee that ids remain
 monotonically increasing and globally unique across the workspace.

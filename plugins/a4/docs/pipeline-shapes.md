@@ -57,19 +57,19 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 ## Shape 3: Minimal
 
-**Entry.** One of `/a4:feature`, `/a4:bug`, `/a4:spike`, `/a4:research`. No UC, domain, or architecture authoring required.
+**Entry.** One of `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research`. No UC, domain, or architecture authoring required.
 
 **Required wiki path.** `bootstrap.md` only. `domain.md`, `architecture.md`, `usecase/*.md`, `roadmap.md` are all skippable.
 
-**Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/feature/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → `/a4:run`.
+**Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → `/a4:run`.
 
 **Acceptance Criteria source.** Set by task family, mirroring the Jira-issue model that the per-family authoring skills are built on:
 
 | Family | AC source |
 |---|---|
-| `feature` + `implements: [usecase/...]` | UC's `## Flow` / `## Validation` / `## Error Handling` (this is Full-shape AC reused inside Minimal) |
-| `feature` + `spec: [spec/...]` | spec's `## Specification` body + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC features) |
-| `feature` with neither | Smell — `/a4:feature` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
+| `task` + `implements: [usecase/...]` | UC's `## Flow` / `## Validation` / `## Error Handling` (this is Full-shape AC reused inside Minimal) |
+| `task` + `spec: [spec/...]` | spec's `## Specification` body + the relevant `architecture.md` section (the canonical Minimal-shape variant for non-UC tasks) |
+| `task` with neither | Smell — `/a4:task` Step 2 asks the user where AC will be drawn from, or downgrades to `spike` |
 | `bug` | The bug description in the task body itself (regression test pins the expected behavior) |
 | `spike` | The hypothesis stated in the task body itself |
 | `research` | The body itself is the deliverable; `/a4:research-review` is the quality pass before downstream consumption |
@@ -89,7 +89,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 | **Production (primary)** | `/a4:arch` authoring — heavy stack / framework / persistence / auth / integration / test-strategy choices. `arch/SKILL.md` Step 1 explicitly nudges users toward `/a4:research` → `/a4:spec` for non-trivial choices. | Full (arch is Full-only) |
 | **Production (secondary)** | `/a4:spec` invoked standalone at any time, in any shape, in any workspace state — including before any pipeline runs. | Any (including No shape) |
 | **Consumption (primary)** | `architecture.md` `## Change Logs` bullet linking `[spec/N-...](spec/N-...md)` records why an architecture change happened. | Full |
-| **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC `feature` task. | Minimal (canonical), Full (occasional) |
+| **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC task. | Minimal (canonical), Full (occasional) |
 
 **Trigger conditions** for writing a spec (independent of shape):
 
@@ -102,7 +102,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 *Mandatory* (the system requires the citation to function correctly):
 
 - `architecture.md` `## Change Logs` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per [`body-conventions.md`](./body-conventions.md) change-log rules.
-- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `feature` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `## Specification` body plus the cited `architecture.md` section as AC source.
+- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `type: task` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `## Specification` body plus the cited `architecture.md` section as AC source.
 - A successor spec's `supersedes: [spec/N]` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk and the older spec flips to `superseded` via cascade.
 - Other wiki pages' `## Change Logs` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same bullet pattern as architecture.md.
 
@@ -115,7 +115,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 **Common omissions** that erode spec value:
 
 - Writing a spec but not adding the `architecture.md` `## Change Logs` bullet when arch was driven by it. The drift detector may eventually catch this; preferring to add the bullet in the same session avoids the drift entry.
-- Minimal-shape `feature` task with no UC and no spec — `/a4:feature` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
+- Minimal-shape `type: task` task with no UC and no spec — `/a4:task` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
 - Reversing a decision without an explicit `superseded by` chain. Both specs end up live and ambiguous about which is current.
 
 **Anti-patterns** (do not write a spec for these):
@@ -150,7 +150,7 @@ For tools and skills that need to know which shape is running:
 | Signal | Implies |
 |---|---|
 | `bootstrap.md` absent | No shape |
-| `bootstrap.md` present + `usecase/*.md` absent | Minimal (entry was one of `/a4:feature`, `/a4:bug`, `/a4:spike`, `/a4:research`) |
+| `bootstrap.md` present + `usecase/*.md` absent | Minimal (entry was one of `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research`) |
 | `bootstrap.md` present + `usecase/*.md` present + `domain.md` and `architecture.md` present | Full (or Reverse-then-forward — the two are indistinguishable from state alone) |
 | `usecase/*.md` present + every UC has `source: auto-usecase` frontmatter | Reverse start (could still be Reverse-only or Reverse-then-forward) |
 

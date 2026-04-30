@@ -47,6 +47,6 @@ When the task file is written:
 - Do not declare `implements:`, `spec:`, or `cycle:` on a spike — all three are forbidden.
 - Do not auto-archive `artifacts/spike/<id>-<slug>/` on completion. Archiving is a manual `git mv` to `artifacts/spike/archive/<id>-<slug>/`.
 - Do not author multiple spikes in one invocation.
-- Do not author non-spike tasks here — use `/a4:feature`, `/a4:bug`, or `/a4:research`.
+- Do not author non-spike tasks here — use `/a4:task`, `/a4:bug`, or `/a4:research`.
 - Do not flip task status beyond the initial `open` / `pending` / `complete` write.
-- Do not write production source from a spike. PoC code belongs under `artifacts/spike/<id>-<slug>/`; if the outcome warrants production work, follow up with a `/a4:feature` task.
+- Do not write production source from a spike. PoC code belongs under `artifacts/spike/<id>-<slug>/`; if the outcome warrants production work, follow up with a `/a4:task` task.

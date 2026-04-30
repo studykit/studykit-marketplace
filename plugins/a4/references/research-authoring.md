@@ -1,8 +1,8 @@
 # a4 — research task authoring
 
-A research task at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or feature tasks may cite the research as input via `related:` or via standard markdown body links.
+A research task at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or tasks may cite the research as input via `related:` or via standard markdown body links.
 
-After a4 v12.0.0 the four task families (`feature`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
+After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
 Companion to [`./frontmatter-schema.md §Research task`](./frontmatter-schema.md), `./body-conventions.md`.
 
@@ -11,7 +11,7 @@ Companion to [`./frontmatter-schema.md §Research task`](./frontmatter-schema.md
 A research task is the right slot when:
 
 - The next step is **evidence-gathering**, not coding — the user needs to understand a topic before committing to a shape.
-- The output should be **citable** by a later spec, feature task, or design conversation.
+- The output should be **citable** by a later spec, task, or design conversation.
 - The investigation has a **bounded scope** — a question, a topic, or a fixed set of options to compare.
 
 If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `## Decision Log` entries), not a research task. If the work is exploratory PoC code rather than written investigation, that is a `type: spike` task with an `artifacts/spike/<id>-<slug>/` directory.
@@ -27,7 +27,7 @@ status: open | pending | progress | complete | failing | discarded
 mode: comparative | single
 options: [name-a, name-b, name-c]   # only when mode: comparative
 depends_on: []                       # other tasks this one needs first
-related: []                          # catchall — typically the spec(s) or feature(s) this research informs
+related: []                          # catchall — typically the spec(s) or task(s) this research informs
 artifacts: []                        # typically empty; if used, paths under artifacts/research/<id>-<slug>/
 labels: []                           # free-form tags
 created: YYYY-MM-DD
@@ -40,7 +40,7 @@ updated: YYYY-MM-DD
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.
 - `implements:` is **forbidden** on research — research is investigation, not delivery. If a research task is scoped to a specific UC's open question, link the UC from `## Context` body prose instead.
-- `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
+- `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `task` and `bug` tasks.
 - `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
 - `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
@@ -139,7 +139,7 @@ Use `/a4:research-review` to walk a structured quality pass over the task body. 
 Citations are **soft** — there is no stored-reverse contract. Two paths:
 
 - **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `[research/<id>-<slug>](../research/<id>-<slug>.md)`. Optionally add the task path to the spec's `related:` frontmatter list for frontmatter-level discoverability.
-- **From a feature task body.** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
+- **From a task body (regular implementation work).** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
 
 Reverse lookups (which specs cite a research task) are derived on demand via grep / `search.py`; they are not stored on the research task.
 
@@ -152,4 +152,4 @@ Reverse lookups (which specs cite a research task) are derived on demand via gre
 - **Don't write `kind:` in research frontmatter.** The field was retired in a4 v12.0.0; `mode:` (comparative / single) is the only research-specific discriminator.
 - **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
 - **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
-- **Don't author a different task family here.** Move features to `a4/feature/`, spikes to `a4/spike/`, and bugs to `a4/bug/` so the matching authoring contract applies.
+- **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and bugs to `a4/bug/` so the matching authoring contract applies.

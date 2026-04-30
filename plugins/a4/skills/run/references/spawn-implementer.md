@@ -4,7 +4,7 @@ For each ready task, spawn one agent **with worktree isolation** (omit `isolatio
 
 ```
 Agent(subagent_type: "a4:task-implementer", isolation: "worktree", prompt: """
-Task file: <absolute path to a4/<type>/<id>-<slug>.md, where <type> ∈ {feature, bug, spike, research}>
+Task file: <absolute path to a4/<type>/<id>-<slug>.md, where <type> ∈ {task, bug, spike, research}>
 Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>

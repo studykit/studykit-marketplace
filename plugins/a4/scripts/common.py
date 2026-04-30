@@ -19,12 +19,14 @@ WIKI_TYPES = frozenset(
 )
 
 # Top-level issue folders under `<a4-dir>/`. a4 v12.0.0 split the former
-# `task/` folder (with a `kind:` discriminator) into four flat sibling
-# folders; iteration order matches a coarse topological flow
-# (UC → tasks → reviews → specs → ideas).
+# combined `task/` folder (with a `kind:` discriminator) into four flat
+# sibling top-level folders (`task`, `bug`, `spike`, `research`) — each
+# is its own issue family with its own type literal. Iteration order
+# matches a coarse topological flow (UC → task families → reviews → specs
+# → ideas).
 ISSUE_FOLDERS: tuple[str, ...] = (
     "usecase",
-    "feature",
+    "task",
     "bug",
     "spike",
     "research",

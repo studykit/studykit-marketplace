@@ -23,7 +23,7 @@ Sections (kebab-case identifier on the left):
   stage-progress      mixed-axis view of usecase/arch/bootstrap/roadmap/impl.
   issue-counts        per folder × {active, in_progress, terminal, total}
                       plus by-kind for review and per-family rows for
-                      the four task families.
+                      the four task issue families.
   usecases-by-source  UC `source:` distribution (Reverse-only detection).
   open-reviews        open / in-progress reviews, sorted by priority
                       then created then id.
@@ -63,7 +63,7 @@ from status_model import (
     ACTIVE_TASK_STATUSES,
     BLOCKED_STATUSES,
     IN_PROGRESS_STATUSES,
-    TASK_FAMILY_TYPES,
+    ISSUE_FAMILY_TYPES,
     TERMINAL_STATUSES,
 )
 
@@ -232,12 +232,12 @@ def render_wiki_pages(pages: list[WikiPage]) -> str:
 
 
 def _all_tasks(issues: dict[str, list[IssueItem]]) -> list[IssueItem]:
-    """Concatenate the four task-family folders into a single list.
+    """Concatenate the four task issue family folders into a single list.
 
-    Order follows ``TASK_FAMILY_TYPES`` so a deterministic display.
+    Order follows ``ISSUE_FAMILY_TYPES`` so the display is deterministic.
     """
     out: list[IssueItem] = []
-    for fam in TASK_FAMILY_TYPES:
+    for fam in ISSUE_FAMILY_TYPES:
         out.extend(issues.get(fam, []))
     return out
 
@@ -292,7 +292,7 @@ def render_stage_progress(
         f"| Arch | {wiki_row('architecture')} |",
         f"| Bootstrap | {wiki_row('bootstrap')} |",
         f"| Roadmap | {roadmap_row} |",
-        f"| Impl | {status_summary('feature', tasks)} |",
+        f"| Impl | {status_summary('task', tasks)} |",
     ]
     return "\n".join(lines)
 
@@ -313,7 +313,7 @@ def render_issue_counts(issues: dict[str, list[IssueItem]]) -> str:
         return f"| {label} | {active} | {in_prog} | {terminal} | {total} |"
 
     lines.append(row("usecase", issues["usecase"], "usecase"))
-    for fam in TASK_FAMILY_TYPES:
+    for fam in ISSUE_FAMILY_TYPES:
         fam_items = issues.get(fam, [])
         if fam_items:
             lines.append(row(fam, fam_items, fam))
@@ -374,9 +374,9 @@ def render_active_tasks(tasks: list[IssueItem]) -> str:
     lines = [heading, ""]
     for t in active:
         deps = f" depends_on={t.depends_on}" if t.depends_on else ""
-        # `folder` doubles as the kind label after the v12 split (one
-        # folder per task family).
-        kind_label = f" {t.folder}" if t.folder in TASK_FAMILY_TYPES else ""
+        # `folder` doubles as the family label after the v12 split (one
+        # folder per task issue family).
+        kind_label = f" {t.folder}" if t.folder in ISSUE_FAMILY_TYPES else ""
         lines.append(f"- {t.ref} — {t.status}{kind_label} — {t.title}{deps}")
     return "\n".join(lines)
 

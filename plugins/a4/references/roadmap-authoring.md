@@ -63,6 +63,6 @@ Create the section if absent. The wiki close guard surfaces missing bullets when
 
 - **Don't write Launch & Verify content here.** A one-line link to `bootstrap.md` is the contract.
 - **Don't define new architecture components here.** Components live in `architecture.md`. The roadmap references them.
-- **Don't author tasks here.** Tasks live in `a4/<type>/<id>-<slug>.md` under one of the four task-family folders (`feature/`, `bug/`, `spike/`, `research/`). The roadmap names milestones; tasks deliver them.
+- **Don't author tasks here.** Tasks live in `a4/<type>/<id>-<slug>.md` under one of the four issue family folders (`task/`, `bug/`, `spike/`, `research/`). The roadmap names milestones; tasks deliver them.
 - **Don't pack architecture rationale.** Decisions belong in specs; the architecture page records the *current* shape; the roadmap records the *delivery sequence*.
 - **Don't append `## Change Logs` bullets without a markdown link.**

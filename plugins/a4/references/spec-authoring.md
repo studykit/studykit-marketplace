@@ -91,7 +91,7 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 - `## Change Logs` — append-only audit trail of why this file was edited (dated bullets with markdown links to the causing issue).
 - `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). `transition_status.py` flips `status:` and bumps `updated:` but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
 
-Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the task-family folders (`a4/feature/`, `a4/bug/`, etc.).
+Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders (`a4/task/`, `a4/bug/`, etc.).
 
 ### Body-link form
 

@@ -1,6 +1,6 @@
 # a4 — architecture wiki authoring
 
-`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), and every task file across the four task-family folders (`feature/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
+`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
 Companion to [`./frontmatter-schema.md §Wiki pages`](./frontmatter-schema.md), `./body-conventions.md`.
 

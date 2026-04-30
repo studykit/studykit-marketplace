@@ -320,7 +320,7 @@ def _unlink_silent(path: Path) -> None:
 _MAX_IDS = 20
 _LOOKUP_FOLDERS: tuple[str, ...] = (
     "usecase",
-    "feature",
+    "task",
     "bug",
     "spike",
     "research",

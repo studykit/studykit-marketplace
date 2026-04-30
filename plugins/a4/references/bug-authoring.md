@@ -2,7 +2,7 @@
 
 A bug task at `a4/bug/<id>-<slug>.md` is a **defect fix** — production code change against expected behavior. Not throwaway.
 
-After a4 v12.0.0 the four task families (`feature`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
+After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in [`./artifacts.md`](./artifacts.md).
 
 Companion to [`./frontmatter-schema.md §Bug task`](./frontmatter-schema.md), `./body-conventions.md`.
 
@@ -131,4 +131,4 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded` is the writer's job.
 - **Don't write `kind:` in bug frontmatter.** The field was retired in a4 v12.0.0.
 - **Don't ship a bug fix without a regression test.** The `## Unit Test Strategy` must include a scenario that pins the expected behavior; closing the task without it is the most common way the same bug returns.
-- **Don't author a different task family here.** Move features to `a4/feature/`, spikes to `a4/spike/`, and research to `a4/research/` so the matching authoring contract applies.
+- **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and research to `a4/research/` so the matching authoring contract applies.
