@@ -438,7 +438,7 @@ def validate_file(
                 )
 
     if ftype == "task":
-        violations.extend(_validate_task_files(rel_str, fm, path))
+        violations.extend(_validate_task_artifacts(rel_str, fm, path))
         violations.extend(
             _validate_complete_artifacts_present(rel_str, fm, path, a4_dir)
         )
@@ -446,8 +446,8 @@ def validate_file(
     return violations
 
 
-def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
-    """Enforce the artifact-only contract on ``task.files:``.
+def _validate_task_artifacts(rel_str: str, fm: dict, path: Path) -> list[Violation]:
+    """Enforce the artifact-only contract on ``task.artifacts:``.
 
     Every entry must start with
     ``artifacts/task/<kind>/<id>-<slug>/`` — and for ``kind: spike``
@@ -456,8 +456,8 @@ def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
     skips when ``kind`` / ``id`` / filename's ``<id>-<slug>`` are
     malformed — those drift modes are surfaced by other rules.
     """
-    files = fm.get("files")
-    if not isinstance(files, list) or not files:
+    artifacts = fm.get("artifacts")
+    if not isinstance(artifacts, list) or not artifacts:
         return []
 
     kind = fm.get("kind")
@@ -480,7 +480,7 @@ def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
     )
 
     violations: list[Violation] = []
-    for i, entry in enumerate(files):
+    for i, entry in enumerate(artifacts):
         if not isinstance(entry, str):
             continue
         e = entry.strip()
@@ -494,9 +494,9 @@ def _validate_task_files(rel_str: str, fm: dict, path: Path) -> list[Violation]:
         violations.append(
             Violation(
                 rel_str,
-                "task-files-bad-artifact-path",
-                "files",
-                f"files[{i}]: {entry!r} must start with "
+                "task-artifacts-bad-path",
+                "artifacts",
+                f"artifacts[{i}]: {entry!r} must start with "
                 f"{expected_prefix!r}{suffix}",
             )
         )
@@ -512,7 +512,7 @@ def _validate_complete_artifacts_present(
     """Preflight: ``research`` / ``feature`` / ``bug`` tasks at
     ``status: complete`` must have their listed artifacts present on disk.
 
-    Layered on top of the static ``task-files-bad-artifact-path`` rule —
+    Layered on top of the static ``task-artifacts-bad-path`` rule —
     this one assumes the prefix is well-formed and only checks the
     filesystem. Entries that do not start with the expected
     ``artifacts/task/<kind>/<id>-<slug>/`` prefix are skipped so the
@@ -524,7 +524,7 @@ def _validate_complete_artifacts_present(
     ``kind: spike`` is intentionally excluded: at ``status: complete``
     the directory may still live at the original prefix until the user
     `git mv`s it to ``artifacts/task/spike/archive/<id>-<slug>/`` and
-    rewrites ``files:``, so an existence check would race the archive
+    rewrites ``artifacts:``, so an existence check would race the archive
     transition.
     """
     kind = fm.get("kind")
@@ -532,8 +532,8 @@ def _validate_complete_artifacts_present(
         return []
     if fm.get("status") != "complete":
         return []
-    files = fm.get("files")
-    if not isinstance(files, list) or not files:
+    artifacts = fm.get("artifacts")
+    if not isinstance(artifacts, list) or not artifacts:
         return []
 
     raw_id = fm.get("id")
@@ -548,7 +548,7 @@ def _validate_complete_artifacts_present(
     project_root = a4_dir.parent
 
     violations: list[Violation] = []
-    for i, entry in enumerate(files):
+    for i, entry in enumerate(artifacts):
         if not isinstance(entry, str):
             continue
         e = entry.strip()
@@ -561,9 +561,9 @@ def _validate_complete_artifacts_present(
             violations.append(
                 Violation(
                     rel_str,
-                    "task-files-missing-artifact",
-                    "files",
-                    f"files[{i}]: artifact {entry!r} does not exist on disk "
+                    "task-artifacts-missing-file",
+                    "artifacts",
+                    f"artifacts[{i}]: artifact {entry!r} does not exist on disk "
                     f"(kind={kind} at status=complete must have all listed "
                     "artifact files present)",
                 )

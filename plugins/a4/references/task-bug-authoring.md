@@ -19,7 +19,7 @@ implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
 related: []            # catchall for cross-references
-files: []              # artifact paths under artifacts/task/bug/<id>-<slug>/ (typically empty)
+artifacts: []          # artifact paths under artifacts/task/bug/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
 created: YYYY-MM-DD
@@ -32,7 +32,7 @@ updated: YYYY-MM-DD
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it when the bug is a regression against a spec's expected behavior.
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.
-- `files:` is artifact-only — paths must point under `artifacts/task/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
+- `artifacts:` is artifact-only — paths must point under `artifacts/task/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
@@ -67,7 +67,7 @@ Writer rules (task-specific):
 
 When the chosen initial status is `complete`, the fix is asserted to already be shipped. Verify before writing:
 
-1. For each path in `files:`, confirm it exists in the working tree. If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
+1. For each path in `artifacts:`, confirm it exists in the working tree. If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
 2. Required sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
 3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (the section is optional and hand-maintained):
 
@@ -109,18 +109,18 @@ A bug task may have a sibling artifact directory at `<project-root>/artifacts/ta
   artifacts/task/bug/<id>-<slug>/        # repro, logs, screenshots (opt-in)
 ```
 
-Optional — the production fix lives in the project's source tree (documented in body `## Files`), not here. Use the artifact directory only when reproduction artifacts have lasting value (a hard-to-reproduce data file, a heap dump that anchors the regression test). Frontmatter `files:` lists artifact paths only.
+Optional — the production fix lives in the project's source tree (documented in body `## Files`), not here. Use the artifact directory only when reproduction artifacts have lasting value (a hard-to-reproduce data file, a heap dump that anchors the regression test). Frontmatter `artifacts:` lists artifact paths only.
 
 No archive convention — closed bug tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
-Cross-kind conventions for the artifact directory — per-kind expectations, the `task.files:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: bug` as written there.
+Cross-kind conventions for the artifact directory — per-kind expectations, the `task.artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: bug` as written there.
 
 ## Common mistakes (task-specific)
 
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Missing `kind:` frontmatter field** — `kind` is required and has no default.
 - **`kind:` value mismatched against folder** — a file under `a4/task/bug/` must declare `kind: bug`. Mismatched declarations are a folder-routing error and should be re-located.
-- **Production source paths in frontmatter `files:`** — `files:` is artifact-only. Production source belongs in the body `## Files` section.
+- **Production source paths in frontmatter `artifacts:`** — `artifacts:` is artifact-only. Production source belongs in the body `## Files` section.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 

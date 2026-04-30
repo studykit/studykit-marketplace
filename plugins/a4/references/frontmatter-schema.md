@@ -182,7 +182,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `implements` | no | list of paths | use cases delivered. **Forbidden on `kind: spike`** (spikes are exploratory, never UC deliverables). Typically empty for `kind: research` as well. |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | Specs governing this task. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research` (cite via body markdown links instead). |
-| `files` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/task/<kind>/<id>-<slug>/`. For `kind: spike`, paths may also point under `artifacts/task/spike/archive/<id>-<slug>/...` once archived. Empty list is allowed for any kind; the typical default for `kind: research` (the body is the deliverable). Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. (Renamed from `files` in a4 v10.0.0.) |
 | `mode` | conditional | enum | `comparative` \| `single` — required when `kind: research` |
 | `options` | conditional | list of strings | option names — required when `kind: research` and `mode: comparative` |
 | `cycle` | no | int | implementation cycle number. **Allowed only on `kind: feature` and `kind: bug`** (a4 v6.0.0); forbidden on `spike` / `research`. |
@@ -190,7 +190,7 @@ Jira "task" semantics — a unit of executable work. The `kind:` field distingui
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-Kind semantics, lifecycle, initial-status policy, and per-kind authoring guidance live in [`task-feature-authoring.md`](./task-feature-authoring.md), [`task-bug-authoring.md`](./task-bug-authoring.md), [`task-spike-authoring.md`](./task-spike-authoring.md), and [`task-research-authoring.md`](./task-research-authoring.md). The cross-kind artifact directory contract (`artifacts/task/<kind>/<id>-<slug>/`, the `task.files:` artifact-only rule, the spike archive convention, curation policy) lives in [`task-artifacts.md`](./task-artifacts.md).
+Kind semantics, lifecycle, initial-status policy, and per-kind authoring guidance live in [`task-feature-authoring.md`](./task-feature-authoring.md), [`task-bug-authoring.md`](./task-bug-authoring.md), [`task-spike-authoring.md`](./task-spike-authoring.md), and [`task-research-authoring.md`](./task-research-authoring.md). The cross-kind artifact directory contract (`artifacts/task/<kind>/<id>-<slug>/`, the `task.artifacts:` artifact-only rule, the spike archive convention, curation policy) lives in [`task-artifacts.md`](./task-artifacts.md).
 
 ## Review item (`a4/review/<id>-<slug>.md`)
 

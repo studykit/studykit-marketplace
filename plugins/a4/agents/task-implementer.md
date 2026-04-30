@@ -52,7 +52,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
 
    Do this **before** beginning implementation so the workspace reflects active work.
 
-2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `files:`). Do not touch files outside that list.
+2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `artifacts:`). Do not touch files outside that list.
 3. **Implement** — follow the task's `## Description`, consuming / providing the Interface Contracts noted in `## Interface Contracts`. Use domain terminology from `a4/domain.md`'s `## Concepts` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `bootstrap.md`'s `## Verify` section (Verified Commands subsection). All unit tests must pass before returning success.

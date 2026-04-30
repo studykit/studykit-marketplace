@@ -98,7 +98,7 @@ Per task:
 - Is the Unit Test Strategy section populated (scenarios, isolation strategy, test files)?
 - Are scenarios concrete (input → expected output), not "test the renderer"?
 - Do scenarios cover error handling defined in the implemented UCs?
-- Does the task's `files:` list include the unit-test files?
+- Does the task's `artifacts:` list include the unit-test files?
 - If the task depends on external services, is isolation specified?
 
 Also at roadmap level:
@@ -110,7 +110,7 @@ Verdicts: `OK` | `NO TEST STRATEGY` | `VAGUE TESTS` | `MISSING ERROR TESTS` | `N
 ### 6. File Mapping — `files`
 
 Per task:
-- Is a `## Files` section (or frontmatter `files:`) populated?
+- Is a `## Files` section (or frontmatter `artifacts:`) populated?
 - Are paths specific enough (`src/services/auth.service.ts`, not "a service file")?
 - For modifications to existing files, is the change scope described (added fields, modified signatures)?
 - Do file paths respect the codebase's existing conventions (check via `a4/bootstrap.md` and direct codebase exploration)?

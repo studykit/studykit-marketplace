@@ -30,7 +30,7 @@ options: [name-a, name-b, name-c]   # only when mode: comparative
 implements: []                       # usually empty (research is not a deliverable)
 depends_on: []                       # other tasks this one needs first
 related: []                          # catchall — e.g., other research tasks on adjacent topics
-files: []                            # typically empty; if used, paths under artifacts/task/research/<id>-<slug>/
+artifacts: []                        # typically empty; if used, paths under artifacts/task/research/<id>-<slug>/
 labels: []                           # free-form tags
 created: YYYY-MM-DD
 updated: YYYY-MM-DD
@@ -43,7 +43,7 @@ updated: YYYY-MM-DD
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option.
 - `implements:` is **usually empty** — research is investigation, not delivery. Populate only if the research is scoped to a specific UC's open question.
 - `spec:` is **not allowed** on research (a4 v6.0.0). Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `feature` and `bug` tasks.
-- `files:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/task/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `files:` (they belong in body links).
+- `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/task/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
 - `cycle:` is **not allowed** on research (a4 v6.0.0); investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
 - `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
@@ -127,10 +127,10 @@ A research task may have a sibling artifact directory at `<project-root>/artifac
 Research-specific notes:
 
 - The directory is **opt-in**. Most research tasks need none — the body is the deliverable. Add the directory only when raw evidence cited from the body needs to live alongside the task.
-- When `files:` is non-empty, every entry must point under `artifacts/task/research/<id>-<slug>/...`. Empty list stays the typical default.
+- When `artifacts:` is non-empty, every entry must point under `artifacts/task/research/<id>-<slug>/...`. Empty list stays the typical default.
 - No archive convention — closed research tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
-Cross-kind conventions for the artifact directory — per-kind expectations, the `task.files:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: research` as written there.
+Cross-kind conventions for the artifact directory — per-kind expectations, the `task.artifacts:` artifact-only contract, what to keep vs. drop, ownership of curation, the project-repo (not scratch) status — live in [`task-artifacts.md`](./task-artifacts.md) and apply to `kind: research` as written there.
 
 ## Reviewing a research task
 

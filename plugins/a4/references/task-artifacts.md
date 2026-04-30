@@ -1,6 +1,6 @@
 # a4 — task artifacts convention
 
-Cross-kind reference for the **artifact directory** that may sit alongside a task at project-root `artifacts/task/<kind>/<id>-<slug>/`. Per-kind shape, the `task.files:` artifact-only contract, the spike archive convention, and curation policy live here so all four kinds (`feature` / `bug` / `spike` / `research`) cite a single source.
+Cross-kind reference for the **artifact directory** that may sit alongside a task at project-root `artifacts/task/<kind>/<id>-<slug>/`. Per-kind shape, the `task.artifacts:` artifact-only contract, the spike archive convention, and curation policy live here so all four kinds (`feature` / `bug` / `spike` / `research`) cite a single source.
 
 Per-kind authoring files (`task-{feature,bug,spike,research}-authoring.md`) cite this document for shared rules and add only kind-specific notes (e.g., the spike's "primary deliverable" status, the bug's "evidence-only" framing).
 
@@ -30,15 +30,15 @@ The `artifacts/` directory:
 | `feature` | Test samples, execution outputs for feature comparison, design mockups, migration dry-run results | Optional — only when artifacts have evidentiary or comparative value |
 | `bug` | Reproduction repos, crash logs, screenshots, traces | Optional — only when reproduction or evidence is itself worth keeping |
 
-## Frontmatter `task.files:` is artifact-only
+## Frontmatter `task.artifacts:` is artifact-only
 
-Frontmatter `task.files:` lists artifact paths only — every path must point under `artifacts/task/<kind>/<id>-<slug>/...`. Production source paths the task writes or modifies belong in the body `## Files` section, not in frontmatter.
+Frontmatter `task.artifacts:` lists artifact paths only — every path must point under `artifacts/task/<kind>/<id>-<slug>/...`. Production source paths the task writes or modifies belong in the body `## Files` section, not in frontmatter. (The field was named `files` before a4 v10.0.0; rename in any pre-v10 workspace.)
 
-For `kind: spike`, `files:` may also point under `artifacts/task/spike/archive/<id>-<slug>/` once the directory has been archived.
+For `kind: spike`, `artifacts:` may also point under `artifacts/task/spike/archive/<id>-<slug>/` once the directory has been archived.
 
 ## Spike archive convention
 
-When a spike completes (or fails), the user manually `git mv`s the directory to `artifacts/task/spike/archive/<id>-<slug>/` and updates the task's `files:` paths to match.
+When a spike completes (or fails), the user manually `git mv`s the directory to `artifacts/task/spike/archive/<id>-<slug>/` and updates the task's `artifacts:` paths to match.
 
 - The archive convention applies to `spike` only — `feature`, `bug`, and `research` artifact directories are **not** archived (closed task markdown moves to `a4/archive/` independently).
 - The move is **never automated**; same-precedent reasoning as `idea/` promotion (deferred until manual cost surfaces as pain).
