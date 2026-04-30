@@ -19,7 +19,7 @@ Group tasks into named deliverable sets (`v1.0`, `beta`, `phase-1`). Milestones 
 - Unit test scenarios + isolation strategy.
 - Acceptance criteria derived from UC flows, validation, error handling.
 - Milestone assignment is captured in the roadmap milestone narrative (links from each milestone to the UCs it ships); tasks themselves do not carry a `milestone:` field.
-- `type: task` (the batch generator emits feature for UC-derived work).
+- `type: task`.
 
 ## 4. Shared Integration Points
 

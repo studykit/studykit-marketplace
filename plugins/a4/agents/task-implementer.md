@@ -24,7 +24,7 @@ Subagents do not auto-inherit project-level path-scoped rules. Read these explic
 
 From the invoking `roadmap` / `run` skill:
 
-- **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `feature/`, `bug/`, `spike/`, `research/`; the folder must match the file's `type:` frontmatter).
+- **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `task/`, `bug/`, `spike/`, `research/`; the folder must match the file's `type:` frontmatter).
 - **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify).
 - **Roadmap file path** *(optional)* — absolute path to `a4/roadmap.md`. Read for Shared Integration Points only; L&V content there is a one-line link to bootstrap, not authoritative.
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).

@@ -25,7 +25,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
 | `arch` | Design architecture — tech stack, components, interfaces, test strategy |
 | `roadmap` | Author the implementation roadmap and per-task files |
-| `feature` / `bug` / `spike` / `research` | Author a single task in the matching family — UC-derived or spec-justified |
+| `task` / `bug` / `spike` / `research` | Author a single task in the matching family — UC-derived or spec-justified |
 | `discard` | Discard a task across any family by id / path / slug fragment |
 | `run` | Run the agent loop — implement and test until all pass |
 
