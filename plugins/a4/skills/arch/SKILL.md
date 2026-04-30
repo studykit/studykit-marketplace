@@ -42,7 +42,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Design** — `a4/architecture.md` does not exist. Start from Phase 1 and follow the guided sequence below.
-- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
+- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
 
 ## Session Task List
 

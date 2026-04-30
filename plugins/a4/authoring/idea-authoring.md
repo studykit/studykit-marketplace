@@ -41,7 +41,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id` is allocated by `../scripts/allocate_id.py` (workspace-global, monotonic). Never invent or reuse an id.
+- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, spark/2026-04-24-1730-idea-x.brainstorm]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.

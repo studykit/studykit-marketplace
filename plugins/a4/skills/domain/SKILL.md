@@ -41,7 +41,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Extraction** — `a4/domain.md` does not exist. Run Phase 1 → 2 → 3 in order.
-- **Iteration** — `a4/domain.md` exists OR the user said `iterate`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
+- **Iteration** — `a4/domain.md` exists OR the user said `iterate`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
 
 `/a4:usecase` does not block on the absence of `domain.md` — it captures actors and per-UC bodies first. Compass routes `UCs exist, domain.md missing → /a4:domain` (Layer 1).
 

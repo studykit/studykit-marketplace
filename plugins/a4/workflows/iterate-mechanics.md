@@ -1,6 +1,6 @@
 # Iterate Mechanics — Shared Procedure for Review-Item Walks
 
-> **Audience:** a4 plugin contributors editing `plugins/a4/` itself. Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead.
+> **Audience:** Skill runtime — LLMs executing a4 skills (and contributors authoring skills). Defines cross-skill workflow contracts (modes, shapes, iterate, wiki-authorship). Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Plugin internals (hooks, cascade implementation) live in `../dev/`.
 
 Single source of truth for the **formal procedure** every iterate flow follows when walking review items: how to filter the backlog, how to present it, how to transition status, and how to record the wiki edit. The **actual work** that happens between status flips (what to inspect, what to fix, which impact rules to apply) is stage-specific.
 
@@ -57,7 +57,7 @@ If a stage detects **staleness signals** (e.g., domain page's `updated:` predate
 
 ## 3. Transition status
 
-Edit `status:` directly on the review item file. The PostToolUse cascade hook (`../scripts/a4_hook.py`) detects the pre→post transition, refreshes `updated:`, and runs any cross-file cascade — never hand-edit `updated:`. The hook does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet by hand. If the rationale is worth keeping in the review's `## Log`, write that *first*, then flip `status:` last so the file is consistent at any read point.
+Edit `status:` directly on the review item file. The PostToolUse cascade hook detects the pre→post transition, refreshes `updated:`, and runs any cross-file cascade — never hand-edit `updated:`. The hook does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet by hand. If the rationale is worth keeping in the review's `## Log`, write that *first*, then flip `status:` last so the file is consistent at any read point.
 
 **Pick → in-progress** (when an item is selected for work): set `status: in-progress`.
 

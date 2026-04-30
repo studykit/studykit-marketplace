@@ -28,7 +28,8 @@ The a4 plugin separates docs by audience. Pick by your task:
   - `plugins/a4/authoring/frontmatter-universals.md` — universal rules (`type:` field, ids, path-reference format, dates, status writers, structural relationship fields).
   - `plugins/a4/authoring/<type>-authoring.md` — per-type field table and lifecycle for the `type:` you are editing.
   - `plugins/a4/authoring/validator-rules.md` — schema enforcement and cross-file status consistency.
-- **Modifying anything inside `plugins/a4/` itself (plugin contributor work)** — additionally read `plugins/a4/dev/*.md` (hook conventions, skill modes, pipeline shapes, wiki authorship policy, iterate mechanics, cascade implementation) and `plugins/a4/CLAUDE.md` (contributor notes).
+- **Authoring or running a4 skills (skill runtime)** — read `plugins/a4/workflows/*.md`. Cross-skill workflow contracts: skill modes (interactive vs autonomous), pipeline shapes (Full / Reverse / Minimal), iterate mechanics (review-item walks), wiki-authorship policy (which skill writes which wiki page).
+- **Modifying anything inside `plugins/a4/` itself (plugin contributor work)** — additionally read `plugins/a4/dev/*.md` (hook conventions, cascade implementation) and `plugins/a4/CLAUDE.md` (contributor notes).
 
-`authoring/` is the single source of truth for the a4 frontmatter contract; `dev/` is the single source of truth for plugin internals. Do not edit a4 frontmatter, write new a4 skills/scripts, or change validators without consulting `authoring/`. Do not change hook flow, skill orchestration, or cascade behavior without consulting `dev/`.
+Three sources of truth, three audiences: `authoring/` is the single source of truth for the a4 frontmatter contract; `workflows/` is the single source of truth for skill orchestration; `dev/` is the single source of truth for plugin internals. Skills cite `authoring/` and `workflows/` but not `dev/`. Do not edit a4 frontmatter, write new a4 skills/scripts, or change validators without consulting `authoring/`. Do not change skill orchestration without consulting `workflows/`. Do not change hook flow or cascade behavior without consulting `dev/`.
 

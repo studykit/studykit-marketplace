@@ -27,7 +27,7 @@ Identify any file appearing in 3+ tasks' file lists. Define the integration patt
 
 ## 5. Launch & Verify
 
-**Do not author content here.** `bootstrap.md` is the single source of truth (per `../../../dev/wiki-authorship.md`); roadmap.md links to it. `/a4:run` reads `bootstrap.md` directly.
+**Do not author content here.** `bootstrap.md` is the single source of truth (per `../../../workflows/wiki-authorship.md`); roadmap.md links to it. `/a4:run` reads `bootstrap.md` directly.
 
 ## Write artifacts
 

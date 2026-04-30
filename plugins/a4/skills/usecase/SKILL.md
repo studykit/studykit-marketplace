@@ -50,7 +50,7 @@ Body heading form, link form, `## Change Logs` audit trail, and the Wiki Update 
 ## Modes
 
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 

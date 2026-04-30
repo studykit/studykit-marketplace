@@ -49,7 +49,7 @@ Rules:
 ## Ids
 
 - Ids are **monotonically increasing integers, global to the workspace**. Unique across all issue folders in a given `a4/` (GitHub-issue semantics).
-- Next id is computed as `max(existing ids in a4/) + 1` by `../scripts/allocate_id.py`.
+- Next id is computed as `max(existing ids in a4/) + 1` by the id allocator (skills invoke it before writing a new issue file).
 - Wiki pages and spark files do **not** carry an `id:` field — they have no issue-tracker identity.
 
 ## Path references
@@ -100,7 +100,7 @@ Unknown fields are **not errors** — they are treated as extension metadata. Sk
 
 ## Status writers
 
-Every status change on `usecase`, the four task issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. The PostToolUse cascade hook (`../scripts/a4_hook.py`) detects the pre→post transition, refreshes `updated:` on the primary file, and runs any cross-file cascade:
+Every status change on `usecase`, the four task issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. The PostToolUse cascade hook detects the pre→post transition, refreshes `updated:` on the primary file, and runs any cross-file cascade:
 
 - Task reset on UC `revising` — across all four task issue families, tasks at `progress`/`failing` → `pending`.
 - Task / review discard cascade on UC `discarded` — across all four task issue families.
@@ -111,10 +111,10 @@ The hook does **not** touch the body's optional `## Log` section — that sectio
 
 Edge cases:
 
-- **Illegal jumps** (e.g. `shipped → ready`, outside `FAMILY_TRANSITIONS`) — the cascade hook silently skips them; the Stop-hook transition-legality safety net (`../scripts/markdown_validator/transitions.py`, working-tree-vs-HEAD git diff) surfaces them as errors.
+- **Illegal jumps** (e.g. `shipped → ready`, outside `FAMILY_TRANSITIONS`) — the cascade hook silently skips them; the Stop-hook transition-legality safety net (working-tree-vs-HEAD git diff) surfaces them as errors.
 - **Legal jumps that bypass the hook** (edits via `git checkout`, external editors, direct script writes) — related files are left unflipped. The cross-file consistency checks (`task.pending` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain) re-surface the missing cascade work.
 - **Recovery** —
-  - Supersedes-chain: `../scripts/validate.py --fix` (workspace-wide, idempotent).
+  - Supersedes-chain: `/a4:validate --fix` (workspace-wide, idempotent).
   - Reverse-link (revising / discarded cascades): re-edit the UC's `status:` to retrigger the hook.
 
 ## Structural relationship fields
@@ -139,9 +139,3 @@ Soft references (see-also, mentions) are expressed as standard markdown links (`
 - **Per-type schemas (formal field tables):** the `## Frontmatter` section of each `./<type>-authoring.md`.
 - **Schema enforcement and cross-file status consistency:** `./validator-rules.md`.
 - **Body conventions:** `./body-conventions.md` — heading form, blank-line discipline, `## Change Logs` and `## Log` entry format, body link form.
-- **Id allocator:** `../scripts/allocate_id.py`.
-- **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions, terminal / in-progress / active classifications, supersedes-trigger maps, cascade input sets, legality predicates.
-- **Cascade engine:** `../scripts/status_cascade.py` — supersedes / discarded / revising cascade primitives shared by the hook and `validate.py --fix`.
-- **Cascade hook:** `../scripts/a4_hook.py` — PostToolUse hook; detects `status:` transitions and runs cascades.
-- **Recovery sweep:** `../scripts/validate.py --fix` — supersedes-chain idempotent sweep.
-- **Transition safety net:** `../scripts/markdown_validator/transitions.py` — Stop-hook git-diff check; rejects illegal jumps.

@@ -1,6 +1,6 @@
 # Roadmap Iteration Entry
 
-Skill-specific addendum on top of `../../../dev/iterate-mechanics.md`. Read that file first for filter / backlog presentation / writer call / footnote / discipline rules.
+Skill-specific addendum on top of `../../../workflows/iterate-mechanics.md`. Read that file first for filter / backlog presentation / writer call / footnote / discipline rules.
 
 ## Backlog filter
 

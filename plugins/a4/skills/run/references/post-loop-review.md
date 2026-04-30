@@ -7,7 +7,7 @@ Once the loop body settles, **transition to `conversational`** and branch on out
 
 Both branches are user-driven. No agent classifies failures or auto-ships UCs. The loop body's autonomy ends at the seam into Step 4.
 
-This skill follows the **stop on strong upstream dependency** policy at `../../../dev/wiki-authorship.md` §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding halts the run rather than retrying against stale assumptions.
+This skill follows the **stop on strong upstream dependency** policy at `../../../workflows/wiki-authorship.md` §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding halts the run rather than retrying against stale assumptions.
 
 ## 4a. Failure path — classify findings
 
@@ -19,7 +19,7 @@ Cycle bound: if 3 cycles complete and failures remain, halt as described in that
 
 For each ship-candidate UC, compose a short verdict and ask the user `mark shipped?`. Per-UC candidate rules, verdict template, defer protocol, and the direct-edit ship procedure are in `./uc-ship-review.md`.
 
-The ship unit varies by **pipeline shape** (see `../../../dev/pipeline-shapes.md`). Per-task vs per-UC ship is `task.implements:`-driven, not invocation-driven:
+The ship unit varies by **pipeline shape** (see `../../../workflows/pipeline-shapes.md`). Per-task vs per-UC ship is `task.implements:`-driven, not invocation-driven:
 
 - **Per-UC ship** — when `task.implements:` is non-empty (Full shape, or Minimal-task-with-UC). Multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
 - **Per-task ship** — when `task.implements:` is empty (Minimal shape's bug / spike / spec-justified task). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely. That is the normal case for those shapes, not an error.

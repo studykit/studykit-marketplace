@@ -42,7 +42,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id` is allocated by `../scripts/allocate_id.py` (workspace-global, monotonic). Never invent or reuse an id.
+- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
 - `kind` is **required** — `finding`, `gap`, or `question`. The three share lifecycle but signal different content shapes:
   - `finding` body explains what is wrong and where.
   - `gap` body explains what is missing and why it should exist.
@@ -56,7 +56,7 @@ updated: YYYY-MM-DD
 
 ### Cascade — `target:` includes a UC that flips to `discarded`
 
-When a UC referenced inside a review's `target:` list flips to `discarded`, **every open review item** containing that UC path automatically cascades to `discarded` via the PostToolUse cascade hook (`../scripts/a4_hook.py`). Do not flip these by hand. Wiki basenames in `target:` do not participate (wiki pages have no `discarded` state); task paths inside `target:` are independent (task discards do not cascade reviews).
+When a UC referenced inside a review's `target:` list flips to `discarded`, **every open review item** containing that UC path automatically cascades to `discarded` via the PostToolUse cascade hook. Do not flip these by hand. Wiki basenames in `target:` do not participate (wiki pages have no `discarded` state); task paths inside `target:` are independent (task discards do not cascade reviews).
 
 ### Lifecycle and writer ownership
 

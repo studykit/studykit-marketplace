@@ -1,6 +1,6 @@
 # Wiki Authorship & Cross-Stage Feedback Policy
 
-> **Audience:** a4 plugin contributors editing `plugins/a4/` itself. Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead.
+> **Audience:** Skill runtime — LLMs executing a4 skills (and contributors authoring skills). Defines cross-skill workflow contracts (modes, shapes, iterate, wiki-authorship). Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Plugin internals (hooks, cascade implementation) live in `../dev/`.
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 

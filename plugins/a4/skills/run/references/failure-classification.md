@@ -2,7 +2,7 @@
 
 After the loop body (Steps 1–3) completes with at least one failing test, classify each test-runner review item into one of three categories. Classification is **user-driven** — the SKILL.md transitions to `conversational` and the user picks the category for each finding. The agent loop does not auto-classify.
 
-This document is the routing table the SKILL.md references. Cross-stage stop/continue policy lives in [`plugins/a4/dev/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md) §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding **stops** the run.
+This document is the routing table the SKILL.md references. Cross-stage stop/continue policy lives in [`plugins/a4/workflows/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md) §Cross-stage feedback — task implementation is contract-bound to `architecture.md` and AC-bound to `usecase/*.md`, so an upstream finding **stops** the run.
 
 ## Routing table
 

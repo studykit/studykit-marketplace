@@ -1,6 +1,6 @@
 # Domain Iteration Entry
 
-Skill-specific addendum on top of the shared iterate mechanics in `../../../dev/iterate-mechanics.md`. Read that file first.
+Skill-specific addendum on top of the shared iterate mechanics in `../../../workflows/iterate-mechanics.md`. Read that file first.
 
 ## Backlog filter
 

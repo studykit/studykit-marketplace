@@ -14,7 +14,7 @@ Two stages over the tasks already authored under the four issue family folders (
 1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md`; `roadmap.md` only links to it).
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`; `roadmap.md` only links to it).
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` write single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -44,7 +44,7 @@ Resolution policy: `references/launch-verify-source.md`. When `bootstrap.md` is 
 ## Mode Detection
 
 - **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
-- **Iterate mode** — open review items target a task or `roadmap`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
+- **Iterate mode** — open review items target a task or `roadmap`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
 - **Pre-flight** (both modes, run at Step 1 entry) — local `HEAD` must equal `origin/HEAD` per `references/parallel-isolation.md`. Halt with a push instruction on mismatch.
 - **Serial fallback** (`/a4:run serial` or `/a4:run iterate serial`) — opt-in mode that skips worktree isolation and the merge sweep entirely. Rules in `references/parallel-isolation.md`.
 

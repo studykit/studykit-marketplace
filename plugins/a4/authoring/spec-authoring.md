@@ -65,7 +65,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | no | date | `YYYY-MM-DD` (bump when the spec is revised) |
 
-- `id` is allocated by `../scripts/allocate_id.py` (workspace-global, monotonic). Never invent or reuse an id.
+- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - The chosen shape is summarized in the `## Context` body section (and recorded as the first `## Decision Log` entry on `→ active`); UC `decision:` frontmatter no longer exists (a4 v6.0.0).
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
@@ -82,7 +82,7 @@ deprecated → superseded
 superseded → (terminal)
 ```
 
-- Edit `status:` directly. The PostToolUse cascade hook (`../scripts/a4_hook.py`) detects the transition, refreshes `updated:`, and runs any cross-file cascade.
+- Edit `status:` directly. The PostToolUse cascade hook detects the transition, refreshes `updated:`, and runs any cross-file cascade.
 - `draft → superseded` is **disallowed** — supersession presumes the predecessor was at one point live.
 - `active → superseded` is **automatic** — it fires when a successor spec with `supersedes: [<this>]` reaches `active`. Do not flip it by hand.
 - `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.

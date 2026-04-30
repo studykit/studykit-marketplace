@@ -4,7 +4,7 @@
 
 Frontmatter validation contract — what the validator rejects, what it ignores, and how cross-file status consistency is checked. Per-type field shapes (required vs optional, enum values, types) live in each `./<type>-authoring.md`. Universal frontmatter rules (path-reference format, status writers, ids) live in `./frontmatter-universals.md`.
 
-This document is the canonical reference for `../scripts/markdown_validator/*.py` and the `/a4:validate` skill.
+This document is the canonical reference for the `/a4:validate` skill — what it rejects, ignores, and reports.
 
 ## Schema enforcement
 
@@ -58,7 +58,3 @@ When these land, update this document **and** the enforcement layer simultaneous
 
 - **Universal frontmatter rules:** `./frontmatter-universals.md` — `type:` field, ids, path-reference format, dates, empty collections, relationships, unknown fields, status writers, structural relationship fields table.
 - **Per-type field tables:** the `## Frontmatter` section of each `./<type>-authoring.md`.
-- **Validator entrypoint:** `../scripts/validate.py` — unified CLI; runs every check registered in `markdown_validator.registry.CHECKS`.
-- **Frontmatter validator:** `../scripts/markdown_validator/frontmatter.py` — required fields, enums, types, path-reference format, id uniqueness, post-draft authoring invariants.
-- **Status consistency checker:** `../scripts/markdown_validator/status_consistency.py` — the cross-file table above.
-- **Transition legality safety net:** `../scripts/markdown_validator/transitions.py` — Stop-hook git-diff check.

@@ -39,7 +39,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **Roadmap mode** — `a4/roadmap.md` absent OR all four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) are empty. Run Steps 1 → 4.
-- **Iterate mode** — open review items target `roadmap` or a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
+- **Iterate mode** — open review items target `roadmap` or a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
 
 Mode detection at session start:
 

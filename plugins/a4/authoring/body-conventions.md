@@ -103,7 +103,7 @@ Issue files (`usecase`, `task`, `review`, `spec`) may carry an optional `## Log`
 - 2026-04-26 — active → superseded — replaced by spec/12
 ```
 
-The PostToolUse cascade hook (`../scripts/a4_hook.py`) refreshes `updated:` on the primary edit and flips related files, but **does not write into `## Log`**. If you want a transition recorded in the body, append the bullet by hand. The section is optional and may be omitted entirely.
+The PostToolUse cascade hook refreshes `updated:` on the primary edit and flips related files, but **does not write into `## Log`**. If you want a transition recorded in the body, append the bullet by hand. The section is optional and may be omitted entirely.
 
 ## Wiki Update Protocol
 
@@ -130,7 +130,7 @@ Skip: typo fixes, metadata-only tweaks, internal notes that don't change semanti
 
 If the user chooses not to update the wiki page immediately, open a review item so the gap does not disappear:
 
-1. Allocate an id via `../scripts/allocate_id.py`.
+1. Allocate an id via the id allocator.
 2. Write `a4/review/<id>-<slug>.md` with:
    - `type: review`
    - `kind: gap`
@@ -153,5 +153,5 @@ When a review item transitions to `status: resolved` and its `target:` list cont
 - `frontmatter-universals.md` — universal frontmatter rules (the universal `type:` field, ids, path references, dates, status writers, structural relationship fields).
 - `validator-rules.md` — schema enforcement and cross-file status consistency tables.
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape and the per-type field table).
-- `../scripts/allocate_id.py` — id allocator; required before writing any new issue file.
+- the id allocator — id allocator; required before writing any new issue file.
 - Body shape is documentation-only; nothing validates section presence at runtime.

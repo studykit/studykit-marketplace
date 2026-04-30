@@ -173,7 +173,7 @@ Do **not** write a separate "Use Case Relationships" document. Views are produce
 
 ### 5. Domain Model — Out of Scope
 
-Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` per the workspace authorship policy at [`dev/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md). The invoking skill (`/a4:auto-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted inline within UC `## Situation` source attributions, but never lifted into a glossary here.
+Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` per the workspace authorship policy at [`workflows/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md). The invoking skill (`/a4:auto-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted inline within UC `## Situation` source attributions, but never lifted into a glossary here.
 
 ### 6. Non-Functional Requirements (nfr.md)
 
