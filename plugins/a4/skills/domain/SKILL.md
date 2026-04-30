@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, EnterPlanMode, ExitPl
 
 # Domain Model Designer
 
-> **Authoring contract:** the contract for `a4/domain.md` lives in `${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md`. This skill orchestrates the extraction phases.
+> **Authoring contract:** the contract for `a4/domain.md` lives in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md`. This skill orchestrates the extraction phases.
 
 Takes the use-case set in `a4/usecase/`, the actor roster in `a4/actors.md`, and the problem framing in `a4/context.md`, and extracts the **cross-cutting Domain Model** — the shared vocabulary architecture and implementation will use. Writes the result to `a4/domain.md` as a single wiki page.
 
@@ -41,7 +41,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Extraction** — `a4/domain.md` does not exist. Run Phase 1 → 2 → 3 in order.
-- **Iteration** — `a4/domain.md` exists OR the user said `iterate`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
+- **Iteration** — `a4/domain.md` exists OR the user said `iterate`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
 
 `/a4:usecase` does not block on the absence of `domain.md` — it captures actors and per-UC bodies first. Compass routes `UCs exist, domain.md missing → /a4:domain` (Layer 1).
 
@@ -71,7 +71,7 @@ Read up front: every file in `a4/usecase/*.md`, `a4/actors.md`, `a4/context.md`,
 
 ### Phases
 
-In **First Extraction**, run Phases 1 → 3 in order. In **Iteration**, start wherever the user wants. Phase-transition fill-in convention is in `${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md` §Body shape. Detailed identification heuristics, abstraction guardrails, and diagram conventions are in `references/domain-model-guide.md`.
+In **First Extraction**, run Phases 1 → 3 in order. In **Iteration**, start wherever the user wants. Phase-transition fill-in convention is in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Body shape. Detailed identification heuristics, abstraction guardrails, and diagram conventions are in `authoring/domain-model-guide.md`.
 
 | Phase | Focus | Procedure |
 |-------|-------|-----------|
@@ -92,7 +92,7 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 
 ## Domain Edits Originating Outside This Skill
 
-`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. The decision table is in `${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md` §Authorship.
+`/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. The decision table is in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship.
 
 When iterating after arch has run, expect to see `## Change Logs` entries citing `[architecture#<section>](architecture.md#<section>)`. Treat them as authoritative.
 

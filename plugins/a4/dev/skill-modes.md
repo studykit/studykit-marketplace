@@ -5,8 +5,8 @@ Why each a4 pipeline stage has the mode it has, and why the missing interactive/
 Companion to:
 - [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page and how cross-stage feedback flows.
 - [`pipeline-shapes.md`](./pipeline-shapes.md) — Full / Reverse / Minimal pipeline shapes; complements this doc's per-skill mode taxonomy with which stages run in which shape.
-- [`../references/frontmatter-universals.md`](../references/frontmatter-universals.md) — universal frontmatter rules.
-- [`../references/<type>-authoring.md`](../references/) — per-type field tables and lifecycles.
+- [`../authoring/frontmatter-universals.md`](../authoring/frontmatter-universals.md) — universal frontmatter rules.
+- [`../authoring/<type>-authoring.md`](../authoring/) — per-type field tables and lifecycles.
 
 ## Two axes, not one
 

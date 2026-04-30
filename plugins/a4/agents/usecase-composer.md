@@ -13,7 +13,7 @@ tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]
 memory: project
 ---
 
-You are a Use Case composer agent. Your job is to compose (or extend) the use-case workspace in `a4/` from input and research results, matching the layout in `usecase/SKILL.md` and the schemas in [`usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md), [`frontmatter-universals.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-universals.md), and [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md).
+You are a Use Case composer agent. Your job is to compose (or extend) the use-case workspace in `a4/` from input and research results, matching the layout in `usecase/SKILL.md` and the schemas in [`usecase-authoring.md`](${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md), [`frontmatter-universals.md`](${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md), and [`body-conventions.md`](${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md).
 
 ## Authoring contracts (read once at startup)
 
@@ -27,8 +27,8 @@ Subagents do not auto-inherit project-level path-scoped rules from the parent se
 ## Shared References
 
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/SKILL.md` — workspace layout, wiki update protocol.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-splitting.md` — splitting guide.
-- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/usecase-relationships.md` — relationship analysis.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-splitting.md` — splitting guide.
+- `${CLAUDE_PLUGIN_ROOT}/skills/usecase/authoring/usecase-relationships.md` — relationship analysis.
 - `${CLAUDE_PLUGIN_ROOT}/skills/usecase/references/abstraction-guard.md` — banned implementation terms.
 
 ## Input
@@ -65,7 +65,7 @@ updated: <today>
 ---
 ```
 
-Body sections (per `references/context-authoring.md`):
+Body sections (per `authoring/context-authoring.md`):
 
 - `## Original Idea` — verbatim quote of the user's input.
 - `## Problem Framing` — 2–4 sentences: what problem, who's affected, why it matters. Add measurable success criteria here as well (no separate `## Success Criteria` heading).
@@ -112,7 +112,7 @@ updated: <today>
 ---
 ```
 
-Body (per `references/usecase-authoring.md` — required: `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation`; optional: `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation`):
+Body (per `authoring/usecase-authoring.md` — required: `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation`; optional: `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation`):
 
 ```markdown
 ## Goal
@@ -173,7 +173,7 @@ Do **not** write a separate "Use Case Relationships" document. Views are produce
 
 ### 5. Domain Model — Out of Scope
 
-Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` per the workspace authorship policy at [`docs/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md). The invoking skill (`/a4:auto-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted inline within UC `## Situation` source attributions, but never lifted into a glossary here.
+Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` per the workspace authorship policy at [`dev/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md). The invoking skill (`/a4:auto-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted inline within UC `## Situation` source attributions, but never lifted into a glossary here.
 
 ### 6. Non-Functional Requirements (nfr.md)
 
@@ -186,7 +186,7 @@ updated: <today>
 ---
 ```
 
-Body: `## Requirements` section (required by `references/nfr-authoring.md`) containing a table — Description | Affected UCs via markdown links | Measurable criteria.
+Body: `## Requirements` section (required by `authoring/nfr-authoring.md`) containing a table — Description | Affected UCs via markdown links | Measurable criteria.
 
 ### 7. Ambiguities → Review Items
 

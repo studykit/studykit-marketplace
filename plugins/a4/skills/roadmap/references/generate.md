@@ -27,14 +27,14 @@ Identify any file appearing in 3+ tasks' file lists. Define the integration patt
 
 ## 5. Launch & Verify
 
-**Do not author content here.** `bootstrap.md` is the single source of truth (per `../../../docs/wiki-authorship.md`); roadmap.md links to it. `/a4:run` reads `bootstrap.md` directly.
+**Do not author content here.** `bootstrap.md` is the single source of truth (per `../../../dev/wiki-authorship.md`); roadmap.md links to it. `/a4:run` reads `bootstrap.md` directly.
 
 ## Write artifacts
 
 Exit plan mode.
 
-**`a4/roadmap.md` body** — write `## Plan` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per `../../../references/roadmap-authoring.md` §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `## Change Logs` bullet citing the driving wiki/issue.
+**`a4/roadmap.md` body** — write `## Plan` with H3 subsections (Overview, Implementation Strategy, Milestones, Dependency Graph snapshot, Launch & Verify pointer, Shared Integration Points) per `../../../authoring/roadmap-authoring.md` §Body shape. Launch & Verify is a one-line link to `[bootstrap](bootstrap.md)` — never inline content. Shared Integration Points is emitted only when a file appears in 3+ tasks. Append a `## Change Logs` bullet citing the driving wiki/issue.
 
-**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` per `../../../references/task-authoring.md` (`type: task`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `task/<id>-<slug>.md`.
+**Per-task files** — allocate ids via `allocate_id.py`, write `a4/task/<id>-<slug>.md` per `../../../authoring/task-authoring.md` (`type: task`, `status: pending`). The roadmap's Milestones subsection references them via standard markdown links pointing into `task/<id>-<slug>.md`.
 
 The UC ↔ task reverse view (which tasks implement a UC) is computed on demand by `search.py` and roadmap surfaces — there is no UC frontmatter field to refresh.

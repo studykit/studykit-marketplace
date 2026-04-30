@@ -1,6 +1,6 @@
 # run Commit Points
 
-All commit subjects follow `../../../references/commit-message-convention.md`.
+All commit subjects follow `../../../authoring/commit-message-convention.md`.
 
 ## Per-task implementation
 

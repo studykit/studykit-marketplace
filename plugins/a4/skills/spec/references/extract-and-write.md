@@ -7,7 +7,7 @@ Two input modes:
 - **No argument.** Read recent conversation context. Identify the converged shape — what artifact it describes, the prescriptive rules, and any decisions explaining why the shape landed this way. If no clear shape emerged, ask the user which one to record.
 - **Short summary / title.** Use `$ARGUMENTS` as a seed; still draw the full content from recent conversation.
 
-Draft a scratch summary covering the fields and sections defined in `../../../references/spec-authoring.md` (`title`, the chosen-shape one-liner that will land in `## Context` and the first `## Decision Log` entry, required `## Context` + `## Specification`, optional sections only when the conversation produced content for them, candidate `supersedes:` if the conversation referenced a predecessor). Do **not** emit placeholder sections.
+Draft a scratch summary covering the fields and sections defined in `../../../authoring/spec-authoring.md` (`title`, the chosen-shape one-liner that will land in `## Context` and the first `## Decision Log` entry, required `## Context` + `## Specification`, optional sections only when the conversation produced content for them, candidate `supersedes:` if the conversation referenced a predecessor). Do **not** emit placeholder sections.
 
 Present the draft to the user before proceeding. Iterate until the substance is confirmed.
 
@@ -48,7 +48,7 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
 3. File path: `<project-root>/a4/spec/<id>-<slug>.md`.
 
-4. Use the `Write` tool. Frontmatter shape, required body sections (`## Context`, `## Specification`), optional sections (`## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`), and heading-form rules are defined in `../../../references/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `## Context` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [research/42-grpc-streaming]`), and add inline `[research/<id>-<slug>](../research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `## Decision Log` or `## Rejected Alternatives`).
+4. Use the `Write` tool. Frontmatter shape, required body sections (`## Context`, `## Specification`), optional sections (`## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`), and heading-form rules are defined in `../../../authoring/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `## Context` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [research/42-grpc-streaming]`), and add inline `[research/<id>-<slug>](../research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `## Decision Log` or `## Rejected Alternatives`).
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
 
@@ -58,4 +58,4 @@ Invoke only when the user signaled `active` in Step 4, or the whole invocation i
 
 Edit the spec file's frontmatter `status:` from `draft` to `active` directly (use the `Edit` tool). The PostToolUse cascade hook (`${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`) detects the transition, refreshes `updated:`, and runs the supersedes-chain cascade — every same-family entry in `supersedes:` currently at `active` or `deprecated` is flipped to `superseded` automatically.
 
-The supersedes-cascade behavior is defined in `../../../references/spec-authoring.md` §Lifecycle. After the edit, surface the hook's `additionalContext` to the user (it lists each cascaded predecessor). If the resulting jump is illegal (e.g., `draft → superseded`), the cascade hook silently skips and the Stop-hook safety net surfaces the violation — return to Step 5 and re-author. Post-draft authoring invariants (placeholder tokens etc.) are caught by the frontmatter validator at the Stop hook.
+The supersedes-cascade behavior is defined in `../../../authoring/spec-authoring.md` §Lifecycle. After the edit, surface the hook's `additionalContext` to the user (it lists each cascaded predecessor). If the resulting jump is illegal (e.g., `draft → superseded`), the cascade hook silently skips and the Stop-hook safety net surfaces the violation — return to Step 5 and re-author. Post-draft authoring invariants (placeholder tokens etc.) are caught by the frontmatter validator at the Stop hook.

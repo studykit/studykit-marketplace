@@ -10,8 +10,8 @@ When **authoring or editing** any spike task file, read these first.
 
 ## Required reading before authoring
 
-- `../references/spike-authoring.md` — purpose, artifacts directory convention (`<project-root>/artifacts/spike/<id>-<slug>/`), frontmatter (`implements:` / `spec:` / `cycle:` forbidden), lifecycle, body shape, common mistakes, "Don't" list.
-- `../references/artifacts.md` — cross-family artifact directory contract.
+- `../authoring/spike-authoring.md` — purpose, artifacts directory convention (`<project-root>/artifacts/spike/<id>-<slug>/`), frontmatter (`implements:` / `spec:` / `cycle:` forbidden), lifecycle, body shape, common mistakes, "Don't" list.
+- `../authoring/artifacts.md` — cross-family artifact directory contract.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Sibling rules

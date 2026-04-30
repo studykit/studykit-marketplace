@@ -22,7 +22,7 @@ updated: <YYYY-MM-DD>
 ---
 ```
 
-Body structure (per `references/review-authoring.md` — `## Description` required, `## Log` and `## Change Logs` optional):
+Body structure (per `authoring/review-authoring.md` — `## Description` required, `## Log` and `## Change Logs` optional):
 
 ```markdown
 ## Description

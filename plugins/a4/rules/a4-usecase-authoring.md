@@ -10,5 +10,5 @@ When **authoring or editing** any UC file, read these first.
 
 ## Required reading before authoring
 
-- `../references/usecase-authoring.md` — purpose, abstraction discipline, frontmatter, lifecycle, body shape, in-situ wiki nudge, splitting protocol, common mistakes, "Don't" list.
+- `../authoring/usecase-authoring.md` — purpose, abstraction discipline, frontmatter, lifecycle, body shape, in-situ wiki nudge, splitting protocol, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).

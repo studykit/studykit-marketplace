@@ -17,7 +17,7 @@ You are a research report reviewer. Your job is to evaluate whether a research t
 
 ## What You Receive
 
-A markdown file at `a4/research/<id>-<slug>.md` whose frontmatter declares `type: research` and `mode: comparative | single`. Body shape per `${CLAUDE_PLUGIN_ROOT}/references/research-authoring.md`:
+A markdown file at `a4/research/<id>-<slug>.md` whose frontmatter declares `type: research` and `mode: comparative | single`. Body shape per `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`:
 
 **Comparative mode** (`mode: comparative`):
 

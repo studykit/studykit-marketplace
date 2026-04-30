@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 
 # Spec Recorder
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/references/spec-authoring.md`. This skill orchestrates capture + activate + wiki nudge.
+> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/spec-authoring.md`. This skill orchestrates capture + activate + wiki nudge.
 
 Documents a converged-on shape (format, protocol, schema, renderer rule, CLI surface, etc.) into `a4/spec/<id>-<slug>.md`, soft-links supporting research tasks if any, optionally records the decision rationale inline, and nudges affected wiki pages. This skill does not facilitate the design itself — it captures an already-converged shape from the current session.
 

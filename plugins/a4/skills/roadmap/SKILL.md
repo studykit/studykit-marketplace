@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPl
 
 # Implementation Roadmap Builder
 
-> **Authoring contracts:** `a4/roadmap.md` — `${CLAUDE_PLUGIN_ROOT}/references/roadmap-authoring.md`. Per-task files (always `type: task` for the batch path): `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`. This skill orchestrates the batch.
+> **Authoring contracts:** `a4/roadmap.md` — `${CLAUDE_PLUGIN_ROOT}/authoring/roadmap-authoring.md`. Per-task files (always `type: task` for the batch path): `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`. This skill orchestrates the batch.
 
 Takes the architecture in `a4/architecture.md` (plus the UCs in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`) and authors the implementation roadmap plus per-task files. The agent-driven implement + test loop lives in `/a4:run`.
 
@@ -39,7 +39,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **Roadmap mode** — `a4/roadmap.md` absent OR all four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) are empty. Run Steps 1 → 4.
-- **Iterate mode** — open review items target `roadmap` or a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
+- **Iterate mode** — open review items target `roadmap` or a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
 
 Mode detection at session start:
 

@@ -41,7 +41,7 @@ Then edit the file's frontmatter `status:` to `discarded` directly. The PostTool
 
 ## D4. Spike artifact directory advisory (if `type: spike`)
 
-If the task's `type:` is `spike` and `<project-root>/artifacts/spike/<id>-<slug>/` exists, **do not delete it**. Per `../../references/artifacts.md`, archiving spike code is a manual `git mv` decision. Tell the user:
+If the task's `type:` is `spike` and `<project-root>/artifacts/spike/<id>-<slug>/` exists, **do not delete it**. Per `../../authoring/artifacts.md`, archiving spike code is a manual `git mv` decision. Tell the user:
 
 > Spike artifact directory `artifacts/spike/<id>-<slug>/` was left in place. Options: (a) leave as-is for reference, (b) `git mv artifacts/spike/<id>-<slug> artifacts/spike/archive/<id>-<slug>` to archive, (c) `git rm -r artifacts/spike/<id>-<slug>` to delete. Pick one when convenient.
 

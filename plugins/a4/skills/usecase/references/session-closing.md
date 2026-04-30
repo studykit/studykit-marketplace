@@ -61,7 +61,7 @@ For each new review item from the reviewer (ordered by priority then id), read t
 
 **Discard** — append the rationale to the review item's optional `## Log` section first (one-line dated bullet), then edit `status:` to `discarded` directly. The PostToolUse cascade hook refreshes `updated:`.
 
-Common finding types the reviewer emits (mirrored from `${CLAUDE_SKILL_DIR}/references/review-report.md`):
+Common finding types the reviewer emits (mirrored from `${CLAUDE_SKILL_DIR}/authoring/review-report.md`):
 
 - **UC quality issues** — `size/split`, `vague actor`, `unclear goal`, `vague situation`, `incomplete flow`, `implementation leak`, `weak outcome`, `missing precision`, `overlap`.
 - **Actor findings** — `orphan actor`, `incomplete actor`, `privilege split`, `type mismatch`, `role mismatch`, `implicit actor`, `missing system actor`.

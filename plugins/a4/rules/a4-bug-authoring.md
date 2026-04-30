@@ -10,7 +10,7 @@ When **authoring or editing** any bug task file, read these first.
 
 ## Required reading before authoring
 
-- `../references/bug-authoring.md` — purpose, frontmatter, lifecycle, body shape, complete-preflight, common mistakes, "Don't" list (incl. regression-test requirement).
+- `../authoring/bug-authoring.md` — purpose, frontmatter, lifecycle, body shape, complete-preflight, common mistakes, "Don't" list (incl. regression-test requirement).
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Sibling rules

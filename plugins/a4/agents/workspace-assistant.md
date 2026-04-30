@@ -125,7 +125,7 @@ Different per mode:
 
 ## Schema Awareness
 
-The frontmatter contract — required fields, enums, status meanings, allowed transitions, reverse-link semantics, path-reference format — lives across [`references/frontmatter-universals.md`](${CLAUDE_PLUGIN_ROOT}/references/frontmatter-universals.md) (universal rules), [`references/<type>-authoring.md`](${CLAUDE_PLUGIN_ROOT}/references/) (per-type field tables and lifecycles), and [`references/validator-rules.md`](${CLAUDE_PLUGIN_ROOT}/references/validator-rules.md) (enforcement rules). Read them on first invocation that needs more than a trivial filter or any transition, then rely on them for filter validity, transition legality, and result interpretation.
+The frontmatter contract — required fields, enums, status meanings, allowed transitions, reverse-link semantics, path-reference format — lives across [`authoring/frontmatter-universals.md`](${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md) (universal rules), [`authoring/<type>-authoring.md`](${CLAUDE_PLUGIN_ROOT}/authoring/) (per-type field tables and lifecycles), and [`authoring/validator-rules.md`](${CLAUDE_PLUGIN_ROOT}/authoring/validator-rules.md) (enforcement rules). Read them on first invocation that needs more than a trivial filter or any transition, then rely on them for filter validity, transition legality, and result interpretation.
 
 ## Non-goals
 

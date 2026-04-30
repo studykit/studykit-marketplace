@@ -1,6 +1,6 @@
 # auto-usecase Commit Points
 
-All commit subjects follow `../../../references/commit-message-convention.md`. Stage files under `a4/`.
+All commit subjects follow `../../../authoring/commit-message-convention.md`. Stage files under `a4/`.
 
 ## Timing
 

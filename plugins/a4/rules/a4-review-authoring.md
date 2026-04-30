@@ -10,5 +10,5 @@ When **authoring or editing** any review file, read these first.
 
 ## Required reading before authoring
 
-- `../references/review-authoring.md` — kinds (finding/gap/question), frontmatter, lifecycle, cascade, close guard, body shape, common mistakes, "Don't" list.
+- `../authoring/review-authoring.md` — kinds (finding/gap/question), frontmatter, lifecycle, cascade, close guard, body shape, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).

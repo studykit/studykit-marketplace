@@ -1,10 +1,10 @@
 """Frontmatter schema validator (library).
 
 Enforces the per-type schemas defined in
-``plugins/a4/references/<type>-authoring.md`` (per-type field tables) and
+``plugins/a4/authoring/<type>-authoring.md`` (per-type field tables) and
 the cross-cutting rules in
-``plugins/a4/references/frontmatter-universals.md`` and
-``plugins/a4/references/validator-rules.md``:
+``plugins/a4/authoring/frontmatter-universals.md`` and
+``plugins/a4/authoring/validator-rules.md``:
 
   - Required fields are present and non-empty.
   - Enum values are in their allowed set.
@@ -585,7 +585,7 @@ def _validate_complete_artifacts_present(
     rule remains the single source of truth for that error. Malformed
     ``id`` / filename id-slug also defers as in the shape rule.
     ``artifacts/`` lives at project root (``a4_dir.parent``) per
-    ``references/artifacts.md``.
+    ``authoring/artifacts.md``.
 
     ``type: spike`` is intentionally excluded: at ``status: complete``
     the directory may still live at the original prefix until the user

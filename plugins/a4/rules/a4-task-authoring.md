@@ -10,7 +10,7 @@ When **authoring or editing** any task file, read these first.
 
 ## Required reading before authoring
 
-- `../references/task-authoring.md` — purpose, smell check (empty anchors), frontmatter, lifecycle, body shape, complete-preflight, common mistakes, "Don't" list.
+- `../authoring/task-authoring.md` — purpose, smell check (empty anchors), frontmatter, lifecycle, body shape, complete-preflight, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).
 
 ## Sibling rules

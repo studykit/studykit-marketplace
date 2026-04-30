@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Bug Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md`. This skill orchestrates writing through that contract.
+> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`. This skill orchestrates writing through that contract.
 
 Writes one `a4/bug/<id>-<slug>.md`. Use when a defect needs a tracked fix; the task lifecycle is identical to task/spike/research, but the body shape leans on reproduction + regression test.
 

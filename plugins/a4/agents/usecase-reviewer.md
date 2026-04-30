@@ -51,7 +51,7 @@ related: []
 labels: []
 ```
 
-Body sections (per `references/usecase-authoring.md` — required: `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation`; optional: `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation`).
+Body sections (per `authoring/usecase-authoring.md` — required: `## Expected Outcome`, `## Flow`, `## Goal`, `## Situation`; optional: `## Change Logs`, `## Dependencies`, `## Error Handling`, `## Log`, `## Validation`).
 
 ## Review Criteria
 

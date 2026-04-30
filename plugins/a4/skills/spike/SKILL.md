@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Spike Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md`. This skill orchestrates writing through that contract.
+> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. This skill orchestrates writing through that contract.
 
 Writes one `a4/spike/<id>-<slug>.md` and proposes the accompanying artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/` for the throwaway PoC code.
 

@@ -40,7 +40,7 @@ The composer:
 - Writes `a4/actors.md` with `type: actors`, `updated`, a `## Roster` section containing the Actors table.
 - Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
 - Writes NFRs to `a4/nfr.md` if any are surfaced.
-- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (per `../../../docs/wiki-authorship.md`). The final summary recommends running `/a4:domain` after auto-usecase finishes.
+- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (per `../../../dev/wiki-authorship.md`). The final summary recommends running `/a4:domain` after auto-usecase finishes.
 - Emits `kind: question` review items for unresolvable ambiguities.
 - Never rewrites previously confirmed UC files without cause.
 
@@ -52,7 +52,7 @@ The composer writes directly. Do **not** read the files back in the main session
 
 Repeat up to 3 rounds. Each round:
 
-1. Spawn the reviewer per `usecase/references/review-report.md`. It writes per-finding review items into `a4/review/<id>-<slug>.md` (via `allocate_id.py`) and returns:
+1. Spawn the reviewer per `usecase/authoring/review-report.md`. It writes per-finding review items into `a4/review/<id>-<slug>.md` (via `allocate_id.py`) and returns:
 
    ```
    verdict: ALL_PASS | NEEDS_REVISION

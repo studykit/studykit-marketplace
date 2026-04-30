@@ -22,7 +22,7 @@ Present this draft to the user and iterate until the substance is right. One que
 
 ## Step 2: Compose the task body
 
-Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md` §Body shape. The required `## Acceptance Criteria` should describe what observable outcome proves or refutes the hypothesis.
+Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` §Body shape. The required `## Acceptance Criteria` should describe what observable outcome proves or refutes the hypothesis.
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -47,7 +47,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/spike/<id>-<slug>.md`.
 
-Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:` under `artifacts/spike/<id>-<slug>/` or `artifacts/spike/archive/<id>-<slug>/`) are defined in `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:` under `artifacts/spike/<id>-<slug>/` or `artifacts/spike/archive/<id>-<slug>/`) are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
 Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 

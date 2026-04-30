@@ -26,7 +26,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items whose `target:` includes the affected wiki basenames |
-| `validate` | Runs frontmatter, body-convention, and cross-file status-consistency validators over `a4/` (rules: `references/validator-rules.md`) |
+| `validate` | Runs frontmatter, body-convention, and cross-file status-consistency validators over `a4/` (rules: `authoring/validator-rules.md`) |
 | `idea` | Quick-capture a one-line idea as `a4/idea/<id>-<slug>.md` |
 | `web-design-mock` | Web design mock generation |
 | `get-api-docs` | Shared global skill for current API/SDK documentation lookup |
@@ -49,7 +49,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 **Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` for a full workspace sweep — status-consistency reporting is now manual rather than firing on SessionStart.
 
-**Design principles.** See `docs/hook-conventions.md` for state classification, lifecycle symmetry, language choice, in-event ordering, non-blocking policy, and output channel usage.
+**Design principles.** See `dev/hook-conventions.md` for state classification, lifecycle symmetry, language choice, in-event ordering, non-blocking policy, and output channel usage.
 
 ### Agents
 
@@ -105,7 +105,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
-- **Four task issue families.** After a4 v12.0.0 the previous single `task/` folder with a `kind:` discriminator was kept-named-`task` for the default kind and joined by three sibling top-level folders that each have their own `type:` literal: `task` (regular implementation work — Jira's "Task" issue type), `bug` (defect fix), `spike` (time-boxed exploration whose throwaway code lives at project-root `artifacts/spike/<id>-<slug>/` outside `a4/`), `research` (written investigation whose body is the deliverable). The four share the same lifecycle / status enum but each carries its own per-type schema and authoring contract. Any family may opt in to an `artifacts/<type>/<id>-<slug>/` sibling directory for byproducts that need to live alongside the task — see `plugins/a4/references/artifacts.md` for what each family typically stores. Closed spikes are archived by manual `git mv` to `artifacts/spike/archive/<id>-<slug>/`.
+- **Four task issue families.** After a4 v12.0.0 the previous single `task/` folder with a `kind:` discriminator was kept-named-`task` for the default kind and joined by three sibling top-level folders that each have their own `type:` literal: `task` (regular implementation work — Jira's "Task" issue type), `bug` (defect fix), `spike` (time-boxed exploration whose throwaway code lives at project-root `artifacts/spike/<id>-<slug>/` outside `a4/`), `research` (written investigation whose body is the deliverable). The four share the same lifecycle / status enum but each carries its own per-type schema and authoring contract. Any family may opt in to an `artifacts/<type>/<id>-<slug>/` sibling directory for byproducts that need to live alongside the task — see `plugins/a4/authoring/artifacts.md` for what each family typically stores. Closed spikes are archived by manual `git mv` to `artifacts/spike/archive/<id>-<slug>/`.
 - **Issue family = top-level folder.** Task files live under `a4/<type>/<id>-<slug>.md`, where `<type>` matches the `type:` frontmatter (one of `task` / `bug` / `spike` / `research`). The family folder is the path scope that lets the matching per-family authoring rule (`a4-task-authoring.md`, `a4-bug-authoring.md`, `a4-spike-authoring.md`, `a4-research-authoring.md`) auto-load on read or edit. Reference forms in frontmatter (`implements`, `depends_on`, `target`, etc.) use the actual family folder (e.g., `task/<id>-<slug>`) — the legacy `task/<kind>/<id>-<slug>` shape (with a kind subfolder) was retired in v12.
 
 ### Conventions
@@ -119,7 +119,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 Wiki pages carry no lifecycle but are continuously updated. All edits flow through **review items** as the unified conduit:
 
-1. Each substantive wiki edit appends a `## Change Logs` bullet — `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` — pointing at the issue that drove the change. See `references/body-conventions.md §## Change Logs audit trail`.
+1. Each substantive wiki edit appends a `## Change Logs` bullet — `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` — pointing at the issue that drove the change. See `authoring/body-conventions.md §## Change Logs audit trail`.
 2. Two entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items whose `target:` lists the affected wiki basenames.
 3. **Close guard (advisory)** — when a review with one or more wiki targets transitions to `resolved`, ensure each referenced wiki page records the change in its `## Change Logs`. There is no automated re-surfacer at this point; re-run `/a4:validate` after wiki edits if you need a sweep.
 

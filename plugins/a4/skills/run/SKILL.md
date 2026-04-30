@@ -7,14 +7,14 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdat
 
 # Implementation Run Loop
 
-> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md`. This skill writes status flips by editing `status:` directly; the PostToolUse cascade hook handles `updated:` and any cross-file cascade. The `task-implementer` and `test-runner` agents do their own writes (code + tests, review items).
+> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`. This skill writes status flips by editing `status:` directly; the PostToolUse cascade hook handles `updated:` and any cross-file cascade. The `task-implementer` and `test-runner` agents do their own writes (code + tests, review items).
 
 Two stages over the tasks already authored under the four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`):
 
 1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `task-implementer` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md`; `roadmap.md` only links to it).
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md`; `roadmap.md` only links to it).
 
 Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` write single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -44,7 +44,7 @@ Resolution policy: `references/launch-verify-source.md`. When `bootstrap.md` is 
 ## Mode Detection
 
 - **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
-- **Iterate mode** — open review items target a task or `roadmap`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
+- **Iterate mode** — open review items target a task or `roadmap`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
 - **Pre-flight** (both modes, run at Step 1 entry) — local `HEAD` must equal `origin/HEAD` per `references/parallel-isolation.md`. Halt with a push instruction on mismatch.
 - **Serial fallback** (`/a4:run serial` or `/a4:run iterate serial`) — opt-in mode that skips worktree isolation and the merge sweep entirely. Rules in `references/parallel-isolation.md`.
 
@@ -75,7 +75,7 @@ Crash recovery + orphaned worktree handling: `references/resume-hygiene.md`.
 
 ## Acceptance Criteria Source by Issue Family
 
-The per-type AC-source convention is defined in the matching authoring rule: tasks draw AC from UC `## Flow` / `## Validation` / `## Error Handling` (or spec `## Specification` body + `architecture.md` for UC-less work) per `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`; bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md`; spike tasks draw AC from the hypothesis + expected result in the spike's own body per `${CLAUDE_PLUGIN_ROOT}/references/spike-authoring.md`. `/a4:run` does not enforce these — automated checks do not block on AC source; only the `## Acceptance Criteria` section's presence is required by the authoring contract.
+The per-type AC-source convention is defined in the matching authoring rule: tasks draw AC from UC `## Flow` / `## Validation` / `## Error Handling` (or spec `## Specification` body + `architecture.md` for UC-less work) per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`; bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`; spike tasks draw AC from the hypothesis + expected result in the spike's own body per `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. `/a4:run` does not enforce these — automated checks do not block on AC source; only the `## Acceptance Criteria` section's presence is required by the authoring contract.
 
 ## Commit Points
 

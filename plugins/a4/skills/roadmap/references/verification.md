@@ -9,7 +9,7 @@ The reviewer emits per-finding review items to `a4/review/<id>-<slug>.md` and re
 
 ## Walk findings
 
-Apply the **stop on strong upstream dependency** policy at `../../../docs/wiki-authorship.md` §Cross-stage feedback — roadmap depends directly on architecture (component → task split) and UCs (UC → AC source), so upstream findings halt this skill rather than continuing with stale assumptions.
+Apply the **stop on strong upstream dependency** policy at `../../../dev/wiki-authorship.md` §Cross-stage feedback — roadmap depends directly on architecture (component → task split) and UCs (UC → AC source), so upstream findings halt this skill rather than continuing with stale assumptions.
 
 - **Roadmap-level fix** — edit `roadmap.md` or the affected task file; edit the review item's `status:` to `resolved` directly (the PostToolUse cascade hook refreshes `updated:`); add a `## Change Logs` bullet on `roadmap.md` if it changed.
 - **Arch / usecase finding** — **stop**. Leave the review item `status: open` with its existing `target:` pointing at `architecture` or `usecase/...`. Tell the user to run `/a4:arch` or `/a4:usecase iterate` and resume `/a4:roadmap iterate` afterwards.

@@ -25,7 +25,7 @@ Present this draft to the user and iterate until the substance is right. One que
 
 ## Step 2: Compose the task body
 
-Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/references/research-authoring.md` §Body shape:
+Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md` §Body shape:
 
 - `## Context` (required) — 1–3 sentences naming the question.
 - `## Options` (required for `mode: comparative`) — one H3 per option name. Each subsection: Sources consulted / Key findings / Raw excerpts (optionally folded in `<details>`).
@@ -43,7 +43,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/research/<id>-<slug>.md`.
 
-Frontmatter shape, allowed initial statuses, and the `complete` preflight (body-section presence) are defined in `${CLAUDE_PLUGIN_ROOT}/references/research-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses, and the `complete` preflight (body-section presence) are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
 Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 

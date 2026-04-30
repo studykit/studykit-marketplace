@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Architecture Designer
 
-> **Authoring contracts:** the contract for `a4/architecture.md` lives in `${CLAUDE_PLUGIN_ROOT}/references/architecture-authoring.md`. Cross-edit allowances when this skill touches other wikis: `${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md` §Authorship (limited in-situ for non-structural concept work), `${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md` §Authorship (system-actor add only), `${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md` §Authorship (footnote annotations only). This skill orchestrates — frontmatter shape, body sections, "Don't" lists, schema rules are defined in those references.
+> **Authoring contracts:** the contract for `a4/architecture.md` lives in `${CLAUDE_PLUGIN_ROOT}/authoring/architecture-authoring.md`. Cross-edit allowances when this skill touches other wikis: `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship (limited in-situ for non-structural concept work), `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md` §Authorship (system-actor add only), `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` §Authorship (footnote annotations only). This skill orchestrates — frontmatter shape, body sections, "Don't" lists, schema rules are defined in those references.
 
 Takes the use-case set in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`, and designs the system architecture through collaborative dialogue. Writes the result to `a4/architecture.md` as a single wiki page.
 
@@ -42,7 +42,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Design** — `a4/architecture.md` does not exist. Start from Phase 1 and follow the guided sequence below.
-- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
+- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
 
 ## Session Task List
 
@@ -71,16 +71,16 @@ Ground the architecture in reality — project structure, naming conventions, de
 
 ### Phases
 
-In **First Design**, run Phases 1 → 4 in order. In **Iteration**, start wherever the user wants. The user controls transitions. Phase-transition fill-in convention for sections is in `${CLAUDE_PLUGIN_ROOT}/references/architecture-authoring.md` §Body shape.
+In **First Design**, run Phases 1 → 4 in order. In **Iteration**, start wherever the user wants. The user controls transitions. Phase-transition fill-in convention for sections is in `${CLAUDE_PLUGIN_ROOT}/authoring/architecture-authoring.md` §Body shape.
 
 | Phase | Focus | Procedure |
 |-------|-------|-----------|
 | 1 | Technology Stack | `references/phase-tech-stack.md` |
 | 2 | External Dependencies | `references/phase-external-deps.md` |
-| 3 | Component Design | `references/architecture-guide.md` |
+| 3 | Component Design | `authoring/architecture-guide.md` |
 | 4 | Test Strategy | `references/test-strategy-guide.md` |
 
-Component names, schema fields, and contract parameters must use `a4/domain.md` terminology. Domain Model modifications during arch work follow the in-situ scope in `${CLAUDE_PLUGIN_ROOT}/references/domain-authoring.md` §Authorship.
+Component names, schema fields, and contract parameters must use `a4/domain.md` terminology. Domain Model modifications during arch work follow the in-situ scope in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship.
 
 ### Technical Claim Verification
 

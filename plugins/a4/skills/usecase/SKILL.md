@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Use Case Discovery Facilitator
 
-> **Authoring contracts:** UC files — `${CLAUDE_PLUGIN_ROOT}/references/usecase-authoring.md`. Wiki pages this skill primary-authors: `${CLAUDE_PLUGIN_ROOT}/references/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/references/nfr-authoring.md`. Review-item shape: `${CLAUDE_PLUGIN_ROOT}/references/review-authoring.md`.
+> **Authoring contracts:** UC files — `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`. Wiki pages this skill primary-authors: `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md`. Review-item shape: `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`.
 
 A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. The conversation progressively produces **Use Cases** — concrete descriptions of how users interact with the system, grounded in real situations — together with the cross-cutting wiki pages that frame them (context, actors, domain, NFRs).
 
@@ -45,12 +45,12 @@ Run this **immediately before** writing a new UC, review item, etc. Ids are mono
 
 ## Body Conventions
 
-Body heading form, link form, `## Change Logs` audit trail, and the Wiki Update Protocol live in `${CLAUDE_PLUGIN_ROOT}/references/body-conventions.md`.
+Body heading form, link form, `## Change Logs` audit trail, and the Wiki Update Protocol live in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md`.
 
 ## Modes
 
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/docs/iterate-mechanics.md`.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/dev/iterate-mechanics.md`.
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 
@@ -99,13 +99,13 @@ Restate the idea back in one sentence to confirm understanding. Then immediately
 | 2 | Discovery loop (gaps + actor discovery) | `references/discovery-loop.md` |
 | 3 | Progressive UC extraction | `references/progressive-extraction.md` |
 | 3a | In-situ wiki nudge | `references/in-situ-wiki-nudge.md` |
-| 4 | UC splitting | `references/usecase-splitting.md` |
+| 4 | UC splitting | `authoring/usecase-splitting.md` |
 | 5 | Challenge mode shifts (Contrarian / Simplifier / Reframer) | `references/facilitation-techniques.md` |
-| 6 | Similar systems research (on request, after 3+ UCs) | `references/research-procedure.md` |
+| 6 | Similar systems research (on request, after 3+ UCs) | `authoring/research-procedure.md` |
 | 7 | Platform capabilities audit | `references/platform-capabilities-audit.md` |
-| 8 | UC relationship analysis (after 5+ UCs) | `references/usecase-relationships.md` |
+| 8 | UC relationship analysis (after 5+ UCs) | `authoring/usecase-relationships.md` |
 | 9 | UI screen grouping + (10) mock generation | `references/ui-screen-grouping.md` |
-| 11 | Non-functional requirements | `references/nfr-capture.md` |
+| 11 | Non-functional requirements | `authoring/nfr-capture.md` |
 
 ### Wrap Up
 

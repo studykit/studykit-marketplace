@@ -18,15 +18,17 @@ The `global/` directory manages rules, subagents, skills, hooks, and MCP configu
 
 ## Path References in Documentation
 
-Inside markdown documentation (CLAUDE.md, README.md, `plugins/a4/references/*.md`, `plugins/a4/docs/*.md`, etc.), reference plugin-internal files using **backticked relative paths** (`` `./file.md` ``, `` `../dir/file.md` ``, `` `plugins/a4/references/foo.md` ``) rather than markdown links (`[text](path)`). Reserve markdown link form for examples that demonstrate cross-reference syntax used inside `<project-root>/a4/` workspace files.
+Inside markdown documentation (CLAUDE.md, README.md, `plugins/a4/authoring/*.md`, `plugins/a4/dev/*.md`, etc.), reference plugin-internal files using **backticked relative paths** (`` `./file.md` ``, `` `../dir/file.md` ``, `` `plugins/a4/authoring/foo.md` ``) rather than markdown links (`[text](path)`). Reserve markdown link form for examples that demonstrate cross-reference syntax used inside `<project-root>/a4/` workspace files.
 
-## a4 plugin frontmatter schema
+## a4 plugin — audience routing
 
-When modifying anything under `plugins/a4/` or anything that reads/writes `<project-root>/a4/` workspace files, always read the relevant a4 frontmatter contracts first:
+The a4 plugin separates docs by audience. Pick by your task:
 
-- `plugins/a4/references/frontmatter-universals.md` — universal rules (`type:` field, ids, path-reference format, dates, status writers, structural relationship fields).
-- `plugins/a4/references/<type>-authoring.md` — per-type field table and lifecycle for the `type:` you are editing.
-- `plugins/a4/references/validator-rules.md` — schema enforcement and cross-file status consistency.
+- **Editing files inside `<project-root>/a4/**/*.md` (workspace authoring)** — read `plugins/a4/authoring/*.md`. These are the binding contracts for workspace authors. In particular, when touching frontmatter, consult:
+  - `plugins/a4/authoring/frontmatter-universals.md` — universal rules (`type:` field, ids, path-reference format, dates, status writers, structural relationship fields).
+  - `plugins/a4/authoring/<type>-authoring.md` — per-type field table and lifecycle for the `type:` you are editing.
+  - `plugins/a4/authoring/validator-rules.md` — schema enforcement and cross-file status consistency.
+- **Modifying anything inside `plugins/a4/` itself (plugin contributor work)** — additionally read `plugins/a4/dev/*.md` (hook conventions, skill modes, pipeline shapes, wiki authorship policy, iterate mechanics, cascade implementation) and `plugins/a4/CLAUDE.md` (contributor notes).
 
-Together they are the single source of truth for the a4 frontmatter contract — required fields, enum values, path-reference format, status writers, auto-maintained reverse links, and validator behavior. Do not edit a4 frontmatter, write new a4 skills/scripts, or change validators without consulting them.
+`authoring/` is the single source of truth for the a4 frontmatter contract; `dev/` is the single source of truth for plugin internals. Do not edit a4 frontmatter, write new a4 skills/scripts, or change validators without consulting `authoring/`. Do not change hook flow, skill orchestration, or cascade behavior without consulting `dev/`.
 

@@ -10,5 +10,5 @@ When **authoring or editing** `a4/context.md`, read these first.
 
 ## Required reading before authoring
 
-- `../references/context-authoring.md` — purpose, frontmatter, body shape, common mistakes, "Don't" list.
+- `../authoring/context-authoring.md` — purpose, frontmatter, body shape, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).

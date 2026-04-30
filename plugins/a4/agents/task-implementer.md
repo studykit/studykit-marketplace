@@ -48,7 +48,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
 3. **Implement** — follow the task's `## Description`, consuming / providing the Interface Contracts noted in `## Interface Contracts`. Use domain terminology from `a4/domain.md`'s `## Concepts` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `bootstrap.md`'s `## Verify` section (Verified Commands subsection). All unit tests must pass before returning success.
-6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/references/commit-message-convention.md):
+6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md):
    ```
    #<task-id> <type>(a4): <description>
    ```

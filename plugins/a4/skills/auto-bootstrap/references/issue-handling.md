@@ -1,6 +1,6 @@
 # Issue Handling (auto-bootstrap Step 5)
 
-Verification failures from Step 4 are classified, optionally researched, and emitted as review items. The skill follows the **continue + review item** policy for upstream (architecture) findings — see [`wiki-authorship.md §Cross-stage feedback`](${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md). Verified bootstrap state is independently meaningful even when an architecture choice turns out to be wrong; record what was checked, emit review items, and let the user run `/a4:arch iterate` separately.
+Verification failures from Step 4 are classified, optionally researched, and emitted as review items. The skill follows the **continue + review item** policy for upstream (architecture) findings — see [`wiki-authorship.md §Cross-stage feedback`](${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md). Verified bootstrap state is independently meaningful even when an architecture choice turns out to be wrong; record what was checked, emit review items, and let the user run `/a4:arch iterate` separately.
 
 ## Diagnose the issue
 
@@ -22,7 +22,7 @@ If the same fix fails twice, stop and emit a review item rather than retrying fu
 
 Allocate ids via `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
 
-Review body shape (per `references/review-authoring.md`) requires `## Description`; `## Log` and `## Change Logs` are optional.
+Review body shape (per `authoring/review-authoring.md`) requires `## Description`; `## Log` and `## Change Logs` are optional.
 
 ### Architecture issue
 

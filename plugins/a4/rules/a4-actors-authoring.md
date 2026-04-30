@@ -10,5 +10,5 @@ When **authoring or editing** `a4/actors.md`, read these first.
 
 ## Required reading before authoring
 
-- `../references/actors-authoring.md` — purpose, frontmatter, body shape, slug discipline, common mistakes, "Don't" list.
+- `../authoring/actors-authoring.md` — purpose, frontmatter, body shape, slug discipline, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).

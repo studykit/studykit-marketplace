@@ -6,7 +6,7 @@ Frontmatter-side rules live in `frontmatter-universals.md` (universal contract: 
 
 ## Scope
 
-Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/references/`. The binding form in the file body is the markdown heading defined below.
+Applies to every markdown file inside the `a4/` workspace. Each file declares `type:` in frontmatter; the recommended body shape per `type:` is documented in the per-type authoring contracts under `plugins/a4/authoring/`. The binding form in the file body is the markdown heading defined below.
 
 ## Section heading form
 

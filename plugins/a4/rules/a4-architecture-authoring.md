@@ -10,5 +10,5 @@ When **authoring or editing** `a4/architecture.md`, read these first.
 
 ## Required reading before authoring
 
-- `../references/architecture-authoring.md` — purpose, frontmatter contract, body shape, common mistakes, "Don't" list.
+- `../authoring/architecture-authoring.md` — purpose, frontmatter contract, body shape, common mistakes, "Don't" list.
 - `a4-workspace-policies.md` — workspace-wide policies (also auto-loaded).

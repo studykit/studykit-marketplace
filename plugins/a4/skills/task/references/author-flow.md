@@ -38,7 +38,7 @@ Empty anchors are not always a problem — small UI tweaks, single-property vali
 
 ## Step 3: Compose the task body
 
-Required and optional body sections and the AC-source convention are defined in `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md` §Body shape. Compose the section content per that contract.
+Required and optional body sections and the AC-source convention are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` §Body shape. Compose the section content per that contract.
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -50,7 +50,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/task/<id>-<slug>.md`.
 
-Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:`) are defined in `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:`) are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
 Write the file with `Write`. The initial `status:` is set by the Write itself; the cascade hook does not fire on file creation (no pre-status snapshot exists).
 

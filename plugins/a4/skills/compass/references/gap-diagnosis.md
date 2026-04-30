@@ -4,7 +4,7 @@ Trace from foundation to execution against the workspace state collected in Step
 
 ## 3.3.0 Detect shape
 
-Layer 0 and Layer 1 below are **Full / Reverse-then-forward only** — they assume a UC-driven pipeline with the canonical wiki chain. Minimal-shape and Reverse-only workspaces have legitimately empty UC sets or upstream wikis and would be mis-diagnosed by those layers. Detect shape from current state per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/docs/pipeline-shapes.md) §"Shape detection" before tracing:
+Layer 0 and Layer 1 below are **Full / Reverse-then-forward only** — they assume a UC-driven pipeline with the canonical wiki chain. Minimal-shape and Reverse-only workspaces have legitimately empty UC sets or upstream wikis and would be mis-diagnosed by those layers. Detect shape from current state per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/dev/pipeline-shapes.md) §"Shape detection" before tracing:
 
 | State | Shape | Layer 0/1 behavior |
 |---|---|---|

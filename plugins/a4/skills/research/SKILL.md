@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Research Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/references/research-authoring.md`. This skill orchestrates writing through that contract.
+> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`. This skill orchestrates writing through that contract.
 
 Writes one `a4/research/<id>-<slug>.md`. The body is the deliverable — sources consulted, findings, options.
 

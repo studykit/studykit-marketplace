@@ -17,4 +17,4 @@ the only SessionStart entry is `sweep-old-edited-a4.sh` above.
 
 Design principles — language choice, lifecycle symmetry, ordering,
 non-blocking, output channels — are documented in
-**`../docs/hook-conventions.md`**.
+**`../dev/hook-conventions.md`**.

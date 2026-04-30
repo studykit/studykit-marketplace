@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/references/task-authoring.md`. This skill orchestrates writing through that contract.
+> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`. This skill orchestrates writing through that contract.
 
 Writes one `a4/task/<id>-<slug>.md` outside the UC-batch path. The `task` family is the default issue family — Jira's "Task" issue type alongside Bug / Spike / Research. Co-exists with `/a4:roadmap` (batch UC-driven generation). Use when a spec-justified task needs implementation in a UC-less or partially-UC project, or when a new task lands after the initial roadmap was authored.
 

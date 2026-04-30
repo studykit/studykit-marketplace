@@ -15,4 +15,4 @@ bootstrap: <fresh | iterate>
 
 Never skip hooks, amend, or force-push.
 
-Commit-subject conventions for other a4 commits live in `../../../references/commit-message-convention.md`.
+Commit-subject conventions for other a4 commits live in `../../../authoring/commit-message-convention.md`.

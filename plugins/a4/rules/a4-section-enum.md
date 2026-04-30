@@ -6,7 +6,7 @@ paths: ["a4/**/*.md"]
 
 # a4 — per-type section enum
 
-Files under `<project-root>/a4/` declare `type:` in YAML frontmatter, and that value drives which body sections are expected. Each body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `## Context`, `## Specification`, `## Change Logs`) with markdown content between successive headings. See [`../references/body-conventions.md`](../references/body-conventions.md) for the full rule set, the kebab-case → Title Case mapping, blank-line discipline, and `## Change Logs` / `## Log` audit-trail conventions.
+Files under `<project-root>/a4/` declare `type:` in YAML frontmatter, and that value drives which body sections are expected. Each body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `## Context`, `## Specification`, `## Change Logs`) with markdown content between successive headings. See [`../authoring/body-conventions.md`](../authoring/body-conventions.md) for the full rule set, the kebab-case → Title Case mapping, blank-line discipline, and `## Change Logs` / `## Log` audit-trail conventions.
 
 **Folder ↔ type:**
 
@@ -35,4 +35,4 @@ After a4 v12.0.0 the four task issue families (`task` / `bug` / `spike` / `resea
 
 ## Maintenance
 
-Body shape is documented in `../references/<type>-authoring.md` — the binding contract for authors. The bullet list above is hand-maintained — keep it in sync with the per-type authoring files.
+Body shape is documented in `../authoring/<type>-authoring.md` — the binding contract for authors. The bullet list above is hand-maintained — keep it in sync with the per-type authoring files.

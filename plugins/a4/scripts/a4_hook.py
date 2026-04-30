@@ -34,7 +34,7 @@ reporting — that sweep moved to manual invocation via `/a4:validate`
 
 Conventions (state classification, lifecycle symmetry, language/invocation,
 in-event ordering, non-blocking policy, output channel usage) live in
-`plugins/a4/docs/hook-conventions.md`.
+`plugins/a4/dev/hook-conventions.md`.
 
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
@@ -84,7 +84,7 @@ def main() -> int:
 # Session-scoped state under `.claude/tmp/a4-edited/a4-prestatus-<sid>.json`:
 # a `{abs_path: pre_status}` map populated by `pre-edit` (PreToolUse) and
 # consumed by `post-edit` (PostToolUse) to detect `status:` transitions.
-# Per `docs/hook-conventions.md` §2 Rule A, paired cleanup runs at
+# Per `dev/hook-conventions.md` §2 Rule A, paired cleanup runs at
 # SessionEnd (`hooks/cleanup-edited-a4.sh`) with a SessionStart safety-net
 # sweep (`hooks/sweep-old-edited-a4.sh`) for crashed sessions.
 
@@ -357,7 +357,7 @@ def _run_status_change_cascade(
 def _emit_cascade_context(report, file_path: str, project_dir: str) -> None:
     """Surface cascade results as additionalContext + systemMessage.
 
-    Per `docs/hook-conventions.md` §6: "both channels together" when a
+    Per `dev/hook-conventions.md` §6: "both channels together" when a
     hook affects workspace state the user should be aware of — cascades
     rewrite related files, so a short systemMessage summary plus a
     per-file additionalContext detail is the right shape.
@@ -605,8 +605,8 @@ def _stop() -> int:
     out_lines.append("")
     out_lines.append(
         "Fix the issues above before stopping. "
-        "See plugins/a4/references/validator-rules.md (enforcement rules) "
-        "and plugins/a4/references/frontmatter-universals.md "
+        "See plugins/a4/authoring/validator-rules.md (enforcement rules) "
+        "and plugins/a4/authoring/frontmatter-universals.md "
         "(universal frontmatter contract)."
     )
     out_lines.append(

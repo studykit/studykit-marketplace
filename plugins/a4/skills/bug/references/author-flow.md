@@ -34,7 +34,7 @@ If neither anchor is appropriate, leave both empty — the AC source is the regr
 
 ## Step 3: Compose the task body
 
-Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md` §Body shape. The required `## Unit Test Strategy` must include a regression scenario that fails before the fix and passes after — closing a bug without that test is the most common reason the same bug returns.
+Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md` §Body shape. The required `## Unit Test Strategy` must include a regression scenario that fails before the fix and passes after — closing a bug without that test is the most common reason the same bug returns.
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -46,7 +46,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/bug/<id>-<slug>.md`.
 
-Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:`) are defined in `${CLAUDE_PLUGIN_ROOT}/references/bug-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses (`open | pending | complete`), and the `complete` preflight (path-existence check on `artifacts:`) are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
 
 Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 

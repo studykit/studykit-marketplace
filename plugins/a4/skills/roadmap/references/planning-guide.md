@@ -58,7 +58,7 @@ Merge when a unit:
 
 ## Launch & Verify
 
-`bootstrap.md` is the single source of truth for Launch & Verify (build / launch / test commands, smoke scenario, test isolation flags). Per [`docs/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/docs/wiki-authorship.md), `roadmap.md` does not author L&V content — it links to bootstrap with a one-line pointer. Roadmap planning therefore does **not** auto-detect app type, build commands, smoke scenarios, or test isolation; that work happened in `/a4:auto-bootstrap` and was already verified there.
+`bootstrap.md` is the single source of truth for Launch & Verify (build / launch / test commands, smoke scenario, test isolation flags). Per [`dev/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/dev/wiki-authorship.md), `roadmap.md` does not author L&V content — it links to bootstrap with a one-line pointer. Roadmap planning therefore does **not** auto-detect app type, build commands, smoke scenarios, or test isolation; that work happened in `/a4:auto-bootstrap` and was already verified there.
 
 If `bootstrap.md` is absent or out of date, stop and re-run `/a4:auto-bootstrap` rather than authoring or auto-detecting commands here. The drift detector and `roadmap-reviewer` flag authored L&V content on `roadmap.md` as a `CONFLICT` against the workspace authorship policy.
 
