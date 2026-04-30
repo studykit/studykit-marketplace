@@ -37,7 +37,10 @@ If you find yourself duplicating substance across `rules/` and `references/`, yo
 
 ## Conventions
 
-- **Path references inside this plugin use relative paths**, not `${CLAUDE_PLUGIN_ROOT}` (see commits `7abaaeac`, `350c2a6a`). Inside `rules/` use `../references/<file>.md`; inside `skills/<name>/` use `../../references/<file>.md` for cross-cutting contracts and `references/<file>.md` for skill-local procedures.
+- **Path references inside this plugin** — choose the form by load context:
+  - `rules/*.md` and `references/*.md` MUST use relative paths. These files are read in contexts where `${CLAUDE_PLUGIN_ROOT}` is not expanded, so env-var paths resolve to literal strings and break (see commits `350c2a6a`, `7abaaeae`). Inside `rules/` use `../references/<file>.md`; inside `references/` use `./<file>.md` for siblings and `../<dir>/<file>.md` for other plugin-internal targets.
+  - `skills/<name>/**` and `agents/*.md` use `${CLAUDE_PLUGIN_ROOT}/<plugin-internal-path>` for both markdown citations and shell snippets. The env var is expanded at skill-invocation / agent-spawn time. Depth-independence and grep uniformity are the rationale (see commit `a665a92d`).
+  - Shell snippets (`uv run`, `bash` code blocks) anywhere ALWAYS use `${CLAUDE_PLUGIN_ROOT}` — they execute under the user's CWD, so relative paths from the file's location would break.
 - **`rules/*.md` carries `paths:` frontmatter** that targets `a4/**/*.md` (the user's workspace), not paths inside this plugin. The rule fires when the end user opens an `a4/<type>/*.md` file.
 - **Ids are globally monotonic.** Allocate via `scripts/allocate_id.py`; never reuse, never re-pack.
 - **Plugin version lives in `.claude-plugin/marketplace.json`**, not in `plugin.json`. Bump the entry when adding a feature (per the project-root [`CLAUDE.md`](../../CLAUDE.md)).
