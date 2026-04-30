@@ -332,8 +332,11 @@ def _apply_supersedes_chain(
     Each ``supersedes:`` entry is resolved through ``index`` so all
     accepted ref forms (``#<id>``, ``<family>/<id>``,
     ``<family>/<id>-<slug>``, ``<id>-<slug>``) reach the same file. An
-    entry the index cannot resolve falls back to path-form parsing so
-    cross-family-by-prefix skips and missing-file errors stay visible.
+    entry the index cannot resolve splits on ``index.is_id_bearing``:
+    id-bearing forms (``#<id>``, ``<family>/<id>``, etc.) become a
+    missing-target error directly so the diagnostic is sharp; everything
+    else falls back to path-form parsing so cross-family-by-prefix skips
+    and missing-file errors stay visible.
     """
     src_path = a4_dir / rel_path
     fm, _, _ = _parse(src_path)
@@ -360,6 +363,12 @@ def _apply_supersedes_chain(
             target_path = resolved.path
             canon = resolved.canonical
         else:
+            if index.is_id_bearing(entry):
+                report.errors.append(
+                    f"supersedes target missing: {entry!r} (no file with "
+                    "this id in workspace)"
+                )
+                continue
             norm = normalize_ref(entry)
             if norm is None:
                 continue
