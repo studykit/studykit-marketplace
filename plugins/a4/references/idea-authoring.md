@@ -91,7 +91,7 @@ The idea body is **largely free**. Quick-capture ideas are typically empty or ca
 - `## Notes` — short prose paragraph capturing the substance of the idea. Default home for any text the idea carries.
 - `## Why This Matters` — motivation paragraph for ideas worth surfacing rather than just noting.
 - `## Change Logs` — append-only audit trail when the body is materially edited post-create (rare; usually the original capture is the final word).
-- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). Append a bullet by hand if you want the transition recorded in the body.
+- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
 
 Unknown H2 headings are tolerated.
 

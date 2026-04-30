@@ -83,15 +83,13 @@ When the chosen initial status is `complete`, the fix is asserted to already be 
 
 1. For each path in `artifacts:`, confirm it exists in the working tree. If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
 2. Required sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
-3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (the section is optional and hand-maintained):
+3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (see `./body-conventions.md#log`):
 
    ```markdown
    ## Log
 
    - <YYYY-MM-DD> created at status: complete (post-hoc documentation; fix shipped prior to task authorship)
    ```
-
-   The PostToolUse cascade hook does not touch `## Log`; the section is purely an author convenience.
 
 ## Body shape
 
@@ -108,7 +106,7 @@ When the chosen initial status is `complete`, the fix is asserted to already be 
 
 - `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`).
 - `## Change Logs` — append-only audit trail when the task body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `## Log` — optional, hand-maintained status-transition narrative (`YYYY-MM-DD — <from> → <to> — <reason>`). The PostToolUse cascade hook refreshes `updated:` and flips related files but does **not** touch `## Log`; append a bullet by hand if you want the transition recorded in the body.
+- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.
