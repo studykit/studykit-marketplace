@@ -57,6 +57,7 @@ import sys
 from dataclasses import asdict, dataclass, field
 from datetime import date
 from pathlib import Path
+from typing import Any, Callable
 
 from common import iter_issue_files, normalize_ref
 from markdown import parse
@@ -271,153 +272,98 @@ def _apply_status_change(
     write_file(path, new_fm, body)
 
 
-def _cascade_uc_revising(
+SkipDecision = tuple[str, str | None] | None
+
+
+def _apply_reverse_cascade(
     a4_dir: Path,
-    uc_rel: str,
+    targets: list[Path],
+    target_kind: str,
+    skip_when: Callable[[Any], SkipDecision],
+    to_status: str,
+    reason_text: str,
     today: str,
     dry_run: bool,
     report: Report,
 ) -> None:
-    """UC implementing → revising: reset related tasks to pending."""
-    uc_ref = uc_rel.removesuffix(".md")
-    for task_path in find_tasks_implementing(a4_dir, uc_ref):
-        fm, _, _ = _parse(task_path)
+    """Reverse-link cascade engine.
+
+    For each target path, parse the current ``status:`` and consult
+    ``skip_when``: a tuple ``(reason, detail|None)`` records a skip and
+    moves on; ``None`` triggers a status flip to ``to_status`` with
+    ``reason_text`` and a ``Change`` row in the report.
+
+    ``target_kind`` ("task" or "review") prefixes the path label in
+    skipped/cascade rows. Unreadable frontmatter is recorded as an error
+    on the report rather than raising.
+    """
+    for path in targets:
+        fm, _, _ = _parse(path)
         if fm is None:
-            report.errors.append(f"{task_path}: unreadable frontmatter")
+            report.errors.append(f"{path}: unreadable frontmatter")
             continue
         current = fm.get("status")
-        if current not in TASK_RESET_ON_REVISING:
-            report.skipped.append(
-                {
-                    "path": f"task/{task_path.stem}",
-                    "reason": "task-not-in-reset-state",
-                    "detail": f"status={current!r}",
-                }
-            )
+        skip = skip_when(current)
+        if skip is not None:
+            reason, detail = skip
+            entry: dict[str, Any] = {
+                "path": f"{target_kind}/{path.stem}",
+                "reason": reason,
+            }
+            if detail is not None:
+                entry["detail"] = detail
+            report.skipped.append(entry)
             continue
-        rel_str = f"task/{task_path.stem}.md"
         _apply_status_change(
-            task_path,
-            str(current),
-            TASK_RESET_TARGET,
-            f"revising cascade: {uc_ref}",
-            dry_run,
-            today,
+            path, str(current), to_status, reason_text, dry_run, today
         )
         report.cascades.append(
             Change(
-                path=rel_str,
+                path=f"{target_kind}/{path.stem}.md",
                 from_status=str(current),
-                to_status=TASK_RESET_TARGET,
-                reason=f"revising cascade: {uc_ref}",
+                to_status=to_status,
+                reason=reason_text,
             )
         )
 
 
-def _cascade_uc_discarded(
+def _apply_supersedes_chain(
     a4_dir: Path,
-    uc_rel: str,
+    family: str,
+    rel_path: str,
     today: str,
     dry_run: bool,
     report: Report,
 ) -> None:
-    """UC → discarded: discard related tasks and open review items."""
-    uc_ref = uc_rel.removesuffix(".md")
-    for task_path in find_tasks_implementing(a4_dir, uc_ref):
-        fm, _, _ = _parse(task_path)
-        if fm is None:
-            report.errors.append(f"{task_path}: unreadable frontmatter")
-            continue
-        current = fm.get("status")
-        if current == "discarded":
-            report.skipped.append(
-                {
-                    "path": f"task/{task_path.stem}",
-                    "reason": "already-discarded",
-                }
-            )
-            continue
-        rel_str = f"task/{task_path.stem}.md"
-        _apply_status_change(
-            task_path,
-            str(current),
-            "discarded",
-            f"cascade: {uc_ref} discarded",
-            dry_run,
-            today,
-        )
-        report.cascades.append(
-            Change(
-                path=rel_str,
-                from_status=str(current),
-                to_status="discarded",
-                reason=f"cascade: {uc_ref} discarded",
-            )
-        )
-    for review_path in find_reviews_targeting(a4_dir, uc_ref):
-        fm, _, _ = _parse(review_path)
-        if fm is None:
-            report.errors.append(f"{review_path}: unreadable frontmatter")
-            continue
-        current = fm.get("status")
-        if current in REVIEW_TERMINAL:
-            report.skipped.append(
-                {
-                    "path": f"review/{review_path.stem}",
-                    "reason": "review-terminal",
-                    "detail": f"status={current!r}",
-                }
-            )
-            continue
-        rel_str = f"review/{review_path.stem}.md"
-        _apply_status_change(
-            review_path,
-            str(current),
-            "discarded",
-            f"cascade: target {uc_ref} discarded",
-            dry_run,
-            today,
-        )
-        report.cascades.append(
-            Change(
-                path=rel_str,
-                from_status=str(current),
-                to_status="discarded",
-                reason=f"cascade: target {uc_ref} discarded",
-            )
-        )
+    """Supersedes-chain cascade engine for usecase / spec.
 
-
-def _cascade_uc_shipped(
-    a4_dir: Path,
-    uc_rel: str,
-    today: str,
-    dry_run: bool,
-    report: Report,
-    from_status: str,
-) -> None:
-    """UC → shipped: flip supersedes targets (shipped → superseded)."""
-    if from_status != "implementing":
-        return
-    uc_path = a4_dir / uc_rel
-    fm, _, _ = _parse(uc_path)
+    Reads ``supersedes:`` on the source file and flips each same-family
+    target to ``superseded`` if its current status is in
+    ``SUPERSEDABLE_FROM_STATUSES[family]``. Cross-family entries, missing
+    files, already-superseded targets, and targets in non-supersedable
+    statuses are surfaced as skips or errors. Idempotent — safe to call
+    twice.
+    """
+    src_path = a4_dir / rel_path
+    fm, _, _ = _parse(src_path)
     if fm is None:
         return
     supersedes = fm.get("supersedes")
     if not isinstance(supersedes, list):
         return
-    uc_ref = uc_rel.removesuffix(".md")
+    src_ref = rel_path.removesuffix(".md")
+    family_prefix = f"{family}/"
+    supersedable_from = SUPERSEDABLE_FROM_STATUSES[family]
     for entry in supersedes:
         norm = normalize_ref(entry)
         if norm is None:
             continue
-        # Same-family only.
-        if not norm.startswith("usecase/"):
+        if not norm.startswith(family_prefix):
             report.skipped.append(
                 {
                     "path": norm,
                     "reason": "cross-family-supersedes",
-                    "detail": f"ignored non-usecase target in {uc_ref}",
+                    "detail": f"ignored non-{family} target in {src_ref}",
                 }
             )
             continue
@@ -437,84 +383,8 @@ def _cascade_uc_shipped(
                 {"path": f"{norm}.md", "reason": "already-superseded"}
             )
             continue
-        if tstatus not in SUPERSEDABLE_FROM_STATUSES["usecase"]:
-            expected = sorted(SUPERSEDABLE_FROM_STATUSES["usecase"])
-            report.skipped.append(
-                {
-                    "path": f"{norm}.md",
-                    "reason": "not-terminal-active",
-                    "detail": f"status={tstatus!r}, expected one of {expected}",
-                }
-            )
-            continue
-        _apply_status_change(
-            target_path,
-            str(tstatus),
-            "superseded",
-            f"superseded by {uc_ref}",
-            dry_run,
-            today,
-        )
-        report.cascades.append(
-            Change(
-                path=f"{norm}.md",
-                from_status=str(tstatus),
-                to_status="superseded",
-                reason=f"superseded by {uc_ref}",
-            )
-        )
-
-
-def _cascade_spec_active(
-    a4_dir: Path,
-    spec_rel: str,
-    today: str,
-    dry_run: bool,
-    report: Report,
-    from_status: str,
-) -> None:
-    """Spec → active: flip supersedes targets ({active|deprecated} → superseded)."""
-    if from_status != "draft":
-        return
-    spec_path = a4_dir / spec_rel
-    fm, _, _ = _parse(spec_path)
-    if fm is None:
-        return
-    supersedes = fm.get("supersedes")
-    if not isinstance(supersedes, list):
-        return
-    spec_ref = spec_rel.removesuffix(".md")
-    for entry in supersedes:
-        norm = normalize_ref(entry)
-        if norm is None:
-            continue
-        if not norm.startswith("spec/"):
-            report.skipped.append(
-                {
-                    "path": norm,
-                    "reason": "cross-family-supersedes",
-                    "detail": f"ignored non-spec target in {spec_ref}",
-                }
-            )
-            continue
-        target_path = a4_dir / f"{norm}.md"
-        if not target_path.is_file():
-            report.errors.append(f"supersedes target missing: {norm}.md")
-            continue
-        tfm, _, _ = _parse(target_path)
-        if tfm is None:
-            report.errors.append(
-                f"{target_path}: unreadable frontmatter (supersedes target)"
-            )
-            continue
-        tstatus = tfm.get("status")
-        if tstatus == "superseded":
-            report.skipped.append(
-                {"path": f"{norm}.md", "reason": "already-superseded"}
-            )
-            continue
-        if tstatus not in SUPERSEDABLE_FROM_STATUSES["spec"]:
-            expected = sorted(SUPERSEDABLE_FROM_STATUSES["spec"])
+        if tstatus not in supersedable_from:
+            expected = sorted(supersedable_from)
             report.skipped.append(
                 {
                     "path": f"{norm}.md",
@@ -527,7 +397,7 @@ def _cascade_spec_active(
             target_path,
             str(tstatus),
             "superseded",
-            f"superseded by {spec_ref}",
+            f"superseded by {src_ref}",
             dry_run,
             today,
         )
@@ -536,9 +406,75 @@ def _cascade_spec_active(
                 path=f"{norm}.md",
                 from_status=str(tstatus),
                 to_status="superseded",
-                reason=f"superseded by {spec_ref}",
+                reason=f"superseded by {src_ref}",
             )
         )
+
+
+def _run_cascade(
+    cascade_name: str,
+    a4_dir: Path,
+    family: str,
+    rel_path: str,
+    today: str,
+    dry_run: bool,
+    report: Report,
+) -> None:
+    """Dispatch cascade by name. Drives both engines off ``CASCADE_TRIGGERS``."""
+    if cascade_name == "uc_revising":
+        uc_ref = rel_path.removesuffix(".md")
+        _apply_reverse_cascade(
+            a4_dir,
+            find_tasks_implementing(a4_dir, uc_ref),
+            target_kind="task",
+            skip_when=lambda s: (
+                None
+                if s in TASK_RESET_ON_REVISING
+                else ("task-not-in-reset-state", f"status={s!r}")
+            ),
+            to_status=TASK_RESET_TARGET,
+            reason_text=f"revising cascade: {uc_ref}",
+            today=today,
+            dry_run=dry_run,
+            report=report,
+        )
+        return
+    if cascade_name == "uc_discarded":
+        uc_ref = rel_path.removesuffix(".md")
+        _apply_reverse_cascade(
+            a4_dir,
+            find_tasks_implementing(a4_dir, uc_ref),
+            target_kind="task",
+            skip_when=lambda s: (
+                ("already-discarded", None) if s == "discarded" else None
+            ),
+            to_status="discarded",
+            reason_text=f"cascade: {uc_ref} discarded",
+            today=today,
+            dry_run=dry_run,
+            report=report,
+        )
+        _apply_reverse_cascade(
+            a4_dir,
+            find_reviews_targeting(a4_dir, uc_ref),
+            target_kind="review",
+            skip_when=lambda s: (
+                ("review-terminal", f"status={s!r}")
+                if s in REVIEW_TERMINAL
+                else None
+            ),
+            to_status="discarded",
+            reason_text=f"cascade: target {uc_ref} discarded",
+            today=today,
+            dry_run=dry_run,
+            report=report,
+        )
+        return
+    if cascade_name in ("uc_supersedes_chain", "spec_supersedes_chain"):
+        _apply_supersedes_chain(
+            a4_dir, family, rel_path, today, dry_run, report
+        )
+        return
 
 
 def transition(
@@ -634,14 +570,10 @@ def transition(
     )
 
     cascade_name = cascade_for(family, current, new_status)
-    if cascade_name == "uc_revising":
-        _cascade_uc_revising(a4_dir, rel_path, today, dry_run, report)
-    elif cascade_name == "uc_discarded":
-        _cascade_uc_discarded(a4_dir, rel_path, today, dry_run, report)
-    elif cascade_name == "uc_supersedes_chain":
-        _cascade_uc_shipped(a4_dir, rel_path, today, dry_run, report, current)
-    elif cascade_name == "spec_supersedes_chain":
-        _cascade_spec_active(a4_dir, rel_path, today, dry_run, report, current)
+    if cascade_name is not None:
+        _run_cascade(
+            cascade_name, a4_dir, family, rel_path, today, dry_run, report
+        )
 
     report.ok = not report.errors
     return report
@@ -670,55 +602,32 @@ def sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     uc_trigger = SUPERSEDES_TRIGGER_STATUS["usecase"]
     spec_trigger = SUPERSEDES_TRIGGER_STATUS["spec"]
 
-    for p in iter_issue_files(a4_dir, "usecase"):
-        fm, _, _ = _parse(p)
-        if fm is None:
-            continue
-        if fm.get("status") != uc_trigger:
-            continue
-        supersedes = fm.get("supersedes")
-        if not isinstance(supersedes, list) or not supersedes:
-            continue
-        rel = f"usecase/{p.name}"
-        report = Report(
-            a4_dir=str(a4_dir),
-            file=rel,
-            family="usecase",
-            current_status=uc_trigger,
-            target_status=uc_trigger,
-            dry_run=dry_run,
-        )
-        _cascade_uc_shipped(
-            a4_dir, rel, today, dry_run, report, from_status="implementing"
-        )
-        report.ok = not report.errors
-        if report.cascades or report.errors:
-            reports.append(report)
-
-    for p in iter_issue_files(a4_dir, "spec"):
-        fm, _, _ = _parse(p)
-        if fm is None:
-            continue
-        if fm.get("status") != spec_trigger:
-            continue
-        supersedes = fm.get("supersedes")
-        if not isinstance(supersedes, list) or not supersedes:
-            continue
-        rel = f"spec/{p.name}"
-        report = Report(
-            a4_dir=str(a4_dir),
-            file=rel,
-            family="spec",
-            current_status=spec_trigger,
-            target_status=spec_trigger,
-            dry_run=dry_run,
-        )
-        _cascade_spec_active(
-            a4_dir, rel, today, dry_run, report, from_status="draft"
-        )
-        report.ok = not report.errors
-        if report.cascades or report.errors:
-            reports.append(report)
+    for family, trigger in (
+        ("usecase", uc_trigger),
+        ("spec", spec_trigger),
+    ):
+        for p in iter_issue_files(a4_dir, family):
+            fm, _, _ = _parse(p)
+            if fm is None:
+                continue
+            if fm.get("status") != trigger:
+                continue
+            supersedes = fm.get("supersedes")
+            if not isinstance(supersedes, list) or not supersedes:
+                continue
+            rel = f"{family}/{p.name}"
+            report = Report(
+                a4_dir=str(a4_dir),
+                file=rel,
+                family=family,
+                current_status=trigger,
+                target_status=trigger,
+                dry_run=dry_run,
+            )
+            _apply_supersedes_chain(a4_dir, family, rel, today, dry_run, report)
+            report.ok = not report.errors
+            if report.cascades or report.errors:
+                reports.append(report)
 
     return reports
 
