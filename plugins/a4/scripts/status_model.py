@@ -2,10 +2,12 @@
 
 Defines per-family status enums, allowed transitions, terminal /
 in-progress / active classifications, kind enums, cascade-target data,
-and a small predicate API for legality checks. Imported by:
+the cascade trigger map, and a small predicate API for legality checks.
+Imported by:
 
   - transition_status.py        — allowed transitions, family states,
-                                  cascade-target data, legality predicates
+                                  cascade-target data, cascade trigger
+                                  map, legality predicates
   - markdown_validator.frontmatter         — enum membership per schema
   - markdown_validator.transitions         — legality predicates
   - markdown_validator.status_consistency  — supersedes trigger map,
@@ -180,6 +182,33 @@ REVIEW_TERMINAL: frozenset[str] = frozenset({"resolved", "discarded"})
 
 
 # ---------------------------------------------------------------------------
+# Cascade trigger map
+# ---------------------------------------------------------------------------
+#
+# Which (family, from_status, to_status) primary transitions trigger a
+# cross-file cascade, and a stable name for the cascade. Keyed by
+# (family, from_status_or_None, to_status); ``None`` for from_status
+# means "any legal source" — useful for transitions whose cascade fires
+# regardless of where the file came from (e.g., UC → discarded).
+#
+# Lookup order in ``cascade_for``: the (family, from, to) entry wins
+# over the (family, None, to) entry, so callers can override a generic
+# rule with a specific one. Returns ``None`` when no cascade applies.
+#
+# Authoritative consumer: ``transition_status.transition()`` dispatches
+# off these names. ``markdown_validator.status_consistency`` checks the
+# observed reverse drift but does not consume this map directly — the
+# check direction is opposite to the dispatch direction.
+
+CASCADE_TRIGGERS: dict[tuple[str, str | None, str], str] = {
+    ("usecase", "implementing", "revising"): "uc_revising",
+    ("usecase", None, "discarded"): "uc_discarded",
+    ("usecase", None, "shipped"): "uc_supersedes_chain",
+    ("spec", None, "active"): "spec_supersedes_chain",
+}
+
+
+# ---------------------------------------------------------------------------
 # Predicates
 # ---------------------------------------------------------------------------
 
@@ -199,3 +228,15 @@ def legal_targets_from(family: str, from_status: str) -> frozenset[str]:
 def is_terminal(family: str, status: str) -> bool:
     """True iff ``status`` is in the family's terminal set."""
     return status in TERMINAL_STATUSES.get(family, frozenset())
+
+
+def cascade_for(family: str, from_status: str, to_status: str) -> str | None:
+    """Cascade name for a primary transition, or ``None`` if none applies.
+
+    Specific (family, from, to) entries take precedence over generic
+    (family, None, to) wildcards.
+    """
+    specific = CASCADE_TRIGGERS.get((family, from_status, to_status))
+    if specific is not None:
+        return specific
+    return CASCADE_TRIGGERS.get((family, None, to_status))

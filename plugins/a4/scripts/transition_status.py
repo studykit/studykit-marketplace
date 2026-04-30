@@ -68,6 +68,7 @@ from status_model import (
     SUPERSEDES_TRIGGER_STATUS,
     TASK_RESET_ON_REVISING,
     TASK_RESET_TARGET,
+    cascade_for,
     is_transition_legal,
     legal_targets_from,
 )
@@ -705,20 +706,15 @@ def transition(
         reason=reason or "",
     )
 
-    if family == "usecase":
-        if current == "implementing" and new_status == "revising":
-            _cascade_uc_revising(a4_dir, rel_path, today, dry_run, report)
-        elif new_status == "discarded":
-            _cascade_uc_discarded(a4_dir, rel_path, today, dry_run, report)
-        elif new_status == "shipped":
-            _cascade_uc_shipped(
-                a4_dir, rel_path, today, dry_run, report, current
-            )
-    elif family == "spec":
-        if new_status == "active":
-            _cascade_spec_active(
-                a4_dir, rel_path, today, dry_run, report, current
-            )
+    cascade_name = cascade_for(family, current, new_status)
+    if cascade_name == "uc_revising":
+        _cascade_uc_revising(a4_dir, rel_path, today, dry_run, report)
+    elif cascade_name == "uc_discarded":
+        _cascade_uc_discarded(a4_dir, rel_path, today, dry_run, report)
+    elif cascade_name == "uc_supersedes_chain":
+        _cascade_uc_shipped(a4_dir, rel_path, today, dry_run, report, current)
+    elif cascade_name == "spec_supersedes_chain":
+        _cascade_spec_active(a4_dir, rel_path, today, dry_run, report, current)
 
     report.ok = not report.errors
     return report
