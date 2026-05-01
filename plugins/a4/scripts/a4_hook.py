@@ -250,7 +250,6 @@ _WIKI_BODY_TYPES = frozenset(
         "context",
         "domain",
         "nfr",
-        "roadmap",
     }
 )
 

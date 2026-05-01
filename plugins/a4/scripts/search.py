@@ -66,7 +66,6 @@ WIKI_KINDS_TUPLE: tuple[str, ...] = (
     "architecture",
     "actors",
     "nfr",
-    "roadmap",
     "bootstrap",
 )
 

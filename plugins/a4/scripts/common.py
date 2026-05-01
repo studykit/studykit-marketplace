@@ -15,7 +15,7 @@ from typing import Any
 from markdown import read_fm
 
 WIKI_TYPES = frozenset(
-    {"context", "domain", "architecture", "actors", "nfr", "roadmap", "bootstrap"}
+    {"context", "domain", "architecture", "actors", "nfr", "bootstrap"}
 )
 
 # Top-level issue folders under `<a4-dir>/`. a4 v12.0.0 split the former

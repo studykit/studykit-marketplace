@@ -23,7 +23,7 @@ Unknown H2 headings are tolerated.
 
 ### Why `## Verify` lives only here
 
-`## Verify` is the single executable contract that drives implementation verification. Duplicating it into `architecture.md` (test strategy section) or `roadmap.md` would create drift. Architecture's `## Test Strategy` describes the **strategy** (unit / integration / e2e split, isolation philosophy); bootstrap's `## Verify` records the **executable contract** (the actual commands). The two are complementary.
+`## Verify` is the single executable contract that drives implementation verification. Duplicating it into `architecture.md` (test strategy section) would create drift. Architecture's `## Test Strategy` describes the **strategy** (unit / integration / e2e split, isolation philosophy); bootstrap's `## Verify` records the **executable contract** (the actual commands). The two are complementary.
 
 ### Body-link form
 
@@ -40,7 +40,7 @@ Most bullets that land on this page cite a `target: architecture` review item th
 ## Don't
 
 - **Don't write commands that have not been verified.** Bootstrap records what *succeeded*; speculative commands belong in a spec or research artifact, not here.
-- **Don't duplicate `## Verify` content into `architecture.md` or `roadmap.md`.** They reference, they do not duplicate.
+- **Don't duplicate `## Verify` content into `architecture.md`.** It references, it does not duplicate.
 - **Don't write architecture rationale here.** The why behind the stack lives in `architecture.md` and the spec(s) that shaped it. Bootstrap records the *how to run it*.
 - **Don't write task-level information here.** Per-task verification belongs in the task's `## Unit Test Strategy` section.
 - **Don't append `## Change Logs` bullets without a markdown link.**

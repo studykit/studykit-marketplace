@@ -43,6 +43,6 @@ The rule is symmetric for `bug`: a regression report without a reproducible fail
 
 ## Out of scope
 
-- Wiki authoring (`actors`, `architecture`, `bootstrap`, `context`, `domain`, `nfr`, `roadmap`) — wikis are not implementation handoffs; the evidence-readiness lens does not apply.
+- Wiki authoring (`actors`, `architecture`, `bootstrap`, `context`, `domain`, `nfr`) — wikis are not implementation handoffs; the evidence-readiness lens does not apply.
 - `usecase`, `spec`, `umbrella`, `idea`, `brainstorm`, `review` — none are implementer-facing in the same sense; their own authoring contracts cover their evidence-shape.
 - Quality of the design itself — this rule does not govern AC depth, file-list completeness, or test-strategy soundness. Those belong to the per-type authoring contract.

@@ -19,8 +19,8 @@ summary at the same time.
 
 Sections (kebab-case identifier on the left):
 
-  wiki-pages          presence + last-updated for the 7 canonical wiki kinds.
-  stage-progress      mixed-axis view of usecase/arch/bootstrap/roadmap/impl.
+  wiki-pages          presence + last-updated for the canonical wiki kinds.
+  stage-progress      mixed-axis view of usecase/arch/bootstrap/impl.
   issue-counts        per folder × {active, in_progress, terminal, total}
                       plus by-kind for review and per-family rows for
                       the four task issue families.
@@ -75,7 +75,6 @@ WIKI_KINDS: tuple[str, ...] = (
     "architecture",
     "actors",
     "nfr",
-    "roadmap",
     "bootstrap",
 )
 
@@ -235,12 +234,6 @@ def render_stage_progress(
             return "not created"
         return f"present · updated {page.updated or '—'}"
 
-    roadmap = pages_by_kind.get("roadmap")
-    if roadmap is None or roadmap.path is None:
-        roadmap_row = "not created"
-    else:
-        roadmap_row = f"present · updated {roadmap.updated or '—'}"
-
     lines = [
         "## Stage progress",
         "",
@@ -249,7 +242,6 @@ def render_stage_progress(
         f"| Usecase | {status_summary('usecase', usecases)} |",
         f"| Arch | {wiki_row('architecture')} |",
         f"| Bootstrap | {wiki_row('bootstrap')} |",
-        f"| Roadmap | {roadmap_row} |",
         f"| Impl | {status_summary('task', tasks)} |",
     ]
     return "\n".join(lines)
