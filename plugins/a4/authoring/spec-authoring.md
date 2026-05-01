@@ -90,7 +90,7 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 - `## Rejected Alternatives` — the options considered and why they lost. Pairs naturally with `## Decision Log`. Inline citations to research tasks land here too when the rejection rationale leans on the investigation.
 - `## Consequences` — downstream effects (positive, negative, or neutral) the spec creates.
 - `## Examples` — concrete cases that pin down the prescriptive rules.
-- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the spec is mid-flight (`draft`). See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the spec is at `draft` (the only mid-flight state — `active` is a stable decision record, not in-flight). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events that have shaped this spec but are not the spec's *design rationale* (rationale belongs in `## Decision Log`). Examples: blocker resolutions, approach changes worth remembering. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 
 Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders (`a4/task/`, `a4/bug/`, etc.).

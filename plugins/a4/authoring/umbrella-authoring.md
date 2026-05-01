@@ -93,7 +93,7 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 **Optional, emit only when applicable:**
 
 - `## Acceptance Criteria` — integration outcome that is not naturally any single child's AC. Skip when the integration outcome is implicit ("all children deliver and tests pass"). Use it when the umbrella has its own observable (e.g., "search-history feature works end-to-end across UC 3 and UC 7").
-- `## Resume` — current-state snapshot for the next session: what cross-cutting work the umbrella is currently driving, current blocker, open questions, next step. Freely rewritten as work progresses. See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session: what cross-cutting work the umbrella is currently driving, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the umbrella is at `open` (the only mid-flight state — `complete` / `discarded` are terminal). See `./issue-body.md#resume`.
 - `## Why Discarded` — populated on `discarded`. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
 
 Unknown H2 headings are tolerated.

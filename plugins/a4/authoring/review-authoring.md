@@ -98,7 +98,7 @@ Review item bodies are **deliberately minimal** — they hold a single observati
 
 **Optional, emit only when applicable:**
 
-- `## Resume` — current-state snapshot for the next session: current approach to the review item, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the review item is `open` / `in-progress`. See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session: current approach to the review item, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the review item is non-terminal (any status other than `resolved` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 
 Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `## Repro`, or `## Context` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `## Description` is usually enough.

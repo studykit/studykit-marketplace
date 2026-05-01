@@ -95,7 +95,7 @@ Writer rules (UC-specific):
 - `## Validation` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
 - `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
 - `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
-- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the UC is mid-flight (`draft` / `revising`). See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the UC is mid-flight (`draft` / `revising`); other non-terminal states (`ready` / `implementing` / `blocked`) reflect downstream-stage progress, not UC-authoring work. See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 
 Unknown H2 headings are tolerated.

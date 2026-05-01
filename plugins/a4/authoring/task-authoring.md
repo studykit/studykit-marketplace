@@ -102,7 +102,7 @@ Task-specific notes:
 **Optional, emit only when there is content for them:**
 
 - `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). For UC-less work, link to the spec or relevant `architecture.md` section.
-- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the task is mid-flight (`pending` / `progress` / `failing`). See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the task is non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 

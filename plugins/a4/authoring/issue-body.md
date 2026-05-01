@@ -60,7 +60,7 @@ Do not record narrative ("we used to try X, then switched to Y"). That belongs i
 
 ### Update discipline
 
-`## Resume` is **strongly recommended whenever the file is mid-flight** (any `status:` other than `open` / `complete` / `discarded` / `superseded`). Status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update it as you work, and especially before any session boundary risks losing the in-memory context.
+`## Resume` is **strongly recommended whenever the file is mid-flight** — i.e., the work it tracks is still in progress. Each per-type contract (`./<type>-authoring.md`) names the family's mid-flight statuses; non-terminal is a useful rough proxy but some non-terminal states (e.g., `usecase: ready / implementing`, `spec: active`) are stable and not mid-flight. Status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update it as you work, and especially before any session boundary risks losing the in-memory context.
 
 When a slot's value changes, **rewrite the slot in place** — do not keep the old value as a strikethrough or supplementary line. If the change is narrative-worthy (a decision pivot worth remembering past the moment), record that pivot as a `## Log` entry separately. Adding a new line over an old line is not a rewrite; see the *Compact whenever you update it* rule above.
 

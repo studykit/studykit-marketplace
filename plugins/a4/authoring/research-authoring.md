@@ -100,7 +100,7 @@ Research-specific notes:
 
 **Optional:**
 
-- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the research item is mid-flight (`pending` / `progress` / `failing`). See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the research item is non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture.
 
