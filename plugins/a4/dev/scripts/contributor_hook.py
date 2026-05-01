@@ -6,30 +6,29 @@
 Distinct from the workspace-side `scripts/a4_hook.py` — that hook fires on
 `<project-root>/a4/**/*.md` (end-user authoring). This one fires on
 `plugins/a4/**/*.md` (plugin contributor work in this repo) and surfaces
-the per-layer audience / citation contract.
+two things:
+  - On the first matching Read/Edit per session: the global layer map
+    (which directory has which audience + citation summary).
+  - On every file's first Read or Edit: a one-line note naming that
+    specific file's audience and pointing to the directory's binding
+    `CLAUDE.md`.
+
+The two are deliberately distinct: the layer map gives the routing big
+picture once; the per-file note disambiguates which slot the current
+file occupies. Detailed citation/body rules live in each directory's
+`CLAUDE.md` — this hook does not duplicate them.
 
 Subcommands:
-  pre-read       PreToolUse on Read. When a contributor first opens a
-                 specific `plugins/a4/**/*.md` this session, emit a
-                 file-scoped note: which layer the file belongs to and
-                 the binding rules for that layer. On the very first
-                 match in the session (across read AND edit), the full
-                 layer map is prepended once.
+  pre-read       PreToolUse on Read. Emit per-file note (with layer-map
+                 prepended on first session match).
   pre-edit       PreToolUse on Write|Edit|MultiEdit. Same shape as
-                 pre-read; uses the same per-file dedup so reading then
-                 editing a file does not double-emit, and the layer-map
-                 prepend uses the same session-wide sentinel so it
-                 fires at most once per session regardless of whether
-                 the first matching tool was Read or Edit.
-
-The layer map is loaded lazily on first `plugins/a4/` touch rather than
-at SessionStart — sessions that never work on a4 do not pay the context
-cost.
+                 pre-read; shares the per-file dedup AND the layer-map
+                 sentinel so a Read followed by an Edit of the same
+                 file does not double-emit either layer.
 
 Session-scoped state under `.claude/tmp/a4-edited/`:
   a4-contributor-files-<sid>.txt   — newline-delimited file paths
-                                     already announced this session
-                                     (per-file dedup).
+                                     already announced this session.
   a4-contributor-map-<sid>.flag    — touched once when the layer map
                                      has been prepended this session.
 Cleaned up by `cleanup-contributor.sh` (SessionEnd) and swept by
@@ -75,9 +74,6 @@ def main() -> int:
 
 
 def _pre_read() -> int:
-    """PreToolUse(Read). Emit a per-file layer note on first Read of a
-    `plugins/a4/**/*.md` file in this session.
-    """
     payload = _payload()
     if payload is None:
         return 0
@@ -87,9 +83,6 @@ def _pre_read() -> int:
 
 
 def _pre_edit() -> int:
-    """PreToolUse(Write|Edit|MultiEdit). Same shape as _pre_read with
-    edit phrasing.
-    """
     payload = _payload()
     if payload is None:
         return 0
@@ -129,24 +122,22 @@ def _inject_per_file(payload: dict, intent: str) -> int:
         return 0
 
     layer = _resolve_layer(file_path, plugin_root)
+    audience, claude_md = _LAYER_INFO.get(layer, _LAYER_INFO["other"])
     display_rel = (
         file_path[len(project_dir) + 1 :]
         if file_path.startswith(project_dir + os.sep)
         else file_path
     )
     intent_label = "read" if intent == "read" else "edit"
-    layer_note = _LAYER_NOTES.get(layer, _LAYER_NOTES["other"])
-    file_body = (
-        f"**a4 ({intent_label})** `{display_rel}` — layer **{layer}**. "
-        f"{layer_note}"
+    file_note = (
+        f"**a4 ({intent_label})** `{display_rel}` — audience: {audience}. "
+        f"See `{claude_md}` for binding rules."
     )
 
     map_prefix = _layer_map_prefix(project_dir, session_id)
-    if map_prefix is not None:
-        body = map_prefix + "\n\n---\n\n" + file_body
-    else:
-        body = file_body
-
+    body = file_note if map_prefix is None else (
+        map_prefix + "\n\n---\n\n" + file_note
+    )
     _emit(
         {
             "hookSpecificOutput": {
@@ -162,10 +153,10 @@ def _inject_per_file(payload: dict, intent: str) -> int:
 
 
 def _layer_map_prefix(project_dir: str, session_id: str) -> str | None:
-    """Return the full layer-map block on the first call per session,
-    None thereafter. Touches the session sentinel atomically — if the
+    """Return the layer-map block on the first call per session, None
+    thereafter. Touches the session sentinel atomically — if the
     sentinel cannot be written, we still return None to avoid emitting
-    the heavy map repeatedly.
+    the map repeatedly.
     """
     sentinel = (
         Path(project_dir).joinpath(*_SENTINEL_DIR)
@@ -183,19 +174,26 @@ def _layer_map_prefix(project_dir: str, session_id: str) -> str | None:
 
 _LAYER_MAP_BLOCK = (
     "**a4 plugin layer map** (loaded once on first `plugins/a4/` touch). "
-    "Path purity is binding — do not invert citation direction.\n"
-    "- `authoring/` — workspace authors. Cite `./*` + `../scripts/*.py`. "
-    "No `../workflows/`, `../skills/`, `../dev/`. Relative paths.\n"
-    "- `workflows/` — skill runtimes. Cite `./*` + `../authoring/`. "
-    "No `../scripts/`, `../dev/`.\n"
-    "- `dev/` — contributors only. May cite anywhere; reverse refs "
+    "Each directory has a fixed audience and citation contract — do not "
+    "invert the citation direction.\n"
+    "- `authoring/` — workspace authors editing "
+    "`<project-root>/a4/**/*.md`. Cite `./*` + `../scripts/*.py`. No "
+    "`../workflows/`, `../skills/`, `../dev/`. Relative paths.\n"
+    "- `workflows/` — skill runtimes. Cite `./*` + `../authoring/`. No "
+    "`../scripts/`, `../dev/`.\n"
+    "- `dev/` — plugin contributors. May cite anywhere; reverse refs "
     "forbidden.\n"
-    "- `skills/<name>/**`, `agents/*.md` — skill / agent definitions. "
-    "Cite `${CLAUDE_PLUGIN_ROOT}/{authoring,workflows}/`. Never `dev/`.\n"
-    "- `scripts/` — workspace runtime. `dev/scripts/` — contributor "
-    "tooling (registered via repo `.claude/settings.json`).\n"
-    "- `hooks/` — workspace hook manifests + bash wrappers.\n"
-    "Binding rules live in each directory's `CLAUDE.md`."
+    "- `dev/scripts/` — plugin contributors (contributor tooling, "
+    "registered via repo `.claude/settings.json`, not in the plugin "
+    "manifest).\n"
+    "- `skills/<name>/**`, `agents/*.md` — skill / agent runtime. Cite "
+    "`${CLAUDE_PLUGIN_ROOT}/{authoring,workflows}/`. Never `dev/`.\n"
+    "- `scripts/` — workspace runtime (validators, hook dispatcher, "
+    "cascade primitives).\n"
+    "- `hooks/` — workspace hook manifests + bash wrappers; substantive "
+    "logic lives in `scripts/a4_hook.py`.\n"
+    "Detailed binding rules live in each directory's `CLAUDE.md` — the "
+    "per-file note will point you at the right one."
 )
 
 
@@ -241,8 +239,8 @@ def _record_announced(project_dir: str, session_id: str, file_path: str) -> bool
 
 
 def _resolve_layer(file_path: str, plugin_root: Path) -> str:
-    """Return the layer name for the matched file: authoring | workflows |
-    dev | dev-scripts | skills | agents | scripts | hooks | other.
+    """Return the layer name: authoring | workflows | dev | dev-scripts |
+    skills | agents | scripts | hooks | other.
     """
     try:
         rel = Path(file_path).resolve().relative_to(plugin_root.resolve())
@@ -259,39 +257,44 @@ def _resolve_layer(file_path: str, plugin_root: Path) -> str:
     return "other"
 
 
-_LAYER_NOTES: dict[str, str] = {
+# (audience, CLAUDE.md path) per layer. Detailed citation / body rules
+# live in each CLAUDE.md — this hook only points contributors at it.
+_LAYER_INFO: dict[str, tuple[str, str]] = {
     "authoring": (
-        "End-user workspace contract. Cite `./*` + `../scripts/*.py`. "
-        "No workflows/skills/dev. Relative paths only."
+        "workspace authors editing `<project-root>/a4/**/*.md`",
+        "plugins/a4/authoring/CLAUDE.md",
     ),
     "workflows": (
-        "Skill orchestration. Cite `./*` + `../authoring/`. "
-        "No scripts/dev."
+        "skill runtimes",
+        "plugins/a4/workflows/CLAUDE.md",
     ),
     "dev": (
-        "Plugin internals. May cite anywhere; reverse refs forbidden."
+        "plugin contributors",
+        "plugins/a4/dev/CLAUDE.md",
     ),
     "dev-scripts": (
-        "Contributor tooling (not in plugin manifest). Type hints; "
-        "invoke via `uv run`."
+        "plugin contributors (contributor-side tooling)",
+        "plugins/a4/dev/CLAUDE.md",
     ),
     "skills": (
-        "Cite `${CLAUDE_PLUGIN_ROOT}/{authoring,workflows}/`. Never "
-        "`dev/`. `SKILL.md` is orchestration; procedures in "
-        "`references/`."
+        "skill runtime",
+        "plugins/a4/CLAUDE.md",
     ),
     "agents": (
-        "Same as skills: `${CLAUDE_PLUGIN_ROOT}` paths, never `dev/`."
+        "skill runtime (subagent definitions)",
+        "plugins/a4/CLAUDE.md",
     ),
     "scripts": (
-        "Workspace runtime. Type hints; `uv run` (not `python`)."
+        "workspace runtime",
+        "plugins/a4/CLAUDE.md",
     ),
     "hooks": (
-        "Manifest + bash wrappers; substantive logic in "
-        "`../scripts/a4_hook.py`. Always exit 0."
+        "workspace hook runtime",
+        "plugins/a4/CLAUDE.md",
     ),
     "other": (
-        "Not in canonical layers — confirm location before editing."
+        "unknown (file is outside canonical layers)",
+        "plugins/a4/CLAUDE.md",
     ),
 }
 
