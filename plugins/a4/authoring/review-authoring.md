@@ -48,7 +48,7 @@ updated: YYYY-MM-DD
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `bug/<id>-<slug>`, `spike/<id>-<slug>`, `research/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `roadmap`, `bootstrap`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without updating `./validator-rules.md`.
+- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without first documenting them here.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).

@@ -3,8 +3,7 @@
 Enforces the per-type schemas defined in
 ``plugins/a4/authoring/<type>-authoring.md`` (per-type field tables) and
 the cross-cutting rules in
-``plugins/a4/authoring/frontmatter-universals.md`` and
-``plugins/a4/authoring/validator-rules.md``:
+``plugins/a4/authoring/frontmatter-universals.md``:
 
   - Required fields are present and non-empty.
   - Enum values are in their allowed set.

@@ -4,7 +4,7 @@
 
 Body-level rules for every file under the `a4/` workspace. Covers section heading form, blank-line discipline, link form, and the `## Change Logs` / `## Log` audit-trail conventions.
 
-Frontmatter-side rules live in `frontmatter-universals.md` (universal contract: `type:`, ids, path-reference format, dates, status writers, structural relationship fields), `validator-rules.md` (enforcement and cross-file consistency), and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables).
+Frontmatter-side rules live in `frontmatter-universals.md` (universal contract: `type:`, ids, path-reference format, dates, status writers, structural relationship fields, title placeholders) and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables).
 
 ## Scope
 
@@ -138,8 +138,7 @@ When a review item transitions to `status: resolved` and its `target:` list cont
 
 ## Cross-references
 
-- `frontmatter-universals.md` — universal frontmatter rules (the universal `type:` field, ids, path references, dates, status writers, structural relationship fields).
-- `validator-rules.md` — schema enforcement and cross-file status consistency tables.
+- `frontmatter-universals.md` — universal frontmatter rules (the universal `type:` field, ids, path references, dates, status writers, structural relationship fields, title placeholders).
 - `<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape and the per-type field table).
 - the id allocator — id allocator; required before writing any new issue file.
 - Body shape is documentation-only; nothing validates section presence at runtime.

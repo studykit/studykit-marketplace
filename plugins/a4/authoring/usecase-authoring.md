@@ -35,14 +35,14 @@ updated: YYYY-MM-DD
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
 | `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `revising` \| `shipped` \| `superseded` \| `discarded` \| `blocked` |
-| `actors` | no | list of strings | actor names as defined in `actors.md` |
+| `actors` | conditional | list of strings | actor slugs as defined in `actors.md`; **must be non-empty once `status >= ready`** (i.e., `ready` / `implementing` / `shipped` / `superseded`). Optional only at `status: draft`. |
 | `supersedes` | no | list of paths | prior use cases this UC replaces |
 | `related` | no | list of paths | catchall |
 | `labels` | no | list of strings | free-form tags |
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the UC reaches `status: ready` (and beyond) — see `./frontmatter-universals.md#title-placeholders`.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s `## Roster` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
 - UC-to-UC ordering is **not** carried in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
 - UC-to-spec ties are **not** carried in frontmatter. When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
@@ -66,7 +66,7 @@ superseded   → (terminal)
 Per-status meaning:
 
 - `draft` — Spec is still being shaped; not ready for implementation.
-- `ready` — Spec is closed; ready to be picked up by an implementer.
+- `ready` — Spec is closed; ready to be picked up by an implementer. Requires non-empty `actors:`; an empty actor list at `ready` (or any later status) is a post-draft authoring violation.
 - `implementing` — A coding agent is actively working on the UC.
 - `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `pending`; `open`/`pending`/`complete` tasks stay.
 - `shipped` — The running system reflects this UC. Forward-path terminal. Cascades: `supersedes:` targets flip `shipped → superseded`.
@@ -137,6 +137,8 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 ## Common mistakes (UC-specific)
 
 - **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
+- **`actors:` empty at `status >= ready`.** `actors:` is optional only at `draft`; advancing the lifecycle without filling it is a post-draft authoring violation.
+- **Placeholder in `title:` at `status >= ready`.** See `./frontmatter-universals.md#title-placeholders`.
 
 (Universal body-shape rules — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 

@@ -335,13 +335,11 @@ def _maybe_inject_authoring_contract(
     pointers = [
         "- `plugins/a4/authoring/frontmatter-universals.md` — universal "
         "frontmatter contract (type field, ids, dates, status writers, "
-        "structural relationship fields).",
+        "structural relationship fields, title placeholders).",
         f"- `plugins/a4/authoring/{type_value}-authoring.md` — per-type "
         "field table, lifecycle, body shape, common mistakes.",
         "- `plugins/a4/authoring/body-conventions.md` — heading form, "
         "link form, change-log discipline, log section.",
-        "- `plugins/a4/authoring/validator-rules.md` — schema enforcement "
-        "and cross-file status-consistency rules.",
     ]
     if type_value in _TASK_FAMILY_TYPES:
         pointers.insert(
@@ -787,10 +785,12 @@ def _stop() -> int:
         )
     out_lines.append("")
     out_lines.append(
-        "Fix the issues above before stopping. "
-        "See plugins/a4/authoring/validator-rules.md (enforcement rules) "
-        "and plugins/a4/authoring/frontmatter-universals.md "
-        "(universal frontmatter contract)."
+        "Fix the issues above before stopping. Each violation message "
+        "names the file, field, and rule; consult "
+        "`plugins/a4/authoring/frontmatter-universals.md` (universal "
+        "contract) and the matching "
+        "`plugins/a4/authoring/<type>-authoring.md` (per-type field "
+        "table and lifecycle) for the binding shape."
     )
     out_lines.append(
         "For a full workspace sweep (id uniqueness etc.), run /a4:validate."

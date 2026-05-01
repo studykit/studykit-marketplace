@@ -2,7 +2,7 @@
 
 > **Audience:** a4 plugin contributors editing `plugins/a4/` itself. Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Skill authors should read `../workflows/` (skill orchestration) and `../authoring/` (frontmatter contract); skills MUST NOT cite this file.
 
-Implementation jump-table for the status cascade engine, the cascade hook, the recovery sweep, and the validator. Maps the contracts described in `../authoring/frontmatter-universals.md` and `../authoring/validator-rules.md` to the modules that enforce them.
+Implementation jump-table for the status cascade engine, the cascade hook, the recovery sweep, and the validator. Maps the contracts described in `../authoring/frontmatter-universals.md` (universal rules including status writers and title placeholders) and the per-type lifecycles in `../authoring/<type>-authoring.md` to the modules that enforce them.
 
 ## Cascade engine
 
@@ -15,7 +15,7 @@ Implementation jump-table for the status cascade engine, the cascade hook, the r
 
 - **Validator entrypoint:** `../scripts/validate.py` — unified CLI; runs every check registered in `markdown_validator.registry.CHECKS`. Surfaced to users as the `/a4:validate` skill.
 - **Frontmatter validator:** `../scripts/markdown_validator/frontmatter.py` — required fields, enums, types, path-reference format, id uniqueness, post-draft authoring invariants.
-- **Status consistency checker:** `../scripts/markdown_validator/status_consistency.py` — the cross-file status table in `../authoring/validator-rules.md` §Cross-file status consistency.
+- **Status consistency checker:** `../scripts/markdown_validator/status_consistency.py` — cross-file status drift checks (supersedes-chain, discarded / revising cascades, idea / brainstorm `promoted:` consistency). Cascade behavior is contracted in `../authoring/frontmatter-universals.md §Status writers` and the per-type lifecycles in `../authoring/<type>-authoring.md`.
 - **Transition legality safety net:** `../scripts/markdown_validator/transitions.py` — Stop-hook git-diff check that rejects `status:` jumps outside `FAMILY_TRANSITIONS`. Catches illegal direct `status:` edits the cascade hook silently ignored.
 
 ## Hook flow

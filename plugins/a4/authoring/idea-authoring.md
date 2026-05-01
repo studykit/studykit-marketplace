@@ -57,7 +57,7 @@ The idea family deliberately omits four fields that other issue families carry. 
 - `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
 - `kind` — only one kind of idea (unlike `review/` which unifies finding / gap / question).
 
-Do not re-introduce these fields without first updating this file and `./validator-rules.md`.
+Do not re-introduce these fields without first updating this file (and the matching schema in `../scripts/markdown_validator/frontmatter.py` if the field affects validation).
 
 ### Lifecycle and writer ownership
 

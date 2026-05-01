@@ -26,7 +26,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items whose `target:` includes the affected wiki basenames |
-| `validate` | Runs frontmatter, body-convention, and cross-file status-consistency validators over `a4/` (rules: `authoring/validator-rules.md`) |
+| `validate` | Runs frontmatter, body-convention, and cross-file status-consistency validators over `a4/` (binding contracts: `authoring/frontmatter-universals.md` + per-type `authoring/<type>-authoring.md`) |
 | `idea` | Quick-capture a one-line idea as `a4/idea/<id>-<slug>.md` |
 | `web-design-mock` | Web design mock generation |
 | `get-api-docs` | Shared global skill for current API/SDK documentation lookup |

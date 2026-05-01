@@ -41,7 +41,7 @@ If you find script paths or implementation pointers leaking into `authoring/`, p
 
 ## Required reading before editing
 
-- **Anything touching frontmatter** → `authoring/frontmatter-universals.md` (universal rules), the matching `authoring/<type>-authoring.md` (per-type field table and lifecycle), and `authoring/validator-rules.md` (enforcement). The project-root `CLAUDE.md` calls these out as a hard prerequisite.
+- **Anything touching frontmatter** → `authoring/frontmatter-universals.md` (universal rules including title placeholders) and the matching `authoring/<type>-authoring.md` (per-type field table and lifecycle). The project-root `CLAUDE.md` calls these out as a hard prerequisite. Enforcement messages from `/a4:validate` and the Stop hook are self-explanatory; they cite the same per-type / universals contract.
 - **Anything touching body sections, tag form, change-logs, or links** → `authoring/body-conventions.md`.
 - **A new or modified skill** → `workflows/skill-modes.md`, `workflows/pipeline-shapes.md`, `workflows/wiki-authorship.md`. Skills must conform to wiki-authorship; if a `SKILL.md` disagrees, the doc wins and the skill is updated.
 - **A new or modified hook** → `dev/hook-conventions.md`. Covers state classification, lifecycle symmetry, in-event ordering, blocking vs non-blocking policy, output-channel choice.

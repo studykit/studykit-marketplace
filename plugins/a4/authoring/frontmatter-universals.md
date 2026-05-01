@@ -2,7 +2,7 @@
 
 > **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
 
-Cross-cutting frontmatter rules that apply to every markdown file under `a4/`. Per-type field tables (required vs optional fields, enum values, types) live in each `<type>-authoring.md`. Schema enforcement and cross-file consistency tables live in `./validator-rules.md`. Body-side conventions live in `./body-conventions.md`.
+Cross-cutting frontmatter rules that apply to every markdown file under `a4/`. Per-type field tables (required vs optional fields, enum values, types) live in each `<type>-authoring.md`. Body-side conventions live in `./body-conventions.md`. Validator output (`/a4:validate`, Stop hook) is self-explanatory and names the violated rule directly; this document plus the per-type files are the binding shape.
 
 ## Scope
 
@@ -103,6 +103,28 @@ Body links use a different form — standard markdown `[text](relative/path.md)`
 
 Empty lists may be written as `[]` or omitted entirely. Both are semantically equivalent. Prefer omission when the field is not expected to populate; prefer `[]` when the field is part of the type's shape and emptiness is noteworthy (e.g., `promoted: []` on a fresh idea or brainstorm).
 
+## Title placeholders
+
+Lifecycle-tracked types whose `title:` graduates from "draft scratch text" to "name the project will commit to" forbid placeholder tokens once the file leaves its drafting status. Placeholders are tolerated *only* at the early/drafting status; advancing the lifecycle without replacing them is a post-draft authoring violation.
+
+Forbidden placeholder tokens (case-insensitive substring match):
+
+- `TBD`
+- `???`
+- `<placeholder>`
+- `<todo>`
+- `TODO:`
+- `<title>`-shaped strings (literal `<...>` placeholder text)
+
+Lifecycle gate by type:
+
+| Type | Placeholder allowed at | Forbidden once status reaches |
+|------|------------------------|--------------------------------|
+| `usecase` | `draft` | `ready` (and beyond — `implementing` / `shipped` / `superseded`) |
+| `spec` | `draft` | `active` (and beyond — `deprecated` / `superseded`) |
+
+Other types do not enforce this rule; their titles may carry placeholder text throughout their lifecycle if the author chooses (in practice, idea / brainstorm / review titles tend to be concrete from the start).
+
 ## Relationships
 
 The schema fixes **one direction per relationship** — the forward direction is the canonical source. Reverse directions are **derived on demand** (grep, script back-scan) rather than stored. There is currently no stored-reverse field; if a future need arises (a status gate, automated check, or hot query that justifies bypassing derive-on-demand), a script must own writes for the field and the rationale must be documented here before the field is introduced.
@@ -160,5 +182,4 @@ Soft references (see-also, mentions) are expressed as standard markdown links (`
 ## Cross-references
 
 - **Per-type schemas (formal field tables):** the `## Frontmatter` section of each `./<type>-authoring.md`.
-- **Schema enforcement and cross-file status consistency:** `./validator-rules.md`.
 - **Body conventions:** `./body-conventions.md` — heading form, blank-line discipline, `## Change Logs` and `## Log` entry format, body link form.
