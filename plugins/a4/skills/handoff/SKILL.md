@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "This skill should be used when the user explicitly invokes /a4:handoff. It first refreshes the `## Resume` snapshot of every mid-flight a4 workspace file the session touched (current approach, current blocker, open questions, next step) so each file alone is enough to continue, optionally appends to `## Log` when the session produced narrative-worthy events (decision pivots, blocker resolutions, approach changes), and then writes a session handoff file under <repo-root>/.handoff/ ONLY when session-level meta exists (a4-anchorless work, session-level validation results, important user dialog, branch/commit state worth recording, or cross-cutting decisions that could not be anchored to a parent). Sessions whose entire substance fits inside the touched files' Resume / Log updates skip the handoff file."
+description: "This skill should be used when the user explicitly invokes /a4:handoff. It first refreshes the `## Resume` snapshot of every mid-flight a4 workspace file the session touched (current approach, current blocker, open questions, next step) so each file alone is enough to continue, optionally appends to `## Log` when the session produced narrative-worthy events (decision pivots, blocker resolutions, approach changes), and then writes a session handoff file under <repo-root>/.handoff/ ONLY for residual session-level meta — meta that cannot be folded into any touched file's `## Resume` / `## Log`, the parent's `## Log`, or this session's commit messages. Candidate triggers (a4-anchorless work, session-level validation results, important user dialog, branch/commit state, cross-cutting decisions) are folded into their natural anchor first; the handoff file captures only what survives that fold. Sessions whose entire substance is reachable from the touched files plus `git log` skip the handoff file."
 argument-hint: "[additional requirements]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -21,15 +21,28 @@ When written, the handoff file is the session index plus session-only meta, and 
 
 ### Handoff file gate
 
-Create the handoff file when at least **one** of the following applies; otherwise skip it.
+The handoff file is the **residual** home for session-level meta — *not* the first-resort home for anything notable. Decide in two stages.
 
-- **a4-anchorless work** — production source under the project's source tree, build / tooling / config changes, or any work that is not captured by an `a4/<type>/<id>-<slug>.md` file.
-- **Session-level validation** — `/a4:run` test-runner output, project tests, lint / type-check runs, or smoke verification whose result is not naturally a single task's cycle outcome.
-- **Important user dialog** — short, high-signal user statements, corrections, constraints, or preferences from this session that shape the work and do not belong inside any single workspace file. Dialog that *triggered* a single file's decision pivot, blocker resolution, or approach change should be folded into that file's `## Log` as a narrative event (not a raw quote) per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md`; an unresolved constraint or question the user gave only in conversation belongs in that file's `## Resume` Open-questions slot. The handoff `Important Dialog` section is the residual home for dialog with no single-file anchor.
-- **Branch / commit state worth recording** — non-obvious branch position (ahead of `origin`, divergent, mid-merge / mid-rebase), commits the next session must know about beyond what `git log` reveals at a glance.
-- **Cross-cutting decision that could not be anchored to a parent** — a decision that affects several touched files but no common `parent:` (issue-family) was an option (e.g., the touched files genuinely span unrelated parents). When a parent *was* the right home, record there per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` § `## Log`; do not duplicate into the handoff.
+**Stage 1 — Fold candidates into their natural anchor first.** For every candidate below, try to fold it into a workspace file's `## Resume` / `## Log`, the parent's `## Log`, or this session's commit messages *before* treating it as a handoff trigger. Only what genuinely cannot be folded survives to Stage 2.
 
-If none of the above applies — e.g., a session that touched a single mid-flight task and refreshed its `## Resume` — skip the handoff file. Report the pre-handoff workspace commit (or `none`) and "no session-level meta — handoff file skipped".
+| Candidate | Fold target (try first) | What stays as residual |
+|-----------|-------------------------|------------------------|
+| **a4-anchorless work** — production source, build / tooling / config changes | When the work has a clean parent issue-family file, link from its `## Resume` / `## Log` and put rationale in the commit message | Source / tooling change with no parent **and** rationale that matters past the commit body |
+| **Session-level validation** — `/a4:run`, project tests, lint, type-check, smoke verification | When the result is one task's cycle outcome, log under that task (`## Resume` Blocked-on slot if failing, `## Log` if narrative-worthy) | Validation that is genuinely cross-cutting (e.g., full-suite green after a multi-task rebase) **and** the outcome matters to the next session beyond a re-run |
+| **Important user dialog** — corrections, constraints, preferences | When the dialog *triggered* a single file's pivot / blocker resolution / approach change, fold into that file's `## Log` as a narrative event per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md`; unresolved constraints go into the file's `## Resume` Open-questions slot | Dialog with no single-file anchor (cross-cutting preference, session-level constraint) |
+| **Branch / commit state** | When the state is obvious from `git status` and `git log --oneline origin/main..HEAD`, do nothing | Non-obvious state — mid-merge, mid-rebase, divergent, commits whose meaning is not visible from a glance |
+| **Cross-cutting decision** | When the touched files share a `parent:` (possibly cross-type per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` § `parent`), record in the parent's `## Log` and inline-cite from each child | A decision that spans genuinely unrelated parents with no common anchor |
+
+**Stage 2 — Check residual.** After Stage 1, ask: *can the next session reach the Next Steps slot of every mid-flight task by opening only the touched workspace files plus `git log --oneline origin/main..HEAD` plus the commit messages?* If yes, skip the handoff file. If no, the unreachable meta is the residual — proceed to write the file scoped to that residual.
+
+**Non-triggers (do not pass the gate on their own).** A handoff file that only carries these is the ceremonial-duplicate failure mode this gate exists to prevent.
+
+- Routine validation green — the next session re-runs anyway.
+- General-guideline CLAUDE.md edits that are not session-meta (e.g., a project-wide logging-style refinement) — the file is auto-loaded on the next session.
+- Test-infrastructure or tooling choices that are not decision forks affecting future continuation steps.
+- Background context the next session can rederive from the task doc and git history.
+
+If no residual survives, skip the handoff file. Report the pre-handoff workspace commit (or `none`), the touched files whose `## Resume` (and `## Log` where applicable) was updated, and "no session-level meta — handoff file skipped".
 
 ## Context
 
@@ -57,9 +70,10 @@ If none of the above applies — e.g., a session that touched a single mid-fligh
    - Do not sweep in unrelated user changes just because they are pending. Leave them untouched and mention in the report that they were left out. Ask the user only if you cannot tell whether a pending change belongs to this session.
    - If there are no relevant non-handoff changes to commit, skip this step entirely — do not create an empty commit.
    - Do **not** include any handoff file in this commit. The handoff file (when created) must be committed separately in its own commit (see step 7).
-3. **Apply the handoff file gate.** Decide whether to create a handoff file at all.
-   - Walk the gate criteria in *Handoff file gate* above. If at least one applies, proceed to step 4. If none applies, **skip** steps 4–7 and go straight to *Output*: report the pre-handoff workspace commit SHA(s) (or `skipped` from step 2), the touched files whose `## Resume` (and `## Log` where applicable) was updated, and "no session-level meta — handoff file skipped".
-   - Be honest. Do not synthesize a handoff file just to produce one; an empty-shell handoff is the failure mode this gate exists to prevent.
+3. **Apply the handoff file gate (fold-then-residual).** Decide whether to create a handoff file at all.
+   - **Stage 1 — fold first.** Walk the candidate table in *Handoff file gate* above and fold each candidate into its natural anchor (workspace file `## Resume` / `## Log`, parent's `## Log`, or commit message) before treating it as a handoff trigger. Folds that affect a workspace file are part of the pre-handoff commit(s) from step 2; folds that affect commit messages must be reflected when you author those commits.
+   - **Stage 2 — check residual.** Ask: *can the next session reach the Next Steps slot of every mid-flight task by opening only the touched workspace files plus `git log --oneline origin/main..HEAD` plus the commit messages?* If yes, **skip** steps 4–7 and go straight to *Output*: report the pre-handoff workspace commit SHA(s) (or `skipped` from step 2), the touched files whose `## Resume` (and `## Log` where applicable) was updated, and "no session-level meta — handoff file skipped". If no, the unreachable meta is the residual — proceed to step 4 and scope the handoff file to that residual.
+   - Be honest. The failure mode this gate exists to prevent is a ceremonial duplicate — a handoff file that only restates what the task doc and commit messages already say.
 4. Decide the handoff path:
    - **Directory**: always write the file directly under the repo-root `.handoff/` directory (`<repo-root>/.handoff/`). Do not create plugin, topic, or date subdirectories. The handoff file lives outside `<project-root>/a4/` because it is a session snapshot, not a typed workspace artifact — placing it under `a4/` would trip the validator (which expects every `a4/**/*.md` to declare a known `type:` per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md`).
    - **Number**: use the value already produced by *Next handoff number* in Context as `<n>`. The bundled `scripts/next-handoff-number.sh` resolves the repo root and returns one greater than the largest existing `<number>-*.md` prefix in `<repo-root>/.handoff/` (or `1` if none). Do not reimplement the scan inline.
