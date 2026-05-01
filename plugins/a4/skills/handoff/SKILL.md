@@ -41,12 +41,12 @@ This is the a4-flavored variant of the global handoff skill. The a4 workspace al
    - Issue-family file content (description, files table, AC, unit-test strategy) — link to `a4/task/<id>-<slug>.md`, `a4/bug/<id>-<slug>.md`, etc. instead.
    - Wiki section content (architecture decisions, UC flows, domain definitions) — link to the wiki page (and section anchor when useful).
    - Large diffs or changed file contents — point to the relevant commits and `git show` / `git diff` commands.
-4. **Record validation state — do not run `/a4:validate` from this skill.** A workspace-wide validate sweep walks every `a4/**/*.md` and inflates the handoff session's context budget; this skill must not trigger it. Instead, capture verification work the user already produced this session — `/a4:run` test-runner output, project tests / linters, an explicit `/a4:validate` invocation the user requested. Record the exact commands and outcomes. If nothing was verified this session, say so explicitly under `Validation` rather than smoothing it over. Run `/a4:validate` (or `validate.py`) here only when the user explicitly asks for it via `$ARGUMENTS`.
+4. **Record verification the user already ran this session.** Capture the exact commands and outcomes — `/a4:run` test-runner output, project tests / linters, anything explicit the user produced. If nothing was verified this session, say so under `Validation` instead of smoothing it over.
 5. **Commit the handoff file alone** as a separate commit, on top of the pre-handoff commit(s) from step 1 (or on top of HEAD if step 1 was skipped). Only the new handoff file should be in this commit's diff. Use a commit message that references the `topic:` (e.g., `docs(handoff): snapshot <topic> session state`).
 
 ## Additional Requirements
 
-Treat `$ARGUMENTS` as extra emphasis or constraints from the user (e.g., "focus on the cycle-3 replan", "run /a4:validate and include the output", "include the failing test output verbatim"). Incorporate these into the relevant sections rather than tacking them on at the end. Running `/a4:validate` from this skill is opt-in via this channel; the default flow does not invoke it.
+Treat `$ARGUMENTS` as extra emphasis or constraints from the user (e.g., "focus on the cycle-3 replan", "include the failing test output verbatim"). Incorporate these into the relevant sections rather than tacking them on at the end.
 
 $ARGUMENTS
 
@@ -122,7 +122,7 @@ Below the banner, adapt the document to the session, but include these sections 
 - `Cross-Cutting Changes and Rationale` — *only* the substantive work that does **not** belong in any single `a4/` file. Examples: implementation source under `src/` not yet anchored to a task, scaffolding decisions across multiple modules, tooling changes. For changes that *are* captured in an `a4/` file, link to that file from `a4 Workspace Touchpoints` instead. Use this section for the diff narrative, with `git show <sha>` pointers for exact contents.
 - `Related Wiki and External Links` — durable links beyond `a4/`: GitHub issues, pull requests, design docs, dashboards, vendor docs. Keep self-contained: explain why each link matters and what state it was in at handoff time.
 - `Important Dialog` — short, high-signal user statements, corrections, constraints, or preferences that shaped the work. Quote sparingly; paraphrase otherwise.
-- `Validation` — exact commands and outcomes from verification the user already ran this session (e.g., `/a4:run` test-runner output, project tests, an explicit `/a4:validate` invocation). This skill does not run validators on its own — see Task step 4. If nothing was verified this session, say so explicitly. Include trailing failure output verbatim when it matters; trim noisy success output.
+- `Validation` — exact commands and outcomes from verification the user already ran this session (e.g., `/a4:run` test-runner output, project tests). If nothing was verified this session, say so explicitly. Include trailing failure output verbatim when it matters; trim noisy success output.
 - `Known Issues and Risks` — unfinished work, failing checks, edge cases, user-visible risks. If a single workspace file already captures the failure (e.g., a `task` at `status: failing` with a Log entry), link to it and only summarize what cannot be inferred from that file.
 - `Next Steps` — concrete continuation steps in priority order. Name the a4 entry point per step (`/a4:run`, `/a4:roadmap`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.) so the next session can re-enter the pipeline directly.
 - `Open Questions` — unresolved product, design, or implementation questions not already captured as a review item under the relevant wiki page. If the question fits an existing review-item walk, log it there instead and link from this section.
@@ -135,6 +135,6 @@ After writing the file and creating the required commits, tell the user:
 1. The handoff file path.
 2. The pre-handoff commit SHA(s) from step 1 (or `skipped`).
 3. The handoff-only commit SHA from step 5.
-4. The validation summary line (e.g., `validation: not run — handoff does not invoke validators by default`, or a one-line summary of checks the user ran this session).
+4. A one-line validation summary (e.g., a brief recap of checks the user ran this session, or `none recorded`).
 
 Do not restate the handoff body in the output.
