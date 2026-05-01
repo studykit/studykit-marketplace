@@ -18,7 +18,14 @@
 # Always exits 0 — must never block session start.
 set -u
 
-src_dir="${CLAUDE_PLUGIN_ROOT:-}/rules"
+# Derive plugin root from this script's location rather than ${CLAUDE_PLUGIN_ROOT}:
+# matches the script-relative resolution used by install-rules.sh / uninstall-rules.sh
+# and stays correct even if the env var is missing from the hook subprocess.
+# Layout: ${CLAUDE_PLUGIN_ROOT}/hooks/refresh-rule-symlinks.sh.
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+plugin_root="$(cd "$script_dir/.." && pwd)"
+
+src_dir="$plugin_root/rules"
 [[ -d "$src_dir" ]] || exit 0
 
 project_dir="${CLAUDE_PROJECT_DIR:-}"

@@ -9,7 +9,13 @@ if ! root="$(git rev-parse --show-toplevel 2>/dev/null)"; then
     exit 1
 fi
 
-src_dir="${CLAUDE_PLUGIN_ROOT}/rules"
+# Derive plugin root from this script's location rather than ${CLAUDE_PLUGIN_ROOT}:
+# the env var is not always exported into the bash subprocess invoked by the
+# skill, but the layout ${CLAUDE_PLUGIN_ROOT}/skills/uninstall-rules/scripts/ is fixed.
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+plugin_root="$(cd "$script_dir/../../.." && pwd)"
+
+src_dir="$plugin_root/rules"
 dst_dir="${root}/.claude/rules"
 
 if [[ ! -d "$src_dir" ]]; then
