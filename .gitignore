@@ -209,6 +209,7 @@ __marimo__/
 session-tree.lock
 
 .claude/sessions/
+.claude/tmp/
 .DS_Store
 **/node_modules/
 .obsidian/workspace.json

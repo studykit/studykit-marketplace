@@ -7,5 +7,56 @@
     "hookify@claude-plugins-official": false,
     "mcp-server-dev@claude-plugins-official": false,
     "pyright-lsp@claude-plugins-official": false
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" pre-read",
+            "timeout": 10
+          }
+        ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" pre-edit",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/cleanup-contributor.sh\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/sweep-contributor.sh\"",
+            "timeout": 5
+          },
+          {
+            "type": "command",
+            "command": "uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" session-start",
+            "timeout": 10
+          }
+        ]
+      }
+    ]
   }
 }
