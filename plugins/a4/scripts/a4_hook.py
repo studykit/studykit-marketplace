@@ -5,11 +5,15 @@
 """a4 hook dispatcher.
 
 Subcommands:
-  pre-edit       PreToolUse on Write|Edit|MultiEdit. Stash the on-disk
-                 ``status:`` of any a4/*.md the tool is about to modify
-                 into a session-scoped JSON map. Consumed by ``post-edit``
-                 to detect ``status:`` transitions precisely (pre vs
-                 post on disk, instead of HEAD vs working tree).
+  pre-edit       PreToolUse on Write|Edit|MultiEdit. Two responsibilities
+                 on the same a4/*.md gate:
+                 (1) Stash the on-disk ``status:`` into a session-scoped
+                 JSON map. Consumed by ``post-edit`` to detect ``status:``
+                 transitions precisely (pre vs post on disk, instead of
+                 HEAD vs working tree).
+                 (2) Inject the type-specific authoring-contract pointers
+                 as ``additionalContext`` once per (file, type) per
+                 session. Silent on subsequent edits to the same file.
   post-edit      PostToolUse on Write|Edit|MultiEdit. Record the edited
                  a4/*.md path (session-scoped), report cross-file
                  status-consistency mismatches within the edited file's
@@ -140,12 +144,16 @@ def _read_status_from_disk(path: "Path") -> str | None:
 
 
 def _pre_edit() -> int:
-    """Stash on-disk `status:` for the a4/*.md the tool is about to write.
+    """Two responsibilities on the same a4/*.md gate:
+      (1) Stash on-disk `status:` for the a4/*.md the tool is about to
+          write. Files outside `a4/`, non-md files, missing `status:`,
+          and parse failures are silent no-ops — the post-edit consumer
+          treats absence as "no transition to detect".
+      (2) Inject type-specific authoring-contract pointers once per
+          (file, type) per session. Sole mechanism for surfacing
+          authoring contracts at edit time.
 
-    Always exits 0. Files outside `a4/`, non-md files, missing
-    `status:`, and parse failures are all silent no-ops — the post-edit
-    consumer treats absence as "no transition to detect" and falls back
-    to its consistency-check-only path.
+    Always exits 0.
     """
     import json
     import os
@@ -175,17 +183,192 @@ def _pre_edit() -> int:
 
     abs_path = Path(file_path)
     if not abs_path.is_file():
-        # Write to a new file — no pre-status to capture. Post-edit will
-        # see no entry and skip cascade detection.
-        return 0
-    pre = _read_status_from_disk(abs_path)
-    if pre is None:
+        # Write to a new file — no on-disk frontmatter to read. Post-edit
+        # will see no prestatus entry and skip cascade detection; the
+        # contract injection cannot resolve `type:` and so is also
+        # skipped. New-file authoring relies on the LLM having already
+        # consulted `authoring/` per the workspace policy.
         return 0
 
-    data = _read_prestatus(project_dir, session_id)
-    data[file_path] = pre
-    _write_prestatus(project_dir, session_id, data)
+    # Responsibility 1 — pre-status snapshot for cascade detection.
+    pre = _read_status_from_disk(abs_path)
+    if pre is not None:
+        data = _read_prestatus(project_dir, session_id)
+        data[file_path] = pre
+        _write_prestatus(project_dir, session_id, data)
+
+    # Responsibility 2 — authoring-contract injection (one-shot per
+    # (file, type) per session). Independent of pre-status presence —
+    # wikis without `status:` still need the contract.
+    _maybe_inject_authoring_contract(
+        abs_path, file_path, a4_dir, project_dir, session_id
+    )
     return 0
+
+
+# -------------------- authoring-contract injection ------------------------
+#
+# Lazy, edit-intent-only surfacing of `authoring/*.md` contracts. Fires
+# from PreToolUse so a pure read of an `a4/*.md` file does NOT pull in
+# the contract; only an imminent Write/Edit/MultiEdit does. Deduped per
+# (file_path, type) per session — repeated edits to the same file
+# inject once and stay silent.
+#
+# Type resolution is by path (`common.WIKI_TYPES` / `common.ISSUE_FOLDERS`),
+# not by frontmatter parse — the a4 layout pins type by location, so an
+# extra file IO is unnecessary. Archive files are skipped.
+#
+# Session-scoped state at `.claude/tmp/a4-edited/a4-injected-<sid>.txt`,
+# one `<file_path>\t<type>` per line. Cleaned up by the same SessionEnd
+# / SessionStart-sweep paths that handle the other a4-edited family
+# files (`hooks/cleanup-edited-a4.sh`, `hooks/sweep-old-edited-a4.sh`).
+
+
+_TASK_FAMILY_TYPES = frozenset({"task", "bug", "spike", "research"})
+
+
+def _injected_path(project_dir: str, session_id: str) -> "Path":
+    return (
+        Path(project_dir) / ".claude" / "tmp" / "a4-edited"
+        / f"a4-injected-{session_id}.txt"
+    )
+
+
+def _read_injected(project_dir: str, session_id: str) -> set:
+    path = _injected_path(project_dir, session_id)
+    if not path.is_file():
+        return set()
+    out: set = set()
+    try:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if "\t" not in line:
+                continue
+            fp, tp = line.split("\t", 1)
+            out.add((fp, tp))
+    except OSError:
+        return set()
+    return out
+
+
+def _record_injected(
+    project_dir: str, session_id: str, file_path: str, type_value: str
+) -> None:
+    path = _injected_path(project_dir, session_id)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+    try:
+        with path.open("a", encoding="utf-8") as f:
+            f.write(f"{file_path}\t{type_value}\n")
+    except OSError:
+        return
+
+
+def _resolve_type_from_path(abs_path: "Path", a4_dir: "Path") -> str | None:
+    """Resolve frontmatter `type:` from the file's location under `a4/`.
+
+    The a4 layout pins `type:` by path: top-level `<wiki>.md` files map
+    to `WIKI_TYPES`, and flat `<folder>/<id>-<slug>.md` files map to
+    `ISSUE_FOLDERS`. Resolving by path avoids a frontmatter parse on
+    every edit (cheaper than reading the file just to read `type:`)
+    and matches the canonical layout used by `discover_files` and the
+    validators.
+
+    Returns None for archived files (`a4/archive/...`) — archived files
+    retain their original `type:` but are not active edit targets, so
+    contract injection is skipped.
+    """
+    try:
+        rel = abs_path.resolve().relative_to(a4_dir.resolve())
+    except (OSError, ValueError):
+        return None
+    parts = rel.parts
+    if not parts:
+        return None
+    if parts[0] == "archive":
+        return None
+    try:
+        from common import ISSUE_FOLDERS, WIKI_TYPES
+    except ImportError:
+        return None
+    if len(parts) == 1 and parts[0].endswith(".md"):
+        stem = parts[0][:-3]
+        return stem if stem in WIKI_TYPES else None
+    if len(parts) >= 2 and parts[0] in ISSUE_FOLDERS:
+        return parts[0]
+    return None
+
+
+def _maybe_inject_authoring_contract(
+    abs_path: "Path",
+    file_path: str,
+    a4_dir: "Path",
+    project_dir: str,
+    session_id: str,
+) -> None:
+    """Inject pointer-style authoring-contract context once per
+    (file, type) per session. Silent when the type cannot be resolved
+    from path (archive files, unrecognized layout).
+    """
+    type_value = _resolve_type_from_path(abs_path, a4_dir)
+    if not type_value:
+        return
+
+    plugin_root = Path(__file__).resolve().parent.parent
+    type_doc = plugin_root / "authoring" / f"{type_value}-authoring.md"
+    if not type_doc.is_file():
+        return
+
+    already = _read_injected(project_dir, session_id)
+    key = (file_path, type_value)
+    if key in already:
+        return
+    _record_injected(project_dir, session_id, file_path, type_value)
+
+    display_rel = (
+        file_path[len(project_dir) + 1 :]
+        if file_path.startswith(project_dir + "/")
+        else file_path
+    )
+
+    pointers = [
+        "- `plugins/a4/authoring/frontmatter-universals.md` — universal "
+        "frontmatter contract (type field, ids, dates, status writers, "
+        "structural relationship fields).",
+        f"- `plugins/a4/authoring/{type_value}-authoring.md` — per-type "
+        "field table, lifecycle, body shape, common mistakes.",
+        "- `plugins/a4/authoring/body-conventions.md` — heading form, "
+        "link form, change-log discipline, log section.",
+        "- `plugins/a4/authoring/validator-rules.md` — schema enforcement "
+        "and cross-file status-consistency rules.",
+    ]
+    if type_value in _TASK_FAMILY_TYPES:
+        pointers.insert(
+            2,
+            "- `plugins/a4/authoring/task-family-lifecycle.md` — "
+            "issue-family lifecycle (status enum, transitions, writer "
+            "rules).",
+        )
+
+    body = "\n".join(pointers)
+    context = (
+        f"## a4 authoring contract — `type: {type_value}`\n\n"
+        f"About to edit `{display_rel}`. Read these contracts before "
+        "writing — they are the binding schema/body contract for this "
+        "type, not optional.\n\n"
+        f"{body}\n\n"
+        "Injected once per (file, type) per session — subsequent edits "
+        "will not re-emit this notice."
+    )
+    _emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": context,
+            }
+        }
+    )
 
 
 # ------------------------- post-edit (PostToolUse) ------------------------

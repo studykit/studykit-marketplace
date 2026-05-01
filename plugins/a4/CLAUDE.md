@@ -22,26 +22,22 @@ Each of `authoring/`, `workflows/`, and `dev/` carries its own `CLAUDE.md` with 
 
 | Path | Role | Audience |
 |------|------|----------|
-| `authoring/` | **End-user authoring contracts.** Single source of truth for frontmatter schemas, body conventions, commit message form, per-type contracts. Cited by `rules/*.md` (auto-load) and skills (frontmatter side). Implementation script paths must NOT appear here — use command surface (e.g. `/a4:validate`) or cross-ref into `workflows/` / `dev/`. | End users (workspace authors) |
-| `rules/` | **Pointer-only rules.** Each file is a thin auto-load shim with `paths:` frontmatter that fires when the user opens or edits a matching `<project-root>/a4/**/*.md` file. Bodies are pointers into `authoring/`, not duplicated content. | Project-rule loader (end-user-facing) |
+| `authoring/` | **End-user authoring contracts.** Single source of truth for frontmatter schemas, body conventions, commit message form, per-type contracts. Cited by skills/agents at runtime and surfaced to the LLM by the PreToolUse contract-injection hook on the first edit of each a4/*.md per session. Implementation script paths must NOT appear here — use command surface (e.g. `/a4:validate`) or cross-ref into `workflows/` / `dev/`. | End users (workspace authors) |
 | `workflows/` | **Skill orchestration contracts.** Cross-skill workflow rules: skill modes (interactive vs autonomous), pipeline shapes (Full / Reverse / Minimal), iterate mechanics (review-item walks), wiki-authorship policy. Cited by skills/agents at runtime. Implementation references must NOT appear here — those go in `dev/`. | Skill runtime |
 | `dev/` | **Plugin contributor docs.** Hook conventions, cascade implementation, validator implementation. Source-code anchor lists live here. Read only when modifying `plugins/a4/` itself. Skills MUST NOT cite `dev/`. | Plugin contributors |
 | `skills/<name>/` | `SKILL.md` is **orchestration only** (preflight + step list + non-goals). Stage-specific procedures live in `skills/<name>/references/*.md`. The cross-cutting authoring contract for the artifact lives in `plugins/a4/authoring/<type>-authoring.md`. | Skill runtime |
 | `agents/` | Subagent definitions (reviewers, composers, implementers, workspace-assistant). | Skill runtime |
-| `skills/install-rules/`, `skills/uninstall-rules/` | `/a4:install-rules` / `/a4:uninstall-rules`. Each ships its own `scripts/<name>.sh`. | End users |
-| `hooks/` + `scripts/a4_hook.py` | All four hook flows dispatch through one Python entry point. Shell wrappers in `hooks/` only handle SessionStart/SessionEnd file housekeeping. | Hook runtime |
+| `hooks/` + `scripts/a4_hook.py` | All hook flows dispatch through one Python entry point. PreToolUse handles two responsibilities on the same a4/*.md gate — pre-status snapshot for the cascade engine and one-shot authoring-contract injection per (file, type) per session. Shell wrappers in `hooks/` only handle SessionStart/SessionEnd file housekeeping. | Hook runtime |
 | `scripts/` | Validators, status transitions, allocator, search, drift detector, hook dispatcher, body-schema XSDs. | Skill / hook runtime |
 
 ## Recent structural moves (read before editing)
 
 The split between these folders is recent — consult `git log --oneline plugins/a4/` for the full sequence. The defining commits:
 
-- **(this refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; split skill-runtime workflow contracts (`iterate-mechanics.md`, `pipeline-shapes.md`, `skill-modes.md`, `wiki-authorship.md`) out of `dev/` into a new `workflows/` so skills do not need to cite plugin internals; added `**Audience:**` banners; enforced path purity (script paths only in `dev/`).
-- `4e6e826` — split former `references/` (data) from former `docs/` (workflow); slimmed `rules/` to pointers.
+- **(this refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; split skill-runtime workflow contracts (`iterate-mechanics.md`, `pipeline-shapes.md`, `skill-modes.md`, `wiki-authorship.md`) out of `dev/` into a new `workflows/` so skills do not need to cite plugin internals; added `**Audience:**` banners; enforced path purity (script paths only in `dev/`); replaced the workspace-rules layer with a PreToolUse contract-injection hook (`scripts/a4_hook.py:_pre_edit`).
 - `04ca63a` — slimmed `SKILL.md` files to orchestration; moved skill procedures into `skills/<name>/references/`.
-- `a014618` — moved per-type authoring guides (`spec-authoring.md`, `task-authoring.md`, …) from `rules/` to (what was then) `references/`.
 
-If you find yourself duplicating substance across `rules/` and `authoring/`, you are undoing one of these refactors — push the substance into `authoring/` and leave `rules/` as the pointer. If you find script paths or implementation pointers leaking into `authoring/`, push them into `dev/` and leave a single cross-ref behind.
+If you find script paths or implementation pointers leaking into `authoring/`, push them into `dev/` and leave a single cross-ref behind.
 
 ## Required reading before editing
 
@@ -54,16 +50,15 @@ If you find yourself duplicating substance across `rules/` and `authoring/`, you
 ## Conventions
 
 - **Path references inside this plugin** — choose the form by load context:
-  - `rules/*.md`, `authoring/*.md`, and `workflows/*.md` MUST use relative paths. These files are read in contexts where `${CLAUDE_PLUGIN_ROOT}` is not expanded, so env-var paths resolve to literal strings and break (see commits `350c2a6a`, `7abaaeae`). Inside `rules/` use `../authoring/<file>.md` for frontmatter/body contracts and `../workflows/<file>.md` when the rule fires for a context that needs orchestration knowledge (e.g., review-item walks); never `../dev/` or `../scripts/`. Inside `authoring/` use `./<file>.md` for siblings and `../scripts/<script>.py` when naming a script artifact in prose (no cross-dir refs to `workflows/`, `rules/`, `skills/`, or `dev/`). Inside `workflows/` use `./<file>.md` for siblings and `../authoring/<file>.md` for the frontmatter contract (no cross-dir refs to dev/).
+  - `authoring/*.md` and `workflows/*.md` MUST use relative paths. These files are read in contexts where `${CLAUDE_PLUGIN_ROOT}` is not expanded, so env-var paths resolve to literal strings and break (see commits `350c2a6a`, `7abaaeae`). Inside `authoring/` use `./<file>.md` for siblings and `../scripts/<script>.py` when naming a script artifact in prose (no cross-dir refs to `workflows/`, `skills/`, or `dev/`). Inside `workflows/` use `./<file>.md` for siblings and `../authoring/<file>.md` for the frontmatter contract (no cross-dir refs to dev/).
   - `skills/<name>/**` and `agents/*.md` use `${CLAUDE_PLUGIN_ROOT}/<plugin-internal-path>` for both markdown citations and shell snippets. The env var is expanded at skill-invocation / agent-spawn time. Depth-independence and grep uniformity are the rationale (see commit `a665a92d`).
-  - Shell snippets (`uv run`, `bash` code blocks) follow the same rule as their containing directory's path form. In `skills/<name>/**` and `agents/*.md`, use `${CLAUDE_PLUGIN_ROOT}/...` (env var expanded at invocation time). In `rules/*.md`, `authoring/*.md`, and `workflows/*.md`, use relative paths (`../scripts/<script>.py`) — the harness resolves them against the doc's filesystem location at command run time. Do not mix forms within one directory.
-- **`rules/*.md` carries `paths:` frontmatter** that targets `a4/**/*.md` (the user's workspace), not paths inside this plugin. The rule fires when the end user opens an `a4/<type>/*.md` file.
+  - Shell snippets (`uv run`, `bash` code blocks) follow the same rule as their containing directory's path form. In `skills/<name>/**` and `agents/*.md`, use `${CLAUDE_PLUGIN_ROOT}/...` (env var expanded at invocation time). In `authoring/*.md` and `workflows/*.md`, use relative paths (`../scripts/<script>.py`) — the harness resolves them against the doc's filesystem location at command run time. Do not mix forms within one directory.
 - **Path purity** — strict per-directory citation rules:
-  - `authoring/*.md` cites `./` siblings and `../scripts/<script>.py` (script *usage* in prose only — not implementation). Scripts are independently usable, so naming them is fine. NO `../workflows/`, `../rules/`, `../skills/`, `../dev/` — those layers consume `authoring/`; reverse refs invert the dependency.
+  - `authoring/*.md` cites `./` siblings and `../scripts/<script>.py` (script *usage* in prose only — not implementation). Scripts are independently usable, so naming them is fine. NO `../workflows/`, `../skills/`, `../dev/` — those layers consume `authoring/`; reverse refs invert the dependency.
   - `workflows/*.md` cites `./` siblings and `../authoring/`. NO `../scripts/`, `../dev/`.
   - `skills/<name>/**` and `agents/*.md` cite `${CLAUDE_PLUGIN_ROOT}/authoring/` and `${CLAUDE_PLUGIN_ROOT}/workflows/`. NEVER `${CLAUDE_PLUGIN_ROOT}/dev/`.
   - `dev/*.md` may cite anything; it is the only directory plugin-internal references are allowed.
-  - For author/skill-facing recovery commands, prefer the command surface (`/a4:validate`, `/a4:install-rules`) over a script path.
+  - For author/skill-facing recovery commands, prefer the command surface (`/a4:validate`) over a script path.
 - **Ids are globally monotonic.** Allocate via `scripts/allocate_id.py`; never reuse, never re-pack.
 - **Plugin version lives in `.claude-plugin/marketplace.json`**, not in `plugin.json`. Bump the entry when adding a feature (per the project-root `CLAUDE.md`).
 

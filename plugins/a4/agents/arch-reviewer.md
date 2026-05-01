@@ -22,9 +22,9 @@ Every review criterion exists because failing it forces the developer to guess. 
 
 Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, id allocation, path-form, heading form, cross-stage feedback).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape (`kind:`, `target:`, `source:`, `priority:` fields and required body sections).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-architecture-authoring.md` — what makes the architecture wiki "complete" (anchor stability, required body sections, change-logs discipline).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract (writer-owned fields, id allocation, path-form, heading form, change-logs).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape (`kind:`, `target:`, `source:`, `priority:` fields and required body sections).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/architecture-authoring.md` — what makes the architecture wiki "complete" (anchor stability, required body sections, change-logs discipline).
 
 ## What You Receive
 

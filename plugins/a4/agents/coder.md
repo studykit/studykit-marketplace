@@ -14,11 +14,13 @@ You are a task implementation agent. Your job is to implement one task and write
 
 ## Authoring contracts (read once at startup)
 
-Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly:
+Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies, especially §9 commit message form (`#<task-id> <type>(a4): <description>`) and §1 status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`; the optional `## Log` section is hand-maintained, not written by the hook).
-- The per-family task contract that matches the task you were assigned: `${CLAUDE_PLUGIN_ROOT}/rules/a4-task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/rules/a4-spike-authoring.md`, or `${CLAUDE_PLUGIN_ROOT}/rules/a4-research-authoring.md` (you do not author task files but you read them and your commits cite their ids; the rule is also auto-loaded when you read the task file).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — when flipping UC `ready → implementing`; do not modify UC bodies.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` — status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — body shape; the optional `## Log` section is hand-maintained, not written by the hook.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form `#<task-id> <type>(a4): <description>`.
+- The per-family task contract that matches the task you were assigned: `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`, or `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`. You do not author task files but you read them and your commits cite their ids.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — when flipping UC `ready → implementing`; do not modify UC bodies.
 
 ## What You Receive
 

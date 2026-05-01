@@ -34,6 +34,11 @@ Examples:
   `pre-edit` hook (PreToolUse) and consumed by `post-edit`
   (PostToolUse) to detect the precise pre→post transition before
   running cascades.
+- `.claude/tmp/a4-edited/a4-injected-<session_id>.txt` — append-only
+  list of `<file_path>\t<type>` lines recording which (file, type)
+  pairs have already received an authoring-contract injection in this
+  session. Populated and consulted by the `pre-edit` hook to dedupe
+  injection (one-shot per pair per session).
 
 ### Permanent workspace state
 
@@ -77,6 +82,14 @@ Concrete pattern (the "edit-record family" — reference implementation):
 | Consume | Stop | Read file, validate each path |
 | Cleanup | SessionEnd | Delete `a4-edited-<sid>.txt` for this session |
 | Safety net | SessionStart | Sweep `a4-edited-*.txt` older than 1 day |
+
+The `a4-injected-<sid>.txt` and `a4-prestatus-<sid>.json` files follow
+the same pattern — appended/written by `pre-edit` (PreToolUse), read by
+either `pre-edit` itself (dedupe lookup) or `post-edit`, deleted by the
+SessionEnd cleanup hook with the SessionStart sweep as safety net.
+Adding a new session-scoped file requires adding it to BOTH
+`hooks/cleanup-edited-a4.sh` (explicit `rm -f` line) and
+`hooks/sweep-old-edited-a4.sh` (find `-name` clause).
 
 ### Rule B — Permanent-state reconciliation writes require idempotency, not a counterpart
 
@@ -204,8 +217,8 @@ exit 0 (Stop event) so hook bugs cannot strand the user.
 
 ## 6. Output channels
 
-Claude Code recognizes two output channels in a SessionStart / PostToolUse
-hook's JSON payload:
+Claude Code recognizes two output channels in a SessionStart / PreToolUse /
+PostToolUse hook's JSON payload:
 
 - **`hookSpecificOutput.additionalContext`** — markdown-structured,
   verbose. Injected into the LLM's context. Use for full diagnostics
@@ -227,7 +240,9 @@ hook's JSON payload:
   the Stop-hook safety net surfaces instead).
 - **`additionalContext` only** for informational reports where no
   user-visible notice is warranted (e.g., the PostToolUse status-
-  consistency report — inline context for the LLM, no pop-up needed).
+  consistency report — inline context for the LLM, no pop-up needed;
+  and the PreToolUse authoring-contract injection — pointer-only
+  reminder before an edit, no user-facing news).
 - **`systemMessage` only** for short announcements with no LLM-relevant
   detail. Rare; none currently.
 - **Neither (silent)** when the hook has nothing meaningful to report
@@ -235,6 +250,39 @@ hook's JSON payload:
 
 Note: the official documentation has historically understated that
 `systemMessage` works on SessionStart. It does — empirically verified.
+
+### PreToolUse authoring-contract injection
+
+The `pre-edit` hook injects a pointer-style `additionalContext` block on
+the first Write/Edit/MultiEdit of an `a4/*.md` file in a session, naming
+the matching `authoring/` contracts for the file's `type:`. The hook is
+the single mechanism that surfaces authoring contracts to the LLM at
+edit time — pure reads do not pull the contract in.
+
+Design choices:
+
+- **Lazy.** Triggers on PreToolUse, not file open. Pure reads no longer
+  pull in the contract.
+- **Pointer-only.** The injection lists pointer paths and a short
+  rationale; full contract bodies are not inlined. The LLM is expected
+  to `Read` the listed files when it actually needs them. Inlining
+  bodies is wasteful (cache miss + token bloat) and weaker than a
+  direct `Read` (no line numbers, no in-file navigation).
+- **Per-(file, type) dedupe.** A second edit to the same file in the
+  same session emits nothing. `type:` change re-triggers injection
+  because the contract changed.
+- **Path-based type resolution.** `type:` is resolved from path
+  (`common.WIKI_TYPES` for top-level wiki pages, `common.ISSUE_FOLDERS`
+  for `<folder>/<id>-<slug>.md`), not by parsing frontmatter — the a4
+  layout pins type by location, so the parse would be wasted IO.
+- **Archive skipped.** Files under `a4/archive/` inject nothing —
+  archived files retain their original type but are not active edit
+  targets.
+- **Silent on miss.** Unrecognized layouts or missing
+  `authoring/<type>-authoring.md` inject nothing.
+- **Edit only — never blocks.** PreToolUse exits 0; the contract is a
+  hint, not a gate. Schema enforcement remains the Stop-hook
+  responsibility (`markdown_validator`).
 
 ---
 

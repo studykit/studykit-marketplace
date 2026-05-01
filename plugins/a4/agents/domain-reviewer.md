@@ -20,11 +20,11 @@ Every review criterion exists because failing it forces downstream work to inven
 
 ## Authoring contracts (read once at startup)
 
-Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before writing review items:
+Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-domain-authoring.md` — what makes the domain wiki "complete" (concepts / relationships / state-transitions sections, in-situ shared scope with arch).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` — what makes the domain wiki "complete" (concepts / relationships / state-transitions sections, in-situ shared scope with arch).
 
 ## What You Receive
 

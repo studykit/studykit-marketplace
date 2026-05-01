@@ -17,12 +17,14 @@ You are a Use Case composer agent. Your job is to compose (or extend) the use-ca
 
 ## Authoring contracts (read once at startup)
 
-Subagents do not auto-inherit project-level path-scoped rules from the parent session. Read these explicitly before writing any a4 file:
+Subagents do not inherit the PreToolUse contract injection from the parent session. Read these explicitly before writing any a4 file:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, id allocation, path-form, heading form, change-logs, wiki authorship boundary, cross-stage feedback, commit form).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — per-UC contract (frontmatter, body sections, lifecycle).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md` / `a4-actors-authoring.md` / `a4-nfr-authoring.md` — wiki-page contracts for the pages this agent primary-authors.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — when emitting `kind: question` review items for unresolvable ambiguities.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract (writer-owned fields, id allocation, path-form, heading form, change-logs).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form.
+- `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md` — wiki authorship boundary across skills.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — per-UC contract (frontmatter, body sections, lifecycle).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` — wiki-page contracts for the pages this agent primary-authors.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — when emitting `kind: question` review items for unresolvable ambiguities.
 
 ## Shared References
 

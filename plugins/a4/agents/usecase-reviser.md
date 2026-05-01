@@ -16,12 +16,12 @@ You are a Use Case revision agent. Your job is to walk a set of open review item
 
 ## Authoring contracts (read once at startup)
 
-Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before editing any a4 file:
+Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before editing any a4 file:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies (writer-owned fields, change-logs, cross-stage feedback).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — per-UC contract.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item lifecycle (resolved / discarded transitions; edit `status:` directly — the PostToolUse cascade hook handles `updated:` and any cross-file flips).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md` / `a4-actors-authoring.md` / `a4-nfr-authoring.md` — when the Suggestion targets one of those wikis.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract (writer-owned fields, change-logs).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — per-UC contract.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item lifecycle (resolved / discarded transitions; edit `status:` directly — the PostToolUse cascade hook handles `updated:` and any cross-file flips).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` — when the Suggestion targets one of those wikis.
 
 ## Shared References
 

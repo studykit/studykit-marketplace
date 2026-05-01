@@ -18,12 +18,12 @@ You are a Use Case quality reviewer. Your job is to analyze a spec-as-wiki+issue
 
 ## Authoring contracts (read once at startup)
 
-Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before writing review items:
+Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-workspace-policies.md` — cross-cutting policies.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-review-authoring.md` — review-item shape.
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-usecase-authoring.md` — UC contract (lifecycle, body sections, abstraction discipline).
-- `${CLAUDE_PLUGIN_ROOT}/rules/a4-context-authoring.md` / `a4-actors-authoring.md` / `a4-nfr-authoring.md` — when emitting findings against those wiki pages.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — UC contract (lifecycle, body sections, abstraction discipline).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` — when emitting findings against those wiki pages.
 
 ## What You Receive
 
