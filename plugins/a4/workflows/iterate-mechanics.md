@@ -1,7 +1,5 @@
 # Iterate Mechanics — Shared Procedure for Review-Item Walks
 
-> **Audience:** Skill runtime — LLMs executing a4 skills (and contributors authoring skills). Defines cross-skill workflow contracts (modes, shapes, iterate, wiki-authorship). Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Plugin internals (hooks, cascade implementation) live in `../dev/`.
-
 Single source of truth for the **formal procedure** every iterate flow follows when walking review items: how to filter the backlog, how to present it, how to transition status, and how to record the wiki edit. The **actual work** that happens between status flips (what to inspect, what to fix, which impact rules to apply) is stage-specific.
 
 **Mental model.** Treat each iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when starting, archive (resolve / discard) when done. The mechanics here are the mailbox protocol.

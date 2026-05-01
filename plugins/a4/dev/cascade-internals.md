@@ -1,7 +1,5 @@
 # a4 cascade & validator internals
 
-> **Audience:** a4 plugin contributors editing `plugins/a4/` itself. Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Skill authors should read `../workflows/` (skill orchestration) and `../authoring/` (frontmatter contract); skills MUST NOT cite this file.
-
 Implementation jump-table for the status cascade engine, the cascade hook, the recovery sweep, and the validator. Maps the contracts described in `../authoring/frontmatter-universals.md` (universal rules including status writers and title placeholders) and the per-type lifecycles in `../authoring/<type>-authoring.md` to the modules that enforce them.
 
 ## Cascade engine

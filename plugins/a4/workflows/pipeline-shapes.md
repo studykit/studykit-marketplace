@@ -1,7 +1,5 @@
 # Pipeline Shapes — Full, Reverse, Minimal
 
-> **Audience:** Skill runtime — LLMs executing a4 skills (and contributors authoring skills). Defines cross-skill workflow contracts (modes, shapes, iterate, wiki-authorship). Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Plugin internals (hooks, cascade implementation) live in `../dev/`.
-
 The a4 pipeline is not one shape. Three named shapes describe how a workspace flows from intent to shipped code, and one named **no-shape** state describes when no pipeline runs at all. Each constituent skill that behaves differently across shapes cites this document; skills with shape-independent behavior do not.
 
 Companion to:

@@ -1,7 +1,5 @@
 # Wiki Authorship & Cross-Stage Feedback Policy
 
-> **Audience:** Skill runtime — LLMs executing a4 skills (and contributors authoring skills). Defines cross-skill workflow contracts (modes, shapes, iterate, wiki-authorship). Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Plugin internals (hooks, cascade implementation) live in `../dev/`.
-
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
 Companion to [`../authoring/frontmatter-universals.md`](../authoring/frontmatter-universals.md) (universal frontmatter rules), [`../authoring/<type>-authoring.md`](../authoring/) (per-type field tables and lifecycles), [`../authoring/body-conventions.md`](../authoring/body-conventions.md) (heading form, `## Change Logs` / `## Log` rules, link form), [`skill-modes.md`](./skill-modes.md) (interactive vs autonomous, forward vs reverse — why some stages have only one mode), and [`pipeline-shapes.md`](./pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).

@@ -14,9 +14,9 @@ Three distinct audiences read this plugin, and confusing them causes drift:
 | Authoring or running an a4 skill (skill runtime — LLM executing a skill) | **Skill runtime** | `authoring/` (frontmatter contract) + `workflows/` (skill orchestration contracts) |
 | Modifying anything inside `plugins/a4/` itself (this plugin) | **Plugin contributor** | `authoring/` + `workflows/` + `dev/` (plugin internals) |
 
-Files clearly mark their audience with a `**Audience:**` banner near the top. If you find yourself reading a `dev/` doc while editing a workspace file or running a skill, you are probably overshooting — back off to `authoring/` or `workflows/`.
+Each of `authoring/`, `workflows/`, and `dev/` carries its own `CLAUDE.md` with directory-local contributor guardrails — audience statement, citation rules, "when to add a file here / when not", and tone. Those auto-load alongside this file when you edit anything in the directory; consult them as the binding rule for that directory. (Per-file `**Audience:**` banners that used to live at the top of each `*.md` were removed — the per-directory `CLAUDE.md` is the single source of truth, and a contributor-side hook registered in repo `.claude/settings.json` injects a layer map and per-file audience pointer on first Read/Edit.)
 
-Each of `authoring/`, `workflows/`, and `dev/` carries its own `CLAUDE.md` with directory-local contributor guardrails — citation rules, "when to add a file here / when not", and tone. Those auto-load alongside this file when you edit anything in the directory; consult them as the binding rule for that directory.
+If you find yourself reading a `dev/` doc while editing a workspace file or running a skill, you are probably overshooting — back off to `authoring/` or `workflows/`.
 
 ## Directory layout
 
@@ -34,7 +34,7 @@ Each of `authoring/`, `workflows/`, and `dev/` carries its own `CLAUDE.md` with 
 
 The split between these folders is recent — consult `git log --oneline plugins/a4/` for the full sequence. The defining commits:
 
-- **(this refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; split skill-runtime workflow contracts (`iterate-mechanics.md`, `pipeline-shapes.md`, `skill-modes.md`, `wiki-authorship.md`) out of `dev/` into a new `workflows/` so skills do not need to cite plugin internals; added `**Audience:**` banners; enforced path purity (script paths only in `dev/`); replaced the workspace-rules layer with a PreToolUse contract-injection hook (`scripts/a4_hook.py:_pre_edit`).
+- **(this refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; split skill-runtime workflow contracts (`iterate-mechanics.md`, `pipeline-shapes.md`, `skill-modes.md`, `wiki-authorship.md`) out of `dev/` into a new `workflows/` so skills do not need to cite plugin internals; enforced path purity (script paths only in `dev/`); replaced the workspace-rules layer with a PreToolUse contract-injection hook (`scripts/a4_hook.py:_pre_edit`). Per-file `**Audience:**` banners were added then later removed in favor of per-directory `CLAUDE.md` audience statements + a contributor hook (`dev/scripts/contributor_hook.py`, registered in repo `.claude/settings.json`).
 - `04ca63a` — slimmed `SKILL.md` files to orchestration; moved skill procedures into `skills/<name>/references/`.
 
 If you find script paths or implementation pointers leaking into `authoring/`, push them into `dev/` and leave a single cross-ref behind.

@@ -1,7 +1,5 @@
 # Skill Modes — Interactive vs Autonomous, Forward vs Reverse
 
-> **Audience:** Skill runtime — LLMs executing a4 skills (and contributors authoring skills). Defines cross-skill workflow contracts (modes, shapes, iterate, wiki-authorship). Workspace authors editing `<project-root>/a4/**/*.md` should read `../authoring/` instead. Plugin internals (hooks, cascade implementation) live in `../dev/`.
-
 Why each a4 pipeline stage has the mode it has, and why the missing interactive/autonomous pairs are intentional rather than gaps.
 
 Companion to:
