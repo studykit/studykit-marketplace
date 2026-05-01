@@ -28,7 +28,7 @@ Each of `authoring/`, `workflows/`, and `dev/` carries its own `CLAUDE.md` with 
 | `dev/` | **Plugin contributor docs.** Hook conventions, cascade implementation, validator implementation. Source-code anchor lists live here. Read only when modifying `plugins/a4/` itself. Skills MUST NOT cite `dev/`. | Plugin contributors |
 | `skills/<name>/` | `SKILL.md` is **orchestration only** (preflight + step list + non-goals). Stage-specific procedures live in `skills/<name>/references/*.md`. The cross-cutting authoring contract for the artifact lives in `plugins/a4/authoring/<type>-authoring.md`. | Skill runtime |
 | `agents/` | Subagent definitions (reviewers, composers, implementers, workspace-assistant). | Skill runtime |
-| `commands/` | `/a4:install-rules` / `/a4:uninstall-rules`. | End users |
+| `skills/install-rules/`, `skills/uninstall-rules/` | `/a4:install-rules` / `/a4:uninstall-rules`. Each ships its own `scripts/<name>.sh`. | End users |
 | `hooks/` + `scripts/a4_hook.py` | All four hook flows dispatch through one Python entry point. Shell wrappers in `hooks/` only handle SessionStart/SessionEnd file housekeeping. | Hook runtime |
 | `scripts/` | Validators, status transitions, allocator, search, drift detector, hook dispatcher, body-schema XSDs. | Skill / hook runtime |
 
