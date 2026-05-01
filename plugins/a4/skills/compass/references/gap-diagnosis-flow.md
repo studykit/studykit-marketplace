@@ -53,7 +53,7 @@ Shape: <Full | Reverse-then-forward | Reverse-only | Minimal | No shape>
 → **<phase identifier>** [target=<target ref>] [mode=iterate|fresh]: <what to do and why>
 ```
 
-The `<phase identifier>` names the kind of work needed — e.g., `architecture`, `domain`, `usecase`, `roadmap`, `task`, `run`, `bootstrap`. `<target ref>` is the specific issue or wiki page the work should open (e.g., `review/6-missing-validation`, `usecase/3-search-history`, `architecture`). For generic resumes, omit `target=` and use `mode=iterate` alone.
+The `<phase identifier>` names the kind of work needed — e.g., `architecture`, `domain`, `usecase`, `breakdown`, `task`, `run`, `bootstrap`. `<target ref>` is the specific issue or wiki page the work should open (e.g., `review/6-missing-validation`, `usecase/3-search-history`, `architecture`). For generic resumes, omit `target=` and use `mode=iterate` alone.
 
 If the user disagrees with the diagnosis, discuss alternatives and let them choose.
 

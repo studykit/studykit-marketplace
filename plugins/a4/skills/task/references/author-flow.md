@@ -34,7 +34,7 @@ These are optional and orthogonal — a task may declare zero, one, or both.
 
 If **both** `implements:` and `spec:` end up empty, ask the user where the AC will be drawn from. A task with no AC source is a smell — either point it at a UC, point it at a spec, or downgrade to `spike` (use `/a4:spike` instead) if the work is genuinely exploratory.
 
-Empty anchors are not always a problem — small UI tweaks, single-property validations, and roadmap-auto-generated tasks without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing spec records, surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/`, `source: task`, body specifying which upstream artifact appears missing.
+Empty anchors are not always a problem — small UI tweaks, single-property validations, and breakdown-derived tasks without a UC group can legitimately stay anchorless. The deeper signal lives in the task body: when the description implies a user-facing scope that no existing UC covers, or an architectural choice that no existing spec records, surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/`, `source: task`, body specifying which upstream artifact appears missing.
 
 ## Step 3: Compose the task body
 

@@ -17,13 +17,13 @@ a4/review/<id>-<slug>.md via allocate_id.py with:
 
   kind: finding
   status: open
-  target: [<<type>/<id>-<slug> (where <type> ∈ {task, bug, spike, research}) if the failure is traceable to a task; otherwise roadmap>]
+  target: [<<type>/<id>-<slug> (where <type> ∈ {task, bug, spike, research}) if the failure is traceable to a task; leave empty when the failure is genuinely cross-task — the calling skill classifies the broader category>]
   source: test-runner
   priority: high | medium
   labels: [test-failure, cycle-<N>]
 
 Body includes: test name, expected vs actual, full stack/log snippet, and best-guess
-root cause pointer (without classifying as roadmap/arch/usecase — the calling skill does
+root cause pointer (without classifying as task/arch/usecase — the calling skill does
 that classification).
 
 Return: counts (passed, failed), list of review item ids written.

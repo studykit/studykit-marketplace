@@ -24,7 +24,7 @@ After Step 3, commit the emitted test-runner review items + updated task frontma
 
 (Drop the id list when zero findings were emitted; commit the log updates alone as `chore(a4): cycle <N> test-runner clean`.)
 
-## Roadmap revision after test failure
+## Task revision after test failure
 
 Commit revised task files + status resets + review item linkages as one commit before re-running Step 1:
 

@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 > **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/bootstrap-authoring.md`. This skill is the sole writer for `a4/bootstrap.md`.
 
-Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`. Both `/a4:run` and the `coder` / `test-runner` agents read this file directly; `/a4:roadmap` only links to it.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`. `/a4:run` and the `coder` / `test-runner` agents read this file directly; `/a4:breakdown` reads its `## Verify` for task acceptance-criteria grounding.
 
 ## Workspace
 
@@ -71,7 +71,7 @@ Runs autonomously. No user interaction during execution. On any verification fai
 
 After the commit lands, suggest:
 
-> The dev environment is ready. Run `/a4:roadmap` to generate an implementation roadmap from the architecture and this bootstrap.
+> The dev environment is ready. Run `/a4:breakdown` to derive a batch of tasks from your usecases / specs (architecture and this bootstrap will be consulted). For single ad-hoc work, use `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`.
 
 If any `target: architecture` review items are `status: open`:
 

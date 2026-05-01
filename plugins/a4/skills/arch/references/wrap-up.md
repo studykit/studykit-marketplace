@@ -48,4 +48,4 @@ Summarize to the user:
 - Review items opened / resolved / still open
 - Suggested next step:
   - `/a4:auto-bootstrap` to set up dev environment
-  - `/a4:roadmap` if bootstrap is already done
+  - `/a4:breakdown` if bootstrap is already done

@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 Write a handoff file that captures everything a fresh Claude Code session needs to continue the current a4 work. Assume the next session will not have access to this conversation.
 
-This is the a4-flavored variant of the global handoff skill. The a4 workspace already records in-flight work as durable, versioned files under `<project-root>/a4/` — issue-family files (`task/`, `bug/`, `spike/`, `research/`), wiki pages (`usecase/`, `spec/`, `roadmap.md`, `architecture.md`, `domain.md`), and review items.
+This is the a4-flavored variant of the global handoff skill. The a4 workspace already records in-flight work as durable, versioned files under `<project-root>/a4/` — issue-family files (`task/`, `bug/`, `spike/`, `research/`), wiki pages (`usecase/`, `spec/`, `architecture.md`, `domain.md`), and review items.
 
 Two-part handoff (the handoff file is conditional):
 
@@ -65,7 +65,7 @@ If no residual survives, skip the handoff file. Report the pre-handoff workspace
 2. **Commit relevant non-handoff changes, split by meaningful unit.**
    - Use the Git status preview in Context as an early signal: empty → likely no non-handoff work to commit; entries → one or more pre-handoff commits may be needed.
    - Before deciding, inspect `git status --short` and `git diff --stat`.
-   - Stage and commit pending working-tree changes that clearly belong to this session, splitting them into separate commits by coherent meaning. For a4 work, common splits are: workspace artifact authoring (`a4/<type>/<id>-<slug>.md` writes), wiki updates (`a4/architecture.md`, `a4/domain.md`, `a4/roadmap.md`), implementation source under the project's source tree, tests, and unrelated cleanup.
+   - Stage and commit pending working-tree changes that clearly belong to this session, splitting them into separate commits by coherent meaning. For a4 work, common splits are: workspace artifact authoring (`a4/<type>/<id>-<slug>.md` writes), wiki updates (`a4/architecture.md`, `a4/domain.md`), implementation source under the project's source tree, tests, and unrelated cleanup.
    - Follow the project's commit-message convention. The a4 workspace's convention lives in `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — consult it when staging a4 file changes.
    - Do not sweep in unrelated user changes just because they are pending. Leave them untouched and mention in the report that they were left out. Ask the user only if you cannot tell whether a pending change belongs to this session.
    - If there are no relevant non-handoff changes to commit, skip this step entirely — do not create an empty commit.
@@ -77,7 +77,7 @@ If no residual survives, skip the handoff file. Report the pre-handoff workspace
 4. Decide the handoff path:
    - **Directory**: always write the file directly under the repo-root `.handoff/` directory (`<repo-root>/.handoff/`). Do not create plugin, topic, or date subdirectories. The handoff file lives outside `<project-root>/a4/` because it is a session snapshot, not a typed workspace artifact — placing it under `a4/` would trip the validator (which expects every `a4/**/*.md` to declare a known `type:` per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md`).
    - **Number**: use the value already produced by *Next handoff number* in Context as `<n>`. The bundled `scripts/next-handoff-number.sh` resolves the repo root and returns one greater than the largest existing `<number>-*.md` prefix in `<repo-root>/.handoff/` (or `1` if none). Do not reimplement the scan inline.
-   - **Filename**: `<n>-<TIMESTAMP>-<slug>.md`, where `<slug>` is a short kebab-case summary of this session's focus (e.g., `12-2026-04-24_0233-task-17-search-history.md`, `13-2026-04-24_0317-roadmap-cycle-3-replan.md`). Do not prefix the slug with `handoff-` — the `.handoff/` directory already identifies the file kind. The filename slug differs from the frontmatter `topic:` field (see File Format): `topic:` is the long-lived thread identifier; the filename slug describes this specific handoff.
+   - **Filename**: `<n>-<TIMESTAMP>-<slug>.md`, where `<slug>` is a short kebab-case summary of this session's focus (e.g., `12-2026-04-24_0233-task-17-search-history.md`, `13-2026-04-24_0317-breakdown-payment-flow.md`). Do not prefix the slug with `handoff-` — the `.handoff/` directory already identifies the file kind. The filename slug differs from the frontmatter `topic:` field (see File Format): `topic:` is the long-lived thread identifier; the filename slug describes this specific handoff.
    - **Topic discovery**: before choosing a new topic, inspect existing handoff files directly under `<repo-root>/.handoff/`. If this session began from an opened handoff file, treat that file as the prior context and reuse its `topic:`. Otherwise, reuse an existing `topic:` value when this session clearly continues that thread; create a new topic only when the session is genuinely unrelated to existing topics. To review prior context for the same thread, sort files with the same `topic:` by `sequence:`.
    - **Never overwrite** an existing handoff file — if the exact path already exists, increment `<n>` until the filename is unique.
 5. Write the handoff **in English**, scoped to the session-level meta that triggered the gate. **Link** rather than restate any content already captured in an `a4/` workspace file (the next session opens the workspace files for per-artifact narrative; the handoff carries only what does not fit there). Do not paste:
@@ -105,7 +105,7 @@ Every handoff file must begin with YAML frontmatter followed by a "do not edit" 
 sequence: <n>                       # same numeric prefix as the filename, e.g., 12
 timestamp: <TIMESTAMP>              # same value as in the filename, e.g. 2026-04-24_0233
 timezone: <TIMEZONE>                # e.g., KST +0900
-topic: <topic-slug>                 # kebab-case identifier for the long-lived thread this handoff belongs to (e.g., a4-cycle-3-roadmap)
+topic: <topic-slug>                 # kebab-case identifier for the long-lived thread this handoff belongs to (e.g., a4-payment-flow-breakdown)
 previous: <previous-handoff-filename>  # optional; filename of the handoff this session started from, if known
 ---
 ```
@@ -147,7 +147,7 @@ Available sections (drop any that have no content):
 ```
 
 - `Goal` — what the user was trying to accomplish this session, if not obvious from the touched files alone.
-- `Current State` — branch / commit context, the starting handoff file when useful, and which a4 pipeline stage(s) the session is currently in (`usecase` / `domain` / `arch` / `roadmap` / `run` / `bug` / etc.). Drop the section if the branch is at `origin/HEAD` and there is nothing non-obvious to record.
+- `Current State` — branch / commit context, the starting handoff file when useful, and which a4 pipeline stage(s) the session is currently in (`usecase` / `domain` / `arch` / `breakdown` / `run` / `bug` / etc.). Drop the section if the branch is at `origin/HEAD` and there is nothing non-obvious to record.
 - `a4 Workspace Touchpoints` — **index only.** A flat list of every workspace file touched or relied on this session, each as: file path → current `status:` (for issue-family / UC / spec / review files) → one-line *why this session interacted with it*. Do **not** restate the file's description, files table, AC, body, or current state; per-artifact resume context lives in each file's `## Resume` (per step 1). Group by issue family / wiki page only when the list is long enough to benefit. Suggested layout:
 
   ```markdown
@@ -158,7 +158,7 @@ Available sections (drop any that have no content):
   - `a4/bug/9-cache-key-collision.md` — `status: pending` — written this session; details in the file's `## Resume`.
 
   ### Wiki
-  - `a4/roadmap.md` — milestone M3 dependency reordered; see commit `<sha>`.
+  - `a4/architecture.md` — component boundary clarified for SessionService; see commit `<sha>`.
   ```
 
   If no a4 files were touched (a4-anchorless session), drop the section entirely — the gate trigger is recorded under the relevant section below (`Cross-Cutting`, `Validation`, etc.).
@@ -167,7 +167,7 @@ Available sections (drop any that have no content):
 - `Important Dialog` — short, high-signal user statements, corrections, constraints, or preferences that shaped the work and do not naturally belong in any single file's `## Resume` / `## Log`. Quote sparingly; paraphrase otherwise. When the dialog triggered a single file's decision pivot, blocker resolution, or approach change, fold it into that file's `## Log` as a narrative event per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` instead of recording it here; an unresolved constraint or question given only in conversation belongs in that file's `## Resume` Open-questions slot.
 - `Validation` — exact commands and outcomes from verification the user already ran this session (e.g., `/a4:run` test-runner output, project tests / linters / type-check). Include trailing failure output verbatim when it matters; trim noisy success output. If validation was the gate trigger, this is the primary section.
 - `Known Issues and Risks` — unfinished work, failing checks, edge cases, user-visible risks **that are not already captured in a single workspace file's `## Resume`**. When the failure is captured there (e.g., a `task` at `status: failing` whose `## Resume` records the cause and next step), link to that file and *do not* re-summarize.
-- `Next Steps` — concrete continuation steps in priority order, **for the session as a whole**. Name the a4 entry point per step (`/a4:run`, `/a4:roadmap`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.). Per-task next steps belong in the task's own `## Resume`; this section captures cross-task ordering or non-task next steps only.
+- `Next Steps` — concrete continuation steps in priority order, **for the session as a whole**. Name the a4 entry point per step (`/a4:run`, `/a4:breakdown`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.). Per-task next steps belong in the task's own `## Resume`; this section captures cross-task ordering or non-task next steps only.
 - `Open Questions` — unresolved product, design, or implementation questions not already captured as a review item or in a single workspace file's `## Resume`. If the question fits an existing review-item walk, log it there instead and link from this section.
 - `Useful Commands and Outputs` — only commands or output snippets that help the next session resume quickly. Include `git show` / `git diff` commands for reviewing exact changed file contents when that detail matters. Include `Glob` / `Grep` patterns the session relied on if they would be expensive to rediscover.
 

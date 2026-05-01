@@ -10,7 +10,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 > **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`. This skill orchestrates writing through that contract.
 
-Writes one `a4/task/<id>-<slug>.md`. The `task` family is the default issue family — Jira's "Task" issue type alongside Bug / Spike / Research. Use when a spec-justified task needs implementation in a UC-less or partially-UC project, or when a new task lands after the initial roadmap was authored.
+Writes one `a4/task/<id>-<slug>.md`. The `task` family is the default issue family — Jira's "Task" issue type alongside Bug / Spike / Research. Use when a spec-justified task needs implementation in a UC-less or partially-UC project, or when a new ad-hoc task lands after the initial breakdown was authored.
 
 This skill never spawns implementation agents itself.
 
@@ -49,5 +49,5 @@ When the task file is written:
 - Do not run a reviewer agent. Single-task authorship is conversational.
 - Do not author multiple tasks in one invocation. Re-invoke `/a4:task` per task.
 - Do not author non-task issue families here — use `/a4:bug`, `/a4:spike`, or `/a4:research`.
-- Do not write `roadmap.md`.
+- Do not write any wiki page; this skill writes a single `a4/task/<id>-<slug>.md` only.
 - Do not flip task status beyond the initial `open` / `pending` / `complete` write.
