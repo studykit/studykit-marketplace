@@ -116,4 +116,3 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `## Decision Log`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `## Decision Log`.
-- **Don't reach for a research artifact at project-root `./research/<slug>.md`.** Research lives as `type: research` tasks under `a4/research/`. Cite them from `related:` and inline body links.
