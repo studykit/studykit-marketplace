@@ -19,6 +19,7 @@ status: open | pending | progress | complete | failing | discarded
 implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
+parent:                # optional: an issue (task / bug / spike / research) this task descends from
 related: []            # catchall for cross-references
 artifacts: []          # artifact paths under artifacts/task/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
@@ -37,6 +38,7 @@ updated: YYYY-MM-DD
 | `implements` | no | list of paths | use cases delivered |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this task descends from, **or** an `umbrella/<id>-<slug>` aggregating this task with siblings. Cross-type within the issue family is allowed (e.g., `parent: spike/12-cache-shape`). See the "Parent and shared narrative" note below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/task/<id>-<slug>/`. Empty list is the typical default — task work that ships only production source. Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. |
 | `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
@@ -50,6 +52,15 @@ updated: YYYY-MM-DD
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.
 - `artifacts:` is artifact-only — paths must point under `artifacts/task/<id>-<slug>/...`. The list is typically empty for task work that ships only production source. Production source paths the task writes or modifies are documented in the body `## Files` section, not in this frontmatter field. See "Artifacts directory" below for when to use the artifact directory.
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
+
+### Parent and shared narrative
+
+`parent:` is optional. Two cases:
+
+- **Derivation parent** — set it when this task descends from another issue: a follow-up `task` produced by a `spike`, a `task` decomposed into smaller `task`s, a `task` spawned to fix a bug surfaced by another `task`. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
+- **Aggregation parent (umbrella)** — set it to an `umbrella/<id>-<slug>` when this task is one of several children grouped under an umbrella for shared narrative. The umbrella file itself is purpose-built to hold cross-cutting decisions across siblings; see `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
+
+The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child Log entry depends on a parent decision, inline-cite the parent path in the child entry per `./body-conventions.md#log` so a session reading the child file alone discovers the parent. Without that inline citation the parent's `## Log` is invisible to the reader.
 
 ### `type: task` with empty `implements:` and `spec:` — smell check
 
@@ -92,7 +103,7 @@ Task-specific notes:
 
 - `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). For UC-less work, link to the spec or relevant `architecture.md` section.
 - `## Change Logs` — append-only audit trail when the task body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the task is mid-flight (`pending` / `progress` / `failing`). See `./body-conventions.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

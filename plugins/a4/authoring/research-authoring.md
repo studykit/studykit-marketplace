@@ -29,6 +29,7 @@ status: open | pending | progress | complete | failing | discarded
 mode: comparative | single
 options: [name-a, name-b, name-c]   # only when mode: comparative
 depends_on: []                       # other tasks this one needs first
+parent:                              # optional: an issue (task / bug / spike / research) this research descends from
 related: []                          # catchall — typically the spec(s) or task(s) this research informs
 artifacts: []                        # typically empty; if used, paths under artifacts/research/<id>-<slug>/
 labels: []                           # free-form tags
@@ -46,6 +47,7 @@ updated: YYYY-MM-DD
 | `mode` | yes | enum | `comparative` \| `single` |
 | `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this research descends from, **or** an `umbrella/<id>-<slug>` aggregating this research with siblings. Cross-type within the issue family is allowed (e.g., research scoped to a stuck task: `parent: task/17-search-history`). See the "Parent and shared narrative" note below. |
 | `related` | no | list of paths | soft links — typically the spec(s) or task(s) this research informs |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/research/<id>-<slug>/` (typically empty — research output lives in the body) |
 | `labels` | no | list of strings | free-form tags |
@@ -62,6 +64,15 @@ updated: YYYY-MM-DD
 - `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
 - `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
+
+### Parent and shared narrative
+
+`parent:` is optional. Two cases:
+
+- **Derivation parent** — set it when this research was scoped from another issue: typically a `task` author who needed an investigation to settle an open question before the parent could proceed. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
+- **Aggregation parent (umbrella)** — set it to an `umbrella/<id>-<slug>` when this research is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
+
+The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child Log entry depends on a parent decision, inline-cite the parent path in the child entry per `./body-conventions.md#log` so a session reading the child file alone discovers the parent.
 
 ### Lifecycle and writer ownership
 
@@ -94,7 +105,7 @@ Research-specific notes:
 **Optional:**
 
 - `## Change Logs` — append-only audit trail when the body is materially edited post-create.
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the research item is mid-flight (`pending` / `progress` / `failing`). See `./body-conventions.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

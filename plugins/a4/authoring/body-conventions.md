@@ -82,16 +82,54 @@ Rules:
 
 ## `## Log`
 
-Issue files (`usecase`, `task`, `review`, `spec`) may carry an optional `## Log` section as a manual audit trail of status transitions or other notable edits. Format is the author's choice — a common shape is one bullet per transition:
+Issue files (`usecase`, `task`, `bug`, `spike`, `research`, `umbrella`, `review`, `spec`) may carry a `## Log` section. Its purpose is **resume context** — what a future Claude Code session (or any reader picking the file up cold) cannot reconstruct from frontmatter, the file's required body sections, the project's commits, or linked review items. The section is the agreed home for that mid-flight knowledge so the file alone is enough to continue the work.
+
+For an `umbrella/<id>-<slug>` file specifically, the `## Log` is the umbrella's **reason for existing** — the cross-cutting narrative that spans its children. Per `./umbrella-authoring.md`, children inline-cite the umbrella path in their own `## Log` entries when they depend on a decision recorded there.
+
+Write entries for things like:
+
+- The approach currently being attempted, when it isn't yet visible in `## Description` / `## Acceptance Criteria` / `## Specification`.
+- Where the work is blocked and the suspected cause.
+- Decisions that changed the original framing — what changed, why, and which upstream artifact (UC, spec, architecture section) still needs to be reconciled.
+- Open questions awaiting user input, or constraints the user gave only in conversation.
+- The next concrete step a fresh session should pick up.
+
+Do **not** restate things a fresh reader can already see:
+
+- Frontmatter values — `status:`, `cycle:`, `updated:`.
+- Which files were modified — `git log` / `git diff` cover this.
+- Review-item bodies — link the review item and stop there.
+- Command history (test runs, builds, etc.) — that belongs in the session handoff, not in the file.
+
+Format is the author's choice — short bullets, one fact per line, append-only. Date prefixes are optional; use them when several entries accrete on the same topic.
 
 ```markdown
 ## Log
 
-- 2026-04-24 — draft → active — committed to current shape
-- 2026-04-26 — active → superseded — replaced by spec/12
+- Approach: caching at the Service layer (not Repository) because the cache key needs `user-id` and the Repository has no user context.
+- Blocked: cache-key shape disagreement between [usecase/3-search-history](usecase/3-search-history.md) Flow and [spec/12-cache-key](spec/12-cache-key.md). Awaiting user input.
+- 2026-05-01 — Decided to follow spec/12. UC 3 Flow still needs to point at spec/12.
+- Next: SearchServiceTest cache-invalidation case is unwritten; eviction-timing assertion strategy undecided.
 ```
 
-The PostToolUse cascade hook refreshes `updated:` on the primary edit and flips related files, but **does not write into `## Log`**. If you want a transition recorded in the body, append the bullet by hand. The section is optional and may be omitted entirely.
+### Inline cross-references for cross-cutting narrative
+
+Some Log entries depend on a decision recorded *elsewhere* — most often in a parent issue's `## Log` (when several siblings share a cross-cutting decision the parent owns). When this happens, write the entry so a reader who opens this file alone can discover the next file to read: **inline-cite the path of the file that carries the source narrative inside the Log entry itself.**
+
+Use the body-link form (`[text](relative/path.md)`) for inline citations.
+
+```markdown
+## Log
+
+- Approach: follow the caching strategy decided in [umbrella/5-search](../umbrella/5-search.md) `## Log`. This child only diverges on test-fixture shape.
+- Blocked: cache eviction timing — local to this task, not covered by the umbrella decision.
+```
+
+Without this inline citation, the parent's `## Log` is invisible to a session that started from the child file. Frontmatter `parent:` makes the parent *discoverable* (reverse children lookup); the inline citation makes the parent *necessary to read* — only when the entry actually depends on it. Entries that are self-contained (work local to this file) need no cross-reference.
+
+The same rule applies whenever a Log entry leans on narrative recorded in any other a4 file (sibling, related issue, spec, UC). Inline-cite the path; do not rely on the reader inferring it from frontmatter alone.
+
+The section is optional in the schema, but **strongly recommended whenever the file is mid-flight** (any `status:` other than `open` / `complete` / `discarded` / `superseded`). The session-handoff workflow prompts the writer to append to `## Log` before snapshotting the session, so session-only context lands in the file it belongs to. The PostToolUse cascade hook refreshes `updated:` and cascades related files but **does not write into `## Log`**; all entries are written by hand.
 
 ## Wiki Update Protocol
 

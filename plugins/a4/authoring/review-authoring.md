@@ -109,7 +109,7 @@ Review item bodies are **deliberately minimal** — they hold a single observati
 **Optional, emit only when applicable:**
 
 - `## Change Logs` — append-only audit trail when the review item body is materially edited post-create (rare; usually the original description is the final word).
-- `## Log` — optional, hand-maintained status-transition trail. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach to the review item, blockers, decisions, open questions, next step. Strongly recommended while the review item is `open`. See `./body-conventions.md#log`.
 
 Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `## Repro`, or `## Context` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `## Description` is usually enough.
 
@@ -130,7 +130,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 ## Don't
 
-- **`## Log` is optional and hand-maintained.** See `./body-conventions.md#log`.
+- **`## Log` is the resume-context surface, not a status-transition log.** Use it for what a fresh session can't reconstruct from frontmatter, the description, or the linked target file. See `./body-conventions.md#log`.
 - **Don't delete a review item file.** `discarded` is the cascade-hook-managed terminal state. Deleting orphans the cascade bookkeeping and breaks drift dedup.
 - **Don't invent placeholder `target:` values.** When the concern is cross-cutting, leave `target:` empty (`[]` or omit the field).
 - **Don't hand-flip the discarded cascade.** When a UC flips to `discarded`, the cascade hook flips open review items pointing at it.

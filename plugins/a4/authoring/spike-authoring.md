@@ -17,6 +17,7 @@ id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
 status: open | pending | progress | complete | failing | discarded
 depends_on: []         # list of paths to other tasks
+parent:                # optional: an issue (task / bug / spike / research) this spike descends from
 related: []            # catchall for cross-references
 artifacts: []          # paths under artifacts/spike/<id>-<slug>/ — never project source tree
 labels: []             # free-form tags
@@ -32,6 +33,7 @@ updated: YYYY-MM-DD
 | `title` | yes | string | human-readable |
 | `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `umbrella/<id>-<slug>` aggregating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See the "Parent and shared narrative" note below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at the project's production source tree — production paths the spike may also touch are documented in the body `## Files` section. |
 | `labels` | no | list of strings | free-form tags |
 | `created` | yes | date | `YYYY-MM-DD` |
@@ -45,6 +47,15 @@ updated: YYYY-MM-DD
 - `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
 - `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/...` (or `artifacts/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `## Files` section, not in frontmatter.
+
+### Parent and shared narrative
+
+`parent:` is optional. Two cases:
+
+- **Derivation parent** — set it when this spike was spawned from another issue: typically a `task` whose work hit a question that needed exploration before the task could proceed. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
+- **Aggregation parent (umbrella)** — set it to an `umbrella/<id>-<slug>` when this spike is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
+
+The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child Log entry depends on a parent decision, inline-cite the parent path in the child entry per `./body-conventions.md#log` so a session reading the child file alone discovers the parent.
 
 ### Lifecycle and writer ownership
 
@@ -72,7 +83,7 @@ Spike-specific notes:
 
 - `## Interface Contracts` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). May be omitted for self-contained spikes.
 - `## Change Logs` — append-only audit trail when the task body is materially edited post-create.
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the spike is mid-flight (`pending` / `progress` / `failing`). See `./body-conventions.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

@@ -30,6 +30,7 @@ ISSUE_FOLDERS: tuple[str, ...] = (
     "bug",
     "spike",
     "research",
+    "umbrella",
     "review",
     "spec",
     "idea",

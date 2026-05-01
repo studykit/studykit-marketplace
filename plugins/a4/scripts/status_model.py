@@ -83,6 +83,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
     "spec": frozenset({"draft", "active", "deprecated", "superseded"}),
     "idea": frozenset({"open", "promoted", "discarded"}),
     "brainstorm": frozenset({"open", "promoted", "discarded"}),
+    "umbrella": frozenset({"open", "complete", "discarded"}),
 }
 
 
@@ -127,6 +128,11 @@ SPEC_TRANSITIONS: dict[str, frozenset[str]] = {
     "deprecated": frozenset({"superseded"}),
 }
 
+UMBRELLA_TRANSITIONS: dict[str, frozenset[str]] = {
+    "open": frozenset({"complete", "discarded"}),
+    "complete": frozenset({"open", "discarded"}),
+}
+
 FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
     "usecase": UC_TRANSITIONS,
     "task": ISSUE_FAMILY_TRANSITIONS,
@@ -135,6 +141,7 @@ FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
     "research": ISSUE_FAMILY_TRANSITIONS,
     "review": REVIEW_TRANSITIONS,
     "spec": SPEC_TRANSITIONS,
+    "umbrella": UMBRELLA_TRANSITIONS,
 }
 
 
@@ -155,6 +162,7 @@ TERMINAL_STATUSES: dict[str, frozenset[str]] = {
     "spec": frozenset({"deprecated", "superseded"}),
     "idea": frozenset({"promoted", "discarded"}),
     "brainstorm": frozenset({"promoted", "discarded"}),
+    "umbrella": frozenset({"complete", "discarded"}),
 }
 
 IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
@@ -167,6 +175,7 @@ IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
     "spec": frozenset(),
     "idea": frozenset(),
     "brainstorm": frozenset(),
+    "umbrella": frozenset(),
 }
 
 BLOCKED_STATUSES: frozenset[str] = frozenset({"blocked"})

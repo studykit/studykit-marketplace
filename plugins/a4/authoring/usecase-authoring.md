@@ -100,7 +100,7 @@ Writer rules (UC-specific):
 - `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
 - `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
 - `## Change Logs` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the UC is mid-flight (`drafting` / `revising`). See `./body-conventions.md#log`.
 
 Unknown H2 headings are tolerated.
 

@@ -113,6 +113,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"related", "supersedes"}),
+        path_scalar_fields=frozenset({"parent"}),
     ),
     "task": Schema(
         name="task",
@@ -126,6 +127,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"implements", "depends_on", "spec"}),
+        path_scalar_fields=frozenset({"parent"}),
     ),
     "bug": Schema(
         name="bug",
@@ -139,6 +141,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id", "cycle"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"implements", "depends_on", "spec"}),
+        path_scalar_fields=frozenset({"parent"}),
     ),
     "spike": Schema(
         name="spike",
@@ -152,6 +155,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"depends_on"}),
+        path_scalar_fields=frozenset({"parent"}),
         forbidden_fields=frozenset({"implements", "spec", "cycle"}),
     ),
     "research": Schema(
@@ -167,6 +171,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"depends_on", "related"}),
+        path_scalar_fields=frozenset({"parent"}),
         forbidden_fields=frozenset({"implements", "spec", "cycle"}),
     ),
     "review": Schema(
@@ -194,6 +199,7 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"supersedes", "related"}),
+        path_scalar_fields=frozenset({"parent"}),
     ),
     "idea": Schema(
         name="idea",
@@ -218,6 +224,22 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted"}),
+    ),
+    "umbrella": Schema(
+        name="umbrella",
+        required=frozenset(
+            {"type", "id", "title", "status", "created", "updated"}
+        ),
+        enums={
+            "type": frozenset({"umbrella"}),
+            "status": STATUS_BY_FOLDER["umbrella"],
+        },
+        int_fields=frozenset({"id"}),
+        date_fields=frozenset({"created", "updated"}),
+        path_list_fields=frozenset({"related"}),
+        forbidden_fields=frozenset(
+            {"implements", "spec", "depends_on", "artifacts", "cycle", "parent"}
+        ),
     ),
 }
 
@@ -506,6 +528,79 @@ def validate_file(
             _validate_complete_artifacts_present(rel_str, fm, path, a4_dir, ftype)
         )
 
+    violations.extend(_validate_parent_target(rel_str, fm, ftype, index))
+
+    return violations
+
+
+_PARENT_ALLOWED_FOLDERS: dict[str, frozenset[str]] = {
+    "task": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
+    "bug": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
+    "spike": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
+    "research": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
+    "usecase": frozenset({"usecase"}),
+    "spec": frozenset({"spec"}),
+}
+
+
+def _validate_parent_target(
+    rel_str: str,
+    fm: dict,
+    ftype: str,
+    index: Any,
+) -> list[Violation]:
+    """Enforce parent target-type rules.
+
+    Per ``frontmatter-universals.md`` §`parent`:
+      - issue-family files (task / bug / spike / research) accept any
+        issue-family parent (cross-type within the family is allowed);
+      - usecase and spec accept same-type parents only.
+
+    Path-format and existence are already checked by ``path_scalar_fields``;
+    this check adds the target-type rule and self-reference rejection.
+    """
+    if ftype not in _PARENT_ALLOWED_FOLDERS:
+        return []
+    raw = fm.get("parent")
+    if raw is None:
+        return []
+    if isinstance(raw, str) and not raw.strip():
+        return []
+    if index is None:
+        return []
+    resolved = index.resolve(raw)
+    if resolved is None:
+        # `path_scalar_fields` already emits ``unresolved-ref``; do not
+        # double-report here.
+        return []
+    allowed = _PARENT_ALLOWED_FOLDERS[ftype]
+    violations: list[Violation] = []
+    if resolved.folder not in allowed:
+        if ftype in ISSUE_FAMILY_TYPES:
+            allowed_label = (
+                "issue-family folders (task / bug / spike / research) "
+                "or umbrella"
+            )
+        else:
+            allowed_label = f"`{ftype}` (same-type)"
+        violations.append(
+            Violation(
+                rel_str,
+                "parent-target-type",
+                "parent",
+                f"`parent: {raw!r}` resolves to `{resolved.canonical}` "
+                f"({resolved.folder}); allowed: {allowed_label}",
+            )
+        )
+    if resolved.canonical == f"{ftype}/{Path(rel_str).stem}":
+        violations.append(
+            Violation(
+                rel_str,
+                "parent-self-reference",
+                "parent",
+                f"`parent:` points at this file itself ({resolved.canonical})",
+            )
+        )
     return violations
 
 

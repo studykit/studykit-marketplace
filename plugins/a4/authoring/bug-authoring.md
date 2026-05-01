@@ -19,6 +19,7 @@ status: open | pending | progress | complete | failing | discarded
 implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
+parent:                # optional: an issue (task / bug / spike / research) this bug descends from
 related: []            # catchall for cross-references
 artifacts: []          # artifact paths under artifacts/bug/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
@@ -37,6 +38,7 @@ updated: YYYY-MM-DD
 | `implements` | no | list of paths | use cases delivered (often empty for bug work that does not implement a UC) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this bug descends from, **or** an `umbrella/<id>-<slug>` aggregating this bug with siblings. Cross-type within the issue family is allowed. See the "Parent and shared narrative" note below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/bug/<id>-<slug>/` (typically empty — repro/logs/screenshots only when worth keeping) |
 | `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
@@ -50,6 +52,15 @@ updated: YYYY-MM-DD
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.
 - `artifacts:` is artifact-only — paths must point under `artifacts/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
+
+### Parent and shared narrative
+
+`parent:` is optional. Two cases:
+
+- **Derivation parent** — set it when this bug descends from another issue: most commonly a `task` whose work surfaced the regression, or a sibling `bug` whose investigation spun this one off. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
+- **Aggregation parent (umbrella)** — set it to an `umbrella/<id>-<slug>` when this bug is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
+
+The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child Log entry depends on a parent decision, inline-cite the parent path in the child entry per `./body-conventions.md#log` so a session reading the child file alone discovers the parent.
 
 ### Lifecycle and writer ownership
 
@@ -76,7 +87,7 @@ Bug-specific notes:
 
 - `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`).
 - `## Change Logs` — append-only audit trail when the task body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the bug is mid-flight (`pending` / `progress` / `failing`). See `./body-conventions.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

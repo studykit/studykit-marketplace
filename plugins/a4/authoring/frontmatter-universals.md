@@ -2,7 +2,7 @@
 
 > **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
 
-Cross-cutting frontmatter rules that apply to every markdown file under `a4/`. Per-type field tables (required vs optional fields, enum values, types) live in each `<type>-authoring.md`. Body-side conventions live in `./body-conventions.md`. Validator output (`/a4:validate`, Stop hook) is self-explanatory and names the violated rule directly; this document plus the per-type files are the binding shape.
+Cross-cutting frontmatter rules that apply to every markdown file under `a4/`. Per-type field tables (required vs optional fields, enum values, types) live in each `<type>-authoring.md`. Body-side conventions live in `./body-conventions.md`. This document plus the per-type files are the binding shape.
 
 ## Scope
 
@@ -11,7 +11,7 @@ Every markdown file under `a4/` carries YAML frontmatter. Files split into two f
 | Family | Examples | Location |
 |--------|----------|----------|
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `roadmap.md`, `bootstrap.md` | `a4/` root |
-| **Issue** | use case, task, bug, spike, research, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
+| **Issue** | use case, task, bug, spike, research, umbrella, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
 
 The four issue families that share the task lifecycle (`task`, `bug`, `spike`, `research`) are siblings — they share the same status enum and lifecycle but each carries its own per-type schema and authoring contract. The `task` family is the default (regular implementation work, equivalent to Jira's "Task" issue type); `bug` / `spike` / `research` are specialized variants. Cross-family operations (UC cascades, status reset on revising) walk all four; single-family authoring uses the matching folder only.
 
@@ -33,6 +33,7 @@ Every markdown file declares a `type:` field in frontmatter. The value selects t
 | Issue — bug | `bug` |
 | Issue — spike | `spike` |
 | Issue — research | `research` |
+| Issue — umbrella | `umbrella` |
 | Issue — review | `review` |
 | Issue — spec | `spec` |
 | Issue — idea | `idea` |
@@ -80,7 +81,7 @@ The script prints the next available id to stdout.
 
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following forms. All forms resolve to the same file, so they are interchangeable on input — pick whichever reads best in context.
 
-- **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. The validator rejects any path-ref entry beginning with `#`.
+- **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `umbrella/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. The validator rejects any path-ref entry beginning with `#`.
 - **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`task`, `bug`, `spike`, `research`, etc.); each task family has its own top-level folder.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter that benefits from at-a-glance context. The slug part is a hint: when the file's actual stem differs (slug rename), the id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Resolves correctly because ids are globally unique. Permitted but folder-prefixed form is preferred for readability.
@@ -174,10 +175,25 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 | `spec` | task (`task` / `bug` only) | spec | Specs that govern this task |
 | `supersedes` | spec, usecase | prior spec(s) / usecase(s) | This item replaces the referenced item(s) of the same family |
 | `promoted` | idea, brainstorm | spec, usecase, task, brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
-| `parent` | any issue | same-type issue | Parent in a decomposition hierarchy |
+| `parent` | any issue except `umbrella` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or an `umbrella` parent; `usecase` and `spec` parents are restricted to same-type; `umbrella` itself takes no parent) | Parent in a decomposition / derivation hierarchy or aggregation grouping. Used as the home for narrative shared across siblings — see body-conventions §`## Log` and `./umbrella-authoring.md`. When set, the child's frontmatter `parent:` is what makes the parent discoverable for reverse `children` lookup |
 | `related` | any | any | Generic catchall for ties that don't fit other fields but warrant frontmatter-level searchability |
 
 Soft references (see-also, mentions) are expressed as standard markdown links (`[text](relative/path.md)`) in body prose, not frontmatter.
+
+### `parent` and cross-cutting narrative
+
+`parent` plays two roles, and they share the field:
+
+- **Derivation parent** — `parent` points at the issue this one was spawned from. A `bug` surfaced by a `task` may set `parent: task/<id>-<slug>`, a follow-up `task` produced by a `spike` may set `parent: spike/<id>-<slug>`. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
+- **Aggregation parent** — `parent` points at an `umbrella/<id>-<slug>`, a file purpose-built to host the shared narrative for several sibling children. See `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
+
+Both forms use the same `parent:` field, so reverse `children` lookups (`grep`, `scripts/search.py --references-via parent`) find every child regardless of whether the parent is another issue or an umbrella.
+
+`usecase` and `spec` use `parent` only in same-type form (UC split, spec supersedes-chain hierarchies). `umbrella` itself takes no parent — nested umbrellas are not supported in this revision.
+
+The parent file is the agreed home for **narrative that spans its children** — decisions that affect several siblings together, shared approach, cross-sibling trade-offs. That narrative belongs in the parent's `## Log`, not duplicated across each child. See `./body-conventions.md#log` for the entry format and the inline cross-reference rule (a child Log entry that depends on a decision recorded in the parent must inline-cite the parent path so a session reading the child file alone can discover the next file to open).
+
+Setting frontmatter `parent:` on a child is what makes the parent discoverable. If a sibling group is meant to share a narrative home, every child must set `parent:` — without it, the parent's `## Log` is unreachable from the child file.
 
 ## Cross-references
 

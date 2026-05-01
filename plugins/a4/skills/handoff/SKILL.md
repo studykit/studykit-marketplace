@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "This skill should be used when the user explicitly invokes /a4:handoff. It writes a session handoff file under <repo-root>/.handoff/ that LINKS to in-flight a4 workspace files (task / bug / spike / research / spec / usecase / roadmap / architecture / domain) instead of duplicating their content, so a fresh Claude Code session can resume the current work."
+description: "This skill should be used when the user explicitly invokes /a4:handoff. It first updates the `## Log` of every mid-flight a4 workspace file the session touched (capturing resume context — current approach, blockers, decisions, open questions, next step) so each file alone is enough to continue, and then writes a session handoff file under <repo-root>/.handoff/ ONLY when session-level meta exists (a4-anchorless work, session-level validation results, important user dialog, branch/commit state worth recording, or cross-cutting decisions that could not be anchored to a parent). Sessions whose entire substance fits inside the touched files' Logs skip the handoff file."
 argument-hint: "[additional requirements]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -10,7 +10,26 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep
 
 Write a handoff file that captures everything a fresh Claude Code session needs to continue the current a4 work. Assume the next session will not have access to this conversation.
 
-This is the a4-flavored variant of the global handoff skill. The a4 workspace already records in-flight work as durable, versioned files under `<project-root>/a4/` — issue-family files (`task/`, `bug/`, `spike/`, `research/`), wiki pages (`usecase/`, `spec/`, `roadmap.md`, `architecture.md`, `domain.md`), and review items. The handoff **links** to those files rather than restating their content, and only captures session-level state that does not belong in any single workspace file.
+This is the a4-flavored variant of the global handoff skill. The a4 workspace already records in-flight work as durable, versioned files under `<project-root>/a4/` — issue-family files (`task/`, `bug/`, `spike/`, `research/`), wiki pages (`usecase/`, `spec/`, `roadmap.md`, `architecture.md`, `domain.md`), and review items.
+
+Two-part handoff (the handoff file is conditional):
+
+1. **In-file resume context** — for every mid-flight a4 file the session touched, append entries to its `## Log` capturing what code, commits, frontmatter, or linked review items can't show (current approach, blockers, decisions, open questions, next step). Per `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md#log`. This is what makes each file self-sufficient for the next session: opening that one file is enough to continue.
+2. **Session-level handoff file (conditional)** — a snapshot at `<repo-root>/.handoff/<n>-...md` for state that does not belong in any single workspace file. Created **only when session-level meta exists** (see *Handoff file gate* below). When the entire session's substance fits inside the touched files' `## Log` updates, skip the handoff file — its only contribution would be ceremonial.
+
+When written, the handoff file is the session index plus session-only meta, and it **links** to workspace files rather than restating their content. Each touched workspace file's `## Log` carries the per-artifact resume context.
+
+### Handoff file gate
+
+Create the handoff file when at least **one** of the following applies; otherwise skip it.
+
+- **a4-anchorless work** — production source under the project's source tree, build / tooling / config changes, or any work that is not captured by an `a4/<type>/<id>-<slug>.md` file.
+- **Session-level validation** — `/a4:run` test-runner output, project tests, lint / type-check runs, or smoke verification whose result is not naturally a single task's cycle outcome.
+- **Important user dialog** — short, high-signal user statements, corrections, constraints, or preferences from this session that shape the work and do not belong inside any single workspace file.
+- **Branch / commit state worth recording** — non-obvious branch position (ahead of `origin`, divergent, mid-merge / mid-rebase), commits the next session must know about beyond what `git log` reveals at a glance.
+- **Cross-cutting decision that could not be anchored to a parent** — a decision that affects several touched files but no common `parent:` (issue-family) was an option (e.g., the touched files genuinely span unrelated parents). When a parent *was* the right home, record there per body-conventions §`## Log`; do not duplicate into the handoff.
+
+If none of the above applies — e.g., a session that touched a single mid-flight task and updated its `## Log` — skip the handoff file. Report the pre-handoff workspace commit (or `none`) and "no session-level meta — handoff file skipped".
 
 ## Context
 
@@ -23,26 +42,35 @@ This is the a4-flavored variant of the global handoff skill. The a4 workspace al
 
 ## Task
 
-1. **Commit relevant non-handoff changes first, split by meaningful unit.**
+1. **Update the `## Log` of every mid-flight a4 file this session touched, before anything else.** This is the resume-context step — the next Claude Code session must be able to open any one of those files alone and continue the work without your conversation transcript.
+   - Scope: every `a4/<type>/<id>-<slug>.md` (and wiki pages that carry `## Log`) the session edited or relied on whose `status:` is mid-flight. Skip files that are terminal (`complete`, `discarded`, `superseded`) or that were untouched.
+   - The contract for entry content, what to write vs. not, and inline cross-references is in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md#log`. Follow it; do not restate it here.
+   - When several touched files share a `parent:` (issue-family parent, possibly cross-type — see `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` §`parent` and shared narrative), record the cross-cutting decision in the parent's `## Log` and inline-cite the parent path from each affected child's Log entry. The contract requires the inline citation; without it the parent's narrative is invisible to a session reading a child file alone.
+   - These `## Log` edits are part of the pre-handoff workspace commit produced by step 2 — do **not** put them in the handoff-only commit.
+2. **Commit relevant non-handoff changes, split by meaningful unit.**
    - Use the Git status preview in Context as an early signal: empty → likely no non-handoff work to commit; entries → one or more pre-handoff commits may be needed.
    - Before deciding, inspect `git status --short` and `git diff --stat`.
    - Stage and commit pending working-tree changes that clearly belong to this session, splitting them into separate commits by coherent meaning. For a4 work, common splits are: workspace artifact authoring (`a4/<type>/<id>-<slug>.md` writes), wiki updates (`a4/architecture.md`, `a4/domain.md`, `a4/roadmap.md`), implementation source under the project's source tree, tests, and unrelated cleanup.
    - Follow the project's commit-message convention. The a4 workspace's convention lives in `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — consult it when staging a4 file changes.
-   - Do not sweep in unrelated user changes just because they are pending. Leave them untouched and mention in the handoff that they were left out. Ask the user only if you cannot tell whether a pending change belongs to this session.
+   - Do not sweep in unrelated user changes just because they are pending. Leave them untouched and mention in the report that they were left out. Ask the user only if you cannot tell whether a pending change belongs to this session.
    - If there are no relevant non-handoff changes to commit, skip this step entirely — do not create an empty commit.
-   - Do **not** include the handoff file in this commit. The handoff file must be committed separately in its own commit (see step 5).
-2. Decide the handoff path:
+   - Do **not** include any handoff file in this commit. The handoff file (when created) must be committed separately in its own commit (see step 7).
+3. **Apply the handoff file gate.** Decide whether to create a handoff file at all.
+   - Walk the gate criteria in *Handoff file gate* above. If at least one applies, proceed to step 4. If none applies, **skip** steps 4–7 and go straight to *Output*: report the pre-handoff workspace commit SHA(s) (or `skipped` from step 2), the touched files whose `## Log` was updated, and "no session-level meta — handoff file skipped".
+   - Be honest. Do not synthesize a handoff file just to produce one; an empty-shell handoff is the failure mode this gate exists to prevent.
+4. Decide the handoff path:
    - **Directory**: always write the file directly under the repo-root `.handoff/` directory (`<repo-root>/.handoff/`). Do not create plugin, topic, or date subdirectories. The handoff file lives outside `<project-root>/a4/` because it is a session snapshot, not a typed workspace artifact — placing it under `a4/` would trip the validator (which expects every `a4/**/*.md` to declare a known `type:` per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md`).
    - **Number**: use the value already produced by *Next handoff number* in Context as `<n>`. The bundled `scripts/next-handoff-number.sh` resolves the repo root and returns one greater than the largest existing `<number>-*.md` prefix in `<repo-root>/.handoff/` (or `1` if none). Do not reimplement the scan inline.
    - **Filename**: `<n>-<TIMESTAMP>-<slug>.md`, where `<slug>` is a short kebab-case summary of this session's focus (e.g., `12-2026-04-24_0233-task-17-search-history.md`, `13-2026-04-24_0317-roadmap-cycle-3-replan.md`). Do not prefix the slug with `handoff-` — the `.handoff/` directory already identifies the file kind. The filename slug differs from the frontmatter `topic:` field (see File Format): `topic:` is the long-lived thread identifier; the filename slug describes this specific handoff.
    - **Topic discovery**: before choosing a new topic, inspect existing handoff files directly under `<repo-root>/.handoff/`. If this session began from an opened handoff file, treat that file as the prior context and reuse its `topic:`. Otherwise, reuse an existing `topic:` value when this session clearly continues that thread; create a new topic only when the session is genuinely unrelated to existing topics. To review prior context for the same thread, sort files with the same `topic:` by `sequence:`.
    - **Never overwrite** an existing handoff file — if the exact path already exists, increment `<n>` until the filename is unique.
-3. Write the handoff **in English**. Make it self-contained for *session-level* meta — branch state, cross-cutting decisions, dialog excerpts, validation results, the next-step plan — but **link** rather than restate any content already captured in an `a4/` workspace file. The next session opens the handoff, follows the links into the workspace, and reads the live source. Do not paste:
+5. Write the handoff **in English**, scoped to the session-level meta that triggered the gate. **Link** rather than restate any content already captured in an `a4/` workspace file (the next session opens the workspace files for per-artifact narrative; the handoff carries only what does not fit there). Do not paste:
    - Issue-family file content (description, files table, AC, unit-test strategy) — link to `a4/task/<id>-<slug>.md`, `a4/bug/<id>-<slug>.md`, etc. instead.
    - Wiki section content (architecture decisions, UC flows, domain definitions) — link to the wiki page (and section anchor when useful).
+   - Per-task progress narrative — that lives in each touched file's `## Log` now. The handoff Touchpoints section is an index, not a re-statement.
    - Large diffs or changed file contents — point to the relevant commits and `git show` / `git diff` commands.
-4. **Record verification the user already ran this session.** Capture the exact commands and outcomes — `/a4:run` test-runner output, project tests / linters, anything explicit the user produced. If nothing was verified this session, say so under `Validation` instead of smoothing it over.
-5. **Commit the handoff file alone** as a separate commit, on top of the pre-handoff commit(s) from step 1 (or on top of HEAD if step 1 was skipped). Only the new handoff file should be in this commit's diff. Use a commit message that references the `topic:` (e.g., `docs(handoff): snapshot <topic> session state`).
+6. **Record verification the user already ran this session.** Capture the exact commands and outcomes — `/a4:run` test-runner output, project tests / linters, anything explicit the user produced. If session-level validation was the gate trigger, this is its primary home. If nothing was verified this session and the gate triggered for some other reason, say so under `Validation` instead of smoothing it over.
+7. **Commit the handoff file alone** as a separate commit, on top of the pre-handoff commit(s) from step 2 (or on top of HEAD if step 2 was skipped). Only the new handoff file should be in this commit's diff. Use a commit message that references the `topic:` (e.g., `docs(handoff): snapshot <topic> session state`).
 
 ## Additional Requirements
 
@@ -84,7 +112,9 @@ Immediately after the frontmatter, include this banner so future sessions know n
 
 ### Body
 
-Below the banner, adapt the document to the session, but include these sections unless one is genuinely irrelevant:
+Below the banner, **emit only the sections whose content actually exists for this session**. The handoff file is session-meta only; per-task progress narrative lives in each touched file's `## Log` and must not be duplicated here.
+
+Available sections (drop any that have no content):
 
 ```markdown
 ## Goal
@@ -100,41 +130,46 @@ Below the banner, adapt the document to the session, but include these sections 
 ## Useful Commands and Outputs
 ```
 
-- `Goal` — what the user was trying to accomplish this session.
-- `Current State` — branch / commit context, the starting handoff file when useful, and which a4 pipeline stage(s) the session is currently in (`usecase` / `domain` / `arch` / `roadmap` / `run` / `bug` / etc.).
-- `a4 Workspace Touchpoints` — **the link-first section.** Group by issue family and wiki page, listing every workspace file touched or relied on this session with its **current `status:`** (for issue-family files) and a one-line note on *why this session interacted with it*. Do not restate the file's description, files table, AC, or body — the next session opens the file. Suggested layout:
+- `Goal` — what the user was trying to accomplish this session, if not obvious from the touched files alone.
+- `Current State` — branch / commit context, the starting handoff file when useful, and which a4 pipeline stage(s) the session is currently in (`usecase` / `domain` / `arch` / `roadmap` / `run` / `bug` / etc.). Drop the section if the branch is at `origin/HEAD` and there is nothing non-obvious to record.
+- `a4 Workspace Touchpoints` — **index only.** A flat list of every workspace file touched or relied on this session, each as: file path → current `status:` (for issue-family / UC / spec / review files) → one-line *why this session interacted with it*. Do **not** restate the file's description, files table, AC, body, or progress narrative; per-artifact resume context lives in each file's `## Log` (per step 1). Group by issue family / wiki page only when the list is long enough to benefit. Suggested layout:
 
   ```markdown
   ### Tasks (`a4/task/`)
-  - `a4/task/17-search-history.md` — `status: progress`, cycle 2 — coder loop hit a regression in `SearchService`; failing `/a4:run` output noted under Validation.
+  - `a4/task/17-search-history.md` — `status: progress`, cycle 2 — coder loop hit a regression; details in the file's `## Log`.
 
   ### Bugs (`a4/bug/`)
-  - `a4/bug/9-cache-key-collision.md` — `status: pending` — written this session; awaiting `/a4:run`.
+  - `a4/bug/9-cache-key-collision.md` — `status: pending` — written this session; details in the file's `## Log`.
 
-  ### Specs and UCs (`a4/spec/`, `a4/usecase/`)
-  - `a4/spec/12-cache-key-format.md` — anchor for bug 9; no body changes this session.
-
-  ### Wiki (`a4/architecture.md`, `a4/domain.md`, `a4/roadmap.md`)
+  ### Wiki
   - `a4/roadmap.md` — milestone M3 dependency reordered; see commit `<sha>`.
   ```
 
-  If the workspace was untouched (e.g., a pure source-code session that did not write any `a4/` file), say so explicitly — do not omit the section silently.
-- `Cross-Cutting Changes and Rationale` — *only* the substantive work that does **not** belong in any single `a4/` file. Examples: implementation source under `src/` not yet anchored to a task, scaffolding decisions across multiple modules, tooling changes. For changes that *are* captured in an `a4/` file, link to that file from `a4 Workspace Touchpoints` instead. Use this section for the diff narrative, with `git show <sha>` pointers for exact contents.
+  If no a4 files were touched (a4-anchorless session), drop the section entirely — the gate trigger is recorded under the relevant section below (`Cross-Cutting`, `Validation`, etc.).
+- `Cross-Cutting Changes and Rationale` — substantive work that does **not** belong in any single `a4/` file. Examples: implementation source under `src/` not yet anchored to a task, scaffolding decisions across multiple modules, tooling changes, build / config edits. For changes that *are* captured in an `a4/` file (single anchor or common parent), link to that file from `a4 Workspace Touchpoints` and the file's `## Log` carries the rationale; do not duplicate here. Use this section for the diff narrative, with `git show <sha>` pointers for exact contents.
 - `Related Wiki and External Links` — durable links beyond `a4/`: GitHub issues, pull requests, design docs, dashboards, vendor docs. Keep self-contained: explain why each link matters and what state it was in at handoff time.
-- `Important Dialog` — short, high-signal user statements, corrections, constraints, or preferences that shaped the work. Quote sparingly; paraphrase otherwise.
-- `Validation` — exact commands and outcomes from verification the user already ran this session (e.g., `/a4:run` test-runner output, project tests). If nothing was verified this session, say so explicitly. Include trailing failure output verbatim when it matters; trim noisy success output.
-- `Known Issues and Risks` — unfinished work, failing checks, edge cases, user-visible risks. If a single workspace file already captures the failure (e.g., a `task` at `status: failing` with a Log entry), link to it and only summarize what cannot be inferred from that file.
-- `Next Steps` — concrete continuation steps in priority order. Name the a4 entry point per step (`/a4:run`, `/a4:roadmap`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.) so the next session can re-enter the pipeline directly.
-- `Open Questions` — unresolved product, design, or implementation questions not already captured as a review item under the relevant wiki page. If the question fits an existing review-item walk, log it there instead and link from this section.
+- `Important Dialog` — short, high-signal user statements, corrections, constraints, or preferences that shaped the work and do not naturally belong in any single file's `## Log`. Quote sparingly; paraphrase otherwise.
+- `Validation` — exact commands and outcomes from verification the user already ran this session (e.g., `/a4:run` test-runner output, project tests / linters / type-check). Include trailing failure output verbatim when it matters; trim noisy success output. If validation was the gate trigger, this is the primary section.
+- `Known Issues and Risks` — unfinished work, failing checks, edge cases, user-visible risks **that are not already captured in a single workspace file's `## Log`**. When the failure is captured there (e.g., a `task` at `status: failing` whose `## Log` records the cause and next step), link to that file and *do not* re-summarize.
+- `Next Steps` — concrete continuation steps in priority order, **for the session as a whole**. Name the a4 entry point per step (`/a4:run`, `/a4:roadmap`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.). Per-task next steps belong in the task's own `## Log`; this section captures cross-task ordering or non-task next steps only.
+- `Open Questions` — unresolved product, design, or implementation questions not already captured as a review item or in a single workspace file's `## Log`. If the question fits an existing review-item walk, log it there instead and link from this section.
 - `Useful Commands and Outputs` — only commands or output snippets that help the next session resume quickly. Include `git show` / `git diff` commands for reviewing exact changed file contents when that detail matters. Include `Glob` / `Grep` patterns the session relied on if they would be expensive to rediscover.
 
 ## Output
 
-After writing the file and creating the required commits, tell the user:
+After completing the run, tell the user:
+
+**When the gate triggered and a handoff file was written:**
 
 1. The handoff file path.
-2. The pre-handoff commit SHA(s) from step 1 (or `skipped`).
-3. The handoff-only commit SHA from step 5.
+2. The pre-handoff commit SHA(s) from step 2 (or `skipped`). The `## Log` updates from step 1 are part of these commit(s) when present.
+3. The handoff-only commit SHA from step 7.
 4. A one-line validation summary (e.g., a brief recap of checks the user ran this session, or `none recorded`).
+
+**When the gate did not trigger (handoff file skipped):**
+
+1. `handoff file: skipped — no session-level meta`.
+2. The pre-handoff commit SHA(s) from step 2 (or `skipped`). The `## Log` updates from step 1 are part of these commit(s) when present.
+3. The list of touched files whose `## Log` was updated, so the user can confirm the resume context is in place.
 
 Do not restate the handoff body in the output.

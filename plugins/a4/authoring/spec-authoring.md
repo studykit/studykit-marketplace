@@ -93,7 +93,7 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 - `## Consequences` — downstream effects (positive, negative, or neutral) the spec creates.
 - `## Examples` — concrete cases that pin down the prescriptive rules.
 - `## Change Logs` — append-only audit trail of why this file was edited (dated bullets with markdown links to the causing issue).
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the spec is mid-flight (e.g., `drafting`). See `./body-conventions.md#log`.
 
 Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders (`a4/task/`, `a4/bug/`, etc.).
 
