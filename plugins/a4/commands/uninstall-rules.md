@@ -1,5 +1,7 @@
 ---
 description: Remove the a4 plugin's symlinks from <project-root>/.claude/rules/
+context: fork
+model: sonnet
 ---
 
 Remove the a4 plugin's path-scoped rules from the current project.

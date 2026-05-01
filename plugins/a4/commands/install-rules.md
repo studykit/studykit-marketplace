@@ -1,5 +1,7 @@
 ---
 description: Symlink the a4 plugin's path-scoped rules into <project-root>/.claude/rules/
+context: fork
+model: sonnet
 ---
 
 Install the a4 plugin's path-scoped rules into the current project.
