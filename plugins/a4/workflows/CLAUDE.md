@@ -1,6 +1,11 @@
 # workflows/ — contributor guardrails
 
-> **You are editing a file inside `workflows/`.** Files here are cited by `../skills/` and `../agents/` at runtime. They hold **cross-skill workflow contracts** that span multiple skills — modes (interactive vs autonomous), pipeline shapes (Full / Reverse / Minimal), iterate mechanics (review-item walks), wiki-authorship policy (which skill writes which wiki page).
+## Audiences
+
+- **This file (`CLAUDE.md`):** plugin contributors editing files in this directory.
+- **Other files in this directory (`*.md`):** skill runtimes — files here are cited by `../skills/` and `../agents/` at runtime. They hold **cross-skill workflow contracts** that span multiple skills — modes (interactive vs autonomous), pipeline shapes (Full / Reverse / Minimal), iterate mechanics (review-item walks), wiki-authorship policy (which skill writes which wiki page).
+
+The remainder of this file describes the rules that govern the *other files in this directory*; if you are editing `CLAUDE.md` itself, the contributor-guardrail framing applies to you.
 
 ## Citation rules (binding)
 

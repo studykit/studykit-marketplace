@@ -6,6 +6,8 @@ These notes apply to anyone editing files under `plugins/a4/`. End-user behavior
 
 ## Audience routing — read this first
 
+Each per-directory `CLAUDE.md` (including this one) is itself for **plugin contributors**; the audience listed below is for the *other `*.md` files* in that directory.
+
 Three distinct audiences read this plugin, and confusing them causes drift:
 
 | Your task | Audience | Read these |

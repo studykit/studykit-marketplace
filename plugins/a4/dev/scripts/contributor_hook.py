@@ -11,7 +11,9 @@ two things:
     (which directory has which audience + citation summary).
   - On every file's first Read or Edit: a one-line note naming that
     specific file's audience and pointing to the directory's binding
-    `CLAUDE.md`.
+    `CLAUDE.md`. `CLAUDE.md` files themselves are special-cased — their
+    audience is plugin contributors regardless of layer (the per-layer
+    audience in `_LAYER_INFO` describes the directory's *other* files).
 
 The two are deliberately distinct: the layer map gives the routing big
 picture once; the per-file note disambiguates which slot the current
@@ -121,8 +123,16 @@ def _inject_per_file(payload: dict, intent: str) -> int:
     if not _record_announced(project_dir, session_id, file_path):
         return 0
 
-    layer = _resolve_layer(file_path, plugin_root)
-    audience, claude_md = _LAYER_INFO.get(layer, _LAYER_INFO["other"])
+    if Path(file_path).name == "CLAUDE.md":
+        # `CLAUDE.md` is the directory's contributor guardrail itself — its
+        # audience is plugin contributors regardless of which layer it sits
+        # in. The audience listed in `_LAYER_INFO` describes the *other*
+        # files in that directory.
+        audience = "plugin contributors editing this directory's guardrails"
+        claude_md = "plugins/a4/CLAUDE.md"
+    else:
+        layer = _resolve_layer(file_path, plugin_root)
+        audience, claude_md = _LAYER_INFO.get(layer, _LAYER_INFO["other"])
     display_rel = (
         file_path[len(project_dir) + 1 :]
         if file_path.startswith(project_dir + os.sep)

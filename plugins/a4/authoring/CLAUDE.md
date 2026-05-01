@@ -1,8 +1,13 @@
 # authoring/ — contributor guardrails
 
-> **You are editing a file inside `authoring/`.** Files here are read by workspace authors (humans) and by LLMs editing `<project-root>/a4/**/*.md`. They define the **binding contract** — what's valid in workspace files — not how the plugin enforces it.
+## Audiences
 
-## Audience (single source of truth — do not repeat per-file)
+- **This file (`CLAUDE.md`):** plugin contributors editing files in this directory.
+- **Other files in this directory (`*.md`):** workspace authors (humans) and LLMs editing `<project-root>/a4/**/*.md`. They define the **binding contract** — what's valid in workspace files — not how the plugin enforces it.
+
+The remainder of this file describes the audience and rules for the *other files in this directory*; if you are editing `CLAUDE.md` itself, the contributor-guardrail framing applies to you.
+
+## Audience of files in this directory (single source of truth — do not repeat per-file)
 
 The audience is fixed by location: every `authoring/*.md` shares the same intended readers, so it lives here once instead of as a banner at the top of each file. Do **not** add an `**Audience:**` banner to new or existing files in this directory — restating it per-file invites drift, and the banner used to be the only sanctioned cross-layer reference (it named `../dev/`), so removing it also tightens path purity.
 

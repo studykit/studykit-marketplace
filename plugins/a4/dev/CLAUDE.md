@@ -1,6 +1,11 @@
 # dev/ — contributor guardrails
 
-> **You are editing a file inside `dev/`.** Files here describe how the plugin enforces the contracts in `../authoring/` (frontmatter / body) and `../workflows/` (skill orchestration). Plugin contributors only — skills, agents, and rules MUST NOT cite this directory.
+## Audiences
+
+- **This file (`CLAUDE.md`):** plugin contributors editing files in this directory.
+- **Other files in this directory (`*.md`):** plugin contributors. Files here describe how the plugin enforces the contracts in `../authoring/` (frontmatter / body) and `../workflows/` (skill orchestration). Skills, agents, and rules MUST NOT cite this directory.
+
+Both audiences coincide here, but the split is preserved for parity with `../authoring/CLAUDE.md` and `../workflows/CLAUDE.md`.
 
 If you find a skill or agent citing `../dev/`, the content belongs in `../workflows/` (cross-skill orchestration) or `../authoring/` (workspace contract). Promote it and update the skill cross-ref.
 
