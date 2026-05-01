@@ -8,7 +8,7 @@ Every markdown file under `a4/` carries YAML frontmatter. Files split into two f
 
 | Family | Examples | Location |
 |--------|----------|----------|
-| **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `roadmap.md`, `bootstrap.md` | `a4/` root |
+| **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `bootstrap.md` | `a4/` root |
 | **Issue** | use case, task, bug, spike, research, umbrella, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
 
 The four issue families that share the task lifecycle (`task`, `bug`, `spike`, `research`) are siblings — they share the same status enum and lifecycle but each carries its own per-type schema and authoring contract. The `task` family is the default (regular implementation work, equivalent to Jira's "Task" issue type); `bug` / `spike` / `research` are specialized variants. Cross-family operations (UC cascades, status reset on revising) walk all four; single-family authoring uses the matching folder only.
@@ -25,7 +25,6 @@ Every markdown file declares a `type:` field in frontmatter. The value selects t
 | Wiki — context | `context` |
 | Wiki — domain | `domain` |
 | Wiki — nfr | `nfr` |
-| Wiki — roadmap | `roadmap` |
 | Issue — usecase | `usecase` |
 | Issue — task | `task` |
 | Issue — bug | `bug` |
@@ -46,7 +45,7 @@ Rules:
 
 ## Wiki family — shared frontmatter contract
 
-Every wiki page (`actors`, `architecture`, `bootstrap`, `context`, `domain`, `nfr`, `roadmap`) shares the same minimal contract:
+Every wiki page (`actors`, `architecture`, `bootstrap`, `context`, `domain`, `nfr`) shares the same minimal contract:
 
 ```yaml
 ---

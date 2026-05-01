@@ -25,7 +25,7 @@ Ask **one** question before showing the catalog:
 > This project has existing code but no a4 workspace. What are you trying to do?
 > - **(a) Reverse-engineer** (Reverse shape) — extract use cases and supporting wiki pages (`context.md`, `actors.md`, `domain.md`) from the existing code.
 > - **(b) Single change** (Minimal shape) — make one small change without the full pipeline (`bootstrap.md` only, then `/a4:task` or `/a4:bug` → `/a4:run`).
-> - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:domain` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:roadmap` → `/a4:run`) for a new feature on top.
+> - **(c) New feature** (Full shape) — start the formal pipeline (`/a4:usecase` → `/a4:domain` → `/a4:arch` → `/a4:auto-bootstrap` → `/a4:breakdown` → `/a4:run`) for a new feature on top.
 
 A user with no implementation goal yet (just recording a spec via `/a4:spec`, capturing research, or sketching ideas) is in a **No-shape** state — none of (a)/(b)/(c) applies. Compass does not prompt for that explicitly; the catalog's Ideation and Standalone sections cover those cases as fall-throughs.
 
@@ -45,4 +45,4 @@ Invoke `/a4:auto-bootstrap` (which already supports incremental mode against an 
 
 ### (c) New feature
 
-Full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:roadmap → /a4:run` (per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/workflows/pipeline-shapes.md) Shape 1 Full forward). Fall through to the Step 2.1 catalog; the user typically picks `/a4:usecase` first.
+Full pipeline: `/a4:usecase → /a4:domain → /a4:arch → /a4:auto-bootstrap → /a4:breakdown → /a4:run` (per [`pipeline-shapes.md`](${CLAUDE_PLUGIN_ROOT}/workflows/pipeline-shapes.md) Shape 1 Full forward). Fall through to the Step 2.1 catalog; the user typically picks `/a4:usecase` first.

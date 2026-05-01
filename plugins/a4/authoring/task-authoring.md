@@ -78,7 +78,7 @@ Lifecycle, status enum, writer rules, and `complete` initial-status preflight ar
 
 Task-specific notes:
 
-- Batch-authored tasks (e.g., from a roadmap) use `pending` as initial status.
+- Batch-authored tasks (from `/a4:breakdown`) use `open` as initial status; the user promotes them `open → pending` when ready for `/a4:run` to pick them up.
 - `complete` means unit tests passed.
 - `cycle:` bumps on `failing → pending` next-cycle defers.
 - Required body sections for the `complete` preflight: `## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`.

@@ -10,7 +10,7 @@ Companion to:
 
 ## Why name the shapes
 
-Most a4 documentation describes the **Full forward** pipeline (`usecase → domain → arch → bootstrap → roadmap → run`). In practice the pipeline runs in at least three distinct shapes:
+Most a4 documentation describes the **Full forward** pipeline (`usecase → domain → arch → bootstrap → breakdown → run`). In practice the pipeline runs in at least three distinct shapes:
 
 - A new project starting from a vague idea — the canonical Full forward.
 - A brownfield project being reverse-engineered into UCs from existing code.
@@ -35,9 +35,9 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Entry.** `/a4:usecase` (interactive) on a fresh idea, vague intent, or new feature scope.
 
-**Required wiki path.** `usecase → domain → architecture → bootstrap → roadmap` (each successive page authored after the previous one is finalized).
+**Required wiki path.** `usecase → domain → architecture → bootstrap` (each successive page authored after the previous one is finalized). `/a4:breakdown` then derives the task batch from the upstream behavioral inputs (UCs and/or specs) grounded in the bootstrap-verified codebase; it does not author its own wiki page.
 
-**Required issue path.** `usecase/<id>-<slug>.md` (one or more) → `task/<id>-<slug>.md` (UC-driven batch produced by `/a4:roadmap`).
+**Required issue path.** `usecase/<id>-<slug>.md` (one or more) → `task/<id>-<slug>.md` (UC/spec-driven batch produced by `/a4:breakdown`).
 
 **Acceptance Criteria source.** Each task's `implements: usecase/<id>-<slug>` resolves to that UC's `## Flow` / `## Validation` / `## Error Handling` sections. `/a4:run` Step 4b ships **per UC**; multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
 
@@ -60,7 +60,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Entry.** One of `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research`. No UC, domain, or architecture authoring required.
 
-**Required wiki path.** `bootstrap.md` only. `domain.md`, `architecture.md`, `usecase/*.md`, `roadmap.md` are all skippable.
+**Required wiki path.** `bootstrap.md` only. `domain.md`, `architecture.md`, `usecase/*.md` are all skippable.
 
 **Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → `/a4:run`.
 
@@ -166,7 +166,7 @@ Two skills branch on shape and therefore cite this document:
 
 Skills that **do not** cite this document, by design:
 
-- `usecase`, `domain`, `arch`, `roadmap` — Full-only stages. Shape is determined by the fact of their invocation; no internal branching needed.
+- `usecase`, `domain`, `arch`, `breakdown` — Full-only stages. Shape is determined by the fact of their invocation; no internal branching needed.
 - `auto-usecase` — the Reverse entry. Shape is determined by invocation; no internal branching.
 - `task` — itself the Minimal entry. Always Jira-issue-modeled regardless of any other shape activity in the workspace.
 - `spec` — cross-cutting; shape-independent.

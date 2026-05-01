@@ -32,8 +32,8 @@ A review item belongs to a given iterate flow when any entry in its `target:` li
 | usecase iterate | `target` contains any of `usecase/*`, `context`, `actors`, `nfr` |
 | domain iterate | `target` contains `domain` |
 | arch iterate | `target` contains `architecture` |
-| roadmap iterate | `target` contains `roadmap` or `task/*` |
-| run iterate | `target` contains `task/*` or `roadmap` (typically from prior cycle's test-runner) |
+| breakdown iterate | `target` contains `task/*` |
+| run iterate | `target` contains `task/*` (typically from prior cycle's test-runner) |
 
 Always restrict to `status: open` (and `in-progress` for resume cases). Exclude `resolved` and `discarded`.
 
@@ -69,7 +69,7 @@ Illegal direct edits (jumps not in `FAMILY_TRANSITIONS`) are surfaced by the Sto
 
 ## 4. Record wiki edits
 
-When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `roadmap.md`, `bootstrap.md`):
+When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `bootstrap.md`):
 
 - Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
 - The wiki close guard warns at resolve-time when `target:` lists wiki basenames but the referenced page lacks a `## Change Logs` bullet pointing at the review item.

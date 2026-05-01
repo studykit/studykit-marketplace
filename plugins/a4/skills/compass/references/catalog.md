@@ -24,7 +24,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `usecase` | Shape a vague idea into concrete Use Cases through dialogue (writes `context.md`, `actors.md`, `nfr.md`, per-UC files) |
 | `domain` | Extract cross-cutting concepts, relationships, and state transitions into `domain.md` |
 | `arch` | Design architecture — tech stack, components, interfaces, test strategy |
-| `roadmap` | Author the implementation roadmap and per-task files |
+| `breakdown` | Derive a batch of task files from usecase / spec inputs grounded in the bootstrap-verified codebase |
 | `task` / `bug` / `spike` / `research` | Author a single task in the matching family — UC-derived or spec-justified |
 | `discard` | Discard a task across any family by id / path / slug fragment |
 | `run` | Run the agent loop — implement and test until all pass |

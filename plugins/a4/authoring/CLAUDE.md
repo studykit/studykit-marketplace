@@ -33,7 +33,7 @@ If the audience for a new file does not match any of the above, that is a signal
 - Workspace-wide frontmatter rule (applies to every file) → extend `frontmatter-universals.md`.
 - Workspace-wide body rule that applies to every file (heading form, link form, `updated:` bumping) → extend `body-conventions.md`.
 - Issue-only body rule (sections used by `usecase` / `task` / `bug` / `spike` / `research` / `umbrella` / `review` / `spec` / `idea` / `brainstorm`) → extend `issue-body.md`.
-- Wiki-only body rule (sections used by `actors` / `architecture` / `bootstrap` / `context` / `domain` / `nfr` / `roadmap`) → extend `wiki-body.md`.
+- Wiki-only body rule (sections used by `actors` / `architecture` / `bootstrap` / `context` / `domain` / `nfr`) → extend `wiki-body.md`.
 - New artifact taxonomy → extend `artifacts.md`.
 - Cross-type binding rule shared by several types (lifecycle, evidence-readiness gate, etc.) → standalone `<rule-name>.md`. Precedents: `task-family-lifecycle.md` (lifecycle shared by `task` / `bug` / `spike` / `research`), `spike-before-task.md` (evidence-readiness gate shared by `task` / `bug`). Per-type docs cite the standalone via `./` for the binding shape.
 

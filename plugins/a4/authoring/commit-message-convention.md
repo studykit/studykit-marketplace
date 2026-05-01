@@ -34,7 +34,7 @@ Subject form for every commit derived from an a4 workspace artifact. A commit is
 | `--no-ff` merge commit (worktree → main) | `#42 merge(a4): integrate render-markdown-preview` |
 | Single task author / discard | `#42 docs(a4): author task render-markdown-preview` |
 | Cycle test-runner findings (multi-review) | `#57 #58 #59 chore(a4): cycle 2 test-runner findings` |
-| Roadmap initial UC + tasks | `#10 #41 #42 #43 docs(a4): roadmap for payment flow` |
+| Breakdown — task batch derivation | `#41 #42 #43 docs(a4): derive tasks for payment flow` |
 | UC ship-transition | `#10 #11 docs(a4): ship UC payment-checkout payment-refund` |
 | Spec author | `#15 docs(a4): record retry strategy decision` |
 | Wiki edit, no triggering artifact | `docs(a4): clarify architecture overview` |

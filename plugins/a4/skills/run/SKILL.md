@@ -15,9 +15,9 @@ Two stages over the tasks already authored under the four issue family folders (
 1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `coder` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`; `roadmap.md` only links to it).
+Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`).
 
-Authoring is out of scope: `/a4:roadmap` writes the roadmap + UC-batch tasks; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` write single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
+Authoring is out of scope: `/a4:breakdown` writes the UC/spec-batch tasks; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` write single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
 ## Workspace Layout
 
@@ -27,7 +27,6 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 - `a4/<type>/<id>-<slug>.md` (under `task/`, `bug/`, `spike/`, or `research/`) — required. The set of executable units this run consumes.
 - `a4/bootstrap.md` — required. Single source of truth for Launch & Verify.
-- `a4/roadmap.md` — optional. Provides milestone narrative + dependency-graph snapshot.
 - `a4/architecture.md` — passed to agents for contract context.
 - `a4/usecase/*.md` — read for UC ship-review candidates (Step 4b). Absent in UC-less projects; that's fine.
 - `a4/review/*.md` — open review items influence ready-set selection and resume behavior.
@@ -45,7 +44,7 @@ Resolution policy: `references/launch-verify-source.md`. When `bootstrap.md` is 
 ## Mode Detection
 
 - **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
-- **Iterate mode** — open review items target a task or `roadmap`. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
+- **Iterate mode** — open review items target a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
 - **Pre-flight** (both modes, run at Step 1 entry) — local `HEAD` must equal `origin/HEAD` per `references/parallel-isolation.md`. Halt with a push instruction on mismatch.
 - **Serial fallback** (`/a4:run serial` or `/a4:run iterate serial`) — opt-in mode that skips worktree isolation and the merge sweep entirely. Rules in `references/parallel-isolation.md`.
 
@@ -55,10 +54,10 @@ Mode detection at session start:
 ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any tasks?
 grep -lhr '^status: pending' a4/task a4/bug a4/spike a4/research 2>/dev/null
 grep -lhr '^status: failing' a4/task a4/bug a4/spike a4/research 2>/dev/null
-ls a4/review/*.md | xargs grep -l 'status: open\|target: roadmap\|target: task/\|target: bug/\|target: spike/\|target: research/'
+ls a4/review/*.md | xargs grep -l 'status: open\|target: task/\|target: bug/\|target: spike/\|target: research/'
 ```
 
-If no tasks exist at all: halt and tell the user to run `/a4:roadmap` (UC-driven batch) or one of `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` (single ad-hoc) first.
+If no tasks exist at all: halt and tell the user to run `/a4:breakdown` (UC/spec-driven batch) or one of `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` (single ad-hoc) first.
 
 ## Resume Hygiene
 
@@ -97,20 +96,20 @@ Context is passed via file paths, not agent memory.
 - **`coder`** — `Agent(subagent_type: "a4:coder")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
 
-`roadmap-reviewer` is **not** invoked from `/a4:run` directly.
+`breakdown-reviewer` is **not** invoked from `/a4:run` directly.
 
 ## Out of Scope
 
-- **Authoring** — task files, roadmap.md, specs, UCs are written elsewhere. `/a4:run` only reads them.
+- **Authoring** — task files, specs, UCs are written elsewhere. `/a4:run` only reads them.
 - **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** Auto-detection of commands is intentionally out of scope.
-- **roadmap-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:roadmap iterate` rather than spawning the reviewer inline.
+- **breakdown-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:breakdown iterate` rather than spawning the reviewer inline.
 - **Per-cycle parallelism beyond independent ready tasks** — coder parallelism is bounded by the dependency graph.
 - **Auto-fall-back to `serial` mode** — opt-in via the `serial` arg only.
 - **Auto-resolution of merge conflicts** — Step 2.5 conflicts halt for the user.
 
 ## Non-Goals
 
-- Do not rebuild Phase 1. `/a4:roadmap` owns roadmap authoring; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` own single-task authoring.
+- Do not rebuild Phase 1. `/a4:breakdown` owns batch task derivation; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` own single-task authoring.
 - Do not split coder / test-runner into sub-skills.
 - Do not split post-loop review (Step 4) into a separate skill, and do not delegate failure classification or UC ship to an agent.
 - Do not emit aggregated test reports. All findings are per-review-item files.

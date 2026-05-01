@@ -21,13 +21,13 @@ Carry the detected shape into the diagnosis report (Step 3.4) so the user sees t
 **Layer 0 — Workspace foundation** *(Full / Reverse-then-forward only)*. Does the workspace have any use cases yet?
 - No UCs → recommend `/a4:usecase` (interactive) or `/a4:auto-usecase` (autonomous).
 
-**Layer 1 — Wiki foundation** *(Full / Reverse-then-forward only; Reverse-only runs `domain.md` check only)*. Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap → roadmap`); stop at the first missing layer.
+**Layer 1 — Wiki foundation** *(Full / Reverse-then-forward only; Reverse-only runs `domain.md` check only)*. Is each wiki page that has dependent issues present? Check in pipeline order (`usecase → domain → architecture → bootstrap`); stop at the first missing layer.
 - UCs exist, `domain.md` missing → recommend `/a4:domain` (cross-cutting concept extraction is its own skill, not part of `/a4:usecase`).
 - `domain.md` exists, `architecture.md` missing → recommend `/a4:arch`.
 - `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
-- `bootstrap.md` exists, `roadmap.md` missing, tasks expected → recommend `/a4:roadmap`.
+- `bootstrap.md` exists, no tasks across the four issue family folders, behavioral source (UC or spec) present → recommend `/a4:breakdown`.
 **Layer 2 — Open review items.** Any open `review/*.md`?
-- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target entries: `architecture` → `/a4:arch iterate`; `domain` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` / `roadmap` → `/a4:roadmap iterate` or `/a4:run iterate`.
+- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target entries: `architecture` → `/a4:arch iterate`; `domain` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` → `/a4:breakdown iterate` or `/a4:run iterate`.
 
 **Layer 3 — Active tasks.** Any `<type>/*.md` (across the four issue family folders `task/`, `bug/`, `spike/`, `research/`) with `status: pending | progress | failing`?
 - Yes → recommend `/a4:run iterate` (resume implementation).

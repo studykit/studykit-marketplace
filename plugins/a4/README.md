@@ -15,7 +15,7 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `usecase` | Collaborative usecase specification design |
 | `domain` | Cross-cutting Domain Model extraction (concepts, relationships, state transitions) |
 | `arch` | Architecture design and review |
-| `roadmap` | Implementation roadmap creation and review |
+| `breakdown` | Derive a batch of task files from usecase / spec inputs grounded in the bootstrap-verified codebase |
 | `auto-bootstrap` | Autonomous project bootstrap with research |
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
 | `brainstorm` | Structured brainstorming sessions |
@@ -61,7 +61,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 | `domain-reviewer` | Review `domain.md` against UCs and architecture; emit per-finding review items |
 | `coder` | Implement tasks and write unit tests |
 | `mock-html-generator` | Generate HTML mockups |
-| `roadmap-reviewer` | Review implementation roadmaps |
+| `breakdown-reviewer` | Review derived task batches against upstream usecases / specs and (when present) architecture intent |
 | `test-runner` | Run tests and produce reports |
 | `usecase-composer` | Compose usecase specifications |
 | `usecase-explorer` | Explore and discover usecases |
@@ -77,7 +77,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 <project-root>/
   a4/                                       # Markdown-only documentation workspace
     context.md architecture.md domain.md     # Wiki pages (flat):
-    actors.md nfr.md roadmap.md bootstrap.md # one file per cross-cutting concern
+    actors.md nfr.md bootstrap.md            # one file per cross-cutting concern
 
     usecase/<id>-<slug>.md                    # Use Cases
     task/<id>-<slug>.md                       # Executable work units (Jira sense) — flat
@@ -101,7 +101,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 ### Wiki vs. issues
 
-- **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, plan, bootstrap) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
+- **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, bootstrap) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
@@ -113,7 +113,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 - **Ids are globally monotonic integers** (GitHub issue semantics) — unique across all folders. Allocator: `scripts/allocate_id.py` computes `max(existing ids) + 1`.
 - **Filenames are `<id>-<slug>.md`.** Folder indicates type; no `uc-`/`task-`/`rev-`/`d-` prefix.
 - **Standard markdown links throughout.** Body uses `[text](relative/path.md)` (renderable by GitHub, VSCode, any markdown viewer); frontmatter paths are plain strings (no brackets, no extension) for stable machine parsing.
-- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `children`, UC ↔ task, …) are computed on demand (`search.py`, roadmap surfaces).
+- **Forward-direction relationships only** in frontmatter: `depends_on`, `implements`, `target`, `spec`, `supersedes`, `parent`, `related`. Reverse views (`blocks`, `children`, UC ↔ task, …) are computed on demand (`search.py`).
 
 ### Wiki update protocol
 
@@ -125,7 +125,7 @@ Wiki pages carry no lifecycle but are continuously updated. All edits flow throu
 
 ### Derived views
 
-Use Case Diagram, authorization matrix, open-issue lists, roadmap milestone narrative — all **rendered from source on demand**, never hand-maintained. Obsidian dataview can render these directly inside the vault; the `workspace-assistant` agent (snapshot mode) renders a parallel plain-markdown view to stdout for sessions that aren't using Obsidian.
+Use Case Diagram, authorization matrix, open-issue lists, dependency graphs — all **rendered from source on demand**, never hand-maintained. Obsidian dataview can render these directly inside the vault; the `workspace-assistant` agent (snapshot mode) renders a parallel plain-markdown view to stdout for sessions that aren't using Obsidian.
 
 ### Workspace dashboard
 

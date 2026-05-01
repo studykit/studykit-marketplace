@@ -4,10 +4,9 @@ Skill-specific addendum on top of `../../../workflows/iterate-mechanics.md`. Rea
 
 ## Backlog filter
 
-Open review items where:
+Open review items where `target: task/*` / `target: bug/*` / `target: spike/*` / `target: research/*`.
 
-- `target: task/*` / `target: bug/*` / `target: spike/*` / `target: research/*`, OR
-- `target: roadmap` (typically `source: test-runner` from the prior cycle).
+`target: roadmap` is no longer a valid target (the type was retired with the prior `roadmap` skill). Stale items still carrying it should be retargeted at `task/<id>-<slug>` or `architecture` and closed.
 
 ## Run-specific work between writer calls
 

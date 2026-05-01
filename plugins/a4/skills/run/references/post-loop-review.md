@@ -11,7 +11,7 @@ This skill follows the **stop on strong upstream dependency** policy at `../../.
 
 ## 4a. Failure path — classify findings
 
-For each open test-runner review item, the user picks one of three categories: **task / roadmap**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and direct status edits — is in `./failure-classification.md`.
+For each open test-runner review item, the user picks one of three categories: **task**, **architecture**, or **usecase**. Routing per category — including cascade rules, cycle-counter increments, and direct status edits — is in `./failure-classification.md`.
 
 Cycle bound: if 3 cycles complete and failures remain, halt as described in that reference.
 
