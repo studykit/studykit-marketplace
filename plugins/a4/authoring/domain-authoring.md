@@ -4,24 +4,11 @@
 
 `a4/domain.md` is the **shared vocabulary wiki**. It catalogs the cross-cutting concepts every UC, spec, and architecture component references — entities, value objects, lifecycle states. The domain page is downstream of UCs (concepts surface during interview) and upstream of architecture (components depend on the agreed vocabulary).
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
-
-## Frontmatter contract (do not deviate)
-
-```yaml
----
-type: domain
-updated: YYYY-MM-DD
----
-```
-
-- `type:` must be exactly `domain`.
-- `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
 
 ## Body shape
 
-The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Concepts`, `## Relationships`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -50,14 +37,11 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. The drift detector checks for `domain` ↔ `architecture` term consistency: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
 
-## Common mistakes
+## Common mistakes (domain-specific)
 
-- **Stray content above the first H2 heading**.
 - **Required section missing** (`## Concepts`).
-- **H2 not in column 0 or not Title Case**.
-- **Sections nested inside other sections** — every section sits at the body's top level.
-- **H1 in body**. Page name is the file basename; title is frontmatter-only.
-- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
+
+(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

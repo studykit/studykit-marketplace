@@ -44,8 +44,8 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s `## Roster` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
-- UC-to-UC ordering is **not** carried in frontmatter (a4 v6.0.0). Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
-- UC-to-spec ties are **not** carried in frontmatter (a4 v6.0.0). When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
+- UC-to-UC ordering is **not** carried in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
+- UC-to-spec ties are **not** carried in frontmatter. When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
 - `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
 - The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `../scripts/search.py` and roadmap surfaces — there is no stored UC field for it.
 - `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as markdown links in the body, not here.
@@ -137,7 +137,6 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 ## Common mistakes (UC-specific)
 
 - **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
-- **Stray `implemented_by:` field** → the field was retired (a4 v6.0.0); the reverse view of `task.implements:` is now derived on demand. Validators ignore the field, but it should not be re-introduced.
 
 (Universal body-shape rules — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 

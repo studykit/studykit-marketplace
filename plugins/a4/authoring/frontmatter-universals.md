@@ -45,6 +45,23 @@ Rules:
 - Every file must carry `type:`. Missing it is an error.
 - For wiki pages, `type:` must match the file basename (e.g., `type: architecture` requires `architecture.md`). Mismatches are errors.
 
+## Wiki family — shared frontmatter contract
+
+Every wiki page (`actors`, `architecture`, `bootstrap`, `context`, `domain`, `nfr`, `roadmap`) shares the same minimal contract:
+
+```yaml
+---
+type: <wiki-basename>
+updated: YYYY-MM-DD
+---
+```
+
+- `type:` must equal the file basename (enforced — see `## type:` field above).
+- `updated:` is an unquoted ISO date. Bump on every substantive edit (see `./body-conventions.md` § Bumping `updated:`).
+- Wiki pages have **no** `id`, **no** `status`, **no** `## Log`, **no** lifecycle. They change continuously; the optional `## Change Logs` body section records why.
+
+Per-wiki authoring files (`<wiki>-authoring.md`) describe only the body sections required for that page; they do not redeclare this contract.
+
 ## Ids
 
 - Ids are **monotonically increasing integers, global to the workspace**. Unique across all issue folders in a given `a4/` (GitHub-issue semantics).
@@ -63,8 +80,8 @@ The script prints the next available id to stdout.
 
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following forms. All forms resolve to the same file, so they are interchangeable on input — pick whichever reads best in context.
 
-- **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. (Renamed from the legacy `#<id>` string short form in a4 v11.0.0; the validator now rejects any path-ref entry beginning with `#`.)
-- **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`task`, `bug`, `spike`, `research`, etc.) — in a4 v12.0.0+ each task family has its own folder; the legacy `task/<kind>/<id>` shape (with a kind subfolder) was retired.
+- **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. The validator rejects any path-ref entry beginning with `#`.
+- **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`task`, `bug`, `spike`, `research`, etc.); each task family has its own top-level folder.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter that benefits from at-a-glance context. The slug part is a hint: when the file's actual stem differs (slug rename), the id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Resolves correctly because ids are globally unique. Permitted but folder-prefixed form is preferred for readability.
 - **Wiki basename.** `architecture`, `domain`, `nfr`, etc. Wiki pages have no id; reference them by file basename. A review item naming a wiki page writes `target: [architecture, domain]`, not `target: [architecture.md]`. Issue-folder paths and wiki basenames may be mixed in a single `target:` list.

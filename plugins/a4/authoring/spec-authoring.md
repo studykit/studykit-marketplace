@@ -56,7 +56,7 @@ updated: YYYY-MM-DD
 
 - `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- The chosen shape is summarized in the `## Context` body section (and recorded as the first `## Decision Log` entry on `→ active`); UC `decision:` frontmatter no longer exists (a4 v6.0.0).
+- The chosen shape is summarized in the `## Context` body section and recorded as the first `## Decision Log` entry on `→ active`.
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
 - `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `../scripts/search.py`.
 - Path values are plain strings without `.md` and without brackets (e.g., `spec/8-caching-strategy`, not `[spec/8-caching-strategy.md]`).
@@ -116,4 +116,4 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `## Decision Log`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `## Decision Log`.
-- **Don't reach for a research artifact at project-root `./research/<slug>.md`.** That convention has been retired — research now lives as `type: research` tasks under `a4/research/`. Cite them from `related:` and inline body links.
+- **Don't reach for a research artifact at project-root `./research/<slug>.md`.** Research lives as `type: research` tasks under `a4/research/`. Cite them from `related:` and inline body links.

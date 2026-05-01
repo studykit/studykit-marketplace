@@ -2,14 +2,7 @@
 
 > **Audience:** Workspace authors writing `<project-root>/a4/usecase/*.md` files (or LLMs editing them on the user's behalf). Cited from `./usecase-authoring.md` § Abstraction discipline.
 
-Flow steps and all other UC fields MUST describe **user-level actions only**. Before writing any flow step, verify it contains no implementation terms.
-
-## Banned Terms and Concepts
-
-- **Technology:** API, REST, GraphQL, HTTP, JSON, XML, webhook
-- **Storage:** database, DB, SQL, cache, queue, index, schema, record, row
-- **Infrastructure:** server, container, microservice, deployment, worker, job, cron
-- **System internals:** "the system queries", "data is stored", "triggers a request", "sends a payload"
+Flow steps and all other UC fields MUST describe **user-level actions only**. Before writing any flow step, verify it contains no implementation terms — anything naming a technology, storage layer, infrastructure component, or internal system action ("the system queries…", "data is stored…", "triggers a request…").
 
 ## How to Convert
 

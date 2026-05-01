@@ -4,7 +4,7 @@
 
 A research item at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code is produced; downstream specs or tasks may cite the research as input via `related:` or via standard markdown body links.
 
-After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
+The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
@@ -55,56 +55,25 @@ updated: YYYY-MM-DD
 `implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error.
 
 - `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
-- `type: research` is fixed for files under `a4/research/`. There is no `kind:` field — the type *is* the kind.
+- `type: research` is fixed for files under `a4/research/`.
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.
 - `implements:` is **forbidden** on research — research is investigation, not delivery. If a research task is scoped to a specific UC's open question, link the UC from `## Context` body prose instead.
 - `spec:` is **forbidden** on research. Cite the triggering spec via a markdown link inside `## Context` body prose; the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle. A failed research re-attempt does not bump a counter.
 - `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`. Production source paths the research touches do not belong in `artifacts:` (they belong in body links).
-- `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `task.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### Lifecycle and writer ownership
 
-```
-open      → discarded | pending | progress
-pending   → discarded | progress
-progress  → complete | discarded | failing | pending
-complete  → discarded | pending
-failing   → discarded | pending | progress
-discarded → (terminal)
-```
+Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four task issue families — see `./task-family-lifecycle.md`.
 
-Per-status meaning:
+Research-specific notes:
 
-- `open` — Backlog. Captured but not yet committed to the work queue.
-- `pending` — In the work queue, awaiting an investigator.
-- `progress` — Investigation underway (the user, an agent, or an implementation loop).
-- `complete` — Investigation finalized; sources cited, findings written. Downstream callers may now cite this task.
-- `failing` — Investigation could not produce usable findings on this iteration (e.g., sources inaccessible, scope mis-framed). Resumed via `failing → progress` or deferred via `failing → pending`.
-- `discarded` — Abandoned. Terminal. Reached via an explicit task-discard when the question is no longer relevant.
-
-Writer rules (research-specific):
-
-- **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; investigation captured in one shot during the same conversation).
-- `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
-- `open → progress` is allowed (e.g., the user starts researching directly without enqueuing first).
-- There is **no `pending → open` reverse** — once enqueued, a research task stays enqueued or moves forward / out.
-
-### `complete` initial-status preflight
-
-When the chosen initial status is `complete`, the investigation is asserted to already be captured in the body. Verify before writing:
-
-1. Required sections (`## Context`, plus `## Options` for `comparative` mode or `## Findings` for `single` mode) must be present and non-empty.
-2. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (see `./body-conventions.md#log`):
-
-   ```markdown
-   ## Log
-
-   - <YYYY-MM-DD> created at status: complete (post-hoc documentation; investigation captured in this conversation)
-   ```
-
-   See `./body-conventions.md#log` for the section convention.
+- `complete` means the investigation is finalized: sources cited, findings written. Downstream callers may now cite this task.
+- `failing` typically signals scope mis-framing or inaccessible sources; deferred via `failing → pending` for re-framing.
+- No `cycle:` field — investigation work has no implement-loop cycle.
+- No `artifacts:` existence check in the `complete` preflight — research output lives in the body.
+- Required body sections for the `complete` preflight: `## Context`, plus `## Options` (when `mode: comparative`) or `## Findings` (when `mode: single`).
 
 ## Body shape
 
@@ -165,10 +134,8 @@ Reverse lookups (which specs cite a research task) are derived on demand via gre
 ## Don't (research-specific)
 
 - **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden on `type: research`. Cite triggering specs via markdown links in `## Context` body prose; record the implementing UC the same way if applicable.
-- **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a research task stays enqueued or moves forward / out.
-- **Don't write `kind:` in research frontmatter.** The field was retired in a4 v12.0.0; `mode:` (comparative / single) is the only research-specific discriminator.
 - **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
 - **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
 - **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and bugs to `a4/bug/` so the matching authoring contract applies.

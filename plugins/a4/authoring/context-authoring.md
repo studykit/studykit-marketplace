@@ -4,24 +4,11 @@
 
 `a4/context.md` is the **upstream framing wiki**. It records the original idea, the problem framing the workspace is shaped around, and (optionally) the screen-navigation narrative that ties UI use cases together. Every other wiki page and every issue family indirectly assumes the framing this page captures.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
-
-## Frontmatter contract (do not deviate)
-
-```yaml
----
-type: context
-updated: YYYY-MM-DD
----
-```
-
-- `type:` must be exactly `context`.
-- `updated:` is an unquoted ISO date. Bump on every edit (including `## Change Logs` bullet appends and screen-group additions).
-- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`. Bump `updated:` on every edit (including `## Change Logs` bullet appends and screen-group additions).
 
 ## Body shape
 
-The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Original Idea`, `## Problem Framing`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -50,14 +37,11 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `context` transitions to `resolved`.
 
-## Common mistakes
+## Common mistakes (context-specific)
 
-- **Stray content above the first H2 heading**.
 - **Required section missing** (`## Original Idea`, `## Problem Framing`).
-- **H2 not in column 0 or not Title Case**.
-- **Sections nested inside other sections** — every section sits at the body's top level.
-- **H1 in body**. Page name is the file basename; title is frontmatter-only.
-- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
+
+(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

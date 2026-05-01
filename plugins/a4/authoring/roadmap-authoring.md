@@ -4,24 +4,11 @@
 
 `a4/roadmap.md` is the **milestone narrative wiki**. It groups UCs into milestones, names the dependency graph between them, and records Shared Integration Points the architecture exposes.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
-
-## Frontmatter contract (do not deviate)
-
-```yaml
----
-type: roadmap
-updated: YYYY-MM-DD
----
-```
-
-- `type:` must be exactly `roadmap`.
-- `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
 
 ## Body shape
 
-The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Plan`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -52,14 +39,11 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `roadmap` transitions to `resolved`.
 
-## Common mistakes
+## Common mistakes (roadmap-specific)
 
-- **Stray content above the first H2 heading**.
 - **Required section missing** (`## Plan`).
-- **H2 not in column 0 or not Title Case**.
-- **Sections nested inside other sections** — every section sits at the body's top level.
-- **H1 in body**. Page name is the file basename; title is frontmatter-only.
-- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
+
+(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

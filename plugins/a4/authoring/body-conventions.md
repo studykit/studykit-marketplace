@@ -36,23 +36,11 @@ Rules:
 - **Unknown H2 headings are tolerated.** Authors may add supplemental sections (`## Benchmarks`, `## Migration Notes`, …) provided the heading is well-formed Title Case.
 - **No stray content above the first section.** Anything in the body that is not whitespace must live under an H2 heading.
 
-Inside a section, content is opaque markdown. Fenced code blocks are passed through verbatim — section detection only inspects the first character of column-0 H2 lines, and lines inside a fenced block (` ``` ` or `~~~`) are not treated as section boundaries.
+Inside a section, content is opaque markdown. Section detection runs on column-0 H2 lines; fenced code blocks are not scanned.
 
 ### Blank-line discipline
 
-Writers leave one blank line above each H2 (except the very first heading in the body) and one blank line between heading and content for predictable rendering:
-
-```markdown
-## Flow
-
-1. Open the meeting record.
-2. Click "share summary".
-3. Confirm the channel.
-
-## Validation
-```
-
-The blank lines are convention rather than enforced syntax, but renderers depend on them — without a blank line between an H2 and the content beneath, some processors merge the heading line into the following paragraph.
+Leave one blank line above each H2 (except the first) and between heading and content. This is convention, not enforced syntax.
 
 ## Link form (body)
 
@@ -65,7 +53,7 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 | Sibling-folder reference | `[research/42-grpc-streaming](../research/42-grpc-streaming.md)` (from `a4/spec/`) |
 | External URL | `[the spec text](https://example.com/spec)` |
 
-Relative paths are computed from the file containing the link to the target. Use the appropriate number of `../` segments. Section anchors use the renderer's lowercase-with-hyphens slugification of the heading text (so `## Decision Log` resolves to `#decision-log`).
+Section anchors use the renderer's standard slugification (`## Decision Log` → `#decision-log`).
 
 Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is also acceptable in prose. It renders as plain text in local markdown viewers but is auto-linked as a cross-issue reference in GitHub Issues / Pull Requests when an `a4/` workspace is mirrored into a tracker. Use it for shorthand mentions; use the markdown-link form when local navigation matters.
 

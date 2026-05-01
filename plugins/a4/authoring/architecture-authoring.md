@@ -4,20 +4,9 @@
 
 `a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
 
-## Frontmatter contract (do not deviate)
-
-```yaml
----
-type: architecture
-updated: YYYY-MM-DD
----
-```
-
-- `type:` must be exactly `architecture`. Mismatches between `type:` and the file basename are an error.
-- Wiki pages have **no** `id`, no `status`, no `## Log`, no lifecycle. They change continuously; the `## Change Logs` body section records the why.
-- No `created:` field on wiki pages — the `## Original Idea` / problem-framing-style "first appeared" content lives in `context.md`.
+Note: no `created:` field on wiki pages — "first appeared" content lives in `context.md` `## Original Idea`.
 
 ## Body shape
 

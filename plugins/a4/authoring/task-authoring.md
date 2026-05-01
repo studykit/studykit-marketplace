@@ -4,7 +4,7 @@
 
 A task at `a4/task/<id>-<slug>.md` is a **unit of regular implementation work** — new functionality, extension, or refactor. The default issue family in the Jira sense (equivalent to Jira's "Task" issue type alongside Bug / Story / Epic).
 
-After a4 v12.0.0 the four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
+The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
 
@@ -50,7 +50,6 @@ updated: YYYY-MM-DD
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.
 - `artifacts:` is artifact-only — paths must point under `artifacts/task/<id>-<slug>/...`. The list is typically empty for task work that ships only production source. Production source paths the task writes or modifies are documented in the body `## Files` section, not in this frontmatter field. See "Artifacts directory" below for when to use the artifact directory.
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
-- `implemented_by:` is **not** a frontmatter field on any artifact — the UC ↔ task reverse view is derived on demand from `<task-family>.implements:`. Do not place an `implemented_by:` field on tasks or UCs.
 
 ### `type: task` with empty `implements:` and `spec:` — smell check
 
@@ -62,47 +61,14 @@ If implementation surfaces a real choice (an architectural shape, a protocol, a 
 
 ### Lifecycle and writer ownership
 
-```
-open      → discarded | pending | progress
-pending   → discarded | progress
-progress  → complete | discarded | failing | pending
-complete  → discarded | pending
-failing   → discarded | pending | progress
-discarded → (terminal)
-```
+Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four task issue families — see `./task-family-lifecycle.md`.
 
-Per-status meaning:
+Task-specific notes:
 
-- `open` — Backlog (kanban "todo"). Captured but not yet committed to the work queue. Not picked up by the implement loop; transition `open → pending` to enqueue.
-- `pending` — In the work queue, awaiting an implementer. Default ready-set entry for the implement loop.
-- `progress` — A `coder` agent is working (or crashed mid-work — reset to `pending` on session resume).
-- `complete` — Unit tests passed. **Not** a forward-path terminal — UC `revising` cascade can return tasks to `pending` for re-implementation.
-- `failing` — Unit tests red. Resumed via `failing → progress` (immediate retry, same cycle) or deferred via `failing → pending` (next cycle, `cycle:` bumps).
-- `discarded` — Abandoned. Terminal. Reached via UC `discarded` cascade or an explicit task-discard.
-
-Writer rules (task-specific):
-
-- **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; code already shipped). Batch-authored tasks (e.g., from a roadmap) use `pending`.
-- `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
-- `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop). The `pending` step expresses queue intent; skip it when the queue is not the entry path.
-- There is **no `pending → open` reverse** — once enqueued, a task cannot be returned to backlog.
-- UC-cascade automatic flips: when a UC flips to `discarded`, all related tasks across the four issue families → `discarded`. When a UC flips to `revising`, tasks at `progress`/`failing` reset to `pending`; `open`/`pending`/`complete` tasks stay. Do not flip these by hand.
-
-### `complete` initial-status preflight
-
-When the chosen initial status is `complete`, the work is asserted to already be shipped. Verify before writing:
-
-1. For each path in `artifacts:`, confirm it exists in the working tree. If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
-2. Required sections (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`) must still be present per the body shape below — `complete` does not exempt the task from documentation.
-3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (see `./body-conventions.md#log`):
-
-   ```markdown
-   ## Log
-
-   - <YYYY-MM-DD> created at status: complete (post-hoc documentation; code shipped prior to task authorship)
-   ```
-
-   See `./body-conventions.md#log` for the section convention.
+- Batch-authored tasks (e.g., from a roadmap) use `pending` as initial status.
+- `complete` means unit tests passed.
+- `cycle:` bumps on `failing → pending` next-cycle defers.
+- Required body sections for the `complete` preflight: `## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`.
 
 ## Body shape
 
@@ -151,16 +117,13 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Wrong `type:` value or wrong folder.** A file under `a4/task/` must declare `type: task`. Mismatched declarations are a folder-routing error and should be re-located.
-- **`kind:` field present** — `kind:` was retired with the v12 split. The folder + `type:` together encode the kind.
 - **Production source paths in frontmatter `artifacts:`** — `artifacts:` is artifact-only. Production source belongs in the body `## Files` section.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (task-specific)
 
-- **Don't put `implemented_by:` on a task or UC.** The field was retired (a4 v6.0.0); the reverse view of `task.implements:` is computed on demand.
 - **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
 - **Don't reverse `pending → open`.** Once enqueued, a task stays enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded`, UC `revising` → task `pending`-reset are the writer's job.
-- **Don't write `kind:` in task frontmatter.** The field was retired in a4 v12.0.0.
 - **Don't author a different issue family here.** Move spikes to `a4/spike/`, bugs to `a4/bug/`, and research to `a4/research/` so the matching authoring contract applies.

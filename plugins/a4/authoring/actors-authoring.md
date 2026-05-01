@@ -4,24 +4,11 @@
 
 `a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`. Wiki pages share a minimal schema (`type:` + `updated:`) — the YAML below is the full contract.
-
-## Frontmatter contract (do not deviate)
-
-```yaml
----
-type: actors
-updated: YYYY-MM-DD
----
-```
-
-- `type:` must be exactly `actors`.
-- `updated:` is an unquoted ISO date. Bump on every edit.
-- Wiki pages have no `id`, no `status`, no `## Log`, no lifecycle.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
 
 ## Body shape
 
-The body is a sequence of column-0 H2 headings in Title Case (e.g., `## Roster`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -62,14 +49,11 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 Create the section if absent. Drift detection cross-checks UC `actors:` lists against the roster — a UC referencing an unknown slug emits a `kind: finding` review item.
 
-## Common mistakes
+## Common mistakes (actors-specific)
 
-- **Stray content above the first H2 heading**.
 - **Required section missing** (`## Roster`).
-- **H2 not in column 0 or not Title Case**.
-- **Sections nested inside other sections** — every section sits at the body's top level.
-- **H1 in body**. Page name is the file basename; title is frontmatter-only.
-- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
+
+(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

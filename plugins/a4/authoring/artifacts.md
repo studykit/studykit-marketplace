@@ -6,7 +6,7 @@ Cross-family reference for the **artifact directory** that may sit alongside a t
 
 Per-family authoring files (`{task,bug,spike,research}-authoring.md`) cite this document for shared rules and add only family-specific notes (e.g., the spike's "primary deliverable" status, the bug's "evidence-only" framing).
 
-After a4 v12.0.0 the four task issue families are sibling top-level folders under `a4/`; the artifact directory mirrors this with sibling top-level folders under `artifacts/`. The legacy `artifacts/task/<kind>/...` prefix (with a kind subfolder) was retired alongside the workspace split.
+The four task issue families are sibling top-level folders under `a4/`; the artifact directory mirrors this with sibling top-level folders under `artifacts/`.
 
 ## Directory layout
 
@@ -36,7 +36,7 @@ The `artifacts/` directory:
 
 ## Frontmatter `artifacts:` is artifact-only
 
-Frontmatter `artifacts:` lists artifact paths only — every path must point under `artifacts/<type>/<id>-<slug>/...`. Production source paths the task writes or modifies belong in the body `## Files` section, not in frontmatter. (The field was named `files` before a4 v10.0.0; rename in any pre-v10 workspace.)
+Frontmatter `artifacts:` lists artifact paths only — every path must point under `artifacts/<type>/<id>-<slug>/...`. Production source paths the task writes or modifies belong in the body `## Files` section, not in frontmatter.
 
 For `type: spike`, `artifacts:` may also point under `artifacts/spike/archive/<id>-<slug>/` once the directory has been archived.
 

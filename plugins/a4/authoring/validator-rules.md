@@ -16,7 +16,7 @@ Body shape is documentation-only; frontmatter rules below are binding.
 | Missing required frontmatter field | error |
 | Wrong type for a known field | error |
 | Value outside enum for a known field | error |
-| Path-reference format (brackets, `.md` extension, non-positive integer, legacy `#<id>` string) | error |
+| Path-reference format (brackets, `.md` extension, non-positive integer, leading `#` on a path-ref entry) | error |
 | Path reference does not resolve to any workspace file | error (`unresolved-ref`) |
 | `type` on wiki page disagrees with filename | error |
 | Filename leading id disagrees with `id:` field | error (`id-filename-mismatch`) |
@@ -43,16 +43,6 @@ Several enum values are semantically derived from cross-file state rather than b
 | `brainstorm.status` | `promoted` | Own `promoted:` list is non-empty | user-driven; surfaced as a consistency check |
 
 Both directions of mismatch (stale terminal status with no supporting cross-reference, or unflipped status despite supporting cross-reference) are reported. Reporting is non-mutating — no file is changed automatically.
-
-## Known deferred items
-
-These are schema items deliberately left softened until a follow-up round.
-
-1. **Issue `## Log` entry format.** Body-level `## Log` is hand-maintained when authors choose to populate it; the exact entry format (prefix, timestamp granularity, author attribution) is not yet locked.
-2. **Exact YAML grammar for path references.** Plain string is the current rule; whether to allow alternative forms (list-of-maps for typed references, etc.) is not yet decided.
-3. **Stricter enums.** Several fields are currently open strings (`source` on review items) because the full value set has not been enumerated.
-
-When these land, update this document **and** the enforcement layer simultaneously — the two must not drift.
 
 ## Cross-references
 
