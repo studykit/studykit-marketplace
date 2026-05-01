@@ -25,7 +25,7 @@ The `/a4:auto-*` prefix is *not* a guarantee that the skill is the autonomous tw
 | `auto-usecase` | autonomous | **reverse / batch** | Distinct job: extract or batch-shape UCs from raw input (codebase, idea, brainstorm). Not an "auto twin" of `usecase` — different input shape |
 | `domain` | **interactive** | forward | Cross-cutting concept extraction is a decision-collaboration step (split / merge / state) requiring user judgement |
 | `arch` | **interactive** | forward | Architecture choices are decisions; collaborative dialogue is the work |
-| `roadmap` | **interactive** | forward | Milestone shaping and dependency calls require user judgement |
+| `breakdown` | **interactive** | forward | Task scope, dependency, and AC choices benefit from user judgement (the skill drafts a batch and the user reviews / iterates) |
 | `auto-bootstrap` | **autonomous** | forward | Pure verification — run build / launch / test commands, record what works. Environment / arch escape hatches flow through review items, not interactive prompts |
 | `run` | **autonomous** | forward | Loop execution — implement / test until pass. Not a decision step; iteration entry is the `iterate` argument |
 
@@ -33,7 +33,7 @@ The `/a4:auto-*` prefix is *not* a guarantee that the skill is the autonomous tw
 
 The pipeline deliberately does **not** include:
 
-- `/a4:auto-domain`, `/a4:auto-arch`, `/a4:auto-roadmap` — these stages are decision-collaboration. An autonomous variant would commit decisions the user has to re-litigate, multiplying review-item load without saving work.
+- `/a4:auto-domain`, `/a4:auto-arch`, `/a4:auto-breakdown` — these stages are decision-collaboration. An autonomous variant would commit decisions the user has to re-litigate, multiplying review-item load without saving work.
 - `/a4:bootstrap` (interactive) — bootstrap's work is verification, not decision. Environment or arch issues that need user input become review items (`auto-bootstrap` is **continue + review item** per [`wiki-authorship.md`](./wiki-authorship.md) §Stage-by-stage policy), not interactive prompts.
 - `/a4:run` interactive variant — `run` is loop execution. Pause / resume / iteration entry are already supported via the `iterate` argument and review-item routing.
 

@@ -32,8 +32,8 @@ A review item belongs to a given iterate flow when any entry in its `target:` li
 | usecase iterate | `target` contains any of `usecase/*`, `context`, `actors`, `nfr` |
 | domain iterate | `target` contains `domain` |
 | arch iterate | `target` contains `architecture` |
-| roadmap iterate | `target` contains `roadmap` or `task/*` |
-| run iterate | `target` contains `task/*` or `roadmap` (typically from prior cycle's test-runner) |
+| breakdown iterate | `target` contains `task/*` |
+| run iterate | `target` contains `task/*` (typically from prior cycle's test-runner) |
 
 Always restrict to `status: open` (and `in-progress` for resume cases). Exclude `resolved` and `discarded`.
 

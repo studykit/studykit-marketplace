@@ -16,17 +16,16 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 | `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: [nfr]` |
 | `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: [architecture]` |
 | `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `## Verify` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:run`, `coder`, and `test-runner`; never duplicated into other wikis | review item, `target: [bootstrap]` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
-| `roadmap.md` | `roadmap` | `roadmap`: milestone narrative, dependency graph, Shared Integration Points (all inside `## Plan`). **Must not author Launch & Verify content** — that section is a one-line link pointer to `bootstrap.md` | review item, `target: [roadmap]` |
 
 ### Why architecture is more restrictive than domain
 
 `domain.md` is downstream of UCs and upstream of arch. Term churn is normal — concept rename happens often during arch work, and forcing every rename through a review item is too much friction. Hence the b3 split (simple inline / structural deferred).
 
-`architecture.md` is the **most depended-on wiki**: `bootstrap`, `roadmap`, every task across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`), and `run` all read it directly. Allowing in-situ edits from other stages would let contract drift propagate before review. Architecture changes therefore stay single-author; the cost of a review-item round trip is justified by the size of the dependent surface.
+`architecture.md` is the **most depended-on wiki**: `bootstrap`, every task across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`), and `run` all read it directly. The `breakdown` skill consults arch.md as design-intent reference (drift-tolerated; the codebase is structural ground truth). Allowing in-situ edits from other stages would let contract drift propagate before review. Architecture changes therefore stay single-author; the cost of a review-item round trip is justified by the size of the dependent surface.
 
-### Why bootstrap, roadmap have a single in-situ owner
+### Why bootstrap has a single in-situ owner
 
-Both are near-terminal wikis (bootstrap drives roadmap; roadmap drives run). They are not normally edited by other interactive skills — instead they are *re-derived* (re-run `auto-bootstrap`, re-run `roadmap iterate`) when their inputs change. The in-situ owner is the only relevant editor.
+Bootstrap is the near-terminal wiki driving `run`. It is not normally edited by other interactive skills — instead it is *re-derived* (re-run `auto-bootstrap`) when its inputs change. The in-situ owner is the only relevant editor. `/a4:breakdown` reads bootstrap's `## Verify` for task acceptance-criteria grounding but never writes to bootstrap.
 
 ## Cross-stage feedback policy
 
@@ -43,8 +42,8 @@ The choice is determined by **whether this stage's output is valid before the up
 
 | Stage | Upstream of concern | Strength | Policy |
 |---|---|---|---|
-| `roadmap` | `architecture.md`, `usecase/*.md` | strong (component → task split, UC → AC source) | **stop**, recommend `/a4:arch iterate` or `/a4:usecase iterate` |
-| `roadmap-reviewer` | `architecture.md`, `usecase/*.md` | strong | emit review item targeting upstream; `roadmap` Step 4 stops |
+| `breakdown` | `architecture.md`, `usecase/*.md`, `spec/*.md`, `bootstrap.md` | strong (component → task split, UC/spec → AC source, bootstrap → verify contract) | **stop**, recommend `/a4:arch iterate`, `/a4:usecase iterate`, spec authoring, or re-running `/a4:auto-bootstrap` per the failing upstream |
+| `breakdown-reviewer` | `architecture.md`, `usecase/*.md`, `spec/*.md` | strong | emit review item targeting upstream; `breakdown` Step 4 stops |
 | `run` Step 4 | `architecture.md`, `usecase/*.md` | strong (task contract / AC source) | **stop**, recommend `/a4:arch iterate` or `/a4:usecase iterate` |
 | `auto-bootstrap` | `architecture.md` | weak (verified env is valid as recorded; arch fix triggers re-bootstrap, not invalidation) | **continue + review item**, `target: [architecture]` |
 | `usecase iterate` | `architecture.md`, `domain.md` | weak (UC text is independent of arch / domain) | **continue + review item** |
@@ -58,10 +57,10 @@ When `/a4:arch iterate` resolves a review whose `target:` lists `architecture`:
 
 1. `architecture.md` is edited; the resolved review item's `status:` is edited directly to `resolved`, the PostToolUse cascade hook refreshes `updated:` and runs any cross-file cascade (the hook does not touch `## Log` — that section is optional and hand-maintained); a new bullet in `architecture.md`'s `## Change Logs` cites the resolved item.
 2. The wiki close guard (per `../authoring/wiki-body.md`) ensures the change-log bullet is well-formed.
-3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, `roadmap`, related `task/*/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
+3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, related `task/*/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
 4. `compass` Layer 2 / Layer 3 routes the user to the correct downstream `iterate` skill based on the new review-item targets.
 
-Until staleness propagation lands, the user remains responsible for re-running `/a4:auto-bootstrap`, `/a4:roadmap iterate`, or `/a4:run iterate` after a substantial architecture fix. SKILL.md wrap-ups recommend the right next step.
+Until staleness propagation lands, the user remains responsible for re-running `/a4:auto-bootstrap`, `/a4:breakdown iterate`, or `/a4:run iterate` after a substantial architecture fix. SKILL.md wrap-ups recommend the right next step.
 
 ### Examples
 
@@ -79,17 +78,17 @@ Until staleness propagation lands, the user remains responsible for re-running `
    /a4:arch iterate first, then re-run /a4:auto-bootstrap."
 ```
 
-**Example 2 — `roadmap` finds an arch issue (stop).**
+**Example 2 — `breakdown` finds an arch issue (stop).**
 ```
-1. roadmap Step 4: roadmap-reviewer reports that the SessionService
+1. breakdown Step 4: breakdown-reviewer reports that the SessionService
    contract has no error-response shape, so task AC for UC-3 is
    ambiguous.
 2. Emit: a4/review/<id>-arch-missing-error-shape.md
    target: [architecture],
-   priority: high, source: roadmap-reviewer
-3. Stop. Do NOT commit a partial roadmap.md.
-4. Wrap-up message: "Roadmap halted — architecture has an open
-   issue. Run /a4:arch iterate; resume /a4:roadmap iterate after."
+   priority: high, source: breakdown-reviewer
+3. Stop. Do NOT commit partial task files for the affected UC.
+4. Wrap-up message: "Breakdown halted — architecture has an open
+   issue. Run /a4:arch iterate; resume /a4:breakdown iterate after."
 ```
 
 **Example 3 — `domain iterate` notices a concept rename affecting arch component name (continue).**
