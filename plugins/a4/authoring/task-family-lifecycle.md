@@ -11,7 +11,7 @@ The four task issue families (`task`, `bug`, `spike`, `research`) share **one** 
 ## Lifecycle
 
 ```
-open      → discarded | pending | progress
+open      → discarded | pending | progress | complete
 pending   → discarded | progress
 progress  → complete | discarded | failing | pending
 complete  → discarded | pending
@@ -33,6 +33,7 @@ discarded → (terminal)
 - **Allowed initial statuses on file create:** `open` (default — backlog), `pending` (queue-fill intent), `complete` (post-hoc documentation; work already done).
 - `progress` and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions.
 - `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop, or the user starts investigating directly). The `pending` step expresses queue intent; skip it when the queue is not the entry path.
+- `open → complete` is allowed for post-hoc closure of backlog items finished outside the implement loop (work already done before the task entered the queue). Required body sections and the `complete` initial-status preflight still apply.
 - There is **no `pending → open` reverse** — once enqueued, a task cannot be returned to backlog.
 - UC-cascade automatic flips: when a UC flips to `discarded`, related tasks across the four families → `discarded`. When a UC flips to `revising`, tasks at `progress`/`failing` reset to `pending`; `open`/`pending`/`complete` tasks stay. Do not flip these by hand.
 

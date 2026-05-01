@@ -108,7 +108,7 @@ UC_TRANSITIONS: dict[str, frozenset[str]] = {
 }
 
 ISSUE_FAMILY_TRANSITIONS: dict[str, frozenset[str]] = {
-    "open": frozenset({"pending", "progress", "discarded"}),
+    "open": frozenset({"pending", "progress", "complete", "discarded"}),
     "pending": frozenset({"progress", "discarded"}),
     "progress": frozenset({"complete", "failing", "pending", "discarded"}),
     "complete": frozenset({"pending", "discarded"}),
