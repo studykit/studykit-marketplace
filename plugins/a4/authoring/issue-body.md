@@ -33,7 +33,7 @@ Suggested slots (all optional, omit when empty):
 - **Open questions.** Questions awaiting user input or constraints the user gave only in conversation.
 - **Next.** The next concrete step a fresh session should pick up.
 
-**Each item in any slot must pass the *currently-true* test.** Before writing or keeping an item, ask: is this item describing something that is *in flight right now* or *next to do*? If the answer is "this used to be true / was done / was decided," the item does not belong in `## Resume` — it belongs in `## Log` (when narrative-worthy) or nowhere (when routine). Done sub-steps, settled questions, resolved blockers, and shipped phases must be removed from their slot the same edit that retires them; do not leave them behind as `_Done._` markers, "settled at …" annotations, or strikethrough lines. The slot lists what is live, not what has been done.
+**Compact `## Resume` on every edit.** Walk every slot and remove items that are no longer in flight or next to do — Done sub-steps, settled Open questions, resolved Blocked-on, shipped phases. If a removed item carries narrative worth preserving past the current state, append a dated `## Log` entry in the same edit; never leave it behind as a `_Done._` marker, `settled at …` annotation, or strikethrough line. The slot lists what is live, not what has been done.
 
 Format is the author's choice — bullets with bold lead-ins, prose paragraphs, or any combination. The expectation is that opening this section gives a fresh reader, in under 30 seconds, the information needed to continue.
 
@@ -58,19 +58,11 @@ Do not restate things a fresh reader can already see:
 
 Do not record narrative ("we used to try X, then switched to Y"). That belongs in `## Log`. `## Resume` carries only what is currently in effect.
 
-Do not retain done or resolved items as historical record:
-
-- **Done phases / slices / sub-steps.** Once shipped, remove the item from the Approach (or equivalent) slot. If the journey to shipping carries a lesson worth preserving, append a dated `## Log` entry in the same edit; the slot itself reflects only work still in flight or next to do.
-- **Settled Open questions.** When a question is answered, remove it from the Open questions slot. If the *why* of the answer matters past the current state, fold it into a `## Log` entry; do not keep "①: settled at X — Y deferred" annotations in the slot. Settled means no longer open.
-- **Resolved Blocked on.** When a blocker is cleared, remove the item from the Blocked on slot. The resolution belongs in `## Log` only when it changes future work; otherwise it leaves no trace in the file.
-
 ### Update discipline
 
 `## Resume` is **strongly recommended whenever the file is mid-flight** (any `status:` other than `open` / `complete` / `discarded` / `superseded`). Status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update it as you work, and especially before any session boundary risks losing the in-memory context.
 
-When a slot's value changes, **rewrite the slot in place** — do not keep the old value as a strikethrough or supplementary line. If the change is narrative-worthy (a decision pivot worth remembering past the moment), record that pivot as a `## Log` entry separately.
-
-**Compaction is part of every Resume edit, not a separate cleanup pass.** Whenever you touch `## Resume` — at slice boundaries, after shipping a phase, when a question gets answered, when a blocker clears — walk every item in every slot and ask the *currently-true* test from §`## Resume`. Items that fail the test must leave the slot in the same edit, with their narrative-worthy `## Log` entry appended at the same time. Without this step, the slot accretes into a phase-by-phase work history; "in-place rewrite" alone does not enforce removal because adding a new line over an old line is not a rewrite.
+When a slot's value changes, **rewrite the slot in place** — do not keep the old value as a strikethrough or supplementary line. If the change is narrative-worthy (a decision pivot worth remembering past the moment), record that pivot as a `## Log` entry separately. Adding a new line over an old line is not a rewrite; see the *Compact every edit* rule above.
 
 ## `## Log`
 
