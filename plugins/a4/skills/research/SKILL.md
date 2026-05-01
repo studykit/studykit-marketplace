@@ -2,6 +2,7 @@
 name: research
 description: "This skill should be used when the user wants to author a single research task — a time-boxed written investigation of a technical topic or comparison of alternatives. Common triggers: 'research X', 'investigate X', 'compare X vs Y', 'evaluate alternatives for', 'I need a research task on'. Required: mode (comparative | single); options (option names) when comparative. The body itself is the deliverable — sources consulted, findings, options. No production code is produced. Writes a4/research/<id>-<slug>.md. `implements:` / `spec:` / `cycle:` are forbidden on research. For exploratory PoC code rather than written investigation, use /a4:spike instead. To discard a task use /a4:discard."
 argument-hint: "[title or short description]"
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList, WebSearch, WebFetch
 ---
 

@@ -2,6 +2,7 @@
 name: spike
 description: "This skill should be used when the user wants to author a single spike task — a time-boxed exploration to unblock a decision (XP sense). PoC, investigation, benchmark — throwaway code. Common triggers: 'spike on X', 'add a spike', 'create a spike for', 'I need a quick PoC', 'investigate X technically before deciding', 'time-box an exploration'. Writes a4/spike/<id>-<slug>.md and proposes a project-root artifacts/spike/<id>-<slug>/ artifact directory for the throwaway code. `implements:` / `spec:` / `cycle:` are forbidden on spike. For pure written investigation without throwaway code, use /a4:research instead. Single-task entry. To discard a task use /a4:discard."
 argument-hint: "[title or short description]"
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList, WebSearch, WebFetch
 ---
 

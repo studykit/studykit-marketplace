@@ -2,6 +2,7 @@
 name: auto-usecase
 description: "This skill should be used when the user wants to extract or batch-shape Use Cases from raw input — an existing codebase, an idea, brainstorm notes, or a file path — without interactive interview. Reverse-engineering an existing system into UCs is its primary job; running it on a fresh idea is a secondary mode. Triggers: 'reverse-engineer use cases', 'extract use cases from code', 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'no interview needed just generate', 'run auto-usecase on'. Writes the result into <project-root>/a4/ per the spec-as-wiki+issues layout (per-UC files + context.md / actors.md / nfr.md). Not the autonomous twin of /a4:usecase — they serve different inputs; see workflows/skill-modes.md for the mode taxonomy."
 argument-hint: <codebase path, idea, brainstorm text, or file path to extract use cases from>
+disable-model-invocation: true
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 

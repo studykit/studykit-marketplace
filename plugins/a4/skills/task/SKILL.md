@@ -2,6 +2,7 @@
 name: task
 description: "This skill should be used when the user wants to author a single task — a unit of regular implementation work (new functionality, extension, refactor) — outside the UC-batch path that /a4:roadmap takes. Common triggers: 'add a task', 'create a task', 'I need a task for', 'one-off task', 'task for <UC>'. Optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<id>-<slug>.md. Single-task entry. For batch UC-driven generation use /a4:roadmap; for the implement loop use /a4:run; for bug/spike/research use the matching skill (/a4:bug, /a4:spike, /a4:research); to discard a task use /a4:discard."
 argument-hint: "[title or short description]"
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList, WebSearch, WebFetch
 ---
 

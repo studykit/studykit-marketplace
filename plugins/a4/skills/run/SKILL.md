@@ -2,6 +2,7 @@
 name: run
 description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/{task,bug,spike,research}/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'coder', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
 argument-hint: <optional: 'iterate' to resume after a halt, 'serial' to opt out of parallel worktree isolation; auto-detects workspace state otherwise>
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 

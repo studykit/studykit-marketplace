@@ -2,6 +2,7 @@
 name: usecase
 description: "This skill should be used when the user has a vague idea for software but doesn't know exactly what to build, when the user says 'help me figure out what to build', 'what should I make', 'shape this idea', 'use cases', 'gather requirements', 'what do users need', 'break this down', or when a rough idea needs to be shaped into concrete Use Cases through a Socratic interview. Writes per-UC issue files plus wiki pages into <project-root>/a4/ following the spec-as-wiki+issues layout."
 argument-hint: <idea or vague concept to turn into use cases, or "iterate" to resume>
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 

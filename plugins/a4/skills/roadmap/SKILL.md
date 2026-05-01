@@ -2,6 +2,7 @@
 name: roadmap
 description: "This skill should be used when the user needs to author the implementation roadmap and per-task files from an architecture. Common triggers include: 'roadmap', 'plan the implementation', 'build the task set from arch', 'lay out milestones'. Writes a4/roadmap.md (wiki page) plus per-task files at a4/task/<id>-<slug>.md. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
 argument-hint: <optional: "iterate" to resume; auto-detects workspace state otherwise>
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---
 

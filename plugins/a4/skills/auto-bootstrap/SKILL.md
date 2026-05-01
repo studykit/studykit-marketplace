@@ -2,6 +2,7 @@
 name: auto-bootstrap
 description: "This skill should be used when the user needs to set up a development base from an architecture document — project structure, dependencies, build configuration, and test infrastructure for each tier. Common triggers include: 'bootstrap', 'set up the project', 'bootstrap the project', 'create the dev environment', 'set up testing'. Applicable after arch finalizes and before plan starts. Writes a4/bootstrap.md (wiki page) with the verified environment and commands."
 argument-hint: <optional: pass no argument to use a4/architecture.md; passing a label archives the current bootstrap.md before writing a new one>
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 

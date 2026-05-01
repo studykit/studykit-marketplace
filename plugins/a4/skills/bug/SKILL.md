@@ -2,6 +2,7 @@
 name: bug
 description: "This skill should be used when the user wants to log a single bug task — a tracked defect fix against expected behavior. Common triggers: 'log a bug', 'create a bug task', 'open a bug for X', 'track this regression', 'file a bug'. Optional implements: (UC paths the bug traces to) and/or spec: (spec paths whose expected behavior the bug violates); writes a4/bug/<id>-<slug>.md. Single-task entry. For batch UC-driven generation use /a4:roadmap; for the implement loop use /a4:run; for task/spike/research use the matching skill (/a4:task, /a4:spike, /a4:research); to discard a task use /a4:discard."
 argument-hint: "[title or short description]"
+disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList, WebSearch, WebFetch
 ---
 
