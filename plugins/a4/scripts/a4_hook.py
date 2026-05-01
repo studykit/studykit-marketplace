@@ -147,11 +147,13 @@ def _pre_edit() -> int:
     """Two responsibilities on the same a4/*.md gate:
       (1) Stash on-disk `status:` for the a4/*.md the tool is about to
           write. Files outside `a4/`, non-md files, missing `status:`,
-          and parse failures are silent no-ops — the post-edit consumer
-          treats absence as "no transition to detect".
+          new files (no on-disk frontmatter), and parse failures are
+          silent no-ops — the post-edit consumer treats absence as
+          "no transition to detect".
       (2) Inject type-specific authoring-contract pointers once per
-          (file, type) per session. Sole mechanism for surfacing
-          authoring contracts at edit time.
+          (file, type) per session, for both existing-file edits and
+          new-file Writes (issue creation). Sole mechanism for
+          surfacing authoring contracts at edit time.
 
     Always exits 0.
     """
@@ -182,24 +184,23 @@ def _pre_edit() -> int:
         return 0
 
     abs_path = Path(file_path)
-    if not abs_path.is_file():
-        # Write to a new file — no on-disk frontmatter to read. Post-edit
-        # will see no prestatus entry and skip cascade detection; the
-        # contract injection cannot resolve `type:` and so is also
-        # skipped. New-file authoring relies on the LLM having already
-        # consulted `authoring/` per the workspace policy.
-        return 0
 
     # Responsibility 1 — pre-status snapshot for cascade detection.
-    pre = _read_status_from_disk(abs_path)
-    if pre is not None:
-        data = _read_prestatus(project_dir, session_id)
-        data[file_path] = pre
-        _write_prestatus(project_dir, session_id, data)
+    # Only meaningful when the file already exists; new-file Writes have
+    # no prior `status:` and post-edit treats absence as "no transition".
+    if abs_path.is_file():
+        pre = _read_status_from_disk(abs_path)
+        if pre is not None:
+            data = _read_prestatus(project_dir, session_id)
+            data[file_path] = pre
+            _write_prestatus(project_dir, session_id, data)
 
     # Responsibility 2 — authoring-contract injection (one-shot per
-    # (file, type) per session). Independent of pre-status presence —
-    # wikis without `status:` still need the contract.
+    # (file, type) per session). Fires for both edits and new-file
+    # Writes — type is resolved from path (`a4/<folder>/...`), which
+    # works without on-disk frontmatter, so issue creation gets the
+    # binding contract before authoring. Dedupe still suppresses repeat
+    # injections on subsequent edits to the same file.
     _maybe_inject_authoring_contract(
         abs_path, file_path, a4_dir, project_dir, session_id
     )
@@ -210,8 +211,10 @@ def _pre_edit() -> int:
 #
 # Lazy, edit-intent-only surfacing of `authoring/*.md` contracts. Fires
 # from PreToolUse so a pure read of an `a4/*.md` file does NOT pull in
-# the contract; only an imminent Write/Edit/MultiEdit does. Deduped per
-# (file_path, type) per session — repeated edits to the same file
+# the contract; only an imminent Write/Edit/MultiEdit does. Covers both
+# edits to existing files and new-file Writes (issue creation) — type
+# is resolved by path, which works without on-disk frontmatter. Deduped
+# per (file_path, type) per session — repeated edits to the same file
 # inject once and stay silent.
 #
 # Type resolution is by path (`common.WIKI_TYPES` / `common.ISSUE_FOLDERS`),
@@ -298,14 +301,15 @@ def _resolve_type_from_path(abs_path: "Path", a4_dir: "Path") -> str | None:
     `ISSUE_FOLDERS`. Resolving by path avoids a frontmatter parse on
     every edit (cheaper than reading the file just to read `type:`)
     and matches the canonical layout used by `discover_files` and the
-    validators.
+    validators. Path-based resolution also works for new-file Writes
+    (issue creation), where on-disk frontmatter does not exist yet.
 
     Returns None for archived files (`a4/archive/...`) — archived files
     retain their original `type:` but are not active edit targets, so
     contract injection is skipped.
     """
     try:
-        rel = abs_path.resolve().relative_to(a4_dir.resolve())
+        rel = abs_path.resolve(strict=False).relative_to(a4_dir.resolve())
     except (OSError, ValueError):
         return None
     parts = rel.parts
