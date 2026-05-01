@@ -2,11 +2,9 @@
 
 `a4/roadmap.md` is the **milestone narrative wiki**. It groups UCs into milestones, names the dependency graph between them, and records Shared Integration Points the architecture exposes.
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
-
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -18,7 +16,7 @@ Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body con
 
 **Optional:**
 
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format and discipline: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
@@ -26,22 +24,13 @@ Unknown H2 headings are tolerated.
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Every UC reference in the milestone narrative and every architecture component reference in Shared Integration Points uses this form.
 
-## `## Change Logs` discipline
+## Change Log triggers
 
-```markdown
-## Change Logs
-
-- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — milestone-2 reshaped after arch fix
-- YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added to milestone-3
-```
-
-Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `roadmap` transitions to `resolved`.
+The wiki close guard surfaces missing bullets when a review item whose `target:` lists `roadmap` transitions to `resolved`.
 
 ## Common mistakes (roadmap-specific)
 
 - **Required section missing** (`## Plan`).
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

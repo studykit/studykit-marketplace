@@ -46,7 +46,7 @@ Run this **immediately before** writing a new UC, review item, etc. Ids are mono
 
 ## Body Conventions
 
-Body heading form, link form, `## Change Logs` audit trail, and the Wiki Update Protocol live in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md`.
+Body heading form and link form live in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md`. The `## Change Logs` audit trail and the Wiki Update Protocol (used when this skill updates wiki pages) live in `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`.
 
 ## Modes
 

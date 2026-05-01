@@ -12,4 +12,4 @@ After writing (or activating) a spec, check whether it affects existing wiki pag
 | New domain concept | `domain.md` |
 | Non-functional requirement change | `nfr.md` |
 
-For each applicable candidate, present the proposed update and ask the user to confirm. The `## Change Logs` / `updated:` mechanics, the defer-via-`kind: gap`-review-item fallback, and the close guard follow [`body-conventions.md §Wiki Update Protocol`](${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md). Cite this spec as a standard markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`, with the relative path computed from the wiki page) in the `## Change Logs` bullet.
+For each applicable candidate, present the proposed update and ask the user to confirm. The `## Change Logs` / `updated:` mechanics, the defer-via-`kind: gap`-review-item fallback, and the close guard follow `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` § Wiki Update Protocol. Cite this spec as a standard markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`, with the relative path computed from the wiki page) in the `## Change Logs` bullet.

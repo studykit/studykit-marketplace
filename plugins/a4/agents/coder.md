@@ -17,7 +17,8 @@ You are a task implementation agent. Your job is to implement one task and write
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly:
 
 - `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` — status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`).
-- `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — body shape; the optional `## Log` section is hand-maintained, not written by the hook.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — cross-cutting body shape (heading form, link form).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` — the optional `## Resume` and `## Log` sections; both are hand-maintained, not written by the hook.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form `#<task-id> <type>(a4): <description>`.
 - The per-family task contract that matches the task you were assigned: `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`, or `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`. You do not author task files but you read them and your commits cite their ids.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — when flipping UC `ready → implementing`; do not modify UC bodies.
@@ -50,7 +51,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
 3. **Implement** — follow the task's `## Description`, consuming / providing the Interface Contracts noted in `## Interface Contracts`. Use domain terminology from `a4/domain.md`'s `## Concepts` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `bootstrap.md`'s `## Verify` section (Verified Commands subsection). All unit tests must pass before returning success.
-6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md):
+6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`:
    ```
    #<task-id> <type>(a4): <description>
    ```

@@ -20,7 +20,7 @@ You are a Use Case quality reviewer. Your job is to analyze a spec-as-wiki+issue
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (universal frontmatter), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` (`## Resume`, `## Log` for review items), and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — UC contract (lifecycle, body sections, abstraction discipline).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` — when emitting findings against those wiki pages.

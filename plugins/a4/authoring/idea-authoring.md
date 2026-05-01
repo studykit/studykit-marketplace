@@ -2,7 +2,7 @@
 
 An idea at `a4/idea/<id>-<slug>.md` is a **pre-pipeline quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or brainstorm via the `promoted:` field.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`.
 
 ## Boundary with `review/`
 
@@ -80,8 +80,6 @@ Writer rules (idea-specific):
 
 ## Body shape
 
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
-
 The idea body is **largely free**. Quick-capture ideas are typically empty or carry a short `## Notes` paragraph; longer ideas may add `## Why This Matters` to articulate the motivation. The frontmatter is the primary artifact; body content is supporting context.
 
 **Required:** none.
@@ -90,8 +88,7 @@ The idea body is **largely free**. Quick-capture ideas are typically empty or ca
 
 - `## Notes` — short prose paragraph capturing the substance of the idea. Default home for any text the idea carries.
 - `## Why This Matters` — motivation paragraph for ideas worth surfacing rather than just noting.
-- `## Change Logs` — append-only audit trail when the body is materially edited post-create (rare; usually the original capture is the final word).
-- `## Log` — optional, hand-maintained status-transition narrative. See `./body-conventions.md#log`.
+- `## Log` — append-only narrative of meaningful events that have shaped this idea (rare; usually the original capture is the final word). See `./issue-body.md#log`.
 
 Unknown H2 headings are tolerated.
 
@@ -100,8 +97,6 @@ Unknown H2 headings are tolerated.
 - **Required-field omission** (`type`, `id`, `title`, `status`, `created`, `updated`).
 - **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — invalid; flagged at validation time.
 - **Adding `priority`, `source`, `target`, or `kind`** — these are deliberately excluded. Unknown fields are tolerated, but they should not appear here.
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't
 

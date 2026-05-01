@@ -57,7 +57,7 @@ updated: YYYY-MM-DD
 
 - `type:` must equal the file basename (enforced — see `## type:` field above).
 - `updated:` is an unquoted ISO date. Bump on every substantive edit (see `./body-conventions.md` § Bumping `updated:`).
-- Wiki pages have **no** `id`, **no** `status`, **no** `## Log`, **no** lifecycle. They change continuously; the optional `## Change Logs` body section records why.
+- Wiki pages have **no** `id`, **no** `status`, **no** lifecycle, and do **not** carry the issue-only body sections (`## Resume`, `## Log`). They change continuously; the optional `## Change Logs` body section records why (see `./wiki-body.md`).
 
 Per-wiki authoring files (`<wiki>-authoring.md`) describe only the body sections required for that page; they do not redeclare this contract.
 
@@ -151,7 +151,7 @@ Every status change on `usecase`, the four task issue families (`task` / `bug` /
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 
-The automatic cascade does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. For cases the cascade cannot mechanically reach (`idea` / `brainstorm` `promoted`), drift between `status:` and the supporting cross-references is invalid and is reported separately at validation time.
+The automatic cascade does **not** touch the body's optional `## Resume` or `## Log` sections (see `./issue-body.md`) — both are hand-maintained when an author wants a body-level resume snapshot or audit trail. For cases the cascade cannot mechanically reach (`idea` / `brainstorm` `promoted`), drift between `status:` and the supporting cross-references is invalid and is reported separately at validation time.
 
 Edge cases:
 
@@ -173,7 +173,7 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 | `spec` | task (`task` / `bug` only) | spec | Specs that govern this task |
 | `supersedes` | spec, usecase | prior spec(s) / usecase(s) | This item replaces the referenced item(s) of the same family |
 | `promoted` | idea, brainstorm | spec, usecase, task, brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
-| `parent` | any issue except `umbrella` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or an `umbrella` parent; `usecase` and `spec` parents are restricted to same-type; `umbrella` itself takes no parent) | Parent in a decomposition / derivation hierarchy or aggregation grouping. Used as the home for narrative shared across siblings — see body-conventions §`## Log` and `./umbrella-authoring.md`. When set, the child's frontmatter `parent:` is what makes the parent discoverable for reverse `children` lookup |
+| `parent` | any issue except `umbrella` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or an `umbrella` parent; `usecase` and `spec` parents are restricted to same-type; `umbrella` itself takes no parent) | Parent in a decomposition / derivation hierarchy or aggregation grouping. Used as the home for narrative shared across siblings — see `./issue-body.md` § `## Log` and `./umbrella-authoring.md`. When set, the child's frontmatter `parent:` is what makes the parent discoverable for reverse `children` lookup |
 | `related` | any | any | Generic catchall for ties that don't fit other fields but warrant frontmatter-level searchability |
 
 Soft references (see-also, mentions) are expressed as standard markdown links (`[text](relative/path.md)`) in body prose, not frontmatter.
@@ -189,11 +189,13 @@ Both forms use the same `parent:` field, so reverse `children` lookups (`grep`, 
 
 `usecase` and `spec` use `parent` only in same-type form (UC split, spec supersedes-chain hierarchies). `umbrella` itself takes no parent — nested umbrellas are not supported in this revision.
 
-The parent file is the agreed home for **narrative that spans its children** — decisions that affect several siblings together, shared approach, cross-sibling trade-offs. That narrative belongs in the parent's `## Log`, not duplicated across each child. See `./body-conventions.md#log` for the entry format and the inline cross-reference rule (a child Log entry that depends on a decision recorded in the parent must inline-cite the parent path so a session reading the child file alone can discover the next file to open).
+The parent file is the agreed home for **narrative that spans its children** — decisions that affect several siblings together, shared approach, cross-sibling trade-offs. That narrative belongs in the parent's `## Log`, not duplicated across each child. See `./issue-body.md#log` for the entry format and `./issue-body.md#inline-cross-references-for-cross-cutting-narrative` for the inline cross-reference rule (a child `## Resume` or `## Log` entry that depends on a decision recorded in the parent must inline-cite the parent path so a session reading the child file alone can discover the next file to open).
 
 Setting frontmatter `parent:` on a child is what makes the parent discoverable. If a sibling group is meant to share a narrative home, every child must set `parent:` — without it, the parent's `## Log` is unreachable from the child file.
 
 ## Cross-references
 
 - **Per-type schemas (formal field tables):** the `## Frontmatter` section of each `./<type>-authoring.md`.
-- **Body conventions:** `./body-conventions.md` — heading form, blank-line discipline, `## Change Logs` and `## Log` entry format, body link form.
+- **Cross-cutting body conventions:** `./body-conventions.md` — heading form, blank-line discipline, body link form, `updated:` bumping.
+- **Issue body sections:** `./issue-body.md` — `## Resume`, `## Log`, inline cross-references for cross-cutting narrative.
+- **Wiki body sections:** `./wiki-body.md` — `## Change Logs`, Wiki Update Protocol.

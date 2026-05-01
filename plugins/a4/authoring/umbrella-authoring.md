@@ -2,7 +2,7 @@
 
 An umbrella at `a4/umbrella/<id>-<slug>.md` is a **narrative-aggregation parent** — a file purpose-built to host the cross-cutting narrative that several issue-family children (`task` / `bug` / `spike` / `research`) share. It is *not* an implementation unit: an umbrella has no `## Files`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children; the umbrella exists so the next session reading any one child can discover the shared decisions through that child's `parent:` pointer.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`. The narrative-home semantics (entry format, inline cross-references) live in `./body-conventions.md#log`; the `parent:` discovery contract lives in `./frontmatter-universals.md` §`parent` and shared narrative.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`. The narrative-home semantics (entry format, inline cross-references) live in `./issue-body.md#log`; the `parent:` discovery contract lives in `./frontmatter-universals.md` §`parent` and shared narrative.
 
 ## When to create an umbrella
 
@@ -16,7 +16,7 @@ Do **not** create an umbrella when:
 
 - A single child is enough — no aggregation. The child's own `## Log` is sufficient.
 - Sibling children exist but are genuinely unrelated. Each child's `## Log` records what's local to it; there is no shared narrative to home, and no umbrella is needed.
-- Two siblings + one cross-cutting decision. Borderline — recording the decision inline once in each child (with cross-reference per `./body-conventions.md#log`) is acceptable; promote to an umbrella when a second decision arrives.
+- Two siblings + one cross-cutting decision. Borderline — recording the decision inline once in each child (with cross-reference per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`) is acceptable; promote to an umbrella when a second decision arrives.
 
 Derivation parents (a follow-up `task` whose `parent:` is the originating `spike`, a `bug` spawned from a `task`) are a different mechanism — those use another issue-family file as parent and do not need an umbrella. Umbrella exists for *aggregation*, not *derivation*.
 
@@ -73,8 +73,6 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 
 ## Body shape
 
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
-
 **Required:**
 
 - `## Description` — what the children together accomplish. Brief — one or two paragraphs. Link the children inline by markdown link when narratively useful.
@@ -90,12 +88,12 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 
   Order is the order in which children were added (chronological). When a child is later discarded or moves under a different parent, leave the bullet but annotate (`— moved to umbrella/22-...`, `— discarded 2026-05-08`) — append-only history beats silent deletion.
 
-- `## Log` — the aggregation narrative. **This is the umbrella's reason for existing.** Format and inline cross-reference rules per `./body-conventions.md#log`. Decisions recorded here are the *source* that children inline-cite from their own `## Log` entries.
+- `## Log` — the aggregation narrative. **This is the umbrella's reason for existing.** Format and inline cross-reference rules per `./issue-body.md#log`. Decisions recorded here are the *source* that children inline-cite from their own `## Log` entries.
 
 **Optional, emit only when applicable:**
 
 - `## Acceptance Criteria` — integration outcome that is not naturally any single child's AC. Skip when the integration outcome is implicit ("all children deliver and tests pass"). Use it when the umbrella has its own observable (e.g., "search-history feature works end-to-end across UC 3 and UC 7").
-- `## Change Logs` — append-only audit trail of edits to the umbrella body itself (rare — the `## Log` already accumulates narrative; reserve `## Change Logs` for material reframes).
+- `## Resume` — current-state snapshot for the next session: what cross-cutting work the umbrella is currently driving, current blocker, open questions, next step. Freely rewritten as work progresses. See `./issue-body.md#resume`.
 - `## Why Discarded` — populated on `discarded`. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
 
 Unknown H2 headings are tolerated.
@@ -104,7 +102,7 @@ Unknown H2 headings are tolerated.
 
 Set the child's frontmatter `parent: umbrella/<id>-<slug>` at creation (or as soon as the umbrella exists). Without this, the umbrella is unreachable from the child file: a session reading the child alone has no signal to open the umbrella.
 
-When the child writes a `## Log` entry that depends on the umbrella's narrative, inline-cite the umbrella path inside the entry per `./body-conventions.md#log`:
+When the child writes a `## Resume` or `## Log` entry that depends on the umbrella's narrative, inline-cite the umbrella path inside the entry per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`:
 
 ```markdown
 ## Log

@@ -43,7 +43,7 @@ When the chosen initial status is `complete`, the work is asserted to already be
 
 1. For families with `artifacts:`, confirm every listed path exists (under the project tree for `task`/`bug`/`research`; under `artifacts/spike/<id>-<slug>/` or its archive for `spike`). If any path is missing, halt and ask: (a) fix the path, or (b) downgrade to `pending` so the task enters the implement loop.
 2. Required body sections (per the family's authoring contract) must still be present — `complete` does not exempt the task from documentation.
-3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (see `./body-conventions.md#log`):
+3. If you want the post-hoc origin recorded, append a manual bullet to a `## Log` section (see `./issue-body.md#log`):
 
    ```markdown
    ## Log

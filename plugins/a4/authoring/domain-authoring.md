@@ -2,11 +2,9 @@
 
 `a4/domain.md` is the **shared vocabulary wiki**. It catalogs the cross-cutting concepts every UC, spec, and architecture component references — entities, value objects, lifecycle states. The domain page is downstream of UCs (concepts surface during interview) and upstream of architecture (components depend on the agreed vocabulary).
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
-
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -16,7 +14,7 @@ Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body con
 
 - `## Relationships` — how concepts relate (associations, compositions, aggregates). Skip when concepts are independent and the relationship is obvious from definitions alone.
 - `## State Transitions` — for concepts whose lifecycle has named states, the transition graph (state, allowed next states, trigger). Common for entities tracked by the workspace (a `Session`'s state, a `Document`'s revision).
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format and discipline: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
@@ -24,22 +22,13 @@ Unknown H2 headings are tolerated.
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Concept definitions often link back to the UCs that introduced them (`[usecase/3-search-history](usecase/3-search-history.md)`).
 
-## `## Change Logs` discipline
+## Drift detection
 
-```markdown
-## Change Logs
-
-- YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added concept Foo
-- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — renamed Conversation → Session
-```
-
-Create the section if absent. `domain` ↔ `architecture` term consistency is monitored: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
+`domain` ↔ `architecture` term consistency is monitored: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
 
 ## Common mistakes (domain-specific)
 
 - **Required section missing** (`## Concepts`).
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

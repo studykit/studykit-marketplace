@@ -4,7 +4,7 @@ A spike at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a 
 
 The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -53,7 +53,7 @@ updated: YYYY-MM-DD
 - **Derivation parent** — set it when this spike was spawned from another issue: typically a `task` whose work hit a question that needed exploration before the task could proceed. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
 - **Aggregation parent (umbrella)** — set it to an `umbrella/<id>-<slug>` when this spike is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
 
-The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child Log entry depends on a parent decision, inline-cite the parent path in the child entry per `./body-conventions.md#log` so a session reading the child file alone discovers the parent.
+The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child `## Resume` or `## Log` entry depends on a parent decision, inline-cite the parent path in the child entry per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative` so a session reading the child file alone discovers the parent.
 
 ### Lifecycle and writer ownership
 
@@ -68,8 +68,6 @@ Spike-specific notes:
 
 ## Body shape
 
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
-
 **Required:**
 
 - `## Description` — the question being explored and why a spike (vs. going straight to a regular task). State the hypothesis and the decision the spike's outcome will inform.
@@ -80,8 +78,8 @@ Spike-specific notes:
 **Optional, emit only when there is content for them:**
 
 - `## Interface Contracts` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). May be omitted for self-contained spikes.
-- `## Change Logs` — append-only audit trail when the task body is materially edited post-create.
-- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the spike is mid-flight (`pending` / `progress` / `failing`). See `./body-conventions.md#log`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the spike is mid-flight (`pending` / `progress` / `failing`). See `./issue-body.md#resume`.
+- `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`) appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.
@@ -109,8 +107,6 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 - **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Wrong `type:` value or wrong folder.** A file under `a4/spike/` must declare `type: spike`. Mismatched declarations are a folder-routing error and should be re-located.
 - **`artifacts:` paths under the project source tree, not under `artifacts/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths belong in the body `## Files` section.
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (spike-specific)
 

@@ -2,11 +2,9 @@
 
 `a4/nfr.md` is the **non-functional requirements wiki**. It records performance targets, security requirements, scalability bounds, accessibility requirements, compliance constraints, and other cross-cutting properties that affect every UC and architecture decision. NFRs are optional — small or exploratory projects may have none, in which case the file simply does not exist.
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
-
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -17,7 +15,7 @@ Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body con
 
 **Optional:**
 
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format and discipline: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
@@ -35,22 +33,9 @@ Architecture footnote annotations may attach to an existing NFR row to point at 
 
 The footnote points at the architecture decision that satisfies the NFR. Do not introduce footnotes that edit the requirement text itself.
 
-## `## Change Logs` discipline
-
-```markdown
-## Change Logs
-
-- YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — added latency NFR
-- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — refined p95 threshold
-```
-
-Create the section if absent.
-
 ## Common mistakes (nfr-specific)
 
 - **Required section missing** (`## Requirements`).
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

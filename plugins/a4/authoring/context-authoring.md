@@ -2,11 +2,9 @@
 
 `a4/context.md` is the **upstream framing wiki**. It records the original idea, the problem framing the workspace is shaped around, and (optionally) the screen-navigation narrative that ties UI use cases together. Every other wiki page and every issue family indirectly assumes the framing this page captures.
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`. Bump `updated:` on every edit (including `## Change Logs` bullet appends and screen-group additions).
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol). Bump `updated:` on every edit (including `## Change Logs` bullet appends and screen-group additions).
 
 ## Body shape
-
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -16,7 +14,7 @@ Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body con
 **Optional, emit only when applicable:**
 
 - `## Screens` — for projects with UI use cases, the screen-navigation narrative grouping UCs into screens. Each screen block lists the screen slug (also added to UC `labels:`) and the UCs that participate, with markdown links. Skip for headless, non-UI, or single-screen projects.
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec).
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format and discipline: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
@@ -24,22 +22,13 @@ Unknown H2 headings are tolerated.
 
 Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained (e.g., `[usecase/3-search-history](usecase/3-search-history.md)`). The `## Screens` section in particular relies on these links.
 
-## `## Change Logs` discipline
+## Change Log triggers
 
-```markdown
-## Change Logs
-
-- YYYY-MM-DD — [usecase/<id>-<slug>](usecase/<id>-<slug>.md) — <what changed>
-- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <what changed>
-```
-
-Create the section if absent. The wiki close guard surfaces missing bullets when a review item whose `target:` lists `context` transitions to `resolved`.
+The wiki close guard surfaces missing bullets when a review item whose `target:` lists `context` transitions to `resolved`.
 
 ## Common mistakes (context-specific)
 
 - **Required section missing** (`## Original Idea`, `## Problem Framing`).
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body, `type:` mismatch with filename — are documented in `./body-conventions.md` and `./frontmatter-universals.md`.)
 
 ## Don't
 

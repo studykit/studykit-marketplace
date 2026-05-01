@@ -22,7 +22,7 @@ Every review criterion exists because failing it forces the developer to guess. 
 
 Subagents do not auto-inherit project-level path-scoped rules. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract (writer-owned fields, id allocation, path-form, heading form, change-logs).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (writer-owned fields, id allocation, path-form), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol) — universal authoring contract for wiki pages.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape (`kind:`, `target:`, `source:`, `priority:` fields and required body sections).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/architecture-authoring.md` — what makes the architecture wiki "complete" (anchor stability, required body sections, change-logs discipline).
 

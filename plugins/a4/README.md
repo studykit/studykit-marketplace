@@ -119,7 +119,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 Wiki pages carry no lifecycle but are continuously updated. All edits flow through **review items** as the unified conduit:
 
-1. Each substantive wiki edit appends a `## Change Logs` bullet — `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` — pointing at the issue that drove the change. See `authoring/body-conventions.md §## Change Logs audit trail`.
+1. Each substantive wiki edit appends a `## Change Logs` bullet — `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` — pointing at the issue that drove the change. See `authoring/wiki-body.md §## Change Logs audit trail`.
 2. Two entry paths converge on review items: single-edit skills nudge in-situ ("does this change need a wiki update?"); reviewer agents emit review items whose `target:` lists the affected wiki basenames.
 3. **Close guard (advisory)** — when a review with one or more wiki targets transitions to `resolved`, ensure each referenced wiki page records the change in its `## Change Logs`. There is no automated re-surfacer at this point; re-run `/a4:validate` after wiki edits if you need a sweep.
 

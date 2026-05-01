@@ -2,13 +2,11 @@
 
 `a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment), `roadmap.md` (component → milestone mapping), and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.
+Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 Note: no `created:` field on wiki pages — "first appeared" content lives in `context.md` `## Original Idea`.
 
 ## Body shape
-
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
 
 **Required:**
 
@@ -21,7 +19,7 @@ Note: no `created:` field on wiki pages — "first appeared" content lives in `c
 
 - `## Component Diagram` — diagrams (mermaid, ASCII, or links to external SVG / PNG kept under `a4/diagrams/`). Skip when prose + table is clearer than a picture.
 - `## External Dependencies` — third-party services, vendor APIs, or upstream systems the architecture depends on. Skip when self-contained.
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing review item, spec, or UC). The wiki-update protocol requires a bullet whenever a non-trivial change lands.
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing review item, spec, or UC). The Wiki Update Protocol requires a bullet whenever a non-trivial change lands. Format and discipline: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
@@ -33,8 +31,6 @@ Unknown H2 headings are tolerated.
 
 - **Required section missing** (`## Overview`, `## Components`, `## Technology Stack`, `## Test Strategy`).
 - **`type:` mismatch** with filename — the `type:` value must equal the file basename.
-
-(Universal body conventions — column-0 H2, Title Case, no H1 in body, sections do not nest — are documented in `./body-conventions.md`.)
 
 ## Don't (architecture-specific)
 

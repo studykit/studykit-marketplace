@@ -16,7 +16,7 @@ You are a test runner agent. Your job is to run integration + smoke tests agains
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (id allocation), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (change-logs), and `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` (commit form) — universal authoring contract.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (id allocation), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` (`## Resume`, `## Log` for review items), `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol), and `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` (commit form) — universal authoring contract.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape (`kind: finding`, `target:` set to the failing task or `roadmap`, `source: test-runner`, `priority`, `labels: [test-failure, cycle-<N>]`).
 
 ## What You Receive

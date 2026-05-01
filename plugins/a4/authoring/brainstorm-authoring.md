@@ -2,7 +2,7 @@
 
 A brainstorm at `a4/brainstorm/<id>-<slug>.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -62,8 +62,6 @@ Writer rules (brainstorm-specific):
 
 ## Body shape
 
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
-
 **Required:**
 
 - `## Ideas` — the session's idea capture. Typically a bullet list, with one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a markdown link to the resulting pipeline artifact (e.g., `- caching: pre-warm on session boot → [spec/8-caching-strategy](../spec/8-caching-strategy.md)`).
@@ -71,7 +69,6 @@ Writer rules (brainstorm-specific):
 **Optional, emit only when applicable:**
 
 - `## Notes` — session context, framing prose, or evaluation notes that don't belong inline next to a single idea.
-- `## Change Logs` — append-only audit trail when the body is materially edited post-create (rare).
 
 Unknown H2 headings are tolerated.
 
@@ -79,8 +76,6 @@ Unknown H2 headings are tolerated.
 
 - **Required-field omission** (`type`, `id`, `title`, `topic`, `status`, `created`, `updated`).
 - **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — invalid; flagged at validation time.
-
-(Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't
 

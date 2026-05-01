@@ -18,7 +18,7 @@ You are a Use Case revision agent. Your job is to walk a set of open review item
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before editing any a4 file:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract (writer-owned fields, change-logs).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (writer-owned fields), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` (`## Resume`, `## Log` for issue files), and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — per-UC contract.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item lifecycle (resolved / discarded transitions; edit `status:` directly — the PostToolUse cascade hook handles `updated:` and any cross-file flips).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` — when the Suggestion targets one of those wikis.

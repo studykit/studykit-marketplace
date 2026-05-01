@@ -4,7 +4,7 @@ A research item at `a4/research/<id>-<slug>.md` is a **time-boxed investigation*
 
 The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`.
 
 ## When a research task is warranted
 
@@ -70,7 +70,7 @@ updated: YYYY-MM-DD
 - **Derivation parent** — set it when this research was scoped from another issue: typically a `task` author who needed an investigation to settle an open question before the parent could proceed. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
 - **Aggregation parent (umbrella)** — set it to an `umbrella/<id>-<slug>` when this research is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md` for when to create an umbrella vs. when not to.
 
-The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child Log entry depends on a parent decision, inline-cite the parent path in the child entry per `./body-conventions.md#log` so a session reading the child file alone discovers the parent.
+The parent file (issue or umbrella) is the agreed home for **narrative shared across siblings**. Record that narrative in the parent's `## Log`, not duplicated in each child. When a child `## Resume` or `## Log` entry depends on a parent decision, inline-cite the parent path in the child entry per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative` so a session reading the child file alone discovers the parent.
 
 ### Lifecycle and writer ownership
 
@@ -86,8 +86,6 @@ Research-specific notes:
 
 ## Body shape
 
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
-
 **Required:**
 
 - `## Context` — why the research is needed. The specific question or comparison purpose. 1–3 sentences.
@@ -102,8 +100,8 @@ Research-specific notes:
 
 **Optional:**
 
-- `## Change Logs` — append-only audit trail when the body is materially edited post-create.
-- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the research item is mid-flight (`pending` / `progress` / `failing`). See `./body-conventions.md#log`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the research item is mid-flight (`pending` / `progress` / `failing`). See `./issue-body.md#resume`.
+- `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 - `## Why Discarded` — populated by discard. Dated bullet appended when the discard reason deserves narrative capture.
 
 Unknown H2 headings are tolerated.

@@ -2,7 +2,7 @@
 
 A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`.
 
 ## Abstraction discipline
 
@@ -83,8 +83,6 @@ Writer rules (UC-specific):
 
 ## Body shape
 
-(Heading form / link form / H1-forbidden are universal — see `./body-conventions.md`.)
-
 **Required:**
 
 - `## Goal` — what the actor wants to accomplish, framed at the user level (the *why*).
@@ -97,8 +95,8 @@ Writer rules (UC-specific):
 - `## Validation` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
 - `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
 - `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer carried in frontmatter, so this section is the only place a UC declares cross-UC prerequisites.
-- `## Change Logs` — append-only audit trail when the UC body is materially edited post-create (dated bullets with markdown links to the causing issue or spec).
-- `## Log` — resume-context surface for a future session: current approach, blockers, decisions that diverge from upstream, open questions, next step. Strongly recommended while the UC is mid-flight (`drafting` / `revising`). See `./body-conventions.md#log`.
+- `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the UC is mid-flight (`draft` / `revising`). See `./issue-body.md#resume`.
+- `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 
 Unknown H2 headings are tolerated.
 
@@ -112,11 +110,7 @@ Authoring or revising a UC frequently has side-effects on wiki pages:
 - New screen group → `context.md` `## Screens` section + UC `labels:`.
 - New non-functional requirement → `nfr.md` `## Requirements` row.
 
-When applying an in-situ wiki edit:
-
-1. Edit the relevant section.
-2. Append a dated bullet to the page's `## Change Logs` section (creating the section if absent), with a markdown link to the causing UC.
-3. Bump the wiki page's `updated:` frontmatter to today.
+When applying an in-situ wiki edit, follow the Wiki Update Protocol in `./wiki-body.md` (edit the relevant section, append a dated `## Change Logs` bullet citing the causing UC, bump the wiki page's `updated:` frontmatter).
 
 When deferring, open a review item with `kind: gap`, `source: self`, `target: [<causing UC path>, <affected wiki basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
 
@@ -137,8 +131,6 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 - **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
 - **`actors:` empty at `status >= ready`.** `actors:` is optional only at `draft`; advancing the lifecycle without filling it is a post-draft authoring violation.
 - **Placeholder in `title:` at `status >= ready`.** See `./frontmatter-universals.md#title-placeholders`.
-
-(Universal body-shape rules — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 
 ## Don't (UC-specific)
 

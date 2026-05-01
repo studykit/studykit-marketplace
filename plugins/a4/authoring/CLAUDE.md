@@ -25,8 +25,13 @@ If the audience for a new file does not match any of the above, that is a signal
 ## When to add a file here
 
 - New `type:` value → add `<type>-authoring.md` (per-type field table + lifecycle + body shape).
-- Workspace-wide rule that applies to every file → extend `frontmatter-universals.md` or `body-conventions.md`.
+- Workspace-wide frontmatter rule (applies to every file) → extend `frontmatter-universals.md`.
+- Workspace-wide body rule that applies to every file (heading form, link form, `updated:` bumping) → extend `body-conventions.md`.
+- Issue-only body rule (sections used by `usecase` / `task` / `bug` / `spike` / `research` / `umbrella` / `review` / `spec` / `idea` / `brainstorm`) → extend `issue-body.md`.
+- Wiki-only body rule (sections used by `actors` / `architecture` / `bootstrap` / `context` / `domain` / `nfr` / `roadmap`) → extend `wiki-body.md`.
 - New artifact taxonomy → extend `artifacts.md`.
+
+Pick by audience: `body-conventions.md` is read by everyone editing any `a4/` file, `issue-body.md` is read only by issue authors, `wiki-body.md` is read only by wiki authors. A rule that lands in the wrong file forces the wrong audience to read it. Per-type contracts (`<type>-authoring.md`) point at whichever of the three is relevant — they do not duplicate the contents.
 
 ## When NOT to add content here
 

@@ -22,7 +22,7 @@ Every review criterion exists because failing it forces the developer to guess. 
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` and `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — universal authoring contract.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (universal frontmatter), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` (`## Resume`, `## Log` for review items), and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/roadmap-authoring.md` — what makes the roadmap wiki "complete" (`## Plan` H3 subsections: milestone narrative, dependency graph, Shared Integration Points, L&V pointer).
 - The per-family task contracts: `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md` (frontmatter, body sections, AC source per family). Roadmap-derived tasks are always `type: task` and live under `a4/task/`; spike / bug / research entries authored via the matching `/a4:<type>` skill live under their respective folders.

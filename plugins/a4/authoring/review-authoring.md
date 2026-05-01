@@ -8,7 +8,7 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 
 Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents and by single-edit defer paths (`source: self`).
 
-Companion to `./frontmatter-universals.md`, `./body-conventions.md`.
+Companion to `./frontmatter-universals.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -84,19 +84,11 @@ Writer rules:
 
 When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a **warning with override** — the transition is allowed, but unresolved violations are re-surfaced as fresh review items targeting the same wiki page.
 
-When resolving, append the bullet to each affected wiki:
-
-```markdown
-## Change Logs
-
-- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>
-```
-
-Create the `## Change Logs` section if it does not yet exist.
+When resolving, follow the wiki Change Logs convention defined in `./wiki-body.md` and link the review item itself in the bullet (`- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>`). Create the `## Change Logs` section on the wiki page if it does not yet exist.
 
 ## Body shape
 
-The body is a sequence of column-0 `## Title Case` H2 headings, with free-form markdown content from one heading to the next (per `./body-conventions.md`). H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
+The body is a sequence of column-0 `## Title Case` H2 headings, with free-form markdown content from one heading to the next. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
 
 Review item bodies are **deliberately minimal** — they hold a single observation, not a long-form artifact.
 
@@ -106,8 +98,8 @@ Review item bodies are **deliberately minimal** — they hold a single observati
 
 **Optional, emit only when applicable:**
 
-- `## Change Logs` — append-only audit trail when the review item body is materially edited post-create (rare; usually the original description is the final word).
-- `## Log` — resume-context surface for a future session: current approach to the review item, blockers, decisions, open questions, next step. Strongly recommended while the review item is `open`. See `./body-conventions.md#log`.
+- `## Resume` — current-state snapshot for the next session: current approach to the review item, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the review item is `open` / `in-progress`. See `./issue-body.md#resume`.
+- `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 
 Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `## Repro`, or `## Context` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `## Description` is usually enough.
 
@@ -128,7 +120,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 
 ## Don't
 
-- **`## Log` is the resume-context surface, not a status-transition log.** Use it for what a fresh session can't reconstruct from frontmatter, the description, or the linked target file. See `./body-conventions.md#log`.
+- **`## Resume` is the resume-context surface, not a status-transition log.** Use it for what a fresh session can't reconstruct from frontmatter, the description, or the linked target file. `## Log` is for narrative-worthy events only — see `./issue-body.md`.
 - **Don't delete a review item file.** `discarded` is the cascade-hook-managed terminal state. Deleting orphans the cascade bookkeeping and breaks drift dedup.
 - **Don't invent placeholder `target:` values.** When the concern is cross-cutting, leave `target:` empty (`[]` or omit the field).
 - **Don't hand-flip the discarded cascade.** When a UC flips to `discarded`, open review items pointing at it flip automatically.

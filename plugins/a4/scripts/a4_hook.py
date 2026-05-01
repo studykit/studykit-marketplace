@@ -225,6 +225,31 @@ def _pre_edit() -> int:
 
 
 _TASK_FAMILY_TYPES = frozenset({"task", "bug", "spike", "research"})
+_ISSUE_BODY_TYPES = frozenset(
+    {
+        "task",
+        "bug",
+        "spike",
+        "research",
+        "usecase",
+        "spec",
+        "umbrella",
+        "review",
+        "idea",
+        "brainstorm",
+    }
+)
+_WIKI_BODY_TYPES = frozenset(
+    {
+        "actors",
+        "architecture",
+        "bootstrap",
+        "context",
+        "domain",
+        "nfr",
+        "roadmap",
+    }
+)
 
 
 def _injected_path(project_dir: str, session_id: str) -> "Path":
@@ -338,9 +363,20 @@ def _maybe_inject_authoring_contract(
         "structural relationship fields, title placeholders).",
         f"- `plugins/a4/authoring/{type_value}-authoring.md` — per-type "
         "field table, lifecycle, body shape, common mistakes.",
-        "- `plugins/a4/authoring/body-conventions.md` — heading form, "
-        "link form, change-log discipline, log section.",
+        "- `plugins/a4/authoring/body-conventions.md` — cross-cutting "
+        "body conventions (heading form, link form, `updated:` bumping).",
     ]
+    if type_value in _ISSUE_BODY_TYPES:
+        pointers.append(
+            "- `plugins/a4/authoring/issue-body.md` — `## Resume` "
+            "(current-state snapshot) and `## Log` (narrative-worthy "
+            "events) for issue files."
+        )
+    if type_value in _WIKI_BODY_TYPES:
+        pointers.append(
+            "- `plugins/a4/authoring/wiki-body.md` — `## Change Logs` "
+            "audit trail and Wiki Update Protocol."
+        )
     if type_value in _TASK_FAMILY_TYPES:
         pointers.insert(
             2,
