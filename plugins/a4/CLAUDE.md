@@ -83,6 +83,18 @@ recovery path for edits that bypassed the hook.
 
 Type hints are required on anything that is not a one-off script.
 
+## Running tests
+
+Validator tests live under `tests/`. They use temp-dir fixtures (no real `a4/` workspace required) and run via `uv run --with pytest --with pyyaml pytest`:
+
+```bash
+cd plugins/a4 && uv run --with pytest --with pyyaml pytest tests/        # all tests
+cd plugins/a4 && uv run --with pytest --with pyyaml pytest tests/ -v     # verbose
+cd plugins/a4 && uv run --with pytest --with pyyaml pytest tests/test_parent_target.py
+```
+
+The `tests/conftest.py` injects `scripts/` onto `sys.path` and exposes an `a4_workspace` fixture (a thin `A4Workspace` helper that writes minimal-but-valid frontmatter for any type). New tests should use that fixture rather than re-rolling YAML by hand.
+
 ## When in doubt
 
 If the substance of a rule, schema, or convention is not in `authoring/`, `workflows/`, or `dev/`, it is not authoritative. Do not infer rules from a single skill's behavior — promote shared behavior into the right reference and have the skill point at it. To pick the right home, ask in order:
