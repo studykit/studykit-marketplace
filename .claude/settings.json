@@ -49,11 +49,6 @@
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/sweep-contributor.sh\"",
             "timeout": 5
-          },
-          {
-            "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" session-start",
-            "timeout": 10
           }
         ]
       }

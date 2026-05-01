@@ -9,29 +9,35 @@ Distinct from the workspace-side `scripts/a4_hook.py` — that hook fires on
 the per-layer audience / citation contract.
 
 Subcommands:
-  session-start  SessionStart. Emit the full layer map (audience + path
-                 purity rules for every layer in plugins/a4/) once per
-                 session — the heavy reference the contributor anchors
-                 every later interaction against.
   pre-read       PreToolUse on Read. When a contributor first opens a
-                 specific `plugins/a4/**/*.md` this session, emit a short
+                 specific `plugins/a4/**/*.md` this session, emit a
                  file-scoped note: which layer the file belongs to and
-                 the binding rules for that layer. Per-file dedup.
+                 the binding rules for that layer. On the very first
+                 match in the session (across read AND edit), the full
+                 layer map is prepended once.
   pre-edit       PreToolUse on Write|Edit|MultiEdit. Same shape as
                  pre-read; uses the same per-file dedup so reading then
-                 editing a file does not double-emit.
+                 editing a file does not double-emit, and the layer-map
+                 prepend uses the same session-wide sentinel so it
+                 fires at most once per session regardless of whether
+                 the first matching tool was Read or Edit.
+
+The layer map is loaded lazily on first `plugins/a4/` touch rather than
+at SessionStart — sessions that never work on a4 do not pay the context
+cost.
 
 Session-scoped state under `.claude/tmp/a4-edited/`:
   a4-contributor-files-<sid>.txt   — newline-delimited file paths
-                                     already announced this session.
+                                     already announced this session
+                                     (per-file dedup).
+  a4-contributor-map-<sid>.flag    — touched once when the layer map
+                                     has been prepended this session.
 Cleaned up by `cleanup-contributor.sh` (SessionEnd) and swept by
 `sweep-contributor.sh` (SessionStart, age-based for crashed sessions).
 
 End-user impact: zero. Pre-tool hooks gate on a `plugins/a4/` path
 prefix under `$CLAUDE_PROJECT_DIR`; that prefix exists only when a
-contributor edits this plugin's own source. SessionStart is a no-op
-unless the prefix directory exists (skips the emit silently otherwise),
-so installing the hook globally is still safe.
+contributor edits this plugin's own source.
 
 Conventions (state classification, lifecycle symmetry, blocking policy,
 output channel) follow `plugins/a4/dev/hook-conventions.md`.
@@ -51,97 +57,17 @@ from pathlib import Path
 _PLUGIN_REL = ("plugins", "a4")
 _SENTINEL_DIR = (".claude", "tmp", "a4-edited")
 _FILES_BASENAME = "a4-contributor-files-{sid}.txt"
+_MAP_BASENAME = "a4-contributor-map-{sid}.flag"
 
 
 def main() -> int:
     if len(sys.argv) < 2:
         return 0
     sub = sys.argv[1]
-    if sub == "session-start":
-        return _session_start()
     if sub == "pre-read":
         return _pre_read()
     if sub == "pre-edit":
         return _pre_edit()
-    return 0
-
-
-# ----------------------------- SessionStart -------------------------------
-
-
-def _session_start() -> int:
-    """Emit the full layer map once per session. Silent no-op if the
-    repo does not contain `plugins/a4/` (i.e., this hook was wired in a
-    repo where the directory is absent — global no-op safety).
-    Always exits 0.
-    """
-    payload = _payload()
-    if payload is None:
-        return 0
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
-    if not project_dir:
-        return 0
-    plugin_root = Path(project_dir).joinpath(*_PLUGIN_REL)
-    if not plugin_root.is_dir():
-        return 0
-
-    body = (
-        "## a4 plugin contributor — audience routing (session start)\n\n"
-        "You are working in `studykit-plugins`, where `plugins/a4/` is "
-        "the a4 plugin's own source. Every directory under `plugins/a4/` "
-        "has a fixed audience and a binding citation contract — do not "
-        "mix them. This map is injected once at session start; per-file "
-        "notes during Read/Edit will only name the layer and its key "
-        "rules without repeating the full map.\n\n"
-        "**Layer map (path purity is binding):**\n\n"
-        "- **`plugins/a4/authoring/`** — workspace authoring contract. "
-        "Audience: workspace authors editing `<project-root>/a4/**/*.md` "
-        "and LLMs editing those files on the user's behalf. Cite `./` "
-        "siblings and `../scripts/<script>.py` (script *usage* in prose) "
-        "only. NO `../workflows/`, `../skills/`, `../dev/`. Use relative "
-        "paths in shell snippets too — `${CLAUDE_PLUGIN_ROOT}` is not "
-        "expanded here. Two scope exceptions: "
-        "`commit-message-convention.md` extends to anyone authoring "
-        "commits derived from a4 artifacts; `usecase-abstraction-guard.md` "
-        "narrows to `<project-root>/a4/usecase/*.md`.\n"
-        "- **`plugins/a4/workflows/`** — skill orchestration contract. "
-        "Audience: skill runtimes. Cite `./` siblings and `../authoring/` "
-        "only. NO `../scripts/`, `../dev/`. Relative paths.\n"
-        "- **`plugins/a4/dev/`** — plugin internals. Audience: plugin "
-        "contributors only. May cite anywhere; skills, agents, "
-        "authoring, and workflows MUST NOT cite back into this "
-        "directory.\n"
-        "- **`plugins/a4/skills/<name>/**`** and "
-        "**`plugins/a4/agents/*.md`** — skill / agent definitions. Cite "
-        "`${CLAUDE_PLUGIN_ROOT}/authoring/` and "
-        "`${CLAUDE_PLUGIN_ROOT}/workflows/`. NEVER cite "
-        "`${CLAUDE_PLUGIN_ROOT}/dev/`. `${CLAUDE_PLUGIN_ROOT}` is the "
-        "binding form for both markdown and shell.\n"
-        "- **`plugins/a4/scripts/`** — workspace-side runtime code "
-        "(validators, hook dispatcher, cascade primitives). Distinct "
-        "from `plugins/a4/dev/scripts/`, which is contributor-only "
-        "tooling.\n"
-        "- **`plugins/a4/dev/scripts/`** — contributor-only tooling "
-        "(this hook, cleanup/sweep wrappers). Registered in repo "
-        "`.claude/settings.json`, not in any plugin manifest.\n"
-        "- **`plugins/a4/hooks/`** — workspace hook manifests + small "
-        "bash wrappers for tmp-file lifecycle.\n\n"
-        "**Audience drift signal:** if you find a skill or agent citing "
-        "`../dev/`, or `authoring/` citing `workflows/`, that is a bug "
-        "— promote or relocate the content to the correct layer rather "
-        "than inverting the dependency.\n\n"
-        "Per-directory `CLAUDE.md` files carry the binding rules; the "
-        "Read/Edit hook will surface the matching layer's notes when "
-        "you touch a file."
-    )
-    _emit(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "SessionStart",
-                "additionalContext": body,
-            }
-        }
-    )
     return 0
 
 
@@ -210,14 +136,20 @@ def _inject_per_file(payload: dict, intent: str) -> int:
     )
     intent_label = "Reading" if intent == "read" else "About to write"
     layer_notes = _LAYER_NOTES.get(layer, _LAYER_NOTES["other"])
-    body = (
+    file_body = (
         f"## a4 contributor — `{display_rel}`\n\n"
         f"{intent_label} this file. Layer: **{layer}**.\n\n"
         f"{layer_notes}\n\n"
-        f"See the session-start audience map for the full layer routing. "
         f"Injected once per file per session — will not re-emit on "
         f"subsequent Read/Edit of `{display_rel}`."
     )
+
+    map_prefix = _layer_map_prefix(project_dir, session_id)
+    if map_prefix is not None:
+        body = map_prefix + "\n\n---\n\n" + file_body
+    else:
+        body = file_body
+
     _emit(
         {
             "hookSpecificOutput": {
@@ -227,6 +159,75 @@ def _inject_per_file(payload: dict, intent: str) -> int:
         }
     )
     return 0
+
+
+# --------------------------- layer-map prepend ----------------------------
+
+
+def _layer_map_prefix(project_dir: str, session_id: str) -> str | None:
+    """Return the full layer-map block on the first call per session,
+    None thereafter. Touches the session sentinel atomically — if the
+    sentinel cannot be written, we still return None to avoid emitting
+    the heavy map repeatedly.
+    """
+    sentinel = (
+        Path(project_dir).joinpath(*_SENTINEL_DIR)
+        / _MAP_BASENAME.format(sid=session_id)
+    )
+    if sentinel.is_file():
+        return None
+    try:
+        sentinel.parent.mkdir(parents=True, exist_ok=True)
+        sentinel.touch(exist_ok=True)
+    except OSError:
+        return None
+    return _LAYER_MAP_BLOCK
+
+
+_LAYER_MAP_BLOCK = (
+    "## a4 plugin contributor — audience routing (lazy-loaded on first "
+    "`plugins/a4/` touch)\n\n"
+    "You just touched a file under `plugins/a4/` — this plugin's own "
+    "source. Every directory has a fixed audience and a binding "
+    "citation contract; do not mix them. This map is injected once per "
+    "session at the first matching Read/Edit; subsequent file-specific "
+    "notes will only name the layer and its key rules.\n\n"
+    "**Layer map (path purity is binding):**\n\n"
+    "- **`plugins/a4/authoring/`** — workspace authoring contract. "
+    "Audience: workspace authors editing `<project-root>/a4/**/*.md` "
+    "and LLMs editing those files on the user's behalf. Cite `./` "
+    "siblings and `../scripts/<script>.py` (script *usage* in prose) "
+    "only. NO `../workflows/`, `../skills/`, `../dev/`. Use relative "
+    "paths in shell snippets too — `${CLAUDE_PLUGIN_ROOT}` is not "
+    "expanded here. Two scope exceptions: "
+    "`commit-message-convention.md` extends to anyone authoring "
+    "commits derived from a4 artifacts; `usecase-abstraction-guard.md` "
+    "narrows to `<project-root>/a4/usecase/*.md`.\n"
+    "- **`plugins/a4/workflows/`** — skill orchestration contract. "
+    "Audience: skill runtimes. Cite `./` siblings and `../authoring/` "
+    "only. NO `../scripts/`, `../dev/`. Relative paths.\n"
+    "- **`plugins/a4/dev/`** — plugin internals. Audience: plugin "
+    "contributors only. May cite anywhere; skills, agents, authoring, "
+    "and workflows MUST NOT cite back into this directory.\n"
+    "- **`plugins/a4/skills/<name>/**`** and **`plugins/a4/agents/*.md`** "
+    "— skill / agent definitions. Cite `${CLAUDE_PLUGIN_ROOT}/authoring/` "
+    "and `${CLAUDE_PLUGIN_ROOT}/workflows/`. NEVER cite "
+    "`${CLAUDE_PLUGIN_ROOT}/dev/`. `${CLAUDE_PLUGIN_ROOT}` is the "
+    "binding form for both markdown and shell.\n"
+    "- **`plugins/a4/scripts/`** — workspace-side runtime code "
+    "(validators, hook dispatcher, cascade primitives). Distinct from "
+    "`plugins/a4/dev/scripts/`, which is contributor-only tooling.\n"
+    "- **`plugins/a4/dev/scripts/`** — contributor-only tooling (this "
+    "hook, cleanup/sweep wrappers). Registered in repo "
+    "`.claude/settings.json`, not in any plugin manifest.\n"
+    "- **`plugins/a4/hooks/`** — workspace hook manifests + small bash "
+    "wrappers for tmp-file lifecycle.\n\n"
+    "**Audience drift signal:** if you find a skill or agent citing "
+    "`../dev/`, or `authoring/` citing `workflows/`, that is a bug — "
+    "promote or relocate the content to the correct layer rather than "
+    "inverting the dependency.\n\n"
+    "Per-directory `CLAUDE.md` files carry the binding rules."
+)
 
 
 # ----------------------------- per-file dedup -----------------------------
