@@ -66,6 +66,10 @@ A task with **both** anchors empty has no AC source. Either downgrade to `spike`
 
 Empty anchors are not always a problem — small UI tweaks, single-property validations, and batch-generated tasks without a UC group can legitimately stay anchorless. The deeper signal is in the body: when the description implies a user-facing scope no existing UC covers, or an architectural choice no existing spec records, surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing.
 
+### Evidence-readiness — sister rule
+
+Anchors decide where the AC comes from; **evidence** decides whether the task is actionable as a handoff. The two are independent — a clean `implements:` / `spec:` does not make the task evidence-ready. Binding rule lives in `./spike-before-task.md`: five evidence categories (reproduce command, code coordinates, data flow, baseline, test fixture) are expected by the time the task is `pending`; when two or more are empty the parent issue family is `spike` (with a runnable artifact directory) or `research`, not `task`.
+
 If implementation surfaces a real choice (an architectural shape, a protocol, a format, a schema) that no existing spec records — common in projects that started spec-less — spawn a spec at that point and add its path to this task's `spec:` frontmatter. A 1-decision spec with just `## Context` + `## Specification` + an initial `## Decision Log` entry is enough; specs are not required to be heavy. Do **not** capture the decision inline in the task body (no `## Decision` section, no rationale paragraph that belongs in a `## Decision Log`). Splitting decision rationale between task and spec breaks the audit trail and the supersede chain — see `./spec-authoring.md` for the spec body shape.
 
 ### Lifecycle and writer ownership

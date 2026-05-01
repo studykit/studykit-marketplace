@@ -51,6 +51,10 @@ updated: YYYY-MM-DD
 - `artifacts:` is artifact-only — paths must point under `artifacts/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
 - `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
 
+### Evidence-readiness — reproduction is the floor
+
+A bug without a reproducible failure path is exploratory until reproduction is captured. The same evidence-readiness rule that governs `task` authoring applies — binding shape lives in `./spike-before-task.md`: five evidence categories (reproduce command, code coordinates, data flow, baseline, test fixture) expected by the time the bug is `pending`; reproduction is the strongest signal among them. When two or more are empty the parent issue family is `spike` (PoC reproduction repo) or `research`, not `bug`.
+
 ### Parent and shared narrative
 
 `parent:` is optional. Two cases:
