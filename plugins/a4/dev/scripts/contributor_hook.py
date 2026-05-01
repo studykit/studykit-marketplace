@@ -134,14 +134,11 @@ def _inject_per_file(payload: dict, intent: str) -> int:
         if file_path.startswith(project_dir + os.sep)
         else file_path
     )
-    intent_label = "Reading" if intent == "read" else "About to write"
-    layer_notes = _LAYER_NOTES.get(layer, _LAYER_NOTES["other"])
+    intent_label = "read" if intent == "read" else "edit"
+    layer_note = _LAYER_NOTES.get(layer, _LAYER_NOTES["other"])
     file_body = (
-        f"## a4 contributor — `{display_rel}`\n\n"
-        f"{intent_label} this file. Layer: **{layer}**.\n\n"
-        f"{layer_notes}\n\n"
-        f"Injected once per file per session — will not re-emit on "
-        f"subsequent Read/Edit of `{display_rel}`."
+        f"**a4 ({intent_label})** `{display_rel}` — layer **{layer}**. "
+        f"{layer_note}"
     )
 
     map_prefix = _layer_map_prefix(project_dir, session_id)
@@ -185,48 +182,20 @@ def _layer_map_prefix(project_dir: str, session_id: str) -> str | None:
 
 
 _LAYER_MAP_BLOCK = (
-    "## a4 plugin contributor — audience routing (lazy-loaded on first "
-    "`plugins/a4/` touch)\n\n"
-    "You just touched a file under `plugins/a4/` — this plugin's own "
-    "source. Every directory has a fixed audience and a binding "
-    "citation contract; do not mix them. This map is injected once per "
-    "session at the first matching Read/Edit; subsequent file-specific "
-    "notes will only name the layer and its key rules.\n\n"
-    "**Layer map (path purity is binding):**\n\n"
-    "- **`plugins/a4/authoring/`** — workspace authoring contract. "
-    "Audience: workspace authors editing `<project-root>/a4/**/*.md` "
-    "and LLMs editing those files on the user's behalf. Cite `./` "
-    "siblings and `../scripts/<script>.py` (script *usage* in prose) "
-    "only. NO `../workflows/`, `../skills/`, `../dev/`. Use relative "
-    "paths in shell snippets too — `${CLAUDE_PLUGIN_ROOT}` is not "
-    "expanded here. Two scope exceptions: "
-    "`commit-message-convention.md` extends to anyone authoring "
-    "commits derived from a4 artifacts; `usecase-abstraction-guard.md` "
-    "narrows to `<project-root>/a4/usecase/*.md`.\n"
-    "- **`plugins/a4/workflows/`** — skill orchestration contract. "
-    "Audience: skill runtimes. Cite `./` siblings and `../authoring/` "
-    "only. NO `../scripts/`, `../dev/`. Relative paths.\n"
-    "- **`plugins/a4/dev/`** — plugin internals. Audience: plugin "
-    "contributors only. May cite anywhere; skills, agents, authoring, "
-    "and workflows MUST NOT cite back into this directory.\n"
-    "- **`plugins/a4/skills/<name>/**`** and **`plugins/a4/agents/*.md`** "
-    "— skill / agent definitions. Cite `${CLAUDE_PLUGIN_ROOT}/authoring/` "
-    "and `${CLAUDE_PLUGIN_ROOT}/workflows/`. NEVER cite "
-    "`${CLAUDE_PLUGIN_ROOT}/dev/`. `${CLAUDE_PLUGIN_ROOT}` is the "
-    "binding form for both markdown and shell.\n"
-    "- **`plugins/a4/scripts/`** — workspace-side runtime code "
-    "(validators, hook dispatcher, cascade primitives). Distinct from "
-    "`plugins/a4/dev/scripts/`, which is contributor-only tooling.\n"
-    "- **`plugins/a4/dev/scripts/`** — contributor-only tooling (this "
-    "hook, cleanup/sweep wrappers). Registered in repo "
-    "`.claude/settings.json`, not in any plugin manifest.\n"
-    "- **`plugins/a4/hooks/`** — workspace hook manifests + small bash "
-    "wrappers for tmp-file lifecycle.\n\n"
-    "**Audience drift signal:** if you find a skill or agent citing "
-    "`../dev/`, or `authoring/` citing `workflows/`, that is a bug — "
-    "promote or relocate the content to the correct layer rather than "
-    "inverting the dependency.\n\n"
-    "Per-directory `CLAUDE.md` files carry the binding rules."
+    "**a4 plugin layer map** (loaded once on first `plugins/a4/` touch). "
+    "Path purity is binding — do not invert citation direction.\n"
+    "- `authoring/` — workspace authors. Cite `./*` + `../scripts/*.py`. "
+    "No `../workflows/`, `../skills/`, `../dev/`. Relative paths.\n"
+    "- `workflows/` — skill runtimes. Cite `./*` + `../authoring/`. "
+    "No `../scripts/`, `../dev/`.\n"
+    "- `dev/` — contributors only. May cite anywhere; reverse refs "
+    "forbidden.\n"
+    "- `skills/<name>/**`, `agents/*.md` — skill / agent definitions. "
+    "Cite `${CLAUDE_PLUGIN_ROOT}/{authoring,workflows}/`. Never `dev/`.\n"
+    "- `scripts/` — workspace runtime. `dev/scripts/` — contributor "
+    "tooling (registered via repo `.claude/settings.json`).\n"
+    "- `hooks/` — workspace hook manifests + bash wrappers.\n"
+    "Binding rules live in each directory's `CLAUDE.md`."
 )
 
 
@@ -292,78 +261,37 @@ def _resolve_layer(file_path: str, plugin_root: Path) -> str:
 
 _LAYER_NOTES: dict[str, str] = {
     "authoring": (
-        "**Audience:** workspace authors editing "
-        "`<project-root>/a4/**/*.md` (and LLMs on their behalf). This is "
-        "a binding contract for end-user workspace files — precise and "
-        "conservative tone, state *what* is valid, not *how* it is "
-        "checked. Cite only `./` siblings and `../scripts/<script>.py` "
-        "(script *usage* in prose). NO `../workflows/`, `../skills/`, "
-        "`../dev/`. Use relative paths in shell snippets — "
-        "`${CLAUDE_PLUGIN_ROOT}` is not expanded here. New `type:` value "
-        "→ add `<type>-authoring.md`; workspace-wide rule → extend "
-        "`frontmatter-universals.md` or `body-conventions.md`."
+        "End-user workspace contract. Cite `./*` + `../scripts/*.py`. "
+        "No workflows/skills/dev. Relative paths only."
     ),
     "workflows": (
-        "**Audience:** skill runtimes. Cross-skill orchestration only — "
-        "skill modes, pipeline shapes, iterate mechanics, "
-        "wiki-authorship policy. Cite `./` siblings and `../authoring/` "
-        "for the frontmatter contract. NO `../scripts/`, `../dev/`. "
-        "Relative paths. A single skill's procedure does NOT belong "
-        "here — it belongs in `../skills/<name>/references/`."
+        "Skill orchestration. Cite `./*` + `../authoring/`. "
+        "No scripts/dev."
     ),
     "dev": (
-        "**Audience:** plugin contributors only. The only layer that "
-        "may cite anywhere — `../scripts/`, `../authoring/`, "
-        "`../workflows/`, `../hooks/`, `../skills/`. Skills, agents, "
-        "authoring, workflows MUST NOT cite back into this directory. "
-        "Lead each entry with the file path; reserve prose for design "
-        "rationale that fits nowhere else."
+        "Plugin internals. May cite anywhere; reverse refs forbidden."
     ),
     "dev-scripts": (
-        "**Audience:** plugin contributors only — contributor-side "
-        "tooling (this hook, cleanup/sweep wrappers, future "
-        "contributor-facing scripts). Distinct from `../../scripts/` "
-        "which is workspace runtime code. Registered via repo "
-        "`.claude/settings.json`, not via any plugin manifest, so "
-        "end-user installs of the a4 plugin never run these. "
-        "Type hints required on Python; invoke via `uv run`."
+        "Contributor tooling (not in plugin manifest). Type hints; "
+        "invoke via `uv run`."
     ),
     "skills": (
-        "**Audience:** skill runtime. `SKILL.md` is orchestration only "
-        "(preflight + step list + non-goals). Procedures live in "
-        "`references/*.md`. Cite "
-        "`${CLAUDE_PLUGIN_ROOT}/authoring/` and "
-        "`${CLAUDE_PLUGIN_ROOT}/workflows/`. NEVER cite "
-        "`${CLAUDE_PLUGIN_ROOT}/dev/`. Use `${CLAUDE_PLUGIN_ROOT}` for "
-        "both markdown citations and shell snippets — env var expands "
-        "at skill-invocation time."
+        "Cite `${CLAUDE_PLUGIN_ROOT}/{authoring,workflows}/`. Never "
+        "`dev/`. `SKILL.md` is orchestration; procedures in "
+        "`references/`."
     ),
     "agents": (
-        "**Audience:** skill runtime (subagent definitions: reviewers, "
-        "composers, implementers, workspace-assistant). Same path-form "
-        "rules as `skills/`: `${CLAUDE_PLUGIN_ROOT}/...` for citations "
-        "and shell, never `../dev/`."
+        "Same as skills: `${CLAUDE_PLUGIN_ROOT}` paths, never `dev/`."
     ),
     "scripts": (
-        "**Audience:** workspace runtime (validators, hook dispatcher, "
-        "cascade primitives). Imports happen in-process from the hook "
-        "dispatcher — keep top-level imports light. Type hints required "
-        "on anything beyond a one-off script. Invoke with `uv run`, not "
-        "`python` directly."
+        "Workspace runtime. Type hints; `uv run` (not `python`)."
     ),
     "hooks": (
-        "**Audience:** workspace hook runtime. `hooks.json` manifest + "
-        "small bash wrappers for trivial tmp-file lifecycle. "
-        "Substantive hook logic lives in `../scripts/a4_hook.py` (or, "
-        "for contributor-only flows, `../dev/scripts/`). Always exit 0 "
-        "in lifecycle wrappers — never block session boundaries."
+        "Manifest + bash wrappers; substantive logic in "
+        "`../scripts/a4_hook.py`. Always exit 0."
     ),
     "other": (
-        "This file is not in one of the canonical layers "
-        "(`authoring/`, `workflows/`, `dev/`, `skills/`, `agents/`, "
-        "`scripts/`, `hooks/`). Confirm it belongs in `plugins/a4/` at "
-        "all before editing — most contributor-relevant content lives "
-        "in those seven directories."
+        "Not in canonical layers — confirm location before editing."
     ),
 }
 
