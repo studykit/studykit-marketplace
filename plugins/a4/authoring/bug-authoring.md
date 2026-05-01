@@ -45,7 +45,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: bug` is fixed for files under `a4/bug/`. There is no `kind:` field — the type *is* the kind.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it when the bug is a regression against a spec's expected behavior.

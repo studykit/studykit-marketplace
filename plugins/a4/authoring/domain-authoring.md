@@ -35,7 +35,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — renamed Conversation → Session
 ```
 
-Create the section if absent. The drift detector checks for `domain` ↔ `architecture` term consistency: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
+Create the section if absent. `domain` ↔ `architecture` term consistency is monitored: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
 
 ## Common mistakes (domain-specific)
 

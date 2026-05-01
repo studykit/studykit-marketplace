@@ -81,7 +81,7 @@ The script prints the next available id to stdout.
 
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following forms. All forms resolve to the same file, so they are interchangeable on input — pick whichever reads best in context.
 
-- **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `umbrella/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. The validator rejects any path-ref entry beginning with `#`.
+- **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `umbrella/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. Any path-ref entry beginning with `#` is invalid (the legacy `#<id>` short form was removed in a4 v11.0.0; write the bare integer instead).
 - **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`task`, `bug`, `spike`, `research`, etc.); each task family has its own top-level folder.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter that benefits from at-a-glance context. The slug part is a hint: when the file's actual stem differs (slug rename), the id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Resolves correctly because ids are globally unique. Permitted but folder-prefixed form is preferred for readability.
@@ -90,7 +90,7 @@ Frontmatter fields that reference other files (`depends_on`, `implements`, `targ
 Universal rules:
 
 - **Plain strings.** No brackets — `usecase/3-search-history`, not `[usecase/3-search-history]`. Plain strings keep frontmatter machine-parseable.
-- **No `.md` extension.** The validator rejects any reference ending in `.md`.
+- **No `.md` extension.** Any reference ending in `.md` is invalid.
 - **Existence is checked.** Each reference must resolve to a file in the workspace; unresolved refs surface as a `unresolved-ref` violation. Format-only references (e.g., a typo in `99` where no file with `id: 99` exists) are treated as authoring errors, not extension metadata.
 
 Body links use a different form — standard markdown `[text](relative/path.md)`, plus plain `#<id>` text where GitHub-issue cross-link rendering is desired. See `./body-conventions.md`.
@@ -146,22 +146,22 @@ Unknown fields are **not errors** — they are treated as extension metadata. Sk
 
 ## Status writers
 
-Every status change on `usecase`, the four task issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. The PostToolUse cascade hook detects the pre→post transition, refreshes `updated:` on the primary file, and runs any cross-file cascade:
+Every status change on `usecase`, the four task issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. When the change lands, `updated:` refreshes automatically on the primary file, and any cross-file cascade runs:
 
 - Task reset on UC `revising` — across all four task issue families, tasks at `progress`/`failing` → `pending`.
 - Task / review discard cascade on UC `discarded` — across all four task issue families.
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 
-The hook does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. For cases the cascade engine cannot mechanically reach (`idea` / `brainstorm` `promoted`), drift between `status:` and the supporting cross-references is surfaced as a separate consistency check.
+The automatic cascade does **not** touch the body's optional `## Log` section — that section is hand-maintained when an author wants a body-level audit trail. For cases the cascade cannot mechanically reach (`idea` / `brainstorm` `promoted`), drift between `status:` and the supporting cross-references is invalid and is reported separately at validation time.
 
 Edge cases:
 
-- **Illegal jumps** (e.g. `shipped → ready`, outside `FAMILY_TRANSITIONS`) — the cascade hook silently skips them; the Stop-hook transition-legality safety net (working-tree-vs-HEAD git diff) surfaces them as errors.
-- **Legal jumps that bypass the hook** (edits via `git checkout`, external editors, direct script writes) — related files are left unflipped. The cross-file consistency checks (`task.pending` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain) re-surface the missing cascade work.
+- **Illegal jumps** (e.g. `shipped → ready`, outside the family's lifecycle table) — `updated:` and cross-file cascades do not run; validation surfaces the jump as an error (working-tree-vs-HEAD diff against the family's allowed transitions).
+- **Legal jumps that bypass the automatic cascade** (edits via `git checkout`, external editors, direct script writes) — related files are left unflipped. Validation re-surfaces the missing cascade work for the categories listed above (`task.pending` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain).
 - **Recovery** —
   - Supersedes-chain: `../scripts/validate.py --fix` (workspace-wide, idempotent).
-  - Reverse-link (revising / discarded cascades): re-edit the UC's `status:` to retrigger the hook.
+  - Reverse-link (revising / discarded cascades): re-edit the UC's `status:` to re-run the automatic cascade.
 
 ## Structural relationship fields
 

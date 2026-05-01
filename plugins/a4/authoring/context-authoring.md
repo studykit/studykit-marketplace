@@ -50,4 +50,4 @@ Create the section if absent. The wiki close guard surfaces missing bullets when
 - **Don't put domain concepts here.** Cross-cutting concepts belong in `domain.md`'s `## Concepts` section.
 - **Don't write actor rosters here.** Actor definitions belong in `actors.md`'s `## Roster` section.
 - **Don't pack screen mockups inline.** HTML mocks live under `a4/mock/<screen-slug>/`; reference them from `## Screens` if useful.
-- **Don't append `## Change Logs` bullets without a markdown link.** The link is what powers the close-guard / drift checks.
+- **Don't append `## Change Logs` bullets without a markdown link.** The link is what makes the bullet machine-discoverable for downstream cross-file checks.

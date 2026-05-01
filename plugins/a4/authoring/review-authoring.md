@@ -52,11 +52,11 @@ updated: YYYY-MM-DD
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; the cascade hook bumps it automatically on status flips.
+- Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; status flips bump it automatically.
 
 ### Cascade — `target:` includes a UC that flips to `discarded`
 
-When a UC referenced inside a review's `target:` list flips to `discarded`, **every open review item** containing that UC path automatically cascades to `discarded` via the PostToolUse cascade hook. Do not flip these by hand. Wiki basenames in `target:` do not participate (wiki pages have no `discarded` state); task paths inside `target:` are independent (task discards do not cascade reviews).
+When a UC referenced inside a review's `target:` list flips to `discarded`, **every open review item** containing that UC path automatically cascades to `discarded`. Do not flip these by hand. Wiki basenames in `target:` do not participate (wiki pages have no `discarded` state); task paths inside `target:` are independent (task discards do not cascade reviews).
 
 ### Lifecycle and writer ownership
 
@@ -77,14 +77,14 @@ Per-status meaning:
 Writer rules:
 
 - `open` is the **only** initial status. New items are always born at `open`; everything else is a transition.
-- Edit `status:` directly. The PostToolUse cascade hook detects the transition, refreshes `updated:`, and runs cascades on related files.
+- Edit `status:` directly. The transition refreshes `updated:` automatically and runs cascades on related files.
 - `open → in-progress` is the iterate-flow's "user picked this item" flip; `in-progress → resolved` (or `→ discarded`) closes it.
 - `open → discarded` is allowed for items that are dismissed without being picked (e.g., obvious duplicate, inapplicable on second look).
-- The drift detector **dedups** against open / in-progress / discarded items with matching `(kind, target-wiki, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).
+- Auto-emitted drift review items **dedup** against open / in-progress / discarded items with matching `(kind, target-wiki, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).
 
 ### Close guard — wiki entries in `target:` must be honored on resolve
 
-When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a **warning with override** — the transition is allowed, but the drift detector re-surfaces violations as fresh `close-guard` review items.
+When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a **warning with override** — the transition is allowed, but unresolved violations are re-surfaced as fresh review items targeting the same wiki page.
 
 When resolving, append the bullet to each affected wiki:
 
@@ -133,9 +133,9 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 - **`## Log` is the resume-context surface, not a status-transition log.** Use it for what a fresh session can't reconstruct from frontmatter, the description, or the linked target file. See `./body-conventions.md#log`.
 - **Don't delete a review item file.** `discarded` is the cascade-hook-managed terminal state. Deleting orphans the cascade bookkeeping and breaks drift dedup.
 - **Don't invent placeholder `target:` values.** When the concern is cross-cutting, leave `target:` empty (`[]` or omit the field).
-- **Don't hand-flip the discarded cascade.** When a UC flips to `discarded`, the cascade hook flips open review items pointing at it.
-- **Don't reuse `drift`, `drift:<kind>`, `drift-cause:<slug>` labels** for non-drift items. Those prefixes are reserved for the drift detector's dedup fingerprint.
+- **Don't hand-flip the discarded cascade.** When a UC flips to `discarded`, open review items pointing at it flip automatically.
+- **Don't reuse `drift`, `drift:<kind>`, `drift-cause:<slug>` labels** for non-drift items. Those prefixes are reserved for the dedup fingerprint of auto-emitted drift items.
 - **Don't pack multiple findings / gaps / questions into one review item.** Re-emit one per concern; iterate flows process items individually.
 - **Don't mark `resolved` when the wiki edit was deferred.** Open a fresh follow-up review item targeting the wiki, leave this item `in-progress` (or close as `discarded` with rationale).
-- **Don't override the close guard silently.** The drift detector will re-surface the violation; better to fix the wiki edit now.
+- **Don't override the close guard silently.** Unresolved violations are re-surfaced as fresh review items; better to fix the wiki edit now.
 - **Don't author review items as long-form prose.** Bodies are hand-off notes. Long write-ups belong in specs, UCs, or wiki pages.

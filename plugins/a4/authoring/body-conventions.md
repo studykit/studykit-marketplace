@@ -129,7 +129,7 @@ Without this inline citation, the parent's `## Log` is invisible to a session th
 
 The same rule applies whenever a Log entry leans on narrative recorded in any other a4 file (sibling, related issue, spec, UC). Inline-cite the path; do not rely on the reader inferring it from frontmatter alone.
 
-The section is optional in the schema, but **strongly recommended whenever the file is mid-flight** (any `status:` other than `open` / `complete` / `discarded` / `superseded`). The session-handoff workflow prompts the writer to append to `## Log` before snapshotting the session, so session-only context lands in the file it belongs to. The PostToolUse cascade hook refreshes `updated:` and cascades related files but **does not write into `## Log`**; all entries are written by hand.
+The section is optional in the schema, but **strongly recommended whenever the file is mid-flight** (any `status:` other than `open` / `complete` / `discarded` / `superseded`). All `## Log` entries are written by hand: status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Log`. Session-only context belongs here, in the file it concerns — append to `## Log` as you work, before any session boundary risks losing it.
 
 ## Wiki Update Protocol
 
@@ -167,7 +167,7 @@ If the user chooses not to update the wiki page immediately, open a review item 
 
 ### Close guard
 
-When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose markdown link points at the review item itself. This is an authoring invariant rather than an enforced check at the moment — there is no automated guard or cross-session re-surfacer. Run the validator (`../scripts/validate.py`) after wiki edits if you need a sweep, and consider extending the validator with a new check if the gap matters.
+When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose markdown link points at the review item itself. This is an authoring invariant; nothing automated currently catches the omission, so the author is the only line of defense. Run `uv run ../scripts/validate.py <a4-dir>` after wiki edits if you want a sweep.
 
 ## Bumping `updated:`
 

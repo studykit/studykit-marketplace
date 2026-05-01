@@ -39,12 +39,13 @@ selector flags scope the work. ``--json`` produces machine-readable
 output for CI parsing.
 
 Exit code:
-  0  — all enabled checks clean (and sweep had no errors when --fix).
+  0  — no errors reported (warnings do not fail; sweep had no errors
+       when --fix).
   1  — semantic usage error (missing workspace dir, file outside the
        workspace, missing file, --fix combined with file args).
-  2  — at least one issue reported, sweep surfaced an error, or
-       argparse-detected malformed CLI (unknown flag, unknown check
-       name, etc.).
+  2  — at least one error reported (severity ``error``), sweep surfaced
+       an error, or argparse-detected malformed CLI (unknown flag,
+       unknown check name, etc.). Warnings alone do not exit 2.
 
 Usage:
     uv run validate.py <a4-dir>
@@ -204,9 +205,12 @@ def main() -> None:
         else:
             results[name] = check.run_workspace(a4_dir)
 
-    total = sum(len(v) for v in results.values())
+    error_total = sum(
+        sum(1 for i in v if i.severity != "warning")
+        for v in results.values()
+    )
     fix_errors = sum(len(r.errors) for r in fix_reports)
-    exit_code = 2 if (total or fix_errors) else 0
+    exit_code = 2 if (error_total or fix_errors) else 0
 
     if args.json:
         out = {
@@ -253,13 +257,21 @@ def main() -> None:
             print("OK — no issues.")
             continue
         file_count = len({i.path for i in issues})
+        n_err = sum(1 for i in issues if i.severity != "warning")
+        n_warn = sum(1 for i in issues if i.severity == "warning")
+        parts: list[str] = []
+        if n_err:
+            parts.append(f"{n_err} error(s)")
+        if n_warn:
+            parts.append(f"{n_warn} warning(s)")
         print(
-            f"{len(issues)} issue(s) across {file_count} file(s):",
+            f"{' + '.join(parts)} across {file_count} file(s):",
             file=sys.stderr,
         )
         for i in issues:
             loc = i.path + (f" [{i.field}]" if i.field else "")
-            print(f"  {loc} ({i.rule}): {i.message}", file=sys.stderr)
+            label = "warning" if i.severity == "warning" else "error"
+            print(f"  [{label}] {loc} ({i.rule}): {i.message}", file=sys.stderr)
 
     sys.exit(exit_code)
 

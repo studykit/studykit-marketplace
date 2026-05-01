@@ -35,7 +35,7 @@ updated: YYYY-MM-DD
 | `updated` | yes | date | `YYYY-MM-DD` |
 
 - `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
 - `promoted:` lists pipeline artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
 - Path values are plain strings without `.md` and without brackets.
@@ -58,8 +58,8 @@ Per-status meaning:
 Writer rules (brainstorm-specific):
 
 - `open` is the **only** initial status. New brainstorms are always born at `open`.
-- The brainstorm family has **no cascade** — the PostToolUse cascade hook doesn't flip related files for it (the family is absent from `FAMILY_TRANSITIONS`). `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
-- Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
+- The brainstorm family has **no cascade** — status changes do not trigger automatic flips of related files. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
+- Drift between `status:` and `promoted:` is invalid: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal.
 
 ## Body shape
@@ -80,7 +80,7 @@ Unknown H2 headings are tolerated.
 ## Common mistakes
 
 - **Required-field omission** (`type`, `id`, `title`, `topic`, `status`, `created`, `updated`).
-- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — surfaced as a consistency check.
+- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — invalid; flagged at validation time.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)
 

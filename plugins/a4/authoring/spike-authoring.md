@@ -41,7 +41,7 @@ updated: YYYY-MM-DD
 
 `implements` / `spec` / `cycle` are not part of the spike schema — declaring them is an error.
 
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: spike` is fixed for files under `a4/spike/`. There is no `kind:` field — the type *is* the kind.
 - `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
 - `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `type: task` and `type: bug`.

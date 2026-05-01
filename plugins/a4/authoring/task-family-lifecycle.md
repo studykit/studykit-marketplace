@@ -4,6 +4,8 @@
 
 The four task issue families (`task`, `bug`, `spike`, `research`) share **one** lifecycle, status enum, writer rules, and `complete` initial-status preflight. This file is the single source of truth; per-family authoring files cite it and add only family-specific deltas.
 
+> `umbrella` is **not** part of the task family. It is a narrative-aggregation parent with its own lifecycle (`open | complete | discarded`), no implement loop, and no UC-cascade. See `./umbrella-authoring.md`.
+
 ## Status enum
 
 `open | pending | progress | complete | failing | discarded`

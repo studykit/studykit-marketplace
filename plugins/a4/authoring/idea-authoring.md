@@ -42,7 +42,7 @@ updated: YYYY-MM-DD
 | `updated` | yes | date | `YYYY-MM-DD` |
 
 - `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.
 - Path values are plain strings without `.md` and without brackets.
@@ -57,7 +57,7 @@ The idea family deliberately omits four fields that other issue families carry. 
 - `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
 - `kind` — only one kind of idea (unlike `review/` which unifies finding / gap / question).
 
-Do not re-introduce these fields without first updating this file (and the matching schema in `../scripts/markdown_validator/frontmatter.py` if the field affects validation).
+Do not re-introduce these fields without first updating this file.
 
 ### Lifecycle and writer ownership
 
@@ -76,8 +76,8 @@ Per-status meaning:
 Writer rules (idea-specific):
 
 - `open` is the **only** initial status. New ideas are always born at `open`.
-- The idea family has **no cascade** — the PostToolUse cascade hook doesn't flip related files for it (the family is absent from `FAMILY_TRANSITIONS`). `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
-- Drift between `status:` and `promoted:` is surfaced as a separate consistency check: non-empty `promoted:` while `status: open` is a mismatch (the idea has graduated but the status was not flipped); empty `promoted:` while `status: promoted` is the inverse mismatch.
+- The idea family has **no cascade** — status changes do not trigger automatic flips of related files. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
+- Drift between `status:` and `promoted:` is invalid: non-empty `promoted:` while `status: open` is a mismatch (the idea has graduated but the status was not flipped); empty `promoted:` while `status: promoted` is the inverse mismatch.
 - There is **no reverse path** from `promoted` or `discarded` — both are terminal. To revive a discarded idea, author a fresh idea (and reference the prior via `related:` if the lineage matters).
 
 ## Body shape
@@ -100,7 +100,7 @@ Unknown H2 headings are tolerated.
 ## Common mistakes
 
 - **Required-field omission** (`type`, `id`, `title`, `status`, `created`, `updated`).
-- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — surfaced as a consistency check.
+- **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — invalid; flagged at validation time.
 - **Adding `priority`, `source`, `target`, or `kind`** — these are deliberately excluded. Unknown fields are tolerated, but they should not appear here.
 
 (Universal body conventions — stray content above the first H2, malformed headings, sections nested inside other sections, H1 in body — are documented in `./body-conventions.md`.)

@@ -56,7 +56,7 @@ updated: YYYY-MM-DD
 
 `implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error.
 
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: research` is fixed for files under `a4/research/`.
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.

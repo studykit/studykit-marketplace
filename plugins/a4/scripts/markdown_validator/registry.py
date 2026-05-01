@@ -119,6 +119,29 @@ def _from_transition(v) -> Issue:
     )
 
 
+def _umbrella_workspace(a4_dir: Path) -> list[Issue]:
+    from . import umbrella_consistency as vuc
+
+    return [_from_umbrella(m) for m in vuc.run(a4_dir, None)]
+
+
+def _umbrella_file(a4_dir: Path, file: Path) -> list[Issue]:
+    from . import umbrella_consistency as vuc
+
+    return [_from_umbrella(m) for m in vuc.run(a4_dir, file)]
+
+
+def _from_umbrella(m) -> Issue:
+    return Issue(
+        category="umbrella",
+        path=m.path,
+        rule=m.rule,
+        message=m.message,
+        field=m.field,
+        severity=m.severity,
+    )
+
+
 CHECKS: dict[str, Check] = {
     "frontmatter": Check(
         name="frontmatter",
@@ -151,5 +174,17 @@ CHECKS: dict[str, Check] = {
         supports_file_scope=True,
         run_workspace=_transitions_workspace,
         run_file=_transitions_file,
+    ),
+    "umbrella": Check(
+        name="umbrella",
+        description=(
+            "Umbrella `## Children` body list ↔ reverse-`parent:` "
+            "consistency. Catches children present in the body but not "
+            "via `parent:`, and children via `parent:` not listed in "
+            "the body. Workspace-only (relationship is cross-file)."
+        ),
+        supports_file_scope=False,
+        run_workspace=_umbrella_workspace,
+        run_file=_umbrella_file,
     ),
 }

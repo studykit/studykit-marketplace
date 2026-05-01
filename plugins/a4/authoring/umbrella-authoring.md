@@ -56,7 +56,7 @@ updated: YYYY-MM-DD
 - `cycle` — umbrellas have no implement loop. Children carry their own cycles.
 - `parent` — nested umbrellas are not supported in this revision. Each umbrella is a top-level aggregation.
 
-- `title` is required and must not be a placeholder; the writer rejects `<title>`-shaped strings.
+- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: umbrella` is fixed for files under `a4/umbrella/`.
 
 ### Lifecycle
@@ -69,9 +69,9 @@ updated: YYYY-MM-DD
 
 `complete` is **author-judged** — there is no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains `pending` / `progress` / `failing`, prefer keeping the umbrella `open`; the next session will see the umbrella's narrative even while individual children are still in flight.
 
-When all children are `complete` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children. A future drift detector may surface this as a soft signal.
+When all children are `complete` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children. Either flip the umbrella to `complete` once the integration outcome is met, or leave it open intentionally for further follow-up children.
 
-The PostToolUse cascade hook refreshes `updated:` on direct edits but does not flip umbrella status based on children. There is no umbrella-driven cascade onto children either: discarding an umbrella does not discard its children. If the children should also be discarded, flip them individually.
+Direct edits refresh `updated:` automatically, but no automatic cascade flips umbrella status based on children. There is no umbrella-driven cascade onto children either: discarding an umbrella does not discard its children. If the children should also be discarded, flip them individually.
 
 ## Body shape
 
@@ -80,7 +80,7 @@ The PostToolUse cascade hook refreshes `updated:` on direct edits but does not f
 **Required:**
 
 - `## Description` — what the children together accomplish. Brief — one or two paragraphs. Link the children inline by markdown link when narratively useful.
-- `## Children` — explicit append-only list of child paths as markdown links, one bullet per child. The validator's reverse-`parent:` resolver remains authoritative; this section exists so a human reader sees the membership at a glance and so children added later are easy to spot.
+- `## Children` — explicit append-only list of child paths as markdown links, one bullet per child. The reverse-`parent:` lookup (across all issue files whose `parent:` resolves to this umbrella) remains the authoritative membership; this section exists so a human reader sees the membership at a glance and so children added later are easy to spot.
 
   ```markdown
   ## Children
@@ -120,7 +120,7 @@ The frontmatter `parent:` makes the umbrella *discoverable*; the inline citation
 
 - **Required section missing** (`## Description`, `## Children`, `## Log`).
 - **Children listed only via reverse-`parent:`** — the body `## Children` section is the human-readable index; emit it.
-- **Forbidden field set** (`implements`, `spec`, `depends_on`, `artifacts`, `cycle`, `parent`) — the validator will flag it. Move the field to the children where it belongs.
+- **Forbidden field set** (`implements`, `spec`, `depends_on`, `artifacts`, `cycle`, `parent`) — declaring any of them is invalid. Move the field to the children where it belongs.
 - **Wrong folder** — umbrella files must live under `a4/umbrella/`. A `type: umbrella` file outside that folder is a routing error.
 
 ## Don't

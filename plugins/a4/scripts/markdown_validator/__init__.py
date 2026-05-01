@@ -10,6 +10,8 @@ Library home for the validator categories:
   - ``transitions`` — git-diff-based status transition legality (HEAD
     vs working tree). Safety net for hand edits the PostToolUse
     cascade hook silently skipped (illegal-jump branch).
+  - ``umbrella_consistency`` — ``umbrella/*.md`` body's ``## Children``
+    list ↔ reverse-``parent:`` agreement.
 
 Plus a shared resolver:
 
@@ -25,7 +27,14 @@ directly when it needs category-specific output shapes.
 
 from __future__ import annotations
 
-from . import frontmatter, refs, registry, status_consistency, transitions
+from . import (
+    frontmatter,
+    refs,
+    registry,
+    status_consistency,
+    transitions,
+    umbrella_consistency,
+)
 from .refs import RefIndex, ResolvedRef
 from .registry import CHECKS, Check, Issue
 
@@ -34,6 +43,7 @@ __all__ = [
     "refs",
     "status_consistency",
     "transitions",
+    "umbrella_consistency",
     "registry",
     "CHECKS",
     "Check",

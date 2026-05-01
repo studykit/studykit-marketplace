@@ -71,7 +71,7 @@ deprecated → superseded
 superseded → (terminal)
 ```
 
-- Edit `status:` directly. The PostToolUse cascade hook detects the transition, refreshes `updated:`, and runs any cross-file cascade.
+- Edit `status:` directly. The transition refreshes `updated:` automatically and runs any cross-file cascade.
 - `draft → superseded` is **disallowed** — supersession presumes the predecessor was at one point live.
 - `active → superseded` is **automatic** — it fires when a successor spec with `supersedes: [<this>]` reaches `active`. Do not flip it by hand.
 - `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.
@@ -104,7 +104,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 ## Common mistakes
 
 - **Stray content above the first H2 heading.** Anything in the body that is not whitespace must live under an H2 heading.
-- **`## Context` or `## Specification` missing.** Both are required by convention; the writer rejects the `→ active` flip until they are present and non-empty.
+- **`## Context` or `## Specification` missing.** Both are required by convention; the `→ active` flip is invalid until they are present and non-empty.
 - **H2 not in column 0 or not Title Case.** Section boundaries fire only on column-0 H2 headings whose text is Title Case with single-space separators.
 - **Sections nested inside other sections.** Sections do not nest; every section sits at the body's top level. Use H3+ for inner structure.
 - **H1 in body.** Title is frontmatter-only.
@@ -112,7 +112,7 @@ Body cross-references are standard markdown links — `[text](relative/path.md)`
 ## Don't
 
 - **Don't auto-populate `supersedes:`.** It is an explicit user decision in the authoring conversation.
-- **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the cascade hook flips the prior spec's status automatically when the successor reaches `active`.
+- **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the prior spec's status flips automatically when the successor reaches `active`.
 - **Don't pack multiple decisions into one spec.** One spec per decision; each gets its own id, supersede chain, and `## Decision Log`.
 - **Don't author a spec post-hoc just to document existing code.** Specs are decisions, not retrospectives.
 - **Don't introduce a separate `decisions/` slot.** All decision rationale lives inside the spec body's `## Decision Log`.
