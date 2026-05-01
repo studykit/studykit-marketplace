@@ -1,7 +1,5 @@
 # a4 — roadmap wiki authoring
 
-> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
-
 `a4/roadmap.md` is the **milestone narrative wiki**. It groups UCs into milestones, names the dependency graph between them, and records Shared Integration Points the architecture exposes.
 
 Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./body-conventions.md`.

@@ -1,7 +1,5 @@
 # a4 — umbrella authoring
 
-> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
-
 An umbrella at `a4/umbrella/<id>-<slug>.md` is a **narrative-aggregation parent** — a file purpose-built to host the cross-cutting narrative that several issue-family children (`task` / `bug` / `spike` / `research`) share. It is *not* an implementation unit: an umbrella has no `## Files`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children; the umbrella exists so the next session reading any one child can discover the shared decisions through that child's `parent:` pointer.
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`. The narrative-home semantics (entry format, inline cross-references) live in `./body-conventions.md#log`; the `parent:` discovery contract lives in `./frontmatter-universals.md` §`parent` and shared narrative.

@@ -1,7 +1,5 @@
 # a4 Frontmatter Universals
 
-> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
-
 Cross-cutting frontmatter rules that apply to every markdown file under `a4/`. Per-type field tables (required vs optional fields, enum values, types) live in each `<type>-authoring.md`. Body-side conventions live in `./body-conventions.md`. This document plus the per-type files are the binding shape.
 
 ## Scope

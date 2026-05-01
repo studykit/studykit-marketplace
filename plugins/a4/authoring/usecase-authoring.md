@@ -1,7 +1,5 @@
 # a4 — usecase authoring
 
-> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
-
 A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
 
 Companion to `./frontmatter-universals.md`, `./body-conventions.md`.

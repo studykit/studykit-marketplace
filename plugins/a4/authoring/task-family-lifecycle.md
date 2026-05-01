@@ -1,7 +1,5 @@
 # a4 — task family lifecycle (shared)
 
-> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
-
 The four task issue families (`task`, `bug`, `spike`, `research`) share **one** lifecycle, status enum, writer rules, and `complete` initial-status preflight. This file is the single source of truth; per-family authoring files cite it and add only family-specific deltas.
 
 > `umbrella` is **not** part of the task family. It is a narrative-aggregation parent with its own lifecycle (`open | complete | discarded`), no implement loop, and no UC-cascade. See `./umbrella-authoring.md`.

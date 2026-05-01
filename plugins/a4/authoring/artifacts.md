@@ -1,7 +1,5 @@
 # a4 — task artifacts convention
 
-> **Audience:** Workspace authors writing `<project-root>/a4/**/*.md` files (or LLMs editing them on the user's behalf). Not for a4 plugin contributors — implementation references live in `../dev/`.
-
 Cross-family reference for the **artifact directory** that may sit alongside a task at project-root `artifacts/<type>/<id>-<slug>/`. Per-family shape, the `artifacts:` artifact-only contract, the spike archive convention, and curation policy live here so all four task issue families (`task` / `bug` / `spike` / `research`) cite a single source.
 
 Per-family authoring files (`{task,bug,spike,research}-authoring.md`) cite this document for shared rules and add only family-specific notes (e.g., the spike's "primary deliverable" status, the bug's "evidence-only" framing).

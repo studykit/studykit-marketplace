@@ -1,7 +1,5 @@
 # a4 Commit Message Convention
 
-> **Audience:** Anyone authoring commits in a project that uses an a4 workspace — workspace authors editing `<project-root>/a4/**/*.md`, and humans or LLMs implementing or resolving what those artifacts track. Not for a4 plugin contributors editing `plugins/a4/` itself — implementation references live in `../dev/`.
-
 Subject form for every commit derived from an a4 workspace artifact. A commit is "derived" if it edits an artifact file (authoring, status flip, body revision) **or** carries work that traces back to an artifact (per-task implementation, per-issue fix, per-UC ship work). Commits with no artifact in scope but still touching the workspace (wiki polish, workspace meta) are ID-less. Edits inside `plugins/a4/` itself, and project work unrelated to the workspace, are outside this convention.
 
 ## Forms
