@@ -25,15 +25,14 @@ Subagents do not inherit the PreToolUse contract injection of the parent session
 
 ## What You Receive
 
-From the invoking `roadmap` / `run` skill:
+From the invoking `run` skill:
 
 - **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `task/`, `bug/`, `spike/`, `research/`; the folder must match the file's `type:` frontmatter).
 - **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify).
-- **Roadmap file path** *(optional)* — absolute path to `a4/roadmap.md`. Read for Shared Integration Points only; L&V content there is a one-line link to bootstrap, not authoritative.
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
 - **UC file paths** — absolute paths to each `a4/usecase/<id>-<slug>.md` referenced in the task's `implements:` frontmatter.
 
-Read the task file first, then bootstrap.md's `## Verify` section (Verified Commands subsection), then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If a `roadmap.md` was provided and Shared Integration Points apply to your files, read that subsection inside its `## Plan`.
+Read the task file first, then bootstrap.md's `## Verify` section (Verified Commands subsection), then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If the task's `## Description` records a Shared Integration Points pattern (a file modified by 3+ tasks), follow that pattern when touching the shared file.
 
 ## What You Do
 
@@ -79,10 +78,10 @@ This exit is parallel to the spec-ambiguity exit — same halt + review-item sha
 ## Rules
 
 - Implement only the assigned task.
-- Do not modify other task files, `roadmap.md`, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
+- Do not modify other task files, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
 - **UC files**: edit `status:` directly to flip lifecycle. Do **not** hand-edit `updated:` — the PostToolUse cascade hook refreshes it. The hook does **not** write into `## Log`; that body section is optional and hand-maintained. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message instead of writing.
 - A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable. Return failure instead of starting; do not write any status onto that UC.
-- Record **factual results only** — do not classify issues as roadmap / arch / usecase. Surface observations neutrally.
+- Record **factual results only** — do not classify issues as task / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.
 - All unit tests must pass before declaring success.
 

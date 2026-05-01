@@ -60,8 +60,8 @@ If the request is ambiguous between the two, ask one clarifying question before 
 
 | Identifier | What it shows |
 |------------|---------------|
-| `wiki-pages` | presence + last-updated for the 7 canonical wiki kinds |
-| `stage-progress` | mixed-axis view of usecase / arch / bootstrap / roadmap / impl |
+| `wiki-pages` | presence + last-updated for the canonical wiki kinds |
+| `stage-progress` | mixed-axis view of usecase / arch / bootstrap / impl |
 | `issue-counts` | per folder × {active, in_progress, terminal, total}, plus by-kind for review/task |
 | `usecases-by-source` | UC `source:` distribution (Reverse-only detection) |
 | `open-reviews` | open / in-progress reviews, sorted by priority then created then id |
