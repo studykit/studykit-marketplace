@@ -37,7 +37,7 @@ Commit subject:
 #<task-id> docs(a4): discard <type> <slug>
 ```
 
-Following `../../authoring/commit-message-convention.md`. Suggest the commit when the user confirms; do not auto-commit.
+Following `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`. Suggest the commit when the user confirms; do not auto-commit.
 
 ## Wrap Up
 

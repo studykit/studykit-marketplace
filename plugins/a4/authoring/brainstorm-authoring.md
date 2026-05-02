@@ -1,6 +1,6 @@
 # a4 — brainstorm authoring
 
-A brainstorm at `a4/brainstorm/<id>-<slug>.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
+A brainstorm at `a4/brainstorm/<id>-<slug>.md` is an **idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into concrete artifacts (spec / usecase / task).
 
 Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
@@ -32,7 +32,7 @@ tags: []              # free-form
 - `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
-- `promoted:` lists pipeline artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
+- `promoted:` lists artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
 
 ### Lifecycle and writer ownership
 
@@ -45,7 +45,7 @@ discarded → (terminal)
 Per-status meaning:
 
 - `open` — Session captured but no idea has graduated yet. Default initial status.
-- `promoted` — At least one idea graduated into a pipeline artifact named in `promoted:`. Terminal.
+- `promoted` — At least one idea graduated into an artifact named in `promoted:`. Terminal.
 - `discarded` — Session deliberately dropped (overtaken by events, no idea worth pursuing). Terminal.
 
 Writer rules (brainstorm-specific):
@@ -59,7 +59,7 @@ Writer rules (brainstorm-specific):
 
 **Required:**
 
-- `## Ideas` — the session's idea capture. Typically a bullet list, with one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a markdown link to the resulting pipeline artifact (e.g., `- caching: pre-warm on session boot → [spec/8-caching-strategy](../spec/8-caching-strategy.md)`).
+- `## Ideas` — the session's idea capture. Typically a bullet list, with one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a markdown link to the resulting artifact (e.g., `- caching: pre-warm on session boot → [spec/8-caching-strategy](../spec/8-caching-strategy.md)`).
 
 **Optional, emit only when applicable:**
 

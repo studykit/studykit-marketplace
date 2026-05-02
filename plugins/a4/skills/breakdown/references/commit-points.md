@@ -1,6 +1,6 @@
 # breakdown Commit Points
 
-All commit subjects follow `../../../authoring/commit-message-convention.md`.
+All commit subjects follow `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
 
 ## Task batch derivation
 

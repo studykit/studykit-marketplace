@@ -46,7 +46,7 @@ The schema fixes **one direction per relationship** — the forward direction is
 | `supersedes` | `superseded_by` | derived |
 | `parent` | `children` | derived |
 | `target` | (review backlinks; wiki-page backlinks) | derived |
-| `promoted` | (idea / brainstorm → pipeline backlinks) | derived |
+| `promoted` | (idea / brainstorm → promotion-target backlinks) | derived |
 | `related` | (symmetric; no reverse) | — |
 
 ## Status changes and cascades
@@ -79,7 +79,7 @@ Shared across all issue types. Omit fields that are empty, or use `[]`.
 | `target` | review | any issue path(s) and/or wiki basename(s) | What this review item is about and which wiki pages must record the resolution; mixed lists are allowed |
 | `spec` | task (`task` / `bug` only) | spec | Specs that govern this task |
 | `supersedes` | spec, usecase | prior spec(s) / usecase(s) | This item replaces the referenced item(s) of the same family |
-| `promoted` | idea, brainstorm | spec, usecase, task, brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into pipeline artifacts; idea: a single captured thought becomes a concrete artifact) |
+| `promoted` | idea, brainstorm | spec, usecase, task, brainstorm | Where this item's content graduated to (brainstorm: one-to-many ideas grow into concrete artifacts; idea: a single captured thought becomes a concrete artifact) |
 | `parent` | any issue except `umbrella` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or an `umbrella` parent; `usecase` and `spec` parents are restricted to same-type; `umbrella` itself takes no parent) | Parent in a decomposition / derivation hierarchy or aggregation grouping. Used as the home for narrative shared across siblings — see `./issue-body.md` § `## Log` and `./umbrella-authoring.md`. When set, the child's frontmatter `parent:` is what makes the parent discoverable for reverse `children` lookup |
 | `related` | any | any | Generic catchall for ties that don't fit other fields but warrant frontmatter-level searchability |
 

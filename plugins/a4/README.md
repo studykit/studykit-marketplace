@@ -1,6 +1,6 @@
 # a4
 
-Manages `a4/` as a git-native wiki + issue tracker — usecase, architecture, and implementation-plan authoring, plus autonomous execution, brainstorming, and decision records.
+Manages `a4/` as a git-native wiki + issue tracker — usecase / domain / architecture design with task batch derivation (`/a4:breakdown`) and autonomous implementation, plus brainstorming and decision records.
 
 ## Prerequisites
 
@@ -86,8 +86,8 @@ Three hook flows share the same events, dispatched through a single Python entry
     research/<id>-<slug>.md                   #    on read/edit). Body is the deliverable for research.
     review/<id>-<slug>.md                     # Findings, gaps, questions (unified)
     spec/<id>-<slug>.md                       # specs
-    idea/<id>-<slug>.md                       # Pre-pipeline quick-capture ideas
-    brainstorm/<id>-<slug>.md                 # Pre-pipeline brainstorming sessions
+    idea/<id>-<slug>.md                       # Quick-capture ideas
+    brainstorm/<id>-<slug>.md                 # Brainstorming sessions
 
     archive/                                  # Closed items; folder = archived flag
 

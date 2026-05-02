@@ -14,4 +14,4 @@ If yes, write `a4/nfr.md` with:
 
 Skip creating the file when there are no NFRs — `nfr.md` is optional.
 
-The full authoring contract for `a4/nfr.md` is in `../../../authoring/nfr-authoring.md`.
+The full authoring contract for `a4/nfr.md` is in `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md`.

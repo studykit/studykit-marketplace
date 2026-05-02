@@ -1,6 +1,6 @@
 # a4 — idea authoring
 
-An idea at `a4/idea/<id>-<slug>.md` is a **pre-pipeline quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or brainstorm via the `promoted:` field.
+An idea at `a4/idea/<id>-<slug>.md` is a **quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or brainstorm via the `promoted:` field.
 
 Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
@@ -38,7 +38,7 @@ labels: []            # free-form tags
 
 - `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
+- `promoted:` lists the artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.
 
 ### Deliberately excluded fields
@@ -63,7 +63,7 @@ discarded → (terminal)
 Per-status meaning:
 
 - `open` — Captured but not yet graduated. Default initial status.
-- `promoted` — Idea graduated into one or more pipeline artifacts named in `promoted:`. Terminal.
+- `promoted` — Idea graduated into one or more artifacts named in `promoted:`. Terminal.
 - `discarded` — Idea deliberately dropped (already covered, not aligned, no longer worth capturing). Terminal.
 
 Writer rules (idea-specific):
@@ -97,6 +97,6 @@ Unknown H2 headings are tolerated.
 
 - **Don't author an idea when the input is a gap in current spec work.** That is a `kind: gap` review item with `target:` populated. Ideas are independent possibilities, not blockers.
 - **Don't introduce a `target:` field.** Ideas are independent by definition; a `target:` would blur the boundary with `review/`.
-- **Don't pre-populate `promoted:` at create time.** The list is filled when the idea actually graduates into a pipeline artifact.
+- **Don't pre-populate `promoted:` at create time.** The list is filled when the idea actually graduates into an artifact.
 - **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; drift is reported separately but does not mutate files.
 - **Don't pack long-form prose into the body.** Long write-ups belong in specs, use cases, or wiki pages. Ideas are quick-capture; if the content has grown, promote it.

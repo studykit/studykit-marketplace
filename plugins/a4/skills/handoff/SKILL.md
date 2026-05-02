@@ -147,7 +147,7 @@ Available sections (drop any that have no content):
 ```
 
 - `Goal` — what the user was trying to accomplish this session, if not obvious from the touched files alone.
-- `Current State` — branch / commit context, the starting handoff file when useful, and which a4 pipeline stage(s) the session is currently in (`usecase` / `domain` / `arch` / `breakdown` / `run` / `bug` / etc.). Drop the section if the branch is at `origin/HEAD` and there is nothing non-obvious to record.
+- `Current State` — branch / commit context, the starting handoff file when useful, and which a4 skill(s) the session has been running (`usecase` / `domain` / `arch` / `breakdown` / `auto-coding` / `bug` / etc.). Drop the section if the branch is at `origin/HEAD` and there is nothing non-obvious to record.
 - `a4 Workspace Touchpoints` — **index only.** A flat list of every workspace file touched or relied on this session, each as: file path → current `status:` (for issue-family / UC / spec / review files) → one-line *why this session interacted with it*. Do **not** restate the file's description, files table, AC, body, or current state; per-artifact resume context lives in each file's `## Resume` (per step 1). Group by issue family / wiki page only when the list is long enough to benefit. Suggested layout:
 
   ```markdown

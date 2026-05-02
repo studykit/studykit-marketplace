@@ -1,4 +1,4 @@
 {
   "name": "a4",
-  "description": "a4/ workspace management — wiki + issues spec authoring, usecase/architecture/implementation-plan design, brainstorming, decision-making"
+  "description": "a4/ workspace management — wiki + issues spec authoring, usecase / domain / architecture design with task batch derivation (/a4:breakdown) and autonomous implementation, brainstorming, and decision-making"
 }

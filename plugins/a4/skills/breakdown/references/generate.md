@@ -26,14 +26,14 @@ When a single UC's flow is large enough to warrant splitting, the split is acros
 
 For every task in the derived batch, populate:
 
-- **`type: task`**, **`status: open`** (initial lifecycle state — see `../../../authoring/task-authoring.md` § Lifecycle).
+- **`type: task`**, **`status: open`** (initial lifecycle state — see `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` § Lifecycle).
 - **`implements:`** — list of `usecase/<id>-<slug>` paths the task delivers. Auto-filled from the candidate grouping. Empty list when the task is purely spec-driven.
 - **`spec:`** — list of `spec/<id>-<slug>` paths the task realizes. Auto-filled from the candidate grouping. Empty when purely UC-driven.
 - **`depends_on:`** — `task/<id>-<slug>` paths for prerequisite tasks (this batch's tasks plus existing tasks the new ones rely on). Derived from the candidate grouping plus codebase imports.
 - **`## Description`** — short narrative of what this task delivers, written against the upstream sources' Flow / Validation / Specification.
-- **`## Files`** — auto-filled from Step 2 codebase exploration. Format per `../../../authoring/task-authoring.md` § Body shape (Action / Path / Change table). Best-effort hints; reviewers and the user iterate before promotion.
+- **`## Files`** — auto-filled from Step 2 codebase exploration. Format per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` § Body shape (Action / Path / Change table). Best-effort hints; reviewers and the user iterate before promotion.
 - **`## Acceptance Criteria`** — derived from each `implements:`'s UC `## Flow` / `## Validation` / `## Error Handling` and each `spec:`'s `## Specification`. Reference `ci.md` `## How to run tests` commands when AC names a runnable check.
-- **`## Unit Test Strategy`** — scenarios + isolation per `../../../authoring/task-authoring.md`.
+- **`## Unit Test Strategy`** — scenarios + isolation per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`.
 
 The reverse view (which tasks implement a UC, which tasks realize a spec) is computed on demand by `search.py` — there is no UC / spec frontmatter field to refresh.
 
@@ -56,7 +56,7 @@ Skipped candidates appear in the wrap-up summary so the user can decide whether 
 Exit plan mode.
 
 - Allocate ids via `allocate_id.py` (one call per new task, in declaration order).
-- Write each `a4/task/<id>-<slug>.md` per `../../../authoring/task-authoring.md`.
+- Write each `a4/task/<id>-<slug>.md` per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`.
 - Do not write any wiki page. Do not append `## Change Logs` to any wiki — this skill no longer owns one.
 
 ## Summary message

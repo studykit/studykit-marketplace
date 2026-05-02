@@ -1,6 +1,6 @@
 ---
 name: idea
-description: "This skill should be used when the user explicitly invokes /a4:idea inside a project that uses the a4 plugin's a4/ workflow. Captures a one-line pre-pipeline idea as a new issue file at a4/idea/<id>-<slug>.md, or discards an existing one. The skill allocates the next global id, slugifies the provided text, and writes the frontmatter + body so the user only has to type the idea itself."
+description: "This skill should be used when the user explicitly invokes /a4:idea inside a project that uses the a4 plugin's a4/ workflow. Captures a one-line idea as a new issue file at a4/idea/<id>-<slug>.md, or discards an existing one. The skill allocates the next global id, slugifies the provided text, and writes the frontmatter + body so the user only has to type the idea itself."
 argument-hint: "<one-line idea> | discard <id-or-slug> [reason]"
 disable-model-invocation: true
 allowed-tools: Bash, Write, Read, Edit, Glob
@@ -10,7 +10,7 @@ allowed-tools: Bash, Write, Read, Edit, Glob
 
 Two modes:
 
-- **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for pre-pipeline possibilities.
+- **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for raw possibilities.
 - **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, bumps `updated:`, optionally appends a one-line `## Change Logs` bullet.
 
 ## Context
