@@ -12,8 +12,8 @@ Subcommands:
                  transitions precisely (pre vs post on disk, instead of
                  HEAD vs working tree).
                  (2) Inject the type-specific authoring-contract pointers
-                 as ``additionalContext`` once per (file, type) per
-                 session. Silent on subsequent edits to the same file.
+                 as ``additionalContext`` once per type per session.
+                 Silent on subsequent edits to any file of the same type.
   post-edit      PostToolUse on Write|Edit|MultiEdit. Record the edited
                  a4/*.md path (session-scoped), report cross-file
                  status-consistency mismatches within the edited file's
@@ -31,10 +31,17 @@ Subcommands:
                  and inject resolved `a4/<type>/<id>-<slug>.md` paths as
                  `additionalContext` so Claude reads the file directly
                  instead of searching for it.
+  session-start  SessionStart. Inject the canonical type → file-location
+                 map for the `<project-root>/a4/` workspace as
+                 `additionalContext` so the LLM places new files in the
+                 right folder before any PreToolUse fires. Built
+                 dynamically from `common.WIKI_TYPES` and
+                 `common.ISSUE_FOLDERS` — adding a new type updates the
+                 injection automatically. Silent when the project has
+                 no `a4/` directory.
 
-SessionStart no longer triggers workspace-wide status-consistency
-reporting — that sweep moved to manual invocation via `/a4:validate`
-(or `validate.py`).
+SessionStart does not run workspace-wide status-consistency reporting —
+that sweep is manual via `/a4:validate` (or `validate.py`).
 
 Conventions (state classification, lifecycle symmetry, language/invocation,
 in-event ordering, non-blocking policy, output channel usage) live in
@@ -80,6 +87,8 @@ def main() -> int:
         return _stop()
     if sub == "user-prompt":
         return _user_prompt()
+    if sub == "session-start":
+        return _session_start()
     return 0
 
 
@@ -151,9 +160,9 @@ def _pre_edit() -> int:
           silent no-ops — the post-edit consumer treats absence as
           "no transition to detect".
       (2) Inject type-specific authoring-contract pointers once per
-          (file, type) per session, for both existing-file edits and
-          new-file Writes (issue creation). Sole mechanism for
-          surfacing authoring contracts at edit time.
+          type per session, for both existing-file edits and new-file
+          Writes (issue creation). Sole mechanism for surfacing
+          authoring contracts at edit time.
 
     Always exits 0.
     """
@@ -214,17 +223,19 @@ def _pre_edit() -> int:
 # the contract; only an imminent Write/Edit/MultiEdit does. Covers both
 # edits to existing files and new-file Writes (issue creation) — type
 # is resolved by path, which works without on-disk frontmatter. Deduped
-# per (file_path, type) per session — repeated edits to the same file
-# inject once and stay silent.
+# per type per session — the contract is a per-type binding (the same
+# `<type>-authoring.md` applies to every file of that type), so once
+# the LLM has seen the umbrella/task/... contract this session, editing
+# another file of the same type re-emits nothing.
 #
 # Type resolution is by path (`common.WIKI_TYPES` / `common.ISSUE_FOLDERS`),
 # not by frontmatter parse — the a4 layout pins type by location, so an
 # extra file IO is unnecessary. Archive files are skipped.
 #
 # Session-scoped state at `.claude/tmp/a4-edited/a4-injected-<sid>.txt`,
-# one `<file_path>\t<type>` per line. Cleaned up by the same SessionEnd
-# / SessionStart-sweep paths that handle the other a4-edited family
-# files (`hooks/cleanup-edited-a4.sh`, `hooks/sweep-old-edited-a4.sh`).
+# one `<type>` per line. Cleaned up by the same SessionEnd / SessionStart-sweep
+# paths that handle the other a4-edited family files
+# (`hooks/cleanup-edited-a4.sh`, `hooks/sweep-old-edited-a4.sh`).
 
 
 _TASK_FAMILY_TYPES = frozenset({"task", "bug", "spike", "research"})
@@ -261,24 +272,25 @@ def _injected_path(project_dir: str, session_id: str) -> "Path":
     )
 
 
-def _read_injected(project_dir: str, session_id: str) -> set:
+def _read_injected(project_dir: str, session_id: str) -> set[str]:
     path = _injected_path(project_dir, session_id)
     if not path.is_file():
         return set()
-    out: set = set()
     try:
-        for line in path.read_text(encoding="utf-8").splitlines():
-            if "\t" not in line:
-                continue
-            fp, tp = line.split("\t", 1)
-            out.add((fp, tp))
+        # Strip any pre-existing `<file>\t<type>` lines too — older sessions
+        # may still have the (file, type) format on disk; treat the type
+        # column as authoritative and ignore the file column.
+        return {
+            (line.split("\t", 1)[1] if "\t" in line else line).strip()
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        }
     except OSError:
         return set()
-    return out
 
 
 def _record_injected(
-    project_dir: str, session_id: str, file_path: str, type_value: str
+    project_dir: str, session_id: str, type_value: str
 ) -> None:
     path = _injected_path(project_dir, session_id)
     try:
@@ -287,7 +299,7 @@ def _record_injected(
         return
     try:
         with path.open("a", encoding="utf-8") as f:
-            f.write(f"{file_path}\t{type_value}\n")
+            f.write(f"{type_value}\n")
     except OSError:
         return
 
@@ -335,9 +347,9 @@ def _maybe_inject_authoring_contract(
     project_dir: str,
     session_id: str,
 ) -> None:
-    """Inject pointer-style authoring-contract context once per
-    (file, type) per session. Silent when the type cannot be resolved
-    from path (archive files, unrecognized layout).
+    """Inject pointer-style authoring-contract context once per type
+    per session. Silent when the type cannot be resolved from path
+    (archive files, unrecognized layout).
     """
     type_value = _resolve_type_from_path(abs_path, a4_dir)
     if not type_value:
@@ -349,10 +361,9 @@ def _maybe_inject_authoring_contract(
         return
 
     already = _read_injected(project_dir, session_id)
-    key = (file_path, type_value)
-    if key in already:
+    if type_value in already:
         return
-    _record_injected(project_dir, session_id, file_path, type_value)
+    _record_injected(project_dir, session_id, type_value)
 
     display_rel = (
         file_path[len(project_dir) + 1 :]
@@ -395,8 +406,8 @@ def _maybe_inject_authoring_contract(
         "writing — they are the binding schema/body contract for this "
         "type, not optional.\n\n"
         f"{body}\n\n"
-        "Injected once per (file, type) per session — subsequent edits "
-        "will not re-emit this notice."
+        f"Injected once per `type: {type_value}` per session — subsequent "
+        "edits to any file of this type will not re-emit this notice."
     )
     _emit(
         {
@@ -1000,6 +1011,75 @@ def _record_resolved_ids(
                 f.write(t + "\n")
     except OSError:
         return
+
+
+# ------------------------- session-start (SessionStart) -------------------
+
+
+def _session_start() -> int:
+    """Inject the canonical type → file-location map for `a4/` as
+    `additionalContext`.
+
+    Surfaces the layout (issue families as flat `a4/<type>/<id>-<slug>.md`;
+    wiki pages as top-level `a4/<type>.md`) so the LLM places new files
+    correctly before the first Write/Edit triggers PreToolUse
+    contract-injection. Built from `common.WIKI_TYPES` and
+    `common.ISSUE_FOLDERS` so adding a new type does not require touching
+    this function.
+
+    Silent when the project has no `a4/` directory (non-a4 projects get
+    no SessionStart noise). Always exits 0.
+    """
+    import os
+
+    # Drain stdin defensively. Claude Code pipes a JSON payload to
+    # SessionStart hooks; we read no fields, but a closed pipe on an
+    # unread parent stdin can block.
+    try:
+        sys.stdin.read()
+    except OSError:
+        pass
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return 0
+    a4_dir = Path(project_dir) / "a4"
+    if not a4_dir.is_dir():
+        return 0
+
+    try:
+        from common import ISSUE_FOLDERS, WIKI_TYPES
+    except ImportError:
+        return 0
+
+    issue_lines = [
+        f"- `{t}` → `a4/{t}/<id>-<slug>.md`" for t in ISSUE_FOLDERS
+    ]
+    wiki_lines = [f"- `{t}` → `a4/{t}.md`" for t in sorted(WIKI_TYPES)]
+
+    context = (
+        "## a4/ workspace — type → file location\n\n"
+        "Canonical layout for files in `<project-root>/a4/`. Use these "
+        "paths when creating or referencing workspace files.\n\n"
+        "**Issue families** (one file per id, flat folder):\n\n"
+        + "\n".join(issue_lines)
+        + "\n\n**Wiki pages** (single top-level file per type):\n\n"
+        + "\n".join(wiki_lines)
+        + "\n\nIds come from `plugins/a4/scripts/allocate_id.py` "
+        "(globally monotonic; never reuse). Per-type field tables and "
+        "lifecycle live in `plugins/a4/authoring/<type>-authoring.md` — "
+        "the PreToolUse contract-injection hook surfaces them on the "
+        "first edit per (file, type) per session."
+    )
+    _emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": context,
+            }
+        }
+    )
+    return 0
 
 
 # -------------------------- shared helpers --------------------------------

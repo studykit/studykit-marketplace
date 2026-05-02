@@ -189,11 +189,18 @@ in **write/cleanup → read/report** order:
   describe the *post-reconciliation* state.
 - Read-only reports run last.
 
-SessionStart currently has only one entry — `sweep-old-edited-a4.sh`,
-the safety-net cleanup (bash). When new SessionStart hooks are added,
-place them according to the rule above (cleanup → reconciliation →
-read-only reports); if the rule is ambiguous, extend this section
-rather than improvising.
+SessionStart currently has two entries, ordered per the rule above:
+1. `sweep-old-edited-a4.sh` — safety-net cleanup (bash) for orphan
+   `a4-edited-*` record files older than 1 day.
+2. `a4_hook.py session-start` — read-only injection of the type →
+   file-location map (`a4/<type>/<id>-<slug>.md` for issue families,
+   `a4/<type>.md` for wiki pages) as `additionalContext`. Built from
+   `common.WIKI_TYPES` / `common.ISSUE_FOLDERS`; silent when the project
+   has no `a4/` directory.
+
+When new SessionStart hooks are added, place them according to the rule
+above (cleanup → reconciliation → read-only reports); if the rule is
+ambiguous, extend this section rather than improvising.
 
 ---
 
