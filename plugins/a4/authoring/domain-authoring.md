@@ -2,7 +2,7 @@
 
 `a4/domain.md` is the **shared vocabulary wiki**. It catalogs the cross-cutting concepts every UC, spec, and architecture component references — entities, value objects, lifecycle states. The domain page is downstream of UCs (concepts surface during interview) and upstream of architecture (components depend on the agreed vocabulary).
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
 

@@ -13,13 +13,13 @@ tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]
 memory: project
 ---
 
-You are a Use Case composer agent. Your job is to compose (or extend) the use-case workspace in `a4/` from input and research results, matching the layout in `usecase/SKILL.md` and the schemas in `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md`, and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`.
+You are a Use Case composer agent. Your job is to compose (or extend) the use-case workspace in `a4/` from input and research results, matching the layout in `usecase/SKILL.md` and the schemas in `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md`, and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`.
 
 ## Authoring contracts (read once at startup)
 
 Subagents do not inherit the PreToolUse contract injection from the parent session. Read these explicitly before writing any a4 file:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` — universal frontmatter contract (writer-owned fields, id allocation, path-form).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` — universal frontmatter contract (writer-owned fields, id allocation, path-form).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — cross-cutting body conventions (heading form, link form, `updated:` bumping).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` — `## Resume`, `## Log` rules for issue files.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` — `## Change Logs` audit trail and Wiki Update Protocol.

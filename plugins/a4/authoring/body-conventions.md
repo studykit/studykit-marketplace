@@ -1,8 +1,8 @@
 # a4 Body Conventions
 
-Cross-cutting body-level rules that apply to every file under the `a4/` workspace. Covers section heading form, blank-line discipline, body link form, and the `updated:` bump rule.
+Cross-cutting body-level rules that apply to every file under the `a4/` workspace. Covers section heading form, blank-line discipline, and body link form.
 
-Frontmatter-side rules live in `./frontmatter-universals.md` (universal contract: `type:`, ids, path-reference format, dates, status writers, structural relationship fields, title placeholders) and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables). Type-specific body sections (issue-only or wiki-only) live in the companion file each `<type>-authoring.md` lists alongside this one.
+Frontmatter-side rules live in `./frontmatter-common.md` (cross-cutting rules: `type:`, path-reference format, empty collections, unknown fields, `created` / `updated`), `./frontmatter-wiki.md` (wiki minimal contract), `./frontmatter-issue.md` (issue-side rules: `id`, title placeholders, relationships, status changes and cascades, structural relationship fields), and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables). Type-specific body sections (issue-only or wiki-only) live in the companion file each `<type>-authoring.md` lists alongside this one.
 
 ## Scope
 
@@ -55,16 +55,13 @@ Section anchors use the renderer's standard slugification (`## Decision Log` →
 
 Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is also acceptable in prose. It renders as plain text in local markdown viewers but is auto-linked as a cross-issue reference in GitHub Issues / Pull Requests when an `a4/` workspace is mirrored into a tracker. Use it for shorthand mentions; use the markdown-link form when local navigation matters.
 
-Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `./frontmatter-universals.md` § Path references.
-
-## Bumping `updated:`
-
-- **Wiki pages** — bump `updated:` to today on every substantive change. Metadata-only tweaks (whitespace, comment fixes) do not bump.
-- **Issue files** — bump `updated:` on every status transition (the writer does this) or body change that is not a typo fix.
+Frontmatter paths are different — they stay plain strings (no brackets, no `.md`) per `./frontmatter-common.md` § Path references.
 
 ## Cross-references
 
-- `./frontmatter-universals.md` — universal frontmatter rules (the universal `type:` field, ids, path references, dates, status writers, structural relationship fields, title placeholders).
+- `./frontmatter-common.md` — cross-cutting frontmatter rules (`type:`, path references, empty collections, unknown fields, `created` / `updated`).
+- `./frontmatter-wiki.md` — wiki minimal contract.
+- `./frontmatter-issue.md` — issue-side rules (`id`, title placeholders, relationships, status changes and cascades, structural relationship fields).
 - `./<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape and the per-type field table).
 - the id allocator — required before writing any new issue file.
 - Body shape is documentation-only; nothing validates section presence at runtime.

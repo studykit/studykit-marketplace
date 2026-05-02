@@ -2,7 +2,7 @@
 
 An idea at `a4/idea/<id>-<slug>.md` is a **pre-pipeline quick-capture slot** — a Jira-issue-style "Idea / Suggestion" with the minimum fields needed to participate in the issue family. Ideas are independent possibilities recorded raw; they may later graduate into a spec, use case, task, or brainstorm via the `promoted:` field.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Boundary with `review/`
 
@@ -22,8 +22,6 @@ status: open | promoted | discarded
 promoted: []          # populated when status → promoted (e.g., [usecase/5-search])
 related: []           # soft links to other artifacts
 labels: []            # free-form tags
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -36,15 +34,13 @@ updated: YYYY-MM-DD
 | `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[usecase/5-search, brainstorm/12-cache-options]`) |
 | `related` | no | list of paths | soft links to other artifacts |
 | `labels` | no | list of strings | free-form tags |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.
 - Path values are plain strings without `.md` and without brackets.
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision.
 
 ### Deliberately excluded fields
 

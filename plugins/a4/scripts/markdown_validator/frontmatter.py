@@ -3,7 +3,7 @@
 Enforces the per-type schemas defined in
 ``plugins/a4/authoring/<type>-authoring.md`` (per-type field tables) and
 the cross-cutting rules in
-``plugins/a4/authoring/frontmatter-universals.md``:
+``plugins/a4/authoring/frontmatter-common.md``:
 
   - Required fields are present and non-empty.
   - Enum values are in their allowed set.
@@ -551,7 +551,7 @@ def _validate_parent_target(
 ) -> list[Violation]:
     """Enforce parent target-type rules.
 
-    Per ``frontmatter-universals.md`` §`parent`:
+    Per ``frontmatter-issue.md`` §`parent`:
       - issue-family files (task / bug / spike / research) accept any
         issue-family parent (cross-type within the family is allowed);
       - usecase and spec accept same-type parents only.

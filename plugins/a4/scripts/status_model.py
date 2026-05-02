@@ -19,10 +19,10 @@ Imported by:
   - search.py                   — CLI flag validation
 
 Authority: this file is canonical. The prose schema references at
-plugins/a4/authoring/frontmatter-universals.md (status writers,
-universal contract) and plugins/a4/authoring/<type>-authoring.md
-(per-type lifecycle blocks) mirror this data for human readers and must
-be kept in sync when the model changes.
+plugins/a4/authoring/frontmatter-issue.md (status changes and
+cascades) and plugins/a4/authoring/<type>-authoring.md (per-type
+lifecycle blocks) mirror this data for human readers and must be kept
+in sync when the model changes.
 
 Keys are folder names under `<a4-dir>/`: `usecase`, the four issue
 families that share the task lifecycle (`task`, `bug`, `spike`,

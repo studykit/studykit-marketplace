@@ -1,8 +1,8 @@
 # a4 Wiki Body Conventions
 
-Body-level rules for wiki pages (`actors.md`, `architecture.md`, `bootstrap.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-universals.md` § Wiki family); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below are how that continuous update is recorded.
+Body-level rules for wiki pages (`actors.md`, `architecture.md`, `bootstrap.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below are how that continuous update is recorded.
 
-Common body rules (heading form, link form, `updated:` bumping) live in `./body-conventions.md`.
+Common body rules (heading form, link form) live in `./body-conventions.md`.
 
 ## `## Change Logs` audit trail
 
@@ -44,7 +44,6 @@ Skip: typo fixes, metadata-only tweaks, internal notes that don't change semanti
 
 1. Edit the affected `## <Section>` content.
 2. Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)`. Create the section if it does not yet exist.
-3. Bump the wiki page's frontmatter `updated:` to today.
 
 ### Deferring the update
 
@@ -65,6 +64,7 @@ When a review item transitions to `status: resolved` and its `target:` list cont
 
 ## Cross-references
 
-- `./body-conventions.md` — common body rules (heading form, link form, `updated:` bumping).
-- `./frontmatter-universals.md` — universal frontmatter rules (wiki frontmatter shape lives in § Wiki family).
+- `./body-conventions.md` — common body rules (heading form, link form).
+- `./frontmatter-wiki.md` — wiki frontmatter contract.
+- `./frontmatter-common.md` — cross-cutting frontmatter rules (`type:`, path references, `updated`).
 - `./<type>-authoring.md` — per-type authoring contracts for individual wiki pages.

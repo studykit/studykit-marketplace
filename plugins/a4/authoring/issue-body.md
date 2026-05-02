@@ -2,7 +2,7 @@
 
 Body-level rules for issue files (`usecase`, `task`, `bug`, `spike`, `research`, `umbrella`, `review`, `spec`, `idea`, `brainstorm`). Defines two optional sections that keep a mid-flight issue file self-sufficient for the next session: `## Resume` (current-state snapshot) and `## Log` (narrative-worthy events).
 
-Common body rules (heading form, link form, `updated:` bumping) live in `./body-conventions.md`.
+Common body rules (heading form, link form) live in `./body-conventions.md`.
 
 ## Why two sections
 
@@ -113,6 +113,6 @@ The same rule applies whenever an entry leans on narrative recorded in any other
 
 ## Cross-references
 
-- `./body-conventions.md` — common body rules (heading form, link form, `updated:` bumping).
-- `./frontmatter-universals.md` — universal frontmatter rules.
+- `./body-conventions.md` — common body rules (heading form, link form).
+- `./frontmatter-common.md` — universal frontmatter rules.
 - `./<type>-authoring.md` — per-type authoring contracts (which list `## Resume` and `## Log` in their optional-sections menu).

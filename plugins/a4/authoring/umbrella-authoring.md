@@ -2,7 +2,7 @@
 
 An umbrella at `a4/umbrella/<id>-<slug>.md` is a **narrative-aggregation parent** — a file purpose-built to host the cross-cutting narrative that several issue-family children (`task` / `bug` / `spike` / `research`) share. It is *not* an implementation unit: an umbrella has no `## Files`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children; the umbrella exists so the next session reading any one child can discover the shared decisions through that child's `parent:` pointer.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`. The narrative-home semantics (entry format, inline cross-references) live in `./issue-body.md#log`; the `parent:` discovery contract lives in `./frontmatter-universals.md` §`parent` and shared narrative.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`. The narrative-home semantics (entry format, inline cross-references) live in `./issue-body.md#log`; the `parent:` discovery contract lives in `./frontmatter-issue.md` §`parent` and shared narrative.
 
 ## When to create an umbrella
 
@@ -30,8 +30,6 @@ title: "<short, human-readable phrase>"
 status: open | complete | discarded
 related: []            # catchall for cross-references
 labels: []             # free-form tags
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -43,8 +41,7 @@ updated: YYYY-MM-DD
 | `status` | yes | enum | `open` \| `complete` \| `discarded` |
 | `related` | no | list of paths | catchall cross-references |
 | `labels` | no | list of strings | free-form tags |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
+
 
 `implements` / `spec` / `depends_on` / `artifacts` / `cycle` / `parent` are **forbidden** on umbrella — declaring any of them is an error:
 
@@ -56,7 +53,7 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: umbrella` is fixed for files under `a4/umbrella/`.
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 
 ### Lifecycle
 

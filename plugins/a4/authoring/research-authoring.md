@@ -4,7 +4,7 @@ A research item at `a4/research/<id>-<slug>.md` is a **time-boxed investigation*
 
 The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## When a research task is warranted
 
@@ -31,8 +31,6 @@ parent:                              # optional: an issue (task / bug / spike / 
 related: []                          # catchall — typically the spec(s) or task(s) this research informs
 artifacts: []                        # typically empty; if used, paths under artifacts/research/<id>-<slug>/
 labels: []                           # free-form tags
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -49,14 +47,13 @@ updated: YYYY-MM-DD
 | `related` | no | list of paths | soft links — typically the spec(s) or task(s) this research informs |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/research/<id>-<slug>/` (typically empty — research output lives in the body) |
 | `labels` | no | list of strings | free-form tags |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
+
 
 `implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error.
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: research` is fixed for files under `a4/research/`.
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.
 - `implements:` is **forbidden** on research — research is investigation, not delivery. If a research task is scoped to a specific UC's open question, link the UC from `## Context` body prose instead.

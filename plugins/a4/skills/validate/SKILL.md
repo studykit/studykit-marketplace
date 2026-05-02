@@ -10,8 +10,8 @@ allowed-tools: Bash, Read
 
 Runs the registered checks in `markdown_validator.registry.CHECKS` through the unified `validate.py` entrypoint. Two checks ship today:
 
-- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders, post-draft authoring invariants (UC `actors:` non-empty at `status >= ready`; `title:` free of placeholders at UC `>= ready` / spec `>= active`). Canonical contract: `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (universal rules including title placeholders) and per-type field tables in `${CLAUDE_PLUGIN_ROOT}/authoring/<type>-authoring.md`.
-- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Cascade behavior is documented in `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md §Status writers` and per-type lifecycle sections.
+- **frontmatter** — required fields, enum values, field types, path-reference format (plain string, no brackets, no `.md`), `type:` matches wiki basename, global id uniqueness across issue folders, post-draft authoring invariants (UC `actors:` non-empty at `status >= ready`; `title:` free of placeholders at UC `>= ready` / spec `>= active`). Canonical contract: `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` (universal rules including title placeholders) and per-type field tables in `${CLAUDE_PLUGIN_ROOT}/authoring/<type>-authoring.md`.
+- **status** — cross-file status consistency. Flags specs / usecases where `status = superseded` disagrees with which file actually declares `supersedes:`, ideas / brainstorms where `status = promoted` disagrees with the `promoted:` list, and tasks / reviews that did not cascade off a discarded UC. Cascade behavior is documented in `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md § Status changes and cascades` and per-type lifecycle sections.
 
 Body shape (heading form, blank-line discipline, link form) lives in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md`. Issue-only body sections (`## Resume`, `## Log`) live in `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md`; wiki-only body sections (`## Change Logs`, Wiki Update Protocol) live in `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`. Per-type required vs optional section lists live in the per-type authoring contracts under `${CLAUDE_PLUGIN_ROOT}/authoring/`. There is no runtime body validator — body shape is documentation-only.
 
@@ -53,7 +53,7 @@ Relay the validator output verbatim — the section labels are already present. 
 Report the aggregate status as one of:
 
 - **All clean** — "OK — every enabled check reports no issues."
-- **One category reports issues** — list them, note the other is clean, and point at the canonical reference doc for the reported class (`frontmatter-universals.md` + the relevant `<type>-authoring.md` for frontmatter; `frontmatter-universals.md §Status writers` + per-type lifecycle sections for status).
+- **One category reports issues** — list them, note the other is clean, and point at the canonical reference doc for the reported class (`frontmatter-common.md` + the relevant `<type>-authoring.md` for frontmatter; `frontmatter-issue.md` § Status changes and cascades + per-type lifecycle sections for status).
 - **Multiple categories report issues** — list each labelled set, then: "Fix frontmatter first — consistency checks may resolve in passing once schema issues are fixed (path references and enum values are shared inputs)."
 
 When file arguments are passed, workspace-only checks (none today, but possible in the future) print a `skipped` line; remind the user to re-run the skill workspace-wide before handoff in that case.

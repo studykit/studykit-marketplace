@@ -2,7 +2,7 @@
 
 A brainstorm at `a4/brainstorm/<id>-<slug>.md` is a **pre-pipeline idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into pipeline artifacts (spec / usecase / task).
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -15,8 +15,6 @@ topic: "<short string — the session's framing question>"
 status: open | promoted | discarded
 promoted: []          # populated when status → promoted (e.g., [spec/8-caching, usecase/5-search])
 tags: []              # free-form
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -29,15 +27,13 @@ updated: YYYY-MM-DD
 | `status` | yes | enum | `open` \| `promoted` \| `discarded` |
 | `promoted` | no | list of paths | populated when `status → promoted` (e.g., `[spec/<id>-<slug>, usecase/<id>-<slug>]`) |
 | `tags` | no | list of strings | free-form |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
 - `promoted:` lists pipeline artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
 - Path values are plain strings without `.md` and without brackets.
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision.
 
 ### Lifecycle and writer ownership
 

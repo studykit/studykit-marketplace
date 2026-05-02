@@ -9,7 +9,7 @@ Companion to:
 - [`../authoring/issue-body.md`](../authoring/issue-body.md) — `## Resume`, `## Log` rules for issue files.
 - [`../authoring/wiki-body.md`](../authoring/wiki-body.md) — `## Change Logs` audit trail and Wiki Update Protocol.
 - [`../authoring/review-authoring.md`](../authoring/review-authoring.md) — review-item frontmatter contract and lifecycle.
-- [`../authoring/frontmatter-universals.md`](../authoring/frontmatter-universals.md) — universal frontmatter rules including writer-owned fields.
+- [`../authoring/frontmatter-common.md`](../authoring/frontmatter-common.md) — universal frontmatter rules including writer-owned fields.
 
 ## Scope
 
@@ -78,7 +78,7 @@ Full `## Change Logs` formatting rules: [`../authoring/wiki-body.md`](../authori
 
 ## 5. Discipline (always-hold rules)
 
-- **Never hand-edit** `status:` / `updated:` on any file the writer owns. Frontmatter fields with managing scripts are listed in [`../authoring/frontmatter-universals.md §Status writers`](../authoring/frontmatter-universals.md). The optional `## Resume` and `## Log` body sections (see [`../authoring/issue-body.md`](../authoring/issue-body.md)) are hand-maintained — the writer does not touch them.
+- **Never hand-edit** `status:` / `updated:` on any file the writer owns. Frontmatter fields with managing scripts are listed in `../authoring/frontmatter-issue.md` § Status changes and cascades. The optional `## Resume` and `## Log` body sections (see `../authoring/issue-body.md`) are hand-maintained — the writer does not touch them.
 - **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
 - **Never delete** review item files. `discarded` is the writer-managed terminal state.
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.

@@ -4,7 +4,7 @@ A spike at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a 
 
 The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -19,8 +19,6 @@ parent:                # optional: an issue (task / bug / spike / research) this
 related: []            # catchall for cross-references
 artifacts: []          # paths under artifacts/spike/<id>-<slug>/ — never project source tree
 labels: []             # free-form tags
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -34,14 +32,13 @@ updated: YYYY-MM-DD
 | `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `umbrella/<id>-<slug>` aggregating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See the "Parent and shared narrative" note below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at the project's production source tree — production paths the spike may also touch are documented in the body `## Files` section. |
 | `labels` | no | list of strings | free-form tags |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
+
 
 `implements` / `spec` / `cycle` are not part of the spike schema — declaring them is an error.
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: spike` is fixed for files under `a4/spike/`. There is no `kind:` field — the type *is* the kind.
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
 - `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.

@@ -125,7 +125,7 @@ Different per mode:
 
 ## Schema Awareness
 
-The frontmatter contract — required fields, enums, status meanings, allowed transitions, reverse-link semantics, path-reference format, title placeholders — lives across `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (universal rules) and `${CLAUDE_PLUGIN_ROOT}/authoring/<type>-authoring.md` (per-type field tables and lifecycles). Read them on first invocation that needs more than a trivial filter or any transition, then rely on them for filter validity, transition legality, and result interpretation. Validator output (`/a4:validate`, Stop-hook violations) is self-explanatory — each message names the file, field, rule, and (where applicable) the recovery hint.
+The frontmatter contract — required fields, enums, status meanings, allowed transitions, reverse-link semantics, path-reference format, title placeholders — lives across `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` (universal rules) and `${CLAUDE_PLUGIN_ROOT}/authoring/<type>-authoring.md` (per-type field tables and lifecycles). Read them on first invocation that needs more than a trivial filter or any transition, then rely on them for filter validity, transition legality, and result interpretation. Validator output (`/a4:validate`, Stop-hook violations) is self-explanatory — each message names the file, field, rule, and (where applicable) the recovery hint.
 
 ## Non-goals
 

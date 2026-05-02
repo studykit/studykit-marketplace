@@ -374,14 +374,27 @@ def _maybe_inject_authoring_contract(
     )
 
     pointers = [
-        "- `plugins/a4/authoring/frontmatter-universals.md` — universal "
-        "frontmatter contract (type field, ids, dates, status writers, "
-        "structural relationship fields, title placeholders).",
+        "- `plugins/a4/authoring/frontmatter-common.md` — cross-cutting "
+        "frontmatter rules (`type:`, path references, empty collections, "
+        "unknown fields, `created` / `updated`).",
+    ]
+    if type_value in _ISSUE_BODY_TYPES:
+        pointers.append(
+            "- `plugins/a4/authoring/frontmatter-issue.md` — issue-side "
+            "rules (`id`, title placeholders, relationships, status "
+            "changes and cascades, structural relationship fields)."
+        )
+    else:
+        pointers.append(
+            "- `plugins/a4/authoring/frontmatter-wiki.md` — wiki minimal "
+            "frontmatter contract."
+        )
+    pointers.extend([
         f"- `plugins/a4/authoring/{type_value}-authoring.md` — per-type "
         "field table, lifecycle, body shape, common mistakes.",
         "- `plugins/a4/authoring/body-conventions.md` — cross-cutting "
-        "body conventions (heading form, link form, `updated:` bumping).",
-    ]
+        "body conventions (heading form, link form).",
+    ])
     if type_value in _ISSUE_BODY_TYPES:
         pointers.append(
             "- `plugins/a4/authoring/issue-body.md` — `## Resume` "
@@ -839,7 +852,7 @@ def _stop() -> int:
     out_lines.append(
         "Fix the issues above before stopping. Each violation message "
         "names the file, field, and rule; consult "
-        "`plugins/a4/authoring/frontmatter-universals.md` (universal "
+        "`plugins/a4/authoring/frontmatter-common.md` (universal "
         "contract) and the matching "
         "`plugins/a4/authoring/<type>-authoring.md` (per-type field "
         "table and lifecycle) for the binding shape."

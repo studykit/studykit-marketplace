@@ -2,7 +2,7 @@
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
-Companion to [`../authoring/frontmatter-universals.md`](../authoring/frontmatter-universals.md) (universal frontmatter rules), [`../authoring/<type>-authoring.md`](../authoring/) (per-type field tables and lifecycles), [`../authoring/body-conventions.md`](../authoring/body-conventions.md) (cross-cutting heading form, link form), [`../authoring/wiki-body.md`](../authoring/wiki-body.md) (`## Change Logs` audit trail and Wiki Update Protocol), [`../authoring/issue-body.md`](../authoring/issue-body.md) (`## Resume`, `## Log` rules for issue files), and [`pipeline-shapes.md`](./pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
+Companion to [`../authoring/frontmatter-common.md`](../authoring/frontmatter-common.md) (universal frontmatter rules), [`../authoring/<type>-authoring.md`](../authoring/) (per-type field tables and lifecycles), [`../authoring/body-conventions.md`](../authoring/body-conventions.md) (cross-cutting heading form, link form), [`../authoring/wiki-body.md`](../authoring/wiki-body.md) (`## Change Logs` audit trail and Wiki Update Protocol), [`../authoring/issue-body.md`](../authoring/issue-body.md) (`## Resume`, `## Log` rules for issue files), and [`pipeline-shapes.md`](./pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
 
 ## Wiki page authorship
 

@@ -2,7 +2,7 @@
 
 `a4/bootstrap.md` is the **single source of truth for Launch & Verify**. It records the environment setup, the build/launch commands, and the verified smoke test that proves the workspace "runs". The `## Verify` section in particular is the executable verification contract — never duplicated into other wiki pages.
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol). Bump `updated:` on every re-run.
+Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
 

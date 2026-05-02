@@ -4,7 +4,7 @@ A spec at `a4/spec/<id>-<slug>.md` is the **prescriptive implementation contract
 
 Spec authoring is self-contained. Related artifacts (`usecase/`, `domain.md`, `architecture.md`) are helpful inputs when they exist — link them from `## Context` or `related:` — but they are not prerequisites; a spec can be written when none of them exist yet.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -17,8 +17,6 @@ status: <draft | active | deprecated | superseded>
 supersedes: []        # list of paths, e.g. [spec/8-caching-strategy]
 related: []           # catchall for cross-references — e.g. supporting research tasks
 labels: []            # free-form tags (alias: tags)
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -32,15 +30,13 @@ updated: YYYY-MM-DD
 | `related` | no | list of paths | catchall (use this slot for soft cross-references including any informing research task) |
 | `labels` | no | list of strings | free-form tags |
 | `tags` | no | list of strings | free-form (alias of `labels`; either is accepted) |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | no | date | `YYYY-MM-DD` (bump when the spec is revised) |
 
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
-- `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the spec reaches `status: active` (and beyond) — see `./frontmatter-universals.md#title-placeholders`.
+
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
+- `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the spec reaches `status: active` (and beyond) — see `./frontmatter-issue.md#title-placeholders`.
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
 - `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `../scripts/search.py`.
 - Path values are plain strings without `.md` and without brackets (e.g., `spec/8-caching-strategy`, not `[spec/8-caching-strategy.md]`).
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; the writer bumps it on status flips.
 
 ### Lifecycle and writer ownership
 

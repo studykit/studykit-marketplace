@@ -8,7 +8,7 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 
 Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents and by single-edit defer paths (`source: self`).
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -22,8 +22,6 @@ target: []                # issue paths and/or wiki basenames; empty for cross-c
 source: self | <reviewer-agent-name>
 priority: high | medium | low
 labels: []                # free-form
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -37,10 +35,9 @@ updated: YYYY-MM-DD
 | `source` | yes | enum \| string | `self` \| `<reviewer-agent-name>` (e.g., `usecase-reviewer-r2`) |
 | `priority` | no | enum | `high` \| `medium` \| `low` |
 | `labels` | no | list of strings | free-form |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `kind` is **required** — `finding`, `gap`, or `question`. The three share lifecycle but signal different content shapes:
   - `finding` body explains what is wrong and where.
   - `gap` body explains what is missing and why it should exist.
@@ -50,7 +47,6 @@ updated: YYYY-MM-DD
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
 - Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
-- Both `created` and `updated` are unquoted ISO dates. Bump `updated:` on every revision; status flips bump it automatically.
 
 ### Cascade — `target:` includes a UC that flips to `discarded`
 

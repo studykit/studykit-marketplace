@@ -2,7 +2,7 @@
 
 `a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment) and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. The `breakdown` skill consults arch.md as design-intent reference (drift-tolerated; the codebase is the structural ground truth). Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
-Frontmatter contract: see `./frontmatter-universals.md` § Wiki family. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 Note: no `created:` field on wiki pages — "first appeared" content lives in `context.md` `## Original Idea`.
 

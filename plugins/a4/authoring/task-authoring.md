@@ -4,7 +4,7 @@ A task at `a4/task/<id>-<slug>.md` is a **unit of regular implementation work** 
 
 The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders that share the same lifecycle but each has its own authoring contract. Cross-family conventions for artifact directories live in `./artifacts.md`.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Frontmatter contract (do not deviate)
 
@@ -22,8 +22,6 @@ related: []            # catchall for cross-references
 artifacts: []          # artifact paths under artifacts/task/<id>-<slug>/ (typically empty)
 cycle: 1               # implementation cycle number
 labels: []             # free-form tags
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -40,12 +38,11 @@ updated: YYYY-MM-DD
 | `artifacts` | no | list of strings | artifact paths under `artifacts/task/<id>-<slug>/`. Empty list is the typical default — task work that ships only production source. Production source paths the task writes or modifies are documented in the body `## Files` section, **not** in this frontmatter field. |
 | `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
+
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: task` is fixed for files under `a4/task/`. There is no `kind:` field — the type *is* the kind.
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it whenever the project is UC-driven.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `## Specification` body + relevant `architecture.md` section becomes the AC source).
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.

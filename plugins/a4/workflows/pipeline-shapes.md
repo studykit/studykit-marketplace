@@ -4,7 +4,7 @@ The a4 pipeline is not one shape. Three named shapes describe how a workspace fl
 
 Companion to:
 - [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
-- [`../authoring/frontmatter-universals.md`](../authoring/frontmatter-universals.md) — universal frontmatter rules.
+- [`../authoring/frontmatter-common.md`](../authoring/frontmatter-common.md) — universal frontmatter rules.
 - [`../authoring/<type>-authoring.md`](../authoring/) — per-type field tables and lifecycles.
 
 ## Why name the shapes

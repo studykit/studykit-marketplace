@@ -22,7 +22,7 @@ Every review criterion exists because failing it forces downstream work to inven
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly before writing review items:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` (universal frontmatter), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` (`## Resume`, `## Log` for review items), and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` (universal frontmatter), `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` (heading form, link form), `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` (`## Resume`, `## Log` for review items), and `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — review-item shape.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` — what makes the domain wiki "complete" (concepts / relationships / state-transitions sections, in-situ shared scope with arch).
 

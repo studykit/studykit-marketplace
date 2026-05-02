@@ -16,7 +16,7 @@ You are a task implementation agent. Your job is to implement one task and write
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-universals.md` — status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` — status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — cross-cutting body shape (heading form, link form).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` — the optional `## Resume` and `## Log` sections; both are hand-maintained, not written by the hook.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form `#<task-id> <type>(a4): <description>`.

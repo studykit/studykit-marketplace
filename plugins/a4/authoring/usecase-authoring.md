@@ -2,7 +2,7 @@
 
 A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. Use cases are the user-facing scope unit — they sit upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
 
-Companion to `./frontmatter-universals.md`, `./issue-body.md`.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
 ## Abstraction discipline
 
@@ -22,8 +22,6 @@ actors: [<slug>, ...]    # actor slugs as defined in actors.md
 supersedes: []           # list of paths to prior UCs this one replaces
 related: []              # catchall for cross-references
 labels: []               # free-form tags (incl. group slugs like screen-dashboard)
-created: YYYY-MM-DD
-updated: YYYY-MM-DD
 ---
 ```
 
@@ -37,11 +35,10 @@ updated: YYYY-MM-DD
 | `supersedes` | no | list of paths | prior use cases this UC replaces |
 | `related` | no | list of paths | catchall |
 | `labels` | no | list of strings | free-form tags |
-| `created` | yes | date | `YYYY-MM-DD` |
-| `updated` | yes | date | `YYYY-MM-DD` |
 
-- `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the UC reaches `status: ready` (and beyond) — see `./frontmatter-universals.md#title-placeholders`.
-- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
+
+- `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the UC reaches `status: ready` (and beyond) — see `./frontmatter-issue.md#title-placeholders`.
+- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s `## Roster` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
 - UC-to-UC ordering is **not** carried in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
 - UC-to-spec ties are **not** carried in frontmatter. When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
@@ -111,7 +108,7 @@ Authoring or revising a UC frequently has side-effects on wiki pages:
 - New screen group → `context.md` `## Screens` section + UC `labels:`.
 - New non-functional requirement → `nfr.md` `## Requirements` row.
 
-When applying an in-situ wiki edit, follow the Wiki Update Protocol in `./wiki-body.md` (edit the relevant section, append a dated `## Change Logs` bullet citing the causing UC, bump the wiki page's `updated:` frontmatter).
+When applying an in-situ wiki edit, follow the Wiki Update Protocol in `./wiki-body.md` (edit the relevant section, append a dated `## Change Logs` bullet citing the causing UC).
 
 When deferring, open a review item with `kind: gap`, `source: self`, `target: [<causing UC path>, <affected wiki basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
 
@@ -131,7 +128,7 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 
 - **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
 - **`actors:` empty at `status >= ready`.** `actors:` is optional only at `draft`; advancing the lifecycle without filling it is a post-draft authoring violation.
-- **Placeholder in `title:` at `status >= ready`.** See `./frontmatter-universals.md#title-placeholders`.
+- **Placeholder in `title:` at `status >= ready`.** See `./frontmatter-issue.md#title-placeholders`.
 
 ## Don't (UC-specific)
 
