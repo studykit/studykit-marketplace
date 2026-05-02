@@ -11,7 +11,7 @@ The user is referring to a spec already recorded earlier as `draft`.
 - `$ARGUMENTS` contains a spec id (`12`, `spec/12`), slug fragment, or title that matches an existing `a4/spec/*.md` at `status: draft`; or
 - the recent conversation referenced a specific draft spec by path/id.
 
-Detect by `Glob a4/spec/*.md` + frontmatter read; confirm with the user before proceeding (one light question: "Activate `spec/<id>-<slug>`?"). If confirmed, skip Steps 2–5 and jump to **Step 6: Activate via writer**.
+Detect by `Glob a4/spec/*.md` + frontmatter read; confirm with the user before proceeding (one light question: "Activate `spec/<id>-<slug>`?"). If confirmed, skip Steps 2–5 and jump to **Step 6: Activate (direct status edit)**.
 
 ## (b) Revise existing
 

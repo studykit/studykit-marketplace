@@ -8,45 +8,18 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Bug Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`. This skill orchestrates writing through that contract.
-
-Writes one `a4/bug/<id>-<slug>.md`. Use when a defect needs a tracked fix; the task lifecycle is identical to task/spike/research, but the body shape leans on reproduction + regression test.
-
-`/a4:run` is the agent loop that consumes files this skill produces. This skill never spawns implementation agents itself.
+Writes one `a4/bug/<id>-<slug>.md` per the authoring contract at `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`. The bug family carries the same lifecycle as task/spike/research, but the body shape leans on reproduction + regression test. No special procedure beyond the contract; this skill is a thin wrapper.
 
 Seed: **$ARGUMENTS**
 
-## Scope
+## Context
 
-- **In:** writing one bug task file at `status: pending` (or `complete` for post-hoc), allocating its id, resolving optional `implements:` / `spec:` references.
-- **Out:** UC/spec-batch generation (`/a4:breakdown`), implement / test loop (`/a4:run`), discard (`/a4:discard`), authoring tasks of other families (`/a4:task`, `/a4:spike`, `/a4:research`). No commit.
+- Project root: !`git rev-parse --show-toplevel 2>/dev/null || echo NOT_A_GIT_REPO`
+- Today: !`date +%Y-%m-%d`
+- Allocated id: !`uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4" 2>/dev/null || echo ALLOC_FAILED`
 
-## Pre-flight
+If the project root resolved to `NOT_A_GIT_REPO` or `a4/` is missing, abort. Ensure `<project-root>/a4/bug/` exists (`mkdir -p` if missing).
 
-1. Resolve project root: `git rev-parse --show-toplevel`. If not a git repo, abort.
-2. Verify `<project-root>/a4/` exists. If not, abort — this skill is workspace-scoped.
-3. Ensure `<project-root>/a4/bug/` exists. Create with `mkdir -p` if missing.
+## Author
 
-## Author Flow
-
-Steps procedure: `references/author-flow.md`. Covers capture intent (observed vs expected behavior, regression test scope) → resolve implements/spec → compose body → allocate id + write → hand-off.
-
-## Commit Points
-
-`references/commit-points.md`.
-
-## Wrap Up
-
-When the task file is written:
-
-1. Summarize: task id / title, observed vs expected behavior, `implements:` / `spec:` references (or "none").
-2. Suggest the next step: `pending` → `/a4:run` (which spawns a `coder` to write the regression test, then the fix).
-3. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
-
-## Non-Goals
-
-- Do not run a reviewer agent.
-- Do not author multiple bugs in one invocation. Re-invoke `/a4:bug` per bug.
-- Do not author non-bug tasks here — use `/a4:task`, `/a4:spike`, or `/a4:research`.
-- Do not flip task status beyond the initial `open` / `pending` / `complete` write.
-- Do not ship the fix here — the implement loop (`/a4:run`) covers regression-test-then-fix.
+Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md` for frontmatter, body shape, initial-status rules, and the `complete` preflight. Write to `a4/bug/<id>-<slug>.md`. The body's `## Unit Test Strategy` must include a regression scenario that fails before the fix and passes after — closing a bug without that test is the most common reason the same bug returns. No commit; no implementation agent spawn.

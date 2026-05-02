@@ -37,6 +37,7 @@ If you find yourself reading a `dev/` doc while editing a workspace file or runn
 The split between these folders is recent — consult `git log --oneline plugins/a4/` for the full sequence. The defining commits:
 
 - **(this refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; split skill-runtime workflow contracts (`iterate-mechanics.md`, `pipeline-shapes.md`, `skill-modes.md`, `wiki-authorship.md`) out of `dev/` into a new `workflows/` so skills do not need to cite plugin internals; enforced path purity (script paths only in `dev/`); replaced the workspace-rules layer with a PreToolUse contract-injection hook (`scripts/a4_hook.py:_pre_edit`). Per-file `**Audience:**` banners were added then later removed in favor of per-directory `CLAUDE.md` audience statements + a contributor hook (`dev/scripts/contributor_hook.py`, registered in repo `.claude/settings.json`).
+- **(skill-modes consolidation)** — retired `workflows/skill-modes.md`. The per-stage mode table was redundant with each `SKILL.md`'s frontmatter (the source of truth); the missing-pair design rationale moved to `dev/skill-mode-design.md` as a contributor design memo. Skill-runtime citation sites inlined the one-line "not the autonomous twin" fact where it was load-bearing (`auto-usecase/SKILL.md`, `compass/references/catalog.md`).
 - `04ca63a` — slimmed `SKILL.md` files to orchestration; moved skill procedures into `skills/<name>/references/`.
 
 If you find script paths or implementation pointers leaking into `authoring/`, push them into `dev/` and leave a single cross-ref behind.
@@ -48,9 +49,22 @@ If you find script paths or implementation pointers leaking into `authoring/`, p
   - Cross-cutting (heading form, link form, `updated:` bumping) → `authoring/body-conventions.md`.
   - Issue body sections (`## Resume`, `## Log`) → `authoring/issue-body.md`.
   - Wiki body sections (`## Change Logs`, Wiki Update Protocol) → `authoring/wiki-body.md`.
-- **A new or modified skill** → `workflows/skill-modes.md`, `workflows/pipeline-shapes.md`, `workflows/wiki-authorship.md`. Skills must conform to wiki-authorship; if a `SKILL.md` disagrees, the doc wins and the skill is updated.
+- **A new or modified skill** → `workflows/pipeline-shapes.md`, `workflows/wiki-authorship.md`. Skills must conform to wiki-authorship; if a `SKILL.md` disagrees, the doc wins and the skill is updated. For the design rationale behind the current skill set (why some pairs are intentionally missing), see `dev/skill-mode-design.md`.
 - **A new or modified hook** → `dev/hook-conventions.md`. Covers state classification, lifecycle symmetry, in-event ordering, blocking vs non-blocking policy, output-channel choice.
 - **An iterate flow (review-item walks)** → `workflows/iterate-mechanics.md`.
+
+## Reading discipline — follow delegation arrows
+
+a4 docs form a delegation graph: most contracts live in one file and are pointed at from many. A one-liner that says `see ./X.md`, `→ ./Y.md#section`, or `Companion to ./Z.md` is a **pointer, not a summary you can reason from**. The single source of truth lives at the *target*; the calling document only carries a hook into it.
+
+Before any cross-document conclusion (consistency, conflict, over-listing, "X differs from Y", "minimum requires Z"):
+
+- **Read the target of every delegation arrow you cite.** Examples that recur: issue body sections (`## Resume`, `## Log`) delegate to `authoring/issue-body.md`; universal heading/link/mistake rules delegate to `authoring/body-conventions.md`; issue family lifecycle delegates to `authoring/issue-family-lifecycle.md`; per-skill procedures delegate to `skills/<name>/references/*.md`. Reading the caller's one-liner is **not enough** — open the target.
+- **List the files needed before drawing conclusions.** Comparing N docs requires reading all N. Don't read 1–2 and infer the rest.
+- **Cite line numbers from files you opened in this session.** If you cannot point at a line, you have not finished reading. Statements like "spec L77 says X" must come from an actual Read in the current session, not from training intuition or a remembered earlier conversation.
+- **Label any unread inference.** If you must hypothesize without reading (rare; usually wrong), mark it `(not read; presumed)` and prompt for the read before acting on the inference.
+
+This guards against the recurring failure of reading one authoring file, noticing a cross-reference, and writing a "consistency analysis" without ever opening the referenced file. The `authoring/` ↔ `workflows/` ↔ `dev/` separation deliberately keeps each file pointer-rich rather than self-contained, so cross-cutting reasoning **must** chase the pointers.
 
 ## Conventions
 

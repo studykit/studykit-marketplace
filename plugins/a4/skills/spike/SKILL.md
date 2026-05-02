@@ -8,46 +8,20 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Spike Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. This skill orchestrates writing through that contract.
-
-Writes one `a4/spike/<id>-<slug>.md` and proposes the accompanying artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/` for the throwaway PoC code.
-
-`/a4:run` is the agent loop that consumes spike files this skill produces. This skill never spawns implementation agents itself.
+Writes one `a4/spike/<id>-<slug>.md` per the authoring contract at `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`, plus an optional artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/` for throwaway PoC code. No special procedure beyond the contract; this skill is a thin wrapper.
 
 Seed: **$ARGUMENTS**
 
-## Scope
+## Context
 
-- **In:** writing one spike task file at `status: pending` (or `complete` for post-hoc), allocating its id, proposing the `artifacts/spike/<id>-<slug>/` artifact directory.
-- **Out:** `implements:` / `spec:` / `cycle:` (all forbidden on spike — cite triggering specs from `## Description` body markdown links if relevant), implement / test loop (`/a4:run`), discard (`/a4:discard`), authoring tasks of other families. No commit.
+- Project root: !`git rev-parse --show-toplevel 2>/dev/null || echo NOT_A_GIT_REPO`
+- Today: !`date +%Y-%m-%d`
+- Allocated id: !`uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4" 2>/dev/null || echo ALLOC_FAILED`
 
-## Pre-flight
+If the project root resolved to `NOT_A_GIT_REPO` or `a4/` is missing, abort. Ensure `<project-root>/a4/spike/` exists (`mkdir -p` if missing).
 
-1. Resolve project root: `git rev-parse --show-toplevel`. If not a git repo, abort.
-2. Verify `<project-root>/a4/` exists. If not, abort — this skill is workspace-scoped.
-3. Ensure `<project-root>/a4/spike/` exists. Create with `mkdir -p` if missing.
+## Author
 
-## Author Flow
+Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` for frontmatter, body shape, initial-status rules, and the `complete` preflight. Write to `a4/spike/<id>-<slug>.md`. `implements:` / `spec:` / `cycle:` are forbidden — cite triggering UCs or specs from `## Description` body prose with markdown links if relevant.
 
-Steps procedure: `references/author-flow.md`. Covers capture intent (hypothesis, decision the spike informs) → compose body → propose artifact directory → allocate id + write → artifact directory create → hand-off.
-
-## Commit Points
-
-`references/commit-points.md`. The single commit covers the new task file plus the empty artifact directory (with `.gitkeep` if added).
-
-## Wrap Up
-
-When the task file is written:
-
-1. Summarize: task id / title, the question being explored, whether the artifact directory was created.
-2. Suggest the next step: `pending` → `/a4:run`.
-3. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
-
-## Non-Goals
-
-- Do not declare `implements:`, `spec:`, or `cycle:` on a spike — all three are forbidden.
-- Do not auto-archive `artifacts/spike/<id>-<slug>/` on completion. Archiving is a manual `git mv` to `artifacts/spike/archive/<id>-<slug>/`.
-- Do not author multiple spikes in one invocation.
-- Do not author non-spike tasks here — use `/a4:task`, `/a4:bug`, or `/a4:research`.
-- Do not flip task status beyond the initial `open` / `pending` / `complete` write.
-- Do not write production source from a spike. PoC code belongs under `artifacts/spike/<id>-<slug>/`; if the outcome warrants production work, follow up with a `/a4:task` task.
+Ask the user once whether to create the artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`. If yes, `mkdir -p` it after the file is written; a `.gitkeep` is optional. No commit; no implementation agent spawn.

@@ -36,7 +36,7 @@ Skill({ skill: "a4:<skill-name>", args: "<user's topic or file path>" })
 | `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase, idea, or brainstorm input (no interview) |
 | `auto-bootstrap` | Set up project structure, dependencies, build, and test infrastructure |
 
-Mode rationale (why some stages have only an interactive or only an autonomous form, and why `auto-usecase` is not a twin of `usecase`): see [`skill-modes.md`](${CLAUDE_PLUGIN_ROOT}/workflows/skill-modes.md).
+`auto-usecase` and `auto-bootstrap` are autonomous because their work — reverse / batch extraction and verification — does not benefit from interactive dialogue. They are not twins of interactive skills at the same stage; the missing pairs (`/a4:auto-domain`, `/a4:auto-arch`, `/a4:auto-breakdown`, interactive `/a4:bootstrap`) are intentional.
 
 ## Standalone
 

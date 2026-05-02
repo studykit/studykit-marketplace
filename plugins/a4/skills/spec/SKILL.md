@@ -1,6 +1,6 @@
 ---
 name: spec
-description: "This skill should be used when the user has converged on the shape of an artifact (format, protocol, schema, renderer rule, CLI surface) and wants to commit it as a living specification. Writes the spec to `a4/spec/<id>-<slug>.md` with proper frontmatter and body, soft-links any related research tasks (a4/research/<id>-<slug>.md) via standard markdown body links and optional `related:` frontmatter entries, optionally records the decision rationale inline as `## Decision Log` entries, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'document this format', 'write up the spec', 'capture this shape', 'this is the spec', 'spec this out', or after the user and LLM converge on a prescriptive shape. Accepts either no argument (extract spec from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft spec to activate it. Requires an `a4/` workspace."
+description: "This skill should be used when the user has converged on the shape of an artifact (format, protocol, schema, renderer rule, CLI surface) and wants to commit it as a prescriptive implementation contract. Writes the spec to `a4/spec/<id>-<slug>.md` with proper frontmatter and body, soft-links any related research tasks (a4/research/<id>-<slug>.md) via standard markdown body links and optional `related:` frontmatter entries, optionally records decision rationale in the `## Decision Log` appendum, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'document this format', 'write up the spec', 'capture this shape', 'this is the spec', 'spec this out', or after the user and LLM converge on a prescriptive shape. Accepts either no argument (extract spec from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft spec to activate it. Requires an `a4/` workspace."
 argument-hint: <optional: short spec summary or title>
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
@@ -10,13 +10,15 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 
 > **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/spec-authoring.md`. This skill orchestrates capture + activate + wiki nudge.
 
-Documents a converged-on shape (format, protocol, schema, renderer rule, CLI surface, etc.) into `a4/spec/<id>-<slug>.md`, soft-links supporting research tasks if any, optionally records the decision rationale inline, and nudges affected wiki pages. This skill does not facilitate the design itself — it captures an already-converged shape from the current session.
+Documents a converged-on shape (format, protocol, schema, renderer rule, CLI surface, etc.) into `a4/spec/<id>-<slug>.md`, soft-links supporting research tasks if any, optionally records decision rationale in the `## Decision Log` appendum, and nudges affected wiki pages. This skill does not facilitate the design itself — it captures an already-converged shape from the current session.
+
+Spec authoring is self-contained: related artifacts (`usecase/`, `domain.md`, `architecture.md`) are helpful inputs when they exist but are not prerequisites — write the spec even when none of them exist yet.
 
 Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** writing the spec file at `status: draft`, activating an existing draft by editing `status:` to `active` (the PostToolUse cascade hook flips predecessor specs to `superseded` automatically), soft-linking research tasks (`a4/research/<id>-<slug>.md`) via standard markdown body links and optional `related:` frontmatter entries, recording append-only `## Decision Log` entries, performing the in-situ wiki nudge, setting `status` via dialogue.
+- **In:** writing the spec file at `status: draft`, activating an existing draft by editing `status:` to `active` (cascade behavior covered in `references/extract-and-write.md`), soft-linking research tasks (`a4/research/<id>-<slug>.md`) via standard markdown body links and optional `related:` frontmatter entries, recording append-only `## Decision Log` appendum entries (optional record-keeping), performing the in-situ wiki nudge, setting `status` via dialogue.
 - **Out:** no investigation (use `/a4:research` first if research is needed). No reviewer for the spec *content itself*. No commit.
 
 ## Pre-flight
@@ -56,4 +58,4 @@ Summarize to the user:
 - **Do not commit.** Leave files in the working tree.
 - **Do not auto-populate `supersedes:`** or retire specs unprompted. The user sets `supersedes:` in Step 2; `→ deprecated` is a manual user call (edit `status:` directly).
 
-(Frontmatter / body / lifecycle / writer-only field rules — including the `## Decision Log` append-only invariant and the `status:` writer-only rule — live in the spec authoring reference, not here.)
+(Frontmatter / body / lifecycle rules — including the `## Decision Log` append-only invariant and the `status:` direct-edit + cascade-hook contract — live in the spec authoring reference, not here.)

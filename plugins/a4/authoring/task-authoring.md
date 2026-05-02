@@ -66,11 +66,15 @@ A task with **both** anchors empty has no AC source. Either downgrade to `spike`
 
 Empty anchors are not always a problem — small UI tweaks, single-property validations, and batch-generated tasks without a UC group can legitimately stay anchorless. The deeper signal is in the body: when the description implies a user-facing scope no existing UC covers, or an architectural choice no existing spec records, surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/` (omit `target:` for cross-cutting), `source: task`, body specifying which upstream artifact appears missing.
 
+### Granularity — one cohesive unit per file
+
+Each `a4/task/<id>-<slug>.md` is one cohesive unit of implementation work. When a request, seed, or breakdown exceeds what fits cohesively in a single task — multiple unrelated edits, distinct AC sets, or independent test surfaces — split it into multiple task files, one per cohesive unit. Each split file allocates its own globally-monotonic `id:` and stands on its own (its own frontmatter, body, and AC). Use `depends_on:` between split tasks when one must land before another, and a shared `parent:` (issue or `umbrella/<id>-<slug>`) when the siblings warrant cross-cutting narrative per `./umbrella-authoring.md`.
+
 ### Evidence-readiness — sister rule
 
 Anchors decide where the AC comes from; **evidence** decides whether the task is actionable as a handoff. The two are independent — a clean `implements:` / `spec:` does not make the task evidence-ready. Binding rule lives in `./spike-before-task.md`: five evidence categories (reproduce command, code coordinates, data flow, baseline, test fixture) are expected by the time the task is `pending`; when two or more are empty the parent issue family is `spike` (with a runnable artifact directory) or `research`, not `task`.
 
-If implementation surfaces a real choice (an architectural shape, a protocol, a format, a schema) that no existing spec records — common in projects that started spec-less — spawn a spec at that point and add its path to this task's `spec:` frontmatter. A 1-decision spec with just `## Context` + `## Specification` + an initial `## Decision Log` entry is enough; specs are not required to be heavy. Do **not** capture the decision inline in the task body (no `## Decision` section, no rationale paragraph that belongs in a `## Decision Log`). Splitting decision rationale between task and spec breaks the audit trail and the supersede chain — see `./spec-authoring.md` for the spec body shape.
+If implementation surfaces a real choice (an architectural shape, a protocol, a format, a schema) that no existing spec records — common in projects that started spec-less — spawn a spec at that point and add its path to this task's `spec:` frontmatter. See `./spec-authoring.md` for the spec body shape; specs are not required to be heavy. Do **not** capture the decision inline in the task body (no `## Decision` section, no rationale paragraph that belongs in a `## Decision Log`). Splitting decision rationale between task and spec breaks the audit trail and the supersede chain.
 
 ### Lifecycle and writer ownership
 
@@ -78,7 +82,7 @@ Lifecycle, status enum, writer rules, and `complete` initial-status preflight ar
 
 Task-specific notes:
 
-- Batch-authored tasks (from `/a4:breakdown`) use `open` as initial status; the user promotes them `open → pending` when ready for `/a4:run` to pick them up.
+- Batch-authored tasks use `open` as initial status; the user promotes them `open → pending` when ready for execution.
 - `complete` means unit tests passed.
 - `cycle:` bumps on `failing → pending` next-cycle defers.
 - Required body sections for the `complete` preflight: `## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`.
