@@ -59,9 +59,5 @@ Frontmatter paths are different — they stay plain strings (no brackets, no `.m
 
 ## Cross-references
 
-- `./frontmatter-common.md` — cross-cutting frontmatter rules (`type:`, path references, empty collections, unknown fields, `created` / `updated`).
-- `./frontmatter-wiki.md` — wiki minimal contract.
-- `./frontmatter-issue.md` — issue-side rules (`id`, title placeholders, relationships, status changes and cascades, structural relationship fields).
 - `./<type>-authoring.md` — binding per-type authoring contracts (the source of truth for body shape and the per-type field table).
-- the id allocator — required before writing any new issue file.
 - Body shape is documentation-only; nothing validates section presence at runtime.

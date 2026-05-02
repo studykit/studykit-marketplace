@@ -114,5 +114,4 @@ The same rule applies whenever an entry leans on narrative recorded in any other
 ## Cross-references
 
 - `./body-conventions.md` — common body rules (heading form, link form).
-- `./frontmatter-common.md` — universal frontmatter rules.
 - `./<type>-authoring.md` — per-type authoring contracts (which list `## Resume` and `## Log` in their optional-sections menu).

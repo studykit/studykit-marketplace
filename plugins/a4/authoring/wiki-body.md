@@ -65,6 +65,4 @@ When a review item transitions to `status: resolved` and its `target:` list cont
 ## Cross-references
 
 - `./body-conventions.md` — common body rules (heading form, link form).
-- `./frontmatter-wiki.md` — wiki frontmatter contract.
-- `./frontmatter-common.md` — cross-cutting frontmatter rules (`type:`, path references, `updated`).
 - `./<type>-authoring.md` — per-type authoring contracts for individual wiki pages.
