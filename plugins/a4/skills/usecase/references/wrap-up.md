@@ -26,7 +26,7 @@ When the user indicates they're done, mark the in-progress phase task `completed
 
 ## Cross-stage findings
 
-The usecase author primary-authors `context.md`, `actors.md`, and `nfr.md` (per `../../../workflows/wiki-authorship.md`). When iteration uncovers an issue in `domain.md` or `architecture.md`, **continue** with usecase work and emit a review item targeting the upstream wiki — do not edit it inline.
+The usecase author primary-authors `context.md`, `actors.md`, and `nfr.md`. When iteration uncovers an issue in `domain.md` or `architecture.md`, **continue** with usecase work and emit a review item targeting the upstream wiki — do not edit it inline.
 
 ## Execution order
 

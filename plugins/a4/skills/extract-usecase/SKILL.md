@@ -1,16 +1,16 @@
 ---
-name: auto-usecase
-description: "This skill should be used when the user wants to extract or batch-shape Use Cases from raw input — an existing codebase, an idea, brainstorm notes, or a file path — without interactive interview. Reverse-engineering an existing system into UCs is its primary job; running it on a fresh idea is a secondary mode. Triggers: 'reverse-engineer use cases', 'extract use cases from code', 'auto-generate use cases', 'auto-usecase', 'generate use cases from this idea', 'no interview needed just generate', 'run auto-usecase on'. Writes the result into <project-root>/a4/ per the spec-as-wiki+issues layout (per-UC files + context.md / actors.md / nfr.md). Not the autonomous twin of /a4:usecase — they serve different inputs (raw material vs. dialogue with someone who knows the problem)."
+name: extract-usecase
+description: "This skill should be used when the user wants the LLM to extract or batch-shape Use Cases from raw input — an existing codebase, an idea, brainstorm notes, or a file path — without an interactive interview. Triggers: 'extract use cases from code', 'extract use cases', 'auto-generate use cases', 'extract-usecase', 'generate use cases from this idea', 'no interview needed just generate', 'run extract-usecase on'. Writes per-UC files plus context.md / actors.md / nfr.md into <project-root>/a4/. Independent skill — does not assume any other skill ran before or runs after; the user picks the next step."
 argument-hint: <codebase path, idea, brainstorm text, or file path to extract use cases from>
 disable-model-invocation: true
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
 ---
 
-# Use Case Reverse-Engineer / Batch Generator
+# Use Case Extractor / Batch Generator
 
-Extract or batch-shape a complete spec-as-wiki+issues Use Case set from raw input — an existing codebase, an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
+Extract or batch-shape a complete Use Case set from raw input — an existing codebase, an idea, brainstorm notes, description, or file path — without human interaction. Make all decisions independently, record open questions as review items, and refine until the set meets quality criteria.
 
-This skill is **not** the autonomous twin of `/a4:usecase`. `/a4:usecase` is a Socratic interview that draws UCs out of a user who knows the problem; this skill is a reverse / batch entry for cases where the input is raw material rather than a person to interview against.
+This skill is independent. It does not require any prior a4 skill to have run, and does not direct the user to any specific next skill — the user picks where to go after the run finishes (typical follow-ups include `/a4:usecase iterate` to review the drafts, `/a4:domain`, or `/a4:arch`).
 
 Generate use cases for: **$ARGUMENTS**
 
@@ -64,7 +64,7 @@ This skill runs two nested loops:
 | Step | Focus | Procedure |
 |------|-------|-----------|
 | 1 | Classify the input + resume detection | `references/input-classification.md` |
-| 2 | Research (similar systems + code analysis, parallel) | `authoring/research-step.md` |
+| 2 | Research (similar systems + code analysis, parallel) | `references/research-step.md` |
 | 3 | Compose + refine loop (a/b/c/d) | `references/compose-refine-loop.md` |
 | 4 | Final summary | `references/final-summary.md` |
 
@@ -74,7 +74,7 @@ Per-step subject formats and timing: `references/commit-points.md`.
 
 ## Cross-Stage Findings
 
-This skill is **continue + review item** for any architecture / domain / NFR concern that surfaces during composition or review — UC drafts are independently meaningful, so emit review items targeting the upstream wiki and finish the autonomous run. See `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md` §Cross-stage feedback. Domain Model itself is **out of scope** — domain extraction lives in `/a4:domain` and is recommended in the final summary.
+When extraction surfaces an architecture / domain / NFR concern, emit a review item targeting the upstream wiki and continue the autonomous run — UC drafts are independently meaningful. Domain Model itself is **out of scope** — domain extraction lives in `/a4:domain` and is recommended in the final summary.
 
 ## Autonomous Decision Rules
 

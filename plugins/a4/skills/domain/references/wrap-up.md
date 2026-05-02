@@ -48,8 +48,7 @@ Summarize to the user:
 - Relationships added / revised
 - State diagrams added / revised
 - Review items opened / resolved / still open
-- Suggested next step: `/a4:arch` (or `/a4:arch iterate` if architecture exists and the domain change affects it)
 
 ## Cross-stage findings
 
-If domain work surfaces an issue in another wiki (e.g., a rename invalidates a `architecture.md` component name), do not edit that wiki — emit a review item with the appropriate `target:`. Per `../wiki-authorship.md` §Cross-stage feedback, this skill is **continue + review item** for upstream findings: finish domain wrap-up, leave the review item open for the owning skill's `iterate` mode.
+If domain work surfaces an issue in another wiki (e.g., a rename invalidates a `architecture.md` component name), do not edit that wiki — emit a review item with the appropriate `target:`. This skill is **continue + review item** for upstream findings: finish domain wrap-up, leave the review item open for the owning skill's `iterate` mode.

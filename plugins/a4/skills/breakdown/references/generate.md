@@ -17,7 +17,7 @@ A task can deliver one or more candidates. Apply the sizing guidance from `./pla
 
 - 1–5 related UCs / specs per task.
 - Touches 1–3 components.
-- Independently testable against `bootstrap.md` `## Verify`.
+- Independently testable against `ci.md` `## How to run tests`.
 - Roughly ≤ ~500 lines of new or changed code.
 
 When a single UC's flow is large enough to warrant splitting, the split is across tasks (one UC may appear in multiple tasks' `implements:`).
@@ -32,7 +32,7 @@ For every task in the derived batch, populate:
 - **`depends_on:`** — `task/<id>-<slug>` paths for prerequisite tasks (this batch's tasks plus existing tasks the new ones rely on). Derived from the candidate grouping plus codebase imports.
 - **`## Description`** — short narrative of what this task delivers, written against the upstream sources' Flow / Validation / Specification.
 - **`## Files`** — auto-filled from Step 2 codebase exploration. Format per `../../../authoring/task-authoring.md` § Body shape (Action / Path / Change table). Best-effort hints; reviewers and the user iterate before promotion.
-- **`## Acceptance Criteria`** — derived from each `implements:`'s UC `## Flow` / `## Validation` / `## Error Handling` and each `spec:`'s `## Specification`. Reference `bootstrap.md` `## Verify` commands when AC names a runnable check.
+- **`## Acceptance Criteria`** — derived from each `implements:`'s UC `## Flow` / `## Validation` / `## Error Handling` and each `spec:`'s `## Specification`. Reference `ci.md` `## How to run tests` commands when AC names a runnable check.
 - **`## Unit Test Strategy`** — scenarios + isolation per `../../../authoring/task-authoring.md`.
 
 The reverse view (which tasks implement a UC, which tasks realize a spec) is computed on demand by `search.py` — there is no UC / spec frontmatter field to refresh.

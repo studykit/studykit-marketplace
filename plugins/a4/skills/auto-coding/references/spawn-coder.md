@@ -5,12 +5,12 @@ For each ready task, spawn one `Agent` call with `subagent_type: "a4:coder"` and
 ```
 Agent(subagent_type: "a4:coder", isolation: "worktree", prompt: """
 Task file: <absolute path to a4/<type>/<id>-<slug>.md, where <type> ∈ {task, bug, spike, research}>
-Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
+ci file: <absolute path to a4/ci.md>  # single source of truth for test execution
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>
 
 Read the task file for ## Description, ## Files, ## Unit Test Strategy, ## Acceptance Criteria.
-Pull build + unit-test commands from bootstrap.md's ## Verify section.
+Pull unit-test commands from ci.md's ## How to run tests section.
 
 Implement the task and write its unit tests. All unit tests must pass.
 Commit code + unit tests (one commit per task) using subject form

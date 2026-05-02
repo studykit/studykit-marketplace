@@ -15,15 +15,15 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 | `usecase` | Collaborative usecase specification design |
 | `domain` | Cross-cutting Domain Model extraction (concepts, relationships, state transitions) |
 | `arch` | Architecture design and review |
-| `breakdown` | Derive a batch of task files from usecase / spec inputs grounded in the bootstrap-verified codebase |
-| `auto-bootstrap` | Autonomous project bootstrap with research |
-| `auto-usecase` | Reverse-engineer or batch-shape UCs from a codebase / idea / brainstorm (no interview; not a twin of `usecase`) |
+| `breakdown` | Derive a batch of task files from usecase / spec inputs grounded in the ci-verified codebase |
+| `auto-scaffold` | Autonomous LLM-driven project scaffold (directory layout, dependencies, build config, minimal entry point). Produces repo files only — no wiki page. |
+| `ci-setup` | Autonomous test environment setup (unit + integration runners, fixtures, sample tests, task entry points). Writes `a4/ci.md` as the test-execution wiki page. |
+| `extract-usecase` | Extract or batch-shape UCs from a codebase / idea / brainstorm (no interview). Independent of `usecase`. |
 | `brainstorm` | Structured brainstorming sessions |
 | `task` / `bug` / `spike` / `research` | Single ad-hoc task authoring per issue family — writes `a4/<type>/<id>-<slug>.md` under the matching folder |
 | `discard` | Discard a task across any of the four issue families by id / path / slug fragment |
 | `research-review` | Reviews a `type: research` task body via the `research-reviewer` agent; applies accepted revisions |
 | `spec` | Records a spec reached through conversation as `a4/spec/<id>-<slug>.md`; soft-links related research tasks via standard markdown body links + optional `related:` frontmatter; nudges affected wiki pages |
-| `compass` | Project direction and next-step guidance |
 | `handoff` | Point-in-time session snapshot for cross-session continuity |
 | `drift` | Wiki-drift detector; emits review items whose `target:` includes the affected wiki basenames |
 | `validate` | Runs frontmatter, body-convention, and cross-file status-consistency validators over `a4/` (binding contracts: `authoring/frontmatter-common.md` + per-type `authoring/<type>-authoring.md`) |
@@ -77,7 +77,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 <project-root>/
   a4/                                       # Markdown-only documentation workspace
     context.md architecture.md domain.md     # Wiki pages (flat):
-    actors.md nfr.md bootstrap.md            # one file per cross-cutting concern
+    actors.md nfr.md ci.md                   # one file per cross-cutting concern
 
     usecase/<id>-<slug>.md                    # Use Cases
     task/<id>-<slug>.md                       # Executable work units (Jira sense) — flat
@@ -101,7 +101,7 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 ### Wiki vs. issues
 
-- **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, bootstrap) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
+- **Wiki pages** describe the project shape. Each cross-cutting concern (context, domain, architecture, actors, nfr, ci) is one flat file at `a4/` root — no `overview.md` catchall. Wiki pages have no lifecycle but are continuously updated by related issue state changes.
 - **Issues** are lifecycle-tracked items in type-scoped folders. Each carries independent `status`, `updated`, `labels` in frontmatter — "what's open?" is answerable without reading prose.
 - **Review items unify open items, gaps, and questions** — all three share the `review/` folder, distinguished by `kind: finding | gap | question`.
 - **Ideas vs. reviews** — `review/` captures gaps in the **current** spec that (usually) block progress; `idea/` captures **independent possibilities** that never block. Lifecycle differs: review items are worked on (`open | in-progress | resolved | discarded`); ideas are graduated or dropped (`open | promoted | discarded`). Capture ideas via `/a4:idea <line>`. Full rationale: `plugins/a4/spec/archive/2026-04-24-idea-slot.decide.md`.
@@ -129,7 +129,7 @@ Use Case Diagram, authorization matrix, open-issue lists, dependency graphs — 
 
 ### Workspace dashboard
 
-The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open brainstorms. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe. `/a4:compass` consumes the same script (`scripts/workspace_state.py`) for its layered gap diagnosis.
+The `workspace-assistant` agent (snapshot mode) renders the current workspace state to stdout — no file is written. Sections: Wiki pages, Stage progress, Issue counts, Use cases by source, Open reviews, Active tasks, Blocked items, Recent activity, Open ideas, Open brainstorms. The dashboard is a fresh **view** computed each run from per-item frontmatter (the source of truth), so re-rendering is always safe.
 
 ### Archive
 

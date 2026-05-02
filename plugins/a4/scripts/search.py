@@ -66,7 +66,7 @@ WIKI_KINDS_TUPLE: tuple[str, ...] = (
     "architecture",
     "actors",
     "nfr",
-    "bootstrap",
+    "ci",
 )
 
 # Folder → set of valid `kind:` enum values for the `--kind` filter.

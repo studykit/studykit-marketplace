@@ -30,7 +30,7 @@ a4/
   mock/                       # Optional: HTML mocks per screen group
 ```
 
-Wiki pages are flat at `a4/` root. Issues each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are produced on demand by `compass` or by grep over frontmatter — not files.
+Wiki pages are flat at `a4/` root. Issues each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are produced on demand by grep over frontmatter — not files.
 
 ## Id Allocation
 
@@ -49,7 +49,7 @@ Body heading form and link form live in `${CLAUDE_PLUGIN_ROOT}/authoring/body-co
 ## Modes
 
 - **New workspace** — `a4/` does not exist or has no UC files. Create `a4/context.md` after receiving the idea; proceed through the interview flow.
-- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
+- **Iteration** — `a4/` already has UC files (or the user said `iterate`). Run `references/iteration-entry.md`
 
 Never overwrite existing UC, review, or wiki content without confirming with the user; iteration always preserves prior confirmed work.
 

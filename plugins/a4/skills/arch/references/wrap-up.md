@@ -46,6 +46,3 @@ Summarize to the user:
 - Phases completed this session
 - Components added / revised
 - Review items opened / resolved / still open
-- Suggested next step:
-  - `/a4:auto-bootstrap` to set up dev environment
-  - `/a4:breakdown` if bootstrap is already done

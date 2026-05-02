@@ -5,7 +5,7 @@ description: >
   structural completeness checks would miss. Suggests UC candidates based on different usage
   contexts, user profiles, and interaction patterns.
 
-  This agent is invoked by auto-usecase and usecase skills. Do not invoke directly.
+  This agent is invoked by extract-usecase and usecase skills. Do not invoke directly.
 model: opus
 color: green
 tools: ["Read", "Write", "Glob", "Grep"]
@@ -141,4 +141,4 @@ Write the exploration report to the report path provided by the invoking skill. 
 
 If no gaps are found for any perspective, state: "All perspectives adequately covered. No new UC candidates."
 
-The explorer does not write UC files or review items. Its output is advisory; the invoking skill (usecase wrap-up or auto-usecase growth loop) decides whether to compose UC files from the candidates.
+The explorer does not write UC files or review items. Its output is advisory; the invoking skill (usecase wrap-up or extract-usecase growth loop) decides whether to compose UC files from the candidates.

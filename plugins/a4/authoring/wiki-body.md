@@ -1,6 +1,6 @@
 # a4 Wiki Body Conventions
 
-Body-level rules for wiki pages (`actors.md`, `architecture.md`, `bootstrap.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below are how that continuous update is recorded.
+Body-level rules for wiki pages (`actors.md`, `architecture.md`, `ci.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below are how that continuous update is recorded.
 
 Common body rules (heading form, link form) live in `./body-conventions.md`.
 

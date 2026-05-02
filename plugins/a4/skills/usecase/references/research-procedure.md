@@ -18,7 +18,7 @@ If the user agrees:
 4. When notified, save the full results as `a4/research/<id>-<slug>.md` per `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`. Allocate `<id>` via `scripts/allocate_id.py`; set `type: research`, `mode: comparative`, and `related: [usecase/<id>-<slug>, ...]` pointing at the UCs that prompted the investigation. Summarize findings at the next natural break:
    > "The research found these features common in similar systems that we haven't covered yet: [list]. Want to explore any of these?"
 
-   Lookup of prior research tasks (to avoid re-running) is via `scripts/search.py --folder research` or `/a4:compass` — there is no separate index file.
+   Lookup of prior research tasks (to avoid re-running) is via `scripts/search.py --folder research` — there is no separate index file.
 5. **Update the working file** — write the research results to the **Similar Systems Research** section. Add **Source** fields to any research-derived UCs going forward.
 6. If the user picks any, enter the Discovery Loop for those topics. UC candidates the user explicitly declines go into **Excluded Ideas** with the reason discussed.
 7. If the user doesn't pick any, record the candidates in Open Questions for future reference.

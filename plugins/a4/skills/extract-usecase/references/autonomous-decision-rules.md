@@ -1,6 +1,6 @@
 # Autonomous Decision Rules
 
-Apply these consistently during composition and revision. No user interaction is permitted — `auto-usecase` is an autonomous skill.
+Apply these consistently during composition and revision. No user interaction is permitted — `extract-usecase` is an autonomous skill.
 
 ## Rules
 

@@ -1,10 +1,12 @@
-# Iterate Mechanics — Shared Procedure for Review-Item Walks
+# Iterate Mechanics — Contributor Design Memo
 
-Single source of truth for the **formal procedure** every iterate flow follows when walking review items: how to filter the backlog, how to present it, how to transition status, and how to record the wiki edit. The **actual work** that happens between status flips (what to inspect, what to fix, which impact rules to apply) is stage-specific.
+Design memo for plugin contributors describing the **shared procedure** that iterate-using skills implement when walking review items: how to filter the backlog, how to present it, how to transition status, and how to record the wiki edit. The **actual work** that happens between status flips (what to inspect, what to fix, which impact rules to apply) is stage-specific.
 
-**Mental model.** Treat each iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when starting, archive (resolve / discard) when done. The mechanics here are the mailbox protocol.
+**Audience.** Plugin contributors adding or modifying an iterate-using skill. Skills do **not** cite this file at runtime; each skill's `references/iteration-entry.md` is self-contained. Use this memo as a reference shape when authoring a new iterate flow so the new skill's iteration-entry.md stays consistent with the rest.
 
-Companion to:
+**Mental model.** Treat each iterate mode as a stage-specific mailbox: filter the inbox to messages addressed to this stage, open the priority queue, mark a message in-progress when starting, archive (resolve / discard) when done. The mechanics described here are the mailbox protocol.
+
+Related contributor references:
 - `../authoring/body-conventions.md` — body heading form, link form.
 - `../authoring/issue-body.md` — `## Resume`, `## Log` rules for issue files.
 - `../authoring/wiki-body.md` — `## Change Logs` audit trail and Wiki Update Protocol.
@@ -33,7 +35,7 @@ A review item belongs to a given iterate flow when any entry in its `target:` li
 | domain iterate | `target` contains `domain` |
 | arch iterate | `target` contains `architecture` |
 | breakdown iterate | `target` contains `task/*` |
-| run iterate | `target` contains `task/*` (typically from prior cycle's test-runner) |
+| auto-coding iterate | `target` contains `task/*` (typically from prior cycle's test-runner) |
 
 Always restrict to `status: open` (and `in-progress` for resume cases). Exclude `resolved` and `discarded`.
 
@@ -69,7 +71,7 @@ Illegal direct edits (jumps not in `FAMILY_TRANSITIONS`) are surfaced by the Sto
 
 ## 4. Record wiki edits
 
-When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `bootstrap.md`):
+When resolving an item involves editing a wiki page (`context.md`, `actors.md`, `domain.md`, `nfr.md`, `architecture.md`, `ci.md`):
 
 - Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md)`. Create the section if it does not yet exist.
 - The wiki close guard warns at resolve-time when `target:` lists wiki basenames but the referenced page lacks a `## Change Logs` bullet pointing at the review item.

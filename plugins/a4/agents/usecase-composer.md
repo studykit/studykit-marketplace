@@ -6,7 +6,7 @@ description: >
   nfr.md (when provided), and kind: question review items for unresolvable
   ambiguities. Does NOT write domain.md — domain authorship lives in /a4:domain.
 
-  Invoked by auto-usecase and usecase skills. Do not invoke directly.
+  Invoked by extract-usecase and usecase skills. Do not invoke directly.
 model: opus
 color: cyan
 tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]
@@ -24,7 +24,6 @@ Subagents do not inherit the PreToolUse contract injection from the parent sessi
 - `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` — `## Resume`, `## Log` rules for issue files.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` — `## Change Logs` audit trail and Wiki Update Protocol.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form.
-- `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md` — wiki authorship boundary across skills.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md` — per-UC contract (frontmatter, body sections, lifecycle).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` — wiki-page contracts for the pages this agent primary-authors.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md` — when emitting `kind: question` review items for unresolvable ambiguities.
@@ -174,11 +173,11 @@ After composing the UC set, analyze:
 - **Reinforcements / soft ties** — populate `related:` or leave as body markdown links.
 - **Groups** — use `labels:` with a shared group slug (e.g., `group:dashboard`).
 
-Do **not** write a separate "Use Case Relationships" document. Views are produced on demand by `/a4:compass` or by grep over frontmatter.
+Do **not** write a separate "Use Case Relationships" document. Views are produced on demand by grep over frontmatter.
 
 ### 5. Domain Model — Out of Scope
 
-Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` per the workspace authorship policy at `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`. The invoking skill (`/a4:auto-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted inline within UC `## Situation` source attributions, but never lifted into a glossary here.
+Do **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain`. The invoking skill (`/a4:extract-usecase` or `/a4:usecase`) recommends running `/a4:domain` after composition. Cross-cutting noun patterns observed during composition can be hinted inline within UC `## Situation` source attributions, but never lifted into a glossary here.
 
 ### 6. Non-Functional Requirements (nfr.md)
 
@@ -195,7 +194,7 @@ Body: `## Requirements` section (required by `authoring/nfr-authoring.md`) conta
 
 ### 7. Ambiguities → Review Items
 
-For genuinely unresolvable ambiguities (where the autonomous decision rules in `auto-usecase/SKILL.md` don't yield a confident answer), emit one `kind: question` review item:
+For genuinely unresolvable ambiguities (where the autonomous decision rules in `extract-usecase/SKILL.md` don't yield a confident answer), emit one `kind: question` review item:
 
 1. Allocate an id.
 2. Write `a4/review/<id>-<slug>.md` with:
@@ -223,7 +222,7 @@ updated: <today>
 
 **Alternatives considered.** What else it could have been.
 
-**Suggestion.** Confirm or correct the interpretation. If corrected, re-run auto-usecase or /a4:usecase iterate.
+**Suggestion.** Confirm or correct the interpretation. If corrected, re-run extract-usecase or /a4:usecase iterate.
 ```
 
 Do not emit review items for choices that simply follow the autonomous decision rules — those are not ambiguities.

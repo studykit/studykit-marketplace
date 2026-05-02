@@ -1,6 +1,6 @@
 ---
 name: breakdown
-description: "This skill should be used when the user needs to derive a batch of task files from existing usecase / spec / architecture inputs. Common triggers include: 'breakdown', 'derive tasks', 'task batch', 'batch tasks from spec', 'plan the implementation tasks'. Writes per-task files at a4/task/<id>-<slug>.md only — no wiki page output. Requires (usecase OR spec) AND bootstrap.md to enter; otherwise redirects to /a4:auto-bootstrap, /a4:spec, /a4:usecase, or /a4:task. The agent-driven implement + test loop is in /a4:auto-coding; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
+description: "This skill should be used when the user needs to derive a batch of task files from existing usecase / spec / architecture inputs. Common triggers include: 'breakdown', 'derive tasks', 'task batch', 'batch tasks from spec', 'plan the implementation tasks'. Writes per-task files at a4/task/<id>-<slug>.md only — no wiki page output. Requires (usecase OR spec) AND ci.md to enter; otherwise redirects to /a4:ci-setup, /a4:spec, /a4:usecase, or /a4:task. The agent-driven implement + test loop is in /a4:auto-coding; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
 argument-hint: <optional: "iterate" to walk task-targeted review items; auto-detects workspace state otherwise>
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
@@ -8,7 +8,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPl
 
 # Task Breakdown
 
-Decomposes upstream behavioral inputs (`a4/usecase/*.md`, `a4/spec/*.md`) into a batch of implementation tasks, grounded in the actual codebase that `bootstrap.md` already verified runs and tests. Emits one `a4/task/<id>-<slug>.md` per executable unit. The agent-driven implement + test loop lives in `/a4:auto-coding`.
+Decomposes upstream behavioral inputs (`a4/usecase/*.md`, `a4/spec/*.md`) into a batch of implementation tasks, grounded in the actual codebase that `ci.md` already verified runs and tests. Emits one `a4/task/<id>-<slug>.md` per executable unit. The agent-driven implement + test loop lives in `/a4:auto-coding`.
 
 This skill replaces the prior `roadmap` skill. The single-`roadmap.md` wiki narrative was retired with it; phase narrative — when a project benefits from one — is the user's to author directly as a wiki page, not a skill output.
 
@@ -21,7 +21,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 - **Behavioral source** — at least one of:
   - `a4/usecase/*.md` — Use Cases (task `implements:` references point here).
   - `a4/spec/*.md` — Specs (task `spec:` references point here).
-- **Structural anchor** — `a4/bootstrap.md`. Single source of truth for Launch & Verify; its presence implies a scaffolded codebase produced by `/a4:auto-bootstrap`. Without it, derived tasks have no executable verification path.
+- **Test-execution anchor** — `a4/ci.md`. Single source of truth for test execution; its presence implies a verified test environment produced by `/a4:ci-setup`. Without it, derived tasks have no executable verification path.
 
 **Optional inputs:**
 
@@ -33,23 +33,21 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 - `a4/task/<id>-<slug>.md` — one per executable unit of work. `type: task`, `status: open`. The breakdown generator always emits `type: task`; spike / bug / research authoring goes through their dedicated skills.
 - `a4/review/<id>-<slug>.md` — findings from `breakdown-reviewer`, plus an optional arch-drift item when the codebase contradicts arch.md.
 
-No `a4/roadmap.md` is authored. Derived views (dependency graph, open-task dashboard) are produced on demand by `/a4:compass` or by grep over frontmatter.
-
 ## Entry Gate
 
 Before any work, verify the input contract:
 
 ```bash
 behav=$(ls a4/usecase/*.md a4/spec/*.md 2>/dev/null | head -1)
-boot=$(ls a4/bootstrap.md 2>/dev/null)
+boot=$(ls a4/ci.md 2>/dev/null)
 ```
 
-| Behavioral source | bootstrap | Action |
-|-------------------|-----------|--------|
+| Behavioral source | ci.md | Action |
+|-------------------|-------|--------|
 | present | present | Continue. Architecture (`a4/architecture.md`) is consulted if present. |
 | missing | present | Halt. Tell the user: behavioral source absent. Run `/a4:spec` or `/a4:usecase` for batch grounding, or `/a4:task` for a single ad-hoc task. |
-| present | missing | Halt. Tell the user: bootstrap absent. Run `/a4:auto-bootstrap` first to scaffold the codebase and establish the verify contract; without it, derived tasks have no verification path. |
-| missing | missing | Halt. Tell the user: neither behavioral source nor bootstrap is present. Ad-hoc work goes through `/a4:task`. |
+| present | missing | Halt. Tell the user: ci.md absent. Run `/a4:ci-setup` first to set up the test environment and establish the test-execution contract; without it, derived tasks have no verification path. |
+| missing | missing | Halt. Tell the user: neither behavioral source nor ci.md is present. Ad-hoc work goes through `/a4:task`. |
 
 ## Id Allocation
 
@@ -60,7 +58,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **Derivation mode** — entry gate passes AND there is unmapped behavioral material (UCs/specs without any `implements:` / `spec:` referencing task). Run Steps 1 → 4.
-- **Iterate mode** — open review items target a task in one of the four issue family folders (`task/`, `bug/`, `spike/`, `research/`). Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
+- **Iterate mode** — open review items target a task in one of the four issue family folders (`task/`, `bug/`, `spike/`, `research/`). Apply `references/iteration-entry.md`
 
 Mode detection at session start:
 
@@ -75,13 +73,13 @@ If every behavioral source is already covered by an existing task and the user's
 
 ### Step 1: Read behavioral sources
 
-Read every UC in `a4/usecase/*.md` and every spec in `a4/spec/*.md` (skip those already covered by an existing `task.implements:` / `task.spec:`). Read `a4/bootstrap.md` for the verify contract — task acceptance criteria reference its `## Verify` commands. Read `a4/architecture.md` if present, treating it as design intent reference only.
+Read every UC in `a4/usecase/*.md` and every spec in `a4/spec/*.md` (skip those already covered by an existing `task.implements:` / `task.spec:`). Read `a4/ci.md` for the test-execution contract — task acceptance criteria reference its `## How to run tests` commands. Read `a4/architecture.md` if present, treating it as design intent reference only.
 
 ### Step 2: Explore the codebase (authoritative for structure)
 
-The codebase that `bootstrap.md` verified is the **single source of truth** for file paths, module boundaries, naming conventions, and import structure. Inspect:
+The codebase that `ci.md` verified is the **single source of truth** for file paths, module boundaries, naming conventions, and import structure. Inspect:
 
-- Project structure, language conventions, build / test wiring (cross-check against `bootstrap.md` `## Verify`).
+- Project structure, language conventions, build / test wiring (cross-check against `ci.md` `## How to run tests`).
 - File organization patterns relevant to the upstream behavioral material.
 - Existing identifiers (class / function / module names) the new tasks will extend or extend alongside.
 
@@ -103,7 +101,7 @@ After Step 4 closes:
 
 > Tasks ready. Begin the implement step — drive each task directly (`pending → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → pending` (edit `status:` directly) when you are ready for them to be picked up.
 
-Both implement forms read `a4/bootstrap.md`'s `## Verify` as the single source of truth. Make sure `bootstrap.md` exists and its `## Verify` content is correct before handing off — re-run `/a4:auto-bootstrap` if architecture or scaffolding changed.
+Both implement forms read `a4/ci.md`'s `## How to run tests` as the single source of truth. Make sure `ci.md` exists and its content is correct before handing off — re-run `/a4:ci-setup` if architecture or test infrastructure changed.
 
 ## Commit Points
 
@@ -127,6 +125,6 @@ When the user ends the breakdown session:
 - Do not author any wiki page. `roadmap.md` is no longer a skill output (and the type was retired with it). Phase narrative belongs to whatever wiki page the user chooses to maintain manually, or to `architecture.md`.
 - Do not infer file paths from `architecture.md` when those paths do not exist in the codebase. Code wins.
 - Do not drive the implement step here. The implement step (whether direct or via `/a4:auto-coding`) follows breakdown, not within it.
-- Do not author Launch & Verify commands. `bootstrap.md` is the single source of truth.
+- Do not author test-execution commands. `ci.md` is the single source of truth.
 - Do not edit `architecture.md` to resolve drift. Emit a review item; resolution flows through `/a4:arch iterate`.
-- Do not skip the entry gate. UC/spec absence ⇒ no batch; bootstrap absence ⇒ no batch.
+- Do not skip the entry gate. UC/spec absence ⇒ no batch; ci.md absence ⇒ no batch.

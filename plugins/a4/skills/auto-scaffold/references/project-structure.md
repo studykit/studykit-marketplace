@@ -1,6 +1,6 @@
 # Project Structure Setup
 
-Based on the Technology Stack and Component structure extracted from `architecture.md` (Full shape) or detected from the project (Minimal shape):
+Based on the Technology Stack and Component structure extracted from `architecture.md` (when present) or detected from the project (otherwise):
 
 1. **Create directory structure** following framework conventions.
 2. **Initialize project files** (`package.json`, `pyproject.toml`, `Cargo.toml`, etc.).
@@ -11,3 +11,5 @@ Based on the Technology Stack and Component structure extracted from `architectu
    - VS Code extension → extension activates + panel opens.
    - CLI → `--help` prints usage.
    - API → health check returns 200.
+
+Do not install test runners or write any tests — that scope belongs to `/a4:ci-setup`.

@@ -101,7 +101,7 @@ Verdicts: `OK` | `NO CONTRACT` | `INCONSISTENT`.
 - Test Strategy section present; covers at least the unit tier.
 - Each tier: tool named with version constraint; rationale clear.
 - No architecture layer (webview, extension host, external deps) lacking test coverage.
-- Special setup requirements noted for `auto-bootstrap`.
+- Special setup requirements noted for `ci-setup`.
 
 Verdicts: `OK` | `MISSING TIER` | `UNVERIFIED TOOL` | `NO SETUP NOTES`.
 

@@ -4,13 +4,11 @@
 # ///
 """Render a4/ workspace state as a markdown report.
 
-Single source of truth for the workspace dashboard view. Two callers:
+Single source of truth for the workspace dashboard view. Caller:
 
   workspace-assistant agent (snapshot mode) — surfaces the full report
                 to the user as the on-demand workspace summary (no
                 file is written).
-  /a4:compass   Step 3.2 — pulls only the sections its layered gap diagnosis
-                needs (`skills/compass/references/gap-diagnosis.md`).
 
 The per-item frontmatter under `a4/` is the source of truth; this report
 is a fresh snapshot computed each run. Output is markdown so the LLM
@@ -20,11 +18,11 @@ summary at the same time.
 Sections (kebab-case identifier on the left):
 
   wiki-pages          presence + last-updated for the canonical wiki kinds.
-  stage-progress      mixed-axis view of usecase/arch/bootstrap/impl.
+  stage-progress      mixed-axis view of usecase/arch/ci/impl.
   issue-counts        per folder × {active, in_progress, terminal, total}
                       plus by-kind for review and per-family rows for
                       the four issue families.
-  usecases-by-source  UC `source:` distribution (Reverse-only detection).
+  usecases-by-source  UC `source:` distribution (extracted-from-code detection).
   open-reviews        open / in-progress reviews, sorted by priority
                       then created then id.
   active-tasks        tasks with status in {pending, progress, failing}.
@@ -75,7 +73,7 @@ WIKI_KINDS: tuple[str, ...] = (
     "architecture",
     "actors",
     "nfr",
-    "bootstrap",
+    "ci",
 )
 
 PRIORITY_ORDER: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
@@ -241,7 +239,7 @@ def render_stage_progress(
         "|-------|-------|",
         f"| Usecase | {status_summary('usecase', usecases)} |",
         f"| Arch | {wiki_row('architecture')} |",
-        f"| Bootstrap | {wiki_row('bootstrap')} |",
+        f"| CI | {wiki_row('ci')} |",
         f"| Impl | {status_summary('task', tasks)} |",
     ]
     return "\n".join(lines)
@@ -432,7 +430,8 @@ def render_state(a4_dir: Path, sections: list[str] | None = None) -> str:
 
     `sections=None` produces the full dashboard with the top-level header.
     A non-empty list produces only those sections (in the order given) and
-    omits the header — useful for compass and other targeted callers.
+    omits the header — useful for targeted callers (e.g., agents pulling
+    a single section into a larger response).
     """
     ctx = _build_context(a4_dir)
 

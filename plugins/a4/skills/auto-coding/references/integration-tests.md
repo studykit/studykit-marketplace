@@ -6,15 +6,15 @@ Otherwise, spawn the test-runner:
 
 ```
 Agent(subagent_type: "a4:test-runner", prompt: """
-Bootstrap file: <absolute path to a4/bootstrap.md>  # single source of truth for L&V
+ci file: <absolute path to a4/ci.md>  # single source of truth for test execution
 a4/ path: <absolute path>
 Cycle: <current integer>
 
-Use bootstrap.md's ## Verify section (verified commands, smoke scenario, test isolation
-flags) for build / run / test commands. Run integration and smoke tests as defined
-there. For each failing test, emit one review item at
-a4/review/<id>-<slug>.md via allocate_id.py — frontmatter and body shape per
-${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md — with:
+Use ci.md's ## How to run tests section (per-tier commands, multi-tier run, test
+isolation flags) plus the optional ## Smoke scenario for run / test commands.
+Run integration and smoke tests as defined there. For each failing test, emit
+one review item at a4/review/<id>-<slug>.md via allocate_id.py — frontmatter
+and body shape per ${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md — with:
 
   kind: finding
   status: open

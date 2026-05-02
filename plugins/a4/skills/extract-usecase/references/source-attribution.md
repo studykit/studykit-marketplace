@@ -1,6 +1,6 @@
 # Source Attribution on UCs
 
-Each UC body produced by `auto-usecase` includes a `## Source` section identifying where the UC came from. The section is mandatory for every UC in `auto-usecase` output.
+Each UC body produced by `extract-usecase` includes a `## Source` section identifying where the UC came from. The section is mandatory for every UC in `extract-usecase` output.
 
 ## Allowed values
 

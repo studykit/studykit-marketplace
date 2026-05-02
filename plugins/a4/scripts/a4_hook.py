@@ -334,7 +334,7 @@ _WIKI_BODY_TYPES = frozenset(
     {
         "actors",
         "architecture",
-        "bootstrap",
+        "ci",
         "context",
         "domain",
         "nfr",

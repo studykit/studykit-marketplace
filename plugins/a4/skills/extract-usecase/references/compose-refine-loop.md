@@ -40,7 +40,7 @@ The composer:
 - Writes `a4/actors.md` with `type: actors`, `updated`, a `## Roster` section containing the Actors table.
 - Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
 - Writes NFRs to `a4/nfr.md` if any are surfaced.
-- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain` (per `../../../workflows/wiki-authorship.md`). The final summary recommends running `/a4:domain` after auto-usecase finishes.
+- Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain`.
 - Emits `kind: question` review items for unresolvable ambiguities. Frontmatter and body shape follow `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`.
 - Never rewrites previously confirmed UC files without cause.
 

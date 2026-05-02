@@ -186,18 +186,17 @@ _LAYER_MAP_BLOCK = (
     "**a4 plugin layer map** (loaded once on first `plugins/a4/` touch). "
     "Each directory has a fixed audience and citation contract — do not "
     "invert the citation direction.\n"
-    "- `authoring/` — workspace authors editing "
-    "`<project-root>/a4/**/*.md`. Cite `./*` + `../scripts/*.py`. No "
-    "`../workflows/`, `../skills/`, `../dev/`. Relative paths.\n"
-    "- `workflows/` — skill runtimes. Cite `./*` + `../authoring/`. No "
-    "`../scripts/`, `../dev/`.\n"
-    "- `dev/` — plugin contributors. May cite anywhere; reverse refs "
-    "forbidden.\n"
+    "- `authoring/` — workspace authors and skill runtime, editing or "
+    "reading `<project-root>/a4/**/*.md` contracts. Cite `./*` + "
+    "`../scripts/*.py`. No `../skills/`, `../dev/`. Relative paths.\n"
+    "- `dev/` — plugin contributors. May cite anywhere; skills must NOT "
+    "cite this directory at runtime.\n"
     "- `dev/scripts/` — plugin contributors (contributor tooling, "
     "registered via repo `.claude/settings.json`, not in the plugin "
     "manifest).\n"
     "- `skills/<name>/**`, `agents/*.md` — skill / agent runtime. Cite "
-    "`${CLAUDE_PLUGIN_ROOT}/{authoring,workflows}/`. Never `dev/`.\n"
+    "`${CLAUDE_PLUGIN_ROOT}/authoring/`. Never `dev/`. Each skill is an "
+    "independent entry point — there is no shared orchestration layer.\n"
     "- `scripts/` — workspace runtime (validators, hook dispatcher, "
     "cascade primitives).\n"
     "- `hooks/` — workspace hook manifests + bash wrappers; substantive "
@@ -262,7 +261,7 @@ def _resolve_layer(file_path: str, plugin_root: Path) -> str:
     head = parts[0]
     if head == "dev" and len(parts) >= 2 and parts[1] == "scripts":
         return "dev-scripts"
-    if head in ("authoring", "workflows", "dev", "skills", "agents", "scripts", "hooks"):
+    if head in ("authoring", "dev", "skills", "agents", "scripts", "hooks"):
         return head
     return "other"
 
@@ -271,12 +270,8 @@ def _resolve_layer(file_path: str, plugin_root: Path) -> str:
 # live in each CLAUDE.md — this hook only points contributors at it.
 _LAYER_INFO: dict[str, tuple[str, str]] = {
     "authoring": (
-        "workspace authors editing `<project-root>/a4/**/*.md`",
+        "workspace authors and skill runtime reading `<project-root>/a4/**/*.md` contracts",
         "plugins/a4/authoring/CLAUDE.md",
-    ),
-    "workflows": (
-        "skill runtimes",
-        "plugins/a4/workflows/CLAUDE.md",
     ),
     "dev": (
         "plugin contributors",

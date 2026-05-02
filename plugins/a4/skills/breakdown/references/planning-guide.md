@@ -37,7 +37,7 @@ Mix both approaches: foundation tasks (shared schemas, utility services) first, 
 A well-sized task should:
 - Cover 1–5 related UCs or specs (or UC subsets — e.g., validation + error handling from a single UC).
 - Touch 1–3 components.
-- Be independently testable against `bootstrap.md`'s `## Verify`.
+- Be independently testable against `ci.md`'s `## How to run tests`.
 - Result in a meaningful, working increment.
 - Require roughly under ~500 lines of new or changed code.
 
@@ -58,9 +58,9 @@ Merge when a task:
 
 ## Launch & Verify Source
 
-`bootstrap.md` is the single source of truth for Launch & Verify (build / launch / test commands, smoke scenario, test isolation flags). Per [`workflows/wiki-authorship.md`](${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md), `breakdown` does not author L&V content and does not auto-detect commands. That work happened in `/a4:auto-bootstrap` and was already verified there.
+`ci.md` is the single source of truth for test execution (per-tier commands, multi-tier run, test isolation flags, optional smoke scenario). `breakdown` does not author ci.md content and does not auto-detect commands. That work happened in `/a4:ci-setup` and was already verified there.
 
-If `bootstrap.md` is absent, the entry gate halts before reaching this step. If `bootstrap.md` is stale (codebase no longer matches verify commands), re-run `/a4:auto-bootstrap` rather than working around it here. The `breakdown-reviewer` flags task AC that disagrees with bootstrap's verify commands as a finding.
+If `ci.md` is absent, the entry gate halts before reaching this step. If `ci.md` is stale (codebase no longer matches verify commands), re-run `/a4:ci-setup` rather than working around it here. The `breakdown-reviewer` flags task AC that disagrees with ci.md's commands as a finding.
 
 ## Dependency Analysis
 
@@ -125,7 +125,7 @@ This is included in the prompt for every coder agent that touches the file, so e
 
 ### Deriving File Paths
 
-Use the codebase observations from Step 2 (the codebase that bootstrap verified) to determine paths:
+Use the codebase observations from Step 2 (the codebase that ci-setup verified) to determine paths:
 
 1. **Inspect the existing codebase** — directory structure, naming conventions, existing patterns.
 2. **Follow framework conventions** — e.g., Next.js uses `app/` for routes, Django uses `<app>/models.py`.

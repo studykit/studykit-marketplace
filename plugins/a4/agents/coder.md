@@ -28,11 +28,11 @@ Subagents do not inherit the PreToolUse contract injection of the parent session
 From the invoking `run` skill:
 
 - **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `task/`, `bug/`, `spike/`, `research/`; the folder must match the file's `type:` frontmatter).
-- **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify).
+- **ci file path** — absolute path to `a4/ci.md` (single source of truth for test execution).
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
 - **UC file paths** — absolute paths to each `a4/usecase/<id>-<slug>.md` referenced in the task's `implements:` frontmatter.
 
-Read the task file first, then bootstrap.md's `## Verify` section (Verified Commands subsection), then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If the task's `## Description` records a Shared Integration Points pattern (a file modified by 3+ tasks), follow that pattern when touching the shared file.
+Read the task file first, then ci.md's `## How to run tests` section, then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If the task's `## Description` records a Shared Integration Points pattern (a file modified by 3+ tasks), follow that pattern when touching the shared file.
 
 ## What You Do
 
@@ -49,7 +49,7 @@ Read the task file first, then bootstrap.md's `## Verify` section (Verified Comm
 2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `artifacts:`). Do not touch files outside that list.
 3. **Implement** — follow the task's `## Description`, consuming / providing the Interface Contracts noted in `## Interface Contracts`. Use domain terminology from `a4/domain.md`'s `## Concepts` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
-5. **Verify** — run the unit-test command from `bootstrap.md`'s `## Verify` section (Verified Commands subsection). All unit tests must pass before returning success.
+5. **Verify** — run the unit-test command from `ci.md`'s `## How to run tests` section. All unit tests must pass before returning success.
 6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`:
    ```
    #<task-id> <type>(a4): <description>

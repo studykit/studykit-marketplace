@@ -1,6 +1,6 @@
 # Iteration Entry Procedure (usecase)
 
-usecase-specific addendum on top of the shared procedure in [`plugins/a4/workflows/iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md). This document describes only what the **usecase** iterate flow does between writer calls — research-reflected check, revising-UC scope handling, allowed activities, work-surface summary.
+Self-contained iterate procedure for `usecase`. Walk open review items as a stage-specific mailbox: filter, present, edit `status:` directly (the cascade hook refreshes `updated:`). This document also describes usecase-specific work between status flips — research-reflected check, revising-UC scope handling, allowed activities, work-surface summary.
 
 When entering Iteration mode (an existing `a4/` workspace with UC files is found), the goal is to surface unresolved review items, unreflected research/exploration reports, and any wiki drift so the session picks up coherently.
 
@@ -15,7 +15,7 @@ List the current state. Do **not** read every UC up front — read on demand.
 
 ## 2. Backlog (per the mechanics)
 
-Filter open review items to this stage's mailbox: items whose `target:` list contains any of `usecase/*`, `context`, `actors`, `nfr`. Present as the priority backlog per [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md) §1–§2. The writer-call protocol for **pick → in-progress** and **resolve → resolved** is in §3 of that document.
+Filter open review items to this stage's mailbox: items whose `target:` list contains any of `usecase/*`, `context`, `actors`, `nfr`. Present as a priority-ordered table (High → Medium → Low, then by `created:`). When picking an item, edit its `status: open → in-progress`; when resolved, edit `status: in-progress → resolved` (or `discarded` when no longer applicable). The PostToolUse cascade hook refreshes `updated:` — never hand-edit it. If a resolution edits a wiki page, append a dated `## Change Logs` bullet citing the review item.
 
 ### Revising-UC priority
 
@@ -46,7 +46,7 @@ Present a brief status:
 
 ## Usecase-specific iteration rules
 
-Most discipline is shared (see [`iterate-mechanics.md`](${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md) §5). usecase adds:
+Universal discipline (do not overwrite previously confirmed content; preserve cross-references when renaming or splitting; never hand-edit `updated:`) applies. usecase adds:
 
 - **Show before/after on UC modifications** — when modifying an existing UC body, present the before/after to the user before writing.
 - **Preserve allocator gaps** — when adding new UCs after iteration, gaps from earlier discards/renumbers stay; do not compact ids.

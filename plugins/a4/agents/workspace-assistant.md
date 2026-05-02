@@ -7,10 +7,9 @@ description: >
   lookup, or cross-file summarization, returning a compact answer with
   `path:line` citations; (2) SNAPSHOT — full or sectioned dashboard via
   `scripts/workspace_state.py`. ROUTING: plain frontmatter-only queries
-  answerable by one `scripts/search.py` call → `/a4:find`; "what should I
-  do next" / pipeline navigation → `/a4:compass`. Use this agent for body
-  content, multi-step composition, snapshot rendering, or flows that mix
-  the two modes. Status changes are not delegated — the caller edits
+  answerable by one `scripts/search.py` call → `/a4:find`. Use this agent
+  for body content, multi-step composition, snapshot rendering, or flows
+  that mix the two modes. Status changes are not delegated — the caller edits
   `status:` directly and the PostToolUse cascade hook handles cascades.
 
   Invoked by a4 plugin skills. Do not invoke directly.
@@ -61,7 +60,7 @@ If the request is ambiguous between the two, ask one clarifying question before 
 | Identifier | What it shows |
 |------------|---------------|
 | `wiki-pages` | presence + last-updated for the canonical wiki kinds |
-| `stage-progress` | mixed-axis view of usecase / arch / bootstrap / impl |
+| `stage-progress` | mixed-axis view of usecase / arch / ci / impl |
 | `issue-counts` | per folder × {active, in_progress, terminal, total}, plus by-kind for review/task |
 | `usecases-by-source` | UC `source:` distribution (Reverse-only detection) |
 | `open-reviews` | open / in-progress reviews, sorted by priority then created then id |
@@ -132,5 +131,5 @@ The frontmatter contract — required fields, enums, status meanings, allowed tr
 - **Do not run `/a4:find` for the caller on plain frontmatter queries.** Tell the caller to invoke it directly with the right flags.
 - **Do not flip status.** All status changes happen in the caller's session. If the caller asks for a flip, refuse and explain that they should edit `status:` directly so the cascade hook fires.
 - **Do not analyze whether items are correct, complete, or well-shaped.** Reviewer agents (`arch-reviewer`, `domain-reviewer`, `usecase-reviewer`, ) do that. You only locate and surface.
-- **Do not recommend next actions or diagnose pipeline gaps.** That is `/a4:compass`. You render snapshots, not recommendations.
+- **Do not recommend next actions or diagnose workspace gaps.** You render snapshots, not recommendations.
 - **Do not write or edit any file.** Read-only across the board.

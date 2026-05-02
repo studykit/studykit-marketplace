@@ -44,7 +44,7 @@ Inside `a4/`:
 - `a4/spec/*.md` — every spec (task `spec:` references resolve here).
 - `a4/architecture.md` — design intent reference (may be absent; treat as drift-tolerated when present).
 - `a4/domain.md`, `a4/actors.md`, `a4/nfr.md`, `a4/context.md` — supporting wiki pages (may be absent).
-- `a4/bootstrap.md` — verify contract (must exist; the breakdown skill's entry gate guarantees it).
+- `a4/ci.md` — verify contract (must exist; the breakdown skill's entry gate guarantees it).
 - `a4/review/*.md` — existing review items; read every `status: open` item to deduplicate.
 
 Read all source files before reviewing.
@@ -93,7 +93,7 @@ Per task:
 - Do scenarios cover error handling defined in the implemented UCs / specs?
 - Does the task's `artifacts:` list include the unit-test files?
 - If the task depends on external services, is isolation specified?
-- Do AC scenarios reference `bootstrap.md` `## Verify` commands when AC names a runnable check?
+- Do AC scenarios reference `ci.md` `## How to run tests` commands when AC names a runnable check?
 
 Verdicts: `OK` | `NO TEST STRATEGY` | `VAGUE TESTS` | `MISSING ERROR TESTS` | `NO ISOLATION` | `BOOTSTRAP DRIFT`.
 
@@ -103,7 +103,7 @@ Per task:
 - Is `## Files` populated?
 - Are paths specific (`src/services/auth.service.ts`, not "a service file")?
 - For modifications to existing files, is the change scope described (added fields, modified signatures)?
-- Do file paths exist in (or follow the conventions of) the codebase that bootstrap verified?
+- Do file paths exist in (or follow the conventions of) the codebase that ci-setup verified?
 
 Verdicts: `OK` | `NO FILES` | `VAGUE FILES` | `MISSING SCOPE` | `CONVENTION CONFLICT` | `PHANTOM PATH`.
 
@@ -121,7 +121,7 @@ Verdicts: `OK` | `NO CRITERIA` | `UNMEASURABLE` | `MISALIGNED`.
 - **Domain terms** — any task content using terms that conflict with `a4/domain.md` glossary (when domain.md is present).
 - **Architecture intent** — when `architecture.md` is present, do task descriptions contradict its component / responsibility narrative? (Note: arch.md is drift-tolerated; only flag explicit contradictions of stated intent, not drift over file paths — that flows through the breakdown skill's drift review, not this finding.)
 - **Behavior** — do task descriptions contradict UC Flow / Outcome or spec Specification?
-- **Bootstrap verify alignment** — task AC that names a verify check should match a command in `bootstrap.md` `## Verify`. Mismatches mean either the task's AC is wrong or `bootstrap.md` is stale.
+- **ci.md alignment** — task AC that names a verify check should match a command in `ci.md` `## How to run tests`. Mismatches mean either the task's AC is wrong or `ci.md` is stale.
 
 Verdicts: `OK` | `CONFLICT`.
 
@@ -150,7 +150,7 @@ id: <allocated id>
 title: "<short finding title>"
 kind: finding | gap
 status: open
-target: [<one or more of: task/<id>-<slug>, architecture, usecase/<id>-<slug>, spec/<id>-<slug>, domain, bootstrap, ...>]
+target: [<one or more of: task/<id>-<slug>, architecture, usecase/<id>-<slug>, spec/<id>-<slug>, domain, ci, ...>]
 source: breakdown-reviewer
 priority: high | medium | low
 labels: [<e.g. "coverage", "dependencies", "tests">]
@@ -180,7 +180,7 @@ updated: <YYYY-MM-DD>
 | UC gap surfaced during review | `[usecase/<id>-<slug>]` |
 | Spec gap surfaced during review | `[spec/<id>-<slug>]` |
 | Architecture intent contradiction | `[architecture]` |
-| Bootstrap verify drift (AC names a command bootstrap doesn't have) | `[bootstrap]` (or `[task/..., bootstrap]` when both sides are off) |
+| ci.md verify drift (AC names a command ci.md doesn't have) | `[ci]` (or `[task/..., ci]` when both sides are off) |
 | Domain term conflict | `[task/..., domain]` (or `[architecture, domain]` if arch is the offender) |
 
 `kind: gap` is preferred for "missing coverage area" findings (missing UC / spec / tier / scenario). `kind: finding` for quality issues on existing content.
@@ -217,7 +217,7 @@ top_issues:
 
 ## Rules
 
-- Read every source file (tasks + UCs + specs + architecture + supporting wiki pages + bootstrap.md) before reviewing.
+- Read every source file (tasks + UCs + specs + architecture + supporting wiki pages + ci.md) before reviewing.
 - Every review item must include Summary, Evidence, Impact, and Suggestion.
 - Think like an AI developer: for each finding, state what the developer would have to guess and why the guess could go wrong.
 - Do not edit task files, UCs, specs, architecture, or any wiki yourself. Emit findings only.

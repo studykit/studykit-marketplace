@@ -5,7 +5,7 @@ description: >
   or wiki pages. Marks items resolved on success, deferred on ambiguity. Emits
   no new review items; only closes or defers existing ones.
 
-  Invoked by auto-usecase and usecase skills. Do not invoke directly.
+  Invoked by extract-usecase and usecase skills. Do not invoke directly.
 model: opus
 color: cyan
 tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep"]

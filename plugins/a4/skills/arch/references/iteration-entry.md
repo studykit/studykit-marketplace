@@ -1,6 +1,6 @@
 # Architecture Iteration Entry
 
-Skill-specific addendum on top of the shared iterate mechanics in `../../../workflows/iterate-mechanics.md`. Read that file first for filter / backlog presentation / writer call / footnote / discipline rules.
+Skill-specific addendum. Walk open review items targeting this stage as a stage-specific mailbox: filter, present as priority table, edit `status` directly (the cascade hook refreshes `updated:`).
 
 ## Backlog filter
 

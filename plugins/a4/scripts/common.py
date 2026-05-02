@@ -28,7 +28,7 @@ def now_kst() -> str:
     return datetime.now(KST).strftime("%Y-%m-%d %H:%M")
 
 WIKI_TYPES = frozenset(
-    {"context", "domain", "architecture", "actors", "nfr", "bootstrap"}
+    {"context", "domain", "architecture", "actors", "nfr", "ci"}
 )
 
 # Top-level issue folders under `<a4-dir>/`. a4 v12.0.0 split the former

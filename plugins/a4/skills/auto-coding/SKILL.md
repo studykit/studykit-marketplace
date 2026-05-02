@@ -13,7 +13,7 @@ Two stages over the tasks already authored under the four issue family folders (
 1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `coder` agents (one `Agent` call per task; default serial mode runs them sequentially in the user's working tree, opt-in parallel mode wraps each in `isolation: "worktree"` and merges back), then run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
-Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`).
+Reads `a4/ci.md` for test / smoke / isolation commands — ci.md is the single source of truth for test execution. See `${CLAUDE_PLUGIN_ROOT}/authoring/ci-authoring.md` for the page contract.
 
 Authoring is out of scope: `/a4:breakdown` writes the UC/spec-batch tasks; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` write single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
 
@@ -24,7 +24,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 **Inputs:**
 
 - `a4/<type>/<id>-<slug>.md` (under `task/`, `bug/`, `spike/`, or `research/`) — required. The set of executable units this run consumes.
-- `a4/bootstrap.md` — required. Single source of truth for Launch & Verify.
+- `a4/ci.md` — required. Single source of truth for test-execution commands.
 - `a4/architecture.md` — passed to agents for contract context.
 - `a4/usecase/*.md` — read for UC ship-review candidates (Step 4b). Absent in UC-less projects; that's fine.
 - `a4/review/*.md` — open review items influence ready-set selection and resume behavior.
@@ -37,7 +37,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 ## Launch & Verify Source
 
-Resolution policy: `references/launch-verify-source.md`. When `bootstrap.md` is absent, halt and delegate to `/a4:compass`.
+Resolution policy: `references/launch-verify-source.md`. When `ci.md` is absent, halt and tell the user to run `/a4:ci-setup` first.
 
 ## Mode Selection
 
@@ -55,7 +55,7 @@ No auto-fall-back on pre-flight failure (halt instead). No in-cycle mode switch.
 ### Axis 2 — Run vs resume (workspace-state-driven)
 
 - **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
-- **Iterate mode** — open review items target a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
+- **Iterate mode** — open review items target a task. Apply `references/iteration-entry.md`.
 
 Workspace-state probe at session start:
 
@@ -112,7 +112,7 @@ Context is passed via file paths, not agent memory.
 ## Out of Scope
 
 - **Authoring** — task files, specs, UCs are written elsewhere. `/a4:auto-coding` only reads them.
-- **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** Auto-detection of commands is intentionally out of scope.
+- **"Best-effort auto-detect" of test commands without `ci.md`.** Auto-detection of commands is intentionally out of scope.
 - **breakdown-reviewer scoped re-runs** — `/a4:auto-coding` Step 4a currently recommends `/a4:breakdown iterate` rather than spawning the reviewer inline.
 - **Per-cycle parallelism beyond independent ready tasks** — coder parallelism is bounded by the dependency graph.
 - **Auto-resolution of merge conflicts** — Step 2.5 conflicts halt for the user.

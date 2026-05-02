@@ -8,7 +8,7 @@ Every markdown file under `a4/` carries YAML frontmatter. Files split into two f
 
 | Family | Examples | Location |
 |--------|----------|----------|
-| **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `bootstrap.md` | `a4/` root |
+| **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `ci.md` | `a4/` root |
 | **Issue** | use case, task, bug, spike, research, umbrella, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
 
 The four **issue families** (`task`, `bug`, `spike`, `research`) are siblings — they share one status enum and lifecycle (see `./issue-family-lifecycle.md`), but each carries its own per-type schema and authoring contract. The `task` family is the default (regular implementation work, equivalent to Jira's "Task" issue type); `bug` / `spike` / `research` are specialized variants. Cross-family operations (UC cascades, status reset on revising) walk all four; single-family authoring uses the matching folder only.
@@ -21,7 +21,7 @@ Every markdown file declares a `type:` field in frontmatter. The value selects t
 |--------|--------------|
 | Wiki — actors | `actors` |
 | Wiki — architecture | `architecture` |
-| Wiki — bootstrap | `bootstrap` |
+| Wiki — ci | `ci` |
 | Wiki — context | `context` |
 | Wiki — domain | `domain` |
 | Wiki — nfr | `nfr` |

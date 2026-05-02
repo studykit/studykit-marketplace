@@ -28,7 +28,7 @@ Reuse the `a4/` workspace resolved via `git rev-parse --show-toplevel`.
 - `a4/review/<id>-<slug>.md` — per-finding review items emitted by the wrap-up reviewer.
 - `a4/research/<label>.md` — research reports from `api-researcher` (if invoked).
 
-Derived views (consistency tables, UC×component coverage matrix, open-arch-findings dashboard) are produced on demand by `compass` or by grep over frontmatter — not files.
+Derived views (consistency tables, UC×component coverage matrix, open-arch-findings dashboard) are produced on demand by grep over frontmatter — not files.
 
 ## Id Allocation
 
@@ -41,7 +41,7 @@ uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-to
 ## Modes
 
 - **First Design** — `a4/architecture.md` does not exist. Start from Phase 1 and follow the guided sequence below.
-- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule) on top of the shared mechanics in `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
+- **Iteration** — `a4/architecture.md` exists. Apply `references/iteration-entry.md` (backlog filter, staleness signals, impact propagation rule).
 
 ## Session Task List
 

@@ -1,10 +1,10 @@
 # a4 Wiki Frontmatter
 
-Wiki-side frontmatter rules — applies to every wiki page (`actors.md`, `architecture.md`, `bootstrap.md`, `context.md`, `domain.md`, `nfr.md`) at the `a4/` root. Cross-cutting rules shared with issues (`type:`, path-reference format, empty collections, unknown fields) live in `./frontmatter-common.md`. The `updated:` timestamp contract lives in `./frontmatter-common.md`.
+Wiki-side frontmatter rules — applies to every wiki page (`actors.md`, `architecture.md`, `ci.md`, `context.md`, `domain.md`, `nfr.md`) at the `a4/` root. Cross-cutting rules shared with issues (`type:`, path-reference format, empty collections, unknown fields) live in `./frontmatter-common.md`. The `updated:` timestamp contract lives in `./frontmatter-common.md`.
 
 ## Shared frontmatter contract
 
-Every wiki page (`actors`, `architecture`, `bootstrap`, `context`, `domain`, `nfr`) shares the same minimal contract:
+Every wiki page (`actors`, `architecture`, `ci`, `context`, `domain`, `nfr`) shares the same minimal contract:
 
 ```yaml
 ---

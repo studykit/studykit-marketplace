@@ -94,7 +94,7 @@ Produce a short session report:
 - Review items resolved: `<count>` (ids: `<list>`)
 - Review items still open after session: `<count>`
 
-Suggest the next step: `/a4:domain` once the UC set is stable (cross-cutting concept extraction lives there). If `a4/domain.md` already exists, suggest `/a4:arch` instead. `/a4:usecase iterate` is the right path to pick up remaining open review items later.
+`/a4:usecase iterate` is the right path to pick up remaining open review items later.
 
 ## Commit
 

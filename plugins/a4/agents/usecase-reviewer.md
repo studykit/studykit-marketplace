@@ -7,7 +7,7 @@ description: >
   problems, cross-UC consistency, domain model coverage, and system
   completeness. Deduplicates against any existing open review items.
 
-  Invoked by /a4:usecase and /a4:auto-usecase. Do not invoke directly.
+  Invoked by /a4:usecase and /a4:extract-usecase. Do not invoke directly.
 model: opus
 color: yellow
 tools: ["Read", "Write", "Bash", "Glob", "Grep"]

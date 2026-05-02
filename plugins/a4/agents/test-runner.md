@@ -23,15 +23,15 @@ Subagents do not inherit the PreToolUse contract injection of the parent session
 
 From the invoking `run` skill:
 
-- **Bootstrap file path** — absolute path to `a4/bootstrap.md` (single source of truth for Launch & Verify: the `## Verify` section, with verified commands, smoke scenario, and test isolation flags as H3+ subsections).
+- **ci file path** — absolute path to `a4/ci.md` (single source of truth for test execution: `## How to run tests` for per-tier commands, optional `## Smoke scenario`, and `### Test isolation flags` for test isolation).
 - **`a4/` path** — absolute path to the workspace, so you can enumerate tasks (`ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md` — task files live under one of the four issue family folders), identify task-to-test mappings, and write review items into `a4/review/`.
 - **Cycle** — integer identifying this test cycle (1, 2, 3…). Used as a `labels:` entry on emitted review items (`cycle-<N>`).
 
 ## What You Do
 
-1. **Build** — run the build command from `bootstrap.md`'s `## Verify` section (Verified Commands subsection). On build failure, emit one review item with `target: bootstrap` (unless the error is clearly isolated to one task's files, in which case target that task).
-2. **Run integration tests** — using the integration-test command from the `## Verify` section's Verified Commands and the flags from its Test Isolation Flags subsection.
-3. **Run smoke tests** — execute the scenario described in the `## Verify` section's Smoke Scenario subsection.
+1. **Build** — run the build command if one is documented (most projects use a build step before tests; if not present, skip). On build failure, emit one review item with `target: ci` (unless the error is clearly isolated to one task's files, in which case target that task).
+2. **Run integration tests** — using the integration-test command from `ci.md`'s `## How to run tests` and the flags from its `### Test isolation flags` subsection.
+3. **Run smoke tests** — execute the scenario described in `ci.md`'s `## Smoke scenario` (when present).
 4. **For each failure**, emit one review item (see Output below).
 5. **Return** a concise summary.
 
@@ -95,8 +95,8 @@ updated: <YYYY-MM-DD>
 
 ## Rules
 
-- Use bootstrap.md's `## Verify` section (Verified Commands subsection) for build/run/test commands — do not auto-detect.
-- Apply test isolation flags from bootstrap.md's `## Verify` section (Test Isolation Flags subsection) — e.g., `--disable-extensions`, clean profile dir.
+- Use ci.md's `## How to run tests` section for run/test commands — do not auto-detect.
+- Apply test isolation flags from ci.md's `### Test isolation flags` subsection — e.g., `--disable-extensions`, clean profile dir.
 - Record factual results only.
 - Do not commit the review items; the invoking skill commits them as part of its cycle commit.
 - Never edit tasks, architecture, or UCs. Findings go into review items only.

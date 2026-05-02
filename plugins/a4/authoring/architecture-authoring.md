@@ -1,6 +1,6 @@
 # a4 — architecture wiki authoring
 
-`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `bootstrap.md` (verify environment) and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. The `breakdown` skill consults arch.md as design-intent reference (drift-tolerated; the codebase is the structural ground truth). Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
+`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `ci.md` (test-execution contract) and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. The `breakdown` skill consults arch.md as design-intent reference (drift-tolerated; the codebase is the structural ground truth). Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
 Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
@@ -36,7 +36,7 @@ Unknown H2 headings are tolerated.
 
 (Universal Don'ts — non-primary-author edits, hand-editing writer-owned fields, bare-text `## Change Logs` bullets — apply on top of these.)
 
-- **Don't write Launch & Verify content here.** That belongs in `bootstrap.md`'s `## Verify` section, the single source of truth. Reference bootstrap by markdown link if needed.
+- **Don't write executable test commands here.** Those belong in `ci.md`'s `## How to run tests` section, the single source of truth. Reference ci.md by markdown link if needed.
 - **Don't write a roadmap / milestone schedule here.** Phase narrative — when a project benefits from one — is the user's to maintain manually as a wiki page; a4 plugin no longer authors a roadmap wiki.
 - **Don't list considered options in `## Technology Stack`.** The chosen stack lives here; the comparison and rejected alternatives belong in a spec under `a4/spec/`.
 - **Don't rename a component heading silently.** Renames cascade to every task's `## Interface Contracts` link. Open a review item to manage the cascade.
