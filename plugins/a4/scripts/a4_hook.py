@@ -32,10 +32,12 @@ Subcommands:
                  `additionalContext` so Claude reads the file directly
                  instead of searching for it.
   session-start  SessionStart. Inject the canonical type → file-location
-                 map for the `<project-root>/a4/` workspace as
-                 `additionalContext` so the LLM places new files in the
-                 right folder before any PreToolUse fires. Built
-                 dynamically from `common.WIKI_TYPES` and
+                 map for the `<project-root>/a4/` workspace plus the
+                 runnable `allocate_id.py` command as
+                 `additionalContext`, so the LLM places new files in
+                 the right folder and allocates a workspace-global
+                 monotonic id before any PreToolUse fires. The map is
+                 built dynamically from `common.WIKI_TYPES` and
                  `common.ISSUE_FOLDERS` — adding a new type updates the
                  injection automatically. Silent when the project has
                  no `a4/` directory.
@@ -1017,15 +1019,16 @@ def _record_resolved_ids(
 
 
 def _session_start() -> int:
-    """Inject the canonical type → file-location map for `a4/` as
-    `additionalContext`.
+    """Inject the canonical type → file-location map for `a4/` plus the
+    `allocate_id.py` invocation as `additionalContext`.
 
     Surfaces the layout (issue families as flat `a4/<type>/<id>-<slug>.md`;
     wiki pages as top-level `a4/<type>.md`) so the LLM places new files
-    correctly before the first Write/Edit triggers PreToolUse
-    contract-injection. Built from `common.WIKI_TYPES` and
-    `common.ISSUE_FOLDERS` so adding a new type does not require touching
-    this function.
+    correctly, and the runnable allocator command so it can claim a
+    workspace-global monotonic id without searching for it — both before
+    the first Write/Edit triggers PreToolUse contract-injection. Built
+    from `common.WIKI_TYPES` and `common.ISSUE_FOLDERS` so adding a new
+    type does not require touching this function.
 
     Silent when the project has no `a4/` directory (non-a4 projects get
     no SessionStart noise). Always exits 0.
@@ -1059,17 +1062,14 @@ def _session_start() -> int:
 
     context = (
         "## a4/ workspace — type → file location\n\n"
-        "Canonical layout for files in `<project-root>/a4/`. Use these "
-        "paths when creating or referencing workspace files.\n\n"
         "**Issue families** (one file per id, flat folder):\n\n"
         + "\n".join(issue_lines)
         + "\n\n**Wiki pages** (single top-level file per type):\n\n"
         + "\n".join(wiki_lines)
-        + "\n\nIds come from `plugins/a4/scripts/allocate_id.py` "
-        "(globally monotonic; never reuse). Per-type field tables and "
-        "lifecycle live in `plugins/a4/authoring/<type>-authoring.md` — "
-        "the PreToolUse contract-injection hook surfaces them on the "
-        "first edit per (file, type) per session."
+        + "\n\n**Allocate id** (issue files only; never invent or reuse):\n\n"
+        "```bash\n"
+        'uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" <a4-dir>\n'
+        "```"
     )
     _emit(
         {

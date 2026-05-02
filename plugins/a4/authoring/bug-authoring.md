@@ -45,6 +45,7 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: bug` is fixed for files under `a4/bug/`. There is no `kind:` field — the type *is* the kind.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it when the bug is a regression against a spec's expected behavior.
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.

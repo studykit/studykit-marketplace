@@ -56,6 +56,7 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: research` is fixed for files under `a4/research/`.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `mode:` is required for research tasks. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list the option names that the body's `## Options` section will cover, one subsection per option. `options:` is forbidden when `mode: single`.
 - `implements:` is **forbidden** on research — research is investigation, not delivery. If a research task is scoped to a specific UC's open question, link the UC from `## Context` body prose instead.

@@ -63,16 +63,25 @@ Per-wiki authoring files (`<wiki>-authoring.md`) describe only the body sections
 ## Ids
 
 - Ids are **monotonically increasing integers, global to the workspace**. Unique across all issue folders in a given `a4/` (GitHub-issue semantics).
-- Next id is computed as `max(existing ids in a4/) + 1` by the id allocator (`../scripts/allocate_id.py`). Allocate before writing a new issue file; never invent or reuse.
+- Next id is computed as `max(existing ids in a4/) + 1` by the id allocator (`../scripts/allocate_id.py`). Allocate before writing a new issue file; **never invent, never reuse, never re-pack after deletion**.
 - Wiki pages do **not** carry an `id:` field — they have no issue-tracker identity.
 
-Allocate the next id:
+### Allocating the next id
+
+Always run the allocator before writing a new issue file. Do not guess by counting existing files or copying from an adjacent file.
 
 ```bash
-uv run ../scripts/allocate_id.py <absolute path to a4/>
+uv run ../scripts/allocate_id.py <absolute path to project's a4/ directory>
 ```
 
-The script prints the next available id to stdout.
+The script scans every issue folder (`usecase/`, `task/`, `bug/`, `spike/`, `research/`, `umbrella/`, `review/`, `spec/`, `idea/`, `brainstorm/`) for the highest existing `id:` and prints `max + 1` to stdout. Use that integer as the new file's `id:` and as the numeric prefix in the filename (`<id>-<slug>.md`).
+
+The allocator has two diagnostic modes that do not allocate but help when ids look wrong:
+
+```bash
+uv run ../scripts/allocate_id.py <a4-dir> --list   # print every (id, path) — sorted; useful for spotting gaps
+uv run ../scripts/allocate_id.py <a4-dir> --check  # exit 1 with details if any id is duplicated across files
+```
 
 ## Path references
 

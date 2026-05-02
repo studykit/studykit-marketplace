@@ -39,7 +39,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.

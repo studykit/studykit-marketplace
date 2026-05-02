@@ -41,6 +41,7 @@ updated: YYYY-MM-DD
 | `updated` | yes | date | `YYYY-MM-DD` |
 
 - `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the UC reaches `status: ready` (and beyond) — see `./frontmatter-universals.md#title-placeholders`.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `actors:` lists slug identifiers defined as rows in `actors.md`'s `## Roster` section (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references them by slug. Platform-capability UCs typically use `actors: [platform]` or another suitable system actor.
 - UC-to-UC ordering is **not** carried in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
 - UC-to-spec ties are **not** carried in frontmatter. When a spec governs the UC, cite it from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add the spec to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.

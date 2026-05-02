@@ -41,6 +41,7 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: spike` is fixed for files under `a4/spike/`. There is no `kind:` field — the type *is* the kind.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
 - `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.

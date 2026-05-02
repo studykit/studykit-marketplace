@@ -35,7 +35,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | no | date | `YYYY-MM-DD` (bump when the spec is revised) |
 
-- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the spec reaches `status: active` (and beyond) — see `./frontmatter-universals.md#title-placeholders`.
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
 - `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `../scripts/search.py`.

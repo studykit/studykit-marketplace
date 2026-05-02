@@ -56,6 +56,7 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: umbrella` is fixed for files under `a4/umbrella/`.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 
 ### Lifecycle
 

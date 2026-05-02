@@ -45,6 +45,7 @@ updated: YYYY-MM-DD
 
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: task` is fixed for files under `a4/task/`. There is no `kind:` field — the type *is* the kind.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it whenever the project is UC-driven.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it in UC-less projects (the spec's `## Specification` body + relevant `architecture.md` section becomes the AC source).
 - `implements:` and `spec:` are **optional and orthogonal** — a task may declare zero, one, or both. See the smell check below for the zero-anchor case.

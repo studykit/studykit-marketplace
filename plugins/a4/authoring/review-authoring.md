@@ -40,7 +40,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `kind` is **required** — `finding`, `gap`, or `question`. The three share lifecycle but signal different content shapes:
   - `finding` body explains what is wrong and where.
   - `gap` body explains what is missing and why it should exist.

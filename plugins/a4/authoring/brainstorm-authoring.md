@@ -32,7 +32,7 @@ updated: YYYY-MM-DD
 | `created` | yes | date | `YYYY-MM-DD` |
 | `updated` | yes | date | `YYYY-MM-DD` |
 
-- `id` is allocated by the id allocator (workspace-global, monotonic). Never invent or reuse an id.
+- `id:` see `./frontmatter-universals.md` § Ids for the allocator command and contract.
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
 - `promoted:` lists pipeline artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
