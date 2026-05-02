@@ -28,7 +28,6 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import date
 from pathlib import Path
 from typing import Any
 
@@ -45,7 +44,7 @@ from status_model import KIND_BY_FOLDER, STATUS_BY_FOLDER, ISSUE_FAMILY_TYPES
 
 from .refs import RefIndex
 
-DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2}$")
+DATE_RE = re.compile(r"^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$")
 
 # Statuses past the initial draft phase. Once a file reaches one of these
 # values, post-draft authoring invariants apply continuously (not only at
@@ -252,6 +251,18 @@ class Violation:
     message: str
 
 
+def types_with_created() -> frozenset[str]:
+    """Schema-driven set of type names whose frontmatter carries `created:`.
+
+    Single source of truth for the hook's stamp targets — adding a new
+    type with `created:` to SCHEMAS auto-extends stamping. Excludes the
+    `wiki` schema (its date_fields = {"updated"} only).
+    """
+    return frozenset(
+        name for name, schema in SCHEMAS.items() if "created" in schema.date_fields
+    )
+
+
 def detect_type(rel: Path, fm: dict) -> str | None:
     if len(rel.parts) < 2:
         # Top-level files are wiki pages iff their basename is a known
@@ -304,11 +315,9 @@ def _validate_path_ref(value: Any) -> str | None:
 
 
 def _validate_date(value: Any) -> str | None:
-    if isinstance(value, date) and not isinstance(value, bool):
-        return None
     if isinstance(value, str) and DATE_RE.match(value):
         return None
-    return f"expected YYYY-MM-DD date, got {value!r}"
+    return f"expected YYYY-MM-DD HH:mm timestamp, got {value!r}"
 
 
 def validate_file(

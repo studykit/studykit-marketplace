@@ -151,6 +151,74 @@ def _read_status_from_disk(path: "Path") -> str | None:
     return s if isinstance(s, str) else None
 
 
+# ----------------------- newfiles snapshot IO -----------------------------
+#
+# Session-scoped state under
+# ``.claude/tmp/a4-edited/a4-newfiles-<sid>.txt`` — one absolute path per
+# line, populated by ``pre-edit`` when the tool is about to Write a file
+# that does not yet exist on disk. Consumed by ``post-edit`` to decide
+# whether to stamp ``created:`` on the post-write frontmatter. Cleaned up
+# alongside the other session-scoped a4-edited family files.
+
+
+def _newfiles_path(project_dir: str, session_id: str) -> "Path":
+    return (
+        Path(project_dir) / ".claude" / "tmp" / "a4-edited"
+        / f"a4-newfiles-{session_id}.txt"
+    )
+
+
+def _read_newfiles(project_dir: str, session_id: str) -> set[str]:
+    path = _newfiles_path(project_dir, session_id)
+    if not path.is_file():
+        return set()
+    try:
+        return {
+            line.strip()
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        }
+    except OSError:
+        return set()
+
+
+def _record_newfile(
+    project_dir: str, session_id: str, file_path: str
+) -> None:
+    path = _newfiles_path(project_dir, session_id)
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+    except OSError:
+        return
+    try:
+        with path.open("a", encoding="utf-8") as f:
+            f.write(file_path + "\n")
+    except OSError:
+        return
+
+
+def _drop_newfile(
+    project_dir: str, session_id: str, file_path: str
+) -> None:
+    path = _newfiles_path(project_dir, session_id)
+    if not path.is_file():
+        return
+    try:
+        lines = [
+            line for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip() and line.strip() != file_path
+        ]
+    except OSError:
+        return
+    try:
+        if lines:
+            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+        else:
+            path.unlink()
+    except OSError:
+        return
+
+
 # -------------------------- pre-edit (PreToolUse) -------------------------
 
 
@@ -205,6 +273,13 @@ def _pre_edit() -> int:
             data = _read_prestatus(project_dir, session_id)
             data[file_path] = pre
             _write_prestatus(project_dir, session_id, data)
+    else:
+        # File doesn't exist yet — record so post-edit can stamp
+        # `created:` after the Write lands. Only Write can create files
+        # in Claude Code's tool model; Edit/MultiEdit require a prior
+        # Read of an existing file.
+        if payload.get("tool_name") == "Write":
+            _record_newfile(project_dir, session_id, file_path)
 
     # Responsibility 2 — authoring-contract injection (one-shot per
     # (file, type) per session). Fires for both edits and new-file
@@ -478,12 +553,139 @@ def _post_edit() -> int:
     if not a4_dir.is_dir():
         return 0
 
-    # Step 2 — status-change cascade (runs before consistency report).
+    # Step 2 — stamp `created:` if this Write created a new file. Runs
+    # before the cascade so a status flip (which also touches `updated:`)
+    # sees a frontmatter that already carries `created:`, and `created:`
+    # ends up immediately above `updated:` (their canonical order).
+    _maybe_stamp_created(a4_dir, file_path, project_dir, session_id)
+
+    # Step 3 — status-change cascade (runs before consistency report).
     _run_status_change_cascade(a4_dir, file_path, project_dir, session_id)
 
-    # Step 3 — status-consistency report on the (now post-cascade) state.
+    # Step 4 — status-consistency report on the (now post-cascade) state.
     _report_status_consistency_post(a4_dir, file_path, project_dir)
     return 0
+
+
+def _maybe_stamp_created(
+    a4_dir: Path, file_path: str, project_dir: str, session_id: str
+) -> None:
+    """Stamp `created:` on a freshly Written a4/*.md whose schema requires it.
+
+    Triggers iff:
+      - PreToolUse recorded the path as new (file did not exist on disk).
+      - The file now exists.
+      - Its `type:` (resolved by path) is in the schema-derived
+        ``types_with_created()`` set.
+      - Its current frontmatter does not already carry a non-empty
+        `created:` value (immutable — never overwrite an author-written
+        timestamp).
+
+    Inserts ``created: <now-kst>`` immediately before ``updated:`` if
+    that line exists, else appends at the frontmatter end. Failure on
+    any step is silent — stamping is a convenience, not a gate.
+    """
+    new_files = _read_newfiles(project_dir, session_id)
+    if file_path not in new_files:
+        return
+
+    abs_path = Path(file_path)
+    if not abs_path.is_file():
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    try:
+        type_value = _resolve_type_from_path(abs_path, a4_dir)
+    except Exception:
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+    if not type_value:
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    try:
+        from markdown_validator.frontmatter import types_with_created
+    except ImportError:
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+    if type_value not in types_with_created():
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    try:
+        from common import now_kst
+        from markdown import extract_preamble
+        from status_cascade import parse_fm, write_file
+    except ImportError:
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    try:
+        preamble = extract_preamble(abs_path)
+    except (OSError, ValueError):
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+    if preamble.fm is None:
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    existing = preamble.fm.get("created")
+    if isinstance(existing, str) and existing.strip():
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+    if existing is not None and not isinstance(existing, str):
+        # date / datetime / int — already populated by the author. Don't
+        # overwrite, even if not a string.
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    try:
+        _, raw_fm, body = parse_fm(abs_path)
+    except (OSError, ValueError):
+        _drop_newfile(project_dir, session_id, file_path)
+        return
+
+    try:
+        new_fm = _insert_created_before_updated(raw_fm, now_kst())
+        write_file(abs_path, new_fm, body)
+    except (OSError, ValueError):
+        pass
+    finally:
+        _drop_newfile(project_dir, session_id, file_path)
+
+
+def _insert_created_before_updated(raw_fm: str, value: str) -> str:
+    """Insert ``created: <value>`` into a YAML frontmatter block.
+
+    Position rule: immediately before the ``updated:`` line if present,
+    else appended at the end. Indentation matches the ``updated:`` line
+    when inserting before it (frontmatter is canonically left-aligned,
+    but the matching keeps the rule minimal). When ``created:`` already
+    exists in the block, this function rewrites the existing line in
+    place via ``rewrite_frontmatter_scalar`` semantics — but the caller
+    is expected to gate on absence so this branch is dead in practice.
+    """
+    from status_cascade import rewrite_frontmatter_scalar
+
+    lines = raw_fm.split("\n")
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if stripped.startswith("created:"):
+            # Should not happen given the caller's gate, but rewrite in
+            # place for safety.
+            return rewrite_frontmatter_scalar(raw_fm, "created", value)
+
+    for i, line in enumerate(lines):
+        stripped = line.lstrip()
+        if stripped.startswith("updated:"):
+            indent = line[: len(line) - len(stripped)]
+            lines.insert(i, f"{indent}created: {value}")
+            return "\n".join(lines)
+
+    while lines and lines[-1].strip() == "":
+        lines.pop()
+    lines.append(f"created: {value}")
+    return "\n".join(lines)
 
 
 def _run_status_change_cascade(
@@ -524,7 +726,7 @@ def _run_status_change_cascade(
         return
 
     try:
-        from datetime import date
+        from common import now_kst
 
         from markdown_validator.refs import RefIndex
         from status_cascade import (
@@ -554,7 +756,7 @@ def _run_status_change_cascade(
         # off an illegal transition.
         return
 
-    today = date.today().isoformat()
+    today = now_kst()
     report = Report(
         a4_dir=str(a4_dir),
         file=rel_path,

@@ -39,7 +39,7 @@ from status_cascade import (
 from status_model import cascade_for
 
 
-TODAY = "2026-05-02"
+TODAY = "2026-05-02 14:30"
 
 
 # ---------------------------------------------------------------------------
@@ -106,7 +106,7 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
         "index",
         status="progress",
         implements=["usecase/1-search"],
-        updated="2026-04-01",
+        updated="2026-04-01 09:00",
     )
     t_complete = a4_workspace.write(
         "task",
@@ -114,7 +114,7 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
         "ui",
         status="complete",
         implements=["usecase/1-search"],
-        updated="2026-04-01",
+        updated="2026-04-01 09:00",
     )
 
     report = Report()
@@ -132,7 +132,7 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
     assert _status(t_progress) == "pending"
     assert _updated(t_progress) == TODAY
     assert _status(t_complete) == "complete"
-    assert _updated(t_complete) == "2026-04-01"
+    assert _updated(t_complete) == "2026-04-01 09:00"
 
     flipped = [c.path for c in report.cascades]
     assert "task/2-index.md" in flipped
@@ -229,7 +229,7 @@ def test_dry_run_writes_no_disk_changes(a4_workspace) -> None:
         "index",
         status="progress",
         implements=["usecase/1-search"],
-        updated="2026-04-01",
+        updated="2026-04-01 09:00",
     )
     before = t.read_bytes()
 

@@ -160,8 +160,8 @@ def test_existing_file_edit_stashes_prestatus_and_injects(
         "id: 3\n"
         "title: Live\n"
         "status: in_progress\n"
-        "created: 2026-05-01\n"
-        "updated: 2026-05-01\n"
+        "created: 2026-05-01 09:00\n"
+        "updated: 2026-05-01 09:00\n"
         "---\n\n"
         "## Description\nx\n",
         encoding="utf-8",

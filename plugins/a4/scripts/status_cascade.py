@@ -485,10 +485,10 @@ def apply_supersedes_sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     Idempotent — a second run on the same workspace produces no
     further changes.
     """
-    from datetime import date
+    from common import now_kst
 
     reports: list[Report] = []
-    today = date.today().isoformat()
+    today = now_kst()
     index = RefIndex(a4_dir)
 
     for family in ("usecase", "spec"):

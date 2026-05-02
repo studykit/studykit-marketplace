@@ -76,7 +76,7 @@ Unknown fields are **not errors** — they are treated as extension metadata. Sk
 | `created` | every issue file | timestamp | `YYYY-MM-DD HH:mm` |
 | `updated` | every issue file and every wiki page | timestamp | `YYYY-MM-DD HH:mm` |
 
-- Format `YYYY-MM-DD HH:mm` (date + 24-hour time, space-separated).
+- Format `YYYY-MM-DD HH:mm` (date + 24-hour time, space-separated). The validator rejects any other shape.
 - All timestamps are implicitly Korean Standard Time (KST). No timezone offset is written — KST is the project-wide convention, not a per-field declaration.
-- **`created` and `updated` are tooling-managed.** Do not insert, rewrite, or hand-bump these fields — LLMs and human authors must leave them untouched. Manual edits are overwritten and can mask drift detection.
-- `created` is set once when the file is first allocated and never re-touched. `updated` refreshes on every substantive edit (body change, status flip, wiki page edit).
+- **`created` is tooling-stamped on first Write.** When a new issue file is created (PostToolUse on `Write`), the hook stamps `created: <KST now>` if the field is missing. Once present, the value is immutable — neither the hook nor the cascade ever rewrites it. Authors may pre-populate `created:` to backdate; the hook respects any non-empty value.
+- **`updated` is tooling-managed on status flips.** When `status:` changes via PostToolUse, the cascade engine refreshes `updated:` to the current KST timestamp on the primary file and on every cascaded related file. For non-status edits (body change, wiki edit) authors hand-bump `updated:` themselves — the hook does not run a global "edit detector".
