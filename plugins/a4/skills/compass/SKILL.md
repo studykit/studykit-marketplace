@@ -14,7 +14,7 @@ Argument: **$ARGUMENTS**
 
 ## Inter-skill entry
 
-Other a4 skills call compass as a fallback router when their preconditions are unmet (e.g., `/a4:run` invoked without `bootstrap.md` present). The calling skill halts and invokes compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md`).
+Other a4 skills call compass as a fallback router when their preconditions are unmet (e.g., `/a4:auto-coding` invoked without `bootstrap.md` present). The calling skill halts and invokes compass via the Skill tool, passing the calling skill name and a short workspace state diagnosis as the argument (e.g., `from=run; missing=bootstrap.md`).
 
 Compass treats this as a regular Step 1 entry — the diagnosis text routes to Step 3 (Gap Diagnosis), not Step 2 (Fresh Start). If the calling skill provided enough context to determine the intent, compass skips the catalog presentation in Step 2 and the brownfield "What are you trying to do?" prompt described there.
 

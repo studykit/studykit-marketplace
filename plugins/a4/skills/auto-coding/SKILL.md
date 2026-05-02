@@ -1,18 +1,16 @@
 ---
-name: run
-description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/{task,bug,spike,research}/. Common triggers include: 'run', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'coder', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
-argument-hint: <optional: 'iterate' to resume after a halt, 'serial' to opt out of parallel worktree isolation; auto-detects workspace state otherwise>
+name: auto-coding
+description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/{task,bug,spike,research}/. Common triggers include: 'auto-coding', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'coder', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
+argument-hint: "[iterate] [parallel]  # iterate = resume after halt; parallel = worktree-isolated parallel coders; no-arg = fresh serial run"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList
 ---
 
-# Implementation Run Loop
-
-> **Authoring contracts:** task files this loop reads — `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. UC ship gates against `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`. Test-runner findings emit reviews per `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`. This skill writes status flips by editing `status:` directly; the PostToolUse cascade hook handles `updated:` and any cross-file cascade. The `coder` and `test-runner` agents do their own writes (code + tests, review items).
+# Auto-Coding Implementation Loop
 
 Two stages over the tasks already authored under the four issue family folders (`a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`):
 
-1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `coder` agents in isolated worktrees (parallel where independent), merge each successful worktree branch back to local main, run the `test-runner`. Bounded to 3 cycles per invocation.
+1. **Loop body (Steps 1–3, autonomous)** — pick ready tasks, spawn `coder` agents (one `Agent` call per task; default serial mode runs them sequentially in the user's working tree, opt-in parallel mode wraps each in `isolation: "worktree"` and merges back), then run the `test-runner`. Bounded to 3 cycles per invocation.
 2. **Post-loop review (Step 4, user-driven)** — failure path: user classifies each failing test-runner finding into task / arch / UC. Ship path: user confirms which UCs go `implementing → shipped`.
 
 Reads `a4/bootstrap.md` for build / launch / test / smoke / isolation commands — bootstrap is the single source of truth for Launch & Verify (per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`).
@@ -41,14 +39,25 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 Resolution policy: `references/launch-verify-source.md`. When `bootstrap.md` is absent, halt and delegate to `/a4:compass`.
 
-## Mode Detection
+## Mode Selection
+
+Two orthogonal axes pick the reference set. **Resolve isolation mode first from the invocation argument** — every Step's reference list below depends on it.
+
+### Axis 1 — Isolation mode (argument-driven; resolve first)
+
+| Argument | Mode | Read |
+|---|---|---|
+| (none) / `iterate` | **Serial** (default) — no worktree, sequential coders, no merge sweep, no pre-flight. Works in any repo, including those without an `origin` remote | `references/serial-mode.md` |
+| `parallel` / `iterate parallel` | **Parallel** (opt-in) — worktree-isolated coders, parallel where independent, merge sweep at Step 2.5, pre-flight required (`HEAD == origin/HEAD`). Halts immediately if the repo has no `origin` remote — drop the `parallel` arg to fall back to serial | `references/parallel-mode.md` |
+
+No auto-fall-back on pre-flight failure (halt instead). No in-cycle mode switch.
+
+### Axis 2 — Run vs resume (workspace-state-driven)
 
 - **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
 - **Iterate mode** — open review items target a task. Apply `references/iteration-entry.md` on top of `${CLAUDE_PLUGIN_ROOT}/workflows/iterate-mechanics.md`.
-- **Pre-flight** (both modes, run at Step 1 entry) — local `HEAD` must equal `origin/HEAD` per `references/parallel-isolation.md`. Halt with a push instruction on mismatch.
-- **Serial fallback** (`/a4:run serial` or `/a4:run iterate serial`) — opt-in mode that skips worktree isolation and the merge sweep entirely. Rules in `references/parallel-isolation.md`.
 
-Mode detection at session start:
+Workspace-state probe at session start:
 
 ```bash
 ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any tasks?
@@ -65,17 +74,19 @@ Crash recovery + orphaned worktree handling: `references/resume-hygiene.md`.
 
 ## Workflow
 
-| Step | Focus | Procedure |
-|------|-------|-----------|
-| 1 | Pick ready tasks (+ pre-flight) | `references/ready-set.md` |
-| 2 | Spawn coder (worktree isolation) | `references/spawn-coder.md` |
-| 2.5 | Merge sweep (parallel mode) | `references/merge-sweep.md` |
-| 3 | Integration + smoke tests via test-runner | `references/integration-tests.md` |
-| 4 | Post-loop review (failure path / ship path) | `references/post-loop-review.md` |
+References are mode-specific. After resolving Axis 1 above, follow only the column for the active mode.
+
+| Step | Focus | Serial mode (default) | Parallel mode (`parallel` arg) |
+|------|-------|-----------------------|--------------------------------|
+| 1 | Pick ready tasks | `references/ready-set.md` (pre-flight skipped) + `references/serial-mode.md` | `references/ready-set.md` (pre-flight applies) + `references/parallel-mode.md` |
+| 2 | Spawn coder | `references/spawn-coder.md` (drop `isolation: "worktree"`) + `references/serial-mode.md` | `references/spawn-coder.md` + `references/parallel-mode.md` |
+| 2.5 | Merge sweep | skipped — see `references/serial-mode.md` | `references/merge-sweep.md` |
+| 3 | Integration + smoke tests via test-runner | `references/integration-tests.md` | `references/integration-tests.md` |
+| 4 | Post-loop review (failure path / ship path) | `references/post-loop-review.md` | `references/post-loop-review.md` |
 
 ## Acceptance Criteria Source by Issue Family
 
-The per-type AC-source convention is defined in the matching authoring rule: tasks draw AC from UC `## Flow` / `## Validation` / `## Error Handling` (or spec `## Specification` body + `architecture.md` for UC-less work) per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`; bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`; spike tasks draw AC from the hypothesis + expected result in the spike's own body per `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. `/a4:run` does not enforce these — automated checks do not block on AC source; only the `## Acceptance Criteria` section's presence is required by the authoring contract.
+The per-type AC-source convention is defined in the matching authoring rule: tasks draw AC from UC `## Flow` / `## Validation` / `## Error Handling` (or spec `## Specification` body + `architecture.md` for UC-less work) per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`; bug tasks draw AC from a reproduction scenario + the regression test pinning the expected behavior per `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md`; spike tasks draw AC from the hypothesis + expected result in the spike's own body per `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md`. `/a4:auto-coding` does not enforce these — automated checks do not block on AC source; only the `## Acceptance Criteria` section's presence is required by the authoring contract.
 
 ## Commit Points
 
@@ -86,7 +97,7 @@ Per-step subject formats and timing: `references/commit-points.md`.
 When all tasks are `complete` and all tests pass (or when the user ends the session):
 
 1. Summarize: tasks completed / revised / still failing, review items opened / resolved / still open, cycles consumed, UCs shipped this run (empty list is fine for UC-less runs).
-2. If any tasks remain `pending` / `failing` or any review items are `open`, suggest `/a4:run iterate` as the resumption path.
+2. If any tasks remain `pending` / `failing` or any review items are `open`, suggest `/a4:auto-coding iterate` as the resumption path.
 3. Suggest `/a4:handoff` to snapshot the session.
 
 ## Agent Usage
@@ -96,15 +107,14 @@ Context is passed via file paths, not agent memory.
 - **`coder`** — `Agent(subagent_type: "a4:coder")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
 
-`breakdown-reviewer` is **not** invoked from `/a4:run` directly.
+`breakdown-reviewer` is **not** invoked from `/a4:auto-coding` directly.
 
 ## Out of Scope
 
-- **Authoring** — task files, specs, UCs are written elsewhere. `/a4:run` only reads them.
+- **Authoring** — task files, specs, UCs are written elsewhere. `/a4:auto-coding` only reads them.
 - **"Best-effort auto-detect" of build / test commands without `bootstrap.md`.** Auto-detection of commands is intentionally out of scope.
-- **breakdown-reviewer scoped re-runs** — `/a4:run` Step 4a currently recommends `/a4:breakdown iterate` rather than spawning the reviewer inline.
+- **breakdown-reviewer scoped re-runs** — `/a4:auto-coding` Step 4a currently recommends `/a4:breakdown iterate` rather than spawning the reviewer inline.
 - **Per-cycle parallelism beyond independent ready tasks** — coder parallelism is bounded by the dependency graph.
-- **Auto-fall-back to `serial` mode** — opt-in via the `serial` arg only.
 - **Auto-resolution of merge conflicts** — Step 2.5 conflicts halt for the user.
 
 ## Non-Goals

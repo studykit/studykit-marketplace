@@ -1,6 +1,6 @@
 ---
 name: breakdown
-description: "This skill should be used when the user needs to derive a batch of task files from existing usecase / spec / architecture inputs. Common triggers include: 'breakdown', 'derive tasks', 'task batch', 'batch tasks from spec', 'plan the implementation tasks'. Writes per-task files at a4/task/<id>-<slug>.md only — no wiki page output. Requires (usecase OR spec) AND bootstrap.md to enter; otherwise redirects to /a4:auto-bootstrap, /a4:spec, /a4:usecase, or /a4:task. The agent-driven implement + test loop is in /a4:run; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
+description: "This skill should be used when the user needs to derive a batch of task files from existing usecase / spec / architecture inputs. Common triggers include: 'breakdown', 'derive tasks', 'task batch', 'batch tasks from spec', 'plan the implementation tasks'. Writes per-task files at a4/task/<id>-<slug>.md only — no wiki page output. Requires (usecase OR spec) AND bootstrap.md to enter; otherwise redirects to /a4:auto-bootstrap, /a4:spec, /a4:usecase, or /a4:task. The agent-driven implement + test loop is in /a4:auto-coding; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
 argument-hint: <optional: "iterate" to walk task-targeted review items; auto-detects workspace state otherwise>
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
@@ -8,9 +8,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPl
 
 # Task Breakdown
 
-> **Authoring contracts:** per-task files (always `type: task` for the batch path): `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`. This skill orchestrates the batch derivation; it does not author wiki content.
-
-Decomposes upstream behavioral inputs (`a4/usecase/*.md`, `a4/spec/*.md`) into a batch of implementation tasks, grounded in the actual codebase that `bootstrap.md` already verified runs and tests. Emits one `a4/task/<id>-<slug>.md` per executable unit. The agent-driven implement + test loop lives in `/a4:run`.
+Decomposes upstream behavioral inputs (`a4/usecase/*.md`, `a4/spec/*.md`) into a batch of implementation tasks, grounded in the actual codebase that `bootstrap.md` already verified runs and tests. Emits one `a4/task/<id>-<slug>.md` per executable unit. The agent-driven implement + test loop lives in `/a4:auto-coding`.
 
 This skill replaces the prior `roadmap` skill. The single-`roadmap.md` wiki narrative was retired with it; phase narrative — when a project benefits from one — is the user's to author directly as a wiki page, not a skill output.
 
@@ -71,7 +69,7 @@ ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any t
 ls a4/review/*.md | xargs grep -l 'status: open' 2>/dev/null
 ```
 
-If every behavioral source is already covered by an existing task and the user's intent is to start implementing, point them at the next implement step — direct `pending → progress` walk per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`, or `/a4:run` for the agent-driven loop.
+If every behavioral source is already covered by an existing task and the user's intent is to start implementing, point them at the next implement step — direct `pending → progress` walk per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`, or `/a4:auto-coding` for the agent-driven loop.
 
 ## Workflow
 
@@ -103,7 +101,7 @@ Procedure: `references/verification.md`. Spawn `breakdown-reviewer` for batch co
 
 After Step 4 closes:
 
-> Tasks ready. Begin the implement step — drive each task directly (`pending → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:run` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → pending` (edit `status:` directly) when you are ready for them to be picked up.
+> Tasks ready. Begin the implement step — drive each task directly (`pending → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → pending` (edit `status:` directly) when you are ready for them to be picked up.
 
 Both implement forms read `a4/bootstrap.md`'s `## Verify` as the single source of truth. Make sure `bootstrap.md` exists and its `## Verify` content is correct before handing off — re-run `/a4:auto-bootstrap` if architecture or scaffolding changed.
 
@@ -115,20 +113,20 @@ Per-step subject formats and timing: `references/commit-points.md`.
 
 When the user ends the breakdown session:
 
-1. Summarize: tasks created / skipped (existing) / total. Review items written by `breakdown-reviewer`. Whether an arch-drift review was emitted. Recommended next step (begin the implement step — directly or via `/a4:run` — for the new tasks; `/a4:arch` if drift was significant; `/a4:spec` or `/a4:usecase iterate` if upstream review items came back).
+1. Summarize: tasks created / skipped (existing) / total. Review items written by `breakdown-reviewer`. Whether an arch-drift review was emitted. Recommended next step (begin the implement step — directly or via `/a4:auto-coding` — for the new tasks; `/a4:arch` if drift was significant; `/a4:spec` or `/a4:usecase iterate` if upstream review items came back).
 2. Suggest `/a4:handoff` to snapshot the session.
 
 ## Agent Usage
 
 - **`breakdown-reviewer`** — `Agent(subagent_type: "a4:breakdown-reviewer")`. Reviews the derived task set against upstream usecases / specs and the architecture intent (when present); emits per-finding review items.
 
-`coder` and `test-runner` are `/a4:run`'s agents — not invoked from this skill.
+`coder` and `test-runner` are `/a4:auto-coding`'s agents — not invoked from this skill.
 
 ## Non-Goals
 
 - Do not author any wiki page. `roadmap.md` is no longer a skill output (and the type was retired with it). Phase narrative belongs to whatever wiki page the user chooses to maintain manually, or to `architecture.md`.
 - Do not infer file paths from `architecture.md` when those paths do not exist in the codebase. Code wins.
-- Do not drive the implement step here. The implement step (whether direct or via `/a4:run`) follows breakdown, not within it.
+- Do not drive the implement step here. The implement step (whether direct or via `/a4:auto-coding`) follows breakdown, not within it.
 - Do not author Launch & Verify commands. `bootstrap.md` is the single source of truth.
 - Do not edit `architecture.md` to resolve drift. Emit a review item; resolution flows through `/a4:arch iterate`.
 - Do not skip the entry gate. UC/spec absence ⇒ no batch; bootstrap absence ⇒ no batch.

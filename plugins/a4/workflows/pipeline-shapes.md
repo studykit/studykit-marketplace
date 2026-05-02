@@ -21,7 +21,7 @@ Treating Full as the only shape forces brownfield and one-off work into routing 
 
 The single condition that decides whether *any* shape applies is **the presence of `a4/bootstrap.md`**.
 
-Every shape — Full, Reverse-then-forward, Minimal — terminates in an **implement step** that consumes `bootstrap.md` for Launch & Verify. The implement step has two valid forms — the user driving `coder` / `test-runner` directly (interactive `open → progress → complete` per `../authoring/issue-family-lifecycle.md`), or invoking `/a4:run` to drive the agent loop with optional UC ship walk. Both forms read `bootstrap.md`'s `## Verify` as the single source of truth, so every shape requires `bootstrap.md` somewhere in the path regardless of which form ends up running. If `bootstrap.md` does not exist and the user has only written specs, research artifacts, brainstorms, or hand-edited wiki pages, **no shape applies** — see "No shape" below.
+Every shape — Full, Reverse-then-forward, Minimal — terminates in an **implement step** that consumes `bootstrap.md` for Launch & Verify. The implement step has two valid forms — the user driving `coder` / `test-runner` directly (interactive `open → progress → complete` per `../authoring/issue-family-lifecycle.md`), or invoking `/a4:auto-coding` to drive the agent loop with optional UC ship walk. Both forms read `bootstrap.md`'s `## Verify` as the single source of truth, so every shape requires `bootstrap.md` somewhere in the path regardless of which form ends up running. If `bootstrap.md` does not exist and the user has only written specs, research artifacts, brainstorms, or hand-edited wiki pages, **no shape applies** — see "No shape" below.
 
 What `bootstrap.md` does **not** depend on:
 
@@ -38,7 +38,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Required issue path.** `usecase/<id>-<slug>.md` (one or more) → `task/<id>-<slug>.md` (UC/spec-driven batch produced by `/a4:breakdown`).
 
-**Acceptance Criteria source.** Each task's `implements: usecase/<id>-<slug>` resolves to that UC's `## Flow` / `## Validation` / `## Error Handling` sections. `/a4:run` Step 4b ships **per UC**; multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
+**Acceptance Criteria source.** Each task's `implements: usecase/<id>-<slug>` resolves to that UC's `## Flow` / `## Validation` / `## Error Handling` sections. `/a4:auto-coding` Step 4b ships **per UC**; multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
 
 **When this shape fits.** Greenfield projects, large new features in any project, and any work where upstream wiki investment pays back across multiple tasks.
 
@@ -61,7 +61,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Required wiki path.** `bootstrap.md` only. `domain.md`, `architecture.md`, `usecase/*.md` are all skippable.
 
-**Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → implement step (direct `progress → complete` walk or `/a4:run`).
+**Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → implement step (direct `progress → complete` walk or `/a4:auto-coding`).
 
 **Acceptance Criteria source.** Set by issue family, mirroring the Jira-issue model that the per-family authoring skills are built on:
 
@@ -74,7 +74,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 | `spike` | The hypothesis stated in the task body itself |
 | `research` | The body itself is the deliverable; `/a4:research-review` is the quality pass before downstream consumption |
 
-`/a4:run` Step 4b ships **per task** when `task.implements:` is empty (no UC to ship); when `task.implements:` is non-empty, it falls back to per-UC ship as in Full shape. The branching is `task.implements:`-driven, not invocation-driven.
+`/a4:auto-coding` Step 4b ships **per task** when `task.implements:` is empty (no UC to ship); when `task.implements:` is non-empty, it falls back to per-UC ship as in Full shape. The branching is `task.implements:`-driven, not invocation-driven.
 
 **When this shape fits.** Single bug fixes, spec-justified one-off features, exploration spikes. Common in brownfield projects where the user does not want to retrofit the full wiki for a small change.
 
@@ -98,7 +98,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 *Mandatory* (the system requires the citation to function correctly):
 
 - `architecture.md` `## Change Logs` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per `../authoring/wiki-body.md` change-log rules.
-- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `type: task` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `## Specification` body plus the cited `architecture.md` section as AC source.
+- `task.spec: [spec/N-...]` frontmatter for Minimal-shape `type: task` tasks grounded in a spec rather than a UC. `/a4:auto-coding` Step 4b reads the spec's `## Specification` body plus the cited `architecture.md` section as AC source.
 - A successor spec's `supersedes: [spec/N]` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk and the older spec flips to `superseded` via cascade.
 - Other wiki pages' `## Change Logs` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same bullet pattern as architecture.md.
 
@@ -114,7 +114,7 @@ specs do not have a shape entry of their own. `/a4:spec` is shape-independent �
 
 ## No shape
 
-When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research tasks, brainstorms, or hand-editing wiki pages — but with no Launch & Verify single source of truth, no implement step (whether driven directly by the user or by `/a4:run`) has a verification anchor, and no task → ship flow is in motion.
+When `bootstrap.md` does not exist, no pipeline shape applies. The workspace may still be active — the user may be writing specs, research tasks, brainstorms, or hand-editing wiki pages — but with no Launch & Verify single source of truth, no implement step (whether driven directly by the user or by `/a4:auto-coding`) has a verification anchor, and no task → ship flow is in motion.
 
 This is a normal state, not an error. Workspaces in this state typically use:
 

@@ -8,8 +8,6 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, EnterPlanMode, ExitPl
 
 # Domain Model Designer
 
-> **Authoring contract:** the contract for `a4/domain.md` lives in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md`. This skill orchestrates the extraction phases.
-
 Takes the use-case set in `a4/usecase/`, the actor roster in `a4/actors.md`, and the problem framing in `a4/context.md`, and extracts the **cross-cutting Domain Model** — the shared vocabulary architecture and implementation will use. Writes the result to `a4/domain.md` as a single wiki page.
 
 This skill exists separately from `/a4:usecase` because cross-cutting concept extraction requires a different reasoning mode from per-UC interview.

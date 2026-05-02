@@ -43,8 +43,8 @@ Transition to `conversational`. For each candidate X, show the verdict and ask:
 Accept natural-language answers:
 
 - **Confirm** (`yes`, `ok`, `맞아요`, `확정`, `mark shipped`, `ship it`) → flip `implementing → shipped` by editing `status:` directly.
-- **Defer without reason** (`not yet`, `아직`, `let me verify`, `hold`) → leave `implementing`. The next `/a4:run iterate` will re-offer.
-- **Defer with reason** (`no — X is incomplete because…`) → leave `implementing` and emit a fresh review item targeting `usecase/X` with `kind: gap`, `source: self`, body containing the user's reason.
+- **Defer without reason** (`not yet`, `아직`, `let me verify`, `hold`) → leave `implementing`. The next `/a4:auto-coding iterate` will re-offer.
+- **Defer with reason** (`no — X is incomplete because…`) → leave `implementing` and emit a fresh review item targeting `usecase/X` with `kind: gap`, `source: self`, body containing the user's reason. Frontmatter and body shape follow `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`.
 
 ## Confirmed → shipped
 

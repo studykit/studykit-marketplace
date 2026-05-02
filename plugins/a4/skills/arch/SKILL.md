@@ -8,8 +8,6 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Architecture Designer
 
-> **Authoring contracts:** the contract for `a4/architecture.md` lives in `${CLAUDE_PLUGIN_ROOT}/authoring/architecture-authoring.md`. Cross-edit allowances when this skill touches other wikis: `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship (limited in-situ for non-structural concept work), `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md` §Authorship (system-actor add only), `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` §Authorship (footnote annotations only). This skill orchestrates — frontmatter shape, body sections, "Don't" lists, schema rules are defined in those references.
-
 Takes the use-case set in `a4/usecase/`, the domain model in `a4/domain.md`, and the actor roster in `a4/actors.md`, and designs the system architecture through collaborative dialogue. Writes the result to `a4/architecture.md` as a single wiki page.
 
 ## Workspace Layout
@@ -81,7 +79,15 @@ In **First Design**, run Phases 1 → 4 in order. In **Iteration**, start wherev
 | 3 | Component Design | `authoring/architecture-guide.md` |
 | 4 | Test Strategy | `references/test-strategy-guide.md` |
 
-Component names, schema fields, and contract parameters must use `a4/domain.md` terminology. Domain Model modifications during arch work follow the in-situ scope in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship.
+Component names, schema fields, and contract parameters must use `a4/domain.md` terminology.
+
+### Cross-Wiki Edits
+
+When arch work touches another wiki page, follow the in-situ allowance in that page's authoring contract:
+
+- `a4/domain.md` — Domain Model modifications follow `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship (limited in-situ for non-structural concept work).
+- `a4/actors.md` — system-actor additions only, per `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md` §Authorship.
+- `a4/nfr.md` — footnote annotations only, per `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md` §Authorship.
 
 ### Technical Claim Verification
 

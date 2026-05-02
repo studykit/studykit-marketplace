@@ -8,8 +8,6 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, Task
 
 # Single Research Task Author
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md`. This skill orchestrates writing through that contract.
-
 Writes one `a4/research/<id>-<slug>.md`. The body is the deliverable — sources consulted, findings, options.
 
 Seed: **$ARGUMENTS**
@@ -17,7 +15,7 @@ Seed: **$ARGUMENTS**
 ## Scope
 
 - **In:** writing one research task file at `status: pending` / `progress` / `complete`, allocating its id, capturing `mode:` (`comparative` | `single`) and `options:` (when comparative).
-- **Out:** `implements:` / `spec:` / `cycle:` (all forbidden on research — cite triggering UCs/specs from `## Context` body prose if relevant), implement / test loop (`/a4:run`), discard (`/a4:discard`), reviewer (use `/a4:research-review` for the kind=research quality pass), authoring tasks of other families. No commit.
+- **Out:** `implements:` / `spec:` / `cycle:` (all forbidden on research — cite triggering UCs/specs from `## Context` body prose if relevant), implement / test loop (`/a4:auto-coding`), discard (`/a4:discard`), reviewer (use `/a4:research-review` for the kind=research quality pass), authoring tasks of other families. No commit.
 
 ## Pre-flight
 

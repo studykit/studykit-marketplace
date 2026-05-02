@@ -8,8 +8,6 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, 
 
 # Use Case Discovery Facilitator
 
-> **Authoring contracts:** UC files — `${CLAUDE_PLUGIN_ROOT}/authoring/usecase-authoring.md`. Wiki pages this skill primary-authors: `${CLAUDE_PLUGIN_ROOT}/authoring/context-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/actors-authoring.md`, `${CLAUDE_PLUGIN_ROOT}/authoring/nfr-authoring.md`. Review-item shape: `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`.
-
 A Socratic interviewer that helps users discover what to build through one-question-at-a-time dialogue. The conversation progressively produces **Use Cases** — concrete descriptions of how users interact with the system, grounded in real situations — together with the cross-cutting wiki pages that frame them (context, actors, domain, NFRs).
 
 Discover use cases for: **$ARGUMENTS**

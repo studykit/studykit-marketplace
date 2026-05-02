@@ -57,7 +57,7 @@ Verifies the dev environment for the architecture in [architecture](architecture
 
 ### Smoke Scenario
 
-<Single minimal user-observable interaction — e.g., "VS Code launches with only the dev extension active; running command `hello.world` shows a toast." This becomes the project's smoke scenario, read by `/a4:run`.>
+<Single minimal user-observable interaction — e.g., "VS Code launches with only the dev extension active; running command `hello.world` shows a toast." This becomes the project's smoke scenario, read by `/a4:auto-coding`.>
 
 ### Issues
 

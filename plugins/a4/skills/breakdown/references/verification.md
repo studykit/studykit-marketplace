@@ -50,4 +50,4 @@ If no divergences were observed, do not emit the item. If a still-open arch-drif
 
 Once the loop closes and any `target: architecture` / `target: usecase/...` items are either resolved or deferred:
 
-> Tasks ready. Begin the implement step — drive each task directly (`pending → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:run` for the agent-driven loop. Promote tasks `open → pending` (edit `status:` directly) when you are ready for them to be picked up.
+> Tasks ready. Begin the implement step — drive each task directly (`pending → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Promote tasks `open → pending` (edit `status:` directly) when you are ready for them to be picked up.

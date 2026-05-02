@@ -13,7 +13,8 @@ Cycle: <current integer>
 Use bootstrap.md's ## Verify section (verified commands, smoke scenario, test isolation
 flags) for build / run / test commands. Run integration and smoke tests as defined
 there. For each failing test, emit one review item at
-a4/review/<id>-<slug>.md via allocate_id.py with:
+a4/review/<id>-<slug>.md via allocate_id.py — frontmatter and body shape per
+${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md — with:
 
   kind: finding
   status: open

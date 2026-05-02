@@ -8,10 +8,10 @@ Before scanning the ready set:
 local=$(git rev-parse HEAD)
 origin=$(git rev-parse origin/HEAD)
 test "$local" = "$origin" \
-  || halt "push local commits to origin (or run 'git remote set-head origin -a' if origin's default branch changed) before running /a4:run"
+  || halt "push local commits to origin (or run 'git remote set-head origin -a' if origin's default branch changed) before running /a4:auto-coding"
 ```
 
-Rationale and recovery in `./parallel-isolation.md`.
+Rationale and recovery in `./parallel-mode.md`. Serial mode skips this entirely — see `./serial-mode.md`.
 
 ## Ready definition
 

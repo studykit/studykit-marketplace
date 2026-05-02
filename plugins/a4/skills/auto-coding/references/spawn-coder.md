@@ -1,6 +1,6 @@
 # Step 2: Spawn coder
 
-For each ready task, spawn one agent **with worktree isolation** (omit `isolation: "worktree"` only in `serial` mode):
+For each ready task, spawn one `Agent` call with `subagent_type: "a4:coder"` and the prompt envelope below. Mode-specific knobs (the `isolation: "worktree"` parameter, parallel-vs-sequential dispatch, branch base) are routed by `./parallel-mode.md` / `./serial-mode.md`.
 
 ```
 Agent(subagent_type: "a4:coder", isolation: "worktree", prompt: """
@@ -26,4 +26,4 @@ Before spawning, flip the task `status:` from `pending` to `progress` by editing
 
 Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, edit `status:` to `complete` or `failing` based on the return value. Do not hand-edit `updated:` — the cascade hook owns it.
 
-The agent commits in its current working tree, which is transparently the worktree — the agent does not need to know it is isolated. Worktree return-value shape, branch naming, and cleanup commands live in `./parallel-isolation.md`.
+The agent commits in its current working tree, which is transparently the worktree (parallel) or the user's branch (serial) — the agent does not need to know which. Mode-specific details (worktree return-value shape, branch naming, cleanup, sequential dispatch, dirty-tree halt) live in `./parallel-mode.md` and `./serial-mode.md`.

@@ -1059,9 +1059,6 @@ def _stop() -> int:
         "`plugins/a4/authoring/<type>-authoring.md` (per-type field "
         "table and lifecycle) for the binding shape."
     )
-    out_lines.append(
-        "For a full workspace sweep (id uniqueness etc.), run /a4:validate."
-    )
     sys.stderr.write("\n".join(out_lines) + "\n")
     return 2
 

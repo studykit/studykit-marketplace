@@ -14,7 +14,7 @@ This document is the routing table the SKILL.md references. Cross-stage stop/con
 
 ## Cycle bound
 
-If 3 cycles complete and failures remain after each `task` revision attempt: halt the run. Flip affected tasks `status: failing` by editing the frontmatter directly, leave all test-runner review items `open`. Report the state to the user and transition to `conversational`. The user can resume via `/a4:run iterate` after addressing the underlying issue.
+If 3 cycles complete and failures remain after each `task` revision attempt: halt the run. Flip affected tasks `status: failing` by editing the frontmatter directly, leave all test-runner review items `open`. Report the state to the user and transition to `conversational`. The user can resume via `/a4:auto-coding iterate` after addressing the underlying issue.
 
 ## Status writer reminder
 

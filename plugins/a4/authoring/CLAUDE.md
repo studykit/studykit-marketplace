@@ -13,7 +13,7 @@ The audience is fixed by location: every `authoring/*.md` shares the same intend
 
 - **Primary readers:** workspace authors writing `<project-root>/a4/**/*.md` files, and LLMs editing those files on the user's behalf.
 - **Not for plugin contributors.** If you find yourself reading `authoring/` while modifying `plugins/a4/` source, back off — implementation references (hook flow, cascade engine, validator internals, script module paths) live in `../dev/`.
-- **Not for skill runtimes either.** Cross-skill orchestration (modes, pipeline shapes, iterate mechanics, wiki-authorship policy) lives in `../workflows/`. Skills cite `authoring/` for the frontmatter contract — never the reverse.
+- **Not for skill runtimes either.** Cross-skill orchestration (modes, pipeline shapes, iterate mechanics) lives in `../workflows/`. Skills cite `authoring/` for the frontmatter contract — never the reverse.
 - **Two scope exceptions** worth keeping in mind when authoring or revising files here:
   - `./commit-message-convention.md` extends to **anyone authoring commits derived from a4 artifacts** — workspace editors, plus humans or LLMs implementing or resolving what those artifacts track. It still excludes commits inside `plugins/a4/` itself.
   - `./usecase-abstraction-guard.md` is **narrower** — it scopes to `<project-root>/a4/usecase/*.md` only and is cited from `./usecase-authoring.md` § Abstraction discipline. Treat it as a sub-section of usecase authoring, not a standalone contract.
@@ -45,7 +45,7 @@ Pick by audience: `body-conventions.md` is read by everyone editing any `a4/` fi
 ## When NOT to add content here
 
 - Plugin implementation, script paths, import graphs → `../dev/`.
-- Cross-skill orchestration rules (modes, shapes, iterate, wiki-authorship) → `../workflows/`.
+- Cross-skill orchestration rules (modes, shapes, iterate) → `../workflows/`.
 - A single skill's procedure → `../skills/<name>/references/`.
 
 ## Tone

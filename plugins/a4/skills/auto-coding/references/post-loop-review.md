@@ -26,6 +26,6 @@ The ship unit varies by **pipeline shape** (see `../../../workflows/pipeline-sha
 
 A run can mix both unit types in one invocation (e.g., a UC-driven task and a spec-justified bug fix shipping in the same cycle); each task's `implements:` field decides which branch its ship verdict takes.
 
-Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:run iterate` session will re-offer them.
+Leftover `implementing` UCs (user deferred on one or more) stay that way; the next `/a4:auto-coding iterate` session will re-offer them.
 
 After 4b finishes (or 4a routes the run elsewhere), proceed to wrap-up.

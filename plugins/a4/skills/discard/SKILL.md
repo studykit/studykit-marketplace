@@ -15,7 +15,7 @@ Seed: **$ARGUMENTS**
 ## Scope
 
 - **In:** flipping an existing task's `status: → discarded` by editing the frontmatter directly, appending an optional `## Why Discarded` note, advising on the spike artifact directory (no auto-delete).
-- **Out:** UC-cascade discards (handled automatically by the PostToolUse cascade hook when a UC flips to `discarded`), authoring (use `/a4:task` / `/a4:bug` / `/a4:spike` / `/a4:research`), implement / test loop (`/a4:run`). No commit.
+- **Out:** UC-cascade discards (handled automatically by the PostToolUse cascade hook when a UC flips to `discarded`), authoring (use `/a4:task` / `/a4:bug` / `/a4:spike` / `/a4:research`), implement / test loop (`/a4:auto-coding`). No commit.
 
 ## Pre-flight
 
@@ -41,7 +41,7 @@ Following `../../authoring/commit-message-convention.md`. Suggest the commit whe
 
 ## Wrap Up
 
-After the discard is applied, summarize: task id, type, title, the reason, and any UC links the user may want to revisit. Do not suggest `/a4:run`. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
+After the discard is applied, summarize: task id, type, title, the reason, and any UC links the user may want to revisit. Do not suggest `/a4:auto-coding`. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
 
 ## Non-Goals
 

@@ -4,7 +4,7 @@ All commit subjects follow `../../../authoring/commit-message-convention.md`.
 
 ## Per-task implementation
 
-`coder` commits its own code + unit tests per task as `#<task-id> <type>(a4): <description>` (`feat` / `fix` per task kind). `/a4:run` does not also commit those files.
+`coder` commits its own code + unit tests per task as `#<task-id> <type>(a4): <description>` (`feat` / `fix` per task kind). `/a4:auto-coding` does not also commit those files.
 
 ## Per-task integration (Step 2.5, parallel mode only)
 
@@ -12,7 +12,7 @@ All commit subjects follow `../../../authoring/commit-message-convention.md`.
 git merge --no-ff -m "#<task-id> merge(a4): integrate <task-slug>" <worktreeBranch>
 ```
 
-Per successfully-implemented task. Serial mode skips this step (coder commits land directly on local main).
+Per successfully-implemented task. Serial mode skips this step — see `./serial-mode.md`.
 
 ## Per-cycle test results
 

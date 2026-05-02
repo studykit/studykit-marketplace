@@ -71,7 +71,7 @@ Distinct from spec ambiguity: the UC is clear, but implementation surfaces an ar
 
 1. **Stop coding.**
 2. **Open a review item.** Allocate an id and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: gap`, `status: open`, `source: coder`, and a `## Description` section describing the choice surfaced and the alternatives considered. Use `target: spec/` only when a specific spec id applies; otherwise omit `target:` (cross-cutting).
-3. **Return failure** naming the review item id. Do not commit partial code. The user authors the spec via `/a4:spec`; `/a4:run iterate` resumes after the spec lands.
+3. **Return failure** naming the review item id. Do not commit partial code. The user authors the spec via `/a4:spec`; `/a4:auto-coding iterate` resumes after the spec lands.
 
 This exit is parallel to the spec-ambiguity exit — same halt + review-item shape — but the UC's lifecycle is untouched. Suppress the exit when the choice is routine (variable names, file layout), framework-mandated (no real alternative), or post-hoc (the code is already written and the conversation is just explaining what's there).
 

@@ -27,10 +27,10 @@ Carry the detected shape into the diagnosis report (Step 3.4) so the user sees t
 - `architecture.md` exists, `bootstrap.md` missing → recommend `/a4:auto-bootstrap`.
 - `bootstrap.md` exists, no tasks across the four issue family folders, behavioral source (UC or spec) present → recommend `/a4:breakdown`.
 **Layer 2 — Open review items.** Any open `review/*.md`?
-- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target entries: `architecture` → `/a4:arch iterate`; `domain` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` → `/a4:breakdown iterate` or `/a4:run iterate`.
+- Sort by `priority` (high → medium → low) then by `created:`. Recommend the iteration skill that owns each item's `target:`. Route by target entries: `architecture` → `/a4:arch iterate`; `domain` → `/a4:domain iterate`; `usecase/*` / `actors` / `context` / `nfr` → `/a4:usecase iterate`; `task/*` → `/a4:breakdown iterate` or `/a4:auto-coding iterate`.
 
 **Layer 3 — Active tasks.** Any `<type>/*.md` (across the four issue family folders `task/`, `bug/`, `spike/`, `research/`) with `status: pending | progress | failing`?
-- Yes → recommend `/a4:run iterate` (resume implementation).
+- Yes → recommend `/a4:auto-coding iterate` (resume implementation).
 
 **Layer 4 — Blocked items.** Any item with `status: blocked`?
 - Read its `depends_on` chain to find the nearest unblocked predecessor; recommend the skill that owns that predecessor.

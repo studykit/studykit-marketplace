@@ -8,9 +8,7 @@ allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, 
 
 # Project Bootstrap
 
-> **Authoring contract:** `${CLAUDE_PLUGIN_ROOT}/authoring/bootstrap-authoring.md`. This skill is the sole writer for `a4/bootstrap.md`.
-
-Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`. `/a4:run` and the `coder` / `test-runner` agents read this file directly; `/a4:breakdown` reads its `## Verify` for task acceptance-criteria grounding.
+Takes the architecture in `a4/architecture.md` and sets up a working development base — project structure, dependencies, build configuration, and test infrastructure per tier. Runs autonomously. Produces `a4/bootstrap.md` as a wiki page that is the **single source of truth for Launch & Verify** per `${CLAUDE_PLUGIN_ROOT}/workflows/wiki-authorship.md`. `/a4:auto-coding` and the `coder` / `test-runner` agents read this file directly; `/a4:breakdown` reads its `## Verify` for task acceptance-criteria grounding.
 
 ## Workspace
 

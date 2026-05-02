@@ -15,7 +15,7 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 | `domain.md` | `domain` | `arch`: simple changes only — see `../skills/arch/SKILL.md` Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: [domain]` |
 | `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: [nfr]` |
 | `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: [architecture]` |
-| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `## Verify` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:run`, `coder`, and `test-runner`; never duplicated into other wikis | review item, `target: [bootstrap]` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
+| `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `## Verify` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:auto-coding`, `coder`, and `test-runner`; never duplicated into other wikis | review item, `target: [bootstrap]` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
 
 ### Why architecture is more restrictive than domain
 
@@ -60,7 +60,7 @@ When `/a4:arch iterate` resolves a review whose `target:` lists `architecture`:
 3. **Downstream staleness propagation** — when present, the drift detector emits new `kind: gap` review items targeting the downstream wikis (`bootstrap`, related `task/*/*.md`) whose `updated:` predates the new architecture change-log entry. *(This propagation rule is currently a planned addition; see the open follow-up under "Pipeline restructure backlog".)*
 4. `compass` Layer 2 / Layer 3 routes the user to the correct downstream `iterate` skill based on the new review-item targets.
 
-Until staleness propagation lands, the user remains responsible for re-running `/a4:auto-bootstrap`, `/a4:breakdown iterate`, or `/a4:run iterate` after a substantial architecture fix. SKILL.md wrap-ups recommend the right next step.
+Until staleness propagation lands, the user remains responsible for re-running `/a4:auto-bootstrap`, `/a4:breakdown iterate`, or `/a4:auto-coding iterate` after a substantial architecture fix. SKILL.md wrap-ups recommend the right next step.
 
 ### Examples
 
