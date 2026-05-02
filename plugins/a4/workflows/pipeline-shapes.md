@@ -3,9 +3,9 @@
 The a4 pipeline is not one shape. Three named shapes describe how a workspace flows from intent to shipped code, and one named **no-shape** state describes when no pipeline runs at all. Each constituent skill that behaves differently across shapes cites this document; skills with shape-independent behavior do not.
 
 Companion to:
-- [`wiki-authorship.md`](./wiki-authorship.md) — who can write each wiki page; cross-stage feedback policy.
-- [`../authoring/frontmatter-common.md`](../authoring/frontmatter-common.md) — universal frontmatter rules.
-- [`../authoring/<type>-authoring.md`](../authoring/) — per-type field tables and lifecycles.
+- `./wiki-authorship.md` — who can write each wiki page; cross-stage feedback policy.
+- `../authoring/frontmatter-common.md` — universal frontmatter rules.
+- `../authoring/<type>-authoring.md` — per-type field tables and lifecycles.
 
 ## Why name the shapes
 
@@ -97,7 +97,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 
 *Mandatory* (the system requires the citation to function correctly):
 
-- `architecture.md` `## Change Logs` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per [`wiki-body.md`](../authoring/wiki-body.md) change-log rules.
+- `architecture.md` `## Change Logs` bullet `[spec/N-...](spec/N-....md)` whenever an arch section is changed by a spec. Per `../authoring/wiki-body.md` change-log rules.
 - `task.spec: [spec/N-...]` frontmatter for Minimal-shape `type: task` tasks grounded in a spec rather than a UC. `/a4:run` Step 4b reads the spec's `## Specification` body plus the cited `architecture.md` section as AC source.
 - A successor spec's `supersedes: [spec/N]` chain when a new decision invalidates an old one. The chain preserves history; both files remain on disk and the older spec flips to `superseded` via cascade.
 - Other wiki pages' `## Change Logs` (`domain.md`, `nfr.md`, `context.md`) when those pages' changes were driven by a spec — same bullet pattern as architecture.md.

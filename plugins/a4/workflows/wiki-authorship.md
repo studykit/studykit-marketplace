@@ -2,7 +2,7 @@
 
 Single source of truth for **who can write to each wiki page in `a4/`** and **what a stage should do when it discovers a problem in another stage's wiki page**. Every a4 skill's behavior with respect to a wiki page must conform to this document; if a SKILL.md disagrees, this document wins and the SKILL.md is updated to match.
 
-Companion to [`../authoring/frontmatter-common.md`](../authoring/frontmatter-common.md) (universal frontmatter rules), [`../authoring/<type>-authoring.md`](../authoring/) (per-type field tables and lifecycles), [`../authoring/body-conventions.md`](../authoring/body-conventions.md) (cross-cutting heading form, link form), [`../authoring/wiki-body.md`](../authoring/wiki-body.md) (`## Change Logs` audit trail and Wiki Update Protocol), [`../authoring/issue-body.md`](../authoring/issue-body.md) (`## Resume`, `## Log` rules for issue files), and [`pipeline-shapes.md`](./pipeline-shapes.md) (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
+Companion to `../authoring/frontmatter-common.md` (universal frontmatter rules), `../authoring/<type>-authoring.md` (per-type field tables and lifecycles), `../authoring/body-conventions.md` (cross-cutting heading form, link form), `../authoring/wiki-body.md` (`## Change Logs` audit trail and Wiki Update Protocol), `../authoring/issue-body.md` (`## Resume`, `## Log` rules for issue files), and `./pipeline-shapes.md` (Full / Reverse / Minimal pipeline shapes — which stages run in which shape).
 
 ## Wiki page authorship
 
@@ -12,7 +12,7 @@ Each wiki page has exactly one **primary author skill**. Other skills may edit t
 |---|---|---|---|
 | `context.md` | `usecase` | `usecase`: any | review item, `target: [context]` |
 | `actors.md` | `usecase` | `usecase`: any. `arch`: add a `system` actor that surfaces during component design (privilege/description text only); never modify a `person` actor | review item, `target: [actors]` |
-| `domain.md` | `domain` | `arch`: simple changes only — see [`skills/arch/SKILL.md`](../skills/arch/SKILL.md) Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: [domain]` |
+| `domain.md` | `domain` | `arch`: simple changes only — see `../skills/arch/SKILL.md` Phase 3 b3 decision table (add concept, 1:1 rename, definition wording). Structural changes (split / merge / relationship / state) → review item | review item, `target: [domain]` |
 | `nfr.md` | `usecase` | `usecase`: any. `arch`: append a footnote pointing to the arch decision that *responds* to an existing NFR row (no new NFR rows, no NFR text edits) | review item, `target: [nfr]` |
 | `architecture.md` | `arch` | `arch`: any. **No other skill edits in-situ.** | review item, `target: [architecture]` |
 | `bootstrap.md` | `auto-bootstrap` | `auto-bootstrap` only (re-runs archive prior copy). **Single source of truth for Launch & Verify** — the `## Verify` section (verified commands, smoke scenario, test isolation flags) is read directly by `/a4:run`, `coder`, and `test-runner`; never duplicated into other wikis | review item, `target: [bootstrap]` (rare — most bootstrap issues become arch issues that bootstrap re-runs cover) |
