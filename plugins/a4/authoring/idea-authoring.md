@@ -40,7 +40,6 @@ labels: []            # free-form tags
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `promoted:` lists the pipeline artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
 - `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.
-- Path values are plain strings without `.md` and without brackets.
 
 ### Deliberately excluded fields
 

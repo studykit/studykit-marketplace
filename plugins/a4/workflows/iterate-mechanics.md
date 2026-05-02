@@ -78,8 +78,7 @@ Full `## Change Logs` formatting rules: [`../authoring/wiki-body.md`](../authori
 
 ## 5. Discipline (always-hold rules)
 
-- **Never hand-edit** `status:` / `updated:` on any file the writer owns. Frontmatter fields with managing scripts are listed in `../authoring/frontmatter-issue.md` § Status changes and cascades. The optional `## Resume` and `## Log` body sections (see `../authoring/issue-body.md`) are hand-maintained — the writer does not touch them.
-- **Never renumber** ids. Ids are globally monotonic; gaps are allowed.
-- **Never delete** review item files. `discarded` is the writer-managed terminal state.
+Tooling-managed fields, id allocation, and the `discarded` terminal state are governed by `../authoring/frontmatter-issue.md` and `../authoring/review-authoring.md` — do not duplicate or override those rules during iterate. Iterate-specific holds:
+
 - **Confirm before overwriting** any previously confirmed UC, wiki, or task content. Iteration preserves prior work.
 - **Preserve cross-references.** When renaming or splitting, update `depends_on:`, `related:`, `target:` (the list now subsumes the old `wiki_impact:` semantics) consistently across affected files (consistency checks pick this up).

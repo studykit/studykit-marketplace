@@ -18,10 +18,6 @@ Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki
 
 Unknown H2 headings are tolerated.
 
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained (e.g., `[usecase/3-search-history](usecase/3-search-history.md)`). The `## Screens` section in particular relies on these links.
-
 ## Change Log triggers
 
 The wiki close guard surfaces missing bullets when a review item whose `target:` lists `context` transitions to `resolved`.

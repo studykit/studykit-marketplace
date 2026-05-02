@@ -55,7 +55,7 @@ Frontmatter fields that reference other files (`depends_on`, `implements`, `targ
 
 Universal rules:
 
-- **Plain strings.** No brackets — `usecase/3-search-history`, not `[usecase/3-search-history]`. Plain strings keep frontmatter machine-parseable.
+- **Plain strings.** No brackets — `usecase/3-search-history`, not `[usecase/3-search-history]`.
 - **No `.md` extension.** Any reference ending in `.md` is invalid.
 - **Existence is checked.** Each reference must resolve to a file in the workspace; unresolved refs surface as a `unresolved-ref` violation. Format-only references (e.g., a typo in `99` where no file with `id: 99` exists) are treated as authoring errors, not extension metadata.
 
@@ -76,7 +76,7 @@ Unknown fields are **not errors** — they are treated as extension metadata. Sk
 | `created` | every issue file | timestamp | `YYYY-MM-DD HH:mm` |
 | `updated` | every issue file and every wiki page | timestamp | `YYYY-MM-DD HH:mm` |
 
-- Format `YYYY-MM-DD HH:mm` (date + 24-hour time, space-separated). Quoted in YAML as a string.
+- Format `YYYY-MM-DD HH:mm` (date + 24-hour time, space-separated).
 - All timestamps are implicitly Korean Standard Time (KST). No timezone offset is written — KST is the project-wide convention, not a per-field declaration.
 - **`created` and `updated` are tooling-managed.** Do not insert, rewrite, or hand-bump these fields — LLMs and human authors must leave them untouched. Manual edits are overwritten and can mask drift detection.
 - `created` is set once when the file is first allocated and never re-touched. `updated` refreshes on every substantive edit (body change, status flip, wiki page edit).

@@ -26,13 +26,8 @@ Actor slugs are referenced from UC frontmatter `actors:` lists. Renaming a slug 
 
 A new actor's slug should:
 
-- Be lowercase, hyphen-separated.
 - Match the user-facing role, not an implementation detail.
 - Not collide with an existing slug. Uniqueness is not currently enforced automatically; visual review at edit time is the gate.
-
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained (e.g., the description column may link to representative UCs: `[usecase/3-search-history](usecase/3-search-history.md)`).
 
 ## Drift detection
 

@@ -91,11 +91,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 | **Consumption (primary)** | `architecture.md` `## Change Logs` bullet linking `[spec/N-...](spec/N-...md)` records why an architecture change happened. | Full |
 | **Consumption (secondary)** | `task.spec: spec/N-...` makes a spec the AC source for a non-UC task. | Minimal (canonical), Full (occasional) |
 
-**Trigger conditions** for writing a spec (independent of shape):
-
-1. Two or more viable options with a non-trivial trade-off.
-2. The "why" of the choice is not recoverable from the resulting code.
-3. The decision could plausibly be revisited later — superseded chains preserve the path not taken.
+**When to write a spec, what counts as a spec, and what does not** — see `../authoring/spec-authoring.md`. Spec is a prescriptive contract for a single artifact (one OpenAPI doc, one schema, one protocol), not a per-decision record; trigger and anti-patterns live there.
 
 **When to cite an existing spec.** specs are written once and cited many times. Each citation site falls into one of two categories:
 
@@ -112,18 +108,7 @@ specs are **orthogonal to shape**. They are produced and consumed across all sha
 - Review item body — clarify what decision a `kind: question` is asking about or what decision a `kind: finding` is violating.
 - Research tasks (`a4/research/<id>-<slug>.md`) — the task body's conclusion can forward-point to a spec that fixed its outcome via inline markdown links.
 
-**Common omissions** that erode spec value:
-
-- Writing a spec but not adding the `architecture.md` `## Change Logs` bullet when arch was driven by it. The drift detector may eventually catch this; preferring to add the bullet in the same session avoids the drift entry.
-- Minimal-shape `type: task` task with no UC and no spec — `/a4:task` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`.
-- Reversing a decision without an explicit `superseded by` chain. Both specs end up live and ambiguous about which is current.
-
-**Anti-patterns** (do not write a spec for these):
-
-- Routine implementation choices (variable naming, file layout).
-- Decisions already determined by the framework or platform.
-- Post-hoc justification — specs capture the trade-off at decision time, not after the fact.
-- Multiple decisions in one file — one decision per file (Nygard 1:1 rule).
+**Shape-specific omission**: a Minimal-shape `type: task` with no UC and no spec — `/a4:task` Step 2 flags as smell. The fix is usually to write a short spec first, then cite it via `spec:`. (General spec hygiene — `architecture.md` change-log bullets, supersede chains — is governed by `../authoring/spec-authoring.md` and `../authoring/wiki-body.md`.)
 
 specs do not have a shape entry of their own. `/a4:spec` is shape-independent — it always writes the same spec file regardless of which shape (if any) is in flight.
 

@@ -114,8 +114,6 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 ## Don't (bug-specific)
 
-- **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
-- **Don't reverse `pending → open`.** Once enqueued, a task stays enqueued or moves forward / out.
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded` is the writer's job.
 - **Don't ship a bug fix without a regression test.** The `## Unit Test Strategy` must include a scenario that pins the expected behavior; closing the task without it is the most common way the same bug returns.
 - **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and research to `a4/research/` so the matching authoring contract applies.

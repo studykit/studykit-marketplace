@@ -25,10 +25,6 @@ Unknown H2 headings are tolerated.
 
 `## Verify` is the single executable contract that drives implementation verification. Duplicating it into `architecture.md` (test strategy section) would create drift. Architecture's `## Test Strategy` describes the **strategy** (unit / integration / e2e split, isolation philosophy); bootstrap's `## Verify` records the **executable contract** (the actual commands). The two are complementary.
 
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Bootstrap typically links back to `architecture.md` for context on why certain commands or env vars are required.
-
 ## Change Log triggers
 
 Most bullets that land on this page cite a `target: architecture` review item that triggered a re-run.

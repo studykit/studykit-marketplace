@@ -21,8 +21,7 @@ Subject form for every commit derived from an a4 workspace artifact. A commit is
 - A commit is "derived" from an artifact if it edits the artifact file **or** the work it carries traces back to that artifact (per-task implementation, per-issue fix, per-UC ship work). Heuristic: *"does this commit advance the lifecycle of artifact #N?"* — if yes, prefix `#N`. The artifact file does not need to be in the diff.
 - `<id>` is the artifact file's frontmatter `id:` value (already allocated at file-creation time — see `./frontmatter-issue.md` § `id`). No type prefix on the id (ids are unique across all artifact families).
 - Multiple ids are space-separated and appear together before the Conventional Commits type prefix. Order them by relevance (the artifact most directly driving the commit first).
-- `<type>` ∈ `feat | fix | docs | refactor | chore | test | merge`.
-- `merge(a4)` is a4-specific, used only for `--no-ff` integration commits that fold a worktree branch into local main during the implement loop.
+- `<type>` follows Conventional Commits, plus a4-specific `merge`: `merge(a4)` is reserved for `--no-ff` integration commits that fold a worktree branch into local main during the implement loop.
 
 ## Examples
 

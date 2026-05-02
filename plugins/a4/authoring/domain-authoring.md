@@ -18,10 +18,6 @@ Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki
 
 Unknown H2 headings are tolerated.
 
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Concept definitions often link back to the UCs that introduced them (`[usecase/3-search-history](usecase/3-search-history.md)`).
-
 ## Drift detection
 
 `domain` ↔ `architecture` term consistency is monitored: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.

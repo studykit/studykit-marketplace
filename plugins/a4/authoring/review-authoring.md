@@ -46,7 +46,6 @@ labels: []                # free-form
 - `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without first documenting them here.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
-- Path values are plain strings without `.md` and without brackets (e.g., `usecase/3-search-history`, not `[usecase/3-search-history.md]`).
 
 ### Cascade — `target:` includes a UC that flips to `discarded`
 
@@ -84,8 +83,6 @@ When resolving, follow the wiki Change Logs convention defined in `./wiki-body.m
 
 ## Body shape
 
-The body is a sequence of column-0 `## Title Case` H2 headings, with free-form markdown content from one heading to the next. H1 (`# Title`) is forbidden in the body. Use H3+ headings inside sections freely.
-
 Review item bodies are **deliberately minimal** — they hold a single observation, not a long-form artifact.
 
 **Required:**
@@ -101,17 +98,9 @@ Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `#
 
 There is no standalone "title" body section — the file's frontmatter carries no `title:` field either. The slug + first line of `## Description` serves as the human-readable name in iterate backlogs.
 
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained (e.g., `[usecase/3-search-history](../usecase/3-search-history.md)`). Frontmatter list paths are different (plain strings, no `.md`).
-
 ## Common mistakes
 
-- **Stray content above the first heading**. Anything in the body that is not whitespace must live under a `## Heading`.
 - **`## Description` missing**. The only required body section.
-- **Heading not on column 0**. The H2 marker (`## `) must be at the start of the line; indented headings do not register as section boundaries.
-- **Sections nested**. Sections do not nest; every section sits at the body's top level under its own `## Heading`.
-- **H1 in body**.
 - **Wiki basenames in `target:` written with `.md` or a folder prefix** → use bare basenames (`architecture`, not `architecture.md`, not `a4/architecture`). The path-format rule already excludes the `.md` suffix.
 
 ## Don't

@@ -19,10 +19,6 @@ Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki
 
 Unknown H2 headings are tolerated.
 
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. The Affected UCs column relies entirely on this form.
-
 Architecture footnote annotations may attach to an existing NFR row to point at the architecture decision that satisfies it:
 
 ```markdown

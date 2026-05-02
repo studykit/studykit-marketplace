@@ -139,8 +139,6 @@ Reverse lookups (which specs cite a research task) are derived on demand via gre
 ## Don't (research-specific)
 
 - **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden on `type: research`. Cite triggering specs via markdown links in `## Context` body prose; record the implementing UC the same way if applicable.
-- **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
-- **Don't reverse `pending → open`.** Once enqueued, a research task stays enqueued or moves forward / out.
 - **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
 - **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
 - **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and bugs to `a4/bug/` so the matching authoring contract applies.

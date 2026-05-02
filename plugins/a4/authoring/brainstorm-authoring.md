@@ -33,7 +33,6 @@ tags: []              # free-form
 - `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
 - `promoted:` lists pipeline artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
-- Path values are plain strings without `.md` and without brackets.
 
 ### Lifecycle and writer ownership
 

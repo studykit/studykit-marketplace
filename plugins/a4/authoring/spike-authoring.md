@@ -109,8 +109,6 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 ## Don't (spike-specific)
 
 - **Don't put `implements:`, `cycle:`, or `spec:` on a spike.** All three are forbidden on `type: spike`. Spikes are exploratory; if the outcome warrants UC delivery, author a follow-up `type: task` that declares `implements:` and `spec:` as needed.
-- **Don't use `progress` or `failing` as an initial status.** They are writer-only, produced by transitions.
-- **Don't reverse `pending → open`.** Once enqueued, a spike stays enqueued or moves forward / out.
 - **Don't auto-delete or auto-archive `artifacts/spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
 - **Don't write production source from a spike.** `artifacts:` paths staying under `artifacts/spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the spike's outcome warrants production work, follow up with a `task` (the default issue family).
 - **Don't author a different issue family here.** Move tasks to `a4/task/`, bugs to `a4/bug/`, and research to `a4/research/` so the matching authoring contract applies.

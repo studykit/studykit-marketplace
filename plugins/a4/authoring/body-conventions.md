@@ -28,21 +28,14 @@ Rules:
 
 - **Section boundary is `## Heading`** — column-0 H2, on its own line. The section ends at the next column-0 H2 or end of file.
 - **Heading text is Title Case** — each word capitalised, words separated by single spaces. Examples: `## Context`, `## Specification`, `## Change Logs`, `## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Acceptance Criteria`, `## Why This Matters`. Map the kebab-case slug from the per-type authoring contract to Title Case by replacing hyphens with spaces and capitalising each word.
-- **No H1 in the body.** Title belongs to frontmatter `title:`. (Use of H1 is reserved; do not author one.)
-- **Use H3+ for inner structure.** Inside a section, paragraphs, lists, code fences, tables, blockquotes, and `###`/`####`/… subheadings are all permitted. Section boundaries only fire on H2.
-- **Sections do not nest.** Every declared section sits at the body's top level; you cannot place a recognised section inside another.
+- **No H1 in the body.** Title belongs to frontmatter `title:`.
+- **Sections do not nest.** Every declared section sits at the body's top level; use H3+ for inner structure.
 - **Unknown H2 headings are tolerated.** Authors may add supplemental sections (`## Benchmarks`, `## Migration Notes`, …) provided the heading is well-formed Title Case.
 - **No stray content above the first section.** Anything in the body that is not whitespace must live under an H2 heading.
 
-Inside a section, content is opaque markdown. Section detection runs on column-0 H2 lines; fenced code blocks are not scanned.
-
-### Blank-line discipline
-
-Leave one blank line above each H2 (except the first) and between heading and content. This is convention, not enforced syntax.
-
 ## Link form (body)
 
-Body cross-references use **standard markdown links** — `[text](relative/path.md)`. The `.md` extension is retained; renderers (GitHub, VSCode, any markdown viewer) navigate them.
+Body cross-references use **standard markdown links** — `[text](relative/path.md)`. The `.md` extension is retained.
 
 | Form | Example |
 |------|---------|
@@ -50,8 +43,6 @@ Body cross-references use **standard markdown links** — `[text](relative/path.
 | Section anchor on a wiki page | `[architecture#sessionservice](../architecture.md#sessionservice)` |
 | Sibling-folder reference | `[research/42-grpc-streaming](../research/42-grpc-streaming.md)` (from `a4/spec/`) |
 | External URL | `[the spec text](https://example.com/spec)` |
-
-Section anchors use the renderer's standard slugification (`## Decision Log` → `#decision-log`).
 
 Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is also acceptable in prose. It renders as plain text in local markdown viewers but is auto-linked as a cross-issue reference in GitHub Issues / Pull Requests when an `a4/` workspace is mirrored into a tracker. Use it for shorthand mentions; use the markdown-link form when local navigation matters.
 

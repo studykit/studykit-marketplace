@@ -36,7 +36,6 @@ labels: []            # free-form tags (alias: tags)
 - `title` is required. Placeholder tokens (`TBD`, `???`, `<placeholder>`, `<todo>`, `TODO:`, `<title>`-shaped strings) are tolerated at `status: draft` but forbidden once the spec reaches `status: active` (and beyond) — see `./frontmatter-issue.md#title-placeholders`.
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
 - `related:` is the soft-link slot — use it for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). There is no stored-reverse contract; reverse lookups are derived on demand via grep / `../scripts/search.py`.
-- Path values are plain strings without `.md` and without brackets (e.g., `spec/8-caching-strategy`, not `[spec/8-caching-strategy.md]`).
 
 ### Lifecycle and writer ownership
 
@@ -53,8 +52,6 @@ superseded → (terminal)
 - `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.
 
 ## Body shape
-
-The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `## Context`, `## Specification`), with markdown content following each heading until the next H2 or end of file. H1 (`# Title`) is forbidden in the body — title belongs to frontmatter `title:`. Use H3+ headings inside sections freely.
 
 **Required:**
 
@@ -76,17 +73,9 @@ The body is a sequence of column-0 H2 markdown headings in Title Case (e.g., `##
 
 Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders (`a4/task/`, `a4/bug/`, etc.).
 
-### Body-link form
-
-Body cross-references are standard markdown links — `[text](relative/path.md)` — with the `.md` extension retained. Frontmatter list paths are different (plain strings, no `.md`).
-
 ## Common mistakes
 
-- **Stray content above the first H2 heading.** Anything in the body that is not whitespace must live under an H2 heading.
 - **`## Context` or `## Specification` missing.** Both are required; the `→ active` flip is invalid until they are present and non-empty.
-- **H2 not in column 0 or not Title Case.** Section boundaries fire only on column-0 H2 headings whose text is Title Case with single-space separators.
-- **Sections nested inside other sections.** Sections do not nest; every section sits at the body's top level. Use H3+ for inner structure.
-- **H1 in body.** Title is frontmatter-only.
 
 ## Don't
 
