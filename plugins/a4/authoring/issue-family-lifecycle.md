@@ -1,8 +1,8 @@
-# a4 — task family lifecycle (shared)
+# a4 — issue family lifecycle (shared)
 
-The four task issue families (`task`, `bug`, `spike`, `research`) share **one** lifecycle, status enum, writer rules, and `complete` initial-status preflight. This file is the single source of truth; per-family authoring files cite it and add only family-specific deltas.
+The four issue families (`task`, `bug`, `spike`, `research`) share **one** lifecycle, status enum, writer rules, and `complete` initial-status preflight. This file is the single source of truth; per-family authoring files cite it and add only family-specific deltas.
 
-> `umbrella` is **not** part of the task family. It is a narrative-aggregation parent with its own lifecycle (`open | complete | discarded`), no implement loop, and no UC-cascade. See `./umbrella-authoring.md`.
+> `umbrella` is **not** part of the issue family. It is a narrative-aggregation parent with its own lifecycle (`open | complete | discarded`), no implement loop, and no UC-cascade. See `./umbrella-authoring.md`.
 
 ## Status enum
 
@@ -36,6 +36,7 @@ discarded → (terminal)
 - `open → complete` is allowed for post-hoc closure of backlog items finished outside the implement loop (work already done before the task entered the queue). Required body sections and the `complete` initial-status preflight still apply.
 - There is **no `pending → open` reverse** — once enqueued, a task cannot be returned to backlog.
 - UC-cascade automatic flips: when a UC flips to `discarded`, related tasks across the four families → `discarded`. When a UC flips to `revising`, tasks at `progress`/`failing` reset to `pending`; `open`/`pending`/`complete` tasks stay. Do not flip these by hand.
+- **Flip `status:` when starting work.** Before the first source edit, flip to `progress` (`pending → progress`, or `open → progress` if the queue step was skipped). The writer is whoever is doing the work; `status:` is never auto-flipped.
 
 ## `complete` initial-status preflight
 

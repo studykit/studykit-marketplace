@@ -74,7 +74,7 @@ WIKI_KINDS_TUPLE: tuple[str, ...] = (
 # `review`). Wiki pages declare their identifier in the `type:` field
 # (matching the file basename); the `wiki` entry below makes
 # `--kind <basename>` work for the wiki folder by routing it through
-# `Record.kind`. The four task issue family folders each map to a
+# `Record.kind`. The four issue family folders each map to a
 # singleton of their own name so `--kind task` (etc.) is accepted by
 # the validator and `Record.kind` (which returns the folder for those
 # families post-v12) lights up.
@@ -166,7 +166,7 @@ class Record:
 
     @property
     def labels(self) -> list[str]:
-        # Schema uses `labels:` on usecase / the four task issue
+        # Schema uses `labels:` on usecase / the four issue
         # families / review / idea, and `tags:` on spec / brainstorm.
         # Treat them as one logical field.
         return _str_list(self.fm.get("labels")) + _str_list(self.fm.get("tags"))

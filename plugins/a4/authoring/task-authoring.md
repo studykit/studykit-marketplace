@@ -74,7 +74,7 @@ If implementation surfaces a real choice (an architectural shape, a protocol, a 
 
 ### Lifecycle and writer ownership
 
-Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four task issue families — see `./task-family-lifecycle.md`.
+Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
 
 Task-specific notes:
 

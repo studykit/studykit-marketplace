@@ -48,6 +48,6 @@ When the task file is written:
 
 - Do not run a reviewer agent. Single-task authorship is conversational.
 - Do not author multiple tasks in one invocation. Re-invoke `/a4:task` per task.
-- Do not author non-task issue families here — use `/a4:bug`, `/a4:spike`, or `/a4:research`.
+- Do not author other issue families here — use `/a4:bug`, `/a4:spike`, or `/a4:research`.
 - Do not write any wiki page; this skill writes a single `a4/task/<id>-<slug>.md` only.
 - Do not flip task status beyond the initial `open` / `pending` / `complete` write.

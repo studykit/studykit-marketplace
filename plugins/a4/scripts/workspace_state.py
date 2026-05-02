@@ -23,7 +23,7 @@ Sections (kebab-case identifier on the left):
   stage-progress      mixed-axis view of usecase/arch/bootstrap/impl.
   issue-counts        per folder × {active, in_progress, terminal, total}
                       plus by-kind for review and per-family rows for
-                      the four task issue families.
+                      the four issue families.
   usecases-by-source  UC `source:` distribution (Reverse-only detection).
   open-reviews        open / in-progress reviews, sorted by priority
                       then created then id.
@@ -189,7 +189,7 @@ def render_wiki_pages(pages: list[WikiPage]) -> str:
 
 
 def _all_tasks(issues: dict[str, list[IssueItem]]) -> list[IssueItem]:
-    """Concatenate the four task issue family folders into a single list.
+    """Concatenate the four issue family folders into a single list.
 
     Order follows ``ISSUE_FAMILY_TYPES`` so the display is deterministic.
     """
@@ -325,7 +325,7 @@ def render_active_tasks(tasks: list[IssueItem]) -> str:
     for t in active:
         deps = f" depends_on={t.depends_on}" if t.depends_on else ""
         # `folder` doubles as the family label after the v12 split (one
-        # folder per task issue family).
+        # folder per issue family).
         kind_label = f" {t.folder}" if t.folder in ISSUE_FAMILY_TYPES else ""
         lines.append(f"- {t.ref} — {t.status}{kind_label} — {t.title}{deps}")
     return "\n".join(lines)

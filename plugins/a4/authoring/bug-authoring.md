@@ -66,7 +66,7 @@ The parent file (issue or umbrella) is the agreed home for **narrative shared ac
 
 ### Lifecycle and writer ownership
 
-Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four task issue families — see `./task-family-lifecycle.md`.
+Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
 
 Bug-specific notes:
 

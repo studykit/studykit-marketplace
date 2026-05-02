@@ -1,10 +1,10 @@
 # a4 — task artifacts convention
 
-Cross-family reference for the **artifact directory** that may sit alongside a task at project-root `artifacts/<type>/<id>-<slug>/`. Per-family shape, the `artifacts:` artifact-only contract, the spike archive convention, and curation policy live here so all four task issue families (`task` / `bug` / `spike` / `research`) cite a single source.
+Cross-family reference for the **artifact directory** that may sit alongside a task at project-root `artifacts/<type>/<id>-<slug>/`. Per-family shape, the `artifacts:` artifact-only contract, the spike archive convention, and curation policy live here so all four issue families (`task` / `bug` / `spike` / `research`) cite a single source.
 
 Per-family authoring files (`{task,bug,spike,research}-authoring.md`) cite this document for shared rules and add only family-specific notes (e.g., the spike's "primary deliverable" status, the bug's "evidence-only" framing).
 
-The four task issue families are sibling top-level folders under `a4/`; the artifact directory mirrors this with sibling top-level folders under `artifacts/`.
+The four issue families are sibling top-level folders under `a4/`; the artifact directory mirrors this with sibling top-level folders under `artifacts/`.
 
 ## Directory layout
 

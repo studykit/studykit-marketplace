@@ -6,10 +6,10 @@ Some status enum values are semantically derived from cross-file state:
     ``status: active`` declares ``supersedes: [<this-path>]``.
   - ``usecase.status = "superseded"`` iff another ``usecase/*.md`` at
     ``status: shipped`` declares ``supersedes: [<this-path>]``.
-  - ``<task-family>.status = "discarded"`` iff every UC in the task's
+  - ``<issue-family>.status = "discarded"`` iff every UC in the task's
     ``implements:`` is at ``status: discarded``. Applies across all four
-    task issue families (``task`` / ``bug`` / ``spike`` / ``research``).
-  - ``<task-family>.status = "pending"`` (from ``progress``/``failing``)
+    issue families (``task`` / ``bug`` / ``spike`` / ``research``).
+  - ``<issue-family>.status = "pending"`` (from ``progress``/``failing``)
     iff a UC in the task's ``implements:`` is at ``status: revising``.
   - ``review.status = "discarded"`` iff the review's ``target:`` points
     at a usecase with ``status: discarded``.

@@ -64,7 +64,7 @@ In other words: `bootstrap.md` is the **anchor every shape needs**, independent 
 
 **Required issue path.** `<type>/<id>-<slug>.md` (under one of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`) → `/a4:run`.
 
-**Acceptance Criteria source.** Set by task family, mirroring the Jira-issue model that the per-family authoring skills are built on:
+**Acceptance Criteria source.** Set by issue family, mirroring the Jira-issue model that the per-family authoring skills are built on:
 
 | Family | AC source |
 |---|---|

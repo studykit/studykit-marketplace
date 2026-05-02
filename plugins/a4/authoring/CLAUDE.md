@@ -35,7 +35,7 @@ If the audience for a new file does not match any of the above, that is a signal
 - Issue-only body rule (sections used by `usecase` / `task` / `bug` / `spike` / `research` / `umbrella` / `review` / `spec` / `idea` / `brainstorm`) → extend `issue-body.md`.
 - Wiki-only body rule (sections used by `actors` / `architecture` / `bootstrap` / `context` / `domain` / `nfr`) → extend `wiki-body.md`.
 - New artifact taxonomy → extend `artifacts.md`.
-- Cross-type binding rule shared by several types (lifecycle, evidence-readiness gate, etc.) → standalone `<rule-name>.md`. Precedents: `task-family-lifecycle.md` (lifecycle shared by `task` / `bug` / `spike` / `research`), `spike-before-task.md` (evidence-readiness gate shared by `task` / `bug`). Per-type docs cite the standalone via `./` for the binding shape.
+- Cross-type binding rule shared by several types (lifecycle, evidence-readiness gate, etc.) → standalone `<rule-name>.md`. Precedents: `issue-family-lifecycle.md` (lifecycle shared by `task` / `bug` / `spike` / `research`), `spike-before-task.md` (evidence-readiness gate shared by `task` / `bug`). Per-type docs cite the standalone via `./` for the binding shape.
 
 Pick by audience: `body-conventions.md` is read by everyone editing any `a4/` file, `issue-body.md` is read only by issue authors, `wiki-body.md` is read only by wiki authors. A rule that lands in the wrong file forces the wrong audience to read it. Per-type contracts (`<type>-authoring.md`) point at whichever of the three is relevant — they do not duplicate the contents.
 

@@ -156,7 +156,7 @@ def find_tasks_implementing(
     Each ``implements:`` entry is resolved through ``index`` so all
     accepted ref forms — ``#<id>``, ``<family>/<id>``,
     ``<family>/<id>-<slug>``, bare ``<id>-<slug>`` — match the same
-    target. Walks the four task issue family folders in
+    target. Walks the four issue family folders in
     ``ISSUE_FAMILY_TYPES``.
     """
     out: list[Path] = []

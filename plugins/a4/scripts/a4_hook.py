@@ -383,7 +383,7 @@ def _maybe_inject_authoring_contract(
     if type_value in _TASK_FAMILY_TYPES:
         pointers.insert(
             2,
-            "- `plugins/a4/authoring/task-family-lifecycle.md` — "
+            "- `plugins/a4/authoring/issue-family-lifecycle.md` — "
             "issue-family lifecycle (status enum, transitions, writer "
             "rules).",
         )

@@ -71,7 +71,7 @@ def test_inject_on_new_task_file(
     assert "type: task" in ctx
     assert "frontmatter-universals.md" in ctx
     assert "task-authoring.md" in ctx
-    assert "task-family-lifecycle.md" in ctx
+    assert "issue-family-lifecycle.md" in ctx
     assert "issue-body.md" in ctx
 
 
@@ -88,7 +88,7 @@ def test_inject_on_new_spike_file(
     ctx = payload["hookSpecificOutput"]["additionalContext"]
     assert "type: spike" in ctx
     assert "spike-authoring.md" in ctx
-    assert "task-family-lifecycle.md" in ctx
+    assert "issue-family-lifecycle.md" in ctx
 
 
 def test_dedupe_same_file_same_session(

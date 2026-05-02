@@ -2,7 +2,7 @@
 
 Cross-type rule for `task` and `bug` authorship: **author the issue file only when the implementer-facing facts it depends on are gathered**. When facts are missing, the issue is not yet evidence-ready and the parent issue family is `spike` (PoC code accompanies findings) or `research` (written investigation only); author the spike or research first, then resume the task / bug.
 
-Companion to `./task-authoring.md`, `./bug-authoring.md`, `./spike-authoring.md`. Cross-type lifecycle and writer rules live in `./task-family-lifecycle.md`.
+Companion to `./task-authoring.md`, `./bug-authoring.md`, `./spike-authoring.md`. Cross-type lifecycle and writer rules live in `./issue-family-lifecycle.md`.
 
 ## Why
 

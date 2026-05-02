@@ -29,8 +29,8 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 | Flag | Meaning |
 |------|---------|
 | `--folder <name>` | usecase / task / bug / spike / research / review / spec / idea / brainstorm / wiki / archive |
-| `--status <value>` | family-validated enum (e.g. task issue families (task/bug/spike/research): `open`/`pending`/`progress`/`complete`/`failing`/`discarded`; usecase: `draft`/`ready`/`implementing`/`shipped`; spec: `draft`/`active`/`deprecated`/`superseded`) |
-| `--kind <value>` | review: finding/gap/question · wiki: context/domain/architecture/actors/nfr/bootstrap · task issue family folders accept their own folder name (e.g. `--kind task` matches `a4/task/`) |
+| `--status <value>` | family-validated enum (e.g. issue families (task/bug/spike/research): `open`/`pending`/`progress`/`complete`/`failing`/`discarded`; usecase: `draft`/`ready`/`implementing`/`shipped`; spec: `draft`/`active`/`deprecated`/`superseded`) |
+| `--kind <value>` | review: finding/gap/question · wiki: context/domain/architecture/actors/nfr/bootstrap · issue family folders accept their own folder name (e.g. `--kind task` matches `a4/task/`) |
 | `--id <int>` | numeric id |
 | `--slug <substr>` | case-sensitive substring on filename stem |
 | `--label <value>` | matches both `labels:` and `tags:` |

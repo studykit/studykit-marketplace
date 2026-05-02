@@ -11,7 +11,7 @@ Every markdown file under `a4/` carries YAML frontmatter. Files split into two f
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `bootstrap.md` | `a4/` root |
 | **Issue** | use case, task, bug, spike, research, umbrella, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
 
-The four issue families that share the task lifecycle (`task`, `bug`, `spike`, `research`) are siblings — they share the same status enum and lifecycle but each carries its own per-type schema and authoring contract. The `task` family is the default (regular implementation work, equivalent to Jira's "Task" issue type); `bug` / `spike` / `research` are specialized variants. Cross-family operations (UC cascades, status reset on revising) walk all four; single-family authoring uses the matching folder only.
+The four **issue families** (`task`, `bug`, `spike`, `research`) are siblings — they share one status enum and lifecycle (see `./issue-family-lifecycle.md`), but each carries its own per-type schema and authoring contract. The `task` family is the default (regular implementation work, equivalent to Jira's "Task" issue type); `bug` / `spike` / `research` are specialized variants. Cross-family operations (UC cascades, status reset on revising) walk all four; single-family authoring uses the matching folder only.
 
 ## `type:` field
 
@@ -79,7 +79,7 @@ The script prints the next available id to stdout.
 Frontmatter fields that reference other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following forms. All forms resolve to the same file, so they are interchangeable on input — pick whichever reads best in context.
 
 - **`<id>` integer short form.** Issue folders only. A bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `umbrella/`, `review/`, `spec/`, `idea/`, or `brainstorm/` carries `id: 3`. Slug-drift-proof. Useful when the artifact's exact slug is irrelevant to the reference. Any path-ref entry beginning with `#` is invalid (the legacy `#<id>` short form was removed in a4 v11.0.0; write the bare integer instead).
-- **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`task`, `bug`, `spike`, `research`, etc.); each task family has its own top-level folder.
+- **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint without binding to the slug. The `<folder>` segment is the actual top-level folder name (`task`, `bug`, `spike`, `research`, etc.); each issue family has its own top-level folder.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter that benefits from at-a-glance context. The slug part is a hint: when the file's actual stem differs (slug rename), the id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Resolves correctly because ids are globally unique. Permitted but folder-prefixed form is preferred for readability.
 - **Wiki basename.** `architecture`, `domain`, `nfr`, etc. Wiki pages have no id; reference them by file basename. A review item naming a wiki page writes `target: [architecture, domain]`, not `target: [architecture.md]`. Issue-folder paths and wiki basenames may be mixed in a single `target:` list.
@@ -143,10 +143,10 @@ Unknown fields are **not errors** — they are treated as extension metadata. Sk
 
 ## Status writers
 
-Every status change on `usecase`, the four task issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. When the change lands, `updated:` refreshes automatically on the primary file, and any cross-file cascade runs:
+Every status change on `usecase`, the four issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. When the change lands, `updated:` refreshes automatically on the primary file, and any cross-file cascade runs:
 
-- Task reset on UC `revising` — across all four task issue families, tasks at `progress`/`failing` → `pending`.
-- Task / review discard cascade on UC `discarded` — across all four task issue families.
+- Task reset on UC `revising` — across all four issue families, tasks at `progress`/`failing` → `pending`.
+- Task / review discard cascade on UC `discarded` — across all four issue families.
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
 

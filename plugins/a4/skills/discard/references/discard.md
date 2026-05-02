@@ -37,7 +37,7 @@ If the user supplied a reason worth narrative capture, append (or extend) a `## 
 
 Append a new dated bullet if the section already exists.
 
-Then edit the file's frontmatter `status:` to `discarded` directly. The PostToolUse cascade hook detects the legal transition, refreshes `updated:`, and runs no cross-file cascade for task-family discards (they don't propagate). If the resulting jump is illegal (already-`discarded` etc.), the cascade hook silently skips and the Stop-hook safety net surfaces the violation. Skip the discard if D2 returned `discarded`; never write the same status twice.
+Then edit the file's frontmatter `status:` to `discarded` directly. The PostToolUse cascade hook detects the legal transition, refreshes `updated:`, and runs no cross-file cascade for issue-family discards (they don't propagate). If the resulting jump is illegal (already-`discarded` etc.), the cascade hook silently skips and the Stop-hook safety net surfaces the violation. Skip the discard if D2 returned `discarded`; never write the same status twice.
 
 ## D4. Spike artifact directory advisory (if `type: spike`)
 
