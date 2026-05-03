@@ -1,0 +1,10 @@
+{
+  "name": "dev-rules",
+  "description": "Inject coding rule sets (logging conventions) into Claude's context on file edits via PreToolUse hook. Per-language dedup ensures each ruleset is injected at most once per session.",
+  "author": {
+    "name": "studykit"
+  },
+  "repository": "https://github.com/studykit/studykit-plugins",
+  "license": "MIT",
+  "keywords": ["dev-rules", "logging", "hooks", "coding-rules", "context-injection"]
+}

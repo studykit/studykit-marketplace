@@ -1,0 +1,42 @@
+{
+  "description": "dev-rules hooks. All logic in `scripts/dev_rules_hook.py` (executed directly via shebang; stdlib-only, no `uv run`). Subcommands: pre-edit, session-end, session-start. Session-scoped dedup state under `.claude/tmp/dev-rules/injected-<sid>.txt` — one line per injected `<category>:<key>` pair (e.g. `logging:general`, `logging:python`). Rulesets are organized as `rulesets/<category>/<key>.md`; the dispatcher auto-discovers every category subdirectory at runtime. PreToolUse on Write|Edit|MultiEdit injects each category's `general` (once per session per category) plus the language ruleset matching the target file's extension (once per session per `<category>:<language>`). SessionEnd deletes this session's state file; SessionStart sweeps orphan files older than 1 day. All hooks exit 0 unconditionally.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/dev_rules_hook.py\" pre-edit",
+            "timeout": 10,
+            "description": "Inject general + language logging ruleset on first matching edit per session"
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/dev_rules_hook.py\" session-end",
+            "timeout": 5,
+            "description": "Delete this session's dev-rules dedup state"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/dev_rules_hook.py\" session-start",
+            "timeout": 5,
+            "description": "Sweep orphan dev-rules dedup state files older than 1 day"
+          }
+        ]
+      }
+    ]
+  }
+}
