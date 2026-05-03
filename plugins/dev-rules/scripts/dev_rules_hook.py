@@ -4,16 +4,22 @@
 Subcommands
 -----------
 - pre-edit       PreToolUse on Write|Edit|MultiEdit. Resolves the target file's
-                 language from its extension, then injects matching ruleset
-                 bodies as `additionalContext`. Rulesets are organized by
-                 category: each subdirectory under `rulesets/` is one category
-                 (e.g. `rulesets/logging/`), and within each category the same
-                 `general.md` + `<language>.md` pattern is used. Per-session
-                 dedup ensures each `<category>:<key>` pair is injected at most
-                 once per session. `general` is injected on the first code edit
-                 of any language; `<language>` is injected on the first edit of
-                 a file in that language. All categories that ship a matching
-                 file are injected together on the same edit.
+                 language from its extension, then injects **pointer paths** to
+                 matching ruleset files as `additionalContext` with an
+                 imperative directive ("Read these — binding, not optional").
+                 The model performs the Read itself, so ruleset bodies enter
+                 the transcript as the model's own tool-result rather than as
+                 system-injected text — higher attention weight, and the rules
+                 stay live across subsequent edits via the cached Read result.
+                 Rulesets are organized by category: each subdirectory under
+                 `rulesets/` is one category (e.g. `rulesets/logging/`), and
+                 within each category the same `general.md` + `<language>.md`
+                 pattern is used. Per-session dedup ensures each
+                 `<category>:<key>` pointer is emitted at most once per
+                 session. `general` is announced on the first code edit of any
+                 language; `<language>` on the first edit of a file in that
+                 language. All categories that ship a matching file are
+                 announced together on the same edit.
 - session-end    SessionEnd. Deletes this session's dedup state file under
                  `.claude/tmp/dev-rules/`.
 - session-start  SessionStart. Sweeps orphan dedup state files older than 1
@@ -57,6 +63,13 @@ EXTENSION_MAP: dict[str, str] = {
     ".java": "java",
     ".kt": "kotlin",
     ".kts": "kotlin",
+}
+
+LANGUAGE_DISPLAY: dict[str, str] = {
+    "python": "Python",
+    "javascript": "JavaScript",
+    "java": "Java",
+    "kotlin": "Kotlin",
 }
 
 STATE_DIR_REL = ".claude/tmp/dev-rules"
@@ -155,11 +168,12 @@ def _record_injected(state_file: Path, keys: list[str]) -> None:
         pass
 
 
-def _read_rulesets(plugin_root: Path, key: str) -> list[tuple[str, str]]:
+def _collect_rulesets(plugin_root: Path, key: str) -> list[str]:
     """Scan every category subdirectory under `rulesets/` for `<key>.md`.
 
-    Returns a list of `(category, body)` tuples in deterministic (sorted-by-
-    category) order, one entry per category that ships a matching file.
+    Returns a list of category names (deterministic, sorted) for which a
+    matching ruleset file exists. The body is **not** read — pre-edit emits
+    pointer paths and lets the model Read the bodies itself.
     """
     rulesets_dir = plugin_root / "rulesets"
     if not rulesets_dir.is_dir():
@@ -168,17 +182,14 @@ def _read_rulesets(plugin_root: Path, key: str) -> list[tuple[str, str]]:
         entries = sorted(rulesets_dir.iterdir(), key=lambda p: p.name)
     except OSError:
         return []
-    results: list[tuple[str, str]] = []
+    results: list[str] = []
     for category_dir in entries:
         if not category_dir.is_dir():
             continue
         path = category_dir / f"{key}.md"
         if not path.is_file():
             continue
-        try:
-            results.append((category_dir.name, path.read_text(encoding="utf-8")))
-        except OSError:
-            continue
+        results.append(category_dir.name)
     return results
 
 
@@ -249,25 +260,28 @@ def pre_edit() -> int:
         already_injected=sorted(already),
     )
 
-    sections: list[str] = []
+    emissions_by_category: dict[str, list[Path]] = {}
     new_keys: list[str] = []
+    plugin_root_abs = plugin_root.resolve()
 
-    for category, body in _read_rulesets(plugin_root, "general"):
+    for category in _collect_rulesets(plugin_root, "general"):
         dedup_key = f"{category}:general"
         if dedup_key in already:
             continue
-        sections.append(body.strip())
+        abs_path = plugin_root_abs / "rulesets" / category / "general.md"
+        emissions_by_category.setdefault(category, []).append(abs_path)
         new_keys.append(dedup_key)
 
     if language:
-        for category, body in _read_rulesets(plugin_root, language):
+        for category in _collect_rulesets(plugin_root, language):
             dedup_key = f"{category}:{language}"
             if dedup_key in already:
                 continue
-            sections.append(body.strip())
+            abs_path = plugin_root_abs / "rulesets" / category / f"{language}.md"
+            emissions_by_category.setdefault(category, []).append(abs_path)
             new_keys.append(dedup_key)
 
-    if not sections:
+    if not emissions_by_category:
         _trace(
             project_dir,
             session_id,
@@ -280,11 +294,23 @@ def pre_edit() -> int:
 
     _record_injected(state_file, new_keys)
 
-    additional_context = (
-        "# dev-rules: coding rule sets (injected once per session per category:key)\n\n"
-        + "\n\n---\n\n".join(sections)
-        + "\n"
-    )
+    if language:
+        lang_display = LANGUAGE_DISPLAY.get(language, language)
+        scope_phrase = f"when editing {lang_display} files"
+    else:
+        scope_phrase = "on every edit"
+
+    sections: list[str] = []
+    for category, paths in emissions_by_category.items():
+        cat_display = category.capitalize()
+        pointer_block = "\n".join(f"- `{p}`" for p in paths)
+        sections.append(
+            f"## {cat_display} rules to follow {scope_phrase}\n\n"
+            "Read these — binding:\n\n"
+            f"{pointer_block}"
+        )
+
+    additional_context = "\n\n".join(sections) + "\n"
     output = {
         "hookSpecificOutput": {
             "hookEventName": "PreToolUse",

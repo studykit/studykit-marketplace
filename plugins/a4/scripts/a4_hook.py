@@ -28,8 +28,11 @@ Subcommands:
                  stamped to both ``created:`` and ``updated:``.
   stop           Stop. Validate all a4/*.md edited in this session against
                  (1) the frontmatter schema and (2) status-transition
-                 legality (HEAD vs working tree, via git). rc=2 on
-                 violations (forces Claude retry); rc=0 on clean or any
+                 legality (HEAD vs working tree, via git). On violations,
+                 emit a JSON `{"decision": "block", "reason": ...}` to
+                 stdout (rc=0) so Claude Code surfaces the message without
+                 the `[command]: ` harness prefix that wraps stderr-on-rc=2
+                 output, and forces Claude retry. rc=0 on clean or any
                  internal failure.
   user-prompt    UserPromptSubmit. Scan the prompt for `#<id>` references
                  and inject resolved `a4/<type>/<id>-<slug>.md` paths as
@@ -64,9 +67,12 @@ The `markdown_validator` package next to this file is imported in-process
 rather than shelled out via `uv run`, so per-invocation interpreter
 startup is paid once — not once per validator call.
 
-Every subcommand exits 0 except `stop`, which may exit 2 on validation
-violations. Internal failures (missing env, missing modules, library
-errors) never propagate — hooks must not block session/stop flows.
+Every subcommand exits 0. `stop` signals validation violations via a
+JSON `{"decision": "block", "reason": ...}` payload on stdout (rather
+than rc=2 + stderr) so Claude Code surfaces the message without the
+`[command]: ` harness prefix. Internal failures (missing env, missing
+modules, library errors) never propagate — hooks must not block
+session/stop flows.
 """
 
 from __future__ import annotations
@@ -1027,7 +1033,12 @@ def _report_status_consistency_post(
 
 
 def _stop() -> int:
-    """Validate a4/*.md files edited this session. rc=2 on violations."""
+    """Validate a4/*.md files edited this session.
+
+    On violations, emit a JSON `{"decision": "block", "reason": ...}` to
+    stdout (rc=0) so Claude Code surfaces the message without the
+    `[command]: ` harness prefix that wraps stderr-on-rc=2 output.
+    """
     import json
     import os
 
@@ -1146,8 +1157,10 @@ def _stop() -> int:
         "`plugins/a4/authoring/<type>-authoring.md` (per-type field "
         "table and lifecycle) for the binding shape."
     )
-    sys.stderr.write("\n".join(out_lines) + "\n")
-    return 2
+    sys.stdout.write(
+        json.dumps({"decision": "block", "reason": "\n".join(out_lines)})
+    )
+    return 0
 
 
 def _unlink_silent(path: Path) -> None:

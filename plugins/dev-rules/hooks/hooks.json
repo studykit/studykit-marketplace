@@ -1,5 +1,5 @@
 {
-  "description": "dev-rules hooks. All logic in `scripts/dev_rules_hook.py` (executed directly via shebang; stdlib-only, no `uv run`). Subcommands: pre-edit, session-end, session-start. Session-scoped dedup state under `.claude/tmp/dev-rules/injected-<sid>.txt` — one line per injected `<category>:<key>` pair (e.g. `logging:general`, `logging:python`). Rulesets are organized as `rulesets/<category>/<key>.md`; the dispatcher auto-discovers every category subdirectory at runtime. PreToolUse on Write|Edit|MultiEdit injects each category's `general` (once per session per category) plus the language ruleset matching the target file's extension (once per session per `<category>:<language>`). SessionEnd deletes this session's state file; SessionStart sweeps orphan files older than 1 day. All hooks exit 0 unconditionally.",
+  "description": "dev-rules hooks. All logic in `scripts/dev_rules_hook.py` (executed directly via shebang; stdlib-only, no `uv run`). Subcommands: pre-edit, session-end, session-start. Session-scoped dedup state under `.claude/tmp/dev-rules/injected-<sid>.txt` — one line per emitted `<category>:<key>` pointer (e.g. `logging:general`, `logging:python`). Rulesets are organized as `rulesets/<category>/<key>.md`; the dispatcher auto-discovers every category subdirectory at runtime. PreToolUse on Write|Edit|MultiEdit emits **pointer paths** (not bodies) to each category's `general` ruleset (once per session per category) plus the language ruleset matching the target file's extension (once per session per `<category>:<language>`), with an imperative directive to Read them before writing. The model performs the Read itself, so the rule body lands in the transcript as the model's own tool-result with stronger attention weight. SessionEnd deletes this session's state file; SessionStart sweeps orphan files older than 1 day. All hooks exit 0 unconditionally.",
   "hooks": {
     "PreToolUse": [
       {
@@ -9,7 +9,7 @@
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}/scripts/dev_rules_hook.py\" pre-edit",
             "timeout": 10,
-            "description": "Inject general + language logging ruleset on first matching edit per session"
+            "description": "Emit pointer paths to general + language ruleset(s) (with imperative read directive) on first matching edit per session per `<category>:<key>`"
           }
         ]
       }

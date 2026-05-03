@@ -211,12 +211,19 @@ ambiguous, extend this section rather than improvising.
 | PostToolUse | Always exit 0. Never blocks an edit. |
 | SessionStart | Always exit 0. Never blocks session entry. |
 | SessionEnd | Always exit 0. Never blocks session termination. |
-| Stop | Exit 2 on validation violations (forces Claude retry). Exit 0 on clean result **and on any internal failure** (missing env, missing scripts, subprocess error). |
+| Stop | On validation violations, emit JSON `{"decision": "block", "reason": ...}` on stdout (exit 0) — Claude Code surfaces the `reason` verbatim and forces Claude retry, *without* the `[command]: ` harness prefix that wraps stderr-on-rc=2 output. Exit 0 on clean result **and on any internal failure** (missing env, missing scripts, subprocess error). |
 
 Internal failures — configuration errors, subprocess crashes, JSON parse
 errors, timeouts — are never allowed to propagate as blocking failures.
 They are either silent (Post/Session events) or logged to stderr with
 exit 0 (Stop event) so hook bugs cannot strand the user.
+
+The Stop event historically used `exit 2 + stderr` to signal violations.
+Claude Code wraps that channel as `[<command>]: <stderr>`, which leaks
+the literal `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" stop`
+prefix into the conversation. The JSON `decision: block` route avoids
+the prefix while preserving the retry semantics — see
+`../scripts/a4_hook.py::_stop`.
 
 ---
 
@@ -301,7 +308,9 @@ Session entry and edit flows are high-attention moments; reserve any
 visible output for news the user can act on.
 
 Internal failures covered by §5 also emit nothing user-facing (Post/Session
-events) or a short stderr line that does not block (Stop event).
+events) or a short stderr line that does not block (Stop event — internal
+failures still use stderr + rc=0 since they aren't surfaced through the
+`decision: block` channel).
 
 ---
 

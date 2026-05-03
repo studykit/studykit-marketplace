@@ -35,14 +35,14 @@ The shared `get-api-docs` skill must also be available in the global skills set.
 
 Three hook flows share the same events, dispatched through a single Python entry point:
 
-1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; exit 2 on frontmatter violations so Claude retries.
+1. **Single-file validation** (blocking) — accumulate `a4/*.md` edits; validate at Stop; emit JSON `{"decision": "block", "reason": ...}` on frontmatter violations so Claude retries (without the `[command]: ` harness prefix that wraps stderr-on-rc=2 output).
 2. **Cross-file status consistency** (non-blocking) — after each edit, run the `status` check on the edited file's connected component and inject findings as `additionalContext`. Workspace-wide sweeps are manual via `/a4:validate`; SessionStart no longer fires status reporting.
 3. **Issue-id resolution** (non-blocking) — scan UserPromptSubmit for `#<id>` references; inject the resolved `a4/<type>/<id>-<slug>.md` path so Claude reads the file directly instead of searching. Per-session dedupe — once an id has been announced, repeats stay silent.
 
 | Event | Script | Purpose |
 |-------|--------|---------|
 | `PostToolUse` (`Write\|Edit\|MultiEdit`) | `scripts/a4_hook.py post-edit` | Record the edited `$project/a4/**/*.md` path to a session-scoped file, then run the `status` check in file mode (connected component reached via `supersedes:`) and inject mismatches as `additionalContext`. Non-blocking. |
-| `Stop` | `scripts/a4_hook.py stop` | Run the `frontmatter` check on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → `exit 2` with stderr so Claude retries. Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
+| `Stop` | `scripts/a4_hook.py stop` | Run the `frontmatter` check on each recorded file (single-file mode; workspace-wide id-uniqueness deferred to `/a4:validate`). Violations → emit JSON `{"decision": "block", "reason": ...}` on stdout so Claude retries (no `[command]: ` harness prefix). Clean → record file deleted. `stop_hook_active` → silent exit to avoid loops. Internal errors → exit 0 with stderr warning. |
 | `SessionEnd` | `hooks/cleanup-edited-a4.sh` | Delete this session's record files (`a4-edited-<sid>.txt`, `a4-resolved-ids-<sid>.txt`). Always exits 0. |
 | `SessionStart` | `hooks/sweep-old-edited-a4.sh` | `find -mtime +1 -delete` orphan record files from crashed sessions where SessionEnd never fired. Always exits 0. |
 | `UserPromptSubmit` | `scripts/a4_hook.py user-prompt` | Match `#<id>` tokens in the prompt (`(?<![\w#])#(\d+)\b`); for each, glob `a4/{usecase,task,review,spec,idea}/<id>-*.md` and `a4/archive/**/<id>-*.md`; inject resolved paths as `additionalContext`. Skips ids already resolved this session via `a4-resolved-ids-<sid>.txt`. Non-blocking; silent on no match. |

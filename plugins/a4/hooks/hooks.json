@@ -34,7 +34,7 @@
             "type": "command",
             "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" stop",
             "timeout": 30,
-            "description": "Validate a4/*.md edited this session; exit 2 on violations to force fix"
+            "description": "Validate a4/*.md edited this session; emit JSON `{decision: block, reason}` on violations to force fix"
           }
         ]
       }
