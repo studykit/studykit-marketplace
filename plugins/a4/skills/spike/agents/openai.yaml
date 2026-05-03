@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Spike"
+  short_description: "Author time-boxed exploration spikes"
+
+policy:
+  allow_implicit_invocation: false

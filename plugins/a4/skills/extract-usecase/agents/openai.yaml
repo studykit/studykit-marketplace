@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Extract Use Case"
+  short_description: "Generate use cases from raw inputs"
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Spec"
+  short_description: "Author prescriptive implementation specs"
+
+policy:
+  allow_implicit_invocation: false

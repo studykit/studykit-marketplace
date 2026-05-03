@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Idea"
+  short_description: "Capture or discard a4 ideas"
+
+policy:
+  allow_implicit_invocation: false

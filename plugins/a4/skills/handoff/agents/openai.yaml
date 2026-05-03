@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Handoff"
+  short_description: "Write resumable a4 session handoffs"
+
+policy:
+  allow_implicit_invocation: false

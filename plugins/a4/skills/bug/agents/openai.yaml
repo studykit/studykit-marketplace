@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Bug"
+  short_description: "Log tracked a4 bug fix tasks"
+
+policy:
+  allow_implicit_invocation: false

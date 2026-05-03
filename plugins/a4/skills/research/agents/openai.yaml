@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Research"
+  short_description: "Author time-boxed research tasks"
+
+policy:
+  allow_implicit_invocation: false

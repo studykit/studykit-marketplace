@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Auto Scaffold"
+  short_description: "Scaffold project structure and entry point"
+
+policy:
+  allow_implicit_invocation: false

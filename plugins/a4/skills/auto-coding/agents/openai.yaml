@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Auto Coding"
+  short_description: "Run the a4 implement and test loop"
+
+policy:
+  allow_implicit_invocation: false

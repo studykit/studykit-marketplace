@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Breakdown"
+  short_description: "Derive implementation tasks from specs"
+
+policy:
+  allow_implicit_invocation: false

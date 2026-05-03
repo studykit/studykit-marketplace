@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Architecture"
+  short_description: "Design and iterate system architecture"
+
+policy:
+  allow_implicit_invocation: false

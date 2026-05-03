@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Find"
+  short_description: "Search a4 workspace frontmatter"
+
+policy:
+  allow_implicit_invocation: false

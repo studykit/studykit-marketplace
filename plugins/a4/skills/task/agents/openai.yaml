@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Task"
+  short_description: "Author regular implementation tasks"
+
+policy:
+  allow_implicit_invocation: false

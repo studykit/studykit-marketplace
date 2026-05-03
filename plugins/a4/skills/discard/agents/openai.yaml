@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Discard"
+  short_description: "Discard tracked a4 workspace tasks"
+
+policy:
+  allow_implicit_invocation: false

@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 CI Setup"
+  short_description: "Set up test infrastructure and ci.md"
+
+policy:
+  allow_implicit_invocation: false
