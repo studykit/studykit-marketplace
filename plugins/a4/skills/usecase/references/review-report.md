@@ -17,8 +17,6 @@ source: usecase-reviewer
 priority: high | medium | low
 title: "<short finding title>"
 labels: []
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 ```
 

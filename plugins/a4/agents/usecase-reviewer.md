@@ -209,8 +209,6 @@ target: [<usecase/<id>-<slug> and/or actors|domain|context|nfr — empty list fo
 source: usecase-reviewer
 priority: high | medium | low
 labels: [<optional, e.g. "abstraction", "completeness", "domain">]
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 
 ## Description

@@ -65,7 +65,6 @@ Allocate **at write time**, one id per file. Do not batch. The command prints th
 ```yaml
 ---
 type: context
-updated: <today>
 ---
 ```
 
@@ -78,7 +77,7 @@ Body sections (per `authoring/context-authoring.md`):
 
 ### 2. Actors (actors.md)
 
-**New mode:** create `a4/actors.md` with `type: actors`, `updated: <today>` and a `## Roster` section containing the table:
+**New mode:** create `a4/actors.md` with `type: actors` and a `## Roster` section containing the table:
 
 ```markdown
 ## Roster
@@ -111,8 +110,6 @@ status: draft
 actors: [<slug>, …]                        # must reference rows in actors.md
 related: []
 labels: [<optional>]
-created: <today>
-updated: <today>
 ---
 ```
 
@@ -186,7 +183,6 @@ Create `a4/nfr.md` only if the input explicitly surfaces NFRs (performance, secu
 ```yaml
 ---
 type: nfr
-updated: <today>
 ---
 ```
 
@@ -210,8 +206,6 @@ target: [<usecase/<id>-<slug> and/or context — empty list for cross-cutting>]
 source: usecase-composer
 priority: medium | low
 labels: [autonomous-choice]
-created: <today>
-updated: <today>
 ---
 
 ## Description

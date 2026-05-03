@@ -52,7 +52,7 @@ When the chosen initial status is `done`, the work is asserted to already be shi
    ```markdown
    ## Log
 
-   - <YYYY-MM-DD HH:mm> created at status: done (post-hoc documentation; <work> done prior to task authorship)
+   - <YYYY-MM-DD HH:mm> authored at status: done (post-hoc documentation; <work> done prior to task authorship at <YYYY-MM-DD>)
    ```
 
 ## Family-specific deltas

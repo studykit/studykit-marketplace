@@ -289,9 +289,10 @@ def _pre_edit() -> int:
             _write_prestatus(project_dir, session_id, data)
     else:
         # File doesn't exist yet — record so post-edit can stamp
-        # `created:` after the Write lands. Only Write can create files
-        # in Claude Code's tool model; Edit/MultiEdit require a prior
-        # Read of an existing file.
+        # `created:` after the Write lands (overwriting any value the
+        # LLM pre-populated; `created:` is hook-owned). Only Write can
+        # create files in Claude Code's tool model; Edit/MultiEdit
+        # require a prior Read of an existing file.
         if payload.get("tool_name") == "Write":
             _record_newfile(project_dir, session_id, file_path)
 
@@ -614,15 +615,21 @@ def _maybe_stamp_created(
       - The file now exists.
       - Its `type:` (resolved by path) is in the schema-derived
         ``types_with_created()`` set.
-      - Its current frontmatter does not already carry a non-empty
-        `created:` value (immutable — never overwrite an author-written
-        timestamp).
+
+    `created:` is hook-owned: any pre-populated value the LLM or author
+    wrote is **overwritten** with the current KST timestamp. Backdating
+    is not supported (record originating work date in body ``## Log``
+    instead). Once stamped, immutable — never rewritten by hook or
+    cascade on subsequent Edits (this function only fires when
+    PreToolUse recorded the path as a new file).
 
     Inserts ``created: <today>`` immediately before ``updated:`` if
-    that line exists, else appends at the frontmatter end. ``today`` is
-    the same KST timestamp the post-edit driver uses for the auto-bump
-    in Step 4, so a fresh Write ends up with ``created == updated``.
-    Failure on any step is silent — stamping is a convenience, not a gate.
+    that line exists, else appends at the frontmatter end. If a
+    ``created:`` line is already present, it is rewritten in place.
+    ``today`` is the same KST timestamp the post-edit driver uses for
+    the auto-bump in Step 4, so a fresh Write ends up with
+    ``created == updated``. Failure on any step is silent — stamping is
+    a convenience, not a gate.
     """
     new_files = _read_newfiles(project_dir, session_id)
     if file_path not in new_files:
@@ -667,16 +674,6 @@ def _maybe_stamp_created(
         _drop_newfile(project_dir, session_id, file_path)
         return
 
-    existing = preamble.fm.get("created")
-    if isinstance(existing, str) and existing.strip():
-        _drop_newfile(project_dir, session_id, file_path)
-        return
-    if existing is not None and not isinstance(existing, str):
-        # date / datetime / int — already populated by the author. Don't
-        # overwrite, even if not a string.
-        _drop_newfile(project_dir, session_id, file_path)
-        return
-
     try:
         _, raw_fm, body = parse_fm(abs_path)
     except (OSError, ValueError):
@@ -693,15 +690,15 @@ def _maybe_stamp_created(
 
 
 def _insert_created_before_updated(raw_fm: str, value: str) -> str:
-    """Insert ``created: <value>`` into a YAML frontmatter block.
+    """Insert or rewrite ``created: <value>`` in a YAML frontmatter block.
 
     Position rule: immediately before the ``updated:`` line if present,
     else appended at the end. Indentation matches the ``updated:`` line
     when inserting before it (frontmatter is canonically left-aligned,
     but the matching keeps the rule minimal). When ``created:`` already
     exists in the block, this function rewrites the existing line in
-    place via ``rewrite_frontmatter_scalar`` semantics — but the caller
-    is expected to gate on absence so this branch is dead in practice.
+    place via ``rewrite_frontmatter_scalar`` — `created:` is hook-owned,
+    so any pre-populated value the LLM wrote is overwritten.
     """
     from status_cascade import rewrite_frontmatter_scalar
 

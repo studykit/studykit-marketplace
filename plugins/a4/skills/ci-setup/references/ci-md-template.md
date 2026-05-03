@@ -7,7 +7,6 @@ The binding shape (required H2, optional H2, canonical H3 names) lives in `${CLA
 ````markdown
 ---
 type: ci
-updated: <today>
 ---
 
 ## How to run tests

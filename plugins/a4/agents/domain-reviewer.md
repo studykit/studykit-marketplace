@@ -149,8 +149,6 @@ target: [domain]
 source: domain-reviewer
 priority: high | medium | low
 labels: [<optional, e.g. "concept", "relationship", "state", "naming", "abstraction">]
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 
 ## Description

@@ -162,8 +162,6 @@ target: [architecture]
 source: arch-reviewer
 priority: high | medium | low
 labels: [<optional, e.g. "coverage", "contract", "test-strategy">]
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 
 ## Description

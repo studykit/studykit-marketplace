@@ -37,8 +37,6 @@ target: [architecture]
 source: ci-setup
 priority: high | medium
 labels: [ci]
-created: <today>
-updated: <today>
 ---
 
 ## Description
@@ -63,8 +61,6 @@ target: [ci]
 source: ci-setup
 priority: low
 labels: [ci, environment]
-created: <today>
-updated: <today>
 ---
 
 ## Description

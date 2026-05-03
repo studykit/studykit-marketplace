@@ -37,8 +37,6 @@ target: [architecture]
 source: auto-scaffold
 priority: high | medium
 labels: [scaffold]
-created: <today>
-updated: <today>
 ---
 
 ## Description
@@ -63,8 +61,6 @@ target: []
 source: auto-scaffold
 priority: low
 labels: [scaffold, environment]
-created: <today>
-updated: <today>
 ---
 
 ## Description

@@ -89,7 +89,7 @@ Unknown H2 headings are tolerated.
 
 ## Common mistakes
 
-- **Required-field omission** (`type`, `id`, `title`, `status`, `created`, `updated`).
+- **Required-field omission** (`type`, `id`, `title`, `status`).
 - **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — invalid; flagged at validation time.
 - **Adding `priority`, `source`, `target`, or `kind`** — deliberately excluded. Unknown fields are tolerated, but they should not appear here.
 

@@ -6,7 +6,7 @@ Ask the user once:
 
 If yes, write `a4/nfr.md` with:
 
-- frontmatter `type: nfr`, `updated: <today>`
+- frontmatter `type: nfr`
 - a `## Requirements` section containing a table:
   - Description
   - Affected UCs (via markdown links)

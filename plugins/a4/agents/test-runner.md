@@ -66,8 +66,6 @@ target: [<task/<id>-<slug>; leave empty / [] for cross-task failures>]
 source: test-runner
 priority: high | medium
 labels: [test-failure, cycle-<N>, <tier:integration | tier:smoke>]
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 
 ## Description

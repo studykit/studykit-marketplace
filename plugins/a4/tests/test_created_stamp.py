@@ -208,9 +208,13 @@ def test_existing_file_edit_does_not_stamp_created(
     )
 
 
-def test_author_supplied_created_is_immutable(
+def test_author_supplied_created_is_overwritten(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    """`created:` is hook-owned: any pre-populated value on first Write
+    is overwritten with the current KST timestamp. Backdating is not
+    supported — record originating work date in body ``## Log`` instead.
+    """
     _make_a4_layout(tmp_path)
     new_file = tmp_path / "a4" / "task" / "4-auth.md"
 
@@ -234,7 +238,14 @@ def test_author_supplied_created_is_immutable(
         hook_module, monkeypatch, tmp_path, new_file, session_id="s4"
     )
 
-    assert _read_fm_field(new_file, "created") == author_value
+    stamped = _read_fm_field(new_file, "created")
+    assert stamped is not None
+    assert stamped != author_value, (
+        "Hook must overwrite a pre-populated `created:` on first Write"
+    )
+    assert KST_RE.match(stamped), (
+        f"Expected KST `YYYY-MM-DD HH:mm` shape, got {stamped!r}"
+    )
 
 
 def test_wiki_new_write_does_not_stamp_created(

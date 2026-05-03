@@ -34,8 +34,6 @@ topic: "<the session's framing question>"
 status: open        # open | promoted | discarded
 promoted: []        # paths populated when status → promoted (e.g., [spec/<id>-<slug>, usecase/<id>-<slug>])
 tags: []
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 
 ## Ideas

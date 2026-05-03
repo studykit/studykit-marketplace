@@ -154,8 +154,6 @@ target: [<one or more of: task/<id>-<slug>, architecture, usecase/<id>-<slug>, s
 source: breakdown-reviewer
 priority: high | medium | low
 labels: [<e.g. "coverage", "dependencies", "tests">]
-created: <YYYY-MM-DD>
-updated: <YYYY-MM-DD>
 ---
 
 ## Description

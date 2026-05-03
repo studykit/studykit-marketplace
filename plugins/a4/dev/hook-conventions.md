@@ -331,8 +331,11 @@ for the canonical sequence):
    two writes within the same minute can't drift across step
    boundaries.
 2. `_maybe_stamp_created` — stamps `created: today` on a new-file
-   Write whose schema requires it. Skips when author pre-populated
-   `created:` (immutable per `../authoring/frontmatter-common.md`).
+   Write whose schema requires it. Overwrites any pre-populated
+   `created:` value the LLM wrote (`created:` is hook-owned per
+   `../authoring/frontmatter-common.md`; backdating is not supported).
+   Once stamped, immutable on subsequent Edits — this driver only
+   fires on first Write (PreToolUse-recorded new file).
 3. `_run_status_change_cascade` — runs the cascade engine on a legal
    `status:` transition, which calls `apply_status_change` on the
    primary (refreshing `updated:` there) and on every cascaded
