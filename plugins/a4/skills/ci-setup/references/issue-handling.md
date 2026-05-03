@@ -71,7 +71,7 @@ updated: <today>
 
 **Summary.** What went wrong.
 
-**Fix applied.** What was done, citing [research/ci-<label>](../../research/ci-<label>.md) if a research report informed the fix.
+**Fix applied.** What was done, citing `../../research/ci-<label>.md` if a research report informed the fix.
 
 ## Log
 

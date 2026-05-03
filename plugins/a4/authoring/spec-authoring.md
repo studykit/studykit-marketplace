@@ -68,7 +68,7 @@ superseded → (terminal)
 
 **Optional appendum sections (record-keeping; emit only when there is content):**
 
-- `## Decision Log` — append-only, dated bullets recording what was chosen and why. Earlier entries never edited or removed; corrections are added as new entries explaining why prior reasoning no longer holds. Inline markdown links (e.g., `[research/42-grpc-streaming](../research/42-grpc-streaming.md)`) cite informing research tasks.
+- `## Decision Log` — append-only, dated bullets recording what was chosen and why. Earlier entries never edited or removed; corrections are added as new entries explaining why prior reasoning no longer holds. Inline backlinks (e.g., `` `../research/42-grpc-streaming.md` ``) cite informing research tasks.
 - `## Rejected Alternatives` — the options considered and why they lost. Inline citations to research tasks land here too when the rejection rationale leans on the investigation.
 
 Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders.

@@ -16,7 +16,7 @@ Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md
 
 **Optional:**
 
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format: `./wiki-body.md`.
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with backlinks to the causing UC, review item, or spec). Format: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
@@ -42,4 +42,4 @@ Drift detection cross-checks UC `actors:` lists against the roster — a UC refe
 - **Don't rename a slug without a review item** when the cascade touches more than one or two UCs.
 - **Don't put authorization rules here as prose.** The roster carries privilege levels; per-UC authorization is encoded in UC `## Flow` / `## Validation` (and in `architecture.md` for technical enforcement details).
 - **Don't pack actor backstories.** The description column is one paragraph. Longer narratives belong in `context.md`'s `## Problem Framing`.
-- **Don't append `## Change Logs` bullets without a markdown link.**
+- **Don't append `## Change Logs` bullets without a backlink path.**

@@ -164,7 +164,7 @@ updated: <YYYY-MM-DD>
 
 **Summary.** One paragraph describing the issue.
 
-**Evidence.** Quote the task / UC / spec / architecture lines demonstrating the issue. Reference the offending file via markdown link — `[<type>/<id>-<slug>](../<type>/<id>-<slug>.md)` where `<type>` ∈ `{task, bug, spike, research}` for issues, or wiki basename without folder for `architecture.md`, `domain.md`, etc.
+**Evidence.** Quote the task / UC / spec / architecture lines demonstrating the issue. Reference the offending file via backlink — `../<type>/<id>-<slug>.md` where `<type>` ∈ `{task, bug, spike, research}` for issues, or `../<wiki>.md` for wiki pages (`architecture.md`, `domain.md`, etc.).
 
 **Impact.** What a developer would guess or re-decide when implementing this task batch as-is.
 

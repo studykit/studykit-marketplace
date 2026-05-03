@@ -59,11 +59,15 @@ Universal rules:
 - **No `.md` extension.** Any reference ending in `.md` is invalid.
 - **Existence is checked.** Each reference must resolve to a file; unresolved refs surface as `unresolved-ref`. Format-only refs (typo `99` where no file with `id: 99` exists) are authoring errors, not extension metadata.
 
-Body links use a different form — markdown `[text](relative/path.md)`, plus plain `#<id>` text where GitHub-issue cross-link rendering is desired. See `./body-conventions.md`.
+Body cross-references use a different form — backtick-wrapped backlinks (`` `../usecase/3-search-history.md` ``), plus plain `#<id>` text where GitHub-issue cross-link rendering is desired. External URLs keep markdown-link form. See `./body-conventions.md`.
 
-## Empty collections
+## Empty values
 
 Empty lists may be `[]` or omitted — semantically equivalent. Prefer omission when the field is not expected to populate; prefer `[]` when emptiness is noteworthy (e.g., `promoted: []` on a fresh idea).
+
+Single-valued optional fields (e.g., `parent`) follow the same rule: omit the field when no value applies. `[]` is also accepted as an explicit "intentionally empty" marker, treated as equivalent to omission.
+
+`null` (and its YAML equivalents `~`, empty scalar) is **never** valid in any field. A field present with no value is an authoring error — either supply a value, omit the key, or write `[]` if the field is optional.
 
 ## Unknown fields
 

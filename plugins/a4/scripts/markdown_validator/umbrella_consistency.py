@@ -56,18 +56,22 @@ class Mismatch:
 
 
 _H2_RE = re.compile(r"^##\s+(.+?)\s*$")
-_BULLET_LINK_RE = re.compile(
-    r"^\s*[-*]\s+\[(?P<text>[^\]]*)\]\((?P<path>[^)]+)\)(?P<rest>.*)$"
+_BULLET_BACKLINK_RE = re.compile(
+    r"^\s*[-*]\s+"
+    r"(?:\d{4}-\d{2}-\d{2}\s+\d{2}:\d{2}\s+)?"
+    r"`(?P<path>[^`]+\.md)`"
+    r"(?P<rest>.*)$"
 )
 
 
 def _normalize_body_link_path(raw: str) -> str:
-    """Normalize a body markdown-link target into a workspace reference.
+    """Normalize a body backlink target into a workspace reference.
 
-    Body links from inside ``a4/umbrella/<file>.md`` use relative paths
-    (``../task/<id>-<slug>.md``); the workspace ``RefIndex`` expects the
-    bare ``<folder>/<id>-<slug>`` (or ``<folder>/<id>-<slug>.md``) form.
-    Strip leading ``./`` and ``../`` segments so the resolver can match.
+    Body backlinks are backtick-wrapped relative paths (e.g.,
+    ``../task/2-foo.md``, ``architecture.md``); the workspace
+    ``RefIndex`` expects the bare ``<folder>/<id>-<slug>`` (or
+    ``<folder>/<id>-<slug>.md``) form. Strip leading ``./`` and ``../``
+    segments so the resolver can match.
     """
     s = raw.strip()
     while s.startswith("./"):
@@ -87,11 +91,14 @@ def _extract_children_entries(body_text: str) -> list[_ChildEntry]:
     """Parse a `## Children` H2 section into bullet entries.
 
     Walks lines after the ``## Children`` heading until the next H2 (or
-    EOF), and extracts markdown-link bullets. A bullet is "annotated"
-    when there is non-whitespace text after the link's closing ``)`` —
-    matching the doc's pattern of ``— moved to ...`` / ``— discarded
-    YYYY-MM-DD`` historical markers. Annotated entries record former
-    membership and are excluded from the stale-listing check.
+    EOF), and extracts backtick-wrapped backlink bullets. A bullet
+    starts with a list marker (``-`` / ``*``), an optional
+    ``YYYY-MM-DD HH:mm`` timestamp, and a backtick-wrapped ``.md`` path
+    (relative or basename). Trailing whitespace and prose after the
+    closing backtick mark the bullet as "annotated" — matching the
+    doc's pattern of ``— moved to ...`` / ``— discarded ...``
+    historical markers. Annotated entries record former membership and
+    are excluded from the stale-listing check.
     """
     entries: list[_ChildEntry] = []
     in_section = False
@@ -115,7 +122,7 @@ def _extract_children_entries(body_text: str) -> list[_ChildEntry]:
             continue
         if not in_section:
             continue
-        m_bullet = _BULLET_LINK_RE.match(line)
+        m_bullet = _BULLET_BACKLINK_RE.match(line)
         if not m_bullet:
             continue
         raw_path = m_bullet.group("path").strip()
@@ -185,9 +192,9 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
         for entry in entries:
             resolved = index.resolve(_normalize_body_link_path(entry.raw_path))
             if resolved is None:
-                # Unresolved link is either a typo or a legacy reference;
-                # do not double-report — the markdown-link check is out
-                # of scope here. Skip silently.
+                # Unresolved backlink is either a typo or a legacy
+                # reference; do not double-report — backlink form
+                # validation is out of scope here. Skip silently.
                 continue
             listed_all.add(resolved.canonical)
             if not entry.annotated:

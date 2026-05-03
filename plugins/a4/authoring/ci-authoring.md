@@ -17,7 +17,7 @@ Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md
 
 - `## Smoke scenario` — a single minimal user-observable interaction the running app produces. Used as the post-implementation smoke check.
 - `## Issues` — links to `./review-authoring.md` review items emitted during the ci-setup run that produced this page, grouped by classification (architecture / environment) and status (open / resolved). Omit when no review items were emitted.
-- `## Change Logs` — append-only audit trail (dated bullets with markdown links to the causing review item or architecture spec). Format: `./wiki-body.md`.
+- `## Change Logs` — append-only audit trail (dated bullets with backlinks to the causing review item or architecture spec). Format: `./wiki-body.md`.
 
 Free-form additional H2 sections are tolerated.
 
@@ -49,4 +49,4 @@ Most bullets that land here cite either a `target: architecture` review item tha
 - **Don't duplicate `## How to run tests` content into `architecture.md`.** It references, it does not duplicate.
 - **Don't write architecture rationale here.** The why behind the test strategy lives in `architecture.md` and the spec(s) that shaped it.
 - **Don't write task-level information here.** Per-task verification belongs in the task's body.
-- **Don't append `## Change Logs` bullets without a markdown link.**
+- **Don't append `## Change Logs` bullets without a backlink path.**

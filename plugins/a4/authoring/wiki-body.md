@@ -2,7 +2,7 @@
 
 Body-level rules for wiki pages (`actors.md`, `architecture.md`, `ci.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below record that continuous update.
 
-Common body rules (heading form, link form): `./body-conventions.md`.
+Common body rules (heading form, backlink form): `./body-conventions.md`.
 
 ## `## Change Logs` audit trail
 
@@ -13,16 +13,16 @@ Format:
 ```markdown
 ## Change Logs
 
-- 2026-04-23 — [usecase/1-share-summary](usecase/1-share-summary.md)
-- 2026-04-24 — [usecase/3-search-history](usecase/3-search-history.md)
-- 2026-04-24 — [spec/8-caching-strategy](spec/8-caching-strategy.md)
+- 2026-04-23 09:14 `usecase/1-share-summary.md`
+- 2026-04-24 11:02 `usecase/3-search-history.md`
+- 2026-04-24 16:48 `spec/8-caching-strategy.md`
 ```
 
 Rules:
 
 - One bullet per material edit. Newest last (chronological).
-- Each bullet: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` with optional trailing prose if a one-line note adds context (`- 2026-04-24 — [spec/8](spec/8.md): renamed Session → Conversation`).
-- The link points to the **causing issue** — a UC, task, spec, or architecture-section anchor. Never a review item; review items are the surface where the user *picks* an edit, but the change-log records *why* the wiki page changed and that "why" is the underlying issue.
+- Each bullet follows the timestamped-bullet form from `./body-conventions.md` § Bullet backlink: `- YYYY-MM-DD HH:mm \`<relpath>/<file>.md\``. Optional trailing prose after the closing backtick records a one-line note (`- 2026-04-24 16:48 \`spec/8-caching-strategy.md\` — renamed Session → Conversation`).
+- The backlink points to the **causing issue** — a UC, task, spec, or architecture-section anchor. Never a review item; review items are the surface where the user *picks* an edit, but the change-log records *why* the wiki page changed and that "why" is the underlying issue.
 - Bullets are append-only. Do not reorder, edit, or remove old entries; corrections accrete as new entries.
 
 ## Wiki Update Protocol
@@ -43,7 +43,7 @@ Skip: typo fixes, metadata-only tweaks, internal notes that don't change semanti
 ### How to update
 
 1. Edit the affected `## <Section>` content.
-2. Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)`. Create the section if it does not yet exist.
+2. Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD HH:mm \`<relpath>/<file>.md\``. Create the section if it does not yet exist.
 
 ### Deferring the update
 
@@ -60,9 +60,9 @@ If the user chooses not to update the wiki page immediately, open a review item 
 
 ### Close guard
 
-When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose markdown link points at the review item itself. This is an authoring invariant; nothing automated currently catches the omission, so the author is the only line of defense. Run `uv run ../scripts/validate.py <a4-dir>` after wiki edits if you want a sweep.
+When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose backlink points at the review item itself. This is an authoring invariant; nothing automated currently catches the omission, so the author is the only line of defense. Run `uv run ../scripts/validate.py <a4-dir>` after wiki edits if you want a sweep.
 
 ## Cross-references
 
-- `./body-conventions.md` — common body rules (heading form, link form).
+- `./body-conventions.md` — common body rules (heading form, backlink form).
 - `./<type>-authoring.md` — per-type authoring contracts for individual wiki pages.

@@ -25,7 +25,7 @@ Unknown H2 headings are tolerated.
 
 ### Component anchor stability
 
-`## Components` exposes anchor-targeted headings that tasks reference in their `## Interface Contracts` section (`[architecture#SessionService](../architecture.md#sessionservice)`). Keep component heading text stable — renaming requires a review item explaining the cascade because every task that links into it is affected.
+`## Components` exposes anchor-targeted headings that tasks reference in their `## Interface Contracts` section (`` `../architecture.md#sessionservice` ``). Keep component heading text stable — renaming requires a review item explaining the cascade because every task that links into it is affected.
 
 ## Common mistakes (architecture-specific)
 
@@ -36,7 +36,7 @@ Unknown H2 headings are tolerated.
 
 (Universal Don'ts — non-primary-author edits, hand-editing writer-owned fields, bare-text `## Change Logs` bullets — apply on top of these.)
 
-- **Don't write executable test commands here.** Those belong in `ci.md`'s `## How to run tests` section, the single source of truth. Reference ci.md by markdown link if needed.
+- **Don't write executable test commands here.** Those belong in `ci.md`'s `## How to run tests` section, the single source of truth. Reference ci.md by backlink if needed.
 - **Don't write a roadmap / milestone schedule here.** Phase narrative — when a project benefits from one — is the user's to maintain manually as a wiki page; a4 plugin no longer authors a roadmap wiki.
 - **Don't list considered options in `## Technology Stack`.** The chosen stack lives here; the comparison and rejected alternatives belong in a spec under `a4/spec/`.
 - **Don't rename a component heading silently.** Renames cascade to every task's `## Interface Contracts` link. Open a review item.

@@ -57,7 +57,7 @@ labels: []                           # free-form tags
 - `mode:` is required. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list option names that the body's `## Options` section will cover, one subsection per option. Forbidden when `mode: single`.
 - `implements:` is **forbidden** on research. If scoped to a specific UC's open question, link the UC from `## Context` body prose.
-- `spec:` is **forbidden** on research. Cite the triggering spec via markdown link inside `## Context` body prose.
+- `spec:` is **forbidden** on research. Cite the triggering spec via backlink inside `## Context` body prose.
 - `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle.
 - `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`.
 
@@ -100,7 +100,7 @@ Research-specific notes:
 
 - `## Resume` — current-state snapshot. Strongly recommended while non-terminal. See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
-- `## Why Discarded` — populated by discard. Dated bullet.
+- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
 
 Unknown H2 headings are tolerated.
 
@@ -131,14 +131,14 @@ A structured quality pass walks the task body before it flips to `complete`. The
 
 Citations are **soft** — there is no stored-reverse contract. Two paths:
 
-- **From a spec body.** Add a markdown link inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `[research/<id>-<slug>](../research/<id>-<slug>.md)`. Optionally add the path to the spec's `related:` for frontmatter-level discoverability.
+- **From a spec body.** Add a backlink inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `` `../research/<id>-<slug>.md` ``. Optionally add the path to the spec's `related:` for frontmatter-level discoverability.
 - **From a task body.** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
 
 Reverse lookups (which specs cite a research task) are derived on demand via grep / `../scripts/search.py`.
 
 ## Don't (research-specific)
 
-- **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden. Cite triggering specs via markdown links in `## Context` body prose; record the implementing UC the same way.
+- **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden. Cite triggering specs via backlinks in `## Context` body prose; record the implementing UC the same way.
 - **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
 - **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
 - **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and bugs to `a4/bug/`.

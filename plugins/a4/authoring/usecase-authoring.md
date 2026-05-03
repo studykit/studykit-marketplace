@@ -40,11 +40,11 @@ labels: []               # free-form tags (incl. group slugs like screen-dashboa
 - `title` is required. Placeholder tokens tolerated at `status: draft`, forbidden at `status: ready` and beyond — see `./frontmatter-issue.md#title-placeholders`.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `actors:` lists slugs defined in `actors.md`'s `## Roster` (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references by slug. Platform-capability UCs typically use `actors: [platform]`.
-- UC-to-UC ordering is **not** in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with markdown links.
-- UC-to-spec ties are **not** in frontmatter. When a spec governs the UC, cite from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via markdown link (`[spec/<id>-<slug>](../spec/<id>-<slug>.md)`); add to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
+- UC-to-UC ordering is **not** in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with backlinks.
+- UC-to-spec ties are **not** in frontmatter. When a spec governs the UC, cite from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via backlink (`` `../spec/<id>-<slug>.md` ``); add to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
 - `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
 - The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `../scripts/search.py`.
-- `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as markdown links in the body, not here.
+- `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as backlinks in the body, not here.
 
 ### Lifecycle and writer ownership
 

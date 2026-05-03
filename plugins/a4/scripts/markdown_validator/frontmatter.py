@@ -336,6 +336,30 @@ def validate_file(
 
     schema = SCHEMAS[ftype]
 
+    for fld in sorted(fm):
+        val = fm[fld]
+        if val is None:
+            violations.append(
+                Violation(
+                    rel_str,
+                    "null-value",
+                    fld,
+                    f"`{fld}:` is null; omit the key or supply a value "
+                    "(use `[]` for an explicitly empty list)",
+                )
+            )
+        elif isinstance(val, list):
+            for i, item in enumerate(val):
+                if item is None:
+                    violations.append(
+                        Violation(
+                            rel_str,
+                            "null-value",
+                            fld,
+                            f"`{fld}[{i}]` is null; remove the entry",
+                        )
+                    )
+
     for fld in sorted(schema.required):
         if fld not in fm or _is_empty(fm[fld]):
             violations.append(

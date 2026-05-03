@@ -1,6 +1,6 @@
 # /a4:auto-coding Serial Mode
 
-Sequential, no-isolation execution path for `/a4:auto-coding`. Covers Steps 1–3 specialization that differs from parallel mode (`./parallel-mode.md`); commit message form is governed by [`commit-message-convention.md`](${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md).
+Sequential, no-isolation execution path for `/a4:auto-coding`. Covers Steps 1–3 specialization that differs from parallel mode (`./parallel-mode.md`); commit message form is governed by `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
 
 The coder agent contract (call shape, prompt envelope, status flips around the call) is shared with parallel mode — see `./spawn-coder.md`. Mode-specific deltas are tabulated below.
 

@@ -77,9 +77,9 @@ Writer rules:
 
 ### Close guard — wiki entries in `target:` must be honored on resolve
 
-When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a **warning with override** — the transition is allowed, but unresolved violations are re-surfaced as fresh review items targeting the same wiki page.
+When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a backlink to the review item itself. Enforcement is a **warning with override** — the transition is allowed, but unresolved violations are re-surfaced as fresh review items targeting the same wiki page.
 
-When resolving, follow the wiki Change Logs convention defined in `./wiki-body.md` and link the review item itself in the bullet (`- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>`). Create the `## Change Logs` section if it does not yet exist.
+When resolving, follow the wiki Change Logs convention defined in `./wiki-body.md` and backlink the review item itself in the bullet (`- YYYY-MM-DD HH:mm \`review/<id>-<slug>.md\` — <short note>`). Create the `## Change Logs` section if it does not yet exist.
 
 ## Body shape
 

@@ -45,7 +45,7 @@ def test_clean_umbrella_no_drift(a4_workspace: A4Workspace) -> None:
         "umbrella",
         1,
         "u",
-        body=_umbrella_body(["- [task/2-foo](../task/2-foo.md)"]),
+        body=_umbrella_body(["- 2026-04-23 09:14 `../task/2-foo.md`"]),
     )
     a4_workspace.write("task", 2, "foo", parent="umbrella/1-u")
 
@@ -71,7 +71,7 @@ def test_body_lists_child_with_no_parent_pointer(
         "umbrella",
         1,
         "u",
-        body=_umbrella_body(["- [task/2-foo](../task/2-foo.md)"]),
+        body=_umbrella_body(["- 2026-04-23 09:14 `../task/2-foo.md`"]),
     )
     a4_workspace.write("task", 2, "foo")  # no parent
 
@@ -89,7 +89,7 @@ def test_annotated_bullet_not_treated_as_active(
         "u",
         body=_umbrella_body(
             [
-                "- [task/2-foo](../task/2-foo.md) — moved to umbrella/9-other 2026-05-08"
+                "- 2026-04-23 09:14 `../task/2-foo.md` — moved to umbrella/9-other 2026-05-08 14:32"
             ]
         ),
     )
@@ -111,8 +111,8 @@ def test_drift_warning_open_umbrella_all_terminal_children(
         status="open",
         body=_umbrella_body(
             [
-                "- [task/2-a](../task/2-a.md)",
-                "- [task/3-b](../task/3-b.md)",
+                "- 2026-04-23 09:14 `../task/2-a.md`",
+                "- 2026-04-25 14:02 `../task/3-b.md`",
             ]
         ),
     )
@@ -148,7 +148,7 @@ def test_drift_silent_when_one_child_non_terminal(
         1,
         "u",
         status="open",
-        body=_umbrella_body(["- [task/2-a](../task/2-a.md)"]),
+        body=_umbrella_body(["- 2026-04-23 09:14 `../task/2-a.md`"]),
     )
     a4_workspace.write(
         "task", 2, "a", status="progress", parent="umbrella/1-u"
@@ -167,7 +167,7 @@ def test_drift_silent_when_umbrella_already_complete(
         1,
         "u",
         status="complete",
-        body=_umbrella_body(["- [task/2-a](../task/2-a.md)"]),
+        body=_umbrella_body(["- 2026-04-23 09:14 `../task/2-a.md`"]),
     )
     a4_workspace.write(
         "task", 2, "a", status="complete", parent="umbrella/1-u"

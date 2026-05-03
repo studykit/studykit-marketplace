@@ -13,7 +13,7 @@ Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md
 
 **Optional, emit only when applicable:**
 
-- `## Screens` — for projects with UI use cases, the screen-navigation narrative grouping UCs into screens. Each screen block lists the screen slug (also added to UC `labels:`) and the UCs that participate, with markdown links. Skip for headless, non-UI, or single-screen projects.
+- `## Screens` — for projects with UI use cases, the screen-navigation narrative grouping UCs into screens. Each screen block lists the screen slug (also added to UC `labels:`) and the UCs that participate, with backlinks. Skip for headless, non-UI, or single-screen projects.
 - `## Change Logs` — append-only audit trail. Format: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
@@ -33,4 +33,4 @@ The wiki close guard surfaces missing bullets when a review item whose `target:`
 - **Don't put domain concepts here.** Cross-cutting concepts belong in `domain.md`'s `## Concepts` section.
 - **Don't write actor rosters here.** Actor definitions belong in `actors.md`'s `## Roster` section.
 - **Don't pack screen mockups inline.** HTML mocks live under `a4/mock/<screen-slug>/`; reference them from `## Screens` if useful.
-- **Don't append `## Change Logs` bullets without a markdown link.**
+- **Don't append `## Change Logs` bullets without a backlink path.**

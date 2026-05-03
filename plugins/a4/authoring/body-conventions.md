@@ -1,6 +1,6 @@
 # a4 Body Conventions
 
-Cross-cutting body-level rules for every file under `a4/`. Covers section heading form and body link form.
+Cross-cutting body-level rules for every file under `a4/`. Covers section heading form and body backlink form.
 
 Frontmatter-side rules: `./frontmatter-common.md` (cross-cutting), `./frontmatter-wiki.md` (wiki minimal), `./frontmatter-issue.md` (issue-side), and the `## Frontmatter` section of each `<type>-authoring.md` (per-type field tables). Type-specific body sections (issue-only or wiki-only) live in the companion file each `<type>-authoring.md` lists alongside this one.
 
@@ -33,18 +33,35 @@ Rules:
 - **Unknown H2 headings are tolerated.** Authors may add supplemental sections (`## Benchmarks`, `## Migration Notes`, …) provided the heading is well-formed Title Case.
 - **No stray content above the first section.** Anything in the body that is not whitespace must live under an H2.
 
-## Link form (body)
+## Backlink form (body)
 
-Body cross-references use **standard markdown links** — `[text](relative/path.md)`. The `.md` extension is retained.
+Body cross-references to other `a4/` files are **backtick-wrapped paths** — `` `<relpath>/<file>.md` `` (relative path) or `` `<file>.md` `` (basename, when the target is unambiguous). No `[text](path)` brackets — the backticks are the visual delimiter and parsers extract the path between them. The `.md` extension is retained. The relpath form is computed from the citing file's directory (e.g., from `a4/usecase/3-share-summary.md` to `architecture.md`, write `` `../architecture.md` ``). Obsidian and most editor tooling render code-styled `.md` paths as clickable backlinks; this is the form the a4 plugin standardizes on.
+
+### Inline backlink (in prose)
 
 | Form | Example |
 |------|---------|
-| Cross-file reference | `[usecase/3-share-summary](../usecase/3-share-summary.md)` |
-| Section anchor on a wiki page | `[architecture#sessionservice](../architecture.md#sessionservice)` |
-| Sibling-folder reference | `[research/42-grpc-streaming](../research/42-grpc-streaming.md)` (from `a4/spec/`) |
+| Cross-file reference (relpath) | `` `../usecase/3-share-summary.md` `` |
+| Cross-file reference (basename) | `` `architecture.md` ``, `` `3-share-summary.md` `` |
+| Section anchor on a wiki page | `` `../architecture.md#sessionservice` `` |
 | External URL | `[the spec text](https://example.com/spec)` |
 
-Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is acceptable in prose. Renders as plain text in local viewers but auto-links as a cross-issue reference in GitHub Issues / PRs when an `a4/` workspace is mirrored. Use it for shorthand mentions; use the markdown-link form when local navigation matters.
+External URLs (anything not resolving to an `a4/` file) keep the **standard markdown link** form — `[text](https://...)` — since a bare URL has no display text.
+
+### Bullet backlink (in `## Children`, `## Change Logs`, etc.)
+
+Append-only audit / membership lists use the timestamped-bullet form:
+
+```markdown
+- YYYY-MM-DD HH:mm `<relpath>/<file>.md`
+```
+
+- The timestamp is `YYYY-MM-DD HH:mm` in KST, matching the `created:` / `updated:` shape (`./frontmatter-common.md`).
+- Exactly one space separates timestamp and path; **no em dash** between them.
+- The path is backtick-wrapped, either relpath or basename per the inline rule above.
+- Optional trailing prose after the closing backtick records annotations (`— moved to ...`, `— discarded ...`, free-form notes).
+
+Plain `#<id>` text (e.g., `see #42 for the rollout plan`) is acceptable in prose. Renders as plain text in local viewers but auto-links as a cross-issue reference in GitHub Issues / PRs when an `a4/` workspace is mirrored. Use it for shorthand mentions; use the backlink form when local navigation matters.
 
 Frontmatter paths are different — plain strings (no brackets, no `.md`) per `./frontmatter-common.md` § Path references.
 

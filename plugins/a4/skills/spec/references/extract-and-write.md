@@ -48,7 +48,7 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 
 3. File path: `<project-root>/a4/spec/<id>-<slug>.md`.
 
-4. Use the `Write` tool. Frontmatter shape, required body sections (`## Context`, `## Specification`), optional sections (`## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`), and heading-form rules are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `## Context` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [research/42-grpc-streaming]`), and add inline `[research/<id>-<slug>](../research/<id>-<slug>.md)` markdown links inside whichever spec section the citation is most relevant to (commonly `## Decision Log` or `## Rejected Alternatives`).
+4. Use the `Write` tool. Frontmatter shape, required body sections (`## Context`, `## Specification`), optional sections (`## Decision Log`, `## Open Questions`, `## Rejected Alternatives`, `## Consequences`, `## Examples`), and heading-form rules are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/spec-authoring.md`. Initial `status:` is always `draft`. Capture the chosen-shape one-liner inside `## Context` so Step 6 can quote it as the activate `--reason`. Populate `related:` with the research-task paths confirmed in Step 3 (e.g., `related: [research/42-grpc-streaming]`), and add inline `../research/<id>-<slug>.md` backlinks inside whichever spec section the citation is most relevant to (commonly `## Decision Log` or `## Rejected Alternatives`).
 
 Report the full file path: "Spec recorded at `<path>` as `draft`."
 

@@ -13,7 +13,8 @@ record_dir="$project_dir/.claude/tmp/a4-edited"
 
 find "$record_dir" -type f \
     \( -name 'a4-contributor-files-*.txt' \
-       -o -name 'a4-contributor-map-*.flag' \) \
+       -o -name 'a4-contributor-map-*.flag' \
+       -o -name 'a4-contributor-hooks-time-*.flag' \) \
     -mtime +1 -delete 2>/dev/null || true
 
 exit 0

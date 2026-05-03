@@ -103,10 +103,10 @@ Task-specific notes:
 **Optional, emit only when there is content for them:**
 
 - `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Distinct from git history (which records changes *after the fact*); this section records what is *planned* before implementation. Useful when (a) the task is one of several in a batch and parallel coder agents need a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./umbrella-authoring.md`). Skip for single-file or self-evident scope. Auto-populated by `/a4:breakdown` for batch-derived tasks.
-- `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). For UC-less work, link to the spec or relevant `architecture.md` section.
+- `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``). For UC-less work, link to the spec or relevant `architecture.md` section.
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
-- `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
+- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
 
 Unknown H2 headings are tolerated.
 

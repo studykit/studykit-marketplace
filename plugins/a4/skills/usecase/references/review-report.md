@@ -31,7 +31,7 @@ Body structure (per `authoring/review-authoring.md` — `## Description` require
 
 **Summary.** One-paragraph statement of the issue.
 
-**Evidence.** Quote the specific UC lines, actor table row, or wiki section that demonstrate the issue. Reference the target via standard markdown link — `[usecase/<id>-<slug>](../usecase/<id>-<slug>.md)`.
+**Evidence.** Quote the specific UC lines, actor table row, or wiki section that demonstrate the issue. Reference the target via plain backlink — `../usecase/<id>-<slug>.md`.
 
 **Suggestion.** Concrete, user-level suggestion for the fix. Do not rewrite the UC body — suggest direction and let the facilitator/author apply the edit.
 ```

@@ -73,18 +73,18 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 
 **Required:**
 
-- `## Description` — what the children together accomplish. Brief — one or two paragraphs. Link the children inline by markdown link when narratively useful.
-- `## Children` — explicit append-only list of child paths as markdown links, one bullet per child. The reverse-`parent:` lookup remains the authoritative membership; this section exists so a human reader sees the membership at a glance.
+- `## Description` — what the children together accomplish. Brief — one or two paragraphs. Link the children inline by backlink when narratively useful.
+- `## Children` — explicit append-only list of child paths as timestamped backlink bullets, one bullet per child. Bullet form per `./body-conventions.md` § Bullet backlink. The reverse-`parent:` lookup remains the authoritative membership; this section exists so a human reader sees the membership at a glance.
 
   ```markdown
   ## Children
 
-  - [task/17-search-history](../task/17-search-history.md)
-  - [task/18-search-pagination](../task/18-search-pagination.md)
-  - [bug/9-cache-key-collision](../bug/9-cache-key-collision.md)
+  - 2026-04-23 09:14 `../task/17-search-history.md`
+  - 2026-04-25 14:02 `../task/18-search-pagination.md`
+  - 2026-05-01 11:30 `../bug/9-cache-key-collision.md`
   ```
 
-  Order is the order in which children were added (chronological). When a child is later discarded or moves under a different parent, leave the bullet but annotate (`— moved to umbrella/22-...`, `— discarded 2026-05-08`) — append-only history beats silent deletion.
+  Order is the order in which children were added (chronological). When a child is later discarded or moves under a different parent, leave the bullet but annotate (`— moved to umbrella/22-...`, `— discarded 2026-05-08 14:32`) — append-only history beats silent deletion.
 
 - `## Log` — the aggregation narrative. **This is the umbrella's reason for existing.** Format and inline cross-reference rules per `./issue-body.md#log`. Decisions recorded here are the *source* that children inline-cite from their own `## Log` entries.
 
@@ -92,7 +92,7 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 
 - `## Acceptance Criteria` — integration outcome that is not naturally any single child's AC. Skip when implicit ("all children deliver and tests pass"). Use it when the umbrella has its own observable (e.g., "search-history feature works end-to-end across UC 3 and UC 7").
 - `## Resume` — current-state snapshot. Strongly recommended while at `open` (the only mid-flight state). See `./issue-body.md#resume`.
-- `## Why Discarded` — populated on `discarded`. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
+- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
 
 Unknown H2 headings are tolerated.
 
@@ -105,7 +105,7 @@ When the child writes a `## Resume` or `## Log` entry that depends on the umbrel
 ```markdown
 ## Log
 
-- Approach: follow the caching strategy decided in [umbrella/5-search](../umbrella/5-search.md) `## Log`. This child only diverges on test-fixture shape.
+- Approach: follow the caching strategy decided in `../umbrella/5-search.md` `## Log`. This child only diverges on test-fixture shape.
 ```
 
 Frontmatter `parent:` makes the umbrella *discoverable*; the inline citation makes it *necessary to read* — only when the entry actually depends on it. Self-contained child entries need no cross-reference.

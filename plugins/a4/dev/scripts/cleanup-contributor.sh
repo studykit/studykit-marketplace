@@ -19,6 +19,7 @@ record_dir="$project_dir/.claude/tmp/a4-edited"
 rm -f \
     "$record_dir/a4-contributor-files-${session_id}.txt" \
     "$record_dir/a4-contributor-map-${session_id}.flag" \
+    "$record_dir/a4-contributor-hooks-time-${session_id}.flag" \
     2>/dev/null || true
 
 exit 0

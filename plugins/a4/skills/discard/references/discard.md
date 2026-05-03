@@ -27,12 +27,12 @@ Surface the task's `type:` and `implements:` / `spec:` to the user before flippi
 
 Compose the reason: every token after `<id-or-slug>` joined by a single space. If empty, use `"discarded via /a4:discard"` as a default. The reason is captured in the body's `## Why Discarded` section (see below) — there is no CLI to pass it to.
 
-If the user supplied a reason worth narrative capture, append (or extend) a `## Why Discarded` body section via `Edit` **before flipping `status:`**, so the file is consistent at any read point:
+If the user supplied a reason worth narrative capture, append (or extend) a `## Why Discarded` body section via `Edit` **before flipping `status:`**, so the file is consistent at any read point. Format follows `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` § `## Why Discarded`:
 
 ```markdown
 ## Why Discarded
 
-- <YYYY-MM-DD> — <reason text>
+- <YYYY-MM-DD HH:mm> <reason text>
 ```
 
 Append a new dated bullet if the section already exists.

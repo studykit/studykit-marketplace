@@ -50,9 +50,9 @@ Records where tests live and how they are organized.
 
 <Optional. Only when review items were emitted during this run. Link to the items emitted in Step 4.>
 
-- Architecture issues (`status: open`): [review/<id>-<slug>](review/<id>-<slug>.md) × N
-- Environment issues (`status: resolved`): [review/<id>-<slug>](review/<id>-<slug>.md) × M
-- Environment issues (`status: open`): [review/<id>-<slug>](review/<id>-<slug>.md) × K
+- Architecture issues (`status: open`): review/<id>-<slug>.md × N
+- Environment issues (`status: resolved`): review/<id>-<slug>.md × M
+- Environment issues (`status: open`): review/<id>-<slug>.md × K
 
 ## Change Logs
 

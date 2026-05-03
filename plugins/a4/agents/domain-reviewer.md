@@ -115,7 +115,7 @@ Verdicts: `OK` | `CONFLICT`.
 *Only when `architecture.md` exists.*
 
 Per `${CLAUDE_PLUGIN_ROOT}/skills/arch/SKILL.md` Phase 3, arch may edit `domain.md` directly for simple changes (add concept, 1:1 rename, definition wording). Verify those edits are well-formed:
-- Each `## Change Logs` bullet citing `[architecture#<section>](architecture.md#<section>)` corresponds to an actual edit in `## Concepts` (definition wording or new entry), not in `## Relationships` or `## State Transitions`.
+- Each `## Change Logs` bullet citing `architecture.md#<section>` corresponds to an actual edit in `## Concepts` (definition wording or new entry), not in `## Relationships` or `## State Transitions`.
 - Structural changes (split / merge / relationship / state) should never appear inline from arch — they should be open review items with `target: domain`. Flag any such inline edit as a structural-edit-bypass.
 
 Verdicts: `OK` | `STRUCTURAL EDIT BYPASS` | `ORPHAN CHANGE-LOG ENTRY`.
@@ -159,7 +159,7 @@ updated: <YYYY-MM-DD>
 
 **Summary.** One paragraph describing the issue.
 
-**Evidence.** Quote the domain.md section, UC line, or architecture entry that demonstrates the issue. Reference via markdown link — `[domain#<section>](../domain.md#<section>)`.
+**Evidence.** Quote the domain.md section, UC line, or architecture entry that demonstrates the issue. Reference via backlink — `../domain.md#<section>`.
 
 **Impact.** What downstream work (architecture, implementation, future UCs) would have to invent or re-decide because of this gap.
 

@@ -2,7 +2,7 @@
 
 Body-level rules for issue files (`usecase`, `task`, `bug`, `spike`, `research`, `umbrella`, `review`, `spec`, `idea`, `brainstorm`). Defines two optional sections that keep a mid-flight issue file self-sufficient for the next session: `## Resume` (current-state snapshot) and `## Log` (narrative-worthy events).
 
-Common body rules (heading form, link form): `./body-conventions.md`.
+Common body rules (heading form, backlink form): `./body-conventions.md`.
 
 ## Why two sections
 
@@ -42,7 +42,7 @@ Format is the author's choice — bullets with bold lead-ins, prose paragraphs, 
 
 **Approach.** caching at the Service layer (not Repository) because the cache key needs `user-id` and the Repository has no user context.
 
-**Blocked on.** cache-key shape disagreement between [usecase/3-search-history](usecase/3-search-history.md) Flow and [spec/12-cache-key](spec/12-cache-key.md). Awaiting user input.
+**Blocked on.** cache-key shape disagreement between `usecase/3-search-history.md` Flow and `spec/12-cache-key.md`. Awaiting user input.
 
 **Next.** SearchServiceTest cache-invalidation case is unwritten; eviction-timing assertion strategy undecided.
 ```
@@ -78,18 +78,18 @@ Write entries when:
 
 Do **not** restate things a fresh reader can already see (same exclusions as `## Resume`).
 
-Format is the author's choice — short bullets, one fact per line, append-only. Use a date prefix when several entries accrete on the same topic; standalone entries may omit the date.
+Format is the author's choice — short bullets, one fact per line, append-only. Use a `YYYY-MM-DD HH:mm` (KST) prefix when several entries accrete on the same topic; standalone entries may omit the timestamp. The minute precision matches the `created:` / `updated:` frontmatter shape (see `./frontmatter-common.md`) so timeline reconstruction across body and frontmatter is unambiguous.
 
 ```markdown
 ## Log
 
-- 2026-04-28 — Tried caching at the Repository layer; abandoned because the cache key needs `user-id` and the Repository has no user context. Moved to Service-layer caching.
-- 2026-05-01 — Decided to follow [spec/12-cache-key](spec/12-cache-key.md) for the cache-key shape. UC 3 Flow still needs to point at spec/12.
+- 2026-04-28 14:32 — Tried caching at the Repository layer; abandoned because the cache key needs `user-id` and the Repository has no user context. Moved to Service-layer caching.
+- 2026-05-01 09:15 Decided to follow `spec/12-cache-key.md` for the cache-key shape. UC 3 Flow still needs to point at spec/12.
 ```
 
 ### Update discipline
 
-`## Log` entries are append-only — do not reorder, edit, or remove old entries. Corrections accrete as new entries (`2026-05-02 — The 2026-05-01 decision was wrong: ...`).
+`## Log` entries are append-only — do not reorder, edit, or remove old entries. Corrections accrete as new entries (`2026-05-02 11:08 — The 2026-05-01 09:15 decision was wrong: ...`).
 
 Like `## Resume`, hand-maintained. Status changes never modify `## Log`.
 
@@ -97,12 +97,12 @@ Like `## Resume`, hand-maintained. Status changes never modify `## Log`.
 
 Both `## Resume` and `## Log` may contain claims that depend on a decision recorded *elsewhere* — most often in a parent issue's `## Log` (when several siblings share a cross-cutting decision the parent owns). When this happens, write the entry so a reader who opens this file alone can discover the next file to read: **inline-cite the path of the file that carries the source narrative inside the entry itself.**
 
-Use the body-link form (`[text](relative/path.md)`) for inline citations.
+Use the body backlink form (`` `<relpath>/<file>.md` `` or `` `<file>.md` `` per `./body-conventions.md` § Backlink form) for inline citations.
 
 ```markdown
 ## Resume
 
-**Approach.** follow the caching strategy decided in [umbrella/5-search](../umbrella/5-search.md) `## Log`. This child only diverges on test-fixture shape.
+**Approach.** follow the caching strategy decided in `../umbrella/5-search.md` `## Log`. This child only diverges on test-fixture shape.
 
 **Blocked on.** cache eviction timing — local to this task, not covered by the umbrella decision.
 ```
@@ -111,7 +111,24 @@ Without this inline citation, the parent's `## Log` is invisible to a session th
 
 The same rule applies whenever an entry leans on narrative recorded in any other a4 file (sibling, related issue, spec, UC). Inline-cite the path; do not rely on the reader inferring it from frontmatter alone.
 
+## `## Why Discarded`
+
+Purpose: **the reason this file was abandoned**, recorded once on the `→ discarded` transition. Single dated bullet, append-only:
+
+```markdown
+## Why Discarded
+
+- 2026-05-08 14:32 superseded by `spec/14-cache-tiers.md`; this exploration is no longer load-bearing.
+```
+
+Rules:
+
+- Format `- <YYYY-MM-DD HH:mm> <reason text>`. Timestamp is KST and matches the `created:` / `updated:` shape from `./frontmatter-common.md`. When the reason cites another file, use the backtick-wrapped backlink form per `./body-conventions.md`.
+- Append-only — never edit or remove the bullet. If the discard rationale is later understood differently, append a second bullet rather than rewriting the first.
+- Emit only when the file is at `status: discarded`. Files in any other lifecycle state must not carry this section.
+- Applies uniformly to every issue type that has a `discarded` terminal status (`task`, `bug`, `spike`, `research`, `umbrella`, `usecase`, `spec`, `idea`, `brainstorm`). Per-type contracts do not redefine the format.
+
 ## Cross-references
 
-- `./body-conventions.md` — common body rules (heading form, link form).
-- `./<type>-authoring.md` — per-type contracts (which list `## Resume` and `## Log` in their optional-sections menu).
+- `./body-conventions.md` — common body rules (heading form, backlink form).
+- `./<type>-authoring.md` — per-type contracts (which list `## Resume`, `## Log`, and `## Why Discarded` in their optional-sections menu).

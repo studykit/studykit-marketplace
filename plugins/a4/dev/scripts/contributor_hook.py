@@ -29,10 +29,14 @@ Subcommands:
                  file does not double-emit either layer.
 
 Session-scoped state under `.claude/tmp/a4-edited/`:
-  a4-contributor-files-<sid>.txt   — newline-delimited file paths
-                                     already announced this session.
-  a4-contributor-map-<sid>.flag    — touched once when the layer map
-                                     has been prepended this session.
+  a4-contributor-files-<sid>.txt        — newline-delimited file paths
+                                          already announced this session.
+  a4-contributor-map-<sid>.flag         — touched once when the layer map
+                                          has been prepended this session.
+  a4-contributor-hooks-time-<sid>.flag  — touched once when the KST
+                                          timestamp block has been
+                                          injected on the first edit
+                                          under `plugins/a4/hooks/`.
 Cleaned up by `cleanup-contributor.sh` (SessionEnd) and swept by
 `sweep-contributor.sh` (SessionStart, age-based for crashed sessions).
 
@@ -211,10 +215,7 @@ def _hooks_time_prefix(
 
     kst = timezone(timedelta(hours=9))
     stamp = datetime.now(kst).strftime("%Y-%m-%d %H:%M")
-    return (
-        f"**a4 hooks/ edit — current time (KST):** {stamp}. "
-        "Use this when the edit needs a timestamp; do not re-derive."
-    )
+    return f"current time (KST): {stamp}"
 
 
 # --------------------------- layer-map prepend ----------------------------

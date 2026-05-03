@@ -70,7 +70,7 @@ Edge cases:
 
 ## Structural relationship fields
 
-Shared across all issue types. Omit empty fields, or use `[]`.
+Shared across all issue types. Omit empty fields, or use `[]`. `null` (or `~`, or an empty scalar like `parent:` with nothing after the colon) is never valid — see `./frontmatter-common.md` § Empty values.
 
 | Field | Applies to | Points at | Meaning |
 |-------|-----------|-----------|---------|
@@ -83,7 +83,7 @@ Shared across all issue types. Omit empty fields, or use `[]`.
 | `parent` | any issue except `umbrella` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or `umbrella`; `usecase` / `spec` parents restricted to same-type; `umbrella` itself takes no parent) | Parent in a decomposition / derivation hierarchy or aggregation grouping. Home for narrative shared across siblings — see `./issue-body.md` § `## Log` and `./umbrella-authoring.md`. The child's `parent:` makes the parent discoverable for reverse `children` lookup |
 | `related` | any | any | Generic catchall for ties not fitting other fields but warranting frontmatter-level searchability |
 
-Soft references (see-also, mentions) are markdown links (`[text](relative/path.md)`) in body prose, not frontmatter.
+Soft references (see-also, mentions) are backtick-wrapped backlinks (`` `../usecase/3-search-history.md` ``) in body prose, not frontmatter.
 
 ### `parent` and cross-cutting narrative
 

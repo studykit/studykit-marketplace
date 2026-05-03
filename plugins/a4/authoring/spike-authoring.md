@@ -40,7 +40,7 @@ labels: []             # free-form tags
 - `type: spike` is fixed for files under `a4/spike/`. No `kind:` field — the type *is* the kind.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome validates a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description`.
-- `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via markdown link.
+- `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via backlink.
 - `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
 - `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/...` (or `artifacts/spike/archive/<id>-<slug>/...` after archive). **Never** point at production source.
 
@@ -75,10 +75,10 @@ Spike-specific notes:
 **Optional, emit only when there is content for them:**
 
 - `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing artifact paths under `artifacts/spike/<id>-<slug>/` the spike plans to create, plus any production source paths the spike may probe or temporarily touch (for reader context). Distinct from git history; records what is *planned* before exploration begins. Skip when the artifact directory is self-explanatory. (Frontmatter `artifacts:` is artifact-only.)
-- `## Interface Contracts` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections.
+- `## Interface Contracts` — contracts the spike consumes or proposes, with backlinks to `architecture.md` sections.
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal. See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
-- `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
+- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
 
 Unknown H2 headings are tolerated.
 

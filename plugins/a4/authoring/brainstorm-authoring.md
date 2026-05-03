@@ -59,7 +59,7 @@ Writer rules (brainstorm-specific):
 
 **Required:**
 
-- `## Ideas` — the session's idea capture. Typically a bullet list, one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a markdown link to the resulting artifact (e.g., `- caching: pre-warm on session boot → [spec/8-caching-strategy](../spec/8-caching-strategy.md)`).
+- `## Ideas` — the session's idea capture. Typically a bullet list, one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a backlink to the resulting artifact (e.g., `` - caching: pre-warm on session boot → `../spec/8-caching-strategy.md` ``).
 
 **Optional, emit only when applicable:**
 

@@ -61,7 +61,7 @@ Verdicts: `OK` | `MISSING` | `INCOMPLETE`.
 ### 2. UC Coverage — "Does the architecture cover every Use Case?"
 
 For each file in `a4/usecase/`:
-- Is there at least one Information Flow subsection inside `architecture.md`'s `## Components` that references the UC via a markdown link (e.g., `[usecase/<id>-<slug>](usecase/<id>-<slug>.md)`)?
+- Is there at least one Information Flow subsection inside `architecture.md`'s `## Components` that references the UC via a backlink (e.g., `usecase/<id>-<slug>.md`)?
 - Are the UC's `actors:` mapped to component interactions in that flow?
 
 Verdict per UC: `OK` | `UNMAPPED UC`.
@@ -108,7 +108,7 @@ Verdicts: `OK` | `MISSING TIER` | `UNVERIFIED TOOL` | `NO SETUP NOTES`.
 ### 7. Technical Claim Verification — "Are the technical statements true?"
 
 Scan `architecture.md` for technical claims (library capabilities, framework constraints, compatibility assertions). For each:
-- Is it sourced? (`(ref: [research/<label>](research/<label>.md))` or official docs link)
+- Is it sourced? (`(ref: research/<label>.md)` backlink or official docs link)
 - Actively verify suspect claims using `WebSearch` / `WebFetch` against official docs.
 
 Verdicts: `OK` | `UNVERIFIED` | `SUSPECT` | `CONFIRMED`.
@@ -172,7 +172,7 @@ updated: <YYYY-MM-DD>
 
 **Summary.** One paragraph describing the issue.
 
-**Evidence.** Quote the architecture section, UC line, or domain model entry that demonstrates the issue. Reference the offending section via markdown link — `[architecture#<section>](../architecture.md#<section>)`.
+**Evidence.** Quote the architecture section, UC line, or domain model entry that demonstrates the issue. Reference the offending section via backlink — `../architecture.md#<section>`.
 
 **Impact.** What a developer would have to guess or re-decide when implementing this architecture as-is.
 

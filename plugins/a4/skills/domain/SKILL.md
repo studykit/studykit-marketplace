@@ -93,7 +93,7 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 
 `/a4:arch` Phase 3 may edit `a4/domain.md` directly for *simple* changes (concept addition, 1:1 rename, definition wording) without invoking this skill. *Structural* changes (concept split/merge, relationship change, state-transition change) flow through this skill via review items with `target: domain`. The decision table is in `${CLAUDE_PLUGIN_ROOT}/authoring/domain-authoring.md` §Authorship.
 
-When iterating after arch has run, expect to see `## Change Logs` entries citing `[architecture#<section>](architecture.md#<section>)`. Treat them as authoritative.
+When iterating after arch has run, expect to see `## Change Logs` entries citing `architecture.md#<section>`. Treat them as authoritative.
 
 ## Agent Usage
 

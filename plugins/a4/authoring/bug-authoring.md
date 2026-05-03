@@ -83,10 +83,10 @@ Bug-specific notes:
 **Optional, emit only when there is content for them:**
 
 - `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the fix plans to write or modify, plus any artifact paths under `artifacts/bug/<id>-<slug>/`. Distinct from git history (which records changes *after the fact*); records what is *planned* before the fix lands. Useful when the fix spans multiple files or sits next to siblings whose scope must be partitioned. Skip for single-file fixes.
-- `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`).
+- `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``).
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
-- `## Why Discarded` — populated by discard. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
+- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
 
 Unknown H2 headings are tolerated.
 

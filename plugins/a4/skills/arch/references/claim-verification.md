@@ -16,7 +16,7 @@ When writing or confirming any technical claim (API support, library capability,
 
 3. **Continue the interview.** Keep working while waiting. Do not transition to the next phase until all pending research results have been received and reflected.
 
-4. **On completion.** The agent writes results to `a4/research/<label>.md`. Read it and apply the verification outcome. Add an inline `(ref: [research/<label>](research/<label>.md))` where the claim is recorded.
+4. **On completion.** The agent writes results to `a4/research/<label>.md`. Read it and apply the verification outcome. Add an inline `(ref: research/<label>.md)` backlink where the claim is recorded.
 
 5. **Flag uncertainty.** When official documentation is ambiguous, tell the user and ask whether to proceed as an assumption or investigate further.
 

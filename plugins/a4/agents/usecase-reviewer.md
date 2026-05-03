@@ -219,7 +219,7 @@ updated: <YYYY-MM-DD>
 
 **Summary.** One short paragraph describing the issue.
 
-**Evidence.** Quote the specific UC lines, actor row, or wiki section demonstrating the issue. Reference the target via standard markdown link — `[<target>](../<target>.md)`.
+**Evidence.** Quote the specific UC lines, actor row, or wiki section demonstrating the issue. Reference the target via plain backlink — `../<target>.md`.
 
 **Suggestion.** Concrete, user-level suggestion for the fix. For `SPLIT` findings, include the full proposed child UCs. For `MISSING PRECISION`, list the specific validation/error scenarios to add. Do not rewrite the UC body — direction, not replacement.
 ```

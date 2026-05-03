@@ -128,8 +128,8 @@ One sentence.
 Concrete trigger — specific moment, not a generic condition.
 
 > Source: input — "<quoted idea fragment>"
-> *(or)* research — <systems> (ref: [research/<id>-<slug>](../research/<id>-<slug>.md))
-> *(or)* code — <path> (ref: [research/<id>-code-analysis-<label>](../research/<id>-code-analysis-<label>.md))
+> *(or)* research — <systems> (ref: `../research/<id>-<slug>.md`)
+> *(or)* code — <path> (ref: `../research/<id>-code-analysis-<label>.md`)
 > *(or)* implicit — surfaced during completeness analysis
 
 ## Flow
@@ -169,8 +169,8 @@ Source attribution lives inline at the start of `## Situation` as a blockquote �
 ### 4. Relationships
 
 After composing the UC set, analyze:
-- **Dependencies** — capture cross-UC ordering as narrative in each dependent UC's `## Dependencies` body section, with markdown links (`[<title>](../usecase/<id>-<slug>.md)`). UC frontmatter does not carry an `depends_on:` field (a4 v6.0.0); implementation ordering is on tasks via `task.depends_on:`.
-- **Reinforcements / soft ties** — populate `related:` or leave as body markdown links.
+- **Dependencies** — capture cross-UC ordering as narrative in each dependent UC's `## Dependencies` body section, with backlinks (`` `../usecase/<id>-<slug>.md` ``). UC frontmatter does not carry an `depends_on:` field (a4 v6.0.0); implementation ordering is on tasks via `task.depends_on:`.
+- **Reinforcements / soft ties** — populate `related:` or leave as body backlinks.
 - **Groups** — use `labels:` with a shared group slug (e.g., `group:dashboard`).
 
 Do **not** write a separate "Use Case Relationships" document. Views are produced on demand by grep over frontmatter.
@@ -248,7 +248,7 @@ The invoking skill uses this summary for commit messages and to decide whether t
 - Read every input file (user idea / research reports / code analysis) fully before composing.
 - Never overwrite an existing UC file without cause. In expansion mode, add new UC files; modify existing ones only when the input explicitly requires it.
 - Every UC file must record source attribution inline at the start of `## Situation`. Every UC frontmatter must list `actors:` with slugs that exist in `actors.md`.
-- Body cross-references use standard markdown links — `[usecase/<id>-<slug>](../usecase/<id>-<slug>.md)`. Paths in frontmatter are plain strings without brackets or `.md`.
+- Body cross-references use backtick-wrapped backlinks — `` `../usecase/<id>-<slug>.md` ``. Paths in frontmatter are plain strings without brackets or `.md`.
 - Bump each touched wiki page's `updated:` to today.
 - For any wiki page modified in this pass, append a dated bullet to its `## Change Logs` section citing the causing UC (creating the section if absent) — per the Wiki Update Protocol in `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`.
 - Never set `status: final`, `status: ready`, `status: implementing`, `status: shipped`, or `status: superseded` on any file. Auto-generated output is always `status: draft` — promotion through the UC lifecycle is always user-driven.
