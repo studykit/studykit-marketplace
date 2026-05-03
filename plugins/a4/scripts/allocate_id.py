@@ -1,34 +1,35 @@
-# /// script
-# requires-python = ">=3.11"
-# dependencies = ["pyyaml>=6.0"]
-# ///
+#!/usr/bin/env python3
 """Compute the next globally-unique id for an a4/ workspace.
 
 Scans all issue files across the canonical issue folders (usecase/,
-task/, bug/, spike/, research/, review/, spec/, idea/) for their
-`id:` frontmatter field and returns max(id) + 1. No state file,
-always computed fresh — this is the semantic guarantee that ids remain
-monotonically increasing and globally unique across the workspace.
+task/, bug/, spike/, research/, umbrella/, review/, spec/, idea/,
+brainstorm/) for filenames of the form ``<id>-<slug>.md`` and returns
+``max(id) + 1``. Filenames are the source of truth for id allocation —
+the validator (`/a4:validate`) independently verifies that each file's
+frontmatter ``id:`` matches its filename, so the two stay in lockstep.
+
+No state file, always computed fresh — this is the semantic guarantee
+that ids remain monotonically increasing and globally unique across
+the workspace.
 
 Usage:
-    uv run allocate_id.py <a4-dir>              # print next id
-    uv run allocate_id.py <a4-dir> --list       # list all existing ids (id\tpath)
-    uv run allocate_id.py <a4-dir> --check      # verify uniqueness; exits 1 on duplicates
+    allocate_id.py <a4-dir>              # print next id
+    allocate_id.py <a4-dir> --list       # list all existing ids (id\tpath)
+    allocate_id.py <a4-dir> --check      # verify uniqueness; exits 1 on duplicates
 """
 
+import re
 import sys
 from pathlib import Path
 
 from common import ISSUE_FOLDERS, iter_issue_files
-from markdown import extract_preamble
+
+_ID_RE = re.compile(r"^(\d+)-")
 
 
 def extract_id(path: Path) -> int | None:
-    fm = extract_preamble(path).fm
-    if fm is None:
-        return None
-    raw = fm.get("id")
-    return raw if isinstance(raw, int) else None
+    m = _ID_RE.match(path.stem)
+    return int(m.group(1)) if m else None
 
 
 def collect_ids(a4_dir: Path) -> list[tuple[int, Path]]:

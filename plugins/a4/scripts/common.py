@@ -14,8 +14,6 @@ from pathlib import Path
 from typing import Any
 from zoneinfo import ZoneInfo
 
-from markdown import read_fm
-
 KST = ZoneInfo("Asia/Seoul")
 
 
@@ -100,6 +98,8 @@ def iter_family(a4_dir: Path, family: str) -> list[tuple[Path, dict]]:
     Skips files whose preamble is absent or malformed. Order matches
     ``iter_issue_files`` (sorted, flat).
     """
+    from markdown import read_fm
+
     out: list[tuple[Path, dict]] = []
     for p in iter_issue_files(a4_dir, family):
         fm = read_fm(p)
