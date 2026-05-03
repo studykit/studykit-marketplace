@@ -451,7 +451,8 @@ def _maybe_inject_authoring_contract(
         return
 
     plugin_root = Path(__file__).resolve().parent.parent
-    type_doc = plugin_root / "authoring" / f"{type_value}-authoring.md"
+    authoring_dir = plugin_root / "authoring"
+    type_doc = authoring_dir / f"{type_value}-authoring.md"
     if not type_doc.is_file():
         return
 
@@ -467,42 +468,42 @@ def _maybe_inject_authoring_contract(
     )
 
     pointers = [
-        "- `plugins/a4/authoring/frontmatter-common.md` — cross-cutting "
+        f"- `{authoring_dir}/frontmatter-common.md` — cross-cutting "
         "frontmatter rules (`type:`, path references, empty collections, "
         "unknown fields, `created` / `updated`).",
     ]
     if type_value in _ISSUE_BODY_TYPES:
         pointers.append(
-            "- `plugins/a4/authoring/frontmatter-issue.md` — issue-side "
+            f"- `{authoring_dir}/frontmatter-issue.md` — issue-side "
             "rules (`id`, title placeholders, relationships, status "
             "changes and cascades, structural relationship fields)."
         )
     else:
         pointers.append(
-            "- `plugins/a4/authoring/frontmatter-wiki.md` — wiki minimal "
+            f"- `{authoring_dir}/frontmatter-wiki.md` — wiki minimal "
             "frontmatter contract."
         )
     pointers.extend([
-        f"- `plugins/a4/authoring/{type_value}-authoring.md` — per-type "
+        f"- `{authoring_dir}/{type_value}-authoring.md` — per-type "
         "field table, lifecycle, body shape, common mistakes.",
-        "- `plugins/a4/authoring/body-conventions.md` — cross-cutting "
+        f"- `{authoring_dir}/body-conventions.md` — cross-cutting "
         "body conventions (heading form, link form).",
     ])
     if type_value in _ISSUE_BODY_TYPES:
         pointers.append(
-            "- `plugins/a4/authoring/issue-body.md` — `## Resume` "
+            f"- `{authoring_dir}/issue-body.md` — `## Resume` "
             "(current-state snapshot) and `## Log` (narrative-worthy "
             "events) for issue files."
         )
     if type_value in _WIKI_BODY_TYPES:
         pointers.append(
-            "- `plugins/a4/authoring/wiki-body.md` — `## Change Logs` "
+            f"- `{authoring_dir}/wiki-body.md` — `## Change Logs` "
             "audit trail and Wiki Update Protocol."
         )
     if type_value in _TASK_FAMILY_TYPES:
         pointers.insert(
             2,
-            "- `plugins/a4/authoring/issue-family-lifecycle.md` — "
+            f"- `{authoring_dir}/issue-family-lifecycle.md` — "
             "issue-family lifecycle (status enum, transitions, writer "
             "rules).",
         )
@@ -1148,13 +1149,14 @@ def _stop() -> int:
             "allowed only when the transition is in FAMILY_TRANSITIONS "
             "(status_model.py); illegal jumps land here."
         )
+    authoring_dir = Path(__file__).resolve().parent.parent / "authoring"
     out_lines.append("")
     out_lines.append(
         "Fix the issues above before stopping. Each violation message "
         "names the file, field, and rule; consult "
-        "`plugins/a4/authoring/frontmatter-common.md` (universal "
+        f"`{authoring_dir}/frontmatter-common.md` (universal "
         "contract) and the matching "
-        "`plugins/a4/authoring/<type>-authoring.md` (per-type field "
+        f"`{authoring_dir}/<type>-authoring.md` (per-type field "
         "table and lifecycle) for the binding shape."
     )
     sys.stdout.write(
@@ -1376,6 +1378,7 @@ def _session_start() -> int:
         Path(__file__).resolve().parent.parent
     )
     allocator = f"{plugin_root}/scripts/allocate_id.py"
+    frontmatter_common = f"{plugin_root}/authoring/frontmatter-common.md"
 
     context = (
         "## a4/ workspace — type → file location\n\n"
@@ -1394,8 +1397,7 @@ def _session_start() -> int:
         "- Authoring a new file: omit both fields entirely.\n"
         "- Editing an existing file: leave both fields untouched.\n"
         "- Status flips: edit `status:` only.\n\n"
-        "Authoritative contract: `${CLAUDE_PLUGIN_ROOT}/authoring/"
-        "frontmatter-common.md`."
+        f"Authoritative contract: `{frontmatter_common}`."
     )
     _emit(
         {
