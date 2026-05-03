@@ -73,7 +73,7 @@ If scaffold succeeded with no open architecture issues:
 
 ## Non-Goals
 
-- Do not write `a4/bootstrap.md`, `a4/ci.md`, or any other wiki page.
+- Do not write any other wiki page.
 - Do not install test runners or write tests.
 - Do not attempt to fix architecture issues. Flag them via review items with `target: architecture`.
 - Do not maintain archives or revision files.

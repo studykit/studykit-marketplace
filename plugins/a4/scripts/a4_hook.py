@@ -40,15 +40,18 @@ Subcommands:
                  instead of searching for it.
   session-start  SessionStart. Inject the canonical type → file-location
                  map for the `<project-root>/a4/` workspace plus the
-                 runnable `allocate_id.py` command as
+                 runnable `allocate_id.py` command and the reserved-
+                 frontmatter-fields directive (`created:` / `updated:`
+                 are hook-owned — never written by the LLM) as
                  `additionalContext`, so the LLM places new files in
-                 the right folder and allocates a workspace-global
-                 monotonic id before any PreToolUse fires. The
-                 allocator path is emitted as a fully-resolved absolute
-                 path (CLAUDE_PLUGIN_ROOT expanded in-process) so the
-                 LLM can invoke `allocate_id.py` directly via its
-                 shebang — no `uv run` wrapper required. The map is
-                 built dynamically from `common.WIKI_TYPES` and
+                 the right folder, allocates a workspace-global
+                 monotonic id, and leaves the timestamp fields alone
+                 before any PreToolUse fires. The allocator path is
+                 emitted as a fully-resolved absolute path
+                 (CLAUDE_PLUGIN_ROOT expanded in-process) so the LLM
+                 can invoke `allocate_id.py` directly via its shebang
+                 — no `uv run` wrapper required. The type map is built
+                 dynamically from `common.WIKI_TYPES` and
                  `common.ISSUE_FOLDERS` — adding a new type updates the
                  injection automatically. Silent when the project has
                  no `a4/` directory.
@@ -1383,7 +1386,16 @@ def _session_start() -> int:
         + "\n\n**Allocate id** (issue files only; never invent or reuse):\n\n"
         "```bash\n"
         f'"{allocator}" <a4-dir>\n'
-        "```"
+        "```\n\n"
+        "## Reserved frontmatter fields — DO NOT WRITE\n\n"
+        "`created:` and `updated:` are **reserved**. Never write, edit, or "
+        "include these two fields in any `a4/**/*.md` file (Write, Edit, "
+        "MultiEdit). They are filled and refreshed by tooling.\n\n"
+        "- Authoring a new file: omit both fields entirely.\n"
+        "- Editing an existing file: leave both fields untouched.\n"
+        "- Status flips: edit `status:` only.\n\n"
+        "Authoritative contract: `${CLAUDE_PLUGIN_ROOT}/authoring/"
+        "frontmatter-common.md`."
     )
     _emit(
         {

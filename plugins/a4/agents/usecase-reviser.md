@@ -60,14 +60,15 @@ Follow the item's Suggestion. Typical patterns:
 
 - **UC quality issue (`target: usecase/<id>-<slug>`)** — edit the UC file per the Suggestion (tighten Situation, add Validation, rewrite a Flow step, etc.). Preserve the rest of the UC.
 - **SPLIT (UC too large)** — allocate ids for each child UC. Write new `a4/usecase/<child-id>-<slug>.md` files. Delete the parent UC file or retain it with `status: blocked`, `related: [<child paths>]`. Update any other UC's `related:` (or `## Dependencies` body links) that pointed at the parent to point at the appropriate child.
-- **Actor issue (`target: actors`)** — edit `a4/actors.md`: add / correct rows, bump `updated:`.
+- **Actor issue (`target: actors`)** — edit `a4/actors.md`: add / correct rows. The PostToolUse hook refreshes `updated:` automatically.
 - **Domain model gap (`target:` includes `domain`)** — edit `a4/domain.md`: add glossary entries, extend relationships, update state diagrams.
 - **Completeness gap (`kind: gap`)** — compose the UC candidate suggested in the body. Allocate a UC id, write the UC file with a source-attribution blockquote inside `## Situation` like `` > Source: implicit — from gap review item `../review/<id>-<slug>.md` ``. Do not create a new review item for the new UC.
 - **Cross-reference dead link (`kind: finding`, stale relationship)** — update the offending UC's `related:` (or `## Dependencies` body links) to the correct target.
 
 **Wiki update protocol.** When any wiki page is edited in this pass:
 1. Append a dated bullet to the page's `## Change Logs` section: `` - <today> `<relpath>/<file>.md` `` (`<today>` in `YYYY-MM-DD HH:mm` KST) — typically the UC the review item targets, or the review item itself for gap/question resolutions. Create the section if absent.
-2. Bump the wiki page's `updated:` to today.
+
+The PostToolUse hook refreshes the wiki page's `updated:` automatically (`${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md`).
 
 ### 3. Close the Review Item
 

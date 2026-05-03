@@ -24,9 +24,8 @@ Read the resolved file's frontmatter. If `status` is:
 
 Edit the file in-place via the `Edit` tool:
 
-1. Change the frontmatter `status:` value from `open` to `discarded`.
-2. Update the frontmatter `updated:` to today's date.
-3. If a reason was provided (any tokens after `<id-or-slug>`), append a `## Change Logs` bullet (creating the section if not already present):
+1. Change the frontmatter `status:` value from `open` to `discarded`. The PostToolUse hook refreshes `updated:` automatically — do not hand-edit it (`${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md`).
+2. If a reason was provided (any tokens after `<id-or-slug>`), append a `## Change Logs` bullet (creating the section if not already present):
 
    ```markdown
    ## Change Logs
@@ -35,6 +34,8 @@ Edit the file in-place via the `Edit` tool:
    ```
 
    Use the reason verbatim — no re-wording. If the section already exists, append a new dated bullet.
+
+   The bullet edit and the status flip can land in the same `Edit` / `MultiEdit` call (the hook bumps `updated:` once for the combined write). If they are split into separate Edits, the hook bumps `updated:` on each — both flows are correct.
 
 ## D4. Report
 

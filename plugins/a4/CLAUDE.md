@@ -47,7 +47,7 @@ If you find script paths or implementation pointers leaking into `authoring/`, p
 
 - **Anything touching frontmatter** → `authoring/frontmatter-common.md` (cross-cutting rules), `authoring/frontmatter-wiki.md` (wiki contract), `authoring/frontmatter-issue.md` (issue-side rules — `id`, title placeholders, relationships, status changes and cascades, structural relationship fields), and the matching `authoring/<type>-authoring.md` (per-type field table and lifecycle). The project-root `CLAUDE.md` calls these out as a hard prerequisite. Enforcement messages from `/a4:validate` and the Stop hook are self-explanatory; they cite the same per-type / universals contract.
 - **Anything touching body sections, tag form, or links** — pick by audience:
-  - Cross-cutting (heading form, link form, `updated:` bumping) → `authoring/body-conventions.md`.
+  - Cross-cutting (heading form, link form) → `authoring/body-conventions.md`. (`updated:` is hook-owned per `authoring/frontmatter-common.md` — never hand-edited.)
   - Issue body sections (`## Resume`, `## Log`) → `authoring/issue-body.md`.
   - Wiki body sections (`## Change Logs`, Wiki Update Protocol) → `authoring/wiki-body.md`.
 - **A new or modified skill** → the skill's own `SKILL.md` + `references/`. Skills are independent — they describe their own preconditions, inputs, outputs, and behavior. There is no shared orchestration contract to conform to. For the design rationale behind the current skill set (why some pairs are intentionally missing), see `dev/skill-mode-design.md`.

@@ -1,6 +1,6 @@
 ---
 name: research-review
-description: "This skill should be used when the user has a research task at `a4/research/<id>-<slug>.md` (a `type: research` task whose body is the investigation deliverable) and wants to review its quality before relying on it for a downstream decision. Runs the `research-reviewer` agent, walks the flagged issues with the user one at a time, applies accepted revisions, and bumps `updated:`. Triggers: 'review this research', 'check the research task', 'is this research sound', 'research review', or after finishing a `type: research` task body."
+description: "This skill should be used when the user has a research task at `a4/research/<id>-<slug>.md` (a `type: research` task whose body is the investigation deliverable) and wants to review its quality before relying on it for a downstream decision. Runs the `research-reviewer` agent, walks the flagged issues with the user one at a time, and applies accepted revisions. Triggers: 'review this research', 'check the research task', 'is this research sound', 'research review', or after finishing a `type: research` task body."
 argument-hint: <task id or path to a4/research/<id>-<slug>.md>
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob
 ---
@@ -13,7 +13,7 @@ Target: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** running the reviewer, walking findings with the user, applying accepted revisions, bumping `updated:`.
+- **In:** running the reviewer, walking findings with the user, applying accepted revisions.
 - **Out:** no decision recording (that's `/a4:spec`). No wiki nudge — research investigation does not directly mutate wiki pages. No commit.
 
 ## Pre-flight
@@ -66,14 +66,13 @@ If a flagged issue requires significant new investigation (e.g., `IMBALANCED` re
 
 ## Step 3: Apply revisions
 
-Use the `Edit` tool to apply accepted changes to the task body. Preserve all content the user did not choose to change. Bump `updated:` to today after each write.
+Use the `Edit` tool to apply accepted changes to the task body. Preserve all content the user did not choose to change. The PostToolUse hook refreshes `updated:` automatically on every Edit — do not hand-edit it.
 
 ## Step 4: Wrap up
 
 Once the user confirms the review pass is done:
 
-1. If revisions landed but no status flip is offered, edit `updated:` directly (no cascade hook fires when `status:` doesn't change).
-2. Offer next-step status flips by editing `status:` directly (the PostToolUse cascade hook refreshes `updated:` when status changes):
+1. Offer next-step status flips by editing `status:` directly (the PostToolUse cascade hook refreshes `updated:` and runs any cross-file cascade):
    - If the task is at `progress` and the user is satisfied: offer `progress → done`.
    - If the task is at `done` and revisions landed: no flip needed (the task is already terminal-active).
    - If the user wants to defer the open follow-ups: offer `progress → failing` so a later cycle picks it up.
@@ -89,5 +88,5 @@ If the review surfaces unresolved trade-offs that suggest a downstream design de
 
 - Do not write a decision. If the research is meant to feed a decision, tell the user to invoke `/a4:spec` next.
 - Do not extend the research unilaterally. If the reviewer finds gaps, propose extension points; the user decides whether to fill them now or defer.
-- Do not hand-edit `updated:` when `status:` is also changing — the PostToolUse cascade hook owns `updated:` on a status flip.
+- Do not hand-edit `updated:` — the PostToolUse hook owns it on every Write/Edit/MultiEdit.
 - Do not commit. Leave files in the working tree.

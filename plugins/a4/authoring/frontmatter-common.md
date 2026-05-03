@@ -80,7 +80,12 @@ Unknown fields are **not errors** — treated as extension metadata. Skills may 
 | `created` | every issue file | timestamp | `YYYY-MM-DD HH:mm` |
 | `updated` | every issue file and every wiki page | timestamp | `YYYY-MM-DD HH:mm` |
 
+Both fields are **reserved**. Authors and skill runtimes must never write them — neither when authoring a new file nor when editing an existing one. Tooling fills `created:` on first Write and refreshes `updated:` on every edit; any value supplied by an author is overwritten. Backdating is not supported — record the originating work date in body `## Log` instead (`./issue-body.md#log`, `./issue-family-lifecycle.md`).
+
+Reading rules (when consuming the values):
+
 - Format `YYYY-MM-DD HH:mm` (date + 24-hour time, space-separated). Validator rejects any other shape.
 - All timestamps are implicitly Korean Standard Time (KST). No offset is written.
-- **`created` is hook-owned.** PostToolUse on `Write` stamps `created: <KST now>` on first Write (i.e., when the file did not exist before the Write), **overwriting any pre-populated value**. Authors and skill runtimes do not write `created:` — backdating is not supported; record the originating work date in body `## Log` instead (see `./issue-body.md#log`, `./issue-family-lifecycle.md`). Once stamped, immutable — never rewritten by hook or cascade on subsequent Edits. On a fresh Write the hook uses the same KST timestamp for `created:` and `updated:`, so a brand-new file has `created == updated`. Edits bypassing the hook (manual `git checkout`, external editors) leave `created:` untouched; recover via `../scripts/validate.py --fix`.
-- **`updated` is tooling-managed on every edit.** PostToolUse refreshes `updated:` to current KST on every Write/Edit/MultiEdit of an `a4/*.md` file (wiki + issue). Same auto-bump runs whether the edit changed `status:`, frontmatter, or body. When `status:` flips legally, the cascade handles primary's `updated:` (and every cascaded file's) in the same pass; auto-bump dedupes against that path so each file is rewritten at most once. Authors and skill runtimes do **not** hand-bump `updated:`. Edits bypassing the hook (manual `git checkout`, external editors) leave `updated:` untouched; recover via re-saving through Claude Code or `../scripts/validate.py --fix`.
+- A brand-new file has `created == updated`. `created:` is then immutable; `updated:` advances on every subsequent edit.
+
+For files that arrived through a path that bypasses the hook (manual `git checkout`, external editors), recover with `../scripts/validate.py --fix` or by re-saving through Claude Code.
