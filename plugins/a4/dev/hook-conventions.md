@@ -223,7 +223,7 @@ Claude Code wraps that channel as `[<command>]: <stderr>`, which leaks
 the literal `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" stop`
 prefix into the conversation. The JSON `decision: block` route avoids
 the prefix while preserving the retry semantics — see
-`../scripts/a4_hook.py::_stop`.
+`../scripts/a4_hook/_stop.py`.
 
 ---
 
@@ -323,7 +323,7 @@ of an `a4/*.md` file. This collapses the previous "status flips →
 cascade refreshes; everything else → author bumps" split into a single
 hook responsibility.
 
-Driver order in `_post_edit` (consult `../scripts/a4_hook.py:_post_edit`
+Driver order in `_post_edit` (consult `../scripts/a4_hook/_post_edit.py:post_edit`
 for the canonical sequence):
 
 1. Compute `today = now_kst()` once and pass it through every step so

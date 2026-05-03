@@ -1,0 +1,219 @@
+"""PreToolUse subcommand: pre-status snapshot + authoring-contract injection.
+
+Two responsibilities on the same a4/*.md gate:
+
+1. Stash the on-disk ``status:`` of the file the tool is about to write.
+   Consumed by ``post-edit`` to detect ``status:`` transitions precisely
+   (pre vs post on disk, instead of HEAD vs working tree).
+2. Inject the type-specific authoring-contract pointers as
+   ``additionalContext`` once per type per session, for both existing-file
+   edits and new-file Writes (issue creation). Sole mechanism for surfacing
+   authoring contracts at edit time.
+
+Authoring-contract injection notes:
+
+- Lazy, edit-intent-only — fires from PreToolUse so a pure read of an
+  `a4/*.md` file does NOT pull in the contract; only an imminent
+  Write/Edit/MultiEdit does.
+- Type resolution is by path (`common.WIKI_TYPES` / `common.ISSUE_FOLDERS`),
+  not by frontmatter parse — the a4 layout pins type by location, so an
+  extra file IO is unnecessary. Archive files are skipped.
+- Deduped per type per session — once the LLM has seen the umbrella/task/...
+  contract this session, editing another file of the same type re-emits
+  nothing.
+- Session-scoped state at `.claude/tmp/a4-edited/a4-injected-<sid>.txt`,
+  one `<type>` per line. Cleaned up by the same SessionEnd / SessionStart-sweep
+  paths that handle the other a4-edited family files.
+"""
+
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+from a4_hook._state import (
+    AUTHORING_DIR,
+    display_rel,
+    emit,
+    read_injected,
+    read_prestatus,
+    read_status_from_disk,
+    record_injected,
+    record_newfile,
+    resolve_type_from_path,
+    write_prestatus,
+)
+
+
+_TASK_FAMILY_TYPES = frozenset({"task", "bug", "spike", "research"})
+_ISSUE_BODY_TYPES = frozenset(
+    {
+        "task",
+        "bug",
+        "spike",
+        "research",
+        "usecase",
+        "spec",
+        "umbrella",
+        "review",
+        "idea",
+        "brainstorm",
+    }
+)
+_WIKI_BODY_TYPES = frozenset(
+    {
+        "actors",
+        "architecture",
+        "ci",
+        "context",
+        "domain",
+        "nfr",
+    }
+)
+
+
+def pre_edit() -> int:
+    """PreToolUse entry point. Always exits 0."""
+    import json
+    import os
+
+    raw = sys.stdin.read()
+    if not raw:
+        return 0
+    try:
+        payload = json.loads(raw)
+    except json.JSONDecodeError:
+        return 0
+
+    if payload.get("tool_name") not in ("Write", "Edit", "MultiEdit"):
+        return 0
+    file_path = (payload.get("tool_input") or {}).get("file_path") or ""
+    session_id = payload.get("session_id") or ""
+    if not file_path or not session_id or not file_path.endswith(".md"):
+        return 0
+
+    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    if not project_dir:
+        return 0
+    a4_dir = Path(project_dir) / "a4"
+    a4_prefix = str(a4_dir) + os.sep
+    if not file_path.startswith(a4_prefix):
+        return 0
+
+    abs_path = Path(file_path)
+
+    # Responsibility 1 — pre-status snapshot for cascade detection.
+    # Only meaningful when the file already exists; new-file Writes have
+    # no prior `status:` and post-edit treats absence as "no transition".
+    if abs_path.is_file():
+        pre = read_status_from_disk(abs_path)
+        if pre is not None:
+            data = read_prestatus(project_dir, session_id)
+            data[file_path] = pre
+            write_prestatus(project_dir, session_id, data)
+    else:
+        # File doesn't exist yet — record so post-edit can stamp
+        # `created:` after the Write lands (overwriting any value the
+        # LLM pre-populated; `created:` is hook-owned). Only Write can
+        # create files in Claude Code's tool model; Edit/MultiEdit
+        # require a prior Read of an existing file.
+        if payload.get("tool_name") == "Write":
+            record_newfile(project_dir, session_id, file_path)
+
+    # Responsibility 2 — authoring-contract injection (one-shot per
+    # (file, type) per session). Fires for both edits and new-file
+    # Writes — type is resolved from path (`a4/<folder>/...`), which
+    # works without on-disk frontmatter, so issue creation gets the
+    # binding contract before authoring. Dedupe still suppresses repeat
+    # injections on subsequent edits to the same file.
+    _maybe_inject_authoring_contract(
+        abs_path, file_path, a4_dir, project_dir, session_id
+    )
+    return 0
+
+
+def _maybe_inject_authoring_contract(
+    abs_path: Path,
+    file_path: str,
+    a4_dir: Path,
+    project_dir: str,
+    session_id: str,
+) -> None:
+    """Inject pointer-style authoring-contract context once per type
+    per session. Silent when the type cannot be resolved from path
+    (archive files, unrecognized layout).
+    """
+    type_value = resolve_type_from_path(abs_path, a4_dir)
+    if not type_value:
+        return
+
+    type_doc = AUTHORING_DIR / f"{type_value}-authoring.md"
+    if not type_doc.is_file():
+        return
+
+    already = read_injected(project_dir, session_id)
+    if type_value in already:
+        return
+    record_injected(project_dir, session_id, type_value)
+
+    rel = display_rel(file_path, project_dir)
+
+    pointers = [
+        f"- `{AUTHORING_DIR}/frontmatter-common.md` — cross-cutting "
+        "frontmatter rules (`type:`, path references, empty collections, "
+        "unknown fields, `created` / `updated`).",
+    ]
+    if type_value in _ISSUE_BODY_TYPES:
+        pointers.append(
+            f"- `{AUTHORING_DIR}/frontmatter-issue.md` — issue-side "
+            "rules (`id`, title placeholders, relationships, status "
+            "changes and cascades, structural relationship fields)."
+        )
+    else:
+        pointers.append(
+            f"- `{AUTHORING_DIR}/frontmatter-wiki.md` — wiki minimal "
+            "frontmatter contract."
+        )
+    pointers.extend([
+        f"- `{AUTHORING_DIR}/{type_value}-authoring.md` — per-type "
+        "field table, lifecycle, body shape, common mistakes.",
+        f"- `{AUTHORING_DIR}/body-conventions.md` — cross-cutting "
+        "body conventions (heading form, link form).",
+    ])
+    if type_value in _ISSUE_BODY_TYPES:
+        pointers.append(
+            f"- `{AUTHORING_DIR}/issue-body.md` — `## Resume` "
+            "(current-state snapshot) and `## Log` (narrative-worthy "
+            "events) for issue files."
+        )
+    if type_value in _WIKI_BODY_TYPES:
+        pointers.append(
+            f"- `{AUTHORING_DIR}/wiki-body.md` — `## Change Logs` "
+            "audit trail and Wiki Update Protocol."
+        )
+    if type_value in _TASK_FAMILY_TYPES:
+        pointers.insert(
+            2,
+            f"- `{AUTHORING_DIR}/issue-family-lifecycle.md` — "
+            "issue-family lifecycle (status enum, transitions, writer "
+            "rules).",
+        )
+
+    body = "\n".join(pointers)
+    context = (
+        f"## a4 authoring contract — `type: {type_value}`\n\n"
+        f"About to edit `{rel}`. Read these contracts before "
+        "writing — they are the binding schema/body contract for this "
+        "type, not optional.\n\n"
+        f"{body}\n\n"
+        f"Injected once per `type: {type_value}` per session — subsequent "
+        "edits to any file of this type will not re-emit this notice."
+    )
+    emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "PreToolUse",
+                "additionalContext": context,
+            }
+        }
+    )
