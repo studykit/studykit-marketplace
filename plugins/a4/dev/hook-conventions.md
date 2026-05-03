@@ -242,7 +242,9 @@ PostToolUse hook's JSON payload:
   flipped N related file(s)"` for the user-facing one-liner, and
   `additionalContext` carrying the per-file flip table for the LLM.
   Silent on cosmetic edits (no transition) and on illegal jumps (which
-  the Stop-hook safety net surfaces instead).
+  the Stop-hook safety net surfaces instead). The companion
+  `updated:` auto-bump (see §8) is intentionally silent on both
+  channels — it is a routine maintenance write, not actionable news.
 - **`additionalContext` only** for informational reports where no
   user-visible notice is warranted (e.g., the PostToolUse status-
   consistency report — inline context for the LLM, no pop-up needed;
@@ -300,6 +302,58 @@ visible output for news the user can act on.
 
 Internal failures covered by §5 also emit nothing user-facing (Post/Session
 events) or a short stderr line that does not block (Stop event).
+
+---
+
+## 8. PostToolUse `updated:` auto-bump
+
+The `post-edit` hook owns `updated:` on every a4/*.md edit. Authors and
+skill runtimes never hand-bump the field; the hook unconditionally
+rewrites it to the current KST timestamp on every Write/Edit/MultiEdit
+of an `a4/*.md` file. This collapses the previous "status flips →
+cascade refreshes; everything else → author bumps" split into a single
+hook responsibility.
+
+Driver order in `_post_edit` (consult `../scripts/a4_hook.py:_post_edit`
+for the canonical sequence):
+
+1. Compute `today = now_kst()` once and pass it through every step so
+   `created` and `updated` end up identical on a fresh Write, and so
+   two writes within the same minute can't drift across step
+   boundaries.
+2. `_maybe_stamp_created` — stamps `created: today` on a new-file
+   Write whose schema requires it. Skips when author pre-populated
+   `created:` (immutable per `../authoring/frontmatter-common.md`).
+3. `_run_status_change_cascade` — runs the cascade engine on a legal
+   `status:` transition, which calls `apply_status_change` on the
+   primary (refreshing `updated:` there) and on every cascaded
+   related file. Returns a bool: True iff `apply_status_change` ran on
+   the primary.
+4. `_refresh_updated_on_primary` — runs iff step 3 returned False
+   (no transition, illegal transition, or family outside
+   `FAMILY_TRANSITIONS`). Rewrites `updated:` on the primary alone;
+   cascaded files are already covered by step 3.
+5. `_report_status_consistency_post` — read-only.
+
+Dedupe rationale: the cascade and the auto-bump both write `updated:`,
+but the bool return from step 3 ensures each file is rewritten at
+most once per edit event. Step 4's `_refresh_updated_on_primary` skips
+silently when the file's `type:` cannot be resolved by path (archive
+files, unrecognized layout) — those files are out of the workspace
+contract.
+
+Recovery for edits that bypass the hook (manual `git checkout`,
+external editors): re-save the file through Claude Code, or run
+`../scripts/validate.py --fix` for the supersedes-chain recovery sweep
+(which does not currently bump `updated:` on the primary; that path
+is explicitly only invoked when the live cascade hook missed). The
+non-status `updated:` drift is benign — the validator does not gate on
+it — so no separate sweep exists.
+
+Output channel: silent on both `additionalContext` and `systemMessage`
+(per §6) — auto-bump is routine maintenance, not actionable news. The
+cascade path keeps its own `additionalContext + systemMessage` pair for
+the cross-file flip summary.
 
 ---
 

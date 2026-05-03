@@ -21,7 +21,11 @@ Subcommands:
                  legally — run the cascade (supersedes / discarded /
                  revising) on related files and refresh ``updated:`` on
                  the primary. Cascade results surface as
-                 additionalContext + systemMessage.
+                 additionalContext + systemMessage. Also auto-refreshes
+                 ``updated:`` on every a4/*.md edit (whether or not
+                 ``status:`` changed) so authors and the LLM never
+                 hand-bump it; on new-file Writes the same value is
+                 stamped to both ``created:`` and ``updated:``.
   stop           Stop. Validate all a4/*.md edited in this session against
                  (1) the frontmatter schema and (2) status-transition
                  legality (HEAD vs working tree, via git). rc=2 on
@@ -553,22 +557,45 @@ def _post_edit() -> int:
     if not a4_dir.is_dir():
         return 0
 
+    # Single timestamp shared across stamp + cascade + auto-bump so a
+    # new-file Write ends up with ``created == updated``, and so two
+    # writes within the same minute can't drift across step boundaries.
+    try:
+        from common import now_kst
+    except ImportError:
+        return 0
+    today = now_kst()
+
     # Step 2 — stamp `created:` if this Write created a new file. Runs
     # before the cascade so a status flip (which also touches `updated:`)
     # sees a frontmatter that already carries `created:`, and `created:`
     # ends up immediately above `updated:` (their canonical order).
-    _maybe_stamp_created(a4_dir, file_path, project_dir, session_id)
+    _maybe_stamp_created(a4_dir, file_path, project_dir, session_id, today)
 
     # Step 3 — status-change cascade (runs before consistency report).
-    _run_status_change_cascade(a4_dir, file_path, project_dir, session_id)
+    # Returns True iff it refreshed `updated:` on the primary itself
+    # (legal transition triggered apply_status_change). Used to dedupe
+    # the auto-bump in Step 4 — no point writing `updated:` twice.
+    cascade_refreshed = _run_status_change_cascade(
+        a4_dir, file_path, project_dir, session_id, today
+    )
 
-    # Step 4 — status-consistency report on the (now post-cascade) state.
+    # Step 4 — auto-refresh `updated:` on every a4/*.md edit.
+    # The cascade already refreshes `updated:` on the primary on a legal
+    # status flip; for everything else (body edit, wiki edit, frontmatter
+    # field change without status flip) the LLM and authors hand-bumping
+    # was the old contract — that responsibility now lives here so the
+    # LLM never has to touch `updated:`.
+    if not cascade_refreshed:
+        _refresh_updated_on_primary(a4_dir, file_path, today)
+
+    # Step 5 — status-consistency report on the (now post-cascade) state.
     _report_status_consistency_post(a4_dir, file_path, project_dir)
     return 0
 
 
 def _maybe_stamp_created(
-    a4_dir: Path, file_path: str, project_dir: str, session_id: str
+    a4_dir: Path, file_path: str, project_dir: str, session_id: str, today: str
 ) -> None:
     """Stamp `created:` on a freshly Written a4/*.md whose schema requires it.
 
@@ -581,9 +608,11 @@ def _maybe_stamp_created(
         `created:` value (immutable — never overwrite an author-written
         timestamp).
 
-    Inserts ``created: <now-kst>`` immediately before ``updated:`` if
-    that line exists, else appends at the frontmatter end. Failure on
-    any step is silent — stamping is a convenience, not a gate.
+    Inserts ``created: <today>`` immediately before ``updated:`` if
+    that line exists, else appends at the frontmatter end. ``today`` is
+    the same KST timestamp the post-edit driver uses for the auto-bump
+    in Step 4, so a fresh Write ends up with ``created == updated``.
+    Failure on any step is silent — stamping is a convenience, not a gate.
     """
     new_files = _read_newfiles(project_dir, session_id)
     if file_path not in new_files:
@@ -613,7 +642,6 @@ def _maybe_stamp_created(
         return
 
     try:
-        from common import now_kst
         from markdown import extract_preamble
         from status_cascade import parse_fm, write_file
     except ImportError:
@@ -646,7 +674,7 @@ def _maybe_stamp_created(
         return
 
     try:
-        new_fm = _insert_created_before_updated(raw_fm, now_kst())
+        new_fm = _insert_created_before_updated(raw_fm, today)
         write_file(abs_path, new_fm, body)
     except (OSError, ValueError):
         pass
@@ -688,9 +716,59 @@ def _insert_created_before_updated(raw_fm: str, value: str) -> str:
     return "\n".join(lines)
 
 
-def _run_status_change_cascade(
-    a4_dir: Path, file_path: str, project_dir: str, session_id: str
+def _refresh_updated_on_primary(
+    a4_dir: Path, file_path: str, today: str
 ) -> None:
+    """Rewrite ``updated:`` on the just-edited a4/*.md to ``today``.
+
+    Called from the post-edit driver for every a4/*.md edit when the
+    status-cascade did not already refresh `updated:` on the primary
+    (i.e., no legal status transition fired). This is the mechanism that
+    lets authors and the LLM stop hand-bumping `updated:` on body /
+    field / wiki edits — the hook owns the bump unconditionally.
+
+    Skips silently when:
+      - The file's `type:` cannot be resolved by path (archive files,
+        unrecognized layout) — those files are out of the workspace
+        contract and should not be touched.
+      - The file is missing or has no parseable frontmatter — schema
+        violations are the Stop-hook validator's job to surface, not
+        this convenience hook's.
+
+    Idempotent on minute-resolution: a second call within the same KST
+    minute writes the same value. ``rewrite_frontmatter_scalar`` appends
+    `updated:` if absent — safe even on author-malformed files (the
+    validator will still flag any other schema issue).
+    """
+    abs_path = Path(file_path)
+    if not abs_path.is_file():
+        return
+    type_value = _resolve_type_from_path(abs_path, a4_dir)
+    if not type_value:
+        return
+
+    try:
+        from status_cascade import parse_fm, rewrite_frontmatter_scalar, write_file
+    except ImportError:
+        return
+
+    try:
+        fm, raw_fm, body = parse_fm(abs_path)
+    except (OSError, ValueError):
+        return
+    if fm is None:
+        return
+
+    try:
+        new_fm = rewrite_frontmatter_scalar(raw_fm, "updated", today)
+        write_file(abs_path, new_fm, body)
+    except (OSError, ValueError):
+        return
+
+
+def _run_status_change_cascade(
+    a4_dir: Path, file_path: str, project_dir: str, session_id: str, today: str
+) -> bool:
     """Detect a `status:` transition on the edited file and run the
     cascade engine on related files.
 
@@ -703,11 +781,16 @@ def _run_status_change_cascade(
     the responsibility of the Stop-hook safety net
     (`markdown_validator.transitions`). Only legal transitions trigger
     a cascade here.
+
+    Returns True iff `apply_status_change` ran on the primary (and thus
+    refreshed `updated:` on disk). The post-edit driver uses the return
+    value to dedupe its own auto-bump in Step 4 — when the cascade
+    already wrote `updated:`, a second write would be redundant.
     """
     pre_map = _read_prestatus(project_dir, session_id)
     pre_status = pre_map.get(file_path)
     if pre_status is None:
-        return
+        return False
 
     abs_path = Path(file_path)
     post_status = _read_status_from_disk(abs_path)
@@ -718,16 +801,14 @@ def _run_status_change_cascade(
     _write_prestatus(project_dir, session_id, pre_map)
 
     if post_status is None or post_status == pre_status:
-        return
+        return False
 
     try:
         rel_path = str(abs_path.resolve().relative_to(a4_dir.resolve()))
     except (OSError, ValueError):
-        return
+        return False
 
     try:
-        from common import now_kst
-
         from markdown_validator.refs import RefIndex
         from status_cascade import (
             Change,
@@ -746,17 +827,16 @@ def _run_status_change_cascade(
             f"a4_hook.py post-edit: failed to import cascade modules ({e}) "
             "— skipping cascade\n"
         )
-        return
+        return False
 
     family = detect_family(rel_path)
     if family is None or family not in FAMILY_TRANSITIONS:
-        return
+        return False
     if not is_transition_legal(family, pre_status, post_status):
         # Illegal direct edit — Stop hook will surface it. Don't cascade
         # off an illegal transition.
-        return
+        return False
 
-    today = now_kst()
     report = Report(
         a4_dir=str(a4_dir),
         file=rel_path,
@@ -774,11 +854,13 @@ def _run_status_change_cascade(
     # Refresh `updated:` on the primary — the LLM wrote `status:` but
     # may not have touched `updated:`. apply_status_change is idempotent
     # on `status:` (already at post) and refreshes `updated:`.
+    primary_refreshed = False
     try:
         apply_status_change(
             abs_path, pre_status, post_status, "direct edit",
             dry_run=False, today=today,
         )
+        primary_refreshed = True
     except (RuntimeError, OSError) as e:
         report.errors.append(f"{rel_path}: failed to refresh updated: {e}")
 
@@ -794,12 +876,13 @@ def _run_status_change_cascade(
             sys.stderr.write(
                 f"a4_hook.py post-edit: cascade error ({e})\n"
             )
-            return
+            return primary_refreshed
 
     if not report.cascades and not report.errors:
-        return
+        return primary_refreshed
 
     _emit_cascade_context(report, file_path, project_dir)
+    return primary_refreshed
 
 
 def _emit_cascade_context(report, file_path: str, project_dir: str) -> None:
