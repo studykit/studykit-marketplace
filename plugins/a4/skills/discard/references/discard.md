@@ -16,7 +16,7 @@ If no file resolves, abort with: "No task file found for `<target>`. List candid
 
 ## D2. Check current status
 
-Read the resolved file's frontmatter. `ISSUE_FAMILY_TRANSITIONS` allows `discarded` from `open | queued | progress | holding | complete | failing`:
+Read the resolved file's frontmatter. `ISSUE_FAMILY_TRANSITIONS` allows `discarded` from `open | queued | progress | holding | done | failing`:
 
 - Any of those six → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.

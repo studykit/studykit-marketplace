@@ -98,7 +98,7 @@ def _make_review(
 
 def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
     """Case 1 — UC implementing → revising resets progress task to queued,
-    leaves complete task untouched, and refreshes ``updated:``."""
+    leaves done task untouched, and refreshes ``updated:``."""
     a4_workspace.write("usecase", 1, "search", status="revising")
     t_progress = a4_workspace.write(
         "task",
@@ -108,11 +108,11 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
         implements=["usecase/1-search"],
         updated="2026-04-01 09:00",
     )
-    t_complete = a4_workspace.write(
+    t_done = a4_workspace.write(
         "task",
         3,
         "ui",
-        status="complete",
+        status="done",
         implements=["usecase/1-search"],
         updated="2026-04-01 09:00",
     )
@@ -131,8 +131,8 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
 
     assert _status(t_progress) == "queued"
     assert _updated(t_progress) == TODAY
-    assert _status(t_complete) == "complete"
-    assert _updated(t_complete) == "2026-04-01 09:00"
+    assert _status(t_done) == "done"
+    assert _updated(t_done) == "2026-04-01 09:00"
 
     flipped = [c.path for c in report.cascades]
     assert "task/2-index.md" in flipped

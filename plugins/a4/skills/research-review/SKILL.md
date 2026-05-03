@@ -7,7 +7,7 @@ allowed-tools: Read, Write, Edit, Agent, Bash, Glob
 
 # Research Review & Revise
 
-Wraps the `research-reviewer` agent into a quality pass for a `type: research` task. Use after the body of `a4/research/<id>-<slug>.md` has been authored (status `progress` or `complete`) and before downstream work cites the findings.
+Wraps the `research-reviewer` agent into a quality pass for a `type: research` task. Use after the body of `a4/research/<id>-<slug>.md` has been authored (status `progress` or `done`) and before downstream work cites the findings.
 
 Target: **$ARGUMENTS**
 
@@ -25,7 +25,7 @@ Target: **$ARGUMENTS**
    - Path containing `research/` → use as-is (relative to project root if not absolute).
    - Bare slug → try `<project-root>/a4/research/*<slug>*.md` (single match required).
 4. If the argument is empty or the path does not resolve, abort with usage hint: "Provide the research task id or path, e.g., `/a4:research-review 42` or `/a4:research-review a4/research/42-grpc-streaming.md`."
-5. Read the file. Confirm `type: research` and that `mode:` is present (sanity check). If `status: complete` already, ask: "This research task is already `complete`. Re-run review anyway?" Proceed only on confirmation.
+5. Read the file. Confirm `type: research` and that `mode:` is present (sanity check). If `status: done` already, ask: "This research task is already `done`. Re-run review anyway?" Proceed only on confirmation.
 
 ## Step 1: Run research-reviewer
 
@@ -74,13 +74,13 @@ Once the user confirms the review pass is done:
 
 1. If revisions landed but no status flip is offered, edit `updated:` directly (no cascade hook fires when `status:` doesn't change).
 2. Offer next-step status flips by editing `status:` directly (the PostToolUse cascade hook refreshes `updated:` when status changes):
-   - If the task is at `progress` and the user is satisfied: offer `progress → complete`.
-   - If the task is at `complete` and revisions landed: no flip needed (the task is already terminal-active).
+   - If the task is at `progress` and the user is satisfied: offer `progress → done`.
+   - If the task is at `done` and revisions landed: no flip needed (the task is already terminal-active).
    - If the user wants to defer the open follow-ups: offer `progress → failing` so a later cycle picks it up.
 3. Report:
    - Verdicts: N OK / N/A, M flagged, K accepted, L dismissed.
    - Revisions applied (file lines touched).
-   - Final status (`progress` / `complete` / `failing`).
+   - Final status (`progress` / `done` / `failing`).
    - Reminder: the file is left in the working tree.
 
 If the review surfaces unresolved trade-offs that suggest a downstream design decision, surface them as candidates for `/a4:spec` rather than asking the reviewer to resolve them — research review is about evidence quality, not about making the decision.

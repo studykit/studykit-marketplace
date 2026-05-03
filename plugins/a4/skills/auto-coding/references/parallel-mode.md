@@ -21,7 +21,7 @@ Halts immediately when `origin/HEAD` is missing or the pre-flight check fails �
 | Merge primitive | `git merge --no-ff -m "<conv-msg>"` per task branch — preserves task-commit hash, marks integration boundary, supports `git log --first-parent` traversal |
 | Merge order | Ascending `task.id` (deterministic, reproducible across re-runs) |
 | Conflict policy | Halt + user resolve. No review item emitted (merge conflicts are immediate-decision items, not artifact-spec gaps) |
-| Partial-progress unit | Siblings merged before the conflict stay on main + transition `→ complete`; conflicting task's worktree/branch preserved + transition `→ failing`; subsequent siblings not attempted |
+| Partial-progress unit | Siblings merged before the conflict stay on main + transition `→ done`; conflicting task's worktree/branch preserved + transition `→ failing`; subsequent siblings not attempted |
 | `test-runner` invariant | Step 3 is reachable only when every cycle ready task is integrated. Any merge sweep failure → Step 3 skipped, cycle ends in halt |
 | Worktree cleanup (success) | `git worktree unlock <path> && git worktree remove --force <path> && git branch -D <branch>` |
 | Worktree cleanup (failure) | Worktree + branch preserved for diagnosis. `/a4:auto-coding iterate parallel` may retry the merge after the user resolves; orphans handled by Claude Code's startup sweep at `cleanupPeriodDays` |

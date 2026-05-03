@@ -13,7 +13,7 @@ Draft a scratch summary (do not write to disk yet):
 - **Description / context** — why the research is needed; what specific question or comparison purpose.
 - **Mode** — `comparative` (option-comparison) or `single` (flat topic / question). Required.
 - **Options** — list of option names, required when `mode: comparative`. Each option becomes an H3 subsection under `## Options` in the body.
-- **Initial status** — `open` (default; backlog), `queued` (enqueue), `progress` (start investigating now), or `complete` (post-hoc; investigation captured in this conversation). Default to `queued` when user wants to schedule, `progress` when starting now, `complete` for one-shot conversational capture.
+- **Initial status** — `open` (default; backlog), `queued` (enqueue), `progress` (start investigating now), or `done` (post-hoc; investigation captured in this conversation). Default to `queued` when user wants to schedule, `progress` when starting now, `done` for one-shot conversational capture.
 - **Artifacts** — frontmatter `artifacts:` lists artifact paths under `artifacts/research/<id>-<slug>/`. Typically empty (the body is the deliverable); populate only when ancillary artifacts (raw data, charts, evaluation scripts) need to live alongside.
 - **Dependencies** — `depends_on:` paths (other tasks); typically none.
 - **Related** — `related:` paths to other artifacts the investigation informs (e.g., a spec being drafted) or that informed it.
@@ -31,7 +31,7 @@ Required and optional body sections are defined in `${CLAUDE_PLUGIN_ROOT}/author
 - `## Options` (required for `mode: comparative`) — one H3 per option name. Each subsection: Sources consulted / Key findings / Raw excerpts (optionally folded in `<details>`).
 - `## Findings` (required for `mode: single`) — same structure, flat.
 
-Authors may seed an empty body and fill it later under `status: progress`, or capture the full investigation in this conversation and write at `status: complete` (post-hoc).
+Authors may seed an empty body and fill it later under `status: progress`, or capture the full investigation in this conversation and write at `status: done` (post-hoc).
 
 Present the composed body to the user. Iterate until confirmed.
 
@@ -43,7 +43,7 @@ Present the composed body to the user. Iterate until confirmed.
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/research/<id>-<slug>.md`.
 
-Frontmatter shape, allowed initial statuses, and the `complete` preflight (body-section presence) are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md` §Frontmatter contract / §`complete` initial-status preflight.
+Frontmatter shape, allowed initial statuses, and the `done` preflight (body-section presence) are defined in `${CLAUDE_PLUGIN_ROOT}/authoring/research-authoring.md` §Frontmatter contract / §`done` initial-status preflight.
 
 Write the file with `Write`. The initial `status:` is set by the Write itself; no additional flip is needed.
 
@@ -53,5 +53,5 @@ Branch the message by initial status:
 
 - **`open`** — *Research `research/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued. Transition `open → queued` when ready to schedule.*
 - **`queued`** — *Research `research/<id>-<slug>` written at `status: queued`. Start the investigation when ready (the user or an investigator agent fills `## Context` + `## Options`/`## Findings`).*
-- **`progress`** — *Research `research/<id>-<slug>` written at `status: progress`. Investigation underway — fill the body sections as evidence accumulates. When finalized, optionally run `/a4:research-review` before flipping to `complete`.*
-- **`complete`** — *Research `research/<id>-<slug>` written at `status: complete` (post-hoc; investigation captured in this conversation). Optionally run `/a4:research-review` for a quality pass.*
+- **`progress`** — *Research `research/<id>-<slug>` written at `status: progress`. Investigation underway — fill the body sections as evidence accumulates. When finalized, optionally run `/a4:research-review` before flipping to `done`.*
+- **`done`** — *Research `research/<id>-<slug>` written at `status: done` (post-hoc; investigation captured in this conversation). Optionally run `/a4:research-review` for a quality pass.*

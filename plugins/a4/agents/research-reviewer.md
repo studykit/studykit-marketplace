@@ -26,7 +26,7 @@ A markdown file at `a4/research/<id>-<slug>.md` whose frontmatter declares `type
 type: research
 id: 42
 title: "<topic>"
-status: progress | complete
+status: progress | done
 mode: comparative
 options: [name-a, name-b, name-c]
 ---
@@ -60,7 +60,7 @@ Why this research is needed. The specific question or comparison purpose.
 type: research
 id: 42
 title: "<topic>"
-status: progress | complete
+status: progress | done
 mode: single
 ---
 

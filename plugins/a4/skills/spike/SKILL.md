@@ -22,6 +22,6 @@ If the project root resolved to `NOT_A_GIT_REPO` or `a4/` is missing, abort. Ens
 
 ## Author
 
-Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` for frontmatter, body shape, initial-status rules, and the `complete` preflight. Write to `a4/spike/<id>-<slug>.md`. `implements:` / `spec:` / `cycle:` are forbidden — cite triggering UCs or specs from `## Description` body prose with markdown links if relevant.
+Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` for frontmatter, body shape, initial-status rules, and the `done` preflight. Write to `a4/spike/<id>-<slug>.md`. `implements:` / `spec:` / `cycle:` are forbidden — cite triggering UCs or specs from `## Description` body prose with markdown links if relevant.
 
 Ask the user once whether to create the artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`. If yes, `mkdir -p` it after the file is written; a `.gitkeep` is optional. No commit; no implementation agent spawn.

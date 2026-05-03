@@ -64,7 +64,7 @@ Per-status meaning:
 - `draft` — Spec is still being shaped; not ready for implementation.
 - `ready` — Spec is closed; ready to be picked up. Requires non-empty `actors:`; an empty actor list at `ready` (or later) is a post-draft authoring violation.
 - `implementing` — A coding agent is actively working on the UC.
-- `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`complete` tasks stay.
+- `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`done` tasks stay.
 - `shipped` — The running system reflects this UC. Forward-path terminal. Cascades: `supersedes:` targets flip `shipped → superseded`.
 - `superseded` — A newer UC declared `supersedes: [<this>]` and shipped. Terminal.
 - `discarded` — Abandoned. Terminal. Cascades: related tasks → `discarded`, open review items with `target: usecase/<this>` → `discarded`.
@@ -76,7 +76,7 @@ Writer rules (UC-specific):
 - **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
 - **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed.
 - **`revising` is in-place.** No new UC is created; the same file is edited, and the ready-gate re-approves `revising → ready`.
-- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are complete; staging readiness and ship verdicts are author-driven.
+- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are done; staging readiness and ship verdicts are author-driven.
 - `shipped → superseded` is **automatic** — fires when a successor UC with `supersedes: [<this>]` reaches `shipped`. Do not flip by hand.
 
 ## Body shape

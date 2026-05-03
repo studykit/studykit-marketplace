@@ -40,7 +40,7 @@ For `type: spike`, `artifacts:` may also point under `artifacts/spike/archive/<i
 
 ## Spike archive convention
 
-When a spike completes (or fails), the user manually `git mv`s the directory to `artifacts/spike/archive/<id>-<slug>/` and updates the task's `artifacts:` paths to match.
+When a spike is done (or fails), the user manually `git mv`s the directory to `artifacts/spike/archive/<id>-<slug>/` and updates the task's `artifacts:` paths to match.
 
 - The archive convention applies to `spike` only — `task`, `bug`, and `research` artifact directories are **not** archived (closed task markdown moves to `a4/archive/` independently).
 - The move is **never automated**; same-precedent reasoning as `idea/` promotion (deferred until manual cost surfaces as pain).

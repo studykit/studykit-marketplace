@@ -58,7 +58,7 @@ ISSUE_FAMILY_TYPES: tuple[str, ...] = ("task", "bug", "spike", "research")
 # ---------------------------------------------------------------------------
 
 _TASK_STATUSES: frozenset[str] = frozenset(
-    {"open", "queued", "progress", "holding", "complete", "failing", "discarded"}
+    {"open", "queued", "progress", "holding", "done", "failing", "discarded"}
 )
 
 # Full set of valid `status:` values per family.
@@ -83,7 +83,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
     "spec": frozenset({"draft", "active", "deprecated", "superseded"}),
     "idea": frozenset({"open", "promoted", "discarded"}),
     "brainstorm": frozenset({"open", "promoted", "discarded"}),
-    "umbrella": frozenset({"open", "complete", "discarded"}),
+    "umbrella": frozenset({"open", "done", "discarded"}),
 }
 
 
@@ -109,11 +109,11 @@ UC_TRANSITIONS: dict[str, frozenset[str]] = {
 }
 
 ISSUE_FAMILY_TRANSITIONS: dict[str, frozenset[str]] = {
-    "open": frozenset({"queued", "progress", "complete", "discarded"}),
+    "open": frozenset({"queued", "progress", "done", "discarded"}),
     "queued": frozenset({"progress", "discarded"}),
-    "progress": frozenset({"complete", "failing", "queued", "holding", "discarded"}),
+    "progress": frozenset({"done", "failing", "queued", "holding", "discarded"}),
     "holding": frozenset({"progress", "discarded"}),
-    "complete": frozenset({"queued", "discarded"}),
+    "done": frozenset({"queued", "discarded"}),
     "failing": frozenset({"queued", "progress", "discarded"}),
 }
 
@@ -130,8 +130,8 @@ SPEC_TRANSITIONS: dict[str, frozenset[str]] = {
 }
 
 UMBRELLA_TRANSITIONS: dict[str, frozenset[str]] = {
-    "open": frozenset({"complete", "discarded"}),
-    "complete": frozenset({"open", "discarded"}),
+    "open": frozenset({"done", "discarded"}),
+    "done": frozenset({"open", "discarded"}),
 }
 
 FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
@@ -150,7 +150,7 @@ FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
 # Status classifications
 # ---------------------------------------------------------------------------
 
-_TASK_TERMINAL: frozenset[str] = frozenset({"complete", "discarded"})
+_TASK_TERMINAL: frozenset[str] = frozenset({"done", "discarded"})
 _TASK_IN_PROGRESS: frozenset[str] = frozenset({"progress"})
 
 TERMINAL_STATUSES: dict[str, frozenset[str]] = {
@@ -163,7 +163,7 @@ TERMINAL_STATUSES: dict[str, frozenset[str]] = {
     "spec": frozenset({"deprecated", "superseded"}),
     "idea": frozenset({"promoted", "discarded"}),
     "brainstorm": frozenset({"promoted", "discarded"}),
-    "umbrella": frozenset({"complete", "discarded"}),
+    "umbrella": frozenset({"done", "discarded"}),
 }
 
 IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
@@ -240,7 +240,7 @@ SUPERSEDABLE_FROM_STATUSES: dict[str, frozenset[str]] = {
 # currently in one of these statuses gets reset to ``TASK_RESET_TARGET``.
 # ``holding`` is intentionally outside the reset set — a manually paused
 # task carries explicit human stewardship and is left untouched, in line
-# with the policy that already exempts ``open`` / ``queued`` / ``complete``.
+# with the policy that already exempts ``open`` / ``queued`` / ``done``.
 TASK_RESET_ON_REVISING: frozenset[str] = frozenset({"progress", "failing"})
 TASK_RESET_TARGET: str = "queued"
 

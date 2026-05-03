@@ -7,7 +7,7 @@ Covers ``markdown_validator.umbrella_consistency``:
   - ``umbrella-stale-listing`` — the body lists a child that no file
     points at via `parent:` (annotated bullets do not count);
   - ``umbrella-children-all-terminal`` (warning) — open umbrella, every
-    child at family-terminal status (`complete` / `discarded`).
+    child at family-terminal status (`done` / `discarded`).
 """
 
 from __future__ import annotations
@@ -117,7 +117,7 @@ def test_drift_warning_open_umbrella_all_terminal_children(
         ),
     )
     a4_workspace.write(
-        "task", 2, "a", status="complete", parent="umbrella/1-u"
+        "task", 2, "a", status="done", parent="umbrella/1-u"
     )
     a4_workspace.write(
         "task", 3, "b", status="discarded", parent="umbrella/1-u"
@@ -159,18 +159,18 @@ def test_drift_silent_when_one_child_non_terminal(
     assert _by_rule(mismatches, "umbrella-children-all-terminal") == []
 
 
-def test_drift_silent_when_umbrella_already_complete(
+def test_drift_silent_when_umbrella_already_done(
     a4_workspace: A4Workspace,
 ) -> None:
     a4_workspace.write(
         "umbrella",
         1,
         "u",
-        status="complete",
+        status="done",
         body=_umbrella_body(["- 2026-04-23 09:14 `../task/2-a.md`"]),
     )
     a4_workspace.write(
-        "task", 2, "a", status="complete", parent="umbrella/1-u"
+        "task", 2, "a", status="done", parent="umbrella/1-u"
     )
 
     mismatches = _run_mismatches(a4_workspace.root)

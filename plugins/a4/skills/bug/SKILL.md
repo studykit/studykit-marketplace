@@ -22,4 +22,4 @@ If the project root resolved to `NOT_A_GIT_REPO` or `a4/` is missing, abort. Ens
 
 ## Author
 
-Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md` for frontmatter, body shape, initial-status rules, and the `complete` preflight. Write to `a4/bug/<id>-<slug>.md`. The body's `## Unit Test Strategy` must include a regression scenario that fails before the fix and passes after — closing a bug without that test is the most common reason the same bug returns. No commit; no implementation agent spawn.
+Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/bug-authoring.md` for frontmatter, body shape, initial-status rules, and the `done` preflight. Write to `a4/bug/<id>-<slug>.md`. The body's `## Unit Test Strategy` must include a regression scenario that fails before the fix and passes after — closing a bug without that test is the most common reason the same bug returns. No commit; no implementation agent spawn.

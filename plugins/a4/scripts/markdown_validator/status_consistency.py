@@ -289,7 +289,7 @@ def check_revising_cascade(
     names that UC and is currently at ``progress`` or ``failing`` should
     have been reset to ``queued`` by the PostToolUse cascade hook.
     Tasks at ``open`` (not yet started), ``queued`` (already reset),
-    ``holding`` (manually paused — human stewardship), ``complete``
+    ``holding`` (manually paused — human stewardship), ``done``
     (already finished), or ``discarded`` are not part of the cascade.
     """
     revising_uc_keys = {

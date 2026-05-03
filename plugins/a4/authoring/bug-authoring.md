@@ -13,7 +13,7 @@ Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 type: bug
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | queued | progress | holding | complete | failing | discarded
+status: open | queued | progress | holding | done | failing | discarded
 implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
@@ -30,7 +30,7 @@ labels: []             # free-form tags
 | `type` | yes | literal | `bug` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `done` \| `failing` \| `discarded` |
 | `implements` | no | list of paths | use cases delivered (often empty for bug work that does not implement a UC) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
@@ -64,13 +64,13 @@ The parent file is the agreed home for **narrative shared across siblings**. Rec
 
 ### Lifecycle and writer ownership
 
-Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
+Lifecycle, status enum, writer rules, and `done` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
 
 Bug-specific notes:
 
-- `complete` means the regression test passes (unit tests green) and the fix is in.
+- `done` means the regression test passes (unit tests green) and the fix is in.
 - `cycle:` bumps on `failing → queued` next-cycle defers.
-- Required body sections for the `complete` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional.)
+- Required body sections for the `done` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional.)
 
 ## Body shape
 
@@ -84,7 +84,7 @@ Bug-specific notes:
 
 - `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the fix plans to write or modify, plus any artifact paths under `artifacts/bug/<id>-<slug>/`. Distinct from git history (which records changes *after the fact*); records what is *planned* before the fix lands. Useful when the fix spans multiple files or sits next to siblings whose scope must be partitioned. Skip for single-file fixes.
 - `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``).
-- `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
+- `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `done` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 - `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
 

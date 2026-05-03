@@ -22,7 +22,7 @@ git branch -D <worktreeBranch>
 
 Per `./parallel-mode.md`:
 
-- Sibling tasks already merged in this sweep stay on main; they retain `status: complete`.
+- Sibling tasks already merged in this sweep stay on main; they retain `status: done`.
 - The conflicting task's worktree and branch are **preserved** for user diagnosis. Transition the task to `failing` via the writer with `--reason "/a4:auto-coding merge conflict in <files>; resolve and re-run /a4:auto-coding iterate"`.
 - Subsequent siblings in the sweep are **not attempted**; they remain at `progress` until `/a4:auto-coding iterate` retries the sweep.
 - Do not emit a review item for the conflict — the halt message names the conflicting task and files directly.

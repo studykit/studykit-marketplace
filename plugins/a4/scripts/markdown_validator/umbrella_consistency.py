@@ -21,11 +21,11 @@ Three signals are surfaced:
     authoring doc and are excluded from this check.
   - ``umbrella-children-all-terminal`` *(warning)* — the umbrella is
     at ``status: open`` but every child reached a terminal status
-    (``complete`` / ``discarded``) for its family. The doc explicitly
+    (``done`` / ``discarded``) for its family. The doc explicitly
     declares this state "mildly inconsistent but not an error" — the
     author may have intentionally kept the umbrella open for follow-up
     children. Surfaced as a warning so authors can review and either
-    flip the umbrella to ``complete`` or knowingly leave it open.
+    flip the umbrella to ``done`` or knowingly leave it open.
 
 The check is workspace-only — file-scope mode is not supported in v1
 because the relationship is inherently cross-file (an umbrella's
@@ -250,8 +250,8 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
                     field="status",
                     message=(
                         "umbrella `status: open` but every child has reached "
-                        "a terminal status (`complete` / `discarded`); "
-                        "consider flipping the umbrella to `complete`, or "
+                        "a terminal status (`done` / `discarded`); "
+                        "consider flipping the umbrella to `done`, or "
                         "leave open intentionally for follow-up children"
                     ),
                     severity="warning",

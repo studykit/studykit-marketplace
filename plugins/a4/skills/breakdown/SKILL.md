@@ -99,7 +99,7 @@ Procedure: `references/verification.md`. Spawn `breakdown-reviewer` for batch co
 
 After Step 4 closes:
 
-> Tasks ready. Begin the implement step — drive each task directly (`queued → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → queued` (edit `status:` directly) when you are ready for them to be picked up.
+> Tasks ready. Begin the implement step — drive each task directly (`queued → progress → done` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → queued` (edit `status:` directly) when you are ready for them to be picked up.
 
 Both implement forms read `a4/ci.md`'s `## How to run tests` as the single source of truth. Make sure `ci.md` exists and its content is correct before handing off — re-run `/a4:ci-setup` if architecture or test infrastructure changed.
 

@@ -94,9 +94,9 @@ Per-step subject formats and timing: `references/commit-points.md`.
 
 ## Wrap Up
 
-When all tasks are `complete` and all tests pass (or when the user ends the session):
+When all tasks are `done` and all tests pass (or when the user ends the session):
 
-1. Summarize: tasks completed / revised / still failing, review items opened / resolved / still open, cycles consumed, UCs shipped this run (empty list is fine for UC-less runs).
+1. Summarize: tasks done / revised / still failing, review items opened / resolved / still open, cycles consumed, UCs shipped this run (empty list is fine for UC-less runs).
 2. If any tasks remain `queued` / `failing` or any review items are `open`, suggest `/a4:auto-coding iterate` as the resumption path. (`holding` tasks are intentionally paused — surface their count separately so the user knows to resume them manually.)
 3. Suggest `/a4:handoff` to snapshot the session.
 

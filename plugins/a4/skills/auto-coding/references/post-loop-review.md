@@ -3,7 +3,7 @@
 Once the loop body settles, **transition to `conversational`** and branch on outcome. There are exactly two branches and they are mutually exclusive on a single run:
 
 - **4a. Failure path** — at least one test-runner review item from Step 3 is open. The user classifies each finding and the run routes accordingly.
-- **4b. Ship path** — all tests passed AND all in-scope tasks reached `status: complete`. The user confirms `implementing → shipped` per candidate UC.
+- **4b. Ship path** — all tests passed AND all in-scope tasks reached `status: done`. The user confirms `implementing → shipped` per candidate UC.
 
 Both branches are user-driven. No agent classifies failures or auto-ships UCs. The loop body's autonomy ends at the seam into Step 4.
 
@@ -22,7 +22,7 @@ For each ship-candidate UC, compose a short verdict and ask the user `mark shipp
 The ship unit is `task.implements:`-driven, not invocation-driven:
 
 - **Per-UC ship** — when `task.implements:` is non-empty. Multiple tasks shipping their target UC's full Flow flip the UC `implementing → shipped`.
-- **Per-task ship** — when `task.implements:` is empty (e.g., bug / spike / spec-justified task). Each task transitions to `complete` independently and 4b skips UC bookkeeping entirely.
+- **Per-task ship** — when `task.implements:` is empty (e.g., bug / spike / spec-justified task). Each task transitions to `done` independently and 4b skips UC bookkeeping entirely.
 
 A run can mix both unit types in one invocation (e.g., a UC-driven task and a spec-justified bug fix shipping in the same cycle); each task's `implements:` field decides which branch its ship verdict takes.
 

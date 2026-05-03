@@ -13,7 +13,7 @@ Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 type: spike
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | queued | progress | holding | complete | failing | discarded
+status: open | queued | progress | holding | done | failing | discarded
 depends_on: []         # list of paths to other tasks
 parent:                # optional: an issue (task / bug / spike / research) this spike descends from
 related: []            # catchall for cross-references
@@ -27,7 +27,7 @@ labels: []             # free-form tags
 | `type` | yes | literal | `spike` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `done` \| `failing` \| `discarded` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `umbrella/<id>-<slug>` aggregating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See "Parent and shared narrative" below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at production source — production paths the spike may touch are recorded by git history, and the optional body `## Change Plan` may name them as a forward-looking scope fence. |
@@ -55,14 +55,14 @@ The parent file is the agreed home for **narrative shared across siblings**. Rec
 
 ### Lifecycle and writer ownership
 
-Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
+Lifecycle, status enum, writer rules, and `done` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
 
 Spike-specific notes:
 
-- `complete` means the hypothesis was validated.
+- `done` means the hypothesis was validated.
 - No `cycle:` field — `failing` re-attempts do not bump a counter.
 - `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/` after archive); the preflight existence check uses these paths.
-- Required body sections for the `complete` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional.)
+- Required body sections for the `done` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional.)
 
 ## Body shape
 
@@ -96,7 +96,7 @@ For every spike task, accompanying PoC code lives at `<project-root>/artifacts/s
 Spike-specific notes:
 
 - The directory is the spike's primary deliverable while exploration is underway. Most active spikes have one.
-- When the spike completes (or fails), `git mv` it to `artifacts/spike/archive/<id>-<slug>/` and update `artifacts:` paths to match. The move is **never automated**.
+- When the spike is done (or fails), `git mv` it to `artifacts/spike/archive/<id>-<slug>/` and update `artifacts:` paths to match. The move is **never automated**.
 
 Cross-family conventions live in `./artifacts.md` and apply to `type: spike` as written there.
 

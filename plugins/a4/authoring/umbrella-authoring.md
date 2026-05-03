@@ -27,7 +27,7 @@ Derivation parents (a follow-up `task` whose `parent:` is the originating `spike
 type: umbrella
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | complete | discarded
+status: open | done | discarded
 related: []            # catchall for cross-references
 labels: []             # free-form tags
 ---
@@ -38,7 +38,7 @@ labels: []             # free-form tags
 | `type` | yes | literal | `umbrella` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `complete` \| `discarded` |
+| `status` | yes | enum | `open` \| `done` \| `discarded` |
 | `related` | no | list of paths | catchall cross-references |
 | `labels` | no | list of strings | free-form tags |
 
@@ -59,13 +59,13 @@ labels: []             # free-form tags
 
 | Status | Meaning | Allowed transitions |
 |--------|---------|---------------------|
-| `open` | Active narrative home for at least one mid-flight child | → `complete`, → `discarded` |
-| `complete` | Author judges the umbrella's purpose fulfilled — usually after all relevant children reach `complete` and the integration outcome is met | → `open` (re-open if work resumes), → `discarded` |
+| `open` | Active narrative home for at least one mid-flight child | → `done`, → `discarded` |
+| `done` | Author judges the umbrella's purpose fulfilled — usually after all relevant children reach `done` and the integration outcome is met | → `open` (re-open if work resumes), → `discarded` |
 | `discarded` | The umbrella is no longer the right grouping (children moved under a different parent or stand alone). Write `## Why Discarded` |  — (terminal) |
 
-`complete` is **author-judged** — no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains mid-flight, prefer keeping the umbrella `open`.
+`done` is **author-judged** — no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains mid-flight, prefer keeping the umbrella `open`.
 
-When all children are `complete` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children.
+When all children are `done` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children.
 
 Direct edits refresh `updated:` automatically, but no automatic cascade flips umbrella status based on children. There is no umbrella-driven cascade onto children either: discarding an umbrella does not discard its children. If the children should also be discarded, flip them individually.
 
@@ -122,5 +122,5 @@ Frontmatter `parent:` makes the umbrella *discoverable*; the inline citation mak
 - **Don't author implementation in the umbrella.** No `## Change Plan`, no `## Unit Test Strategy`. The work belongs to children.
 - **Don't treat the umbrella as a decision document.** Long-lived design decisions belong in `spec/`. The umbrella's `## Log` carries *implementation-progress narrative* that spans children.
 - **Don't nest umbrellas.** `parent:` on an umbrella is forbidden in this revision.
-- **Don't delete an umbrella after its purpose ends.** Flip to `complete` or `discarded` and let the file stay; reverse `parent:` lookups from children remain valid.
+- **Don't delete an umbrella after its purpose ends.** Flip to `done` or `discarded` and let the file stay; reverse `parent:` lookups from children remain valid.
 - **Don't duplicate the umbrella's narrative across children.** That defeats the point. Each child's `## Log` carries only what is local to that child plus inline citations to the umbrella when they share a decision.

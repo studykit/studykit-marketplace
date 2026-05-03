@@ -558,7 +558,7 @@ def validate_file(
     if ftype in ISSUE_FAMILY_TYPES:
         violations.extend(_validate_task_artifacts(rel_str, fm, path, ftype))
         violations.extend(
-            _validate_complete_artifacts_present(rel_str, fm, path, a4_dir, ftype)
+            _validate_done_artifacts_present(rel_str, fm, path, a4_dir, ftype)
         )
 
     violations.extend(_validate_parent_target(rel_str, fm, ftype, index))
@@ -692,14 +692,14 @@ def _validate_task_artifacts(
     return violations
 
 
-_COMPLETE_ARTIFACT_TYPES: frozenset[str] = frozenset({"research", "task", "bug"})
+_DONE_ARTIFACT_TYPES: frozenset[str] = frozenset({"research", "task", "bug"})
 
 
-def _validate_complete_artifacts_present(
+def _validate_done_artifacts_present(
     rel_str: str, fm: dict, path: Path, a4_dir: Path, ftype: str
 ) -> list[Violation]:
     """Preflight: ``research`` / ``task`` / ``bug`` issues at
-    ``status: complete`` must have their listed artifacts present on disk.
+    ``status: done`` must have their listed artifacts present on disk.
 
     Layered on top of the static ``artifacts-bad-path`` rule —
     this one assumes the prefix is well-formed and only checks the
@@ -710,15 +710,15 @@ def _validate_complete_artifacts_present(
     ``artifacts/`` lives at project root (``a4_dir.parent``) per
     ``authoring/artifacts.md``.
 
-    ``type: spike`` is intentionally excluded: at ``status: complete``
+    ``type: spike`` is intentionally excluded: at ``status: done``
     the directory may still live at the original prefix until the user
     `git mv`s it to ``artifacts/spike/archive/<id>-<slug>/`` and rewrites
     ``artifacts:``, so an existence check would race the archive
     transition.
     """
-    if ftype not in _COMPLETE_ARTIFACT_TYPES:
+    if ftype not in _DONE_ARTIFACT_TYPES:
         return []
-    if fm.get("status") != "complete":
+    if fm.get("status") != "done":
         return []
     artifacts = fm.get("artifacts")
     if not isinstance(artifacts, list) or not artifacts:
@@ -752,7 +752,7 @@ def _validate_complete_artifacts_present(
                     "artifacts-missing-file",
                     "artifacts",
                     f"artifacts[{i}]: artifact {entry!r} does not exist on disk "
-                    f"(type={ftype} at status=complete must have all listed "
+                    f"(type={ftype} at status=done must have all listed "
                     "artifact files present)",
                 )
             )

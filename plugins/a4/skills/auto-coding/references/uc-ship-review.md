@@ -1,6 +1,6 @@
 # UC Ship Review (post-loop review, ship branch)
 
-After the loop body (Steps 1–3) completes with all tests passing and all in-scope tasks `status: complete`, walk every UC whose implementation is now done and let the user confirm `implementing → shipped`.
+After the loop body (Steps 1–3) completes with all tests passing and all in-scope tasks `status: done`, walk every UC whose implementation is now done and let the user confirm `implementing → shipped`.
 
 This document holds the per-UC verdict template + acceptance/defer/gap protocol the SKILL.md references. It is **user-driven**: the SKILL.md transitions to `conversational`, presents the verdict, and writes status only on explicit user confirmation. No agent classifies or auto-ships.
 
@@ -13,7 +13,7 @@ If no task in this run has a non-empty `implements:` (UC-less project, or every 
 A UC X is a ship candidate when **all** hold:
 
 - `X.status` is `implementing` (flipped by `coder` at work-start per its protocol).
-- Every task with `implements: [usecase/X]` in its frontmatter now has `status: complete`.
+- Every task with `implements: [usecase/X]` in its frontmatter now has `status: done`.
 - No review item with `target: usecase/X` is `open` or `in-progress` (all `resolved` or `discarded`).
 
 If the candidate set is empty, skip to wrap-up.
@@ -38,7 +38,7 @@ No new files, no review items emitted at this point unless the user defers with 
 
 Transition to `conversational`. For each candidate X, show the verdict and ask:
 
-> UC X is ready to mark shipped based on completed tasks and passing tests. [verdict]. Mark shipped?
+> UC X is ready to mark shipped based on done tasks and passing tests. [verdict]. Mark shipped?
 
 Accept natural-language answers:
 
@@ -54,7 +54,7 @@ For every UC the user confirmed, edit the UC file's frontmatter `status:` from `
 - Runs the supersedes-chain cascade — if the UC has a non-empty `supersedes:` list, every same-family target currently at `shipped` is flipped to `superseded` with a `superseded by usecase/<id>` reason recorded on the cascade report.
 - Surfaces an `additionalContext` block listing the cascade flips; relay those to the user.
 
-There is no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `complete` before flipping. Illegal jumps (e.g., `shipped → ready`) are silently ignored by the cascade hook and surfaced by the Stop-hook safety net — fix the source rather than retry.
+There is no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `done` before flipping. Illegal jumps (e.g., `shipped → ready`) are silently ignored by the cascade hook and surfaced by the Stop-hook safety net — fix the source rather than retry.
 
 Do **not** hand-edit `updated:` or supersedes-target frontmatter — the cascade hook owns those writes.
 

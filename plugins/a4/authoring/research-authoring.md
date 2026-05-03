@@ -23,7 +23,7 @@ If the user is already converging on a shape and only needs to capture rationale
 type: research
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | queued | progress | holding | complete | failing | discarded
+status: open | queued | progress | holding | done | failing | discarded
 mode: comparative | single
 options: [name-a, name-b, name-c]   # only when mode: comparative
 depends_on: []                       # other tasks this one needs first
@@ -39,7 +39,7 @@ labels: []                           # free-form tags
 | `type` | yes | literal | `research` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `done` \| `failing` \| `discarded` |
 | `mode` | yes | enum | `comparative` \| `single` |
 | `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
@@ -72,15 +72,15 @@ The parent file is the agreed home for **narrative shared across siblings**. Rec
 
 ### Lifecycle and writer ownership
 
-Lifecycle, status enum, writer rules, and `complete` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
+Lifecycle, status enum, writer rules, and `done` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
 
 Research-specific notes:
 
-- `complete` means the investigation is finalized: sources cited, findings written. Downstream callers may now cite this task.
+- `done` means the investigation is finalized: sources cited, findings written. Downstream callers may now cite this task.
 - `failing` typically signals scope mis-framing or inaccessible sources; deferred via `failing → queued` for re-framing.
 - No `cycle:` field.
-- No `artifacts:` existence check in the `complete` preflight — research output lives in the body.
-- Required body sections for the `complete` preflight: `## Context`, plus `## Options` (when `mode: comparative`) or `## Findings` (when `mode: single`).
+- No `artifacts:` existence check in the `done` preflight — research output lives in the body.
+- Required body sections for the `done` preflight: `## Context`, plus `## Options` (when `mode: comparative`) or `## Findings` (when `mode: single`).
 
 ## Body shape
 
@@ -125,7 +125,7 @@ Cross-family conventions live in `./artifacts.md` and apply to `type: research` 
 
 ## Reviewing a research task
 
-A structured quality pass walks the task body before it flips to `complete`. The review checks source quality, option balance (in comparative mode), claim grounding, bias, completeness, and decision neutrality. Output is advisory; the user accepts, modifies, or dismisses each finding.
+A structured quality pass walks the task body before it flips to `done`. The review checks source quality, option balance (in comparative mode), claim grounding, bias, completeness, and decision neutrality. Output is advisory; the user accepts, modifies, or dismisses each finding.
 
 ## Citing a research task from a spec or task
 
