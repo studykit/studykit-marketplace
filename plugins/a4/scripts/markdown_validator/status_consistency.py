@@ -9,7 +9,7 @@ Some status enum values are semantically derived from cross-file state:
   - ``<issue-family>.status = "discarded"`` iff every UC in the task's
     ``implements:`` is at ``status: discarded``. Applies across all four
     issue families (``task`` / ``bug`` / ``spike`` / ``research``).
-  - ``<issue-family>.status = "pending"`` (from ``progress``/``failing``)
+  - ``<issue-family>.status = "queued"`` (from ``progress``/``failing``)
     iff a UC in the task's ``implements:`` is at ``status: revising``.
   - ``review.status = "discarded"`` iff the review's ``target:`` points
     at a usecase with ``status: discarded``.
@@ -287,10 +287,10 @@ def check_revising_cascade(
 
     When a UC flips to ``revising``, every task whose ``implements:`` list
     names that UC and is currently at ``progress`` or ``failing`` should
-    have been reset to ``pending`` by the PostToolUse cascade hook.
-    Tasks at ``open`` (not yet started), ``pending`` (already reset),
-    ``complete`` (already finished), or ``discarded`` are not part of
-    the cascade.
+    have been reset to ``queued`` by the PostToolUse cascade hook.
+    Tasks at ``open`` (not yet started), ``queued`` (already reset),
+    ``holding`` (manually paused — human stewardship), ``complete``
+    (already finished), or ``discarded`` are not part of the cascade.
     """
     revising_uc_keys = {
         key for key, fm in usecases.items()
@@ -318,11 +318,11 @@ def check_revising_cascade(
             mismatches.append(
                 Mismatch(
                     path=f"{task_family}/{p.stem}.md",
-                    rule=f"missing-pending-status-{task_family}",
+                    rule=f"missing-queued-status-{task_family}",
                     message=(
                         f"status={status!r} but a UC this {task_family} "
                         "task implements is at 'revising'. Expected "
-                        "status=pending — the cascade hook should have "
+                        "status=queued — the cascade hook should have "
                         "reset it. Re-edit the UC `status:` to "
                         "retrigger the cascade."
                     ),

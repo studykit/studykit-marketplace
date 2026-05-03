@@ -13,7 +13,7 @@ Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 type: bug
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | pending | progress | complete | failing | discarded
+status: open | queued | progress | holding | complete | failing | discarded
 implements: []         # list of paths, e.g. [usecase/3-search-history]
 depends_on: []         # list of paths to other tasks
 spec: []               # list of paths, e.g. [spec/8-caching-strategy]
@@ -30,7 +30,7 @@ labels: []             # free-form tags
 | `type` | yes | literal | `bug` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `complete` \| `failing` \| `discarded` |
 | `implements` | no | list of paths | use cases delivered (often empty for bug work that does not implement a UC) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
@@ -46,12 +46,12 @@ labels: []             # free-form tags
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare it when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare it when the bug is a regression against a spec's expected behavior.
 - `implements:` and `spec:` are **optional and orthogonal** — a bug may declare zero, one, or both. Empty anchors are common for cross-cutting fixes.
-- `artifacts:` is artifact-only — paths must point under `artifacts/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree (documented in the body `## Files` section). See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
-- `cycle` starts at `1`; bumped on `failing → pending` next-cycle defers.
+- `artifacts:` is artifact-only — paths must point under `artifacts/bug/<id>-<slug>/...`. The list is typically empty since the production fix lives in the project's source tree; git history is the authoritative record of what was changed, and the optional body `## Change Plan` section may name fix paths as a forward-looking scope fence when needed. See "Artifacts directory" below for when to use the artifact directory (repro repos, crash logs, screenshots).
+- `cycle` starts at `1`; bumped on `failing → queued` next-cycle defers.
 
 ### Evidence-readiness — reproduction is the floor
 
-A bug without a reproducible failure path is exploratory until reproduction is captured. The same evidence-readiness rule that governs `task` authoring applies — binding shape lives in `./spike-before-task.md`: five evidence categories (reproduce command, code coordinates, data flow, baseline, test fixture) expected by the time the bug is `pending`; reproduction is the strongest signal among them. When two or more are empty the parent issue family is `spike` (PoC reproduction repo) or `research`, not `bug`.
+A bug without a reproducible failure path is exploratory until reproduction is captured. The same evidence-readiness rule that governs `task` authoring applies — binding shape lives in `./spike-before-task.md`: five evidence categories (reproduce command, code coordinates, data flow, baseline, test fixture) expected by the time the bug is `queued`; reproduction is the strongest signal among them. When two or more are empty the parent issue family is `spike` (PoC reproduction repo) or `research`, not `bug`.
 
 ### Parent and shared narrative
 
@@ -69,20 +69,20 @@ Lifecycle, status enum, writer rules, and `complete` initial-status preflight ar
 Bug-specific notes:
 
 - `complete` means the regression test passes (unit tests green) and the fix is in.
-- `cycle:` bumps on `failing → pending` next-cycle defers.
-- Required body sections for the `complete` preflight: `## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`.
+- `cycle:` bumps on `failing → queued` next-cycle defers.
+- Required body sections for the `complete` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional — see "Body shape" below.)
 
 ## Body shape
 
 **Required:**
 
 - `## Description` — what's broken and why the fix matters. State the observed behavior and the expected behavior.
-- `## Files` — action / path / change table. Lists production source paths the fix writes or modifies, plus any artifact paths under `artifacts/bug/<id>-<slug>/` when the task uses an artifact directory.
 - `## Unit Test Strategy` — regression test scenarios + isolation strategy + test file paths. The bug must end with a test that fails before the fix and passes after.
 - `## Acceptance Criteria` — checklist. AC source: **reproduction scenario + fixed criteria** (the regression test pinning the expected behavior). The `## Acceptance Criteria` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing the production source paths the fix plans to write or modify, plus any artifact paths under `artifacts/bug/<id>-<slug>/` when the task uses an artifact directory. Distinct from git history (which records what was changed *after the fact*); this section records what is *planned* before the fix lands. Useful when the fix spans multiple files or sits next to siblings whose scope must be partitioned. Skip for single-file fixes; rely on `## Description` + `## Acceptance Criteria` and let git history record the actual changes.
 - `## Interface Contracts` — contracts this task consumes or provides, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`).
 - `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the bug is non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
@@ -100,7 +100,7 @@ A bug task may have a sibling artifact directory at `<project-root>/artifacts/bu
   artifacts/bug/<id>-<slug>/        # repro, logs, screenshots (opt-in)
 ```
 
-Optional — the production fix lives in the project's source tree (documented in body `## Files`), not here. Use the artifact directory only when reproduction artifacts have lasting value (a hard-to-reproduce data file, a heap dump that anchors the regression test). Frontmatter `artifacts:` lists artifact paths only.
+Optional — the production fix lives in the project's source tree (recorded by git history; the optional body `## Change Plan` may name it for forward-looking scope-fencing), not here. Use the artifact directory only when reproduction artifacts have lasting value (a hard-to-reproduce data file, a heap dump that anchors the regression test). Frontmatter `artifacts:` lists artifact paths only.
 
 No archive convention — closed bug tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
 
@@ -108,9 +108,9 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 ## Common mistakes (bug-specific)
 
-- **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
+- **Required section missing** (`## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Wrong `type:` value or wrong folder.** A file under `a4/bug/` must declare `type: bug`. Mismatched declarations are a folder-routing error and should be re-located.
-- **Production source paths in frontmatter `artifacts:`** — `artifacts:` is artifact-only. Production source belongs in the body `## Files` section.
+- **Production source paths in frontmatter `artifacts:`** — `artifacts:` is artifact-only. Production source paths are not duplicated in frontmatter; rely on git history (and, when forward-looking scope-fencing is needed, the optional body `## Change Plan` section).
 
 ## Don't (bug-specific)
 

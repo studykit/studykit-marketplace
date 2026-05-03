@@ -106,7 +106,7 @@ When the file mapping shows 3+ tasks modifying the same file, that file is a **s
 
 After completing all task file mappings, scan for shared integration points:
 
-1. **Identify shared files** — any file appearing in 3+ tasks' `## Files` table.
+1. **Identify shared files** — any file appearing in 3+ tasks' `## Change Plan` table.
 2. **Define the integration pattern** — for each shared file, describe how the contributions from different tasks compose into a working whole.
 3. **Inline the integration pattern in each contributing task's `## Description`** so each `coder` agent sees both its piece and the overall pattern.
 
@@ -135,7 +135,7 @@ When `architecture.md` suggests a file location that does not match the codebase
 
 ### Change Scope for Existing Files
 
-When modifying existing files, specify in `## Files`:
+When modifying existing files, specify in `## Change Plan`:
 
 - **What is added** — new fields, methods, routes, imports.
 - **What is modified** — changed function signatures, updated schemas.

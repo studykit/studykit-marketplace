@@ -155,7 +155,7 @@ Available sections (drop any that have no content):
   - `a4/task/17-search-history.md` — `status: progress`, cycle 2 — coder loop hit a regression; details in the file's `## Resume`.
 
   ### Bugs (`a4/bug/`)
-  - `a4/bug/9-cache-key-collision.md` — `status: pending` — written this session; details in the file's `## Resume`.
+  - `a4/bug/9-cache-key-collision.md` — `status: queued` — written this session; details in the file's `## Resume`.
 
   ### Wiki
   - `a4/architecture.md` — component boundary clarified for SessionService; see commit `<sha>`.

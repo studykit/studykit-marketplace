@@ -13,7 +13,7 @@ Draft a scratch summary (do not write to disk yet):
 - **Description / context** — why the research is needed; what specific question or comparison purpose.
 - **Mode** — `comparative` (option-comparison) or `single` (flat topic / question). Required.
 - **Options** — list of option names, required when `mode: comparative`. Each option becomes an H3 subsection under `## Options` in the body.
-- **Initial status** — `open` (default; backlog), `pending` (enqueue), `progress` (start investigating now), or `complete` (post-hoc; investigation captured in this conversation). Default to `pending` when user wants to schedule, `progress` when starting now, `complete` for one-shot conversational capture.
+- **Initial status** — `open` (default; backlog), `queued` (enqueue), `progress` (start investigating now), or `complete` (post-hoc; investigation captured in this conversation). Default to `queued` when user wants to schedule, `progress` when starting now, `complete` for one-shot conversational capture.
 - **Artifacts** — frontmatter `artifacts:` lists artifact paths under `artifacts/research/<id>-<slug>/`. Typically empty (the body is the deliverable); populate only when ancillary artifacts (raw data, charts, evaluation scripts) need to live alongside.
 - **Dependencies** — `depends_on:` paths (other tasks); typically none.
 - **Related** — `related:` paths to other artifacts the investigation informs (e.g., a spec being drafted) or that informed it.
@@ -51,7 +51,7 @@ Write the file with `Write`. The initial `status:` is set by the Write itself; n
 
 Branch the message by initial status:
 
-- **`open`** — *Research `research/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued. Transition `open → pending` when ready to schedule.*
-- **`pending`** — *Research `research/<id>-<slug>` written at `status: pending`. Start the investigation when ready (the user or an investigator agent fills `## Context` + `## Options`/`## Findings`).*
+- **`open`** — *Research `research/<id>-<slug>` written at `status: open` (backlog). Not yet enqueued. Transition `open → queued` when ready to schedule.*
+- **`queued`** — *Research `research/<id>-<slug>` written at `status: queued`. Start the investigation when ready (the user or an investigator agent fills `## Context` + `## Options`/`## Findings`).*
 - **`progress`** — *Research `research/<id>-<slug>` written at `status: progress`. Investigation underway — fill the body sections as evidence accumulates. When finalized, optionally run `/a4:research-review` before flipping to `complete`.*
 - **`complete`** — *Research `research/<id>-<slug>` written at `status: complete` (post-hoc; investigation captured in this conversation). Optionally run `/a4:research-review` for a quality pass.*

@@ -99,13 +99,13 @@ Verdicts: `OK` | `NO TEST STRATEGY` | `VAGUE TESTS` | `MISSING ERROR TESTS` | `N
 
 ### 5. File Mapping — `files`
 
-Per task:
-- Is `## Files` populated?
-- Are paths specific (`src/services/auth.service.ts`, not "a service file")?
+Per task (`## Change Plan` is optional — applies only when batch context warrants explicit scope-fencing, which `/a4:breakdown` auto-populates by default):
+- When `## Change Plan` is present, are paths specific (`src/services/auth.service.ts`, not "a service file")?
 - For modifications to existing files, is the change scope described (added fields, modified signatures)?
 - Do file paths exist in (or follow the conventions of) the codebase that ci-setup verified?
+- When `## Change Plan` is absent on a batch-derived task, flag it — breakdown auto-fills the section, so absence usually signals a generation gap. (Single ad-hoc tasks authored via `/a4:task` may legitimately omit it.)
 
-Verdicts: `OK` | `NO FILES` | `VAGUE FILES` | `MISSING SCOPE` | `CONVENTION CONFLICT` | `PHANTOM PATH`.
+Verdicts: `OK` | `MISSING CHANGE PLAN` | `VAGUE FILES` | `MISSING SCOPE` | `CONVENTION CONFLICT` | `PHANTOM PATH`.
 
 ### 6. Acceptance Criteria — `acceptance`
 

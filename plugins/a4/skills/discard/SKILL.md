@@ -27,7 +27,7 @@ Seed: **$ARGUMENTS**
 
 ## Procedure
 
-Apply the steps in `references/discard.md`: resolve the target task by id / `<type>/<id>-<slug>` / slug fragment (D1), confirm current status is `open | pending | progress | complete | failing` (D2), append an optional `## Why Discarded` block first and then edit `status:` to `discarded` (D3), advise on the spike artifact directory without auto-deleting (D4), and report (D5).
+Apply the steps in `references/discard.md`: resolve the target task by id / `<type>/<id>-<slug>` / slug fragment (D1), confirm current status is `open | queued | progress | holding | complete | failing` (D2), append an optional `## Why Discarded` block first and then edit `status:` to `discarded` (D3), advise on the spike artifact directory without auto-deleting (D4), and report (D5).
 
 ## Commit Points
 

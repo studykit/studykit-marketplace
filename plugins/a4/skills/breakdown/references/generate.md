@@ -31,7 +31,7 @@ For every task in the derived batch, populate:
 - **`spec:`** — list of `spec/<id>-<slug>` paths the task realizes. Auto-filled from the candidate grouping. Empty when purely UC-driven.
 - **`depends_on:`** — `task/<id>-<slug>` paths for prerequisite tasks (this batch's tasks plus existing tasks the new ones rely on). Derived from the candidate grouping plus codebase imports.
 - **`## Description`** — short narrative of what this task delivers, written against the upstream sources' Flow / Validation / Specification.
-- **`## Files`** — auto-filled from Step 2 codebase exploration. Format per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` § Body shape (Action / Path / Change table). Best-effort hints; reviewers and the user iterate before promotion.
+- **`## Change Plan`** — auto-filled from Step 2 codebase exploration (the section is optional in the per-type contract, but breakdown always emits it because batch-derived tasks need an explicit per-task scope fence for parallel coder agents). Format per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` § Body shape (Action / Path / Change table). Best-effort hints; reviewers and the user iterate before promotion.
 - **`## Acceptance Criteria`** — derived from each `implements:`'s UC `## Flow` / `## Validation` / `## Error Handling` and each `spec:`'s `## Specification`. Reference `ci.md` `## How to run tests` commands when AC names a runnable check.
 - **`## Unit Test Strategy`** — scenarios + isolation per `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md`.
 
@@ -39,7 +39,7 @@ The reverse view (which tasks implement a UC, which tasks realize a spec) is com
 
 ## 4. Shared Integration Points
 
-Identify any file appearing in 3+ tasks' `## Files`. Define the integration pattern explicitly in each contributing task's `## Description` so each `coder` agent sees it. Without this, parallel coder agents land conflicting partial implementations on the shared file.
+Identify any file appearing in 3+ tasks' `## Change Plan`. Define the integration pattern explicitly in each contributing task's `## Description` so each `coder` agent sees it. Without this, parallel coder agents land conflicting partial implementations on the shared file.
 
 ## 5. Duplicate detection (idempotency)
 
@@ -47,7 +47,7 @@ Before writing any task, compare the draft against existing tasks across all fou
 
 - **Identical anchors** — proposed task `implements:` / `spec:` set fully overlaps an existing task → **skip** (the existing task already covers it).
 - **Title near-match** — slug overlap > 50% with an existing task → **skip with note** (the user should manually merge if they want the new framing).
-- **File set overlap** — proposed `## Files` paths fully covered by an existing task → **skip with note** (likely the same change scope under different framing).
+- **File set overlap** — proposed `## Change Plan` paths fully covered by an existing task → **skip with note** (likely the same change scope under different framing).
 
 Skipped candidates appear in the wrap-up summary so the user can decide whether to discard or repurpose them.
 

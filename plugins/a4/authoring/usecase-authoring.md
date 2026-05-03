@@ -64,7 +64,7 @@ Per-status meaning:
 - `draft` — Spec is still being shaped; not ready for implementation.
 - `ready` — Spec is closed; ready to be picked up by an implementer. Requires non-empty `actors:`; an empty actor list at `ready` (or any later status) is a post-draft authoring violation.
 - `implementing` — A coding agent is actively working on the UC.
-- `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `pending`; `open`/`pending`/`complete` tasks stay.
+- `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`complete` tasks stay.
 - `shipped` — The running system reflects this UC. Forward-path terminal. Cascades: `supersedes:` targets flip `shipped → superseded`.
 - `superseded` — A newer UC declared `supersedes: [<this>]` and has shipped. Terminal.
 - `discarded` — Abandoned; direction was wrong or UC no longer needed. Terminal. Cascades: related tasks → `discarded`, open review items with `target: usecase/<this>` → `discarded`.
@@ -132,7 +132,7 @@ Splits do **not** flow through the supersede mechanism — supersession presumes
 
 ## Don't (UC-specific)
 
-- **Don't manually flip cascade-driven statuses.** UC `shipped` → predecessor's `superseded`, UC `discarded` → cascading task / review discards, UC `revising` → task `pending`-reset are all the writer's job.
+- **Don't manually flip cascade-driven statuses.** UC `shipped` → predecessor's `superseded`, UC `discarded` → cascading task / review discards, UC `revising` → task `queued`-reset are all the writer's job.
 - **Don't write internal mechanics into the body.** Storage choices, service names, queue strategies, library calls — those live in `architecture.md` or specs. UC body stays at the user level.
 - **Don't author a UC for a routine framework-mandated behavior.** UCs describe user-visible interactions; if the only thing to say is "the framework does X," there is no UC there.
 - **Don't pack multiple goals into one UC.** Split when the actor's goal forks. One UC = one user-level goal.

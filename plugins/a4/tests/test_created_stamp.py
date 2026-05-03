@@ -123,7 +123,7 @@ def test_created_stamped_on_new_task_write(
         "type: task\n"
         "id: 1\n"
         "title: New\n"
-        "status: pending\n"
+        "status: queued\n"
         "updated: 2026-05-02 14:30\n"
         "---\n\n"
         "## Description\nx\n",
@@ -153,7 +153,7 @@ def test_created_inserted_before_updated(
         "type: task\n"
         "id: 2\n"
         "title: Order\n"
-        "status: pending\n"
+        "status: queued\n"
         "updated: 2026-05-02 14:30\n"
         "---\n\n"
         "## Description\nx\n",
@@ -187,7 +187,7 @@ def test_existing_file_edit_does_not_stamp_created(
         "type: task\n"
         "id: 3\n"
         "title: Live\n"
-        "status: pending\n"
+        "status: queued\n"
         "updated: 2026-05-02 14:30\n"
         "---\n\n"
         "## Description\nx\n",
@@ -223,7 +223,7 @@ def test_author_supplied_created_is_immutable(
         "type: task\n"
         "id: 4\n"
         "title: Auth\n"
-        "status: pending\n"
+        "status: queued\n"
         f"created: {author_value}\n"
         "updated: 2026-05-02 14:30\n"
         "---\n\n"

@@ -32,7 +32,7 @@ From the invoking `run` skill:
 - **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
 - **UC file paths** — absolute paths to each `a4/usecase/<id>-<slug>.md` referenced in the task's `implements:` frontmatter.
 
-Read the task file first, then ci.md's `## How to run tests` section, then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If the task's `## Description` records a Shared Integration Points pattern (a file modified by 3+ tasks), follow that pattern when touching the shared file.
+Read the task file first, then ci.md's `## How to run tests` section, then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If the task's `## Description` records a Shared Integration Points pattern (a file modified by 3+ tasks), follow that pattern when touching the shared file. If a `## Change Plan` section is present, treat it as the path-level scope fence (see step 2 below).
 
 ## What You Do
 
@@ -46,7 +46,7 @@ Read the task file first, then ci.md's `## How to run tests` section, then the r
 
    Do this **before** beginning implementation so the workspace reflects active work.
 
-2. **Honor the task's Files list** — create / modify only files listed in the task's `## Files` section (or frontmatter `artifacts:`). Do not touch files outside that list.
+2. **Honor the task's scope fence.** If the task has a `## Change Plan` section, create / modify only files listed there (or frontmatter `artifacts:`); do not touch files outside that list. If `## Change Plan` is absent, derive the scope from `## Description` + `## Acceptance Criteria` and stay within files those sections imply — when in doubt, prefer fewer touched files and surface the gap as an issue in the return value rather than expanding scope silently.
 3. **Implement** — follow the task's `## Description`, consuming / providing the Interface Contracts noted in `## Interface Contracts`. Use domain terminology from `a4/domain.md`'s `## Concepts` when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `ci.md`'s `## How to run tests` section. All unit tests must pass before returning success.
@@ -62,7 +62,7 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 
 1. **Stop coding.** Do not guess at the missing spec.
 2. **Open a review item** for the ambiguity. Allocate an id via `scripts/allocate_id.py` and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: finding`, `status: open`, `target: usecase/<X>`, `source: coder`, and a `## Description` section describing exactly what is ambiguous and what clarification is needed.
-3. **Flip the UC** to `revising` by editing its `status:` field directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress`/`failing` tasks (across `task` / `bug` / `spike` / `research`) back to `pending`, refreshing `updated:` on every flipped file. Add a one-line bullet to the UC's optional `## Log` section if you want a body-level audit pointer to the new review item — the hook does not write `## Log`.
+3. **Flip the UC** to `revising` by editing its `status:` field directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress`/`failing` tasks (across `task` / `bug` / `spike` / `research`) back to `queued`, refreshing `updated:` on every flipped file. Add a one-line bullet to the UC's optional `## Log` section if you want a body-level audit pointer to the new review item — the hook does not write `## Log`.
 4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
 
 ### Architecture-choice exit — halt + spec-gap

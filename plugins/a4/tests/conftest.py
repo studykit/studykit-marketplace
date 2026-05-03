@@ -40,20 +40,17 @@ def _write_md(
 _DEFAULT_BODY: dict[str, str] = {
     "task": (
         "## Description\nx\n\n"
-        "## Files\n- none\n\n"
         "## Unit Test Strategy\nnone\n\n"
         "## Acceptance Criteria\n- x\n"
     ),
     "bug": (
         "## Description\nx\n\n"
-        "## Files\n- none\n\n"
         "## Unit Test Strategy\nnone\n\n"
         "## Acceptance Criteria\n- x\n"
     ),
     "spike": (
         "## Description\nx\n\n"
-        "## Hypothesis\nx\n\n"
-        "## Files\n- none\n"
+        "## Hypothesis\nx\n"
     ),
     "research": (
         "## Description\nx\n\n"

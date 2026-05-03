@@ -23,7 +23,7 @@ If the user is already converging on a shape and only needs to capture rationale
 type: research
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | pending | progress | complete | failing | discarded
+status: open | queued | progress | holding | complete | failing | discarded
 mode: comparative | single
 options: [name-a, name-b, name-c]   # only when mode: comparative
 depends_on: []                       # other tasks this one needs first
@@ -39,7 +39,7 @@ labels: []                           # free-form tags
 | `type` | yes | literal | `research` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `complete` \| `failing` \| `discarded` |
 | `mode` | yes | enum | `comparative` \| `single` |
 | `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
@@ -77,7 +77,7 @@ Lifecycle, status enum, writer rules, and `complete` initial-status preflight ar
 Research-specific notes:
 
 - `complete` means the investigation is finalized: sources cited, findings written. Downstream callers may now cite this task.
-- `failing` typically signals scope mis-framing or inaccessible sources; deferred via `failing → pending` for re-framing.
+- `failing` typically signals scope mis-framing or inaccessible sources; deferred via `failing → queued` for re-framing.
 - No `cycle:` field — investigation work has no implement-loop cycle.
 - No `artifacts:` existence check in the `complete` preflight — research output lives in the body.
 - Required body sections for the `complete` preflight: `## Context`, plus `## Options` (when `mode: comparative`) or `## Findings` (when `mode: single`).

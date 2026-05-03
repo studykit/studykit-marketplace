@@ -6,13 +6,13 @@ Companion to `./task-authoring.md`, `./bug-authoring.md`, `./spike-authoring.md`
 
 ## Why
 
-A `task` or `bug` file is the agreed handoff anchor for implementation work. A new session opening that file in isolation must be able to start coding without re-deriving the context. When the file's `## Acceptance Criteria` and `## Files` are written but the underlying facts are missing, the file becomes a design record rather than an actionable handoff — the implementer's first move is still investigation, not implementation.
+A `task` or `bug` file is the agreed handoff anchor for implementation work. A new session opening that file in isolation must be able to start coding without re-deriving the context. When the file's `## Acceptance Criteria` is written but the underlying facts are missing, the file becomes a design record rather than an actionable handoff — the implementer's first move is still investigation, not implementation.
 
 The split is **not** a quality gate on the design. The design may be fully decided; the rule fires only when the *evidence the design rests on* has not been captured. The two are independent: a task can have a strong design and weak evidence, or vice versa.
 
 ## Evidence categories
 
-Five facts a `task` or `bug` is expected to anchor by the time it is `pending`:
+Five facts a `task` or `bug` is expected to anchor by the time it is `queued`:
 
 1. **Reproduce command** — the exact CLI / SQL / probe / script that reproduces the situation the task addresses (a current-state measurement, a failure, a fan-out, a benchmark). Must be runnable from a fresh checkout.
 2. **Code coordinates** — file paths and line spans for the call sites, helpers, fill code, and adjacent narrowing infrastructure the task touches or depends on. Symbol names alone are not enough — they rot.
@@ -34,7 +34,7 @@ Split into a `spike` (with `parent:` pointed at the still-being-drafted task / b
 
 When a spike is spun out before the task / bug:
 
-- The spike is authored first at `status: pending`. Its `## Description` states the question and the decision the spike's outcome will inform; its `## Acceptance Criteria` enumerates which of the five evidence categories the spike must populate.
+- The spike is authored first at `status: queued`. Its `## Description` states the question and the decision the spike's outcome will inform; its `## Acceptance Criteria` enumerates which of the five evidence categories the spike must populate.
 - The spike's artifact directory at `artifacts/spike/<id>-<slug>/` holds reproducible probes (scripts, queries, configs) and any captured outputs that became evidence.
 - The follow-up task / bug declares `parent: spike/<id>-<slug>` (derivation parent) or `depends_on: [spike/<id>-<slug>]` when the relationship is consumption-only. The follow-up's `## Description` cites the spike, and its evidence sections quote the spike's findings rather than re-deriving them.
 - The reverse — task / bug authored first, spike spawned mid-flight when an evidence gap surfaces — is also valid; in that case the spike's `parent:` points at the originating task / bug.

@@ -13,7 +13,7 @@ Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 type: spike
 id: <int — globally monotonic across the workspace>
 title: "<short, human-readable phrase>"
-status: open | pending | progress | complete | failing | discarded
+status: open | queued | progress | holding | complete | failing | discarded
 depends_on: []         # list of paths to other tasks
 parent:                # optional: an issue (task / bug / spike / research) this spike descends from
 related: []            # catchall for cross-references
@@ -27,10 +27,10 @@ labels: []             # free-form tags
 | `type` | yes | literal | `spike` |
 | `id` | yes | int | monotonic global integer |
 | `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `pending` \| `progress` \| `complete` \| `failing` \| `discarded` |
+| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `complete` \| `failing` \| `discarded` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `umbrella/<id>-<slug>` aggregating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See the "Parent and shared narrative" note below. |
-| `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at the project's production source tree — production paths the spike may also touch are documented in the body `## Files` section. |
+| `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at the project's production source tree — production paths the spike may also touch are recorded by git history, and the optional body `## Change Plan` section may name them as a forward-looking scope fence when needed. |
 | `labels` | no | list of strings | free-form tags |
 
 
@@ -42,7 +42,7 @@ labels: []             # free-form tags
 - `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome turns out to validate a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description` body.
 - `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via a markdown link — the frontmatter forward link is reserved for `type: task` and `type: bug`.
 - `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
-- `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/...` (or `artifacts/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are documented in the body `## Files` section, not in frontmatter.
+- `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/...` (or `artifacts/spike/archive/<id>-<slug>/...` after archive). **Never** point at the project's production source tree — production paths the task may *also* touch are recorded by git history, with the optional body `## Change Plan` section naming them as a forward-looking scope fence when needed. They are not duplicated in frontmatter.
 
 ### Parent and shared narrative
 
@@ -62,19 +62,19 @@ Spike-specific notes:
 - `complete` means the hypothesis was validated.
 - No `cycle:` field — `failing` re-attempts do not bump a counter (there is no multi-cycle implement loop for exploratory work).
 - `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/` after archive); the preflight existence check uses these paths.
-- Required body sections for the `complete` preflight: `## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`.
+- Required body sections for the `complete` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional — see "Body shape" below.)
 
 ## Body shape
 
 **Required:**
 
 - `## Description` — the question being explored and why a spike (vs. going straight to a regular task). State the hypothesis and the decision the spike's outcome will inform.
-- `## Files` — action / path / change table. Artifact paths under `artifacts/spike/<id>-<slug>/` for files the spike creates; production source paths the spike may probe or temporarily touch may also appear here for reader context. (Frontmatter `artifacts:` is artifact-only.)
 - `## Unit Test Strategy` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). The section is still required.
 - `## Acceptance Criteria` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question. The `## Acceptance Criteria` section must exist regardless.
 
 **Optional, emit only when there is content for them:**
 
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing artifact paths under `artifacts/spike/<id>-<slug>/` the spike plans to create, plus any production source paths the spike may probe or temporarily touch (for reader context). Distinct from git history (which records what was changed *after the fact*); this section records what is *planned* before exploration begins. Skip when the spike's artifact directory is self-explanatory; rely on `## Description` and let git history record the actual changes. (Frontmatter `artifacts:` is artifact-only.)
 - `## Interface Contracts` — contracts the spike consumes or proposes, with markdown links to `architecture.md` sections (e.g., `[architecture#SessionService](../architecture.md#sessionservice)`). May be omitted for self-contained spikes.
 - `## Resume` — current-state snapshot for the next session: current approach, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the spike is non-terminal (any status other than `complete` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
@@ -102,9 +102,9 @@ Cross-family conventions for the artifact directory — per-type expectations, t
 
 ## Common mistakes (spike-specific)
 
-- **Required section missing** (`## Description`, `## Files`, `## Unit Test Strategy`, `## Acceptance Criteria`).
+- **Required section missing** (`## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`).
 - **Wrong `type:` value or wrong folder.** A file under `a4/spike/` must declare `type: spike`. Mismatched declarations are a folder-routing error and should be re-located.
-- **`artifacts:` paths under the project source tree, not under `artifacts/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths belong in the body `## Files` section.
+- **`artifacts:` paths under the project source tree, not under `artifacts/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths the spike may temporarily touch are recorded by git history (and may be named in the optional body `## Change Plan` section as a forward-looking scope fence).
 
 ## Don't (spike-specific)
 

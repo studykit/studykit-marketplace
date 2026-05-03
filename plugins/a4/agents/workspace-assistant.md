@@ -64,7 +64,7 @@ If the request is ambiguous between the two, ask one clarifying question before 
 | `issue-counts` | per folder × {active, in_progress, terminal, total}, plus by-kind for review/task |
 | `usecases-by-source` | UC `source:` distribution (Reverse-only detection) |
 | `open-reviews` | open / in-progress reviews, sorted by priority then created then id |
-| `active-tasks` | tasks with status in {pending, progress, failing} |
+| `active-tasks` | tasks with status in {queued, progress, failing, holding} |
 | `blocked-items` | any issue with status: blocked, with depends_on chain |
 | `recent-activity` | top 10 issue items by `updated:` desc |
 | `open-ideas` | non-terminal `idea/*.md` |

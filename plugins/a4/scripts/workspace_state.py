@@ -25,7 +25,7 @@ Sections (kebab-case identifier on the left):
   usecases-by-source  UC `source:` distribution (extracted-from-code detection).
   open-reviews        open / in-progress reviews, sorted by priority
                       then created then id.
-  active-tasks        tasks with status in {pending, progress, failing}.
+  active-tasks        tasks with status in {queued, progress, failing, holding}.
   blocked-items       any issue with status: blocked, with depends_on chain.
   recent-activity     top 10 issue items by `updated:` desc.
   open-ideas          non-terminal `idea/*.md`.
@@ -317,7 +317,7 @@ def render_active_tasks(tasks: list[IssueItem]) -> str:
     active = [t for t in tasks if t.status in ACTIVE_TASK_STATUSES]
     heading = f"## Active tasks ({len(active)})"
     if not active:
-        return f"{heading}\n\n*No tasks pending / progress / failing.*"
+        return f"{heading}\n\n*No tasks queued / progress / failing / holding.*"
     active.sort(key=lambda t: (t.status, t.id_ or 0))
     lines = [heading, ""]
     for t in active:

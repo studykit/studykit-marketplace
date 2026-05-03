@@ -53,7 +53,7 @@ The schema fixes **one direction per relationship** — the forward direction is
 
 Every status change on `usecase`, the four issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` files is **edited directly** on the file. When the change lands, `updated:` refreshes automatically on the primary file, and any cross-file cascade runs:
 
-- Task reset on UC `revising` — across all four issue families, tasks at `progress`/`failing` → `pending`.
+- Task reset on UC `revising` — across all four issue families, tasks at `progress`/`failing` → `queued`.
 - Task / review discard cascade on UC `discarded` — across all four issue families.
 - Supersedes-chain flip on UC `shipped` (predecessor UC: `shipped → superseded`).
 - Supersedes-chain flip on spec `active` (predecessor spec: `active|deprecated → superseded`).
@@ -63,7 +63,7 @@ The automatic cascade does **not** touch the body's optional `## Resume` or `## 
 Edge cases:
 
 - **Illegal jumps** (e.g. `shipped → ready`, outside the family's lifecycle table) — `updated:` and cross-file cascades do not run; validation surfaces the jump as an error (working-tree-vs-HEAD diff against the family's allowed transitions).
-- **Legal jumps that bypass the automatic cascade** (edits via `git checkout`, external editors, direct script writes) — related files are left unflipped. Validation re-surfaces the missing cascade work for the categories listed above (`task.pending` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain).
+- **Legal jumps that bypass the automatic cascade** (edits via `git checkout`, external editors, direct script writes) — related files are left unflipped. Validation re-surfaces the missing cascade work for the categories listed above (`task.queued` revising cascade, `task.discarded` cascade, `review.discarded` cascade, supersedes chain).
 - **Recovery** —
   - Supersedes-chain: `../scripts/validate.py --fix` (workspace-wide, idempotent).
   - Reverse-link (revising / discarded cascades): re-edit the UC's `status:` to re-run the automatic cascade.

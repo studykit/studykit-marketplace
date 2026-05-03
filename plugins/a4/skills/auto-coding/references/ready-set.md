@@ -17,7 +17,7 @@ Rationale and recovery in `./parallel-mode.md`. Serial mode skips this entirely 
 
 A task is **ready** when all of:
 
-- `status ∈ {pending, failing}`
+- `status ∈ {queued, failing}`
 - every `depends_on` entry resolves to a task with `status: complete`
 - one of:
   - `implements:` is non-empty AND every UC in `implements:` has `status ∈ {ready, implementing}` (so `revising` / `discarded` / `blocked` / `superseded` / `shipped` UCs' tasks are skipped), OR

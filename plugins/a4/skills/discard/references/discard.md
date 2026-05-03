@@ -16,9 +16,9 @@ If no file resolves, abort with: "No task file found for `<target>`. List candid
 
 ## D2. Check current status
 
-Read the resolved file's frontmatter. `ISSUE_FAMILY_TRANSITIONS` allows `discarded` from `open | pending | progress | complete | failing`:
+Read the resolved file's frontmatter. `ISSUE_FAMILY_TRANSITIONS` allows `discarded` from `open | queued | progress | holding | complete | failing`:
 
-- Any of those five → proceed to D3.
+- Any of those six → proceed to D3.
 - `discarded` → report "`<path>` is already `discarded`. No change." and exit.
 
 Surface the task's `type:` and `implements:` / `spec:` to the user before flipping, so they can confirm they're discarding the right one. One-line summary, no separate prompt unless slug-fragment resolution returned multiple candidates in D1.
@@ -62,6 +62,6 @@ Mention any other artifacts the user may want to revisit:
 - If `implements:` was non-empty, name the UC(s) so the user can decide whether to re-author a replacement task or also discard the UC.
 - If `spec:` was non-empty, the cited spec(s) are unaffected.
 
-If the discarded task was the only `pending` / `progress` / `failing` task tied to a UC, mention that the UC may now have nothing to ship — the user can decide whether to author a replacement task, discard the UC itself, or leave the UC in `implementing` waiting for another task.
+If the discarded task was the only `queued` / `progress` / `failing` / `holding` task tied to a UC, mention that the UC may now have nothing to ship — the user can decide whether to author a replacement task, discard the UC itself, or leave the UC in `implementing` waiting for another task.
 
 Do not commit. Leave files in the working tree. The single-commit scope is just the edited task file (status flip + optional `## Why Discarded` section). Spike artifact directory moves/deletes are a separate, user-driven commit.

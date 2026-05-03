@@ -23,7 +23,7 @@ A single `/a4:auto-coding` invocation runs in one mode end-to-end — no in-cycl
 | Step 2.5 merge sweep | Skipped — see `./merge-sweep.md` (parallel-only) |
 | Coder failure | If the agent halted before committing or resetting, the working tree may be left dirty. Transition the task to `failing` and surface dirty paths in the halt message. User resolves (`git stash` / `git reset` / commit-as-wip) before re-invoking `/a4:auto-coding iterate`. Subsequent ready tasks in the cycle are **not attempted** after the first halt |
 | Step 3 invariant | Reachable only when every cycle ready task committed without halt. No merge-sweep failure path exists |
-| Resume hygiene | Only the standard `progress → pending` session-start reset applies. No orphan-worktree handling (none are created) |
+| Resume hygiene | Only the standard `progress → queued` session-start reset applies. `holding` tasks are not touched by resume hygiene. No orphan-worktree handling (none are created) |
 | Worktree cleanup | N/A |
 
 ## Mode mixing

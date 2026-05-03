@@ -1,6 +1,8 @@
 # Resume Hygiene
 
-At session start, for every task with `status: progress`, edit the frontmatter `status:` from `progress` to `pending` directly (a `progress` status at session-start means the prior session crashed mid-work). The PostToolUse cascade hook refreshes `updated:` automatically.
+At session start, for every task with `status: progress`, edit the frontmatter `status:` from `progress` to `queued` directly (a `progress` status at session-start means the prior session crashed mid-work). The PostToolUse cascade hook refreshes `updated:` automatically.
+
+Tasks at `status: holding` are **not** swept by resume hygiene — `holding` is an explicit human-driven pause, not a crash signature, so a paused task stays paused across sessions until a writer flips it `holding → progress` (resume) or `holding → discarded` (abandon).
 
 ## Orphaned worktrees
 

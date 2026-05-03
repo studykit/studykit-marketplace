@@ -14,7 +14,7 @@ Seed: **$ARGUMENTS**
 
 ## Scope
 
-- **In:** writing one research task file at `status: pending` / `progress` / `complete`, allocating its id, capturing `mode:` (`comparative` | `single`) and `options:` (when comparative).
+- **In:** writing one research task file at `status: queued` / `progress` / `complete`, allocating its id, capturing `mode:` (`comparative` | `single`) and `options:` (when comparative).
 - **Out:** `implements:` / `spec:` / `cycle:` (all forbidden on research — cite triggering UCs/specs from `## Context` body prose if relevant), implement / test loop (`/a4:auto-coding`), discard (`/a4:discard`), reviewer (use `/a4:research-review` for the kind=research quality pass), authoring tasks of other families. No commit.
 
 ## Pre-flight
@@ -37,7 +37,7 @@ When the task file is written:
 
 1. Summarize: task id / title, mode (`single` / `comparative`), options if comparative.
 2. Suggest the next step:
-   - `pending` or `progress` → start the investigation directly (the user or an investigator agent fills `## Context` + `## Options`/`## Findings`); when finalized, optionally run `/a4:research-review` before flipping to `complete`.
+   - `queued` or `progress` → start the investigation directly (the user or an investigator agent fills `## Context` + `## Options`/`## Findings`); when finalized, optionally run `/a4:research-review` before flipping to `complete`.
    - `complete` → consider `/a4:research-review` for a quality pass.
 3. Suggest `/a4:handoff` only if the broader session warrants a snapshot.
 
@@ -47,5 +47,5 @@ When the task file is written:
 - Do not run a reviewer agent inline. `/a4:research-review` is a separate quality pass.
 - Do not author multiple research tasks in one invocation.
 - Do not author non-research tasks here — use `/a4:task`, `/a4:bug`, or `/a4:spike`.
-- Do not flip task status beyond the initial `open` / `pending` / `complete` write.
+- Do not flip task status beyond the initial `open` / `queued` / `complete` write.
 - Do not make the decision in the research body. Research describes evidence; the decision belongs in a spec's `## Decision Log`.

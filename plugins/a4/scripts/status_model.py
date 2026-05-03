@@ -58,7 +58,7 @@ ISSUE_FAMILY_TYPES: tuple[str, ...] = ("task", "bug", "spike", "research")
 # ---------------------------------------------------------------------------
 
 _TASK_STATUSES: frozenset[str] = frozenset(
-    {"open", "pending", "progress", "complete", "failing", "discarded"}
+    {"open", "queued", "progress", "holding", "complete", "failing", "discarded"}
 )
 
 # Full set of valid `status:` values per family.
@@ -109,11 +109,12 @@ UC_TRANSITIONS: dict[str, frozenset[str]] = {
 }
 
 ISSUE_FAMILY_TRANSITIONS: dict[str, frozenset[str]] = {
-    "open": frozenset({"pending", "progress", "complete", "discarded"}),
-    "pending": frozenset({"progress", "discarded"}),
-    "progress": frozenset({"complete", "failing", "pending", "discarded"}),
-    "complete": frozenset({"pending", "discarded"}),
-    "failing": frozenset({"pending", "progress", "discarded"}),
+    "open": frozenset({"queued", "progress", "complete", "discarded"}),
+    "queued": frozenset({"progress", "discarded"}),
+    "progress": frozenset({"complete", "failing", "queued", "holding", "discarded"}),
+    "holding": frozenset({"progress", "discarded"}),
+    "complete": frozenset({"queued", "discarded"}),
+    "failing": frozenset({"queued", "progress", "discarded"}),
 }
 
 REVIEW_TRANSITIONS: dict[str, frozenset[str]] = {
@@ -180,9 +181,14 @@ IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
 
 BLOCKED_STATUSES: frozenset[str] = frozenset({"blocked"})
 
-# Tasks occupying the work queue — surfaced as the active section of the
-# workspace dashboard.
-ACTIVE_TASK_STATUSES: frozenset[str] = frozenset({"pending", "progress", "failing"})
+# Tasks occupying the active workflow — surfaced as the active section
+# of the workspace dashboard. Includes ``queued`` (in the work queue),
+# ``progress`` (currently being worked), ``failing`` (failed this
+# iteration, awaiting retry / defer), and ``holding`` (manually paused
+# mid-work). ``open`` (backlog) and the terminal statuses are excluded.
+ACTIVE_TASK_STATUSES: frozenset[str] = frozenset(
+    {"queued", "progress", "failing", "holding"}
+)
 
 
 # ---------------------------------------------------------------------------
@@ -232,8 +238,11 @@ SUPERSEDABLE_FROM_STATUSES: dict[str, frozenset[str]] = {
 # four issue families (``task`` / ``bug`` / ``spike`` / ``research``;
 # see ISSUE_FAMILY_TYPES) whose ``implements:`` lists the UC and is
 # currently in one of these statuses gets reset to ``TASK_RESET_TARGET``.
+# ``holding`` is intentionally outside the reset set — a manually paused
+# task carries explicit human stewardship and is left untouched, in line
+# with the policy that already exempts ``open`` / ``queued`` / ``complete``.
 TASK_RESET_ON_REVISING: frozenset[str] = frozenset({"progress", "failing"})
-TASK_RESET_TARGET: str = "pending"
+TASK_RESET_TARGET: str = "queued"
 
 # When a UC discard cascade looks at a review item, items already in one
 # of these terminal statuses are skipped (no flip).

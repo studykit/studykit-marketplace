@@ -4,7 +4,7 @@ Covers the four cascade engines that flip related files when a primary
 ``status:`` change occurs on a usecase / spec / issue-family file:
 
   - ``uc_revising``           — UC implementing → revising resets
-                                progress / failing tasks to pending.
+                                progress / failing tasks to queued.
   - ``uc_discarded``          — UC → discarded propagates to implementing
                                 tasks and targeting reviews.
   - ``uc_supersedes_chain``   — UC → shipped flips same-family supersedes
@@ -97,7 +97,7 @@ def _make_review(
 
 
 def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
-    """Case 1 — UC implementing → revising resets progress task to pending,
+    """Case 1 — UC implementing → revising resets progress task to queued,
     leaves complete task untouched, and refreshes ``updated:``."""
     a4_workspace.write("usecase", 1, "search", status="revising")
     t_progress = a4_workspace.write(
@@ -129,7 +129,7 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
         index=RefIndex(a4_workspace.root),
     )
 
-    assert _status(t_progress) == "pending"
+    assert _status(t_progress) == "queued"
     assert _updated(t_progress) == TODAY
     assert _status(t_complete) == "complete"
     assert _updated(t_complete) == "2026-04-01 09:00"
@@ -260,7 +260,7 @@ def test_dry_run_writes_no_disk_changes(a4_workspace) -> None:
         report=real_report,
         index=RefIndex(a4_workspace.root),
     )
-    assert _status(t) == "pending"
+    assert _status(t) == "queued"
     assert [c.path for c in real_report.cascades] == [
         c.path for c in dry_report.cascades
     ]
@@ -271,7 +271,7 @@ def test_apply_status_change_preserves_log_body(a4_workspace) -> None:
     scalars and leaves ``## Log`` body bytes untouched."""
     body = (
         "## Description\nimplement search\n\n"
-        "## Files\n- src/search.py\n\n"
+        "## Change Plan\n- src/search.py\n\n"
         "## Unit Test Strategy\npytest\n\n"
         "## Acceptance Criteria\n- works\n\n"
         "## Log\n"
@@ -282,12 +282,12 @@ def test_apply_status_change_preserves_log_body(a4_workspace) -> None:
         "task", 2, "index", status="progress", body=body
     )
 
-    apply_status_change(t, "progress", "pending", "test", dry_run=False, today=TODAY)
+    apply_status_change(t, "progress", "queued", "test", dry_run=False, today=TODAY)
 
     new_text = t.read_text(encoding="utf-8")
     assert "## Log\n- 2026-04-01 — picked up by alice" in new_text
     assert "- 2026-04-15 — paused, see review/9\n" in new_text
-    assert _status(t) == "pending"
+    assert _status(t) == "queued"
     assert _updated(t) == TODAY
 
 
@@ -422,15 +422,15 @@ def test_apply_supersedes_sweep_recovers_missed_cascades(a4_workspace) -> None:
 # ---------------------------------------------------------------------------
 
 
-def test_uc_revising_skips_pending_task(a4_workspace) -> None:
-    """Case 2 — task in ``pending`` (outside ``TASK_RESET_ON_REVISING``)
+def test_uc_revising_skips_queued_task(a4_workspace) -> None:
+    """Case 2 — task in ``queued`` (outside ``TASK_RESET_ON_REVISING``)
     is skipped with ``not-in-reset-state``."""
     a4_workspace.write("usecase", 1, "search", status="revising")
     t = a4_workspace.write(
         "task",
         2,
         "index",
-        status="pending",
+        status="queued",
         implements=["usecase/1-search"],
     )
 
@@ -446,7 +446,7 @@ def test_uc_revising_skips_pending_task(a4_workspace) -> None:
         index=RefIndex(a4_workspace.root),
     )
 
-    assert _status(t) == "pending"
+    assert _status(t) == "queued"
     assert report.cascades == []
     assert any(s["reason"] == "not-in-reset-state" for s in report.skipped)
 

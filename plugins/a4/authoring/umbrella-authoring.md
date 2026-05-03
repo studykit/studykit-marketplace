@@ -1,6 +1,6 @@
 # a4 — umbrella authoring
 
-An umbrella at `a4/umbrella/<id>-<slug>.md` is a **narrative-aggregation parent** — a file purpose-built to host the cross-cutting narrative that several issue-family children (`task` / `bug` / `spike` / `research`) share. It is *not* an implementation unit: an umbrella has no `## Files`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children; the umbrella exists so the next session reading any one child can discover the shared decisions through that child's `parent:` pointer.
+An umbrella at `a4/umbrella/<id>-<slug>.md` is a **narrative-aggregation parent** — a file purpose-built to host the cross-cutting narrative that several issue-family children (`task` / `bug` / `spike` / `research`) share. It is *not* an implementation unit: an umbrella has no `## Change Plan`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children; the umbrella exists so the next session reading any one child can discover the shared decisions through that child's `parent:` pointer.
 
 Companion to `./frontmatter-issue.md`, `./issue-body.md`. The narrative-home semantics (entry format, inline cross-references) live in `./issue-body.md#log`; the `parent:` discovery contract lives in `./frontmatter-issue.md` §`parent` and shared narrative.
 
@@ -63,7 +63,7 @@ labels: []             # free-form tags
 | `complete` | Author judges the umbrella's purpose fulfilled — usually after all relevant children reach `complete` and the integration outcome is met | → `open` (re-open if work resumes), → `discarded` |
 | `discarded` | The umbrella is no longer the right grouping (children moved under a different parent or stand alone). Write `## Why Discarded` |  — (terminal) |
 
-`complete` is **author-judged** — there is no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains `pending` / `progress` / `failing`, prefer keeping the umbrella `open`; the next session will see the umbrella's narrative even while individual children are still in flight.
+`complete` is **author-judged** — there is no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains `queued` / `progress` / `holding` / `failing`, prefer keeping the umbrella `open`; the next session will see the umbrella's narrative even while individual children are still in flight.
 
 When all children are `complete` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children. Either flip the umbrella to `complete` once the integration outcome is met, or leave it open intentionally for further follow-up children.
 
@@ -119,7 +119,7 @@ The frontmatter `parent:` makes the umbrella *discoverable*; the inline citation
 
 ## Don't
 
-- **Don't author implementation in the umbrella.** No `## Files`, no `## Unit Test Strategy`. The work belongs to children.
+- **Don't author implementation in the umbrella.** No `## Change Plan`, no `## Unit Test Strategy`. The work belongs to children.
 - **Don't treat the umbrella as a decision document.** Long-lived design decisions belong in `spec/`. The umbrella's `## Log` carries *implementation-progress narrative* that spans children — current approach, blockers, decisions tied to in-flight work.
 - **Don't nest umbrellas.** `parent:` on an umbrella is forbidden in this revision. If a deeper grouping arises, reorganize the children rather than adding a parent umbrella.
 - **Don't delete an umbrella after its purpose ends.** Flip to `complete` or `discarded` and let the file stay; reverse `parent:` lookups from children remain valid.

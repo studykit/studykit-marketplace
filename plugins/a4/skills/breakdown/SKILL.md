@@ -67,7 +67,7 @@ ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any t
 ls a4/review/*.md | xargs grep -l 'status: open' 2>/dev/null
 ```
 
-If every behavioral source is already covered by an existing task and the user's intent is to start implementing, point them at the next implement step — direct `pending → progress` walk per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`, or `/a4:auto-coding` for the agent-driven loop.
+If every behavioral source is already covered by an existing task and the user's intent is to start implementing, point them at the next implement step — direct `queued → progress` walk per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`, or `/a4:auto-coding` for the agent-driven loop.
 
 ## Workflow
 
@@ -89,7 +89,7 @@ File paths in derived task frontmatter must be specific to this codebase (`src/r
 
 ### Step 3: Derive tasks
 
-Procedure: `references/generate.md`. Covers task derivation from each behavioral source, file mapping (auto-populated `## Files`), upstream anchor population (`implements:` / `spec:` auto-fill), duplicate detection (skip + summary), and shared integration points.
+Procedure: `references/generate.md`. Covers task derivation from each behavioral source, file mapping (auto-populated `## Change Plan`), upstream anchor population (`implements:` / `spec:` auto-fill), duplicate detection (skip + summary), and shared integration points.
 
 ### Step 4: Verification + drift review
 
@@ -99,7 +99,7 @@ Procedure: `references/verification.md`. Spawn `breakdown-reviewer` for batch co
 
 After Step 4 closes:
 
-> Tasks ready. Begin the implement step — drive each task directly (`pending → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → pending` (edit `status:` directly) when you are ready for them to be picked up.
+> Tasks ready. Begin the implement step — drive each task directly (`queued → progress → complete` per `${CLAUDE_PLUGIN_ROOT}/authoring/issue-family-lifecycle.md`) or run `/a4:auto-coding` for the agent-driven loop. Single ad-hoc tasks can be added at any time via `/a4:task`, `/a4:bug`, `/a4:spike`, or `/a4:research`. Promote new tasks `open → queued` (edit `status:` directly) when you are ready for them to be picked up.
 
 Both implement forms read `a4/ci.md`'s `## How to run tests` as the single source of truth. Make sure `ci.md` exists and its content is correct before handing off — re-run `/a4:ci-setup` if architecture or test infrastructure changed.
 

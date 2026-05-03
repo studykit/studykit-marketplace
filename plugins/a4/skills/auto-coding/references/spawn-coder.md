@@ -9,7 +9,7 @@ ci file: <absolute path to a4/ci.md>  # single source of truth for test executio
 Architecture file: <absolute path to a4/architecture.md>
 Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>
 
-Read the task file for ## Description, ## Files, ## Unit Test Strategy, ## Acceptance Criteria.
+Read the task file for ## Description, ## Change Plan (if present — path-level scope fence), ## Unit Test Strategy, ## Acceptance Criteria.
 Pull unit-test commands from ci.md's ## How to run tests section.
 
 Implement the task and write its unit tests. All unit tests must pass.
@@ -22,7 +22,7 @@ Return: result (pass/fail), summary of changes, any issues encountered.
 
 ## Status flips around the agent call
 
-Before spawning, flip the task `status:` from `pending` to `progress` by editing the task file's frontmatter directly. The PostToolUse cascade hook refreshes `updated:` automatically.
+Before spawning, flip the task `status:` from `queued` to `progress` by editing the task file's frontmatter directly. The PostToolUse cascade hook refreshes `updated:` automatically.
 
 Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, edit `status:` to `complete` or `failing` based on the return value. Do not hand-edit `updated:` — the cascade hook owns it.
 

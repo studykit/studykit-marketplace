@@ -34,7 +34,7 @@ The `artifacts/` directory:
 
 ## Frontmatter `artifacts:` is artifact-only
 
-Frontmatter `artifacts:` lists artifact paths only — every path must point under `artifacts/<type>/<id>-<slug>/...`. Production source paths the task writes or modifies belong in the body `## Files` section, not in frontmatter.
+Frontmatter `artifacts:` lists artifact paths only — every path must point under `artifacts/<type>/<id>-<slug>/...`. Production source paths the task writes or modifies are not duplicated in frontmatter; git history is the authoritative record, and the optional body `## Change Plan` section may name them as a forward-looking scope fence when needed (per each per-family authoring file).
 
 For `type: spike`, `artifacts:` may also point under `artifacts/spike/archive/<id>-<slug>/` once the directory has been archived.
 

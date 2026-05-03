@@ -54,14 +54,14 @@ No auto-fall-back on pre-flight failure (halt instead). No in-cycle mode switch.
 
 ### Axis 2 — Run vs resume (workspace-state-driven)
 
-- **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `pending` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here.)
+- **Implement mode** — any of `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/` has `queued` or `failing` tasks, or no test-runner review items yet reference the current cycle. Run Steps 1–4 in order. (`open` tasks are backlog and intentionally **not** picked up here; `holding` tasks are paused under explicit human stewardship and require a manual `holding → progress` flip before they re-enter the loop.)
 - **Iterate mode** — open review items target a task. Apply `references/iteration-entry.md`.
 
 Workspace-state probe at session start:
 
 ```bash
 ls a4/task/*.md a4/bug/*.md a4/spike/*.md a4/research/*.md 2>/dev/null   # any tasks?
-grep -lhr '^status: pending' a4/task a4/bug a4/spike a4/research 2>/dev/null
+grep -lhr '^status: queued' a4/task a4/bug a4/spike a4/research 2>/dev/null
 grep -lhr '^status: failing' a4/task a4/bug a4/spike a4/research 2>/dev/null
 ls a4/review/*.md | xargs grep -l 'status: open\|target: task/\|target: bug/\|target: spike/\|target: research/'
 ```
@@ -97,7 +97,7 @@ Per-step subject formats and timing: `references/commit-points.md`.
 When all tasks are `complete` and all tests pass (or when the user ends the session):
 
 1. Summarize: tasks completed / revised / still failing, review items opened / resolved / still open, cycles consumed, UCs shipped this run (empty list is fine for UC-less runs).
-2. If any tasks remain `pending` / `failing` or any review items are `open`, suggest `/a4:auto-coding iterate` as the resumption path.
+2. If any tasks remain `queued` / `failing` or any review items are `open`, suggest `/a4:auto-coding iterate` as the resumption path. (`holding` tasks are intentionally paused — surface their count separately so the user knows to resume them manually.)
 3. Suggest `/a4:handoff` to snapshot the session.
 
 ## Agent Usage
