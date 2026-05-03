@@ -40,8 +40,6 @@ labels: []             # free-form tags
 | `labels` | no | list of strings | free-form tags |
 
 
-- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `type: bug` is fixed for files under `a4/bug/`. No `kind:` field — the type *is* the kind.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `implements:` lists `usecase/<id>-<slug>` paths. Declare when the bug traces to a UC's flow.
 - `spec:` lists `spec/<id>-<slug>` paths. Declare when the bug is a regression against a spec's expected behavior.
@@ -82,7 +80,7 @@ Bug-specific notes:
 
 **Optional, emit only when there is content for them:**
 
-- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the fix plans to write or modify, plus any artifact paths under `artifacts/bug/<id>-<slug>/`. Distinct from git history (which records changes *after the fact*); records what is *planned* before the fix lands. Useful when the fix spans multiple files or sits next to siblings whose scope must be partitioned. Skip for single-file fixes.
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the fix plans to write or modify, plus any artifact paths under `artifacts/bug/<id>-<slug>/`. Useful when the fix spans multiple files or sits next to siblings whose scope must be partitioned.
 - `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``).
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `done` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
@@ -116,4 +114,3 @@ Cross-family conventions live in `./artifacts.md` and apply to `type: bug` as wr
 
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded` is the writer's job.
 - **Don't ship a bug fix without a regression test.** The `## Unit Test Strategy` must include a scenario pinning the expected behavior; closing the task without it is the most common way the same bug returns.
-- **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and research to `a4/research/`.

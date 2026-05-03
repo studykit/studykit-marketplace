@@ -33,7 +33,6 @@ labels: []            # free-form tags (alias: tags)
 
 
 - `id:` see `./frontmatter-issue.md` § `id`.
-- `title` required. Placeholder tokens tolerated at `status: draft`, forbidden at `status: active` and beyond — see `./frontmatter-issue.md#title-placeholders`.
 - `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
 - `related:` is the soft-link slot — use for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). No stored-reverse contract; reverse lookups are derived on demand via grep / `../scripts/search.py`.
 
@@ -76,6 +75,7 @@ Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.).
 ## Common mistakes
 
 - **`## Context` or `## Specification` missing.** Both required; the `→ active` flip is invalid until they are present and non-empty.
+- **Placeholder in `title:` at `status >= active`.** See `./frontmatter-issue.md#title-placeholders`.
 
 ## Don't
 

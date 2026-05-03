@@ -37,7 +37,6 @@ labels: []               # free-form tags (incl. group slugs like screen-dashboa
 | `labels` | no | list of strings | free-form tags |
 
 
-- `title` is required. Placeholder tokens tolerated at `status: draft`, forbidden at `status: ready` and beyond — see `./frontmatter-issue.md#title-placeholders`.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `actors:` lists slugs defined in `actors.md`'s `## Roster` (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references by slug. Platform-capability UCs typically use `actors: [platform]`.
 - UC-to-UC ordering is **not** in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with backlinks.

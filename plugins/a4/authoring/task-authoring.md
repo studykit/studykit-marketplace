@@ -40,8 +40,6 @@ labels: []             # free-form tags
 | `labels` | no | list of strings | free-form tags |
 
 
-- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `type: task` is fixed for files under `a4/task/`. No `kind:` field — the type *is* the kind.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare whenever UC-driven.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare in UC-less projects (the spec's `## Specification` body + relevant `architecture.md` section becomes the AC source).
@@ -64,9 +62,9 @@ A task with **both** anchors empty has no AC source. Either downgrade to `spike`
 
 Empty anchors are not always a problem — small UI tweaks, single-property validations, and batch-generated tasks without a UC group can legitimately stay anchorless. The deeper signal is in the body: when the description implies a user-facing scope no existing UC covers, or an architectural choice no existing spec records, surface the gap as a review item with `kind: gap`, `target: usecase/` or `target: spec/` (omit `target:` for cross-cutting), `source: task`.
 
-### Granularity — one cohesive unit per file
+### Granularity — split signals
 
-Each `a4/task/<id>-<slug>.md` is one cohesive unit. When a request, seed, or breakdown exceeds what fits cohesively in a single task — multiple unrelated edits, distinct AC sets, or independent test surfaces — split into multiple task files, one per cohesive unit. Each split file allocates its own globally-monotonic `id:` and stands on its own. Use `depends_on:` between split tasks when one must land before another, and a shared `parent:` (issue or `umbrella/<id>-<slug>`) when the siblings warrant cross-cutting narrative per `./umbrella-authoring.md`.
+Split into multiple task files when a single task would span multiple unrelated edits, distinct AC sets, or independent test surfaces. Each split file allocates its own globally-monotonic `id:` and stands on its own. Use `depends_on:` between split tasks when one must land before another, and a shared `parent:` (issue or `umbrella/<id>-<slug>`) when the siblings warrant cross-cutting narrative per `./umbrella-authoring.md`.
 
 ### Evidence-readiness — sister rule
 
@@ -102,7 +100,7 @@ Task-specific notes:
 
 **Optional, emit only when there is content for them:**
 
-- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Distinct from git history (which records changes *after the fact*); this section records what is *planned* before implementation. Useful when (a) the task is one of several in a batch and parallel coder agents need a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./umbrella-authoring.md`). Skip for single-file or self-evident scope. Auto-populated by `/a4:breakdown` for batch-derived tasks.
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Useful when (a) the task is one of several in a batch and parallel coder agents need a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./umbrella-authoring.md`). Auto-populated by `/a4:breakdown` for batch-derived tasks.
 - `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``). For UC-less work, link to the spec or relevant `architecture.md` section.
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `done` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
@@ -135,4 +133,3 @@ Cross-family conventions live in `./artifacts.md` and apply to `type: task` as w
 ## Don't (task-specific)
 
 - **Don't manually flip cascade-driven statuses.** UC `discarded` → task `discarded`, UC `revising` → task `queued`-reset are the writer's job.
-- **Don't author a different issue family here.** Move spikes to `a4/spike/`, bugs to `a4/bug/`, and research to `a4/research/`.

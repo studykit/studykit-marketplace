@@ -51,8 +51,6 @@ labels: []                           # free-form tags
 
 `implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error.
 
-- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `type: research` is fixed for files under `a4/research/`.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `mode:` is required. `comparative` for option-comparison investigations; `single` for a flat topic / question.
 - `options:` is required when `mode: comparative` — list option names that the body's `## Options` section will cover, one subsection per option. Forbidden when `mode: single`.
@@ -141,4 +139,3 @@ Reverse lookups (which specs cite a research task) are derived on demand via gre
 - **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden. Cite triggering specs via backlinks in `## Context` body prose; record the implementing UC the same way.
 - **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
 - **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
-- **Don't author a different issue family here.** Move tasks to `a4/task/`, spikes to `a4/spike/`, and bugs to `a4/bug/`.

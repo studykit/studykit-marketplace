@@ -36,8 +36,6 @@ labels: []             # free-form tags
 
 `implements` / `spec` / `cycle` are not part of the spike schema — declaring them is an error.
 
-- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `type: spike` is fixed for files under `a4/spike/`. No `kind:` field — the type *is* the kind.
 - `id:` see `./frontmatter-issue.md` § `id`.
 - `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome validates a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description`.
 - `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via backlink.
@@ -74,7 +72,7 @@ Spike-specific notes:
 
 **Optional, emit only when there is content for them:**
 
-- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing artifact paths under `artifacts/spike/<id>-<slug>/` the spike plans to create, plus any production source paths the spike may probe or temporarily touch (for reader context). Distinct from git history; records what is *planned* before exploration begins. Skip when the artifact directory is self-explanatory. (Frontmatter `artifacts:` is artifact-only.)
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing artifact paths under `artifacts/spike/<id>-<slug>/` the spike plans to create, plus any production source paths the spike may probe or temporarily touch (for reader context). (Frontmatter `artifacts:` is artifact-only.)
 - `## Interface Contracts` — contracts the spike consumes or proposes, with backlinks to `architecture.md` sections.
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal. See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
@@ -111,4 +109,3 @@ Cross-family conventions live in `./artifacts.md` and apply to `type: spike` as 
 - **Don't put `implements:`, `cycle:`, or `spec:` on a spike.** All three are forbidden. If the outcome warrants UC delivery, author a follow-up `type: task`.
 - **Don't auto-delete or auto-archive `artifacts/spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
 - **Don't write production source from a spike.** `artifacts:` paths staying under `artifacts/spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the outcome warrants production work, follow up with a `task`.
-- **Don't author a different issue family here.** Move tasks to `a4/task/`, bugs to `a4/bug/`, and research to `a4/research/`.
