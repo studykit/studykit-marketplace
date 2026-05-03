@@ -1,7 +1,7 @@
 ---
 name: domain
 description: "This skill should be used when the user needs to extract or revise the cross-cutting Domain Model — concepts, relationships, state transitions — from an existing use-case set. Common triggers include: 'domain model', 'extract concepts', 'glossary', 'class diagram', 'state diagram', 'concept relationships', 'state transitions', 'domain.md', 'reconcile vocabulary'. Writes a4/domain.md (wiki page) following the spec-as-wiki+issues layout. Authored separately from usecase: usecase captures per-UC actor/situation/flow; domain extracts the cross-cutting vocabulary that emerges across UCs."
-argument-hint: <optional: "iterate" to resume on open domain review items; otherwise auto-detects existing a4/domain.md>
+argument-hint: '<optional: "iterate" to resume on open domain review items; otherwise auto-detects existing a4/domain.md>'
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---

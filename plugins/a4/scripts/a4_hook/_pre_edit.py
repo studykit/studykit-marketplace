@@ -7,14 +7,17 @@ Two responsibilities on the same a4/*.md gate:
    (pre vs post on disk, instead of HEAD vs working tree).
 2. Inject the type-specific authoring-contract pointers as
    ``additionalContext`` once per type per session, for both existing-file
-   edits and new-file Writes (issue creation). Sole mechanism for surfacing
-   authoring contracts at edit time.
+   edits and new-file Writes (issue creation), when the runtime supports
+   PreToolUse context injection. Sole mechanism for surfacing authoring
+   contracts at edit time in Claude Code.
 
 Authoring-contract injection notes:
 
 - Lazy, edit-intent-only — fires from PreToolUse so a pure read of an
   `a4/*.md` file does NOT pull in the contract; only an imminent
-  Write/Edit/MultiEdit does.
+  Write/Edit/MultiEdit does. Codex apply_patch payloads still record
+  pre-edit state, but suppress this context because Codex PreToolUse does
+  not inject `additionalContext` into the model.
 - Type resolution is by path (`common.WIKI_TYPES` / `common.ISSUE_FOLDERS`),
   not by frontmatter parse — the a4 layout pins type by location, so an
   extra file IO is unnecessary. Archive files are skipped.
@@ -35,6 +38,7 @@ from a4_hook._state import (
     AUTHORING_DIR,
     display_rel,
     emit,
+    project_dir_from_payload,
     read_injected,
     read_prestatus,
     read_status_from_disk,
@@ -43,6 +47,7 @@ from a4_hook._state import (
     resolve_type_from_path,
     write_prestatus,
 )
+from a4_hook._runtime import select_hook_strategy
 
 
 _TASK_FAMILY_TYPES = frozenset({"task", "bug", "spike", "research"})
@@ -85,20 +90,53 @@ def pre_edit() -> int:
     except json.JSONDecodeError:
         return 0
 
-    if payload.get("tool_name") not in ("Write", "Edit", "MultiEdit"):
-        return 0
-    file_path = (payload.get("tool_input") or {}).get("file_path") or ""
     session_id = payload.get("session_id") or ""
-    if not file_path or not session_id or not file_path.endswith(".md"):
+    if not session_id:
         return 0
 
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    project_dir = project_dir_from_payload(payload)
     if not project_dir:
         return 0
     a4_dir = Path(project_dir) / "a4"
     a4_prefix = str(a4_dir) + os.sep
-    if not file_path.startswith(a4_prefix):
+
+    strategy = select_hook_strategy(payload)
+    targets = strategy.edit_targets(payload, project_dir)
+    if not targets:
         return 0
+
+    # Codex currently parses PreToolUse `additionalContext` but does not inject
+    # it into the model. Emitting the Claude-style authoring-contract context
+    # from a Codex PreToolUse hook would therefore become invalid hook output.
+    # Keep the stateful pre-edit work, but suppress context for Codex payloads.
+    suppress_context = strategy.suppress_pretooluse_context
+
+    for target in targets:
+        _pre_edit_one(
+            payload,
+            target.path,
+            a4_dir,
+            a4_prefix,
+            project_dir,
+            session_id,
+            target.is_new_file_intent,
+            suppress_context,
+        )
+    return 0
+
+
+def _pre_edit_one(
+    payload: dict,
+    file_path: str,
+    a4_dir: Path,
+    a4_prefix: str,
+    project_dir: str,
+    session_id: str,
+    is_new_file_intent: bool,
+    suppress_context: bool,
+) -> None:
+    if not file_path.startswith(a4_prefix):
+        return
 
     abs_path = Path(file_path)
 
@@ -117,7 +155,7 @@ def pre_edit() -> int:
         # LLM pre-populated; `created:` is hook-owned). Only Write can
         # create files in Claude Code's tool model; Edit/MultiEdit
         # require a prior Read of an existing file.
-        if payload.get("tool_name") == "Write":
+        if is_new_file_intent or payload.get("tool_name") == "Write":
             record_newfile(project_dir, session_id, file_path)
 
     # Responsibility 2 — authoring-contract injection (one-shot per
@@ -126,10 +164,10 @@ def pre_edit() -> int:
     # works without on-disk frontmatter, so issue creation gets the
     # binding contract before authoring. Dedupe still suppresses repeat
     # injections on subsequent edits to the same file.
-    _maybe_inject_authoring_contract(
-        abs_path, file_path, a4_dir, project_dir, session_id
-    )
-    return 0
+    if not suppress_context:
+        _maybe_inject_authoring_contract(
+            abs_path, file_path, a4_dir, project_dir, session_id
+        )
 
 
 def _maybe_inject_authoring_contract(

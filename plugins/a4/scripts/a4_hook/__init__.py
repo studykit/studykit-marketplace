@@ -7,6 +7,8 @@ of the modules it actually uses (the `post-edit` fast path fires on every
 Write/Edit/MultiEdit, so this matters).
 
 Module map:
+- `_runtime`       — runtime Strategy implementations for Claude Code and
+                     Codex payload shapes / output behavior.
 - `_state`         — module-level constants (`PLUGIN_ROOT`, `AUTHORING_DIR`),
                      shared helpers (`record_dir`, `display_rel`, `emit`,
                      `read_status_from_disk`, `resolve_type_from_path`,

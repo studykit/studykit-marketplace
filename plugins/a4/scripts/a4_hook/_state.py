@@ -45,6 +45,44 @@ def display_rel(file_path: str, project_dir: str) -> str:
     return file_path[len(prefix):] if file_path.startswith(prefix) else file_path
 
 
+def project_dir_from_payload(payload: dict) -> str:
+    """Resolve the active project directory for Claude Code and Codex hooks.
+
+    Claude Code provides ``CLAUDE_PROJECT_DIR``. Codex hook stdin provides
+    ``cwd`` but not that Claude-specific environment variable, so for Codex we
+    derive the git root from ``cwd`` and fall back to ``cwd`` itself. The return
+    value is a normalized absolute path string or ``""`` when no usable cwd can
+    be found.
+    """
+    import os
+    import subprocess
+
+    explicit = os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("PROJECT_DIR")
+    if explicit:
+        return str(Path(explicit).expanduser().resolve())
+
+    cwd = payload.get("cwd") or os.getcwd()
+    if not isinstance(cwd, str) or not cwd:
+        return ""
+    cwd_path = Path(cwd).expanduser().resolve()
+
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(cwd_path), "rev-parse", "--show-toplevel"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        root = proc.stdout.strip()
+        if root:
+            return str(Path(root).resolve())
+    except (OSError, subprocess.CalledProcessError):
+        pass
+
+    return str(cwd_path)
+
+
 def emit(payload: dict) -> None:
     import json
 

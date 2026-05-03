@@ -22,22 +22,27 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from a4_hook._state import PLUGIN_ROOT, emit
+from a4_hook._state import PLUGIN_ROOT, emit, project_dir_from_payload
 
 
 def session_start() -> int:
     """SessionStart entry point. Always exits 0."""
+    import json
     import os
 
     # Drain stdin defensively. Claude Code pipes a JSON payload to
     # SessionStart hooks; we read no fields, but a closed pipe on an
     # unread parent stdin can block.
     try:
-        sys.stdin.read()
+        raw = sys.stdin.read()
     except OSError:
-        pass
+        raw = ""
+    try:
+        payload = json.loads(raw) if raw else {}
+    except json.JSONDecodeError:
+        payload = {}
 
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    project_dir = project_dir_from_payload(payload)
     if not project_dir:
         return 0
     a4_dir = Path(project_dir) / "a4"

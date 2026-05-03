@@ -35,12 +35,15 @@ def _run_pre_edit(
     file_path: Path,
     session_id: str = "sess1",
     tool_name: str = "Write",
+    extra_payload: dict | None = None,
 ) -> tuple[int, str]:
     payload = {
         "tool_name": tool_name,
         "tool_input": {"file_path": str(file_path)},
         "session_id": session_id,
     }
+    if extra_payload:
+        payload.update(extra_payload)
     monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project_dir))
     monkeypatch.setattr(
         hook_module.sys, "stdin", io.StringIO(json.dumps(payload))
@@ -192,6 +195,154 @@ def test_existing_file_edit_stashes_prestatus_and_injects(
     assert prestatus_file.is_file()
     data = json.loads(prestatus_file.read_text(encoding="utf-8"))
     assert data[str(existing)] == "in_progress"
+
+
+def test_claude_common_fields_do_not_suppress_injection(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Claude Code also sends cwd/hook_event_name; they are not Codex signals."""
+    _make_a4_layout(tmp_path)
+    existing = tmp_path / "a4" / "task" / "31-common-fields.md"
+    existing.write_text(
+        "---\n"
+        "type: task\n"
+        "id: 31\n"
+        "title: Common Fields\n"
+        "status: in_progress\n"
+        "created: 2026-05-01 09:00\n"
+        "updated: 2026-05-01 09:00\n"
+        "---\n\n"
+        "## Description\nx\n",
+        encoding="utf-8",
+    )
+
+    rc, out = _run_pre_edit(
+        hook_module,
+        monkeypatch,
+        tmp_path,
+        existing,
+        session_id="sess-claude-common",
+        tool_name="Edit",
+        extra_payload={
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "model": "claude-sonnet-4-6",
+        },
+    )
+
+    assert rc == 0
+    payload = json.loads(out.strip())
+    assert "task-authoring.md" in payload["hookSpecificOutput"][
+        "additionalContext"
+    ]
+
+
+def test_claude_file_tool_signal_wins_over_inherited_codex_env(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_a4_layout(tmp_path)
+    monkeypatch.setenv("PLUGIN_ROOT", "/tmp/inherited-codex-plugin-root")
+    monkeypatch.setenv("CODEX_THREAD_ID", "inherited-thread-id")
+    new_file = tmp_path / "a4" / "task" / "37-inherited-env.md"
+
+    rc, out = _run_pre_edit(
+        hook_module,
+        monkeypatch,
+        tmp_path,
+        new_file,
+        session_id="sess-claude-inherited-env",
+        tool_name="Write",
+        extra_payload={
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "model": "claude-sonnet-4-6",
+        },
+    )
+
+    assert rc == 0
+    payload = json.loads(out.strip())
+    assert "task-authoring.md" in payload["hookSpecificOutput"][
+        "additionalContext"
+    ]
+
+
+def test_claude_relative_file_path_resolves_from_project_dir(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_a4_layout(tmp_path)
+    rc, out = _run_pre_edit(
+        hook_module,
+        monkeypatch,
+        tmp_path,
+        Path("a4/task/39-relative.md"),
+        session_id="sess-claude-relative",
+        tool_name="Write",
+        extra_payload={
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "model": "claude-sonnet-4-6",
+        },
+    )
+
+    assert rc == 0
+    payload = json.loads(out.strip())
+    assert "a4/task/39-relative.md" in payload["hookSpecificOutput"][
+        "additionalContext"
+    ]
+
+
+def test_codex_apply_patch_suppresses_pretooluse_context_but_records_newfile(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _make_a4_layout(tmp_path)
+    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
+    monkeypatch.setenv("PLUGIN_ROOT", "/tmp/fake-codex-plugin")
+
+    patch_text = (
+        "*** Begin Patch\n"
+        "*** Add File: a4/task/41-codex.md\n"
+        "+---\n"
+        "+type: task\n"
+        "+id: 41\n"
+        "+title: Codex\n"
+        "+status: queued\n"
+        "+updated: 2026-05-03 10:00\n"
+        "+---\n"
+        "+\n"
+        "+## Description\n"
+        "+x\n"
+        "*** End Patch\n"
+    )
+    payload = {
+        "tool_name": "apply_patch",
+        "tool_input": {"command": patch_text},
+        "session_id": "sess-codex-apply-patch",
+        "cwd": str(tmp_path),
+        "hook_event_name": "PreToolUse",
+        "model": "gpt-5.5",
+        "turn_id": "turn-1",
+    }
+    monkeypatch.setattr(
+        hook_module.sys, "stdin", io.StringIO(json.dumps(payload))
+    )
+    captured = io.StringIO()
+    monkeypatch.setattr(hook_module.sys, "stdout", captured)
+
+    rc = hook_module._pre_edit()
+
+    assert rc == 0
+    assert captured.getvalue() == ""
+    newfiles_file = (
+        tmp_path
+        / ".claude"
+        / "tmp"
+        / "a4-edited"
+        / "a4-newfiles-sess-codex-apply-patch.txt"
+    )
+    assert newfiles_file.is_file()
+    assert str(tmp_path / "a4" / "task" / "41-codex.md") in newfiles_file.read_text(
+        encoding="utf-8"
+    )
 
 
 def test_new_file_does_not_create_prestatus_entry(

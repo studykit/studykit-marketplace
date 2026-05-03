@@ -1,7 +1,7 @@
 ---
 name: breakdown
 description: "This skill should be used when the user needs to derive a batch of task files from existing usecase / spec / architecture inputs. Common triggers include: 'breakdown', 'derive tasks', 'task batch', 'batch tasks from spec', 'plan the implementation tasks'. Writes per-task files at a4/task/<id>-<slug>.md only — no wiki page output. Requires (usecase OR spec) AND ci.md to enter; otherwise redirects to /a4:ci-setup, /a4:spec, /a4:usecase, or /a4:task. The agent-driven implement + test loop is in /a4:auto-coding; single ad-hoc tasks come through /a4:task, /a4:bug, /a4:spike, /a4:research."
-argument-hint: <optional: "iterate" to walk task-targeted review items; auto-detects workspace state otherwise>
+argument-hint: '<optional: "iterate" to walk task-targeted review items; auto-detects workspace state otherwise>'
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList
 ---

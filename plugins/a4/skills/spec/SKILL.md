@@ -1,7 +1,7 @@
 ---
 name: spec
 description: "This skill should be used when the user has converged on the shape of an artifact (format, protocol, schema, renderer rule, CLI surface) and wants to commit it as a prescriptive implementation contract. Writes the spec to `a4/spec/<id>-<slug>.md` with proper frontmatter and body, soft-links any related research tasks (a4/research/<id>-<slug>.md) via standard markdown body links and optional `related:` frontmatter entries, optionally records decision rationale in the `## Decision Log` appendum, and nudges affected wiki pages (architecture / context / domain / actors / nfr). Triggers: 'document this format', 'write up the spec', 'capture this shape', 'this is the spec', 'spec this out', or after the user and LLM converge on a prescriptive shape. Accepts either no argument (extract spec from recent conversation) or a short summary / title (used as a seed). Also handles re-invocation on an existing draft spec to activate it. Requires an `a4/` workspace."
-argument-hint: <optional: short spec summary or title>
+argument-hint: '<optional: short spec summary or title>'
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Task
 ---

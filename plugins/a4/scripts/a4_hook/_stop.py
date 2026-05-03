@@ -14,7 +14,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from a4_hook._state import AUTHORING_DIR, record_dir, unlink_silent
+from a4_hook._state import (
+    AUTHORING_DIR,
+    project_dir_from_payload,
+    record_dir,
+    unlink_silent,
+)
 
 
 def stop() -> int:
@@ -34,7 +39,7 @@ def stop() -> int:
     if not session_id or payload.get("stop_hook_active") is True:
         return 0
 
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    project_dir = project_dir_from_payload(payload)
     if not project_dir:
         return 0
     a4_dir = Path(project_dir) / "a4"

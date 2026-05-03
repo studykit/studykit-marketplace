@@ -9,13 +9,19 @@ script). Imports are lazy: a `pre-edit` invocation only loads the
 `_pre_edit` module, not `_post_edit` etc., keeping the per-invocation
 import cost minimal (the `post-edit` fast path fires on every
 Write/Edit/MultiEdit, so this matters).
+Claude/Codex payload differences live behind runtime Strategy objects in
+`a4_hook._runtime`; the edit subcommands pick one strategy up front and then
+operate on normalized edit targets.
 
 Subcommand surface:
-  pre-edit       PreToolUse on Write|Edit|MultiEdit. Stash on-disk
+  pre-edit       PreToolUse on Write|Edit|MultiEdit or Codex apply_patch.
+                 Stash on-disk
                  ``status:`` for cascade detection AND inject the
                  type-specific authoring-contract pointers as
-                 ``additionalContext`` once per type per session.
-  post-edit      PostToolUse on Write|Edit|MultiEdit. Record edit, stamp
+                 ``additionalContext`` once per type per session when the
+                 runtime supports PreToolUse context injection.
+  post-edit      PostToolUse on Write|Edit|MultiEdit or Codex apply_patch.
+                 Record edit, stamp
                  ``created:`` on new-file Writes, run ``status:``
                  transition cascade if applicable, refresh ``updated:``
                  on the primary, and report cross-file status-consistency
@@ -41,6 +47,8 @@ in-event ordering, non-blocking policy, output channel usage) live in
 
 Invoked from `plugins/a4/hooks/hooks.json` as
 `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
+Codex plugin hooks provide `CLAUDE_PLUGIN_ROOT` as a compatibility alias
+for the plugin root.
 
 The `markdown_validator` package next to this file is imported in-process
 rather than shelled out via `uv run`, so per-invocation interpreter

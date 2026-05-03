@@ -1,5 +1,9 @@
 """PostToolUse subcommand: record + cascade + stamp/refresh + consistency.
 
+Supports Claude Code Write/Edit/MultiEdit payloads and Codex apply_patch
+payloads. Codex apply_patch can touch several files in one hook invocation,
+so Codex-mode stdout is aggregated into a single JSON object before return.
+
 Driver order in :func:`post_edit`:
 
 1. Record the edited a4/*.md path (session-scoped, fail-open).
@@ -24,6 +28,7 @@ from a4_hook._state import (
     display_rel,
     drop_newfile,
     emit,
+    project_dir_from_payload,
     read_newfiles,
     read_prestatus,
     read_status_from_disk,
@@ -31,6 +36,7 @@ from a4_hook._state import (
     resolve_type_from_path,
     write_prestatus,
 )
+from a4_hook._runtime import select_hook_strategy
 
 
 def post_edit() -> int:
@@ -40,6 +46,8 @@ def post_edit() -> int:
     report describes the post-cascade workspace (otherwise cascaded
     files would briefly look inconsistent and produce noise).
     """
+    import contextlib
+    import io
     import json
     import os
 
@@ -51,24 +59,20 @@ def post_edit() -> int:
     except json.JSONDecodeError:
         return 0
 
-    if payload.get("tool_name") not in ("Write", "Edit", "MultiEdit"):
-        return 0
-
-    file_path = (payload.get("tool_input") or {}).get("file_path") or ""
     session_id = payload.get("session_id") or ""
-    if not file_path or not session_id or not file_path.endswith(".md"):
+    if not session_id:
         return 0
 
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    project_dir = project_dir_from_payload(payload)
     if not project_dir:
         return 0
     a4_dir = Path(project_dir) / "a4"
     a4_prefix = str(a4_dir) + os.sep
-    if not file_path.startswith(a4_prefix):
-        return 0
 
-    # Step 1 — record (session-scoped, fail-open).
-    record_edited(project_dir, session_id, file_path)
+    strategy = select_hook_strategy(payload)
+    targets = strategy.edit_targets(payload, project_dir)
+    if not targets:
+        return 0
 
     if not a4_dir.is_dir():
         return 0
@@ -81,6 +85,36 @@ def post_edit() -> int:
     except ImportError:
         return 0
     today = now_kst()
+
+    if strategy.aggregate_posttooluse_output:
+        captured = io.StringIO()
+        with contextlib.redirect_stdout(captured):
+            for target in targets:
+                _post_edit_one(
+                    a4_dir, a4_prefix, target.path, project_dir, session_id, today
+                )
+        _emit_codex_post_aggregate(captured.getvalue())
+    else:
+        for target in targets:
+            _post_edit_one(
+                a4_dir, a4_prefix, target.path, project_dir, session_id, today
+            )
+    return 0
+
+
+def _post_edit_one(
+    a4_dir: Path,
+    a4_prefix: str,
+    file_path: str,
+    project_dir: str,
+    session_id: str,
+    today: str,
+) -> None:
+    if not file_path.startswith(a4_prefix):
+        return
+
+    # Step 1 — record (session-scoped, fail-open).
+    record_edited(project_dir, session_id, file_path)
 
     # Step 2 — stamp `created:` if this Write created a new file. Runs
     # before the cascade so a status flip (which also touches `updated:`)
@@ -107,7 +141,54 @@ def post_edit() -> int:
 
     # Step 5 — status-consistency report on the (now post-cascade) state.
     _report_status_consistency_post(a4_dir, file_path, project_dir)
-    return 0
+
+
+def _emit_codex_post_aggregate(raw: str) -> None:
+    """Collapse multiple internal post-edit emissions into one Codex JSON.
+
+    Codex hook stdout is parsed as a single JSON object. The a4 post-edit
+    pipeline can emit more than one JSON object when one patch touches several
+    connected a4 files, so plugin-hook invocations aggregate them before
+    returning to Codex.
+    """
+    import json
+
+    contexts: list[str] = []
+    messages: list[str] = []
+    invalid: list[str] = []
+    for line in raw.splitlines():
+        if not line.strip():
+            continue
+        try:
+            payload = json.loads(line)
+        except json.JSONDecodeError:
+            invalid.append(line.strip())
+            continue
+        if isinstance(payload, dict):
+            msg = payload.get("systemMessage")
+            if isinstance(msg, str) and msg.strip():
+                messages.append(msg.strip())
+            hook_specific = payload.get("hookSpecificOutput")
+            if isinstance(hook_specific, dict):
+                ctx = hook_specific.get("additionalContext")
+                if isinstance(ctx, str) and ctx.strip():
+                    contexts.append(ctx.strip())
+
+    if invalid and not contexts and not messages:
+        messages.append("\n".join(invalid))
+
+    if not contexts and not messages:
+        return
+
+    out: dict = {}
+    if contexts:
+        out["hookSpecificOutput"] = {
+            "hookEventName": "PostToolUse",
+            "additionalContext": "\n\n---\n\n".join(contexts),
+        }
+    if messages:
+        out["systemMessage"] = " | ".join(messages)
+    emit(out)
 
 
 def _maybe_stamp_created(

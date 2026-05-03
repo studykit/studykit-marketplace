@@ -16,7 +16,12 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from a4_hook._state import emit, read_resolved_ids, record_resolved_ids
+from a4_hook._state import (
+    emit,
+    project_dir_from_payload,
+    read_resolved_ids,
+    record_resolved_ids,
+)
 
 
 _MAX_IDS = 20
@@ -51,7 +56,7 @@ def user_prompt() -> int:
     if not prompt or not session_id:
         return 0
 
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    project_dir = project_dir_from_payload(payload)
     if not project_dir:
         return 0
     a4_dir = Path(project_dir) / "a4"
