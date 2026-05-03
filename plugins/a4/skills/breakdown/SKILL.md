@@ -52,7 +52,7 @@ boot=$(ls a4/ci.md 2>/dev/null)
 ## Id Allocation
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
 ## Modes

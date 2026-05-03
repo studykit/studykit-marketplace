@@ -2,40 +2,40 @@
 
 Body-level rules for issue files (`usecase`, `task`, `bug`, `spike`, `research`, `umbrella`, `review`, `spec`, `idea`, `brainstorm`). Defines two optional sections that keep a mid-flight issue file self-sufficient for the next session: `## Resume` (current-state snapshot) and `## Log` (narrative-worthy events).
 
-Common body rules (heading form, link form) live in `./body-conventions.md`.
+Common body rules (heading form, link form): `./body-conventions.md`.
 
 ## Why two sections
 
-A future Claude Code session (or any reader picking the file up cold) needs two distinct things:
+A future Claude Code session (or any reader picking up cold) needs two distinct things:
 
-- **What to do next** — the current approach, current blocker, the next concrete step. This is a *snapshot*; previous values become irrelevant the moment a new value replaces them.
-- **What got us here** — the decision pivots, blocker resolutions, and approach changes that have shaped the work to date. This is a *narrative*; older entries retain value as audit trail.
+- **What to do next** — current approach, current blocker, next concrete step. A *snapshot*; previous values become irrelevant the moment a new value replaces them.
+- **What got us here** — decision pivots, blocker resolutions, approach changes that have shaped the work. A *narrative*; older entries retain value as audit trail.
 
-Mixing the two in one section makes it impossible for a fresh reader to tell which fact is still live. The split keeps each surface readable on its own:
+Mixing the two makes it impossible for a fresh reader to tell which fact is still live. The split keeps each surface readable on its own:
 
 | Section | Role | Write rule |
 |---|---|---|
 | `## Resume` | Current-state snapshot. What a fresh session needs to pick the work up. | Freely rewrite or replace any slot; do not preserve history. |
 | `## Log` | Narrative of meaningful events: decision pivots, blocker resolutions, approach changes worth remembering. | Append-only. Dated bullets. Older entries are not edited. |
 
-When `## Resume` is present, do **not** duplicate its content in `## Log`. Use `## Log` only for events whose narrative value persists past the current state — what changed, why, and what was superseded. Routine status updates ("started X today", "moved to progress") do not belong in `## Log`.
+When `## Resume` is present, do **not** duplicate its content in `## Log`. Use `## Log` only for events whose narrative value persists past the current state — what changed, why, what was superseded. Routine status updates ("started X today", "moved to progress") do not belong in `## Log`.
 
 Both sections are optional. A file may carry one, the other, both, or neither.
 
 ## `## Resume`
 
-Purpose: **current-state snapshot for the next session**. Contains only what is true *now* — the previous state is no longer of interest, so the section is freely overwritten as work progresses.
+Purpose: **current-state snapshot for the next session**. Contains only what is true *now*; freely overwritten as work progresses.
 
 Suggested slots (all optional, omit when empty):
 
-- **Approach.** The strategy currently being attempted, when not yet visible in `## Description` / `## Acceptance Criteria` / `## Specification`.
+- **Approach.** Strategy currently being attempted, when not yet visible in `## Description` / `## Acceptance Criteria` / `## Specification`.
 - **Blocked on.** Where the work is currently stuck and the suspected cause.
 - **Open questions.** Questions awaiting user input or constraints the user gave only in conversation.
 - **Next.** The next concrete step a fresh session should pick up.
 
 **Compact `## Resume` whenever you update it.** Adding a new in-flight item, modifying an existing one, or marking something settled — in the same edit, walk every slot and remove items no longer in flight or next to do (Done sub-steps, settled Open questions, resolved Blocked-on, shipped phases). If a removed item carries narrative worth preserving past the current state, append a dated `## Log` entry in the same edit; never leave it behind as a `_Done._` marker, `settled at …` annotation, or strikethrough line. The slot lists what is live, not what has been done.
 
-Format is the author's choice — bullets with bold lead-ins, prose paragraphs, or any combination. The expectation is that opening this section gives a fresh reader, in under 30 seconds, the information needed to continue.
+Format is the author's choice — bullets with bold lead-ins, prose paragraphs, or any combination. Opening this section should give a fresh reader, in under 30 seconds, the information needed to continue.
 
 ```markdown
 ## Resume
@@ -54,29 +54,29 @@ Do not restate things a fresh reader can already see:
 - Frontmatter values — `status:`, `cycle:`, `updated:`.
 - Which files were modified — `git log` / `git diff` cover this.
 - Review-item bodies — link the review item and stop there.
-- Command history (test runs, builds, etc.) — that belongs in the session handoff, not in the file.
+- Command history (test runs, builds, etc.) — that belongs in the session handoff.
 
 Do not record narrative ("we used to try X, then switched to Y"). That belongs in `## Log`. `## Resume` carries only what is currently in effect.
 
 ### Update discipline
 
-`## Resume` is **strongly recommended whenever the file is mid-flight** — i.e., the work it tracks is still in progress. Each per-type contract (`./<type>-authoring.md`) names the family's mid-flight statuses; non-terminal is a useful rough proxy but some non-terminal states (e.g., `usecase: ready / implementing`, `spec: active`) are stable and not mid-flight. Status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update it as you work, and especially before any session boundary risks losing the in-memory context.
+`## Resume` is **strongly recommended whenever the file is mid-flight**. Each per-type contract (`./<type>-authoring.md`) names the family's mid-flight statuses; non-terminal is a useful rough proxy but some non-terminal states (e.g., `usecase: ready / implementing`, `spec: active`) are stable and not mid-flight. Status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update as you work, especially before any session boundary risks losing in-memory context.
 
-When a slot's value changes, **rewrite the slot in place** — do not keep the old value as a strikethrough or supplementary line. If the change is narrative-worthy (a decision pivot worth remembering past the moment), record that pivot as a `## Log` entry separately. Adding a new line over an old line is not a rewrite; see the *Compact whenever you update it* rule above.
+When a slot's value changes, **rewrite the slot in place** — do not keep the old value as strikethrough or supplementary line. If the change is narrative-worthy, record that pivot as a `## Log` entry separately. Adding a new line over an old line is not a rewrite; see *Compact whenever you update it* above.
 
 ## `## Log`
 
-Purpose: **append-only narrative of meaningful events** that have shaped the work — decision pivots, blocker resolutions, approach changes worth remembering. Routine progress is not narrative; do not log "started today" or "moved to progress". The section earns its place when the *why* of a past change adds context that the current state of the file alone cannot supply.
+Purpose: **append-only narrative of meaningful events** that have shaped the work — decision pivots, blocker resolutions, approach changes worth remembering. Routine progress is not narrative; do not log "started today" or "moved to progress". The section earns its place when the *why* of a past change adds context the current state alone cannot supply.
 
-For an `umbrella/<id>-<slug>` file specifically, `## Log` is the umbrella's **reason for existing** — the cross-cutting narrative that spans its children. Per `./umbrella-authoring.md`, children inline-cite the umbrella path in their own entries when they depend on a decision recorded there.
+For an `umbrella/<id>-<slug>` file, `## Log` is the umbrella's **reason for existing** — the cross-cutting narrative spanning its children. Per `./umbrella-authoring.md`, children inline-cite the umbrella path in their own entries when they depend on a decision recorded there.
 
 Write entries when:
 
-- A decision changed the original framing — what changed, why, and which upstream artifact (UC, spec, architecture section) still needs to be reconciled.
+- A decision changed the original framing — what changed, why, and which upstream artifact (UC, spec, architecture section) still needs reconciling.
 - A blocker recorded earlier in `## Resume` was resolved, and the resolution shapes future work.
 - The approach was replaced by a materially different one and the prior attempt's lesson is worth preserving.
 
-Do **not** restate things a fresh reader can already see (same exclusions as `## Resume` above).
+Do **not** restate things a fresh reader can already see (same exclusions as `## Resume`).
 
 Format is the author's choice — short bullets, one fact per line, append-only. Use a date prefix when several entries accrete on the same topic; standalone entries may omit the date.
 
@@ -91,7 +91,7 @@ Format is the author's choice — short bullets, one fact per line, append-only.
 
 `## Log` entries are append-only — do not reorder, edit, or remove old entries. Corrections accrete as new entries (`2026-05-02 — The 2026-05-01 decision was wrong: ...`).
 
-Like `## Resume`, the section is hand-maintained. Status changes never modify `## Log`.
+Like `## Resume`, hand-maintained. Status changes never modify `## Log`.
 
 ## Inline cross-references for cross-cutting narrative
 
@@ -107,11 +107,11 @@ Use the body-link form (`[text](relative/path.md)`) for inline citations.
 **Blocked on.** cache eviction timing — local to this task, not covered by the umbrella decision.
 ```
 
-Without this inline citation, the parent's `## Log` is invisible to a session that started from the child file. Frontmatter `parent:` makes the parent *discoverable* (reverse children lookup); the inline citation makes the parent *necessary to read* — only when the entry actually depends on it. Entries that are self-contained (work local to this file) need no cross-reference.
+Without this inline citation, the parent's `## Log` is invisible to a session that started from the child file. Frontmatter `parent:` makes the parent *discoverable* (reverse children lookup); the inline citation makes it *necessary to read* — only when the entry actually depends on it. Self-contained entries need no cross-reference.
 
 The same rule applies whenever an entry leans on narrative recorded in any other a4 file (sibling, related issue, spec, UC). Inline-cite the path; do not rely on the reader inferring it from frontmatter alone.
 
 ## Cross-references
 
 - `./body-conventions.md` — common body rules (heading form, link form).
-- `./<type>-authoring.md` — per-type authoring contracts (which list `## Resume` and `## Log` in their optional-sections menu).
+- `./<type>-authoring.md` — per-type contracts (which list `## Resume` and `## Log` in their optional-sections menu).

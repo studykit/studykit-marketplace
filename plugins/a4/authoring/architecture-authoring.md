@@ -1,8 +1,8 @@
 # a4 — architecture wiki authoring
 
-`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. It is read directly by `ci.md` (test-execution contract) and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. The `breakdown` skill consults arch.md as design-intent reference (drift-tolerated; the codebase is the structural ground truth). Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
+`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. Read directly by `ci.md` (test-execution contract) and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. The `breakdown` skill consults arch.md as design-intent reference (drift-tolerated; the codebase is the structural ground truth). Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
 
-Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 Note: no `created:` field on wiki pages — "first appeared" content lives in `context.md` `## Original Idea`.
 
@@ -17,15 +17,15 @@ Note: no `created:` field on wiki pages — "first appeared" content lives in `c
 
 **Optional, emit only when the conversation produced content for them:**
 
-- `## Component Diagram` — diagrams (mermaid, ASCII, or links to external SVG / PNG kept under `a4/diagrams/`). Skip when prose + table is clearer than a picture.
-- `## External Dependencies` — third-party services, vendor APIs, or upstream systems the architecture depends on. Skip when self-contained.
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing review item, spec, or UC). The Wiki Update Protocol requires a bullet whenever a non-trivial change lands. Format and discipline: `./wiki-body.md`.
+- `## Component Diagram` — diagrams (mermaid, ASCII, or links to external SVG / PNG kept under `a4/diagrams/`). Skip when prose + table is clearer.
+- `## External Dependencies` — third-party services, vendor APIs, or upstream systems. Skip when self-contained.
+- `## Change Logs` — append-only audit trail. The Wiki Update Protocol requires a bullet whenever a non-trivial change lands. Format: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
 ### Component anchor stability
 
-`## Components` exposes anchor-targeted headings that tasks reference in their `## Interface Contracts` section (`[architecture#SessionService](../architecture.md#sessionservice)`). Keep component heading text stable — renaming a component requires a review item explaining the cascade because every task that links into it is affected.
+`## Components` exposes anchor-targeted headings that tasks reference in their `## Interface Contracts` section (`[architecture#SessionService](../architecture.md#sessionservice)`). Keep component heading text stable — renaming requires a review item explaining the cascade because every task that links into it is affected.
 
 ## Common mistakes (architecture-specific)
 
@@ -39,5 +39,5 @@ Unknown H2 headings are tolerated.
 - **Don't write executable test commands here.** Those belong in `ci.md`'s `## How to run tests` section, the single source of truth. Reference ci.md by markdown link if needed.
 - **Don't write a roadmap / milestone schedule here.** Phase narrative — when a project benefits from one — is the user's to maintain manually as a wiki page; a4 plugin no longer authors a roadmap wiki.
 - **Don't list considered options in `## Technology Stack`.** The chosen stack lives here; the comparison and rejected alternatives belong in a spec under `a4/spec/`.
-- **Don't rename a component heading silently.** Renames cascade to every task's `## Interface Contracts` link. Open a review item to manage the cascade.
+- **Don't rename a component heading silently.** Renames cascade to every task's `## Interface Contracts` link. Open a review item.
 - **Don't pack a decision rationale into `## Overview`.** Decisions belong in a spec's `## Decision Log`. The architecture page records the *current* shape, not how it was reached.

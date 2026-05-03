@@ -26,7 +26,7 @@ discarded → (terminal)
 - `queued` — In the work queue, awaiting an implementer. Default ready-set entry for the implement loop.
 - `progress` — A `coder` agent (or investigator, for `research`) is working (or crashed mid-work — reset to `queued` on session resume).
 - `holding` — Work was started but is **temporarily paused by an explicit human or agent decision** (e.g., blocking dependency surfaced, awaiting an external answer, scope of the in-flight work needs broader thought before resuming). Distinct from `failing` (the iteration ran and did not succeed) and from `queued` (work has not started yet). Not picked up by the implement loop — resume requires a manual `holding → progress` flip.
-- `complete` — Work succeeded against the family's success criterion (unit tests passed, hypothesis validated, investigation finalized). **Not** a forward-path terminal — UC `revising` cascade can return tasks to `queued` for re-implementation.
+- `complete` — Work succeeded against the family's success criterion (unit tests passed, hypothesis validated, investigation finalized). **Not** a forward-path terminal — UC `revising` cascade can return tasks to `queued`.
 - `failing` — Work could not succeed on this iteration. Resumed via `failing → progress` (immediate retry, same cycle for families that carry `cycle:`) or deferred via `failing → queued` (next cycle, `cycle:` bumps where applicable).
 - `discarded` — Abandoned. Terminal. Reached via UC `discarded` cascade or an explicit task-discard.
 
@@ -35,11 +35,11 @@ discarded → (terminal)
 - **Allowed initial statuses on file create:** `open` (default — backlog), `queued` (queue-fill intent), `complete` (post-hoc documentation; work already done).
 - `progress`, `holding`, and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions on a file already in the workspace.
 - `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop, or the user starts investigating directly). The `queued` step expresses queue intent; skip it when the queue is not the entry path.
-- `open → complete` is allowed for post-hoc closure of backlog items finished outside the implement loop (work already done before the task entered the queue). Required body sections and the `complete` initial-status preflight still apply.
+- `open → complete` is allowed for post-hoc closure of backlog items finished outside the implement loop. Required body sections and the `complete` initial-status preflight still apply.
 - There is **no `queued → open` reverse** — once enqueued, a task cannot be returned to backlog.
-- `holding` is reachable only from `progress` (i.e., work that was actually started, then paused). Reaching `holding` from any other state is illegal — if work has not begun yet, leave the file at `open` / `queued` instead. Resume via `holding → progress`; abandon via `holding → discarded`. There is no automatic exit; a paused task stays paused until a writer flips it.
+- `holding` is reachable only from `progress` (i.e., work that was actually started, then paused). Reaching `holding` from any other state is illegal — if work has not begun yet, leave the file at `open` / `queued`. Resume via `holding → progress`; abandon via `holding → discarded`. There is no automatic exit; a paused task stays paused until a writer flips it.
 - UC-cascade automatic flips: when a UC flips to `discarded`, related tasks across the four families → `discarded`. When a UC flips to `revising`, tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`complete` tasks stay. (`holding` is exempt because the pause carries explicit human stewardship.) Do not flip these by hand.
-- **Flip `status:` when starting work.** Before the first source edit, flip to `progress` (`queued → progress`, or `open → progress` if the queue step was skipped, or `holding → progress` when resuming a paused task). The writer is whoever is doing the work; `status:` is never auto-flipped.
+- **Flip `status:` when starting work.** Before the first source edit, flip to `progress` (`queued → progress`, or `open → progress` if the queue step was skipped, or `holding → progress` when resuming). The writer is whoever is doing the work; `status:` is never auto-flipped.
 
 ## `complete` initial-status preflight
 

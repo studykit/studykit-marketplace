@@ -134,7 +134,7 @@ For each non-OK finding, write one file at `a4/review/<id>-<slug>.md`.
 Run once per finding, at write time:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<absolute path to a4/>"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<absolute path to a4/>"
 ```
 
 ### 2. Pick a Slug

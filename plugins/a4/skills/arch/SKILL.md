@@ -35,7 +35,7 @@ Derived views (consistency tables, UC×component coverage matrix, open-arch-find
 When emitting review items:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
 ## Modes

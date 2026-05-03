@@ -40,7 +40,11 @@ Subcommands:
                  runnable `allocate_id.py` command as
                  `additionalContext`, so the LLM places new files in
                  the right folder and allocates a workspace-global
-                 monotonic id before any PreToolUse fires. The map is
+                 monotonic id before any PreToolUse fires. The
+                 allocator path is emitted as a fully-resolved absolute
+                 path (CLAUDE_PLUGIN_ROOT expanded in-process) so the
+                 LLM can invoke `allocate_id.py` directly via its
+                 shebang — no `uv run` wrapper required. The map is
                  built dynamically from `common.WIKI_TYPES` and
                  `common.ISSUE_FOLDERS` — adding a new type updates the
                  injection automatically. Silent when the project has
@@ -1355,6 +1359,11 @@ def _session_start() -> int:
     ]
     wiki_lines = [f"- `{t}` → `a4/{t}.md`" for t in sorted(WIKI_TYPES)]
 
+    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT") or str(
+        Path(__file__).resolve().parent.parent
+    )
+    allocator = f"{plugin_root}/scripts/allocate_id.py"
+
     context = (
         "## a4/ workspace — type → file location\n\n"
         "**Issue families** (one file per id, flat folder):\n\n"
@@ -1363,7 +1372,7 @@ def _session_start() -> int:
         + "\n".join(wiki_lines)
         + "\n\n**Allocate id** (issue files only; never invent or reuse):\n\n"
         "```bash\n"
-        'uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" <a4-dir>\n'
+        f'"{allocator}" <a4-dir>\n'
         "```"
     )
     _emit(

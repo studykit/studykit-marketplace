@@ -2,20 +2,20 @@
 
 `a4/nfr.md` is the **non-functional requirements wiki**. It records performance targets, security requirements, scalability bounds, accessibility requirements, compliance constraints, and other cross-cutting properties that affect every UC and architecture decision. NFRs are optional — small or exploratory projects may have none, in which case the file simply does not exist.
 
-Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
 
 **Required:**
 
-- `## Requirements` — the NFR table. One row per requirement with these columns:
+- `## Requirements` — the NFR table. One row per requirement:
   - **Description** — the requirement in prose (e.g., "Cold-start response under 200 ms p95").
-  - **Affected UCs** — markdown links to UCs the requirement constrains (e.g., `[usecase/3-search-history](usecase/3-search-history.md)`). Use `(all)` when the requirement applies workspace-wide.
-  - **Measurable criteria** — the concrete threshold or check (timing, error rate, compliance standard reference). Avoid aspirational phrasing — NFRs only earn their slot when they have a measurable shape.
+  - **Affected UCs** — markdown links to UCs the requirement constrains (e.g., `[usecase/3-search-history](usecase/3-search-history.md)`). Use `(all)` when workspace-wide.
+  - **Measurable criteria** — concrete threshold or check (timing, error rate, compliance standard reference). NFRs only earn their slot when they have a measurable shape.
 
 **Optional:**
 
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format and discipline: `./wiki-body.md`.
+- `## Change Logs` — append-only audit trail. Format: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 

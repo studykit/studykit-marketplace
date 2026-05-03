@@ -65,7 +65,7 @@ The close-guard at session-end checks each wiki entry in `target:` before closin
 The reviewer must allocate ids via the shared utility:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<a4-absolute-path>"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<a4-absolute-path>"
 ```
 
 Allocate one id per finding at the moment the file is written, not up front for the whole batch — parallel reviewer runs (future) should not race.

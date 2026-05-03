@@ -2,7 +2,7 @@
 
 An umbrella at `a4/umbrella/<id>-<slug>.md` is a **narrative-aggregation parent** — a file purpose-built to host the cross-cutting narrative that several issue-family children (`task` / `bug` / `spike` / `research`) share. It is *not* an implementation unit: an umbrella has no `## Change Plan`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children; the umbrella exists so the next session reading any one child can discover the shared decisions through that child's `parent:` pointer.
 
-Companion to `./frontmatter-issue.md`, `./issue-body.md`. The narrative-home semantics (entry format, inline cross-references) live in `./issue-body.md#log`; the `parent:` discovery contract lives in `./frontmatter-issue.md` §`parent` and shared narrative.
+Companion to `./frontmatter-issue.md`, `./issue-body.md`. Narrative-home semantics (entry format, inline cross-references): `./issue-body.md#log`. The `parent:` discovery contract: `./frontmatter-issue.md` § `parent` and shared narrative.
 
 ## When to create an umbrella
 
@@ -15,7 +15,7 @@ Create one when at least one of the following holds:
 Do **not** create an umbrella when:
 
 - A single child is enough — no aggregation. The child's own `## Log` is sufficient.
-- Sibling children exist but are genuinely unrelated. Each child's `## Log` records what's local to it; there is no shared narrative to home, and no umbrella is needed.
+- Sibling children exist but are genuinely unrelated. No shared narrative to home.
 - Two siblings + one cross-cutting decision. Borderline — recording the decision inline once in each child (with cross-reference per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`) is acceptable; promote to an umbrella when a second decision arrives.
 
 Derivation parents (a follow-up `task` whose `parent:` is the originating `spike`, a `bug` spawned from a `task`) are a different mechanism — those use another issue-family file as parent and do not need an umbrella. Umbrella exists for *aggregation*, not *derivation*.
@@ -43,17 +43,17 @@ labels: []             # free-form tags
 | `labels` | no | list of strings | free-form tags |
 
 
-`implements` / `spec` / `depends_on` / `artifacts` / `cycle` / `parent` are **forbidden** on umbrella — declaring any of them is an error:
+`implements` / `spec` / `depends_on` / `artifacts` / `cycle` / `parent` are **forbidden** on umbrella — declaring any is an error:
 
-- `implements` / `spec` — children carry these forward anchors; the umbrella does not deliver UCs or follow specs directly. If the children all implement the same UC, that's already visible from each child's `implements:`.
+- `implements` / `spec` — children carry these forward anchors; the umbrella does not deliver UCs or follow specs directly. If children all implement the same UC, that's already visible from each child's `implements:`.
 - `depends_on` — sequencing belongs to children.
 - `artifacts` — umbrellas hold no artifact directory. Per-child artifacts use `artifacts/<type>/<child-id>-<child-slug>/`.
 - `cycle` — umbrellas have no implement loop. Children carry their own cycles.
-- `parent` — nested umbrellas are not supported in this revision. Each umbrella is a top-level aggregation.
+- `parent` — nested umbrellas are not supported in this revision. Each umbrella is top-level aggregation.
 
-- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
+- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
 - `type: umbrella` is fixed for files under `a4/umbrella/`.
-- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
+- `id:` see `./frontmatter-issue.md` § `id`.
 
 ### Lifecycle
 
@@ -63,9 +63,9 @@ labels: []             # free-form tags
 | `complete` | Author judges the umbrella's purpose fulfilled — usually after all relevant children reach `complete` and the integration outcome is met | → `open` (re-open if work resumes), → `discarded` |
 | `discarded` | The umbrella is no longer the right grouping (children moved under a different parent or stand alone). Write `## Why Discarded` |  — (terminal) |
 
-`complete` is **author-judged** — there is no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains `queued` / `progress` / `holding` / `failing`, prefer keeping the umbrella `open`; the next session will see the umbrella's narrative even while individual children are still in flight.
+`complete` is **author-judged** — no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains mid-flight, prefer keeping the umbrella `open`.
 
-When all children are `complete` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children. Either flip the umbrella to `complete` once the integration outcome is met, or leave it open intentionally for further follow-up children.
+When all children are `complete` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children.
 
 Direct edits refresh `updated:` automatically, but no automatic cascade flips umbrella status based on children. There is no umbrella-driven cascade onto children either: discarding an umbrella does not discard its children. If the children should also be discarded, flip them individually.
 
@@ -74,7 +74,7 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 **Required:**
 
 - `## Description` — what the children together accomplish. Brief — one or two paragraphs. Link the children inline by markdown link when narratively useful.
-- `## Children` — explicit append-only list of child paths as markdown links, one bullet per child. The reverse-`parent:` lookup (across all issue files whose `parent:` resolves to this umbrella) remains the authoritative membership; this section exists so a human reader sees the membership at a glance and so children added later are easy to spot.
+- `## Children` — explicit append-only list of child paths as markdown links, one bullet per child. The reverse-`parent:` lookup remains the authoritative membership; this section exists so a human reader sees the membership at a glance.
 
   ```markdown
   ## Children
@@ -90,15 +90,15 @@ Direct edits refresh `updated:` automatically, but no automatic cascade flips um
 
 **Optional, emit only when applicable:**
 
-- `## Acceptance Criteria` — integration outcome that is not naturally any single child's AC. Skip when the integration outcome is implicit ("all children deliver and tests pass"). Use it when the umbrella has its own observable (e.g., "search-history feature works end-to-end across UC 3 and UC 7").
-- `## Resume` — current-state snapshot for the next session: what cross-cutting work the umbrella is currently driving, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the umbrella is at `open` (the only mid-flight state — `complete` / `discarded` are terminal). See `./issue-body.md#resume`.
+- `## Acceptance Criteria` — integration outcome that is not naturally any single child's AC. Skip when implicit ("all children deliver and tests pass"). Use it when the umbrella has its own observable (e.g., "search-history feature works end-to-end across UC 3 and UC 7").
+- `## Resume` — current-state snapshot. Strongly recommended while at `open` (the only mid-flight state). See `./issue-body.md#resume`.
 - `## Why Discarded` — populated on `discarded`. Dated bullet (`<YYYY-MM-DD> — <reason text>`).
 
 Unknown H2 headings are tolerated.
 
 ## Authoring children that point at an umbrella
 
-Set the child's frontmatter `parent: umbrella/<id>-<slug>` at creation (or as soon as the umbrella exists). Without this, the umbrella is unreachable from the child file: a session reading the child alone has no signal to open the umbrella.
+Set the child's frontmatter `parent: umbrella/<id>-<slug>` at creation (or as soon as the umbrella exists). Without this, the umbrella is unreachable from the child file.
 
 When the child writes a `## Resume` or `## Log` entry that depends on the umbrella's narrative, inline-cite the umbrella path inside the entry per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`:
 
@@ -108,19 +108,19 @@ When the child writes a `## Resume` or `## Log` entry that depends on the umbrel
 - Approach: follow the caching strategy decided in [umbrella/5-search](../umbrella/5-search.md) `## Log`. This child only diverges on test-fixture shape.
 ```
 
-The frontmatter `parent:` makes the umbrella *discoverable*; the inline citation makes it *necessary to read* — only when the entry actually depends on it. Self-contained child entries need no cross-reference.
+Frontmatter `parent:` makes the umbrella *discoverable*; the inline citation makes it *necessary to read* — only when the entry actually depends on it. Self-contained child entries need no cross-reference.
 
 ## Common mistakes
 
 - **Required section missing** (`## Description`, `## Children`, `## Log`).
-- **Children listed only via reverse-`parent:`** — the body `## Children` section is the human-readable index; emit it.
-- **Forbidden field set** (`implements`, `spec`, `depends_on`, `artifacts`, `cycle`, `parent`) — declaring any of them is invalid. Move the field to the children where it belongs.
+- **Children listed only via reverse-`parent:`** — emit the body `## Children` section as the human-readable index.
+- **Forbidden field set** (`implements`, `spec`, `depends_on`, `artifacts`, `cycle`, `parent`) — declaring any is invalid. Move the field to the children where it belongs.
 - **Wrong folder** — umbrella files must live under `a4/umbrella/`. A `type: umbrella` file outside that folder is a routing error.
 
 ## Don't
 
 - **Don't author implementation in the umbrella.** No `## Change Plan`, no `## Unit Test Strategy`. The work belongs to children.
-- **Don't treat the umbrella as a decision document.** Long-lived design decisions belong in `spec/`. The umbrella's `## Log` carries *implementation-progress narrative* that spans children — current approach, blockers, decisions tied to in-flight work.
-- **Don't nest umbrellas.** `parent:` on an umbrella is forbidden in this revision. If a deeper grouping arises, reorganize the children rather than adding a parent umbrella.
+- **Don't treat the umbrella as a decision document.** Long-lived design decisions belong in `spec/`. The umbrella's `## Log` carries *implementation-progress narrative* that spans children.
+- **Don't nest umbrellas.** `parent:` on an umbrella is forbidden in this revision.
 - **Don't delete an umbrella after its purpose ends.** Flip to `complete` or `discarded` and let the file stay; reverse `parent:` lookups from children remain valid.
 - **Don't duplicate the umbrella's narrative across children.** That defeats the point. Each child's `## Log` carries only what is local to that child plus inline citations to the umbrella when they share a decision.

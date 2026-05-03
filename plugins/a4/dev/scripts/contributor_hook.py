@@ -56,9 +56,11 @@ from pathlib import Path
 
 
 _PLUGIN_REL = ("plugins", "a4")
+_HOOKS_REL = ("plugins", "a4", "hooks")
 _SENTINEL_DIR = (".claude", "tmp", "a4-edited")
 _FILES_BASENAME = "a4-contributor-files-{sid}.txt"
 _MAP_BASENAME = "a4-contributor-map-{sid}.flag"
+_HOOKS_TIME_BASENAME = "a4-contributor-hooks-time-{sid}.flag"
 
 
 def main() -> int:
@@ -106,7 +108,7 @@ def _payload() -> dict | None:
 def _inject_per_file(payload: dict, intent: str) -> int:
     file_path = (payload.get("tool_input") or {}).get("file_path") or ""
     session_id = payload.get("session_id") or ""
-    if not file_path or not session_id or not file_path.endswith(".md"):
+    if not file_path or not session_id:
         return 0
 
     project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
@@ -116,6 +118,23 @@ def _inject_per_file(payload: dict, intent: str) -> int:
     plugin_root = Path(project_dir).joinpath(*_PLUGIN_REL)
     plugin_prefix = str(plugin_root) + os.sep
     if not file_path.startswith(plugin_prefix):
+        return 0
+
+    if intent == "edit":
+        time_prefix = _hooks_time_prefix(
+            project_dir, session_id, file_path
+        )
+        if time_prefix is not None:
+            _emit(
+                {
+                    "hookSpecificOutput": {
+                        "hookEventName": "PreToolUse",
+                        "additionalContext": time_prefix,
+                    }
+                }
+            )
+
+    if not file_path.endswith(".md"):
         return 0
 
     if _already_announced(project_dir, session_id, file_path):
@@ -157,6 +176,45 @@ def _inject_per_file(payload: dict, intent: str) -> int:
         }
     )
     return 0
+
+
+# --------------------- hooks/ first-edit time prefix ----------------------
+
+
+def _hooks_time_prefix(
+    project_dir: str, session_id: str, file_path: str
+) -> str | None:
+    """Return a one-shot KST timestamp block on the first edit under
+    `plugins/a4/hooks/` per session, None thereafter or when the path is
+    outside that directory. Touches the session sentinel atomically — if
+    the sentinel cannot be written, we still return None to avoid
+    re-emitting on subsequent edits.
+    """
+    hooks_root = Path(project_dir).joinpath(*_HOOKS_REL)
+    hooks_prefix = str(hooks_root) + os.sep
+    if not file_path.startswith(hooks_prefix):
+        return None
+
+    sentinel = (
+        Path(project_dir).joinpath(*_SENTINEL_DIR)
+        / _HOOKS_TIME_BASENAME.format(sid=session_id)
+    )
+    if sentinel.is_file():
+        return None
+    try:
+        sentinel.parent.mkdir(parents=True, exist_ok=True)
+        sentinel.touch(exist_ok=True)
+    except OSError:
+        return None
+
+    from datetime import datetime, timedelta, timezone
+
+    kst = timezone(timedelta(hours=9))
+    stamp = datetime.now(kst).strftime("%Y-%m-%d %H:%M")
+    return (
+        f"**a4 hooks/ edit — current time (KST):** {stamp}. "
+        "Use this when the edit needs a timestamp; do not re-derive."
+    )
 
 
 # --------------------------- layer-map prepend ----------------------------

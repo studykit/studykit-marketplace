@@ -1,12 +1,12 @@
 # a4 Wiki Body Conventions
 
-Body-level rules for wiki pages (`actors.md`, `architecture.md`, `ci.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below are how that continuous update is recorded.
+Body-level rules for wiki pages (`actors.md`, `architecture.md`, `ci.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below record that continuous update.
 
-Common body rules (heading form, link form) live in `./body-conventions.md`.
+Common body rules (heading form, link form): `./body-conventions.md`.
 
 ## `## Change Logs` audit trail
 
-Every wiki page carries a `## Change Logs` section once a substantive edit has happened. The section is optional in every authoring contract — only emit it once it has content.
+Every wiki page carries a `## Change Logs` section once a substantive edit has happened. Optional in every authoring contract — emit only once it has content.
 
 Format:
 
@@ -20,9 +20,9 @@ Format:
 
 Rules:
 
-- One bullet per material edit. Newest last (chronological order).
+- One bullet per material edit. Newest last (chronological).
 - Each bullet: `- YYYY-MM-DD — [<causing-issue>](<relative-path>.md)` with optional trailing prose if a one-line note adds context (`- 2026-04-24 — [spec/8](spec/8.md): renamed Session → Conversation`).
-- The link points to the **causing issue** — a UC, task, spec, or architecture-section anchor. Never a review item; review items are the surface where the user *picks* an edit to apply, but the change-log records *why* a wiki page changed and that "why" is the underlying issue.
+- The link points to the **causing issue** — a UC, task, spec, or architecture-section anchor. Never a review item; review items are the surface where the user *picks* an edit, but the change-log records *why* the wiki page changed and that "why" is the underlying issue.
 - Bullets are append-only. Do not reorder, edit, or remove old entries; corrections accrete as new entries.
 
 ## Wiki Update Protocol
@@ -33,7 +33,7 @@ Wiki pages have no lifecycle. They are updated when an **issue state change** af
 
 Update a wiki page when an issue change affects its content:
 
-- **New UC, actor, or concept** — the affected wiki page (typically `actors.md`, `domain.md`, `context.md`) needs a section entry.
+- **New UC, actor, or concept** — affected wiki page (typically `actors.md`, `domain.md`, `context.md`) needs a section entry.
 - **UC refinement** — may change framing in `context.md` or a concept definition in `domain.md`.
 - **Architectural decision or component revision** — updates `architecture.md` (and occasionally `domain.md` when terminology shifts).
 - **Resolved review item whose `target:` list contains a wiki basename** — triggers the close guard below.

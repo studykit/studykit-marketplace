@@ -37,7 +37,7 @@ Wiki pages are flat at `a4/` root. Issues each get their own file in the matchin
 Every new issue file gets the next globally-unique id:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
 Run this **immediately before** writing a new UC, review item, etc. Ids are monotonic across the whole workspace; do not reuse or renumber.

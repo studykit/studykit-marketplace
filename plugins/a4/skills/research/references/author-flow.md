@@ -38,7 +38,7 @@ Present the composed body to the user. Iterate until confirmed.
 ## Step 3: Allocate id and write the file
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
 Slugify the title (lowercase, hyphenated, drop non-alphanumeric). File path: `a4/research/<id>-<slug>.md`.

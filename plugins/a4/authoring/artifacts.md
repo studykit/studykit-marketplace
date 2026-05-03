@@ -2,7 +2,7 @@
 
 Cross-family reference for the **artifact directory** that may sit alongside a task at project-root `artifacts/<type>/<id>-<slug>/`. Per-family shape, the `artifacts:` artifact-only contract, the spike archive convention, and curation policy live here so all four issue families (`task` / `bug` / `spike` / `research`) cite a single source.
 
-Per-family authoring files (`{task,bug,spike,research}-authoring.md`) cite this document for shared rules and add only family-specific notes (e.g., the spike's "primary deliverable" status, the bug's "evidence-only" framing).
+Per-family authoring files cite this document for shared rules and add only family-specific notes (e.g., the spike's "primary deliverable" status, the bug's "evidence-only" framing).
 
 The four issue families are sibling top-level folders under `a4/`; the artifact directory mirrors this with sibling top-level folders under `artifacts/`.
 
@@ -34,9 +34,9 @@ The `artifacts/` directory:
 
 ## Frontmatter `artifacts:` is artifact-only
 
-Frontmatter `artifacts:` lists artifact paths only — every path must point under `artifacts/<type>/<id>-<slug>/...`. Production source paths the task writes or modifies are not duplicated in frontmatter; git history is the authoritative record, and the optional body `## Change Plan` section may name them as a forward-looking scope fence when needed (per each per-family authoring file).
+Frontmatter `artifacts:` lists artifact paths only — every path must point under `artifacts/<type>/<id>-<slug>/...`. Production source paths the task writes or modifies are not duplicated in frontmatter; git history is authoritative, and the optional body `## Change Plan` may name them as a forward-looking scope fence.
 
-For `type: spike`, `artifacts:` may also point under `artifacts/spike/archive/<id>-<slug>/` once the directory has been archived.
+For `type: spike`, `artifacts:` may also point under `artifacts/spike/archive/<id>-<slug>/` once archived.
 
 ## Spike archive convention
 

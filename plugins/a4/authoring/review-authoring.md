@@ -4,9 +4,9 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 
 - `finding` — something is wrong / inconsistent in an existing artifact (bad UC abstraction, contract mismatch, drift between files).
 - `gap` — something is missing that ought to exist (a UC that no spec covers, an architectural choice nobody recorded, a wiki page that has not been updated to reflect a confirmed change).
-- `question` — an open question the conversation could not resolve in place (deferred decision, unclear constraint).
+- `question` — an open question the conversation could not resolve in place.
 
-Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. They are emitted by reviewer agents and by single-edit defer paths (`source: self`).
+Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. Emitted by reviewer agents and by single-edit defer paths (`source: self`).
 
 Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
@@ -37,13 +37,13 @@ labels: []                # free-form
 | `labels` | no | list of strings | free-form |
 
 
-- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
+- `id:` see `./frontmatter-issue.md` § `id`.
 - `kind` is **required** — `finding`, `gap`, or `question`. The three share lifecycle but signal different content shapes:
   - `finding` body explains what is wrong and where.
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `bug/<id>-<slug>`, `spike/<id>-<slug>`, `research/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `ci`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. Any string is accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without first documenting them here.
+- `source:` records who emitted the item. Any string accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without first documenting them here.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
 
@@ -64,22 +64,22 @@ Per-status meaning:
 
 - `open` — Item is in the inbox. Default initial status. Picked up by the iterate flow whose filter matches an entry in `target:`.
 - `in-progress` — Item selected from the iterate backlog. Active resolution.
-- `resolved` — Fix landed. Every artifact named in `target:` (issue paths and any wiki basenames) reflects the resolution. Terminal.
-- `discarded` — No longer applicable (e.g., the underlying UC was discarded, the finding was re-evaluated as not-a-bug, the question was overtaken by events). Terminal.
+- `resolved` — Fix landed. Every artifact named in `target:` reflects the resolution. Terminal.
+- `discarded` — No longer applicable. Terminal.
 
 Writer rules:
 
-- `open` is the **only** initial status. New items are always born at `open`; everything else is a transition.
+- `open` is the **only** initial status.
 - Edit `status:` directly. The transition refreshes `updated:` automatically and runs cascades on related files.
 - `open → in-progress` is the iterate-flow's "user picked this item" flip; `in-progress → resolved` (or `→ discarded`) closes it.
-- `open → discarded` is allowed for items that are dismissed without being picked (e.g., obvious duplicate, inapplicable on second look).
+- `open → discarded` is allowed for items dismissed without being picked.
 - Auto-emitted drift review items **dedup** against open / in-progress / discarded items with matching `(kind, target-wiki, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).
 
 ### Close guard — wiki entries in `target:` must be honored on resolve
 
 When `target:` contains one or more wiki basenames, the review cannot cleanly transition to `resolved` unless each referenced wiki page records the change in its `## Change Logs` section with a markdown link to the review item itself. Enforcement is a **warning with override** — the transition is allowed, but unresolved violations are re-surfaced as fresh review items targeting the same wiki page.
 
-When resolving, follow the wiki Change Logs convention defined in `./wiki-body.md` and link the review item itself in the bullet (`- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>`). Create the `## Change Logs` section on the wiki page if it does not yet exist.
+When resolving, follow the wiki Change Logs convention defined in `./wiki-body.md` and link the review item itself in the bullet (`- YYYY-MM-DD — [review/<id>-<slug>](review/<id>-<slug>.md) — <short note>`). Create the `## Change Logs` section if it does not yet exist.
 
 ## Body shape
 
@@ -87,14 +87,14 @@ Review item bodies are **deliberately minimal** — they hold a single observati
 
 **Required:**
 
-- `## Description` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise. The body of a review item is a hand-off note, not an essay.
+- `## Description` — what the finding / gap / question is, why it matters, and (when relevant) how to resolve. Concise.
 
 **Optional, emit only when applicable:**
 
-- `## Resume` — current-state snapshot for the next session: current approach to the review item, current blocker, open questions, next step. Freely rewritten as work progresses. Strongly recommended while the review item is non-terminal (any status other than `resolved` / `discarded`). See `./issue-body.md#resume`.
-- `## Log` — append-only narrative of meaningful events (decision pivots, blocker resolutions, approach changes worth remembering). Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
+- `## Resume` — current-state snapshot. Strongly recommended while non-terminal. See `./issue-body.md#resume`.
+- `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
 
-Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `## Repro`, or `## Context` blocks when the description benefits from structured supplemental content. Use sparingly; a one-paragraph `## Description` is usually enough.
+Unknown Title Case headings are tolerated — useful for embedding `## Diff`, `## Repro`, or `## Context` blocks. Use sparingly; a one-paragraph `## Description` is usually enough.
 
 There is no standalone "title" body section — the file's frontmatter carries no `title:` field either. The slug + first line of `## Description` serves as the human-readable name in iterate backlogs.
 

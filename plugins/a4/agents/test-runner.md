@@ -46,7 +46,7 @@ Do **not** classify failures as task / arch / usecase issues. Emit neutral factu
 Run once per failing test at write time:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<absolute path to a4/>"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<absolute path to a4/>"
 ```
 
 ### 2. Pick a Slug

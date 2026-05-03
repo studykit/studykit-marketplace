@@ -15,7 +15,7 @@ When the user indicates they're done:
 5. **Allocate an id** — Run the shared allocator:
 
    ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+   "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
    ```
 
    The command prints the next available id to stdout. Use it verbatim as `id:` and as the filename prefix.

@@ -51,7 +51,7 @@ From the invoking skill:
 For every new file you create with an `id:` frontmatter field (UC, review item), run:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace path>"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace path>"
 ```
 
 Allocate **at write time**, one id per file. Do not batch. The command prints the next monotonic id.

@@ -41,7 +41,7 @@ Ensure `<project-root>/a4/idea/` exists; create with `mkdir -p` if missing.
 ### 3. Allocate next id
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<project-root>/a4"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<project-root>/a4"
 ```
 
 The script prints the next integer. Capture it — this becomes the idea's `id:` and prefixes the filename.

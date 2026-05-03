@@ -34,7 +34,7 @@ Reuse the `a4/` workspace resolved via `git rev-parse --show-toplevel`.
 When emitting review items:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
 ```
 
 ## Modes

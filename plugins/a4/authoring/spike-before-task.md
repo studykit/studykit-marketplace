@@ -2,13 +2,13 @@
 
 Cross-type rule for `task` and `bug` authorship: **author the issue file only when the implementer-facing facts it depends on are gathered**. When facts are missing, the issue is not yet evidence-ready and the parent issue family is `spike` (PoC code accompanies findings) or `research` (written investigation only); author the spike or research first, then resume the task / bug.
 
-Companion to `./task-authoring.md`, `./bug-authoring.md`, `./spike-authoring.md`. Cross-type lifecycle and writer rules live in `./issue-family-lifecycle.md`.
+Companion to `./task-authoring.md`, `./bug-authoring.md`, `./spike-authoring.md`. Cross-type lifecycle and writer rules: `./issue-family-lifecycle.md`.
 
 ## Why
 
 A `task` or `bug` file is the agreed handoff anchor for implementation work. A new session opening that file in isolation must be able to start coding without re-deriving the context. When the file's `## Acceptance Criteria` is written but the underlying facts are missing, the file becomes a design record rather than an actionable handoff — the implementer's first move is still investigation, not implementation.
 
-The split is **not** a quality gate on the design. The design may be fully decided; the rule fires only when the *evidence the design rests on* has not been captured. The two are independent: a task can have a strong design and weak evidence, or vice versa.
+The split is **not** a quality gate on the design. The design may be fully decided; the rule fires only when the *evidence the design rests on* has not been captured. The two are independent — a task can have a strong design and weak evidence, or vice versa.
 
 ## Evidence categories
 

@@ -9,7 +9,7 @@ Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 - **idea** — independent possibility, captured raw; not bound to current progress.
 - **review** — gap in current spec, bound to progress (something downstream depends on it).
 
-If ignoring the input blocks or degrades current spec work, it is a review item; otherwise it is an idea. When in doubt, ideas are the safer slot — they have no `target:` and no cascade obligations.
+If ignoring the input blocks or degrades current spec work, it is a review item; otherwise an idea. When in doubt, ideas are the safer slot — no `target:`, no cascade obligations.
 
 ## Frontmatter contract (do not deviate)
 
@@ -36,17 +36,17 @@ labels: []            # free-form tags
 | `labels` | no | list of strings | free-form tags |
 
 
-- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
-- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `promoted:` lists the artifacts this idea graduated into (e.g., `[usecase/5-search, brainstorm/12-cache-options]`). The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
-- `related:` is the soft-link slot for ideas tied to other artifacts that are not direct graduation targets.
+- `id:` see `./frontmatter-issue.md` § `id`.
+- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
+- `promoted:` lists artifacts this idea graduated into. The list lives on the **idea** side; the target file does not carry a back-reference. Reverse views are derived on demand.
+- `related:` is the soft-link slot for ideas tied to other artifacts not direct graduation targets.
 
 ### Deliberately excluded fields
 
-The idea family deliberately omits four fields that other issue families carry. These omissions are intentional, not oversight:
+The idea family deliberately omits four fields that other issue families carry. Intentional, not oversight:
 
-- `priority` — ideas are pre-prioritization; prioritization attaches to the graduation target (spec / usecase / task) at promote time.
-- `source` — ideas are effectively always `self`; recording the source carries no information content.
+- `priority` — ideas are pre-prioritization; prioritization attaches to the graduation target at promote time.
+- `source` — ideas are effectively always `self`.
 - `target` — ideas are independent of other artifacts by definition; a `target` would blur the boundary with `review/`.
 - `kind` — only one kind of idea (unlike `review/` which unifies finding / gap / question).
 
@@ -64,18 +64,18 @@ Per-status meaning:
 
 - `open` — Captured but not yet graduated. Default initial status.
 - `promoted` — Idea graduated into one or more artifacts named in `promoted:`. Terminal.
-- `discarded` — Idea deliberately dropped (already covered, not aligned, no longer worth capturing). Terminal.
+- `discarded` — Idea deliberately dropped. Terminal.
 
 Writer rules (idea-specific):
 
-- `open` is the **only** initial status. New ideas are always born at `open`.
-- The idea family has **no cascade** — status changes do not trigger automatic flips of related files. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
-- Drift between `status:` and `promoted:` is invalid: non-empty `promoted:` while `status: open` is a mismatch (the idea has graduated but the status was not flipped); empty `promoted:` while `status: promoted` is the inverse mismatch.
-- There is **no reverse path** from `promoted` or `discarded` — both are terminal. To revive a discarded idea, author a fresh idea (and reference the prior via `related:` if the lineage matters).
+- `open` is the **only** initial status.
+- The idea family has **no cascade** — status changes do not trigger automatic flips. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
+- Drift between `status:` and `promoted:` is invalid: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
+- There is **no reverse path** from `promoted` or `discarded` — both are terminal. To revive a discarded idea, author a fresh idea (and reference the prior via `related:` if lineage matters).
 
 ## Body shape
 
-The idea body is **largely free**. Quick-capture ideas are typically empty or carry a short `## Notes` paragraph; longer ideas may add `## Why This Matters` to articulate the motivation. The frontmatter is the primary artifact; body content is supporting context.
+The idea body is **largely free**. Quick-capture ideas are typically empty or carry a short `## Notes` paragraph; longer ideas may add `## Why This Matters`. Frontmatter is the primary artifact; body content is supporting context.
 
 **Required:** none.
 
@@ -83,7 +83,7 @@ The idea body is **largely free**. Quick-capture ideas are typically empty or ca
 
 - `## Notes` — short prose paragraph capturing the substance of the idea. Default home for any text the idea carries.
 - `## Why This Matters` — motivation paragraph for ideas worth surfacing rather than just noting.
-- `## Log` — append-only narrative of meaningful events that have shaped this idea (rare; usually the original capture is the final word). See `./issue-body.md#log`.
+- `## Log` — append-only narrative (rare; usually the original capture is the final word). See `./issue-body.md#log`.
 
 Unknown H2 headings are tolerated.
 
@@ -91,12 +91,12 @@ Unknown H2 headings are tolerated.
 
 - **Required-field omission** (`type`, `id`, `title`, `status`, `created`, `updated`).
 - **`status: promoted` with empty `promoted:` list** (or non-empty `promoted:` with `status: open`) — invalid; flagged at validation time.
-- **Adding `priority`, `source`, `target`, or `kind`** — these are deliberately excluded. Unknown fields are tolerated, but they should not appear here.
+- **Adding `priority`, `source`, `target`, or `kind`** — deliberately excluded. Unknown fields are tolerated, but they should not appear here.
 
 ## Don't
 
 - **Don't author an idea when the input is a gap in current spec work.** That is a `kind: gap` review item with `target:` populated. Ideas are independent possibilities, not blockers.
 - **Don't introduce a `target:` field.** Ideas are independent by definition; a `target:` would blur the boundary with `review/`.
-- **Don't pre-populate `promoted:` at create time.** The list is filled when the idea actually graduates into an artifact.
+- **Don't pre-populate `promoted:` at create time.** The list is filled when the idea actually graduates.
 - **Don't auto-flip `status:` based on `promoted:` content.** The user owns the flip; drift is reported separately but does not mutate files.
-- **Don't pack long-form prose into the body.** Long write-ups belong in specs, use cases, or wiki pages. Ideas are quick-capture; if the content has grown, promote it.
+- **Don't pack long-form prose into the body.** Long write-ups belong in specs, use cases, or wiki pages. If the content has grown, promote it.

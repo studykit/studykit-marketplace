@@ -20,7 +20,7 @@ If the same fix fails twice, stop and emit a review item rather than retrying fu
 
 ## Emit review items
 
-Allocate ids via `uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
+Allocate ids via `"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"`.
 
 Review body shape (per `${CLAUDE_PLUGIN_ROOT}/authoring/review-authoring.md`) requires `## Description`; `## Log` and `## Change Logs` are optional.
 

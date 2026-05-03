@@ -187,7 +187,7 @@ For each finding, write one file at `a4/review/<id>-<slug>.md`.
 Run the shared allocator via Bash **once per finding** at the moment you're about to write:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<absolute path to a4/>"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<absolute path to a4/>"
 ```
 
 The command prints the next available id to stdout. Use it verbatim as `id:` and as the filename prefix. Do not batch-allocate; allocate at write time to avoid collisions with concurrent writers.

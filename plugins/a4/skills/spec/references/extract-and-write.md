@@ -41,7 +41,7 @@ If ambiguous, ask once: *"Activate now, or leave as `draft` for now?"*
 1. Allocate id:
 
    ```bash
-   uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<project-root>/a4"
+   "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<project-root>/a4"
    ```
 
 2. Derive slug from the title (kebab-case; ASCII lowercase + CJK pass through; punctuation stripped; collapse hyphens; trim to ~50 chars; fall back to `untitled` if empty).

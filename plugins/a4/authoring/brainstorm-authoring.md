@@ -1,6 +1,6 @@
 # a4 — brainstorm authoring
 
-A brainstorm at `a4/brainstorm/<id>-<slug>.md` is an **idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any of those ideas graduated into concrete artifacts (spec / usecase / task).
+A brainstorm at `a4/brainstorm/<id>-<slug>.md` is an **idea-capture session**. The body collects raw ideas surfaced during a session; the lifecycle tracks whether any graduated into concrete artifacts (spec / usecase / task).
 
 Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
@@ -29,10 +29,10 @@ tags: []              # free-form
 | `tags` | no | list of strings | free-form |
 
 
-- `id:` see `./frontmatter-issue.md` § `id` for the allocator command and contract.
-- `title` is required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `topic:` is the session's framing question or theme — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
-- `promoted:` lists artifacts that one or more ideas in the body graduated into. The list lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
+- `id:` see `./frontmatter-issue.md` § `id`.
+- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
+- `topic:` is the session's framing question — a short string complementing `title:`. Where `title:` is a one-line headline ("Caching strategy options"), `topic:` is the question the session set out to explore ("How to keep the dashboard responsive when the data set grows past 100K rows?").
+- `promoted:` lists artifacts that one or more ideas in the body graduated into. Lives on the **brainstorm** side; the target file does not carry a back-reference. Reverse lookups are derived on demand.
 
 ### Lifecycle and writer ownership
 
@@ -46,20 +46,20 @@ Per-status meaning:
 
 - `open` — Session captured but no idea has graduated yet. Default initial status.
 - `promoted` — At least one idea graduated into an artifact named in `promoted:`. Terminal.
-- `discarded` — Session deliberately dropped (overtaken by events, no idea worth pursuing). Terminal.
+- `discarded` — Session deliberately dropped. Terminal.
 
 Writer rules (brainstorm-specific):
 
-- `open` is the **only** initial status. New brainstorms are always born at `open`.
-- The brainstorm family has **no cascade** — status changes do not trigger automatic flips of related files. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
+- `open` is the **only** initial status.
+- The brainstorm family has **no cascade** — status changes do not trigger automatic flips. `status:` is hand-flipped after the user populates `promoted:` (or decides to discard).
 - Drift between `status:` and `promoted:` is invalid: non-empty `promoted:` while `status: open` is a mismatch; empty `promoted:` while `status: promoted` is the inverse mismatch.
-- There is **no reverse path** from `promoted` or `discarded` — both are terminal.
+- There is **no reverse path** from `promoted` or `discarded` — both terminal.
 
 ## Body shape
 
 **Required:**
 
-- `## Ideas` — the session's idea capture. Typically a bullet list, with one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a markdown link to the resulting artifact (e.g., `- caching: pre-warm on session boot → [spec/8-caching-strategy](../spec/8-caching-strategy.md)`).
+- `## Ideas` — the session's idea capture. Typically a bullet list, one bullet per surfaced idea. Keep entries short — a brainstorm captures volume; promoting an idea is when the substance gets fleshed out elsewhere. Each promoted idea may carry a markdown link to the resulting artifact (e.g., `- caching: pre-warm on session boot → [spec/8-caching-strategy](../spec/8-caching-strategy.md)`).
 
 **Optional, emit only when applicable:**
 

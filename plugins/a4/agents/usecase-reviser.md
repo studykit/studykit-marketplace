@@ -41,7 +41,7 @@ From the invoking skill:
 You do not allocate ids. You only resolve existing review items. Splitting a UC into children requires new ids for each child — use the shared allocator:
 
 ```bash
-uv run "${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace path>"
+"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<workspace path>"
 ```
 
 ## Process

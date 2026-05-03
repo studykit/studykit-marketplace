@@ -2,21 +2,21 @@
 
 `a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it.
 
-Frontmatter contract: see `./frontmatter-wiki.md`. Body conventions: see `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
 ## Body shape
 
 **Required:**
 
-- `## Roster` — the actor table. One row per actor with these columns:
-  - **Slug** — kebab-case identifier (e.g., `meeting-organizer`, `team-member`, `platform`). This is what UC frontmatter `actors: [<slug>]` references.
+- `## Roster` — the actor table. One row per actor:
+  - **Slug** — kebab-case identifier (e.g., `meeting-organizer`, `team-member`, `platform`). Referenced from UC frontmatter `actors: [<slug>]`.
   - **Type** — `person` or `system`.
   - **Role / privileges** — what this actor is allowed to do; the privilege level relative to other actors.
-  - **Description** — a short prose paragraph explaining who this actor is.
+  - **Description** — short prose paragraph explaining who this actor is.
 
 **Optional:**
 
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format and discipline: `./wiki-body.md`.
+- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with markdown links to the causing UC, review item, or spec). Format: `./wiki-body.md`.
 
 Unknown H2 headings are tolerated.
 
