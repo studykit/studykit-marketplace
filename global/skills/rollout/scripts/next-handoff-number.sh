@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repo_root="$(git rev-parse --show-toplevel)"
-handoff_dir="$repo_root/.handoff"
+handoff_dir="$repo_root/.rollout"
 
 mkdir -p "$handoff_dir"
 

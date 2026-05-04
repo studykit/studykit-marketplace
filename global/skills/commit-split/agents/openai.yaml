@@ -1,0 +1,7 @@
+interface:
+  display_name: "commit-split"
+  short_description: "Split staged git changes into grouped commits"
+  default_prompt: "Use the commit-split skill only when explicitly requested."
+
+policy:
+  allow_implicit_invocation: false
