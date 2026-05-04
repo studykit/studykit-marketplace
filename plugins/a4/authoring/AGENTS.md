@@ -2,10 +2,10 @@
 
 ## Audiences
 
-- **This file (`CLAUDE.md`):** plugin contributors editing files in this directory.
+- **This file (`AGENTS.md`) and the colocated `CLAUDE.md` shim:** plugin contributors editing files in this directory.
 - **Other files in this directory (`*.md`):** workspace authors (humans) and LLMs editing `<project-root>/a4/**/*.md`. They define the **binding contract** — what's valid in workspace files — not how the plugin enforces it.
 
-The remainder describes the audience and rules for the *other files in this directory*; if you are editing `CLAUDE.md` itself, the contributor-guardrail framing applies to you.
+The remainder describes the audience and rules for the *other files in this directory*; if you are editing `AGENTS.md` or the `CLAUDE.md` shim itself, the contributor-guardrail framing applies to you.
 
 ## Audience of files in this directory (single source of truth — do not repeat per-file)
 
@@ -51,4 +51,4 @@ Pick by audience: `body-conventions.md` is read by everyone editing any `a4/` fi
 
 Authoring contracts are precise and conservative. State *what* is valid, not *how* it is checked. Avoid hedging language ("usually", "typically") when describing schema.
 
-The full audience routing and plugin directory layout lives in `../CLAUDE.md`.
+The full audience routing and plugin directory layout lives in `../AGENTS.md` (loaded by the `../CLAUDE.md` shim).

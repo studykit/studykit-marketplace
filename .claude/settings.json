@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" pre-read",
+            "command": "A4_HOOK_RUNTIME=claude uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" pre-read",
             "timeout": 10
           }
         ]
@@ -25,7 +25,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" pre-edit",
+            "command": "A4_HOOK_RUNTIME=claude uv run \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/contributor_hook.py\" pre-edit",
             "timeout": 10
           }
         ]
@@ -36,7 +36,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/cleanup-contributor.sh\"",
+            "command": "A4_HOOK_RUNTIME=claude bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/cleanup-contributor.sh\"",
             "timeout": 5
           }
         ]
@@ -47,7 +47,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/sweep-contributor.sh\"",
+            "command": "A4_HOOK_RUNTIME=claude bash \"$CLAUDE_PROJECT_DIR/plugins/a4/dev/scripts/sweep-contributor.sh\"",
             "timeout": 5
           }
         ]

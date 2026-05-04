@@ -1,0 +1,32 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "startup|resume|clear",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_HOOK_RUNTIME=codex uv run \"$(git rev-parse --show-toplevel)/plugins/a4/dev/scripts/contributor_hook.py\" session-start",
+            "timeout": 5,
+            "statusMessage": "Sweeping a4 contributor hook state",
+            "description": "Remove stale contributor-hook sentinel files from crashed Codex sessions"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_HOOK_RUNTIME=codex uv run \"$(git rev-parse --show-toplevel)/plugins/a4/dev/scripts/contributor_hook.py\" post-edit",
+            "timeout": 10,
+            "statusMessage": "Loading a4 contributor guidance",
+            "description": "Inject contributor audience guidance after Codex apply_patch edits under plugins/a4/"
+          }
+        ]
+      }
+    ]
+  }
+}

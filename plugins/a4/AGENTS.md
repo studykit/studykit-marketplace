@@ -6,7 +6,7 @@ These notes apply to anyone editing files under `plugins/a4/`. End-user behavior
 
 ## Audience routing — read this first
 
-Each per-directory `CLAUDE.md` (including this one) is itself for **plugin contributors**; the audience listed below is for the *other `*.md` files* in that directory.
+Each per-directory guardrail pair — `AGENTS.md` (including this one) plus the colocated `CLAUDE.md` shim that loads it — is for **plugin contributors**; the audience listed below is for the *other `*.md` files* in that directory.
 
 Two distinct audiences read this plugin, and confusing them causes drift:
 
@@ -15,7 +15,7 @@ Two distinct audiences read this plugin, and confusing them causes drift:
 | Editing files inside `<project-root>/a4/**/*.md` (workspace authoring), authoring or running an a4 skill (skill runtime — LLM executing a skill), or any other read at runtime | **Workspace / skill runtime** | `authoring/` |
 | Modifying anything inside `plugins/a4/` itself (this plugin) | **Plugin contributor** | `authoring/` + `dev/` (plugin internals) |
 
-Each of `authoring/` and `dev/` carries its own `CLAUDE.md` with directory-local contributor guardrails — audience statement, citation rules, "when to add a file here / when not", and tone. Those auto-load alongside this file when you edit anything in the directory; consult them as the binding rule for that directory. (Per-file `**Audience:**` banners that used to live at the top of each `*.md` were removed — the per-directory `CLAUDE.md` is the single source of truth, and a contributor-side hook registered in repo `.claude/settings.json` injects a layer map and per-file audience pointer on first Read/Edit.)
+Each of `authoring/` and `dev/` carries its own `AGENTS.md` with directory-local contributor guardrails — audience statement, citation rules, "when to add a file here / when not", and tone — loaded by a colocated `CLAUDE.md` shim. Those guardrails auto-load alongside this file when you edit anything in the directory; consult them as the binding rule for that directory. (Per-file `**Audience:**` banners that used to live at the top of each `*.md` were removed — the per-directory `AGENTS.md` is the single source of truth, the colocated `CLAUDE.md` only forwards to it, and a contributor-side hook registered in repo `.claude/settings.json` and `.codex/hooks.json` injects a layer map and per-file audience pointer on first Claude Read/Edit or after Codex apply_patch edits.)
 
 If you find yourself reading a `dev/` doc while editing a workspace file or running a skill, you are probably overshooting — back off to `authoring/`.
 
@@ -37,7 +37,7 @@ a4 skills are **independent**. Each skill is its own entry point with its own pr
 The split between these folders is recent — consult `git log --oneline plugins/a4/` for the full sequence. The defining commits:
 
 - **(v21.0.0 pipeline dismantling)** — retired the orchestration layer. Deleted `workflows/pipeline-shapes.md` (Full / Reverse / Minimal shapes), `workflows/wiki-authorship.md` (cross-skill authorship policy), and the `compass` skill (catalog / next-step recommendation). Moved `workflows/iterate-mechanics.md` to `dev/iterate-mechanics.md` as a contributor design memo (skills now describe their own iterate procedures inline). Renamed `auto-bootstrap` → `auto-scaffold` (scaffold-only) and added a separate `ci-setup` skill that owns the test environment and writes `a4/ci.md` (the new test-execution wiki page; `bootstrap.md` was retired with no migration). Renamed `auto-usecase` → `extract-usecase` and dropped the Reverse-only / Reverse-then-forward sub-variants. Each skill is now an independent entry point.
-- **(audience routing refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; enforced path purity (script paths only in `dev/`); replaced the workspace-rules layer with a PreToolUse contract-injection hook (`scripts/a4_hook/_pre_edit.py`). Per-file `**Audience:**` banners were added then later removed in favor of per-directory `CLAUDE.md` audience statements + a contributor hook (`dev/scripts/contributor_hook.py`, registered in repo `.claude/settings.json`).
+- **(audience routing refactor)** — renamed `references/` → `authoring/` and `docs/` → `dev/` to make audience explicit; enforced path purity (script paths only in `dev/`); replaced the workspace-rules layer with a PreToolUse contract-injection hook (`scripts/a4_hook/_pre_edit.py`). Per-file `**Audience:**` banners were added then later removed in favor of per-directory `AGENTS.md` audience statements loaded through `CLAUDE.md` shims + a contributor hook (`dev/scripts/contributor_hook.py`, registered in repo `.claude/settings.json` and `.codex/hooks.json`).
 - **(skill-modes consolidation)** — retired the per-stage mode table (it was redundant with each `SKILL.md`'s frontmatter). The missing-pair design rationale moved to `dev/skill-mode-design.md` as a contributor design memo.
 - `04ca63a` — slimmed `SKILL.md` files to orchestration; moved skill procedures into `skills/<name>/references/`.
 
@@ -45,7 +45,7 @@ If you find script paths or implementation pointers leaking into `authoring/`, p
 
 ## Required reading before editing
 
-- **Anything touching frontmatter** → `authoring/frontmatter-common.md` (cross-cutting rules), `authoring/frontmatter-wiki.md` (wiki contract), `authoring/frontmatter-issue.md` (issue-side rules — `id`, title placeholders, relationships, status changes and cascades, structural relationship fields), and the matching `authoring/<type>-authoring.md` (per-type field table and lifecycle). The project-root `CLAUDE.md` calls these out as a hard prerequisite. Enforcement messages from `/a4:validate` and the Stop hook are self-explanatory; they cite the same per-type / universals contract.
+- **Anything touching frontmatter** → `authoring/frontmatter-common.md` (cross-cutting rules), `authoring/frontmatter-wiki.md` (wiki contract), `authoring/frontmatter-issue.md` (issue-side rules — `id`, title placeholders, relationships, status changes and cascades, structural relationship fields), and the matching `authoring/<type>-authoring.md` (per-type field table and lifecycle). The project-root `AGENTS.md` (loaded by the `CLAUDE.md` shim) calls these out as a hard prerequisite. Enforcement messages from `/a4:validate` and the Stop hook are self-explanatory; they cite the same per-type / universals contract.
 - **Anything touching body sections, tag form, or links** — pick by audience:
   - Cross-cutting (heading form, link form) → `authoring/body-conventions.md`. (`updated:` is hook-owned per `authoring/frontmatter-common.md` — never hand-edited.)
   - Issue body sections (`## Resume`, `## Log`) → `authoring/issue-body.md`.

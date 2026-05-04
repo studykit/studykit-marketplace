@@ -21,12 +21,20 @@ file occupies. Detailed citation/body rules live in each directory's
 `CLAUDE.md` — this hook does not duplicate them.
 
 Subcommands:
-  pre-read       PreToolUse on Read. Emit per-file note (with layer-map
-                 prepended on first session match).
-  pre-edit       PreToolUse on Write|Edit|MultiEdit. Same shape as
+  pre-read       Claude PreToolUse on Read. Emit per-file note (with
+                 layer-map prepended on first session match).
+  pre-edit       Claude PreToolUse on Write|Edit|MultiEdit. Same shape as
                  pre-read; shares the per-file dedup AND the layer-map
                  sentinel so a Read followed by an Edit of the same
-                 file does not double-emit either layer.
+                 file does not double-emit either layer. Codex PreToolUse
+                 is intentionally silent because Codex currently does not
+                 inject PreToolUse `additionalContext` into the model.
+  post-edit      Codex PostToolUse on apply_patch. Emit one aggregated
+                 PostToolUse JSON object with per-file notes for touched
+                 `plugins/a4/**/*.md` files.
+  session-start  Sweep orphan contributor-hook sentinels older than 1 day.
+                 This is the Codex replacement for SessionEnd cleanup,
+                 because Codex does not currently support SessionEnd.
 
 Session-scoped state under `.claude/tmp/a4-edited/`:
   a4-contributor-files-<sid>.txt        — newline-delimited file paths
@@ -37,25 +45,29 @@ Session-scoped state under `.claude/tmp/a4-edited/`:
                                           timestamp block has been
                                           injected on the first edit
                                           under `plugins/a4/hooks/`.
-Cleaned up by `cleanup-contributor.sh` (SessionEnd) and swept by
-`sweep-contributor.sh` (SessionStart, age-based for crashed sessions).
+Cleaned up by `cleanup-contributor.sh` (Claude SessionEnd) and swept by
+`sweep-contributor.sh` / `session-start` (age-based for crashed sessions
+and Codex sessions).
 
-End-user impact: zero. Pre-tool hooks gate on a `plugins/a4/` path
-prefix under `$CLAUDE_PROJECT_DIR`; that prefix exists only when a
-contributor edits this plugin's own source.
+End-user impact: zero. Tool hooks gate on a `plugins/a4/` path prefix
+under the active project root; that prefix exists only when a contributor
+edits this plugin's own source.
 
 Conventions (state classification, lifecycle symmetry, blocking policy,
 output channel) follow `plugins/a4/dev/hook-conventions.md`.
 
-Registered in repo `.claude/settings.json` (not in plugin manifest) so
-it applies only to contributors who clone this repository.
+Registered in repo `.claude/settings.json` and `.codex/hooks.json` (not in
+the plugin manifest) so it applies only to contributors who clone this
+repository.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import subprocess
 import sys
+import time
 from pathlib import Path
 
 
@@ -65,6 +77,9 @@ _SENTINEL_DIR = (".claude", "tmp", "a4-edited")
 _FILES_BASENAME = "a4-contributor-files-{sid}.txt"
 _MAP_BASENAME = "a4-contributor-map-{sid}.flag"
 _HOOKS_TIME_BASENAME = "a4-contributor-hooks-time-{sid}.flag"
+_RUNTIME_ENV_VAR = "A4_HOOK_RUNTIME"
+_CLAUDE_EDIT_TOOLS = frozenset({"Write", "Edit", "MultiEdit"})
+_STALE_SENTINEL_SECONDS = 24 * 60 * 60
 
 
 def main() -> int:
@@ -75,10 +90,14 @@ def main() -> int:
         return _pre_read()
     if sub == "pre-edit":
         return _pre_edit()
+    if sub == "post-edit":
+        return _post_edit()
+    if sub == "session-start":
+        return _session_start()
     return 0
 
 
-# ----------------------------- PreToolUse ---------------------------------
+# ----------------------------- Hook events --------------------------------
 
 
 def _pre_read() -> int:
@@ -87,16 +106,68 @@ def _pre_read() -> int:
         return 0
     if payload.get("tool_name") != "Read":
         return 0
-    return _inject_per_file(payload, intent="read")
+    # Codex does not expose a built-in Read hook shape equivalent to Claude's
+    # file Read event. This path is intentionally Claude-only.
+    if _runtime_name(payload) == "codex":
+        return 0
+    return _emit_payload_targets(payload, intent="read", hook_event="PreToolUse")
 
 
 def _pre_edit() -> int:
     payload = _payload()
     if payload is None:
         return 0
-    if payload.get("tool_name") not in ("Write", "Edit", "MultiEdit"):
+
+    runtime = _runtime_name(payload)
+    if runtime == "codex":
+        # Codex parses but does not currently inject PreToolUse
+        # `additionalContext`; emitting the Claude-shaped context here would be
+        # noisy at best and invalid for some clients. Codex receives the same
+        # contributor guidance through PostToolUse, where additionalContext is
+        # supported.
         return 0
-    return _inject_per_file(payload, intent="edit")
+
+    if payload.get("tool_name") not in _CLAUDE_EDIT_TOOLS:
+        return 0
+    return _emit_payload_targets(payload, intent="edit", hook_event="PreToolUse")
+
+
+def _post_edit() -> int:
+    payload = _payload()
+    if payload is None:
+        return 0
+
+    runtime = _runtime_name(payload)
+    if runtime != "codex" and payload.get("tool_name") != "apply_patch":
+        return 0
+
+    session_id = _session_id(payload)
+    if not session_id:
+        return 0
+    project_dir = _project_dir(payload)
+    if not project_dir:
+        return 0
+
+    contexts: list[str] = []
+    for file_path in _edit_targets(payload, project_dir):
+        context = _context_for_file(project_dir, session_id, file_path, "edit")
+        if context:
+            contexts.append(context)
+
+    if contexts:
+        _emit_context("PostToolUse", "\n\n---\n\n".join(contexts))
+    return 0
+
+
+def _session_start() -> int:
+    payload = _payload() or {}
+    project_dir = _project_dir(payload)
+    if project_dir:
+        _sweep_stale_sentinels(project_dir)
+    return 0
+
+
+# ----------------------------- Payload IO ---------------------------------
 
 
 def _payload() -> dict | None:
@@ -104,47 +175,218 @@ def _payload() -> dict | None:
     if not raw:
         return None
     try:
-        return json.loads(raw)
+        payload = json.loads(raw)
     except json.JSONDecodeError:
         return None
+    return payload if isinstance(payload, dict) else None
 
 
-def _inject_per_file(payload: dict, intent: str) -> int:
-    file_path = (payload.get("tool_input") or {}).get("file_path") or ""
-    session_id = payload.get("session_id") or ""
-    if not file_path or not session_id:
+def _emit_context(hook_event: str, body: str) -> None:
+    _emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": hook_event,
+                "additionalContext": body,
+            }
+        }
+    )
+
+
+def _emit(payload: dict) -> None:
+    json.dump(payload, sys.stdout, ensure_ascii=False)
+    sys.stdout.write("\n")
+
+
+# ----------------------------- Runtime ------------------------------------
+
+
+def _runtime_name(payload: dict) -> str:
+    runtime = os.environ.get(_RUNTIME_ENV_VAR, "").strip().lower()
+    if runtime in {"claude", "codex"}:
+        return runtime
+
+    tool_name = payload.get("tool_name")
+    if tool_name == "apply_patch" or payload.get("turn_id"):
+        return "codex"
+    if tool_name == "Read" or tool_name in _CLAUDE_EDIT_TOOLS:
+        return "claude"
+    return "unknown"
+
+
+def _session_id(payload: dict) -> str:
+    session_id = payload.get("session_id") or payload.get("turn_id") or ""
+    return session_id if isinstance(session_id, str) else ""
+
+
+def _project_dir(payload: dict) -> str:
+    """Return the active repository root for Claude and Codex hooks."""
+
+    runtime = _runtime_name(payload)
+    if runtime != "codex":
+        explicit = os.environ.get("CLAUDE_PROJECT_DIR")
+        if explicit:
+            return str(Path(explicit).expanduser().resolve())
+
+    cwd = payload.get("cwd") or os.getcwd()
+    if not isinstance(cwd, str) or not cwd:
+        return ""
+    cwd_path = Path(cwd).expanduser().resolve()
+
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(cwd_path), "rev-parse", "--show-toplevel"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        root = proc.stdout.strip()
+        if root:
+            return str(Path(root).resolve())
+    except (OSError, subprocess.CalledProcessError):
+        pass
+
+    return str(cwd_path)
+
+
+# ----------------------------- Target parsing -----------------------------
+
+
+def _emit_payload_targets(payload: dict, intent: str, hook_event: str) -> int:
+    session_id = _session_id(payload)
+    if not session_id:
         return 0
 
-    project_dir = os.environ.get("CLAUDE_PROJECT_DIR", "")
+    project_dir = _project_dir(payload)
     if not project_dir:
         return 0
 
-    plugin_root = Path(project_dir).joinpath(*_PLUGIN_REL)
+    targets = (
+        _read_targets(payload, project_dir)
+        if intent == "read"
+        else _edit_targets(payload, project_dir)
+    )
+    for file_path in targets:
+        context = _context_for_file(project_dir, session_id, file_path, intent)
+        if context:
+            _emit_context(hook_event, context)
+    return 0
+
+
+def _read_targets(payload: dict, project_dir: str) -> list[str]:
+    if payload.get("tool_name") != "Read":
+        return []
+    tool_input = payload.get("tool_input") or {}
+    if not isinstance(tool_input, dict):
+        return []
+    file_path = tool_input.get("file_path") or ""
+    if not isinstance(file_path, str) or not file_path:
+        return []
+    return [_resolve_path(file_path, payload, project_dir)]
+
+
+def _edit_targets(payload: dict, project_dir: str) -> list[str]:
+    tool_name = payload.get("tool_name")
+    tool_input = payload.get("tool_input") or {}
+    if not isinstance(tool_input, dict):
+        return []
+
+    if tool_name in _CLAUDE_EDIT_TOOLS:
+        file_path = tool_input.get("file_path") or ""
+        if not isinstance(file_path, str) or not file_path:
+            return []
+        return [_resolve_path(file_path, payload, project_dir)]
+
+    if tool_name == "apply_patch":
+        command = tool_input.get("command") or ""
+        if not isinstance(command, str) or not command:
+            return []
+        seen: set[str] = set()
+        out: list[str] = []
+        for raw_path in _apply_patch_paths(command):
+            path = _resolve_path(raw_path, payload, project_dir)
+            if path in seen:
+                continue
+            seen.add(path)
+            out.append(path)
+        return out
+
+    return []
+
+
+def _resolve_path(raw_path: str, payload: dict, project_dir: str) -> str:
+    path = Path(raw_path).expanduser()
+    if not path.is_absolute():
+        cwd = payload.get("cwd") or project_dir
+        base = (
+            Path(cwd).expanduser()
+            if isinstance(cwd, str) and cwd
+            else Path(project_dir)
+        )
+        path = base / path
+    return str(path.resolve(strict=False))
+
+
+def _apply_patch_paths(patch_text: str) -> list[str]:
+    """Extract file paths from Codex `apply_patch` text."""
+
+    out: list[str] = []
+    for line in patch_text.splitlines():
+        if line.startswith("*** Add File: "):
+            out.append(line.removeprefix("*** Add File: ").strip())
+        elif line.startswith("*** Update File: "):
+            out.append(line.removeprefix("*** Update File: ").strip())
+        elif line.startswith("*** Delete File: "):
+            out.append(line.removeprefix("*** Delete File: ").strip())
+        elif line.startswith("*** Move to: "):
+            out.append(line.removeprefix("*** Move to: ").strip())
+    return out
+
+
+# ----------------------------- Context building ---------------------------
+
+
+def _context_for_file(
+    project_dir: str,
+    session_id: str,
+    file_path: str,
+    intent: str,
+) -> str | None:
+    plugin_root = Path(project_dir).joinpath(*_PLUGIN_REL).resolve(strict=False)
     plugin_prefix = str(plugin_root) + os.sep
     if not file_path.startswith(plugin_prefix):
-        return 0
+        return None
 
+    parts: list[str] = []
     if intent == "edit":
-        time_prefix = _hooks_time_prefix(
-            project_dir, session_id, file_path
-        )
+        time_prefix = _hooks_time_prefix(project_dir, session_id, file_path)
         if time_prefix is not None:
-            _emit(
-                {
-                    "hookSpecificOutput": {
-                        "hookEventName": "PreToolUse",
-                        "additionalContext": time_prefix,
-                    }
-                }
-            )
+            parts.append(time_prefix)
 
-    if not file_path.endswith(".md"):
-        return 0
+    if file_path.endswith(".md"):
+        file_note = _file_note(project_dir, plugin_root, session_id, file_path, intent)
+        if file_note:
+            map_prefix = _layer_map_prefix(project_dir, session_id)
+            if map_prefix is not None:
+                parts.append(map_prefix)
+            parts.append(file_note)
 
+    if not parts:
+        return None
+    return "\n\n---\n\n".join(parts)
+
+
+def _file_note(
+    project_dir: str,
+    plugin_root: Path,
+    session_id: str,
+    file_path: str,
+    intent: str,
+) -> str | None:
     if _already_announced(project_dir, session_id, file_path):
-        return 0
+        return None
     if not _record_announced(project_dir, session_id, file_path):
-        return 0
+        return None
 
     if Path(file_path).name == "CLAUDE.md":
         # `CLAUDE.md` is the directory's contributor guardrail itself — its
@@ -156,30 +398,17 @@ def _inject_per_file(payload: dict, intent: str) -> int:
     else:
         layer = _resolve_layer(file_path, plugin_root)
         audience, claude_md = _LAYER_INFO.get(layer, _LAYER_INFO["other"])
+
     display_rel = (
         file_path[len(project_dir) + 1 :]
         if file_path.startswith(project_dir + os.sep)
         else file_path
     )
     intent_label = "read" if intent == "read" else "edit"
-    file_note = (
+    return (
         f"**a4 ({intent_label})** `{display_rel}` — audience: {audience}. "
         f"See `{claude_md}` for binding rules."
     )
-
-    map_prefix = _layer_map_prefix(project_dir, session_id)
-    body = file_note if map_prefix is None else (
-        map_prefix + "\n\n---\n\n" + file_note
-    )
-    _emit(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "PreToolUse",
-                "additionalContext": body,
-            }
-        }
-    )
-    return 0
 
 
 # --------------------- hooks/ first-edit time prefix ----------------------
@@ -194,7 +423,7 @@ def _hooks_time_prefix(
     the sentinel cannot be written, we still return None to avoid
     re-emitting on subsequent edits.
     """
-    hooks_root = Path(project_dir).joinpath(*_HOOKS_REL)
+    hooks_root = Path(project_dir).joinpath(*_HOOKS_REL).resolve(strict=False)
     hooks_prefix = str(hooks_root) + os.sep
     if not file_path.startswith(hooks_prefix):
         return None
@@ -251,8 +480,8 @@ _LAYER_MAP_BLOCK = (
     "- `dev/` — plugin contributors. May cite anywhere; skills must NOT "
     "cite this directory at runtime.\n"
     "- `dev/scripts/` — plugin contributors (contributor tooling, "
-    "registered via repo `.claude/settings.json`, not in the plugin "
-    "manifest).\n"
+    "registered via repo `.claude/settings.json` and `.codex/hooks.json`, "
+    "not in the plugin manifest).\n"
     "- `skills/<name>/**`, `agents/*.md` — skill / agent runtime. Cite "
     "`${CLAUDE_PLUGIN_ROOT}/authoring/`. Never `dev/`. Each skill is an "
     "independent entry point — there is no shared orchestration layer.\n"
@@ -301,6 +530,29 @@ def _record_announced(project_dir: str, session_id: str, file_path: str) -> bool
     except OSError:
         return False
     return True
+
+
+# ----------------------------- Session sweep ------------------------------
+
+
+def _sweep_stale_sentinels(project_dir: str) -> None:
+    record_dir = Path(project_dir).joinpath(*_SENTINEL_DIR)
+    if not record_dir.is_dir():
+        return
+
+    cutoff = time.time() - _STALE_SENTINEL_SECONDS
+    patterns = (
+        "a4-contributor-files-*.txt",
+        "a4-contributor-map-*.flag",
+        "a4-contributor-hooks-time-*.flag",
+    )
+    for pattern in patterns:
+        for path in record_dir.glob(pattern):
+            try:
+                if path.is_file() and path.stat().st_mtime < cutoff:
+                    path.unlink()
+            except OSError:
+                continue
 
 
 # ----------------------------- layer routing ------------------------------
@@ -361,11 +613,6 @@ _LAYER_INFO: dict[str, tuple[str, str]] = {
         "plugins/a4/CLAUDE.md",
     ),
 }
-
-
-def _emit(payload: dict) -> None:
-    json.dump(payload, sys.stdout, ensure_ascii=False)
-    sys.stdout.write("\n")
 
 
 if __name__ == "__main__":
