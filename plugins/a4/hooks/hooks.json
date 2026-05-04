@@ -1,30 +1,28 @@
 {
-  "description": "a4/ workspace lifecycle hooks for Codex and Claude Code. Codex plugin hooks provide PLUGIN_ROOT/CLAUDE_PLUGIN_ROOT and PLUGIN_DATA/CLAUDE_PLUGIN_DATA; commands preserve CLAUDE_PROJECT_DIR when Claude provides it and otherwise derive it from the current git root for Codex. Codex supports SessionStart, UserPromptSubmit, PreToolUse, PostToolUse, and Stop; Claude Code additionally runs SessionEnd cleanup. The Python dispatcher `scripts/a4_hook.py` handles pre-edit, post-edit, stop, user-prompt, and session-start. Session-scoped state is kept under `.claude/tmp/a4-edited/`: edited paths, pre-edit status snapshots, new-file markers, resolved #id tokens, and authoring-contract injection dedupe. For Codex apply_patch payloads, the dispatcher extracts touched markdown paths from `tool_input.command`; PreToolUse stores state only because Codex does not currently inject PreToolUse additionalContext, while PostToolUse performs stamping, cascade, updated refresh, and consistency reporting. Stop validates frontmatter and transition legality for files recorded during the session. UserPromptSubmit resolves `#<id>` references to a4 paths. SessionStart injects the a4 type-to-location map and reserved `created:` / `updated:` directive.",
+  "description": "a4/ workspace hooks. Most logic lives in the Python dispatcher `scripts/a4_hook.py` (subcommands: pre-edit, post-edit, stop, user-prompt, session-start). Two small bash hooks (`cleanup-edited-a4.sh`, `sweep-old-edited-a4.sh`) handle trivial tmp-file lifecycle. Session-scoped state under `.claude/tmp/a4-edited/`: `a4-edited-<sid>.txt` (paths edited this session, consumed by Stop), `a4-resolved-ids-<sid>.txt` (issue ids already announced via UserPromptSubmit, dedupes per-session), `a4-prestatus-<sid>.json` (pre-edit `status:` snapshot keyed by absolute path, populated by PreToolUse and consumed by PostToolUse to detect transitions), and `a4-injected-<sid>.txt` (per-type authoring-contract injection log so PreToolUse emits the contract pointers only on the first edit of any file of that type per session). PreToolUse stashes the on-disk `status:` of the file about to be edited and injects the type-specific authoring-contract pointers. PostToolUse records the edit, runs the status-change cascade (supersedes / discarded / revising flips on related files) when pre→post is a legal transition, refreshes `updated:` on the primary, then reports per-component status-consistency on the post-cascade state. Stop runs frontmatter schema checks AND a transition-legality safety net (HEAD-vs-working-tree git diff against `FAMILY_TRANSITIONS`) on session-edited files — catches illegal direct `status:` edits that the cascade hook intentionally ignored. UserPromptSubmit resolves `#<id>` references in the prompt to `a4/<type>/<id>-<slug>.md` paths and injects them as `additionalContext` so Claude reads the file directly instead of searching. SessionStart sweeps orphan record files older than 1 day (bash) and injects the canonical type → file-location map (issue folders + wiki top-level pages) plus the reserved-frontmatter-fields directive (`created:` / `updated:` are hook-owned — the LLM must never write them) so new files land in the right folder before the first edit and the timestamp fields are left to the hook; it does not run workspace-wide status-consistency reporting — run `/a4:validate` (or invoke `validate.py` directly) for a manual sweep. Design principles — language choice, lifecycle symmetry, ordering, non-blocking, output channels — live in `dev/hook-conventions.md`. For edits that bypassed the cascade hook (manual git checkout, external editors), run `/a4:validate --fix` (i.e. `validate.py <a4-dir> --fix`) — it walks live successors and reconciles `superseded` flips. Cascade primitives shared by the hook and the recovery sweep live in `scripts/status_cascade.py`.",
   "hooks": {
     "PreToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|apply_patch",
+        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" pre-edit",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" pre-edit",
             "timeout": 10,
-            "statusMessage": "Preparing a4 edit",
-            "description": "Snapshot on-disk a4/*.md `status:` and, in Claude Code, inject first-edit authoring-contract pointers"
+            "description": "Snapshot on-disk a4/*.md `status:` so post-edit can detect transitions precisely"
           }
         ]
       }
     ],
     "PostToolUse": [
       {
-        "matcher": "Edit|Write|MultiEdit|apply_patch",
+        "matcher": "Write|Edit|MultiEdit",
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" post-edit",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" post-edit",
             "timeout": 15,
-            "statusMessage": "Reconciling a4 edit",
-            "description": "Record edited a4/*.md files, stamp created/updated, run status-change cascade, and report status-consistency"
+            "description": "Record edited a4/*.md, run status-change cascade, then report per-component status-consistency"
           }
         ]
       }
@@ -34,10 +32,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" stop",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" stop",
             "timeout": 30,
-            "statusMessage": "Validating a4 files",
-            "description": "Validate a4/*.md files edited this session; emit JSON `{decision: block, reason}` on violations to force a fix/continuation"
+            "description": "Validate a4/*.md edited this session; emit JSON `{decision: block, reason}` on violations to force fix"
           }
         ]
       }
@@ -47,9 +44,9 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" bash \"${CLAUDE_PLUGIN_ROOT}/hooks/cleanup-edited-a4.sh\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/cleanup-edited-a4.sh\"",
             "timeout": 5,
-            "description": "Claude Code only: delete this session's a4 record files"
+            "description": "Delete this session's a4 record files"
           }
         ]
       }
@@ -59,17 +56,15 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" bash \"${CLAUDE_PLUGIN_ROOT}/hooks/sweep-old-edited-a4.sh\"",
+            "command": "bash \"${CLAUDE_PLUGIN_ROOT}/hooks/sweep-old-edited-a4.sh\"",
             "timeout": 5,
-            "statusMessage": "Sweeping stale a4 state",
             "description": "Sweep orphan a4 record files older than 1 day"
           },
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" session-start",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" session-start",
             "timeout": 10,
-            "statusMessage": "Loading a4 workspace map",
-            "description": "Inject type-to-file-location map and reserved frontmatter-field directive as additionalContext"
+            "description": "Inject type → file-location map for the a4/ workspace as additionalContext"
           }
         ]
       }
@@ -79,9 +74,8 @@
         "hooks": [
           {
             "type": "command",
-            "command": "CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" user-prompt",
+            "command": "uv run \"${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py\" user-prompt",
             "timeout": 10,
-            "statusMessage": "Resolving a4 references",
             "description": "Resolve #<id> references in the prompt to a4/<type>/<id>-<slug>.md paths (per-session dedupe)"
           }
         ]
