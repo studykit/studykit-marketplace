@@ -36,12 +36,12 @@ def test_codex_project_dir_uses_payload_cwd_not_claude_env(
     stale_claude_dir.mkdir()
 
     monkeypatch.setenv("A4_HOOK_RUNTIME", "codex")
-    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(stale_claude_dir))
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(stale_claude_dir))
 
     assert project_dir_from_payload({"cwd": str(payload_cwd)}) == str(payload_cwd)
 
 
-def test_claude_project_root_env_wins(
+def test_claude_project_dir_env_wins(
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: Path,
 ) -> None:
@@ -51,7 +51,7 @@ def test_claude_project_root_env_wins(
     payload_cwd.mkdir()
 
     monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
-    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(project_root))
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project_root))
 
     assert project_dir_from_payload({"cwd": str(payload_cwd)}) == str(project_root)
 

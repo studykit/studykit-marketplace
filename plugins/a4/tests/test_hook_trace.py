@@ -42,7 +42,7 @@ def test_trace_records_no_a4_dir_abort(
     }
     monkeypatch.setenv("A4_HOOK_TRACE", "1")
     monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
-    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(hook_module.sys, "stdin", io.StringIO(json.dumps(payload)))
     monkeypatch.setattr(hook_module.sys, "stdout", io.StringIO())
 
@@ -66,7 +66,7 @@ def test_trace_records_outside_a4_skip(
     }
     monkeypatch.setenv("A4_HOOK_TRACE", "yes")
     monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
-    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
     monkeypatch.setattr(hook_module.sys, "stdin", io.StringIO(json.dumps(payload)))
     monkeypatch.setattr(hook_module.sys, "stdout", io.StringIO())
 

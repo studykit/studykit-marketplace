@@ -57,7 +57,7 @@ class ClaudeHookStrategy:
     name: HookRuntimeName = "claude"
     suppress_pretooluse_context = False
     aggregate_posttooluse_output = False
-    project_root_env_vars = ("CLAUDE_PROJECT_ROOT",)
+    project_root_env_vars = ("CLAUDE_PROJECT_DIR",)
     plugin_root_env_vars = ("CLAUDE_PLUGIN_ROOT",)
 
     _TOOLS = frozenset({"Write", "Edit", "MultiEdit"})
