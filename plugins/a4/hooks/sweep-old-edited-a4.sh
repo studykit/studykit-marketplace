@@ -14,6 +14,8 @@ find "$record_dir" -type f \
     \( -name 'a4-edited-*.txt' \
        -o -name 'a4-resolved-ids-*.txt' \
        -o -name 'a4-prestatus-*.json' \
+       -o -name 'a4-newfiles-*.txt' \
+       -o -name 'trace.log' \
        -o -name 'a4-injected-*.txt' \) \
     -mtime +1 -delete 2>/dev/null || true
 

@@ -21,6 +21,7 @@ from a4_hook._state import (
     project_dir_from_payload,
     read_resolved_ids,
     record_resolved_ids,
+    trace,
 )
 
 
@@ -45,22 +46,33 @@ def user_prompt() -> int:
 
     raw = sys.stdin.read()
     if not raw:
+        trace(project_dir_from_payload({}), None, "user-prompt", "abort", reason="no_payload")
         return 0
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
+        trace(project_dir_from_payload({}), None, "user-prompt", "abort", reason="bad_json")
         return 0
 
     prompt = payload.get("prompt") or ""
     session_id = payload.get("session_id") or ""
     if not prompt or not session_id:
+        trace(
+            project_dir_from_payload(payload),
+            session_id or None,
+            "user-prompt",
+            "abort",
+            reason="no_prompt" if not prompt else "no_session_id",
+        )
         return 0
 
     project_dir = project_dir_from_payload(payload)
     if not project_dir:
+        trace(None, session_id, "user-prompt", "abort", reason="no_project_dir")
         return 0
     a4_dir = Path(project_dir) / "a4"
     if not a4_dir.is_dir():
+        trace(project_dir, session_id, "user-prompt", "abort", reason="no_a4_dir")
         return 0
 
     # `#<id>`. Negative lookbehind `(?<![\w#])` rejects markdown headings
@@ -80,11 +92,20 @@ def user_prompt() -> int:
         if len(ids) >= _MAX_IDS:
             break
     if not ids:
+        trace(project_dir, session_id, "user-prompt", "noop", reason="no_ids")
         return 0
 
     already = read_resolved_ids(project_dir, session_id)
     fresh = [t for t in ids if t not in already]
     if not fresh:
+        trace(
+            project_dir,
+            session_id,
+            "user-prompt",
+            "noop",
+            reason="all_ids_already_resolved",
+            ids=ids,
+        )
         return 0
 
     project_prefix = project_dir + os.sep
@@ -110,9 +131,25 @@ def user_prompt() -> int:
             resolved.append((token, display))
 
     if not resolved:
+        trace(
+            project_dir,
+            session_id,
+            "user-prompt",
+            "noop",
+            reason="ids_not_found",
+            ids=fresh,
+        )
         return 0
 
     record_resolved_ids(project_dir, session_id, [t for t, _ in resolved])
+    trace(
+        project_dir,
+        session_id,
+        "user-prompt",
+        "resolved",
+        ids=[t for t, _ in resolved],
+        count=len(resolved),
+    )
 
     # Terse on purpose — only the path is actionable. No header / footer:
     # `#<id> → path` is self-explanatory in context, and meta-explanation

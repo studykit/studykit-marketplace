@@ -20,9 +20,13 @@ no SessionStart noise). Always exits 0.
 from __future__ import annotations
 
 import sys
+import time
 from pathlib import Path
 
-from a4_hook._state import PLUGIN_ROOT, emit, project_dir_from_payload
+from a4_hook._state import PLUGIN_ROOT, emit, project_dir_from_payload, trace, trace_file
+
+
+_TRACE_MAX_AGE_SECONDS = 24 * 60 * 60
 
 
 def session_start() -> int:
@@ -41,17 +45,46 @@ def session_start() -> int:
         payload = json.loads(raw) if raw else {}
     except json.JSONDecodeError:
         payload = {}
+        trace(project_dir_from_payload({}), None, "session-start", "abort", reason="bad_json")
 
     project_dir = project_dir_from_payload(payload)
     if not project_dir:
+        trace(None, None, "session-start", "abort", reason="no_project_dir")
         return 0
+
+    trace_path = trace_file(project_dir)
+    truncated_trace = False
+    if trace_path.is_file():
+        try:
+            if trace_path.stat().st_mtime < time.time() - _TRACE_MAX_AGE_SECONDS:
+                trace_path.write_text("", encoding="utf-8")
+                truncated_trace = True
+        except OSError:
+            pass
+
     a4_dir = Path(project_dir) / "a4"
     if not a4_dir.is_dir():
+        trace(
+            project_dir,
+            None,
+            "session-start",
+            "noop",
+            reason="no_a4_dir",
+            truncated_trace=truncated_trace,
+        )
         return 0
 
     try:
         from common import ISSUE_FOLDERS, WIKI_TYPES
     except ImportError:
+        trace(
+            project_dir,
+            None,
+            "session-start",
+            "abort",
+            reason="import_common_failed",
+            truncated_trace=truncated_trace,
+        )
         return 0
 
     issue_lines = [
@@ -89,5 +122,14 @@ def session_start() -> int:
                 "additionalContext": context,
             }
         }
+    )
+    trace(
+        project_dir,
+        None,
+        "session-start",
+        "emit_context",
+        truncated_trace=truncated_trace,
+        issue_types=ISSUE_FOLDERS,
+        wiki_types=sorted(WIKI_TYPES),
     )
     return 0

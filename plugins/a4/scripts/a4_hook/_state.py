@@ -10,6 +10,8 @@ All session-state lives under ``<project>/.claude/tmp/a4-edited/``:
                                    injected this session (Pre dedupe).
 - ``a4-resolved-ids-<sid>.txt``  — `#<id>` tokens already resolved this session
                                    (UserPromptSubmit dedupe).
+- ``trace.log``                  — opt-in JSON Lines trace, written only when
+                                   ``A4_HOOK_TRACE`` is truthy.
 
 All cleanup runs at SessionEnd (`hooks/cleanup-edited-a4.sh`) with a
 SessionStart safety-net sweep (`hooks/sweep-old-edited-a4.sh`) for crashed
@@ -27,6 +29,10 @@ from pathlib import Path
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent.parent
 AUTHORING_DIR = PLUGIN_ROOT / "authoring"
 
+TRACE_ENV_VAR = "A4_HOOK_TRACE"
+TRACE_FILE_NAME = "trace.log"
+TRACE_TRUTHY = {"1", "true", "yes", "on"}
+
 
 # ----------------------------- generic helpers ----------------------------
 
@@ -34,6 +40,57 @@ AUTHORING_DIR = PLUGIN_ROOT / "authoring"
 def record_dir(project_dir: str) -> Path:
     """Session-scoped state directory shared by all a4-edited family files."""
     return Path(project_dir) / ".claude" / "tmp" / "a4-edited"
+
+
+def trace_enabled() -> bool:
+    """Return true when opt-in hook tracing is enabled.
+
+    Tracing is intentionally file-only and off by default. Enable it by
+    launching the host with ``A4_HOOK_TRACE=1`` (also accepts
+    ``true``/``yes``/``on``, case-insensitive).
+    """
+    import os
+
+    return os.environ.get(TRACE_ENV_VAR, "").strip().lower() in TRACE_TRUTHY
+
+
+def trace_file(project_dir: str | Path) -> Path:
+    return record_dir(str(project_dir)) / TRACE_FILE_NAME
+
+
+def trace(
+    project_dir: str | Path | None,
+    session_id: str | None,
+    subcommand: str,
+    event: str,
+    **fields,
+) -> None:
+    """Append one JSON Lines trace record.
+
+    This helper never writes stdout/stderr and never raises. It exists to
+    diagnose early-return paths such as "payload had no targets", "target was
+    outside root ``a4/``", or "project has no ``a4/`` directory" without
+    breaking hook JSON output.
+    """
+    if not trace_enabled() or project_dir is None:
+        return
+    try:
+        import json
+        from datetime import datetime
+
+        path = trace_file(project_dir)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        record = {
+            "ts": datetime.now().isoformat(timespec="microseconds"),
+            "sid": session_id,
+            "cmd": subcommand,
+            "event": event,
+        }
+        record.update(fields)
+        with path.open("a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False, default=str) + "\n")
+    except OSError:
+        return
 
 
 def display_rel(file_path: str, project_dir: str) -> str:

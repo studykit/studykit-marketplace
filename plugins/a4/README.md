@@ -49,6 +49,11 @@ Three hook flows share the same events, dispatched through a single Python entry
 
 **Scope.** Only files under `$project/a4/` are recorded by single-file validation. Pre-existing violations in files the user did not touch this session are not re-reported. Run `/a4:validate` for a full workspace sweep — status-consistency reporting is now manual rather than firing on SessionStart.
 
+**Trace.** Set `A4_HOOK_TRACE=1` before launching the host to append
+JSON Lines diagnostics to `$project/.claude/tmp/a4-edited/trace.log`.
+The trace is opt-in, file-only, and records decision points / early
+returns without polluting hook stdout/stderr.
+
 **Design principles.** See `dev/hook-conventions.md` for state classification, lifecycle symmetry, language choice, in-event ordering, non-blocking policy, and output channel usage.
 
 ### Agents
@@ -134,4 +139,3 @@ The `workspace-assistant` agent (snapshot mode) renders the current workspace st
 ### Archive
 
 Closed items are archived by `git mv`-ing them into `a4/archive/`. Folder location is the flag — there is no `archived:` frontmatter field. The move is always user-confirmed.
-

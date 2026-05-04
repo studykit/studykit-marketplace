@@ -34,6 +34,7 @@ from a4_hook._state import (
     read_status_from_disk,
     record_edited,
     resolve_type_from_path,
+    trace,
     write_prestatus,
 )
 from a4_hook._runtime import select_hook_strategy
@@ -53,18 +54,29 @@ def post_edit() -> int:
 
     raw = sys.stdin.read()
     if not raw:
+        trace(project_dir_from_payload({}), None, "post-edit", "abort", reason="no_payload")
         return 0
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
+        trace(project_dir_from_payload({}), None, "post-edit", "abort", reason="bad_json")
         return 0
 
     session_id = payload.get("session_id") or ""
     if not session_id:
+        trace(
+            project_dir_from_payload(payload),
+            None,
+            "post-edit",
+            "abort",
+            reason="no_session_id",
+            tool_name=payload.get("tool_name"),
+        )
         return 0
 
     project_dir = project_dir_from_payload(payload)
     if not project_dir:
+        trace(None, session_id, "post-edit", "abort", reason="no_project_dir")
         return 0
     a4_dir = Path(project_dir) / "a4"
     a4_prefix = str(a4_dir) + os.sep
@@ -72,9 +84,27 @@ def post_edit() -> int:
     strategy = select_hook_strategy(payload)
     targets = strategy.edit_targets(payload, project_dir)
     if not targets:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "abort",
+            reason="no_targets",
+            runtime=strategy.name,
+            tool_name=payload.get("tool_name"),
+        )
         return 0
 
     if not a4_dir.is_dir():
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "abort",
+            reason="no_a4_dir",
+            a4_dir=str(a4_dir),
+            targets=[t.path for t in targets],
+        )
         return 0
 
     # Single timestamp shared across stamp + cascade + auto-bump so a
@@ -83,8 +113,20 @@ def post_edit() -> int:
     try:
         from common import now_kst
     except ImportError:
+        trace(project_dir, session_id, "post-edit", "abort", reason="import_common_failed")
         return 0
     today = now_kst()
+
+    trace(
+        project_dir,
+        session_id,
+        "post-edit",
+        "targets",
+        runtime=strategy.name,
+        aggregate_output=strategy.aggregate_posttooluse_output,
+        count=len(targets),
+        paths=[t.path for t in targets],
+    )
 
     if strategy.aggregate_posttooluse_output:
         captured = io.StringIO()
@@ -111,10 +153,26 @@ def _post_edit_one(
     today: str,
 ) -> None:
     if not file_path.startswith(a4_prefix):
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip",
+            reason="outside_a4",
+            file_path=file_path,
+            a4_dir=str(a4_dir),
+        )
         return
 
     # Step 1 — record (session-scoped, fail-open).
     record_edited(project_dir, session_id, file_path)
+    trace(
+        project_dir,
+        session_id,
+        "post-edit",
+        "record_edited",
+        file_path=file_path,
+    )
 
     # Step 2 — stamp `created:` if this Write created a new file. Runs
     # before the cascade so a status flip (which also touches `updated:`)
@@ -137,7 +195,7 @@ def _post_edit_one(
     # was the old contract — that responsibility now lives here so the
     # LLM never has to touch `updated:`.
     if not cascade_refreshed:
-        _refresh_updated_on_primary(a4_dir, file_path, today)
+        _refresh_updated_on_primary(a4_dir, file_path, today, project_dir, session_id)
 
     # Step 5 — status-consistency report on the (now post-cascade) state.
     _report_status_consistency_post(a4_dir, file_path, project_dir)
@@ -219,29 +277,79 @@ def _maybe_stamp_created(
     """
     new_files = read_newfiles(project_dir, session_id)
     if file_path not in new_files:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="not_recorded_newfile",
+            file_path=file_path,
+        )
         return
 
     abs_path = Path(file_path)
     if not abs_path.is_file():
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="file_missing_after_write",
+            file_path=file_path,
+        )
         return
 
     try:
         type_value = resolve_type_from_path(abs_path, a4_dir)
     except Exception:
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="type_resolution_error",
+            file_path=file_path,
+        )
         return
     if not type_value:
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="unknown_type",
+            file_path=file_path,
+        )
         return
 
     try:
         from markdown_validator.frontmatter import types_with_created
     except ImportError:
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="import_frontmatter_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
     if type_value not in types_with_created():
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="type_without_created",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     try:
@@ -249,28 +357,81 @@ def _maybe_stamp_created(
         from status_cascade import parse_fm, write_file
     except ImportError:
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="import_rewrite_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     try:
         preamble = extract_preamble(abs_path)
     except (OSError, ValueError):
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="extract_preamble_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
     if preamble.fm is None:
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="missing_frontmatter",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     try:
         _, raw_fm, body = parse_fm(abs_path)
     except (OSError, ValueError):
         drop_newfile(project_dir, session_id, file_path)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="parse_frontmatter_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     try:
         new_fm = _insert_created_before_updated(raw_fm, today)
         write_file(abs_path, new_fm, body)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "stamp_created",
+            file_path=file_path,
+            type=type_value,
+            value=today,
+        )
     except (OSError, ValueError):
-        pass
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_created_stamp",
+            reason="write_failed",
+            file_path=file_path,
+            type=type_value,
+        )
     finally:
         drop_newfile(project_dir, session_id, file_path)
 
@@ -310,7 +471,11 @@ def _insert_created_before_updated(raw_fm: str, value: str) -> str:
 
 
 def _refresh_updated_on_primary(
-    a4_dir: Path, file_path: str, today: str
+    a4_dir: Path,
+    file_path: str,
+    today: str,
+    project_dir: str,
+    session_id: str,
 ) -> None:
     """Rewrite ``updated:`` on the just-edited a4/*.md to ``today``.
 
@@ -335,27 +500,88 @@ def _refresh_updated_on_primary(
     """
     abs_path = Path(file_path)
     if not abs_path.is_file():
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_updated_refresh",
+            reason="file_missing",
+            file_path=file_path,
+        )
         return
     type_value = resolve_type_from_path(abs_path, a4_dir)
     if not type_value:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_updated_refresh",
+            reason="unknown_type",
+            file_path=file_path,
+        )
         return
 
     try:
         from status_cascade import parse_fm, rewrite_frontmatter_scalar, write_file
     except ImportError:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_updated_refresh",
+            reason="import_rewrite_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     try:
         fm, raw_fm, body = parse_fm(abs_path)
     except (OSError, ValueError):
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_updated_refresh",
+            reason="parse_frontmatter_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
     if fm is None:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_updated_refresh",
+            reason="missing_frontmatter",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     try:
         new_fm = rewrite_frontmatter_scalar(raw_fm, "updated", today)
         write_file(abs_path, new_fm, body)
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "refresh_updated",
+            file_path=file_path,
+            type=type_value,
+            value=today,
+        )
     except (OSError, ValueError):
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_updated_refresh",
+            reason="write_failed",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
 
@@ -383,6 +609,14 @@ def _run_status_change_cascade(
     pre_map = read_prestatus(project_dir, session_id)
     pre_status = pre_map.get(file_path)
     if pre_status is None:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_cascade",
+            reason="no_prestatus",
+            file_path=file_path,
+        )
         return False
 
     abs_path = Path(file_path)
@@ -394,11 +628,29 @@ def _run_status_change_cascade(
     write_prestatus(project_dir, session_id, pre_map)
 
     if post_status is None or post_status == pre_status:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_cascade",
+            reason="status_unchanged_or_missing",
+            file_path=file_path,
+            pre_status=pre_status,
+            post_status=post_status,
+        )
         return False
 
     try:
         rel_path = str(abs_path.resolve().relative_to(a4_dir.resolve()))
     except (OSError, ValueError):
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_cascade",
+            reason="outside_a4_after_resolve",
+            file_path=file_path,
+        )
         return False
 
     try:
@@ -420,14 +672,43 @@ def _run_status_change_cascade(
             f"a4_hook post-edit: failed to import cascade modules ({e}) "
             "— skipping cascade\n"
         )
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_cascade",
+            reason="import_cascade_failed",
+            file_path=file_path,
+            error=str(e),
+        )
         return False
 
     family = detect_family(rel_path)
     if family is None or family not in FAMILY_TRANSITIONS:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_cascade",
+            reason="family_without_transitions",
+            file_path=file_path,
+            family=family,
+        )
         return False
     if not is_transition_legal(family, pre_status, post_status):
         # Illegal direct edit — Stop hook will surface it. Don't cascade
         # off an illegal transition.
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "skip_cascade",
+            reason="illegal_transition",
+            file_path=file_path,
+            family=family,
+            pre_status=pre_status,
+            post_status=post_status,
+        )
         return False
 
     report = Report(
@@ -454,8 +735,27 @@ def _run_status_change_cascade(
             dry_run=False, today=today,
         )
         primary_refreshed = True
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "refresh_primary_for_cascade",
+            file_path=file_path,
+            family=family,
+            pre_status=pre_status,
+            post_status=post_status,
+            value=today,
+        )
     except (RuntimeError, OSError) as e:
         report.errors.append(f"{rel_path}: failed to refresh updated: {e}")
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "cascade_primary_refresh_error",
+            file_path=file_path,
+            error=str(e),
+        )
 
     cascade_name = cascade_for(family, pre_status, post_status)
     if cascade_name is not None:
@@ -469,12 +769,43 @@ def _run_status_change_cascade(
             sys.stderr.write(
                 f"a4_hook post-edit: cascade error ({e})\n"
             )
+            trace(
+                project_dir,
+                session_id,
+                "post-edit",
+                "cascade_error",
+                file_path=file_path,
+                cascade=cascade_name,
+                error=str(e),
+            )
             return primary_refreshed
 
     if not report.cascades and not report.errors:
+        trace(
+            project_dir,
+            session_id,
+            "post-edit",
+            "cascade_complete",
+            file_path=file_path,
+            family=family,
+            cascade=cascade_name,
+            cascades=0,
+            errors=0,
+        )
         return primary_refreshed
 
     _emit_cascade_context(report, file_path, project_dir)
+    trace(
+        project_dir,
+        session_id,
+        "post-edit",
+        "cascade_complete",
+        file_path=file_path,
+        family=family,
+        cascade=cascade_name,
+        cascades=len(report.cascades),
+        errors=len(report.errors),
+    )
     return primary_refreshed
 
 

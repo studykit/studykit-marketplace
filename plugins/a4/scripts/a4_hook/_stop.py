@@ -18,6 +18,7 @@ from a4_hook._state import (
     AUTHORING_DIR,
     project_dir_from_payload,
     record_dir,
+    trace,
     unlink_silent,
 )
 
@@ -29,29 +30,60 @@ def stop() -> int:
 
     raw = sys.stdin.read()
     if not raw:
+        trace(project_dir_from_payload({}), None, "stop", "abort", reason="no_payload")
         return 0
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
+        trace(project_dir_from_payload({}), None, "stop", "abort", reason="bad_json")
         return 0
 
     session_id = payload.get("session_id") or ""
     if not session_id or payload.get("stop_hook_active") is True:
+        trace(
+            project_dir_from_payload(payload),
+            session_id or None,
+            "stop",
+            "abort",
+            reason=(
+                "stop_hook_active"
+                if payload.get("stop_hook_active") is True
+                else "no_session_id"
+            ),
+        )
         return 0
 
     project_dir = project_dir_from_payload(payload)
     if not project_dir:
+        trace(None, session_id, "stop", "abort", reason="no_project_dir")
         return 0
     a4_dir = Path(project_dir) / "a4"
     if not a4_dir.is_dir():
+        trace(project_dir, session_id, "stop", "abort", reason="no_a4_dir")
         return 0
     record_file = record_dir(project_dir) / f"a4-edited-{session_id}.txt"
     if not record_file.is_file():
+        trace(
+            project_dir,
+            session_id,
+            "stop",
+            "noop",
+            reason="no_record_file",
+            record_file=str(record_file),
+        )
         return 0
 
     try:
         raw_paths = record_file.read_text().splitlines()
     except OSError:
+        trace(
+            project_dir,
+            session_id,
+            "stop",
+            "abort",
+            reason="record_read_failed",
+            record_file=str(record_file),
+        )
         return 0
 
     a4_prefix = str(a4_dir) + os.sep
@@ -60,6 +92,14 @@ def stop() -> int:
     )
     if not edited:
         unlink_silent(record_file)
+        trace(
+            project_dir,
+            session_id,
+            "stop",
+            "noop",
+            reason="no_existing_a4_edits",
+            raw_count=len(raw_paths),
+        )
         return 0
 
     try:
@@ -69,6 +109,14 @@ def stop() -> int:
     except ImportError as e:
         sys.stderr.write(
             f"a4_hook stop: failed to import validators ({e}) — skipping validation\n"
+        )
+        trace(
+            project_dir,
+            session_id,
+            "stop",
+            "abort",
+            reason="import_validators_failed",
+            error=str(e),
         )
         return 0
 
@@ -97,10 +145,19 @@ def stop() -> int:
         sys.stderr.write(
             f"a4_hook stop: validator error ({e}) — skipping validation\n"
         )
+        trace(
+            project_dir,
+            session_id,
+            "stop",
+            "abort",
+            reason="validator_error",
+            error=str(e),
+        )
         return 0
 
     if not fm_violations and not tr_violations:
         unlink_silent(record_file)
+        trace(project_dir, session_id, "stop", "clean", edited=edited)
         return 0
 
     out_lines = ["a4/ validators found issues in files edited this session:"]
@@ -141,5 +198,14 @@ def stop() -> int:
     )
     sys.stdout.write(
         json.dumps({"decision": "block", "reason": "\n".join(out_lines)})
+    )
+    trace(
+        project_dir,
+        session_id,
+        "stop",
+        "block",
+        edited=edited,
+        frontmatter_violations=len(fm_violations),
+        transition_violations=len(tr_violations),
     )
     return 0

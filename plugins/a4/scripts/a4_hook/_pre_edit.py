@@ -45,6 +45,7 @@ from a4_hook._state import (
     record_injected,
     record_newfile,
     resolve_type_from_path,
+    trace,
     write_prestatus,
 )
 from a4_hook._runtime import select_hook_strategy
@@ -84,18 +85,29 @@ def pre_edit() -> int:
 
     raw = sys.stdin.read()
     if not raw:
+        trace(project_dir_from_payload({}), None, "pre-edit", "abort", reason="no_payload")
         return 0
     try:
         payload = json.loads(raw)
     except json.JSONDecodeError:
+        trace(project_dir_from_payload({}), None, "pre-edit", "abort", reason="bad_json")
         return 0
 
     session_id = payload.get("session_id") or ""
     if not session_id:
+        trace(
+            project_dir_from_payload(payload),
+            None,
+            "pre-edit",
+            "abort",
+            reason="no_session_id",
+            tool_name=payload.get("tool_name"),
+        )
         return 0
 
     project_dir = project_dir_from_payload(payload)
     if not project_dir:
+        trace(None, session_id, "pre-edit", "abort", reason="no_project_dir")
         return 0
     a4_dir = Path(project_dir) / "a4"
     a4_prefix = str(a4_dir) + os.sep
@@ -103,6 +115,15 @@ def pre_edit() -> int:
     strategy = select_hook_strategy(payload)
     targets = strategy.edit_targets(payload, project_dir)
     if not targets:
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "abort",
+            reason="no_targets",
+            runtime=strategy.name,
+            tool_name=payload.get("tool_name"),
+        )
         return 0
 
     # Codex currently parses PreToolUse `additionalContext` but does not inject
@@ -110,6 +131,16 @@ def pre_edit() -> int:
     # from a Codex PreToolUse hook would therefore become invalid hook output.
     # Keep the stateful pre-edit work, but suppress context for Codex payloads.
     suppress_context = strategy.suppress_pretooluse_context
+    trace(
+        project_dir,
+        session_id,
+        "pre-edit",
+        "targets",
+        runtime=strategy.name,
+        suppress_context=suppress_context,
+        count=len(targets),
+        paths=[t.path for t in targets],
+    )
 
     for target in targets:
         _pre_edit_one(
@@ -136,6 +167,15 @@ def _pre_edit_one(
     suppress_context: bool,
 ) -> None:
     if not file_path.startswith(a4_prefix):
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "skip",
+            reason="outside_a4",
+            file_path=file_path,
+            a4_dir=str(a4_dir),
+        )
         return
 
     abs_path = Path(file_path)
@@ -149,6 +189,23 @@ def _pre_edit_one(
             data = read_prestatus(project_dir, session_id)
             data[file_path] = pre
             write_prestatus(project_dir, session_id, data)
+            trace(
+                project_dir,
+                session_id,
+                "pre-edit",
+                "record_prestatus",
+                file_path=file_path,
+                status=pre,
+            )
+        else:
+            trace(
+                project_dir,
+                session_id,
+                "pre-edit",
+                "skip_prestatus",
+                reason="no_status",
+                file_path=file_path,
+            )
     else:
         # File doesn't exist yet — record so post-edit can stamp
         # `created:` after the Write lands (overwriting any value the
@@ -157,6 +214,22 @@ def _pre_edit_one(
         # require a prior Read of an existing file.
         if is_new_file_intent or payload.get("tool_name") == "Write":
             record_newfile(project_dir, session_id, file_path)
+            trace(
+                project_dir,
+                session_id,
+                "pre-edit",
+                "record_newfile",
+                file_path=file_path,
+            )
+        else:
+            trace(
+                project_dir,
+                session_id,
+                "pre-edit",
+                "skip_newfile",
+                reason="not_create_intent",
+                file_path=file_path,
+            )
 
     # Responsibility 2 — authoring-contract injection (one-shot per
     # (file, type) per session). Fires for both edits and new-file
@@ -167,6 +240,15 @@ def _pre_edit_one(
     if not suppress_context:
         _maybe_inject_authoring_contract(
             abs_path, file_path, a4_dir, project_dir, session_id
+        )
+    else:
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "skip_contract_context",
+            reason="runtime_suppresses_pretooluse_context",
+            file_path=file_path,
         )
 
 
@@ -183,16 +265,50 @@ def _maybe_inject_authoring_contract(
     """
     type_value = resolve_type_from_path(abs_path, a4_dir)
     if not type_value:
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "skip_contract_context",
+            reason="unknown_type",
+            file_path=file_path,
+        )
         return
 
     type_doc = AUTHORING_DIR / f"{type_value}-authoring.md"
     if not type_doc.is_file():
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "skip_contract_context",
+            reason="missing_type_doc",
+            file_path=file_path,
+            type=type_value,
+        )
         return
 
     already = read_injected(project_dir, session_id)
     if type_value in already:
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "skip_contract_context",
+            reason="already_injected",
+            file_path=file_path,
+            type=type_value,
+        )
         return
     record_injected(project_dir, session_id, type_value)
+    trace(
+        project_dir,
+        session_id,
+        "pre-edit",
+        "inject_contract_context",
+        file_path=file_path,
+        type=type_value,
+    )
 
     rel = display_rel(file_path, project_dir)
 

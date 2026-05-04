@@ -5,11 +5,11 @@ independent filesystem operations:
 
 - `cleanup-edited-a4.sh` — SessionEnd: delete this session's
   `a4-edited-<session_id>.txt`, `a4-resolved-ids-<session_id>.txt`,
-  `a4-prestatus-<session_id>.json`, and `a4-injected-<session_id>.txt`
-  record files.
+  `a4-prestatus-<session_id>.json`, `a4-newfiles-<session_id>.txt`,
+  and `a4-injected-<session_id>.txt` record files.
 - `sweep-old-edited-a4.sh` — SessionStart: delete orphan record files
   in the same family older than 1 day (safety net for crashed
-  sessions).
+  sessions). It also prunes an opt-in `trace.log` older than 1 day.
 
 All other hook logic (JSON parsing, script wrapping, structured output
 shaping) lives in the Python dispatcher: **`../scripts/a4_hook.py`**,
@@ -29,6 +29,20 @@ SessionStart fires both the bash sweep above and the python dispatcher
 (`session-start` injects the type → file-location map as
 additionalContext); SessionEnd fires only the bash cleanup above in the
 Claude Code manifest.
+
+## Opt-in trace
+
+Set `A4_HOOK_TRACE=1` (also accepts `true`, `yes`, or `on`) before
+launching the host to append JSON Lines diagnostics to:
+
+```text
+<project>/.claude/tmp/a4-edited/trace.log
+```
+
+The trace is file-only and records decision points / early returns such
+as missing payload, missing `a4/` directory, target paths outside
+`a4/`, dedupe hits, and validation outcomes. It never writes trace
+records to stdout/stderr because hook stdout may be parsed as JSON.
 
 Design principles — language choice, lifecycle symmetry, ordering,
 non-blocking, output channels — are documented in
