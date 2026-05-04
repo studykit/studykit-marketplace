@@ -13,6 +13,47 @@ if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
 from a4_hook._runtime import select_hook_strategy  # noqa: E402
+from a4_hook._state import project_dir_from_payload  # noqa: E402
+
+
+def test_explicit_runtime_marker_from_manifest_wins(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("A4_HOOK_RUNTIME", "codex")
+    assert select_hook_strategy({"tool_name": "Edit"}).name == "codex"
+
+    monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
+    assert select_hook_strategy({"tool_name": "apply_patch"}).name == "claude"
+
+
+def test_codex_project_dir_uses_payload_cwd_not_claude_env(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    payload_cwd = tmp_path / "workspace"
+    stale_claude_dir = tmp_path / "stale-claude"
+    payload_cwd.mkdir()
+    stale_claude_dir.mkdir()
+
+    monkeypatch.setenv("A4_HOOK_RUNTIME", "codex")
+    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(stale_claude_dir))
+
+    assert project_dir_from_payload({"cwd": str(payload_cwd)}) == str(payload_cwd)
+
+
+def test_claude_project_root_env_wins(
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+) -> None:
+    project_root = tmp_path / "claude-root"
+    payload_cwd = tmp_path / "payload-cwd"
+    project_root.mkdir()
+    payload_cwd.mkdir()
+
+    monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
+    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(project_root))
+
+    assert project_dir_from_payload({"cwd": str(payload_cwd)}) == str(project_root)
 
 
 def test_claude_file_tool_strategy_wins_over_inherited_codex_env(

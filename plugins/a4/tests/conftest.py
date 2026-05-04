@@ -124,3 +124,9 @@ class A4Workspace:
 @pytest.fixture
 def a4_workspace(tmp_path: Path) -> A4Workspace:
     return A4Workspace(tmp_path / "a4")
+
+
+@pytest.fixture(autouse=True)
+def _clear_hook_runtime_marker(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Keep local hook-manifest runtime markers from leaking into tests."""
+    monkeypatch.delenv("A4_HOOK_RUNTIME", raising=False)

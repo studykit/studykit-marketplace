@@ -79,7 +79,10 @@ This guards against the recurring failure of reading one authoring file, noticin
   - `dev/*.md` may cite anything; it is the only directory plugin-internal references are allowed.
   - For author/skill-facing recovery commands, prefer the command surface (`/a4:validate`) over a script path.
 - **Ids are globally monotonic.** Allocate via `scripts/allocate_id.py`; never reuse, never re-pack.
-- **Plugin version lives in `.claude-plugin/marketplace.json`**, not in `plugin.json`. Bump the entry when adding a feature (per the project-root `CLAUDE.md`).
+- **Plugin version metadata has two agent-specific homes and they must match.**
+  - Claude marketplace version: repository-root `.claude-plugin/marketplace.json`, in the `plugins[]` entry where `"name": "a4"` / `"source": "./plugins/a4"`.
+  - Codex plugin version: `plugins/a4/.codex-plugin/plugin.json`, at top-level `"version"`.
+  - Always bump both files in the same change and keep the version strings identical. Do not add a version to `plugins/a4/.claude-plugin/plugin.json`; Claude gets the a4 version from the repository marketplace entry.
 
 ## Running plugin scripts
 

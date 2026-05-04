@@ -4,10 +4,10 @@ The a4 hook entry points stay intentionally small: they choose one runtime
 strategy up front, then ask that strategy how to interpret edit targets and how
 to shape runtime-specific output behavior.
 
-Tool names are treated as the strongest runtime signal. This keeps Claude Code
-safe when it is launched from an environment that happens to inherit Codex
-variables such as ``PLUGIN_ROOT`` or ``CODEX_THREAD_ID``: if Claude sends a
-``Write`` / ``Edit`` / ``MultiEdit`` payload, the Claude strategy wins.
+Agent-specific hook manifests set ``A4_HOOK_RUNTIME`` to ``claude`` or
+``codex`` so the dispatcher can identify the host explicitly. Tool names remain
+only as a payload-based fallback for direct script tests or older manifests
+that have not set the marker yet.
 """
 
 from __future__ import annotations
@@ -18,6 +18,8 @@ from typing import Literal, Protocol
 
 
 HookRuntimeName = Literal["claude", "codex", "unknown"]
+
+RUNTIME_ENV_VAR = "A4_HOOK_RUNTIME"
 
 
 @dataclass(frozen=True)
@@ -37,6 +39,8 @@ class HookRuntimeStrategy(Protocol):
     name: HookRuntimeName
     suppress_pretooluse_context: bool
     aggregate_posttooluse_output: bool
+    project_root_env_vars: tuple[str, ...]
+    plugin_root_env_vars: tuple[str, ...]
 
     def edit_targets(self, payload: dict, project_dir: str) -> list[EditTarget]:
         """Return normalized markdown edit targets for this runtime."""
@@ -53,6 +57,8 @@ class ClaudeHookStrategy:
     name: HookRuntimeName = "claude"
     suppress_pretooluse_context = False
     aggregate_posttooluse_output = False
+    project_root_env_vars = ("CLAUDE_PROJECT_ROOT",)
+    plugin_root_env_vars = ("CLAUDE_PLUGIN_ROOT",)
 
     _TOOLS = frozenset({"Write", "Edit", "MultiEdit"})
 
@@ -88,6 +94,8 @@ class CodexHookStrategy:
     name: HookRuntimeName = "codex"
     suppress_pretooluse_context = True
     aggregate_posttooluse_output = True
+    project_root_env_vars = ()
+    plugin_root_env_vars = ("PLUGIN_ROOT",)
 
     def edit_targets(self, payload: dict, project_dir: str) -> list[EditTarget]:
         if payload.get("tool_name") != "apply_patch":
@@ -118,6 +126,8 @@ class UnknownHookStrategy:
     name: HookRuntimeName = "unknown"
     suppress_pretooluse_context = False
     aggregate_posttooluse_output = False
+    project_root_env_vars = ()
+    plugin_root_env_vars = ()
 
     def edit_targets(self, payload: dict, project_dir: str) -> list[EditTarget]:
         return []
@@ -131,12 +141,18 @@ UNKNOWN_STRATEGY = UnknownHookStrategy()
 def select_hook_strategy(payload: dict) -> HookRuntimeStrategy:
     """Pick the runtime strategy for a hook payload.
 
-    The ordering intentionally protects Claude Code first for file-edit hooks:
-    Claude's ``Write`` / ``Edit`` / ``MultiEdit`` tools win even if Codex
-    environment variables leaked into the process.
+    Agent-specific hook manifests are expected to set ``A4_HOOK_RUNTIME``.
+    When absent, fall back only to hook payload shape; do not infer runtime from
+    unrelated inherited environment variables.
     """
 
     import os
+
+    runtime = os.environ.get(RUNTIME_ENV_VAR, "").strip().lower()
+    if runtime == "claude":
+        return CLAUDE_STRATEGY
+    if runtime == "codex":
+        return CODEX_STRATEGY
 
     tool_name = payload.get("tool_name")
     if tool_name in ClaudeHookStrategy._TOOLS:
@@ -148,22 +164,61 @@ def select_hook_strategy(payload: dict) -> HookRuntimeStrategy:
     if payload.get("turn_id"):
         return CODEX_STRATEGY
 
-    # Codex plugin hooks set PLUGIN_ROOT / PLUGIN_DATA. Claude-prefixed plugin
-    # variables are compatibility aliases in Codex, so they are not used here.
-    if os.environ.get("PLUGIN_ROOT") or os.environ.get("PLUGIN_DATA"):
-        return CODEX_STRATEGY
-
-    if (
-        os.environ.get("CLAUDE_PROJECT_DIR")
-        or os.environ.get("CLAUDE_CODE_SHELL")
-        or os.environ.get("CLAUDE_ENV_FILE")
-    ):
-        return CLAUDE_STRATEGY
-
-    if os.environ.get("CODEX_THREAD_ID") or os.environ.get("CODEX_CI"):
-        return CODEX_STRATEGY
-
     return UNKNOWN_STRATEGY
+
+
+def project_root_from_payload(payload: dict) -> str:
+    """Resolve the active project root for the selected runtime.
+
+    Claude exposes its project root through Claude-prefixed environment
+    variables. Codex does not need a project-root environment variable because
+    its hook payload includes the official session ``cwd``; for cwd-derived
+    paths we normalize to the git root when available and fall back to cwd
+    itself.
+    """
+
+    import os
+    import subprocess
+
+    strategy = select_hook_strategy(payload)
+    for env_var in strategy.project_root_env_vars:
+        explicit = os.environ.get(env_var)
+        if explicit:
+            return str(Path(explicit).expanduser().resolve())
+
+    cwd = payload.get("cwd") or os.getcwd()
+    if not isinstance(cwd, str) or not cwd:
+        return ""
+    cwd_path = Path(cwd).expanduser().resolve()
+
+    try:
+        proc = subprocess.run(
+            ["git", "-C", str(cwd_path), "rev-parse", "--show-toplevel"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+        root = proc.stdout.strip()
+        if root:
+            return str(Path(root).resolve())
+    except (OSError, subprocess.CalledProcessError):
+        pass
+
+    return str(cwd_path)
+
+
+def plugin_root_from_payload(payload: dict, fallback: Path) -> Path:
+    """Resolve the active plugin root for the selected runtime."""
+
+    import os
+
+    strategy = select_hook_strategy(payload)
+    for env_var in strategy.plugin_root_env_vars:
+        explicit = os.environ.get(env_var)
+        if explicit:
+            return Path(explicit).expanduser().resolve()
+    return fallback
 
 
 def _resolve_path(raw_path: str, payload: dict, project_dir: str) -> str:

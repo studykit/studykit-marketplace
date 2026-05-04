@@ -1,4 +1,4 @@
-"""SessionStart subcommand: inject type→file-location map.
+"""SessionStart subcommand: sweep stale hook state and inject type→location map.
 
 Surfaces the layout (issue families as flat ``a4/<type>/<id>-<slug>.md``;
 wiki pages as top-level ``a4/<type>.md``) so the LLM places new files
@@ -9,24 +9,33 @@ from ``common.WIKI_TYPES`` and ``common.ISSUE_FOLDERS`` so adding a new
 type does not require touching this function.
 
 The allocator path is emitted as a fully-resolved absolute path
-(``CLAUDE_PLUGIN_ROOT`` expanded in-process) so the LLM can invoke
-``allocate_id.py`` directly via its shebang — no ``uv run`` wrapper
-required.
+(runtime-specific plugin-root environment declared in ``a4_hook._runtime``;
+``__file__`` fallback for direct script tests) so the LLM can invoke
+``allocate_id.py`` directly via its shebang — no ``uv run`` wrapper required.
 
-Silent when the project has no ``a4/`` directory (non-a4 projects get
-no SessionStart noise). Always exits 0.
+The stale-record sweep runs once per SessionStart before the ``a4/`` directory
+check so crashed-session state is cleaned even if the workspace has since
+removed a4/. Silent when the project has no ``a4/`` directory (non-a4 projects
+get no SessionStart context noise). Always exits 0.
 """
 
 from __future__ import annotations
 
 import sys
-import time
 from pathlib import Path
 
+from a4_hook._runtime import plugin_root_from_payload
 from a4_hook._state import PLUGIN_ROOT, emit, project_dir_from_payload, trace, trace_file
 
 
-_TRACE_MAX_AGE_SECONDS = 24 * 60 * 60
+_STALE_RECORD_MAX_AGE_SECONDS = 24 * 60 * 60
+_STALE_RECORD_NAMES = {"trace.log"}
+_STALE_RECORD_PATTERNS: tuple[tuple[str, str], ...] = (
+    ("a4-edited-", ".txt"),
+    ("a4-resolved-ids-", ".txt"),
+    ("a4-prestatus-", ".json"),
+    ("a4-injected-", ".txt"),
+)
 
 
 def session_start() -> int:
@@ -52,15 +61,7 @@ def session_start() -> int:
         trace(None, None, "session-start", "abort", reason="no_project_dir")
         return 0
 
-    trace_path = trace_file(project_dir)
-    truncated_trace = False
-    if trace_path.is_file():
-        try:
-            if trace_path.stat().st_mtime < time.time() - _TRACE_MAX_AGE_SECONDS:
-                trace_path.write_text("", encoding="utf-8")
-                truncated_trace = True
-        except OSError:
-            pass
+    swept_records = _sweep_old_records(project_dir)
 
     a4_dir = Path(project_dir) / "a4"
     if not a4_dir.is_dir():
@@ -70,7 +71,7 @@ def session_start() -> int:
             "session-start",
             "noop",
             reason="no_a4_dir",
-            truncated_trace=truncated_trace,
+            swept_records=swept_records,
         )
         return 0
 
@@ -83,7 +84,7 @@ def session_start() -> int:
             "session-start",
             "abort",
             reason="import_common_failed",
-            truncated_trace=truncated_trace,
+            swept_records=swept_records,
         )
         return 0
 
@@ -92,8 +93,8 @@ def session_start() -> int:
     ]
     wiki_lines = [f"- `{t}` → `a4/{t}.md`" for t in sorted(WIKI_TYPES)]
 
-    plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)
-    allocator = f"{plugin_root}/scripts/allocate_id.py"
+    plugin_root = plugin_root_from_payload(payload, PLUGIN_ROOT)
+    allocator = str(plugin_root / "scripts" / "allocate_id.py")
     context = (
         "## a4/ workspace — type → file location\n\n"
         "**Issue families** (one file per id, flat folder):\n\n"
@@ -118,8 +119,52 @@ def session_start() -> int:
         None,
         "session-start",
         "emit_context",
-        truncated_trace=truncated_trace,
+        swept_records=swept_records,
         issue_types=ISSUE_FOLDERS,
         wiki_types=sorted(WIKI_TYPES),
     )
     return 0
+
+
+def _sweep_old_records(project_dir: str) -> int:
+    """Delete stale a4 hook record files older than one day.
+
+    This is the Python equivalent of the historical
+    ``hooks/sweep-old-edited-a4.sh`` hook, kept inside SessionStart so every
+    runtime uses the same runtime-layer project resolution.
+    """
+
+    import time
+
+    record_dir = trace_file(project_dir).parent
+    if not record_dir.is_dir():
+        return 0
+
+    cutoff = time.time() - _STALE_RECORD_MAX_AGE_SECONDS
+    deleted = 0
+    try:
+        candidates = list(record_dir.iterdir())
+    except OSError:
+        return 0
+
+    for path in candidates:
+        if not path.is_file() or not _is_stale_record_name(path.name):
+            continue
+        try:
+            if path.stat().st_mtime >= cutoff:
+                continue
+            path.unlink()
+            deleted += 1
+        except OSError:
+            continue
+
+    return deleted
+
+
+def _is_stale_record_name(name: str) -> bool:
+    if name in _STALE_RECORD_NAMES:
+        return True
+    return any(
+        name.startswith(prefix) and name.endswith(suffix)
+        for prefix, suffix in _STALE_RECORD_PATTERNS
+    )

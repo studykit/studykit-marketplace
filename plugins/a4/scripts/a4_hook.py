@@ -31,8 +31,9 @@ Subcommand surface:
                  ``{"decision": "block", "reason": ...}`` on stdout.
   user-prompt    UserPromptSubmit. Resolve `#<id>` references to
                  `a4/<type>/<id>-<slug>.md` paths.
-  session-start  SessionStart. Inject the type → file-location map +
-                 the runnable `allocate_id.py` command.
+  session-start  SessionStart. Sweep stale session-state records, then inject
+                 the type → file-location map + the runnable `allocate_id.py`
+                 command.
 
 SessionStart does not run workspace-wide status-consistency reporting —
 that sweep is manual via `/a4:validate` (or `validate.py`).
@@ -41,10 +42,10 @@ Conventions (state classification, lifecycle symmetry, language/invocation,
 in-event ordering, non-blocking policy, output channel usage) live in
 `plugins/a4/dev/hook-conventions.md`.
 
-Invoked from `plugins/a4/hooks/hooks.json` as
-`uv run "${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py" <subcommand>`.
-Codex plugin hooks provide `CLAUDE_PLUGIN_ROOT` as a compatibility alias
-for the plugin root.
+Invoked from the agent-specific lifecycle manifests with
+`A4_HOOK_RUNTIME=claude|codex` so runtime strategy selection can identify the
+host explicitly. The Claude manifest resolves scripts through
+`CLAUDE_PLUGIN_ROOT`; the Codex manifest resolves through `PLUGIN_ROOT`.
 
 The `markdown_validator` package next to this file is imported in-process
 rather than shelled out via `uv run`, so per-invocation interpreter

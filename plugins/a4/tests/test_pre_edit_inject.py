@@ -44,7 +44,8 @@ def _run_pre_edit(
     }
     if extra_payload:
         payload.update(extra_payload)
-    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project_dir))
+    monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
+    monkeypatch.setenv("CLAUDE_PROJECT_ROOT", str(project_dir))
     monkeypatch.setattr(
         hook_module.sys, "stdin", io.StringIO(json.dumps(payload))
     )
@@ -291,7 +292,8 @@ def test_codex_apply_patch_suppresses_pretooluse_context(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _make_a4_layout(tmp_path)
-    monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
+    monkeypatch.delenv("CLAUDE_PROJECT_ROOT", raising=False)
+    monkeypatch.setenv("A4_HOOK_RUNTIME", "codex")
     monkeypatch.setenv("PLUGIN_ROOT", "/tmp/fake-codex-plugin")
 
     patch_text = (

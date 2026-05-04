@@ -12,14 +12,16 @@ All session-state lives under ``<project>/.claude/tmp/a4-edited/``:
                                    ``A4_HOOK_TRACE`` is truthy.
 
 All cleanup runs at SessionEnd (`hooks/cleanup-edited-a4.sh`) with a
-SessionStart safety-net sweep (`hooks/sweep-old-edited-a4.sh`) for crashed
-sessions, per `dev/hook-conventions.md` §2 Rule A.
+SessionStart safety-net sweep in the Python dispatcher for crashed sessions,
+per `dev/hook-conventions.md` §2 Rule A.
 """
 
 from __future__ import annotations
 
 import sys
 from pathlib import Path
+
+from a4_hook._runtime import project_root_from_payload
 
 # Plugin-internal anchor paths. Resolved once at import time so every
 # subcommand can render fully-qualified absolute pointers to authoring
@@ -103,39 +105,11 @@ def display_rel(file_path: str, project_dir: str) -> str:
 def project_dir_from_payload(payload: dict) -> str:
     """Resolve the active project directory for Claude Code and Codex hooks.
 
-    Claude Code provides ``CLAUDE_PROJECT_DIR``. Codex hook stdin provides
-    ``cwd`` but not that Claude-specific environment variable, so for Codex we
-    derive the git root from ``cwd`` and fall back to ``cwd`` itself. The return
-    value is a normalized absolute path string or ``""`` when no usable cwd can
-    be found.
+    Runtime-specific source variables and cwd fallback behavior are declared in
+    ``a4_hook._runtime``. The return value is a normalized absolute path string
+    or ``""`` when no usable cwd can be found.
     """
-    import os
-    import subprocess
-
-    explicit = os.environ.get("CLAUDE_PROJECT_DIR") or os.environ.get("PROJECT_DIR")
-    if explicit:
-        return str(Path(explicit).expanduser().resolve())
-
-    cwd = payload.get("cwd") or os.getcwd()
-    if not isinstance(cwd, str) or not cwd:
-        return ""
-    cwd_path = Path(cwd).expanduser().resolve()
-
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(cwd_path), "rev-parse", "--show-toplevel"],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-        )
-        root = proc.stdout.strip()
-        if root:
-            return str(Path(root).resolve())
-    except (OSError, subprocess.CalledProcessError):
-        pass
-
-    return str(cwd_path)
+    return project_root_from_payload(payload)
 
 
 def emit(payload: dict) -> None:
