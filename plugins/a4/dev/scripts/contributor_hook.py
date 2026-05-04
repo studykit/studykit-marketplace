@@ -11,9 +11,10 @@ two things:
     (which directory has which audience + citation summary).
   - On every file's first Read or Edit: a one-line note naming that
     specific file's audience and pointing to the directory's binding
-    `CLAUDE.md`. `CLAUDE.md` files themselves are special-cased — their
-    audience is plugin contributors regardless of layer (the per-layer
-    audience in `_LAYER_INFO` describes the directory's *other* files).
+    `CLAUDE.md`. `CLAUDE.md` and `AGENTS.md` files themselves are
+    special-cased — their audience is plugin contributors regardless of
+    layer (the per-layer audience in `_LAYER_INFO` describes the
+    directory's *other* files).
 
 The two are deliberately distinct: the layer map gives the routing big
 picture once; the per-file note disambiguates which slot the current
@@ -79,6 +80,7 @@ _MAP_BASENAME = "a4-contributor-map-{sid}.flag"
 _HOOKS_TIME_BASENAME = "a4-contributor-hooks-time-{sid}.flag"
 _RUNTIME_ENV_VAR = "A4_HOOK_RUNTIME"
 _CLAUDE_EDIT_TOOLS = frozenset({"Write", "Edit", "MultiEdit"})
+_GUARDRAIL_FILENAMES = frozenset({"CLAUDE.md", "AGENTS.md"})
 _STALE_SENTINEL_SECONDS = 24 * 60 * 60
 
 
@@ -388,11 +390,11 @@ def _file_note(
     if not _record_announced(project_dir, session_id, file_path):
         return None
 
-    if Path(file_path).name == "CLAUDE.md":
-        # `CLAUDE.md` is the directory's contributor guardrail itself — its
-        # audience is plugin contributors regardless of which layer it sits
-        # in. The audience listed in `_LAYER_INFO` describes the *other*
-        # files in that directory.
+    if Path(file_path).name in _GUARDRAIL_FILENAMES:
+        # `CLAUDE.md` and `AGENTS.md` are the directory's contributor
+        # guardrails themselves — their audience is plugin contributors
+        # regardless of which layer they sit in. The audience listed in
+        # `_LAYER_INFO` describes the *other* files in that directory.
         audience = "plugin contributors editing this directory's guardrails"
         claude_md = "plugins/a4/CLAUDE.md"
     else:

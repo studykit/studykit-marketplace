@@ -67,6 +67,46 @@ def test_claude_pre_read_injects_layer_map_and_file_note(tmp_path: Path) -> None
     assert "plugins/a4/dev/CLAUDE.md" in context
 
 
+def test_guardrail_files_are_plugin_contributor_audience_regardless_of_layer(
+    tmp_path: Path,
+) -> None:
+    cases = [
+        ("root-agents", tmp_path / "plugins" / "a4" / "AGENTS.md"),
+        (
+            "authoring-agents",
+            tmp_path / "plugins" / "a4" / "authoring" / "AGENTS.md",
+        ),
+        (
+            "authoring-claude",
+            tmp_path / "plugins" / "a4" / "authoring" / "CLAUDE.md",
+        ),
+    ]
+
+    for session_id, target in cases:
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("# Guardrail\n", encoding="utf-8")
+
+        proc = _run_hook(
+            "pre-read",
+            {
+                "session_id": session_id,
+                "cwd": str(tmp_path),
+                "tool_name": "Read",
+                "tool_input": {"file_path": str(target)},
+            },
+            env=_env_for("claude", tmp_path),
+        )
+
+        assert proc.returncode == 0, proc.stderr
+        out = json.loads(proc.stdout)
+        context = out["hookSpecificOutput"]["additionalContext"]
+        assert (
+            "— audience: plugin contributors editing this directory's guardrails."
+            in context
+        )
+        assert "— audience: workspace authors and skill runtime" not in context
+
+
 def test_codex_pre_edit_is_silent_because_context_is_unsupported(
     tmp_path: Path,
 ) -> None:
