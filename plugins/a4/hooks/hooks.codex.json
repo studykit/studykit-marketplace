@@ -1,0 +1,79 @@
+{
+  "description": "a4/ workspace lifecycle hooks for Codex. This manifest is referenced by `.codex-plugin/plugin.json` and intentionally contains only Codex-supported hook events. Commands resolve the plugin root from PLUGIN_ROOT with CLAUDE_PLUGIN_ROOT as a compatibility fallback, derive CLAUDE_PROJECT_DIR from the current git root when it is not already set, and dispatch to `scripts/a4_hook.py`. Session-scoped state is kept under `.claude/tmp/a4-edited/` in the active project. Codex apply_patch payloads are parsed from `tool_input.command`; PreToolUse stores state only, PostToolUse performs stamping, cascade, updated refresh, and consistency reporting, Stop validates edited a4 files, UserPromptSubmit resolves #id references, and SessionStart injects the a4 workspace map plus reserved `created:` / `updated:` directive.",
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_PLUGIN_ROOT=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; if [ -n \"$A4_PLUGIN_ROOT\" ]; then CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"$A4_PLUGIN_ROOT/scripts/a4_hook.py\" pre-edit; fi",
+            "timeout": 10,
+            "statusMessage": "Preparing a4 edit",
+            "description": "Snapshot on-disk a4/*.md `status:` and record new-file intent for Codex apply_patch edits"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_PLUGIN_ROOT=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; if [ -n \"$A4_PLUGIN_ROOT\" ]; then CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"$A4_PLUGIN_ROOT/scripts/a4_hook.py\" post-edit; fi",
+            "timeout": 15,
+            "statusMessage": "Reconciling a4 edit",
+            "description": "Record edited a4/*.md files, stamp created/updated, run status-change cascade, and report status-consistency"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_PLUGIN_ROOT=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; if [ -n \"$A4_PLUGIN_ROOT\" ]; then CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"$A4_PLUGIN_ROOT/scripts/a4_hook.py\" stop; fi",
+            "timeout": 30,
+            "statusMessage": "Validating a4 files",
+            "description": "Validate a4/*.md files edited this session; emit JSON `{decision: block, reason}` on violations to force a continuation"
+          }
+        ]
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_PLUGIN_ROOT=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; if [ -n \"$A4_PLUGIN_ROOT\" ]; then CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" bash \"$A4_PLUGIN_ROOT/hooks/sweep-old-edited-a4.sh\"; fi",
+            "timeout": 5,
+            "statusMessage": "Sweeping stale a4 state",
+            "description": "Sweep orphan a4 record files older than 1 day"
+          },
+          {
+            "type": "command",
+            "command": "A4_PLUGIN_ROOT=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; if [ -n \"$A4_PLUGIN_ROOT\" ]; then CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"$A4_PLUGIN_ROOT/scripts/a4_hook.py\" session-start; fi",
+            "timeout": 10,
+            "statusMessage": "Loading a4 workspace map",
+            "description": "Inject type-to-file-location map and reserved frontmatter-field directive as additionalContext"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "A4_PLUGIN_ROOT=\"${PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-}}\"; if [ -n \"$A4_PLUGIN_ROOT\" ]; then CLAUDE_PROJECT_DIR=\"${CLAUDE_PROJECT_DIR:-$(git rev-parse --show-toplevel 2>/dev/null || pwd)}\" uv run \"$A4_PLUGIN_ROOT/scripts/a4_hook.py\" user-prompt; fi",
+            "timeout": 10,
+            "statusMessage": "Resolving a4 references",
+            "description": "Resolve #<id> references in the prompt to a4/<type>/<id>-<slug>.md paths (per-session dedupe)"
+          }
+        ]
+      }
+    ]
+  }
+}
