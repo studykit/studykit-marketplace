@@ -18,7 +18,6 @@ rm -f \
     "$record_dir/a4-edited-${session_id}.txt" \
     "$record_dir/a4-resolved-ids-${session_id}.txt" \
     "$record_dir/a4-prestatus-${session_id}.json" \
-    "$record_dir/a4-newfiles-${session_id}.txt" \
     "$record_dir/a4-injected-${session_id}.txt" \
     2>/dev/null || true
 

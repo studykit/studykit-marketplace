@@ -1,6 +1,6 @@
 {
   "name": "a4",
-  "version": "0.26.10",
+  "version": "0.26.11",
   "description": "a4/ workspace management — wiki + issues spec authoring, usecase / domain / architecture design with task batch derivation (/a4:breakdown) and autonomous implementation, brainstorming, and decision-making",
   "author": {
     "name": "studykit"

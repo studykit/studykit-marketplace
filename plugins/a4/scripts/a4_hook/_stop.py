@@ -15,7 +15,6 @@ import sys
 from pathlib import Path
 
 from a4_hook._state import (
-    AUTHORING_DIR,
     project_dir_from_payload,
     record_dir,
     trace,
@@ -122,6 +121,7 @@ def stop() -> int:
 
     fm_violations: list = []
     tr_violations: list = []
+    fm_by_rel: dict[str, dict | None] = {}
 
     try:
         from markdown_validator.refs import RefIndex
@@ -131,6 +131,8 @@ def stop() -> int:
         for f in edited:
             path = Path(f)
             preamble = extract_preamble(path)
+            rel_str = str(path.resolve().relative_to(a4_dir.resolve()))
+            fm_by_rel[rel_str] = preamble.fm
             if preamble.fm is None:
                 missing = vfm.check_missing_frontmatter(path, a4_dir)
                 if missing is not None:
@@ -160,44 +162,15 @@ def stop() -> int:
         trace(project_dir, session_id, "stop", "clean", edited=edited)
         return 0
 
-    out_lines = ["a4/ validators found issues in files edited this session:"]
-    if fm_violations:
-        fm_file_count = len({v.path for v in fm_violations})
-        out_lines.append("")
-        out_lines.append("--- markdown_validator.frontmatter ---")
-        out_lines.append(
-            f"{len(fm_violations)} violation(s) across {fm_file_count} file(s):"
-        )
-        for v in fm_violations:
-            loc = v.path + (f" [{v.field}]" if v.field else "")
-            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
-    if tr_violations:
-        tr_file_count = len({v.path for v in tr_violations})
-        out_lines.append("")
-        out_lines.append("--- markdown_validator.transitions ---")
-        out_lines.append(
-            f"{len(tr_violations)} violation(s) across {tr_file_count} file(s):"
-        )
-        for v in tr_violations:
-            loc = v.path + (f" [{v.field}]" if v.field else "")
-            out_lines.append(f"  {loc} ({v.rule}): {v.message}")
-        out_lines.append(
-            "Edit `status:` directly — the PostToolUse cascade hook handles "
-            "related-file flips and `updated:` refresh. Direct edits are "
-            "allowed only when the transition is in FAMILY_TRANSITIONS "
-            "(status_model.py); illegal jumps land here."
-        )
-    out_lines.append("")
-    out_lines.append(
-        "Fix the issues above before stopping. Each violation message "
-        "names the file, field, and rule; consult "
-        f"`{AUTHORING_DIR}/frontmatter-common.md` (universal "
-        "contract) and the matching "
-        f"`{AUTHORING_DIR}/<type>-authoring.md` (per-type field "
-        "table and lifecycle) for the binding shape."
-    )
     sys.stdout.write(
-        json.dumps({"decision": "block", "reason": "\n".join(out_lines)})
+        json.dumps(
+            {
+                "decision": "block",
+                "reason": _format_block_reason(
+                    fm_violations, tr_violations, fm_by_rel, vfm
+                ),
+            }
+        )
     )
     trace(
         project_dir,
@@ -209,3 +182,183 @@ def stop() -> int:
         transition_violations=len(tr_violations),
     )
     return 0
+
+
+_STATUS_VALUE_ORDER: dict[str, tuple[str, ...]] = {
+    "usecase": (
+        "draft",
+        "ready",
+        "implementing",
+        "revising",
+        "shipped",
+        "superseded",
+        "discarded",
+        "blocked",
+    ),
+    "task": ("open", "queued", "progress", "holding", "done", "failing", "discarded"),
+    "bug": ("open", "queued", "progress", "holding", "done", "failing", "discarded"),
+    "spike": ("open", "queued", "progress", "holding", "done", "failing", "discarded"),
+    "research": (
+        "open",
+        "queued",
+        "progress",
+        "holding",
+        "done",
+        "failing",
+        "discarded",
+    ),
+    "review": ("open", "in-progress", "resolved", "discarded"),
+    "spec": ("draft", "active", "deprecated", "superseded"),
+    "idea": ("open", "promoted", "discarded"),
+    "brainstorm": ("open", "promoted", "discarded"),
+    "umbrella": ("open", "done", "discarded"),
+}
+
+_FIELD_VALUE_ORDER: dict[str, tuple[str, ...]] = {
+    "mode": ("comparative", "single"),
+    "priority": ("high", "medium", "low"),
+    "kind": ("finding", "gap", "question"),
+}
+
+
+def _format_block_reason(
+    fm_violations: list,
+    tr_violations: list,
+    fm_by_rel: dict[str, dict | None],
+    vfm_module,
+) -> str:
+    """Render a concise, fix-oriented Stop block reason.
+
+    The stop hook is the agent's retry prompt. Keep it short enough to read,
+    but list every violation so the agent can fix all edited files in one pass.
+    """
+
+    lines = ["a4 validation failed.", ""]
+    for v in fm_violations:
+        lines.append(
+            f"  - {_format_location(v.path, v.field)}: "
+            f"{_compact_frontmatter_message(v, fm_by_rel, vfm_module)}"
+        )
+    for v in tr_violations:
+        lines.append(
+            f"  - {_format_location(v.path, v.field)}: "
+            f"{_compact_transition_message(v)}"
+        )
+    return "\n".join(lines)
+
+
+def _format_location(path: str, field: str | None) -> str:
+    return path + (f" [{field}]" if field else "")
+
+
+def _compact_frontmatter_message(v, fm_by_rel: dict[str, dict | None], vfm_module) -> str:
+    if v.rule == "enum-violation" and v.field:
+        value = _frontmatter_value(v.path, v.field, fm_by_rel)
+        allowed = _allowed_enum_values(v, fm_by_rel, vfm_module)
+        if allowed:
+            return f"invalid {_format_value(value)}. Valid: {_format_values(allowed)}"
+
+    if v.rule == "type-filename-mismatch" and v.field == "type":
+        value = _frontmatter_value(v.path, v.field, fm_by_rel)
+        return f"invalid {_format_value(value)}. Valid: {Path(v.path).stem}"
+
+    if v.rule == "missing-required":
+        return "missing or empty"
+
+    if v.rule == "missing-frontmatter":
+        return "missing frontmatter"
+
+    return _strip_field_prefix(v.message, v.field)
+
+
+def _compact_transition_message(v) -> str:
+    import re
+
+    from status_model import legal_targets_from
+
+    match = re.search(r"transition '([^']+)' → '([^']+)' not allowed", v.message)
+    if not match:
+        return _strip_field_prefix(v.message, v.field)
+
+    old_status, new_status = match.groups()
+    family = Path(v.path).parts[0] if Path(v.path).parts else ""
+    allowed = legal_targets_from(family, old_status)
+    if allowed:
+        return (
+            f"illegal transition '{old_status}' → '{new_status}'. "
+            f"Valid from '{old_status}': "
+            f"{_format_values(_ordered_values(allowed, field='status', family=family))}"
+        )
+    return (
+        f"illegal transition '{old_status}' → '{new_status}'. "
+        f"'{old_status}' has no valid next statuses."
+    )
+
+
+_MISSING = object()
+
+
+def _frontmatter_value(path: str, field: str, fm_by_rel: dict[str, dict | None]):
+    fm = fm_by_rel.get(path)
+    if isinstance(fm, dict):
+        return fm.get(field, _MISSING)
+    return _MISSING
+
+
+def _allowed_enum_values(
+    v,
+    fm_by_rel: dict[str, dict | None],
+    vfm_module,
+) -> tuple[str, ...]:
+    fm = fm_by_rel.get(v.path)
+    ftype = None
+    if isinstance(fm, dict):
+        ftype = vfm_module.detect_type(Path(v.path), fm)
+    if ftype is None:
+        parts = Path(v.path).parts
+        if len(parts) >= 2 and parts[0] in vfm_module.SCHEMAS:
+            ftype = parts[0]
+        elif Path(v.path).stem in getattr(vfm_module, "WIKI_TYPES", frozenset()):
+            ftype = "wiki"
+    if ftype is None:
+        return ()
+
+    schema = vfm_module.SCHEMAS.get(ftype)
+    if schema is None or v.field not in schema.enums:
+        return ()
+    return _ordered_values(schema.enums[v.field], field=v.field, family=ftype)
+
+
+def _ordered_values(
+    values,
+    *,
+    field: str | None = None,
+    family: str | None = None,
+) -> tuple[str, ...]:
+    value_set = set(values)
+    if field == "status" and family in _STATUS_VALUE_ORDER:
+        return tuple(v for v in _STATUS_VALUE_ORDER[family] if v in value_set)
+    if field in _FIELD_VALUE_ORDER:
+        return tuple(v for v in _FIELD_VALUE_ORDER[field] if v in value_set)
+    return tuple(sorted(value_set))
+
+
+def _format_values(values) -> str:
+    return ", ".join(values)
+
+
+def _format_value(value) -> str:
+    if value is _MISSING:
+        return "<missing>"
+    if isinstance(value, str):
+        return f"'{value}'"
+    return repr(value)
+
+
+def _strip_field_prefix(message: str, field: str | None) -> str:
+    if not field:
+        return message
+    for prefix in (f"`{field}` ", f"{field}: ", f"`{field}:` "):
+        if message.startswith(prefix):
+            return message.removeprefix(prefix)
+    return message

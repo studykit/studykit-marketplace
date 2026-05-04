@@ -1,6 +1,6 @@
 # Breakdown Iteration Entry
 
-Skill-specific addendum. Walk open review items targeting this stage as a stage-specific mailbox: filter, present as priority table, edit `status` directly (the cascade hook refreshes `updated:`).
+Skill-specific addendum. Walk open review items targeting this stage as a stage-specific mailbox: filter, present as priority table, edit `status` directly.
 
 ## Backlog filter
 

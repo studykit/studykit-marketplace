@@ -1,6 +1,6 @@
 # Auto-Coding Iteration Entry
 
-Self-contained iterate procedure for `auto-coding`. Walk open review items as a stage-specific mailbox: filter to items targeting tasks, present a priority-ordered table, edit `status: open → in-progress` when starting a fix, and `status: in-progress → resolved | discarded` when done (the PostToolUse cascade hook refreshes `updated:` — never hand-edit it).
+Self-contained iterate procedure for `auto-coding`. Walk open review items as a stage-specific mailbox: filter to items targeting tasks, present a priority-ordered table, edit `status: open → in-progress` when starting a fix, and `status: in-progress → resolved | discarded` when done.
 
 ## Backlog filter
 

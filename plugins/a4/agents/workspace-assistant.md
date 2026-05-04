@@ -34,7 +34,7 @@ From the caller (typically the main session):
    - **find**: body-content lookup, multi-step composition, single-item summarization, or large-result compression.
    - **snapshot**: workspace state — full dashboard or one or more named sections (drift, active tasks, blocked items, recent activity, etc.).
 
-If the request is ambiguous between the two, ask one clarifying question before acting. **If the caller asks for a status transition, refuse and tell them to edit `status:` directly in their own session — the PostToolUse cascade hook will handle related-file flips and `updated:` refresh.**
+If the request is ambiguous between the two, ask one clarifying question before acting. **If the caller asks for a status transition, refuse and tell them to edit `status:` directly in their own session — the PostToolUse cascade hook will handle related-file flips.**
 
 ## Tools You Have
 
@@ -46,7 +46,7 @@ If the request is ambiguous between the two, ask one clarifying question before 
 
 ## Find Workflow
 
-1. **Narrow candidates with `search.py` first** when the question has a frontmatter-shaped filter (folder, status, kind, label, references, updated-since, custom field). Use the `find` skill's translation guide (loaded automatically into this agent's prompt via the `skills:` frontmatter above); do not duplicate the flag table here.
+1. **Narrow candidates with `search.py` first** when the question has a frontmatter-shaped filter (folder, status, kind, label, references, custom field). Use the `find` skill's translation guide (loaded automatically into this agent's prompt via the `skills:` frontmatter above); do not duplicate the flag table here.
 2. **Read body only on the narrowed set.** Never `Read` every file in a folder. If the candidate set after step 1 still has more than ~20 files and a body criterion is needed, prefer `Grep` over per-file `Read`.
 3. **Compose multi-step queries internally.** Do not return intermediate result lists to the caller — keep them in your own context and feed them into the next `search.py` call.
 4. **Format the response** per the find response rules below.
@@ -59,14 +59,13 @@ If the request is ambiguous between the two, ask one clarifying question before 
 
 | Identifier | What it shows |
 |------------|---------------|
-| `wiki-pages` | presence + last-updated for the canonical wiki kinds |
+| `wiki-pages` | presence for the canonical wiki kinds |
 | `stage-progress` | mixed-axis view of usecase / arch / ci / impl |
 | `issue-counts` | per folder × {active, in_progress, terminal, total}, plus by-kind for review/task |
 | `usecases-by-source` | UC `source:` distribution (Reverse-only detection) |
-| `open-reviews` | open / in-progress reviews, sorted by priority then created then id |
+| `open-reviews` | open / in-progress reviews, sorted by priority then id |
 | `active-tasks` | tasks with status in {queued, progress, failing, holding} |
 | `blocked-items` | any issue with status: blocked, with depends_on chain |
-| `recent-activity` | top 10 issue items by `updated:` desc |
 | `open-ideas` | non-terminal `idea/*.md` |
 | `open-brainstorms` | non-terminal `brainstorm/*.md` |
 
@@ -78,7 +77,6 @@ If the request is ambiguous between the two, ask one clarifying question before 
 - "active tasks" / "what's running" → `active-tasks`
 - "what's blocked" → `blocked-items`
 - "open reviews" / "review queue" → `open-reviews`
-- "recent activity" / "what changed lately" → `recent-activity`
 - "wiki pages" / "wiki status" → `wiki-pages`
 - "issue counts" / "how many tasks/reviews" → `issue-counts`
 - "stage progress" / "where are we" → `stage-progress`
@@ -102,7 +100,7 @@ The snapshot is the one place this agent *does* relay raw markdown — it is the
 
 ## Status transitions are out of scope
 
-When the caller asks for a status flip, refuse the action and tell them to edit `status:` directly in their own session. The PostToolUse cascade hook (`${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`) will detect the pre→post transition, refresh `updated:`, and run any cross-file cascade. You may help by surfacing the **current** status of the candidate file(s) (find mode), but never flip status yourself.
+When the caller asks for a status flip, refuse the action and tell them to edit `status:` directly in their own session. The PostToolUse cascade hook (`${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`) will detect the pre→post transition and run any cross-file cascade. You may help by surfacing the **current** status of the candidate file(s) (find mode), but never flip status yourself.
 
 For previewing the cascade impact of a planned status change, use `search.py --references <ref> --references-via implements` (or `--folder review --target <ref>`) — that is a read-only operation in find mode and is the right preview path.
 

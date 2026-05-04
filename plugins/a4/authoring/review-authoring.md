@@ -70,7 +70,7 @@ Per-status meaning:
 Writer rules:
 
 - `open` is the **only** initial status.
-- Edit `status:` directly. The transition refreshes `updated:` automatically and runs cascades on related files.
+- Edit `status:` directly. The transition runs any cascades on related files.
 - `open → in-progress` is the iterate-flow's "user picked this item" flip; `in-progress → resolved` (or `→ discarded`) closes it.
 - `open → discarded` is allowed for items dismissed without being picked.
 - Auto-emitted drift review items **dedup** against open / in-progress / discarded items with matching `(kind, target-wiki, drift-cause:<slug>)` fingerprints — discarded counts as a tombstone so the same drift does not re-emit. Resolved items do not block re-emission (the drift returned).

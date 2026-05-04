@@ -22,8 +22,8 @@ Return: result (pass/fail), summary of changes, any issues encountered.
 
 ## Status flips around the agent call
 
-Before spawning, flip the task `status:` from `queued` to `progress` by editing the task file's frontmatter directly. The PostToolUse cascade hook refreshes `updated:` automatically.
+Before spawning, flip the task `status:` from `queued` to `progress` by editing the task file's frontmatter directly.
 
-Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, edit `status:` to `done` or `failing` based on the return value. Do not hand-edit `updated:` — the cascade hook owns it.
+Parse each Agent return value's trailing 3 lines (`agentId:`, `worktreePath:`, `worktreeBranch:`) and record `{taskId → agentId, worktreePath, worktreeBranch}` in-memory for Step 2.5. After the agent returns, edit `status:` to `done` or `failing` based on the return value.
 
 The agent commits in its current working tree, which is transparently the worktree (parallel) or the user's branch (serial) — the agent does not need to know which. Mode-specific details (worktree return-value shape, branch naming, cleanup, sequential dispatch, dirty-tree halt) live in `./parallel-mode.md` and `./serial-mode.md`.

@@ -1,6 +1,6 @@
 # a4 Issue Frontmatter
 
-Issue-side frontmatter rules — every file under `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/`. Per-type field tables: each `<type>-authoring.md`. Cross-cutting rules shared with wiki pages (`type:`, path-reference format, empty collections, unknown fields, `created` / `updated`) live in `./frontmatter-common.md`.
+Issue-side frontmatter rules — every file under `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/`. Per-type field tables: each `<type>-authoring.md`. Cross-cutting rules shared with wiki pages (`type:`, path-reference format, empty collections, unknown fields) live in `./frontmatter-common.md`.
 
 ## `id`
 
@@ -51,7 +51,7 @@ The schema fixes **one direction per relationship** — the forward direction is
 
 ## Status changes and cascades
 
-Every status change on `usecase`, the four issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` is **edited directly** on the file. When the change lands, `updated:` refreshes automatically on the primary, and any cross-file cascade runs:
+Every status change on `usecase`, the four issue families (`task` / `bug` / `spike` / `research`), `review`, and `spec` is **edited directly** on the file. When the change lands, any configured cross-file cascade runs:
 
 - Task reset on UC `revising` — across all four issue families, tasks at `progress`/`failing` → `queued`.
 - Task / review discard cascade on UC `discarded` — across all four issue families.
@@ -62,7 +62,7 @@ The cascade does **not** touch `## Resume` or `## Log` (see `./issue-body.md`) �
 
 Edge cases:
 
-- **Illegal jumps** (e.g. `shipped → ready`, outside the family's lifecycle) — `updated:` and cascades do not run; validation surfaces the jump as an error (working-tree-vs-HEAD diff against allowed transitions).
+- **Illegal jumps** (e.g. `shipped → ready`, outside the family's lifecycle) — cascades do not run; validation surfaces the jump as an error (working-tree-vs-HEAD diff against allowed transitions).
 - **Legal jumps that bypass the cascade** (edits via `git checkout`, external editors, direct script writes) — related files left unflipped. Validation re-surfaces the missing cascade work for the categories listed above.
 - **Recovery** —
   - Supersedes-chain: `../scripts/validate.py --fix` (workspace-wide, idempotent).

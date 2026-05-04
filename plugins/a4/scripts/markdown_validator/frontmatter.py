@@ -98,61 +98,56 @@ class Schema:
 SCHEMAS: dict[str, Schema] = {
     "wiki": Schema(
         name="wiki",
-        required=frozenset({"type", "updated"}),
+        required=frozenset({"type"}),
         enums={"type": WIKI_TYPES},
-        date_fields=frozenset({"updated"}),
     ),
     "usecase": Schema(
         name="usecase",
-        required=frozenset({"type", "id", "title", "status", "created", "updated"}),
+        required=frozenset({"type", "id", "title", "status"}),
         enums={
             "type": frozenset({"usecase"}),
             "status": STATUS_BY_FOLDER["usecase"],
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"related", "supersedes"}),
         path_scalar_fields=frozenset({"parent"}),
     ),
     "task": Schema(
         name="task",
         required=frozenset(
-            {"type", "id", "title", "status", "created", "updated"}
+            {"type", "id", "title", "status"}
         ),
         enums={
             "type": frozenset({"task"}),
             "status": STATUS_BY_FOLDER["task"],
         },
         int_fields=frozenset({"id", "cycle"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"implements", "depends_on", "spec"}),
         path_scalar_fields=frozenset({"parent"}),
     ),
     "bug": Schema(
         name="bug",
         required=frozenset(
-            {"type", "id", "title", "status", "created", "updated"}
+            {"type", "id", "title", "status"}
         ),
         enums={
             "type": frozenset({"bug"}),
             "status": STATUS_BY_FOLDER["bug"],
         },
         int_fields=frozenset({"id", "cycle"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"implements", "depends_on", "spec"}),
         path_scalar_fields=frozenset({"parent"}),
     ),
     "spike": Schema(
         name="spike",
         required=frozenset(
-            {"type", "id", "title", "status", "created", "updated"}
+            {"type", "id", "title", "status"}
         ),
         enums={
             "type": frozenset({"spike"}),
             "status": STATUS_BY_FOLDER["spike"],
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"depends_on"}),
         path_scalar_fields=frozenset({"parent"}),
         forbidden_fields=frozenset({"implements", "spec", "cycle"}),
@@ -160,7 +155,7 @@ SCHEMAS: dict[str, Schema] = {
     "research": Schema(
         name="research",
         required=frozenset(
-            {"type", "id", "title", "status", "mode", "created", "updated"}
+            {"type", "id", "title", "status", "mode"}
         ),
         enums={
             "type": frozenset({"research"}),
@@ -168,7 +163,6 @@ SCHEMAS: dict[str, Schema] = {
             "mode": frozenset({"comparative", "single"}),
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"depends_on", "related"}),
         path_scalar_fields=frozenset({"parent"}),
         forbidden_fields=frozenset({"implements", "spec", "cycle"}),
@@ -176,7 +170,7 @@ SCHEMAS: dict[str, Schema] = {
     "review": Schema(
         name="review",
         required=frozenset(
-            {"type", "id", "kind", "status", "source", "created", "updated"}
+            {"type", "id", "kind", "status", "source"}
         ),
         enums={
             "type": frozenset({"review"}),
@@ -185,56 +179,51 @@ SCHEMAS: dict[str, Schema] = {
             "priority": frozenset({"high", "medium", "low"}),
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"target"}),
     ),
     "spec": Schema(
         name="spec",
-        required=frozenset({"type", "id", "title", "status", "created"}),
+        required=frozenset({"type", "id", "title", "status"}),
         enums={
             "type": frozenset({"spec"}),
             "status": STATUS_BY_FOLDER["spec"],
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"supersedes", "related"}),
         path_scalar_fields=frozenset({"parent"}),
     ),
     "idea": Schema(
         name="idea",
-        required=frozenset({"type", "id", "title", "status", "created", "updated"}),
+        required=frozenset({"type", "id", "title", "status"}),
         enums={
             "type": frozenset({"idea"}),
             "status": STATUS_BY_FOLDER["idea"],
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted", "related"}),
     ),
     "brainstorm": Schema(
         name="brainstorm",
         required=frozenset(
-            {"type", "id", "title", "topic", "status", "created", "updated"}
+            {"type", "id", "title", "topic", "status"}
         ),
         enums={
             "type": frozenset({"brainstorm"}),
             "status": STATUS_BY_FOLDER["brainstorm"],
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"promoted"}),
     ),
     "umbrella": Schema(
         name="umbrella",
         required=frozenset(
-            {"type", "id", "title", "status", "created", "updated"}
+            {"type", "id", "title", "status"}
         ),
         enums={
             "type": frozenset({"umbrella"}),
             "status": STATUS_BY_FOLDER["umbrella"],
         },
         int_fields=frozenset({"id"}),
-        date_fields=frozenset({"created", "updated"}),
         path_list_fields=frozenset({"related"}),
         forbidden_fields=frozenset(
             {"implements", "spec", "depends_on", "artifacts", "cycle", "parent"}
@@ -249,18 +238,6 @@ class Violation:
     rule: str
     field: str | None
     message: str
-
-
-def types_with_created() -> frozenset[str]:
-    """Schema-driven set of type names whose frontmatter carries `created:`.
-
-    Single source of truth for the hook's stamp targets — adding a new
-    type with `created:` to SCHEMAS auto-extends stamping. Excludes the
-    `wiki` schema (its date_fields = {"updated"} only).
-    """
-    return frozenset(
-        name for name, schema in SCHEMAS.items() if "created" in schema.date_fields
-    )
 
 
 def detect_type(rel: Path, fm: dict) -> str | None:

@@ -66,13 +66,13 @@ If a flagged issue requires significant new investigation (e.g., `IMBALANCED` re
 
 ## Step 3: Apply revisions
 
-Use the `Edit` tool to apply accepted changes to the task body. Preserve all content the user did not choose to change. The PostToolUse hook refreshes `updated:` automatically on every Edit — do not hand-edit it.
+Use the `Edit` tool to apply accepted changes to the task body. Preserve all content the user did not choose to change.
 
 ## Step 4: Wrap up
 
 Once the user confirms the review pass is done:
 
-1. Offer next-step status flips by editing `status:` directly (the PostToolUse cascade hook refreshes `updated:` and runs any cross-file cascade):
+1. Offer next-step status flips by editing `status:` directly (the PostToolUse cascade hook runs any cross-file cascade):
    - If the task is at `progress` and the user is satisfied: offer `progress → done`.
    - If the task is at `done` and revisions landed: no flip needed (the task is already terminal-active).
    - If the user wants to defer the open follow-ups: offer `progress → failing` so a later cycle picks it up.
@@ -88,5 +88,4 @@ If the review surfaces unresolved trade-offs that suggest a downstream design de
 
 - Do not write a decision. If the research is meant to feed a decision, tell the user to invoke `/a4:spec` next.
 - Do not extend the research unilaterally. If the reviewer finds gaps, propose extension points; the user decides whether to fill them now or defer.
-- Do not hand-edit `updated:` — the PostToolUse hook owns it on every Write/Edit/MultiEdit.
 - Do not commit. Leave files in the working tree.

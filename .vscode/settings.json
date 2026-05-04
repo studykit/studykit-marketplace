@@ -11,7 +11,7 @@
     "**/.settings": true,
     "**/.factorypath": true,
     ".pytest_cache": true,
-    ".claude/tmp": true
+    ".claude/tmp": false
   },
   "explorerExclude.backup": {}
 }

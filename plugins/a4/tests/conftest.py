@@ -112,8 +112,6 @@ class A4Workspace:
             "id": id_,
             "title": title,
             "status": status,
-            "created": "2026-05-01 09:00",
-            "updated": "2026-05-01 09:00",
         }
         for k, v in extra_fm.items():
             fm[k] = v

@@ -36,8 +36,8 @@ questions emitted as kind: question review items.
 
 The composer:
 
-- Writes `a4/context.md` with `type: context`, `updated`, an `## Original Idea` section quoting the input and a `## Problem Framing` section.
-- Writes `a4/actors.md` with `type: actors`, `updated`, a `## Roster` section containing the Actors table.
+- Writes `a4/context.md` with `type: context`, an `## Original Idea` section quoting the input and a `## Problem Framing` section.
+- Writes `a4/actors.md` with `type: actors`, a `## Roster` section containing the Actors table.
 - Allocates ids via `allocate_id.py` and writes one `a4/usecase/<id>-<slug>.md` per UC.
 - Writes NFRs to `a4/nfr.md` if any are surfaced.
 - Does **not** write `a4/domain.md`. Domain Model authorship belongs to `/a4:domain`.
@@ -74,7 +74,7 @@ Repeat up to 3 rounds. Each round:
 
    For each review item (status: open, source: usecase-reviewer): read it, apply
    the Suggestion to the target UC / wiki page, edit the review item's `status:`
-   to `resolved` directly (the PostToolUse cascade hook refreshes `updated:`),
+   to `resolved` directly,
    and append a ## Change Logs bullet on each modified wiki page whose basename
    appears in the review's target: list.
    If a finding cannot be applied (e.g., ambiguous), leave status: open and

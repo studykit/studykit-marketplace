@@ -21,12 +21,10 @@ Subcommand surface:
                  ``additionalContext`` once per type per session when the
                  runtime supports PreToolUse context injection.
   post-edit      PostToolUse on Write|Edit|MultiEdit or Codex apply_patch.
-                 Record edit, stamp
-                 ``created:`` on new-file Writes, run ``status:``
-                 transition cascade if applicable, refresh ``updated:``
-                 on the primary, and report cross-file status-consistency
-                 mismatches. Cascade results surface as additionalContext
-                 + systemMessage.
+                 Record edit, run ``status:`` transition cascade if
+                 applicable, and report cross-file status-consistency
+                 mismatches. Cascade results surface as additionalContext +
+                 systemMessage.
   stop           Stop. Validate all a4/*.md edited in this session
                  (frontmatter schema + transition-legality safety net).
                  On violations, emit JSON
@@ -34,9 +32,7 @@ Subcommand surface:
   user-prompt    UserPromptSubmit. Resolve `#<id>` references to
                  `a4/<type>/<id>-<slug>.md` paths.
   session-start  SessionStart. Inject the type → file-location map +
-                 the runnable `allocate_id.py` command + the reserved-
-                 frontmatter-fields directive (`created:`/`updated:`
-                 are hook-owned).
+                 the runnable `allocate_id.py` command.
 
 SessionStart does not run workspace-wide status-consistency reporting —
 that sweep is manual via `/a4:validate` (or `validate.py`).

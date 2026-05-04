@@ -31,7 +31,7 @@ The reviewer emits one review item file per finding into `a4/review/<id>-<slug>.
 
 For each emitted review item, ordered by priority then id, present to the user and resolve or defer:
 
-- **Fix now** — edit `architecture.md` (and any cross-referenced file). Edit the review item's `status:` to `resolved` directly (the PostToolUse cascade hook refreshes `updated:`), and add a dated `## Change Logs` bullet on each modified wiki page per the Wiki Update Protocol.
+- **Fix now** — edit `architecture.md` (and any cross-referenced file). Edit the review item's `status:` to `resolved` directly, and add a dated `## Change Logs` bullet on each modified wiki page per the Wiki Update Protocol.
 - **Defer** — leave `status: open`. Capture the deferral reason in conversation notes / handoff.
 - **Discard** — edit `status:` to `discarded` directly.
 

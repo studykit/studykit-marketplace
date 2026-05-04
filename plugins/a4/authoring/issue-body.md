@@ -51,7 +51,7 @@ Format is the author's choice — bullets with bold lead-ins, prose paragraphs, 
 
 Do not restate things a fresh reader can already see:
 
-- Frontmatter values — `status:`, `cycle:`, `updated:`.
+- Frontmatter values — `status:`, `cycle:`.
 - Which files were modified — `git log` / `git diff` cover this.
 - Review-item bodies — link the review item and stop there.
 - Command history (test runs, builds, etc.) — that belongs in the session handoff.
@@ -60,7 +60,7 @@ Do not record narrative ("we used to try X, then switched to Y"). That belongs i
 
 ### Update discipline
 
-`## Resume` is **strongly recommended whenever the file is mid-flight**. Each per-type contract (`./<type>-authoring.md`) names the family's mid-flight statuses; non-terminal is a useful rough proxy but some non-terminal states (e.g., `usecase: ready / implementing`, `spec: active`) are stable and not mid-flight. Status changes refresh `updated:` and run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update as you work, especially before any session boundary risks losing in-memory context.
+`## Resume` is **strongly recommended whenever the file is mid-flight**. Each per-type contract (`./<type>-authoring.md`) names the family's mid-flight statuses; non-terminal is a useful rough proxy but some non-terminal states (e.g., `usecase: ready / implementing`, `spec: active`) are stable and not mid-flight. Status changes may run cross-file cascades automatically, but never modify `## Resume` — its content is hand-maintained. Update as you work, especially before any session boundary risks losing in-memory context.
 
 When a slot's value changes, **rewrite the slot in place** — do not keep the old value as strikethrough or supplementary line. If the change is narrative-worthy, record that pivot as a `## Log` entry separately. Adding a new line over an old line is not a rewrite; see *Compact whenever you update it* above.
 
@@ -78,7 +78,7 @@ Write entries when:
 
 Do **not** restate things a fresh reader can already see (same exclusions as `## Resume`).
 
-Format is the author's choice — short bullets, one fact per line, append-only. Use a `YYYY-MM-DD HH:mm` (KST) prefix when several entries accrete on the same topic; standalone entries may omit the timestamp. The minute precision matches the `created:` / `updated:` frontmatter shape (see `./frontmatter-common.md`) so timeline reconstruction across body and frontmatter is unambiguous.
+Format is the author's choice — short bullets, one fact per line, append-only. Use a `YYYY-MM-DD HH:mm` (KST) prefix when several entries accrete on the same topic; standalone entries may omit the timestamp.
 
 ```markdown
 ## Log
@@ -123,7 +123,7 @@ Purpose: **the reason this file was abandoned**, recorded once on the `→ disca
 
 Rules:
 
-- Format `- <YYYY-MM-DD HH:mm> <reason text>`. Timestamp is KST and matches the `created:` / `updated:` shape from `./frontmatter-common.md`. When the reason cites another file, use the backtick-wrapped backlink form per `./body-conventions.md`.
+- Format `- <YYYY-MM-DD HH:mm> <reason text>`. Timestamp is KST. When the reason cites another file, use the backtick-wrapped backlink form per `./body-conventions.md`.
 - Append-only — never edit or remove the bullet. If the discard rationale is later understood differently, append a second bullet rather than rewriting the first.
 - Emit only when the file is at `status: discarded`. Files in any other lifecycle state must not carry this section.
 - Applies uniformly to every issue type that has a `discarded` terminal status (`task`, `bug`, `spike`, `research`, `umbrella`, `usecase`, `spec`, `idea`, `brainstorm`). Per-type contracts do not redefine the format.

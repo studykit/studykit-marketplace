@@ -45,7 +45,7 @@ deprecated → superseded
 superseded → (terminal)
 ```
 
-- Edit `status:` directly. The transition refreshes `updated:` automatically and runs any cross-file cascade.
+- Edit `status:` directly. The transition runs any cross-file cascade.
 - `draft → superseded` is **disallowed** — supersession presumes the predecessor was at one point live.
 - `active → superseded` is **automatic** — fires when a successor spec with `supersedes: [<this>]` reaches `active`. Do not flip by hand.
 - `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.

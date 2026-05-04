@@ -20,7 +20,7 @@ You are a Use Case composer agent. Your job is to compose (or extend) the use-ca
 Subagents do not inherit the PreToolUse contract injection from the parent session. Read these explicitly before writing any a4 file:
 
 - `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` — universal frontmatter contract (writer-owned fields, id allocation, path-form).
-- `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — cross-cutting body conventions (heading form, link form). `updated:` is hook-owned per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` — never hand-edited.
+- `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — cross-cutting body conventions (heading form, link form).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` — `## Resume`, `## Log` rules for issue files.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` — `## Change Logs` audit trail and Wiki Update Protocol.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form.
@@ -243,6 +243,5 @@ The invoking skill uses this summary for commit messages and to decide whether t
 - Never overwrite an existing UC file without cause. In expansion mode, add new UC files; modify existing ones only when the input explicitly requires it.
 - Every UC file must record source attribution inline at the start of `## Situation`. Every UC frontmatter must list `actors:` with slugs that exist in `actors.md`.
 - Body cross-references use backtick-wrapped backlinks — `` `../usecase/<id>-<slug>.md` ``. Paths in frontmatter are plain strings without brackets or `.md`.
-- Bump each touched wiki page's `updated:` to today.
 - For any wiki page modified in this pass, append a dated bullet to its `## Change Logs` section citing the causing UC (creating the section if absent) — per the Wiki Update Protocol in `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`.
 - Never set `status: final`, `status: ready`, `status: implementing`, `status: shipped`, or `status: superseded` on any file. Auto-generated output is always `status: draft` — promotion through the UC lifecycle is always user-driven.

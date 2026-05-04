@@ -5,8 +5,8 @@ independent filesystem operations:
 
 - `cleanup-edited-a4.sh` — SessionEnd: delete this session's
   `a4-edited-<session_id>.txt`, `a4-resolved-ids-<session_id>.txt`,
-  `a4-prestatus-<session_id>.json`, `a4-newfiles-<session_id>.txt`,
-  and `a4-injected-<session_id>.txt` record files.
+  `a4-prestatus-<session_id>.json`, and
+  `a4-injected-<session_id>.txt` record files.
 - `sweep-old-edited-a4.sh` — SessionStart: delete orphan record files
   in the same family older than 1 day (safety net for crashed
   sessions). It also prunes an opt-in `trace.log` older than 1 day.

@@ -50,13 +50,12 @@ Accept natural-language answers:
 
 For every UC the user confirmed, edit the UC file's frontmatter `status:` from `implementing` to `shipped` directly with the `Edit` tool. The PostToolUse cascade hook (`${CLAUDE_PLUGIN_ROOT}/scripts/a4_hook.py`) then:
 
-- Refreshes `updated:` on the UC.
 - Runs the supersedes-chain cascade — if the UC has a non-empty `supersedes:` list, every same-family target currently at `shipped` is flipped to `superseded` with a `superseded by usecase/<id>` reason recorded on the cascade report.
 - Surfaces an `additionalContext` block listing the cascade flips; relay those to the user.
 
 There is no mechanical task gate (a4 v6.0.0); the operator owns confirming that all tasks declaring `implements: [usecase/<this>]` are `done` before flipping. Illegal jumps (e.g., `shipped → ready`) are silently ignored by the cascade hook and surfaced by the Stop-hook safety net — fix the source rather than retry.
 
-Do **not** hand-edit `updated:` or supersedes-target frontmatter — the cascade hook owns those writes.
+Do **not** hand-edit supersedes-target frontmatter — the cascade hook owns those writes.
 
 ## Commit
 

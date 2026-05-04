@@ -1,6 +1,6 @@
 ---
 name: find
-description: "Use when the user wants to search, list, or query a4/ workspace items by frontmatter: open reviews, tasks/bugs/spikes/research, references to a use case, items touching wiki pages, custom fields, labels/tags, or updated-since dates. Triggers include 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', 'find by tag', and 'items updated since'. Translates the request into one scripts/search.py invocation. Frontmatter only; use Grep for body text. For workspace aggregate snapshots, use workspace-assistant."
+description: "Use when the user wants to search, list, or query a4/ workspace items by frontmatter: open reviews, tasks/bugs/spikes/research, references to a use case, items touching wiki pages, custom fields, or labels/tags. Triggers include 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', and 'find by tag'. Translates the request into one scripts/search.py invocation. Frontmatter only; use Grep for body text. For workspace aggregate snapshots, use workspace-assistant."
 argument-hint: <natural-language query, or raw search.py flags>
 disable-model-invocation: true
 context: fork
@@ -34,7 +34,6 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 | `--id <int>` | numeric id |
 | `--slug <substr>` | case-sensitive substring on filename stem |
 | `--label <value>` | matches both `labels:` and `tags:` |
-| `--updated-since YYYY-MM-DD` / `--updated-until YYYY-MM-DD` | date-range filter on `updated:` |
 | `--target <ref>` | match review.target list against this reference (issue path or wiki basename) |
 | `--references <ref>` | back-scan all forward relation fields (`depends_on`, `implements`, `spec`, `target`, `supersedes`, `promoted`, `parent`, `related`, `research`) for items pointing at `<ref>` |
 | `--references-via <field>` | restrict `--references` to a single forward field |
@@ -50,7 +49,6 @@ If the command fails or `$ROOT/a4/` is not a directory, abort with a clear messa
 - "what references usecase/3" or "what depends on it" → `--references usecase/3-...` (omit `--references-via` for any-direction back-scan)
 - "reviews touching the architecture wiki" → `--folder review --target architecture`
 - "items tagged perf" → `--label perf`
-- "items updated since 2026-04-01" → `--updated-since 2026-04-01`
 - "items emitted by the usecase reviewer" → `--field source=usecase-reviewer-r2`
 - "all specs" → `--folder spec`
 - If the user just wants raw output and passes flags directly (e.g. `/a4:find --folder task --status queued`), pass `$ARGUMENTS` through verbatim.

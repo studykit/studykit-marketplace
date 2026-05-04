@@ -67,7 +67,7 @@ labels: []             # free-form tags
 
 When all children are `done` or `discarded` and the umbrella is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the umbrella open for further follow-up children.
 
-Direct edits refresh `updated:` automatically, but no automatic cascade flips umbrella status based on children. There is no umbrella-driven cascade onto children either: discarding an umbrella does not discard its children. If the children should also be discarded, flip them individually.
+No automatic cascade flips umbrella status based on children. There is no umbrella-driven cascade onto children either: discarding an umbrella does not discard its children. If the children should also be discarded, flip them individually.
 
 ## Body shape
 

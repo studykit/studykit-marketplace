@@ -1,4 +1,4 @@
-"""SessionStart subcommand: inject type→file-location map and reserved-fields directive.
+"""SessionStart subcommand: inject type→file-location map.
 
 Surfaces the layout (issue families as flat ``a4/<type>/<id>-<slug>.md``;
 wiki pages as top-level ``a4/<type>.md``) so the LLM places new files
@@ -94,8 +94,6 @@ def session_start() -> int:
 
     plugin_root = os.environ.get("CLAUDE_PLUGIN_ROOT") or str(PLUGIN_ROOT)
     allocator = f"{plugin_root}/scripts/allocate_id.py"
-    frontmatter_common = f"{plugin_root}/authoring/frontmatter-common.md"
-
     context = (
         "## a4/ workspace — type → file location\n\n"
         "**Issue families** (one file per id, flat folder):\n\n"
@@ -105,15 +103,7 @@ def session_start() -> int:
         + "\n\n**Allocate id** (issue files only; never invent or reuse):\n\n"
         "```bash\n"
         f'"{allocator}" <a4-dir>\n'
-        "```\n\n"
-        "## Reserved frontmatter fields — DO NOT WRITE\n\n"
-        "`created:` and `updated:` are **reserved**. Never write, edit, or "
-        "include these two fields in any `a4/**/*.md` file (Write, Edit, "
-        "MultiEdit). They are filled and refreshed by tooling.\n\n"
-        "- Authoring a new file: omit both fields entirely.\n"
-        "- Editing an existing file: leave both fields untouched.\n"
-        "- Status flips: edit `status:` only.\n\n"
-        f"Authoritative contract: `{frontmatter_common}`."
+        "```"
     )
     emit(
         {

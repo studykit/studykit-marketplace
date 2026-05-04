@@ -32,7 +32,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 **Outputs:**
 
 - `a4/review/<id>-<slug>.md` — test-runner findings; gap items emitted during ship-review when the user defers.
-- Per-task `status:` flips via direct frontmatter edit on every status change; `updated:` is refreshed automatically by the PostToolUse cascade hook.
+- Per-task `status:` flips via direct frontmatter edit on every status change.
 - Per-task implementation commits authored by `coder` agents.
 
 ## Launch & Verify Source
@@ -123,4 +123,3 @@ Context is passed via file paths, not agent memory.
 - Do not split coder / test-runner into sub-skills.
 - Do not split post-loop review (Step 4) into a separate skill, and do not delegate failure classification or UC ship to an agent.
 - Do not emit aggregated test reports. All findings are per-review-item files.
-- Do not hand-edit `updated:` — only edit `status:` and let the PostToolUse cascade hook refresh `updated:`.

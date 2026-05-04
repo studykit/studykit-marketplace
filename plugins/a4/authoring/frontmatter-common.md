@@ -72,20 +72,3 @@ Single-valued optional fields (e.g., `parent`) follow the same rule: omit the fi
 ## Unknown fields
 
 Unknown fields are **not errors** — treated as extension metadata. Skills may carry additional fields (`tags`, `labels`) per the per-type tables.
-
-## `created` and `updated`
-
-| Field | Applies to | Type | Format |
-|-------|-----------|------|--------|
-| `created` | every issue file | timestamp | `YYYY-MM-DD HH:mm` |
-| `updated` | every issue file and every wiki page | timestamp | `YYYY-MM-DD HH:mm` |
-
-Both fields are **reserved**. Authors and skill runtimes must never write them — neither when authoring a new file nor when editing an existing one. Tooling fills `created:` on first Write and refreshes `updated:` on every edit; any value supplied by an author is overwritten. Backdating is not supported — record the originating work date in body `## Log` instead (`./issue-body.md#log`, `./issue-family-lifecycle.md`).
-
-Reading rules (when consuming the values):
-
-- Format `YYYY-MM-DD HH:mm` (date + 24-hour time, space-separated). Validator rejects any other shape.
-- All timestamps are implicitly Korean Standard Time (KST). No offset is written.
-- A brand-new file has `created == updated`. `created:` is then immutable; `updated:` advances on every subsequent edit.
-
-For files that arrived through a path that bypasses the hook (manual `git checkout`, external editors), recover with `../scripts/validate.py --fix` or by re-saving through Claude Code.

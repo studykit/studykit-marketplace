@@ -87,7 +87,6 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 - **Create `a4/domain.md`** at the end of Phase 1 with the frontmatter and the confirmed `## Concepts` section.
 - **Update** at each phase transition using `Edit` where possible. `Write` only for full rewrites.
 - **Change-log entries** — append a dated bullet citing the causing UC / spec / review item.
-- **`updated:`** — hook-owned. The PostToolUse hook refreshes it automatically on every Write/Edit/MultiEdit; do not hand-edit (`${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md`).
 
 ## Domain Edits Originating Outside This Skill
 

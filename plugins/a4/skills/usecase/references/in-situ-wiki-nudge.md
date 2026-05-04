@@ -14,7 +14,6 @@ For each confirmed update:
 
 1. Edit the affected wiki page — update the relevant `## <Section>` content, then append a dated bullet to the page's `## Change Logs` section with a markdown link to the causing issue. Create the `## Change Logs` section if it does not yet exist.
 
-The PostToolUse hook refreshes the wiki page's `updated:` automatically — do not hand-edit it (`${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md`).
 
 ## Defer path
 

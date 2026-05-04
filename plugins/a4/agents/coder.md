@@ -16,7 +16,7 @@ You are a task implementation agent. Your job is to implement one task and write
 
 Subagents do not inherit the PreToolUse contract injection of the parent session. Read these explicitly:
 
-- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` — status-write rules (edit `status:` directly; the PostToolUse cascade hook refreshes `updated:` and runs cross-file cascades; never hand-edit `updated:`).
+- `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md` — status-write rules (edit `status:` directly; the PostToolUse cascade hook runs cross-file cascades).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md` — cross-cutting body shape (heading form, link form).
 - `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md` — the optional `## Resume` and `## Log` sections; both are hand-maintained, not written by the hook.
 - `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md` — commit subject form `#<task-id> <type>(a4): <description>`.
@@ -36,7 +36,7 @@ Read the task file first, then ci.md's `## How to run tests` section, then the r
 
 ## What You Do
 
-1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, edit the UC file's `status:` from `ready` to `implementing` directly with the `Edit` tool. The PostToolUse cascade hook refreshes `updated:` automatically — do not hand-edit `updated:`.
+1. **Transition the implementing UCs.** For every UC path in the task's `implements:` frontmatter, edit the UC file's `status:` from `ready` to `implementing` directly with the `Edit` tool.
 
    You enforce:
    - Current status must be `ready`. If it is `draft`, **refuse to start** — return failure with the UC reference and instruct the user to finalize via `/a4:usecase` (ready-gate). Surface this in `issues:` without touching the UC.
@@ -62,7 +62,7 @@ If, during implementation, you discover spec ambiguity that cannot be resolved f
 
 1. **Stop coding.** Do not guess at the missing spec.
 2. **Open a review item** for the ambiguity. Allocate an id via `scripts/allocate_id.py` and write `a4/review/<id>-<slug>.md` with `type: review`, `kind: finding`, `status: open`, `target: usecase/<X>`, `source: coder`, and a `## Description` section describing exactly what is ambiguous and what clarification is needed.
-3. **Flip the UC** to `revising` by editing its `status:` field directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress`/`failing` tasks (across `task` / `bug` / `spike` / `research`) back to `queued`, refreshing `updated:` on every flipped file. Add a one-line bullet to the UC's optional `## Log` section if you want a body-level audit pointer to the new review item — the hook does not write `## Log`.
+3. **Flip the UC** to `revising` by editing its `status:` field directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress`/`failing` tasks (across `task` / `bug` / `spike` / `research`) back to `queued`. Add a one-line bullet to the UC's optional `## Log` section if you want a body-level audit pointer to the new review item — the hook does not write `## Log`.
 4. **Return failure** naming the UC and review item id. Do not commit partial code — either discard local changes or leave them unstaged. The user resolves the review via `/a4:usecase iterate`, which eventually flips `revising → ready`.
 
 ### Architecture-choice exit — halt + spec-gap
@@ -79,7 +79,7 @@ This exit is parallel to the spec-ambiguity exit — same halt + review-item sha
 
 - Implement only the assigned task.
 - Do not modify other task files, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
-- **UC files**: edit `status:` directly to flip lifecycle. Do **not** hand-edit `updated:` — the PostToolUse cascade hook refreshes it. The hook does **not** write into `## Log`; that body section is optional and hand-maintained. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message instead of writing.
+- **UC files**: edit `status:` directly to flip lifecycle. The hook does **not** write into `## Log`; that body section is optional and hand-maintained. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message instead of writing.
 - A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable. Return failure instead of starting; do not write any status onto that UC.
 - Record **factual results only** — do not classify issues as task / arch / usecase. Surface observations neutrally.
 - If a required Interface Contract is missing or inconsistent, stop and return failure with a concrete description.

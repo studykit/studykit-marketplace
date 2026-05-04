@@ -4,7 +4,7 @@
 
 Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
 
-Note: no `created:` field on wiki pages — "first appeared" content lives in `context.md` `## Original Idea`.
+Note: "first appeared" content lives in `context.md` `## Original Idea`.
 
 ## Body shape
 

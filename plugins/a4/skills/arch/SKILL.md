@@ -102,7 +102,6 @@ When the user indicates they're done, run `references/wrap-up.md`: pre-flight co
 - **Create `a4/architecture.md`** at the end of Phase 1 with the frontmatter, `## Overview` stub, and the confirmed `## Technology Stack` content.
 - **Update** at each phase transition using `Edit` where possible. `Write` only for full rewrites.
 - **Change-log entries** — append a dated bullet citing the causing UC / spec / review item.
-- **`updated:`** — hook-owned. The PostToolUse hook refreshes it automatically on every Write/Edit/MultiEdit; do not hand-edit (`${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-common.md`).
 
 ## Agent Usage
 

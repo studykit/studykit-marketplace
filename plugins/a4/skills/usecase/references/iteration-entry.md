@@ -1,6 +1,6 @@
 # Iteration Entry Procedure (usecase)
 
-Self-contained iterate procedure for `usecase`. Walk open review items as a stage-specific mailbox: filter, present, edit `status:` directly (the cascade hook refreshes `updated:`). This document also describes usecase-specific work between status flips — research-reflected check, revising-UC scope handling, allowed activities, work-surface summary.
+Self-contained iterate procedure for `usecase`. Walk open review items as a stage-specific mailbox: filter, present, edit `status:` directly. This document also describes usecase-specific work between status flips — research-reflected check, revising-UC scope handling, allowed activities, work-surface summary.
 
 When entering Iteration mode (an existing `a4/` workspace with UC files is found), the goal is to surface unresolved review items, unreflected research/exploration reports, and any wiki drift so the session picks up coherently.
 
@@ -15,11 +15,11 @@ List the current state. Do **not** read every UC up front — read on demand.
 
 ## 2. Backlog (per the mechanics)
 
-Filter open review items to this stage's mailbox: items whose `target:` list contains any of `usecase/*`, `context`, `actors`, `nfr`. Present as a priority-ordered table (High → Medium → Low, then by `created:`). When picking an item, edit its `status: open → in-progress`; when resolved, edit `status: in-progress → resolved` (or `discarded` when no longer applicable). The PostToolUse cascade hook refreshes `updated:` — never hand-edit it. If a resolution edits a wiki page, append a dated `## Change Logs` bullet citing the review item.
+Filter open review items to this stage's mailbox: items whose `target:` list contains any of `usecase/*`, `context`, `actors`, `nfr`. Present as a priority-ordered table (High → Medium → Low, then by id). When picking an item, edit its `status: open → in-progress`; when resolved, edit `status: in-progress → resolved` (or `discarded` when no longer applicable). If a resolution edits a wiki page, append a dated `## Change Logs` bullet citing the review item.
 
 ### Revising-UC priority
 
-If the iterate session is scoped to a specific UC (e.g., the user said "fix UC-5" and UC-5 is `status: implementing` / `revising`), first present review items where `target: usecase/<that-uc>` and `source: coder` (these describe the blocking ambiguity) before the general backlog. When editing begins, flip the UC's `status:` to `revising` by editing the frontmatter directly. The PostToolUse cascade hook detects `implementing → revising`, refreshes `updated:` on the UC, and resets `progress` / `failing` tasks (across `task` / `bug` / `spike` / `research`) back to `queued`. At session end, Step 6 ready-gate flips `revising → ready`.
+If the iterate session is scoped to a specific UC (e.g., the user said "fix UC-5" and UC-5 is `status: implementing` / `revising`), first present review items where `target: usecase/<that-uc>` and `source: coder` (these describe the blocking ambiguity) before the general backlog. When editing begins, flip the UC's `status:` to `revising` by editing the frontmatter directly. The PostToolUse cascade hook detects `implementing → revising` and resets `progress` / `failing` tasks (across `task` / `bug` / `spike` / `research`) back to `queued`. At session end, Step 6 ready-gate flips `revising → ready`.
 
 ## 3. Unreflected research / exploration reports
 
@@ -46,7 +46,7 @@ Present a brief status:
 
 ## Usecase-specific iteration rules
 
-Universal discipline (do not overwrite previously confirmed content; preserve cross-references when renaming or splitting; never hand-edit `updated:`) applies. usecase adds:
+Universal discipline (do not overwrite previously confirmed content; preserve cross-references when renaming or splitting) applies. usecase adds:
 
 - **Show before/after on UC modifications** — when modifying an existing UC body, present the before/after to the user before writing.
 - **Preserve allocator gaps** — when adding new UCs after iteration, gaps from earlier discards/renumbers stay; do not compact ids.

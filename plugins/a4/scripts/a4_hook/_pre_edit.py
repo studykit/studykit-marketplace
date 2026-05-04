@@ -43,7 +43,6 @@ from a4_hook._state import (
     read_prestatus,
     read_status_from_disk,
     record_injected,
-    record_newfile,
     resolve_type_from_path,
     trace,
     write_prestatus,
@@ -206,30 +205,15 @@ def _pre_edit_one(
                 reason="no_status",
                 file_path=file_path,
             )
-    else:
-        # File doesn't exist yet — record so post-edit can stamp
-        # `created:` after the Write lands (overwriting any value the
-        # LLM pre-populated; `created:` is hook-owned). Only Write can
-        # create files in Claude Code's tool model; Edit/MultiEdit
-        # require a prior Read of an existing file.
-        if is_new_file_intent or payload.get("tool_name") == "Write":
-            record_newfile(project_dir, session_id, file_path)
-            trace(
-                project_dir,
-                session_id,
-                "pre-edit",
-                "record_newfile",
-                file_path=file_path,
-            )
-        else:
-            trace(
-                project_dir,
-                session_id,
-                "pre-edit",
-                "skip_newfile",
-                reason="not_create_intent",
-                file_path=file_path,
-            )
+    elif not (is_new_file_intent or payload.get("tool_name") == "Write"):
+        trace(
+            project_dir,
+            session_id,
+            "pre-edit",
+            "skip_newfile",
+            reason="not_create_intent",
+            file_path=file_path,
+        )
 
     # Responsibility 2 — authoring-contract injection (one-shot per
     # (file, type) per session). Fires for both edits and new-file
@@ -315,7 +299,7 @@ def _maybe_inject_authoring_contract(
     pointers = [
         f"- `{AUTHORING_DIR}/frontmatter-common.md` — cross-cutting "
         "frontmatter rules (`type:`, path references, empty collections, "
-        "unknown fields, `created` / `updated`).",
+        "unknown fields).",
     ]
     if type_value in _ISSUE_BODY_TYPES:
         pointers.append(

@@ -11,7 +11,7 @@ allowed-tools: Bash, Write, Read, Edit, Glob
 Two modes:
 
 - **Capture** (default) — `/a4:idea <한 줄 아이디어>`. Writes a new `a4/idea/<id>-<slug>.md` with `status: open`. 30-second capture for raw possibilities.
-- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded` (the PostToolUse hook refreshes `updated:`), optionally appends a one-line `## Change Logs` bullet.
+- **Discard** — `/a4:idea discard <id-or-slug> [reason]`. Locates an existing idea file, flips `status: open → discarded`, optionally appends a one-line `## Change Logs` bullet.
 
 ## Context
 

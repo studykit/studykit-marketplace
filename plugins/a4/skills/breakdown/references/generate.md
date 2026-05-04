@@ -66,7 +66,7 @@ After writing, emit a summary covering:
 ```
 breakdown summary:
   candidates: <N> (UCs: <a>, specs: <b>)
-  created: <M> tasks (#<id1>–<idK>)
+  new tasks: <M> (#<id1>–<idK>)
   skipped: <S> (anchor / title / files overlap)
     - <reason> for <candidate path>
   shared integration points: <count>

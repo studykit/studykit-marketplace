@@ -6,7 +6,7 @@ Implementation jump-table for the status cascade engine, the cascade hook, the r
 
 - **Status model (canonical):** `../scripts/status_model.py` — per-family status enums, allowed transitions (`FAMILY_TRANSITIONS`), terminal / in-progress / active classifications, supersedes-trigger maps, cascade input sets, legality predicates. Imported by every other cascade-aware module.
 - **Cascade engine:** `../scripts/status_cascade.py` — supersedes / discarded / revising cascade primitives shared by the PostToolUse cascade hook and the `/a4:validate --fix` recovery sweep.
-- **Cascade hook:** `../scripts/a4_hook.py` — PostToolUse hook entry point; detects pre→post `status:` transitions, refreshes `updated:` on the primary file, runs cascades on related files. Reads pre-edit `status:` snapshot from `.claude/tmp/a4-edited/a4-prestatus-<sid>.json`.
+- **Cascade hook:** `../scripts/a4_hook.py` — PostToolUse hook entry point; detects pre→post `status:` transitions and runs cascades on related files. Reads pre-edit `status:` snapshot from `.claude/tmp/a4-edited/a4-prestatus-<sid>.json`.
 - **Recovery sweep:** `../scripts/validate.py --fix` — supersedes-chain idempotent sweep for edits that bypassed the hook (manual `git checkout`, external editors, direct script writes). Walks live successors and reconciles `superseded` flips workspace-wide. Surfaced to users as the `/a4:validate --fix` skill command.
 
 ## Validator
@@ -23,7 +23,7 @@ See `./hook-conventions.md` for the design principles (state classification, lif
 The four hook flows in `../hooks/hooks.json` all dispatch through `../scripts/a4_hook.py` subcommands:
 
 - `pre-edit` (PreToolUse) — stash on-disk `status:` of the file about to be edited.
-- `post-edit` (PostToolUse) — record the edit, run the status-change cascade if pre→post is a legal transition, refresh `updated:`, report per-component status-consistency on the post-cascade state.
+- `post-edit` (PostToolUse) — record the edit, run the status-change cascade if pre→post is a legal transition, report per-component status-consistency on the post-cascade state.
 - `stop` (Stop) — frontmatter schema checks AND transition-legality safety net (HEAD-vs-working-tree git diff against `FAMILY_TRANSITIONS`) on session-edited files.
 - `user-prompt` (UserPromptSubmit) — resolve `#<id>` references in the prompt to `a4/<type>/<id>-<slug>.md` paths and inject them as `additionalContext`.
 

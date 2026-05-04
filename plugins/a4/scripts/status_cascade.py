@@ -14,7 +14,7 @@ Two callers consume this module in-process:
     that bypassed the hook (manual git checkout, external editors).
   - ``a4_hook.py post-edit`` (PostToolUse hook) — primary write is the
     LLM's direct ``status:`` edit; the hook calls cascade primitives to
-    flip related files and refresh ``updated:`` on the primary.
+    flip related files after a primary status change.
 
 Authoring invariants beyond legality (UC ``actors:`` non-empty at
 ``>= ready``, placeholder tokens in ``title:``, etc.) are enforced
@@ -204,7 +204,7 @@ def apply_status_change(
     dry_run: bool,
     today: str,
 ) -> None:
-    """Rewrite ``status:`` and ``updated:`` in frontmatter; leave body untouched.
+    """Rewrite ``status:`` in frontmatter; leave body untouched.
 
     The ``## Log`` body section, when present, is hand-maintained — this
     primitive never reads or rewrites it. ``log_reason`` is preserved on
@@ -219,7 +219,6 @@ def apply_status_change(
     if fm is None:
         raise RuntimeError(f"{path}: unreadable frontmatter")
     new_fm = rewrite_frontmatter_scalar(raw_fm, "status", to_status)
-    new_fm = rewrite_frontmatter_scalar(new_fm, "updated", today)
     if dry_run:
         return
     write_file(path, new_fm, body)
@@ -485,10 +484,7 @@ def apply_supersedes_sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
     Idempotent — a second run on the same workspace produces no
     further changes.
     """
-    from common import now_kst
-
     reports: list[Report] = []
-    today = now_kst()
     index = RefIndex(a4_dir)
 
     for family in ("usecase", "spec"):
@@ -509,7 +505,7 @@ def apply_supersedes_sweep(a4_dir: Path, dry_run: bool) -> list[Report]:
                 dry_run=dry_run,
             )
             apply_supersedes_chain(
-                a4_dir, family, rel, today, dry_run, report, index
+                a4_dir, family, rel, "", dry_run, report, index
             )
             report.ok = not report.errors
             if report.cascades or report.errors:

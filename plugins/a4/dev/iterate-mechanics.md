@@ -53,13 +53,13 @@ Show the filtered set as a priority-ordered table. Use this shape:
 >
 > Which items would you like to address?
 
-Order by `priority` (High → Medium → Low), then by `created:`.
+Order by `priority` (High → Medium → Low), then by id.
 
-If a stage detects **staleness signals** (e.g., domain page's `updated:` predates recent UC additions, arch page's `## Change Logs` misses recent UC files) and no review item exists yet, the stage may surface them as "likely review triggers" alongside the backlog.
+If a stage detects **staleness signals** (e.g., a wiki page's `## Change Logs` misses recent UC files) and no review item exists yet, the stage may surface them as "likely review triggers" alongside the backlog.
 
 ## 3. Transition status
 
-Edit `status:` directly on the review item file. The PostToolUse cascade hook detects the pre→post transition, refreshes `updated:`, and runs any cross-file cascade — never hand-edit `updated:`. The hook does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet by hand. If the rationale is worth keeping in the review's `## Log`, write that *first*, then flip `status:` last so the file is consistent at any read point.
+Edit `status:` directly on the review item file. The PostToolUse cascade hook detects the pre→post transition and runs any cross-file cascade. The hook does **not** write into `## Log`; if you want a transition recorded in the body, append a bullet by hand. If the rationale is worth keeping in the review's `## Log`, write that *first*, then flip `status:` last so the file is consistent at any read point.
 
 **Pick → in-progress** (when an item is selected for work): set `status: in-progress`.
 

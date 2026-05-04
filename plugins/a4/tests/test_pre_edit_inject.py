@@ -163,8 +163,6 @@ def test_existing_file_edit_stashes_prestatus_and_injects(
         "id: 3\n"
         "title: Live\n"
         "status: in_progress\n"
-        "created: 2026-05-01 09:00\n"
-        "updated: 2026-05-01 09:00\n"
         "---\n\n"
         "## Description\nx\n",
         encoding="utf-8",
@@ -209,8 +207,6 @@ def test_claude_common_fields_do_not_suppress_injection(
         "id: 31\n"
         "title: Common Fields\n"
         "status: in_progress\n"
-        "created: 2026-05-01 09:00\n"
-        "updated: 2026-05-01 09:00\n"
         "---\n\n"
         "## Description\nx\n",
         encoding="utf-8",
@@ -291,7 +287,7 @@ def test_claude_relative_file_path_resolves_from_project_dir(
     ]
 
 
-def test_codex_apply_patch_suppresses_pretooluse_context_but_records_newfile(
+def test_codex_apply_patch_suppresses_pretooluse_context(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _make_a4_layout(tmp_path)
@@ -306,7 +302,6 @@ def test_codex_apply_patch_suppresses_pretooluse_context_but_records_newfile(
         "+id: 41\n"
         "+title: Codex\n"
         "+status: queued\n"
-        "+updated: 2026-05-03 10:00\n"
         "+---\n"
         "+\n"
         "+## Description\n"
@@ -332,18 +327,6 @@ def test_codex_apply_patch_suppresses_pretooluse_context_but_records_newfile(
 
     assert rc == 0
     assert captured.getvalue() == ""
-    newfiles_file = (
-        tmp_path
-        / ".claude"
-        / "tmp"
-        / "a4-edited"
-        / "a4-newfiles-sess-codex-apply-patch.txt"
-    )
-    assert newfiles_file.is_file()
-    assert str(tmp_path / "a4" / "task" / "41-codex.md") in newfiles_file.read_text(
-        encoding="utf-8"
-    )
-
 
 def test_new_file_does_not_create_prestatus_entry(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch

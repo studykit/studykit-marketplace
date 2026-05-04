@@ -4,8 +4,6 @@ All session-state lives under ``<project>/.claude/tmp/a4-edited/``:
 
 - ``a4-edited-<sid>.txt``        — paths edited this session (PostToolUse → Stop).
 - ``a4-prestatus-<sid>.json``    — pre-edit ``status:`` snapshot (Pre → Post).
-- ``a4-newfiles-<sid>.txt``      — paths the LLM is about to Write that did not
-                                   exist on disk yet (Pre → Post).
 - ``a4-injected-<sid>.txt``      — types whose authoring contract was already
                                    injected this session (Pre dedupe).
 - ``a4-resolved-ids-<sid>.txt``  — `#<id>` tokens already resolved this session
@@ -233,60 +231,6 @@ def write_prestatus(project_dir: str, session_id: str, data: dict) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data), encoding="utf-8")
-    except OSError:
-        return
-
-
-# ----------------------------- newfiles IO --------------------------------
-
-
-def newfiles_path(project_dir: str, session_id: str) -> Path:
-    return record_dir(project_dir) / f"a4-newfiles-{session_id}.txt"
-
-
-def read_newfiles(project_dir: str, session_id: str) -> set[str]:
-    path = newfiles_path(project_dir, session_id)
-    if not path.is_file():
-        return set()
-    try:
-        return {
-            line.strip()
-            for line in path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        }
-    except OSError:
-        return set()
-
-
-def record_newfile(project_dir: str, session_id: str, file_path: str) -> None:
-    path = newfiles_path(project_dir, session_id)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        return
-    try:
-        with path.open("a", encoding="utf-8") as f:
-            f.write(file_path + "\n")
-    except OSError:
-        return
-
-
-def drop_newfile(project_dir: str, session_id: str, file_path: str) -> None:
-    path = newfiles_path(project_dir, session_id)
-    if not path.is_file():
-        return
-    try:
-        lines = [
-            line for line in path.read_text(encoding="utf-8").splitlines()
-            if line.strip() and line.strip() != file_path
-        ]
-    except OSError:
-        return
-    try:
-        if lines:
-            path.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        else:
-            path.unlink()
     except OSError:
         return
 

@@ -53,12 +53,6 @@ def _status(p: Path) -> str:
     return fm["status"]
 
 
-def _updated(p: Path) -> str:
-    fm = read_fm(p)
-    assert fm is not None
-    return str(fm["updated"])
-
-
 def _make_review(
     workspace,
     id_: int,
@@ -98,7 +92,7 @@ def _make_review(
 
 def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
     """Case 1 — UC implementing → revising resets progress task to queued,
-    leaves done task untouched, and refreshes ``updated:``."""
+    and leaves done task untouched."""
     a4_workspace.write("usecase", 1, "search", status="revising")
     t_progress = a4_workspace.write(
         "task",
@@ -106,7 +100,6 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
         "index",
         status="progress",
         implements=["usecase/1-search"],
-        updated="2026-04-01 09:00",
     )
     t_done = a4_workspace.write(
         "task",
@@ -114,7 +107,6 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
         "ui",
         status="done",
         implements=["usecase/1-search"],
-        updated="2026-04-01 09:00",
     )
 
     report = Report()
@@ -130,9 +122,7 @@ def test_uc_revising_resets_in_progress_tasks(a4_workspace) -> None:
     )
 
     assert _status(t_progress) == "queued"
-    assert _updated(t_progress) == TODAY
     assert _status(t_done) == "done"
-    assert _updated(t_done) == "2026-04-01 09:00"
 
     flipped = [c.path for c in report.cascades]
     assert "task/2-index.md" in flipped
@@ -229,7 +219,6 @@ def test_dry_run_writes_no_disk_changes(a4_workspace) -> None:
         "index",
         status="progress",
         implements=["usecase/1-search"],
-        updated="2026-04-01 09:00",
     )
     before = t.read_bytes()
 
@@ -288,7 +277,6 @@ def test_apply_status_change_preserves_log_body(a4_workspace) -> None:
     assert "## Log\n- 2026-04-01 — picked up by alice" in new_text
     assert "- 2026-04-15 — paused, see review/9\n" in new_text
     assert _status(t) == "queued"
-    assert _updated(t) == TODAY
 
 
 # ---------------------------------------------------------------------------

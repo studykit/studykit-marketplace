@@ -13,9 +13,9 @@ Module map:
                      shared helpers (`record_dir`, `display_rel`, `emit`,
                      `read_status_from_disk`, `resolve_type_from_path`,
                      `unlink_silent`), and all session-state IO
-                     (prestatus / newfiles / injected / resolved-ids / edited).
+                     (prestatus / injected / resolved-ids / edited).
 - `_pre_edit`      — PreToolUse subcommand and authoring-contract injection.
-- `_post_edit`     — PostToolUse subcommand: cascade, stamp, refresh, consistency.
+- `_post_edit`     — PostToolUse subcommand: cascade + consistency.
 - `_stop`          — Stop subcommand: validators + decision-block emission.
 - `_user_prompt`   — UserPromptSubmit subcommand: `#<id>` resolution.
 - `_session_start` — SessionStart subcommand: type→location map injection.

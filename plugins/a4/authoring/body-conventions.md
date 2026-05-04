@@ -56,7 +56,7 @@ Append-only audit / membership lists use the timestamped-bullet form:
 - YYYY-MM-DD HH:mm `<relpath>/<file>.md`
 ```
 
-- The timestamp is `YYYY-MM-DD HH:mm` in KST, matching the `created:` / `updated:` shape (`./frontmatter-common.md`).
+- The timestamp is `YYYY-MM-DD HH:mm` in KST.
 - Exactly one space separates timestamp and path; **no em dash** between them.
 - The path is backtick-wrapped, either relpath or basename per the inline rule above.
 - Optional trailing prose after the closing backtick records annotations (`— moved to ...`, `— discarded ...`, free-form notes).

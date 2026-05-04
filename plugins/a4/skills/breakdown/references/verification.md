@@ -12,7 +12,7 @@ The reviewer emits per-finding review items to `a4/review/<id>-<slug>.md` and re
 
 Apply **stop on strong upstream dependency** — task derivation depends directly on usecases / specs (AC source) and on the codebase that ci-setup verified, so upstream findings halt this skill rather than continuing with stale assumptions.
 
-- **Task-level fix** — edit the affected task file; edit the review item's `status:` to `resolved` directly (the PostToolUse cascade hook refreshes `updated:`). No wiki `## Change Logs` bullet — this skill does not own a wiki page.
+- **Task-level fix** — edit the affected task file; edit the review item's `status:` to `resolved` directly. No wiki `## Change Logs` bullet — this skill does not own a wiki page.
 - **Upstream finding (`target: architecture`, `target: usecase/...`, `target: <spec/...>`, `target: ci`)** — **stop**. Leave the review item `status: open`. Tell the user which iterate skill to run next:
   - `target: architecture` → `/a4:arch iterate`
   - `target: usecase/...` → `/a4:usecase iterate`

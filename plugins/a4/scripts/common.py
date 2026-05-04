@@ -9,21 +9,8 @@ document dataclass) lives in the sibling `markdown.py` module.
 
 from __future__ import annotations
 
-from datetime import datetime
 from pathlib import Path
 from typing import Any
-from zoneinfo import ZoneInfo
-
-KST = ZoneInfo("Asia/Seoul")
-
-
-def now_kst() -> str:
-    """Return the current Korean Standard Time as ``YYYY-MM-DD HH:mm``.
-
-    Used by hook / cascade write paths to stamp `created:` and `updated:`.
-    KST has no DST, so this is a fixed UTC+9 offset.
-    """
-    return datetime.now(KST).strftime("%Y-%m-%d %H:%M")
 
 WIKI_TYPES = frozenset(
     {"context", "domain", "architecture", "actors", "nfr", "ci"}

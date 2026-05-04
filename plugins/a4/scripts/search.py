@@ -157,14 +157,6 @@ class Record:
         return _str(self.fm.get("title"))
 
     @property
-    def updated(self) -> str | None:
-        return _date_str(self.fm.get("updated"))
-
-    @property
-    def created(self) -> str | None:
-        return _date_str(self.fm.get("created"))
-
-    @property
     def labels(self) -> list[str]:
         # Schema uses `labels:` on usecase / the four issue
         # families / review / idea, and `tags:` on spec / brainstorm.
@@ -189,19 +181,6 @@ def _str_list(v: Any) -> list[str]:
             if s:
                 out.append(s)
     return out
-
-
-def _date_str(v: Any) -> str | None:
-    if v is None:
-        return None
-    if isinstance(v, (date, datetime)):
-        return v.isoformat()[:10]
-    s = str(v).strip()
-    return s or None
-
-
-def _parse_iso(value: str) -> date:
-    return datetime.strptime(value, "%Y-%m-%d").date()
 
 
 def _bare_ref(ref: str) -> str:
@@ -315,8 +294,6 @@ def filter_records(
     ids: list[int] | None,
     slug_substr: str | None,
     labels: list[str],
-    updated_since: date | None,
-    updated_until: date | None,
     target: str | None,
     references: str | None,
     references_field: str | None,
@@ -338,18 +315,6 @@ def filter_records(
         if labels:
             rec_labels = set(r.labels)
             if not all(label in rec_labels for label in labels):
-                continue
-        if updated_since or updated_until:
-            u = r.updated
-            if not u:
-                continue
-            try:
-                u_date = _parse_iso(u)
-            except ValueError:
-                continue
-            if updated_since and u_date < updated_since:
-                continue
-            if updated_until and u_date > updated_until:
                 continue
         if target is not None:
             t_raw = r.fm.get("target")
@@ -379,9 +344,7 @@ def render_text(records: list[Record]) -> str:
     lines: list[str] = []
     for r in records:
         if r.folder == "wiki":
-            lines.append(
-                f"{r.stem} | wiki | {r.kind or '—'} | (updated {r.updated or '—'})"
-            )
+            lines.append(f"{r.stem} | wiki | {r.kind or '—'}")
         else:
             status = r.status or "—"
             kind = r.kind or "—"
@@ -397,8 +360,6 @@ PROJECTED_FIELDS: frozenset[str] = frozenset(
         "title",
         "status",
         "kind",
-        "updated",
-        "created",
         "labels",
         "tags",
     }
@@ -417,8 +378,6 @@ def render_json(records: list[Record]) -> str:
             "title": r.title,
             "status": r.status,
             "kind": r.kind,
-            "updated": r.updated,
-            "created": r.created,
             "labels": r.labels,
             "archived": r.archived,
         }
@@ -543,14 +502,6 @@ def main() -> None:
         help="require this label/tag (repeat → AND across labels; matches both `labels:` and `tags:`)",
     )
     parser.add_argument(
-        "--updated-since",
-        help="only items with updated >= YYYY-MM-DD",
-    )
-    parser.add_argument(
-        "--updated-until",
-        help="only items with updated <= YYYY-MM-DD",
-    )
-    parser.add_argument(
         "--target",
         help="match review.target list against this reference (issue path or wiki basename)",
     )
@@ -622,13 +573,6 @@ def main() -> None:
             sys.exit(2)
         field_filters.append((name, value))
 
-    try:
-        updated_since = _parse_iso(args.updated_since) if args.updated_since else None
-        updated_until = _parse_iso(args.updated_until) if args.updated_until else None
-    except ValueError as e:
-        print(f"Error: {e}", file=sys.stderr)
-        sys.exit(2)
-
     target = args.target if args.target else None
     references = args.references if args.references else None
 
@@ -648,8 +592,6 @@ def main() -> None:
         ids=list(args.id) or None,
         slug_substr=args.slug,
         labels=list(args.label),
-        updated_since=updated_since,
-        updated_until=updated_until,
         target=target,
         references=references,
         references_field=args.references_via,

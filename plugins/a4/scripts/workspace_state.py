@@ -17,17 +17,15 @@ summary at the same time.
 
 Sections (kebab-case identifier on the left):
 
-  wiki-pages          presence + last-updated for the canonical wiki kinds.
+  wiki-pages          presence for the canonical wiki kinds.
   stage-progress      mixed-axis view of usecase/arch/ci/impl.
   issue-counts        per folder × {active, in_progress, terminal, total}
                       plus by-kind for review and per-family rows for
                       the four issue families.
   usecases-by-source  UC `source:` distribution (extracted-from-code detection).
-  open-reviews        open / in-progress reviews, sorted by priority
-                      then created then id.
+  open-reviews        open / in-progress reviews, sorted by priority then id.
   active-tasks        tasks with status in {queued, progress, failing, holding}.
   blocked-items       any issue with status: blocked, with depends_on chain.
-  recent-activity     top 10 issue items by `updated:` desc.
   open-ideas          non-terminal `idea/*.md`.
   open-brainstorms    non-terminal `brainstorm/*.md`.
 
@@ -37,7 +35,7 @@ documented inline below).
 Usage:
     uv run workspace_state.py <a4-dir>                      # full dashboard (all sections, with header)
     uv run workspace_state.py <a4-dir> active-tasks         # one section, no header
-    uv run workspace_state.py <a4-dir> active-tasks blocked-items recent-activity
+    uv run workspace_state.py <a4-dir> active-tasks blocked-items
                                                             # multiple sections, in the order requested
     uv run workspace_state.py --list-sections               # print section identifiers and exit
 
@@ -51,7 +49,7 @@ import argparse
 import sys
 from collections import Counter
 from dataclasses import dataclass, field
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable
 
@@ -77,9 +75,6 @@ WIKI_KINDS: tuple[str, ...] = (
 )
 
 PRIORITY_ORDER: dict[str, int] = {"high": 0, "medium": 1, "low": 2}
-RECENT_ACTIVITY_LIMIT = 10
-
-
 @dataclass
 class IssueItem:
     folder: str
@@ -91,8 +86,6 @@ class IssueItem:
     source: str | None
     priority: str | None
     target: list[str] = field(default_factory=list)
-    updated: str | None = None
-    created: str | None = None
     depends_on: list[str] = field(default_factory=list)
 
     @property
@@ -108,20 +101,10 @@ class IssueItem:
 class WikiPage:
     kind: str
     path: Path | None
-    updated: str | None = None
 
 
 def _fm(path: Path) -> dict:
     return extract_preamble(path).fm or {}
-
-
-def _display_date(raw: Any) -> str | None:
-    if raw is None:
-        return None
-    if isinstance(raw, (date, datetime)):
-        return raw.isoformat()[:10]
-    s = str(raw).strip()
-    return s or None
 
 
 def _str_field(fm: dict, key: str) -> str | None:
@@ -143,10 +126,7 @@ def discover_wikis(a4_dir: Path) -> list[WikiPage]:
         if not path.is_file():
             pages.append(WikiPage(kind=kind, path=None))
             continue
-        fm = _fm(path)
-        pages.append(
-            WikiPage(kind=kind, path=path, updated=_display_date(fm.get("updated")))
-        )
+        pages.append(WikiPage(kind=kind, path=path))
     return pages
 
 
@@ -167,8 +147,6 @@ def discover_issues(a4_dir: Path) -> dict[str, list[IssueItem]]:
                     source=_str_field(fm, "source"),
                     priority=_str_field(fm, "priority"),
                     target=_str_list(fm, "target"),
-                    updated=_display_date(fm.get("updated")),
-                    created=_display_date(fm.get("created")),
                     depends_on=_str_list(fm, "depends_on"),
                 )
             )
@@ -179,10 +157,10 @@ def discover_issues(a4_dir: Path) -> dict[str, list[IssueItem]]:
 
 
 def render_wiki_pages(pages: list[WikiPage]) -> str:
-    lines = ["## Wiki pages", "", "| Page | Present | Updated |", "|------|---------|---------|"]
+    lines = ["## Wiki pages", "", "| Page | Present |", "|------|---------|"]
     for p in pages:
         present = "yes" if p.path is not None else "—"
-        lines.append(f"| {p.kind} | {present} | {p.updated or '—'} |")
+        lines.append(f"| {p.kind} | {present} |")
     return "\n".join(lines)
 
 
@@ -230,7 +208,7 @@ def render_stage_progress(
         page = pages_by_kind.get(kind)
         if page is None or page.path is None:
             return "not created"
-        return f"present · updated {page.updated or '—'}"
+        return "present"
 
     lines = [
         "## Stage progress",
@@ -299,16 +277,14 @@ def render_open_reviews(reviews: list[IssueItem]) -> str:
     open_items.sort(
         key=lambda r: (
             PRIORITY_ORDER.get(r.priority or "", 3),
-            r.created or "",
             r.id_ or 0,
         )
     )
     lines = [heading, ""]
     for r in open_items:
         target = f" (target=`{', '.join(r.target)}`)" if r.target else ""
-        created = f" · created {r.created}" if r.created else ""
         lines.append(
-            f"- {r.ref} — {r.priority or '—'} {r.kind or '—'}{created} — {r.title}{target}"
+            f"- {r.ref} — {r.priority or '—'} {r.kind or '—'} — {r.title}{target}"
         )
     return "\n".join(lines)
 
@@ -343,36 +319,15 @@ def render_blocked_items(issues: dict[str, list[IssueItem]]) -> str:
     return "\n".join(lines)
 
 
-def render_recent_activity(issues: dict[str, list[IssueItem]]) -> str:
-    flat: list[IssueItem] = []
-    for folder in ISSUE_FOLDERS:
-        flat.extend(issues[folder])
-    dated = [i for i in flat if i.updated]
-    dated.sort(key=lambda i: (i.updated or "", i.id_ or 0), reverse=True)
-    top = dated[:RECENT_ACTIVITY_LIMIT]
-    if not top:
-        return "## Recent activity\n\n*No items with `updated:` frontmatter yet.*"
-    lines = [
-        "## Recent activity",
-        "",
-        "| Item | Folder | Status | Updated |",
-        "|------|--------|--------|---------|",
-    ]
-    for i in top:
-        lines.append(f"| {i.ref} | {i.folder} | {i.status or '—'} | {i.updated} |")
-    return "\n".join(lines)
-
-
 def render_open_ideas(ideas: list[IssueItem]) -> str:
     open_ideas = [i for i in ideas if i.status not in TERMINAL_STATUSES["idea"]]
     heading = f"## Open ideas ({len(open_ideas)})"
     if not open_ideas:
         return f"{heading}\n\n*No open ideas.*"
-    open_ideas.sort(key=lambda i: (i.updated or "", i.id_ or 0), reverse=True)
+    open_ideas.sort(key=lambda i: i.id_ or 0)
     lines = [heading, ""]
     for i in open_ideas:
-        updated = f" · updated {i.updated}" if i.updated else ""
-        lines.append(f"- {i.ref} — {i.title}{updated}")
+        lines.append(f"- {i.ref} — {i.title}")
     return "\n".join(lines)
 
 
@@ -382,11 +337,10 @@ def render_open_brainstorms(brainstorms: list[IssueItem]) -> str:
     heading = f"## Open brainstorms ({len(open_items)})"
     if not open_items:
         return f"{heading}\n\n*No open brainstorms.*"
-    open_items.sort(key=lambda b: (b.updated or "", b.id_ or 0), reverse=True)
+    open_items.sort(key=lambda b: b.id_ or 0)
     lines = [heading, ""]
     for b in open_items:
-        updated = f" · updated {b.updated}" if b.updated else ""
-        lines.append(f"- {b.ref} — {b.title}{updated}")
+        lines.append(f"- {b.ref} — {b.title}")
     return "\n".join(lines)
 
 
@@ -406,7 +360,6 @@ SECTION_RENDERERS: dict[str, Callable[[dict[str, Any]], str]] = {
     "open-reviews": lambda ctx: render_open_reviews(ctx["issues"]["review"]),
     "active-tasks": lambda ctx: render_active_tasks(_all_tasks(ctx["issues"])),
     "blocked-items": lambda ctx: render_blocked_items(ctx["issues"]),
-    "recent-activity": lambda ctx: render_recent_activity(ctx["issues"]),
     "open-ideas": lambda ctx: render_open_ideas(ctx["issues"]["idea"]),
     "open-brainstorms": lambda ctx: render_open_brainstorms(
         ctx["issues"]["brainstorm"]
