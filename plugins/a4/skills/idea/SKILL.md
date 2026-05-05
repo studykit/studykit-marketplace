@@ -40,11 +40,7 @@ Ensure `<project-root>/a4/idea/` exists; create with `mkdir -p` if missing.
 
 ### 3. Allocate next id
 
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "<project-root>/a4"
-```
-
-The script prints the next integer. Capture it — this becomes the idea's `id:` and prefixes the filename.
+Allocate the next id immediately before writing. This becomes the idea's `id:` and prefixes the filename.
 
 ### 4. Generate slug
 
@@ -79,14 +75,13 @@ Procedure: `references/discard-flow.md`. Covers target resolution (D1), status c
 - Do not propose a target artifact at capture time. Ideas are independent by definition; graduation is a separate, later decision.
 - Do not launch a brainstorm or research session off the back of a capture. If the user wants that, they invoke `/a4:brainstorm` or `/a4:research` with the idea path as input themselves.
 - Do not surface existing `a4/idea/` open count or nudge the user about prior ideas. Capture is capture; review is separate.
-- Do not validate the workspace-wide id uniqueness here. `allocate_id.py` reads current state and returns `max(id) + 1`; the Stop hook catches any collision on next stop.
+- Do not validate the workspace-wide id uniqueness here; the Stop hook catches collisions on next stop.
 
 ## Failure modes
 
 - `NOT_A_GIT_REPO` — abort with a short message.
 - `a4/` missing — abort; ideas require a workspace.
 - Empty `$ARGUMENTS` — abort with a one-line usage hint.
-- `allocate_id.py` non-zero exit — relay stderr and abort (capture mode).
 - Write fails (disk full, permission) — relay the error; do not retry silently.
 - Discard target unresolvable or ambiguous — list candidates or report "no match" per D1.
 - Discard target already `promoted` — refuse per D2.

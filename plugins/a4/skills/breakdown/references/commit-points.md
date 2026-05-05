@@ -1,7 +1,5 @@
 # breakdown Commit Points
 
-All commit subjects follow `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
-
 ## Task batch derivation
 
 Commit all new `a4/task/*.md` files together once the user confirms.

@@ -3,10 +3,14 @@
 Surfaces the layout (issue families as flat ``a4/<type>/<id>-<slug>.md``;
 wiki pages as top-level ``a4/<type>.md``) so the LLM places new files
 correctly, and the runnable allocator command so it can claim a
-workspace-global monotonic id without searching for it — both before
-the first Write/Edit triggers PreToolUse contract-injection. Built
-from ``common.WIKI_TYPES`` and ``common.ISSUE_FOLDERS`` so adding a new
-type does not require touching this function.
+workspace-global monotonic id without searching for it. Built from
+``common.WIKI_TYPES`` and ``common.ISSUE_FOLDERS`` so adding a new type
+does not require touching this function.
+
+Also injects a compact authoring entrypoint index at SessionStart. The
+per-type authoring document and commit-message convention must be visible
+before the edit mechanism is chosen, and both Claude and Codex use the
+same session-start guidance.
 
 The allocator path is emitted as a fully-resolved absolute path
 (runtime-specific plugin-root environment declared in ``a4_hook._runtime``;
@@ -41,7 +45,6 @@ _STALE_RECORD_PATTERNS: tuple[tuple[str, str], ...] = (
 def session_start() -> int:
     """SessionStart entry point. Always exits 0."""
     import json
-    import os
 
     # Drain stdin defensively. Claude Code pipes a JSON payload to
     # SessionStart hooks; we read no fields, but a closed pipe on an
@@ -95,6 +98,9 @@ def session_start() -> int:
 
     plugin_root = plugin_root_from_payload(payload, PLUGIN_ROOT)
     allocator = str(plugin_root / "scripts" / "allocate_id.py")
+    authoring_context = _authoring_entrypoint_index(
+        ISSUE_FOLDERS, sorted(WIKI_TYPES), plugin_root / "authoring"
+    )
     context = (
         "## a4/ workspace — type → file location\n\n"
         "**Issue families** (one file per id, flat folder):\n\n"
@@ -105,6 +111,7 @@ def session_start() -> int:
         "```bash\n"
         f'"{allocator}" <a4-dir>\n'
         "```"
+        + authoring_context
     )
     emit(
         {
@@ -124,6 +131,40 @@ def session_start() -> int:
         wiki_types=sorted(WIKI_TYPES),
     )
     return 0
+
+
+def _authoring_entrypoint_index(
+    issue_types: tuple[str, ...], wiki_types: list[str], authoring_dir: Path
+) -> str:
+    """Return per-type authoring entrypoints for SessionStart.
+
+    SessionStart emits the one authoring document to open for each a4 file
+    type. Each per-type file is the entrypoint for any shared companion
+    contracts it needs.
+    """
+
+    issue_lines = [
+        f"- `{t}` → `{t}-authoring.md`" for t in issue_types
+    ]
+    wiki_lines = [
+        f"- `{t}` → `{t}-authoring.md`" for t in wiki_types
+    ]
+
+    return (
+        "\n\n**a4 authoring entrypoints**\n\n"
+        f"Authoring directory: `{authoring_dir}`\n\n"
+        "Before creating or editing an `a4/*.md` file, open the "
+        "`<type>-authoring.md` file for that document type from the "
+        "authoring directory above. That file is the entrypoint for any "
+        "shared companion contracts it needs.\n\n"
+        "Before committing a4-related changes, open "
+        "`commit-message-convention.md` from the authoring directory "
+        "above.\n\n"
+        "Per issue type:\n"
+        + "\n".join(issue_lines)
+        + "\n\nPer wiki type:\n"
+        + "\n".join(wiki_lines)
+    )
 
 
 def _sweep_old_records(project_dir: str) -> int:

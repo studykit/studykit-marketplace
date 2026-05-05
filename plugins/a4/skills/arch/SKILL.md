@@ -30,14 +30,6 @@ Reuse the `a4/` workspace resolved via `git rev-parse --show-toplevel`.
 
 Derived views (consistency tables, UC×component coverage matrix, open-arch-findings dashboard) are produced on demand by grep over frontmatter — not files.
 
-## Id Allocation
-
-When emitting review items:
-
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
-```
-
 ## Modes
 
 - **First Design** — `a4/architecture.md` does not exist. Start from Phase 1 and follow the guided sequence below.

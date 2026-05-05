@@ -4,8 +4,6 @@ All session-state lives under ``<project>/.claude/tmp/a4-edited/``:
 
 - ``a4-edited-<sid>.txt``        — paths edited this session (PostToolUse → Stop).
 - ``a4-prestatus-<sid>.json``    — pre-edit ``status:`` snapshot (Pre → Post).
-- ``a4-injected-<sid>.txt``      — types whose authoring contract was already
-                                   injected this session (Pre dedupe).
 - ``a4-resolved-ids-<sid>.txt``  — `#<id>` tokens already resolved this session
                                    (UserPromptSubmit dedupe).
 - ``trace.log``                  — opt-in JSON Lines trace, written only when
@@ -23,11 +21,9 @@ from pathlib import Path
 
 from a4_hook._runtime import project_root_from_payload
 
-# Plugin-internal anchor paths. Resolved once at import time so every
-# subcommand can render fully-qualified absolute pointers to authoring
-# contracts without redoing `Path(__file__).resolve().parent.parent.parent`.
+# Plugin-internal anchor path. Resolved once at import time so subcommands can
+# render fully-qualified absolute pointers without recomputing the plugin root.
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent.parent
-AUTHORING_DIR = PLUGIN_ROOT / "authoring"
 
 TRACE_ENV_VAR = "A4_HOOK_TRACE"
 TRACE_FILE_NAME = "trace.log"
@@ -145,42 +141,6 @@ def read_status_from_disk(path: Path) -> str | None:
     return s if isinstance(s, str) else None
 
 
-def resolve_type_from_path(abs_path: Path, a4_dir: Path) -> str | None:
-    """Resolve frontmatter `type:` from the file's location under `a4/`.
-
-    The a4 layout pins `type:` by path: top-level `<wiki>.md` files map
-    to `WIKI_TYPES`, and flat `<folder>/<id>-<slug>.md` files map to
-    `ISSUE_FOLDERS`. Resolving by path avoids a frontmatter parse on
-    every edit (cheaper than reading the file just to read `type:`)
-    and matches the canonical layout used by `discover_files` and the
-    validators. Path-based resolution also works for new-file Writes
-    (issue creation), where on-disk frontmatter does not exist yet.
-
-    Returns None for archived files (`a4/archive/...`) — archived files
-    retain their original `type:` but are not active edit targets, so
-    contract injection is skipped.
-    """
-    try:
-        rel = abs_path.resolve(strict=False).relative_to(a4_dir.resolve())
-    except (OSError, ValueError):
-        return None
-    parts = rel.parts
-    if not parts:
-        return None
-    if parts[0] == "archive":
-        return None
-    try:
-        from common import ISSUE_FOLDERS, WIKI_TYPES
-    except ImportError:
-        return None
-    if len(parts) == 1 and parts[0].endswith(".md"):
-        stem = parts[0][:-3]
-        return stem if stem in WIKI_TYPES else None
-    if len(parts) >= 2 and parts[0] in ISSUE_FOLDERS:
-        return parts[0]
-    return None
-
-
 # ----------------------------- prestatus IO -------------------------------
 
 
@@ -205,43 +165,6 @@ def write_prestatus(project_dir: str, session_id: str, data: dict) -> None:
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps(data), encoding="utf-8")
-    except OSError:
-        return
-
-
-# ----------------------------- injected IO --------------------------------
-
-
-def injected_path(project_dir: str, session_id: str) -> Path:
-    return record_dir(project_dir) / f"a4-injected-{session_id}.txt"
-
-
-def read_injected(project_dir: str, session_id: str) -> set[str]:
-    path = injected_path(project_dir, session_id)
-    if not path.is_file():
-        return set()
-    try:
-        # Strip any pre-existing `<file>\t<type>` lines too — older sessions
-        # may still have the (file, type) format on disk; treat the type
-        # column as authoritative and ignore the file column.
-        return {
-            (line.split("\t", 1)[1] if "\t" in line else line).strip()
-            for line in path.read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        }
-    except OSError:
-        return set()
-
-
-def record_injected(project_dir: str, session_id: str, type_value: str) -> None:
-    path = injected_path(project_dir, session_id)
-    try:
-        path.parent.mkdir(parents=True, exist_ok=True)
-    except OSError:
-        return
-    try:
-        with path.open("a", encoding="utf-8") as f:
-            f.write(f"{type_value}\n")
     except OSError:
         return
 

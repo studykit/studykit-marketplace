@@ -1,8 +1,8 @@
-"""Tests for `_pre_edit` authoring-contract injection in a4_hook.
+"""Tests for `_pre_edit` status snapshot behavior in a4_hook.
 
-Covers the policy that contract pointers fire on issue *creation* (new-file
-Write) as well as edits to existing files, and that repeated edits to the
-same `(file_path, type)` within a session do not re-inject.
+PreEdit intentionally performs only status-transition bookkeeping. Authoring
+entrypoints are emitted by SessionStart for all runtimes, so PreEdit should not
+emit authoring `additionalContext` for either Claude or Codex.
 """
 
 from __future__ import annotations
@@ -10,7 +10,6 @@ from __future__ import annotations
 import importlib
 import io
 import json
-import os
 import sys
 from pathlib import Path
 
@@ -46,9 +45,7 @@ def _run_pre_edit(
         payload.update(extra_payload)
     monkeypatch.setenv("A4_HOOK_RUNTIME", "claude")
     monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project_dir))
-    monkeypatch.setattr(
-        hook_module.sys, "stdin", io.StringIO(json.dumps(payload))
-    )
+    monkeypatch.setattr(hook_module.sys, "stdin", io.StringIO(json.dumps(payload)))
     captured = io.StringIO()
     monkeypatch.setattr(hook_module.sys, "stdout", captured)
     rc = hook_module._pre_edit()
@@ -60,100 +57,29 @@ def _make_a4_layout(project_dir: Path) -> None:
         (project_dir / "a4" / folder).mkdir(parents=True, exist_ok=True)
 
 
-def test_inject_on_new_task_file(
+def test_new_file_write_emits_no_authoring_context_and_no_prestatus(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _make_a4_layout(tmp_path)
     new_file = tmp_path / "a4" / "task" / "1-new.md"
-    assert not new_file.exists()
 
-    rc, out = _run_pre_edit(hook_module, monkeypatch, tmp_path, new_file)
-
-    assert rc == 0
-    payload = json.loads(out.strip())
-    ctx = payload["hookSpecificOutput"]["additionalContext"]
-    assert "type: task" in ctx
-    assert "frontmatter-common.md" in ctx
-    assert "task-authoring.md" in ctx
-    assert "issue-family-lifecycle.md" in ctx
-    assert "issue-body.md" in ctx
-
-
-def test_inject_on_new_spike_file(
-    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _make_a4_layout(tmp_path)
-    new_file = tmp_path / "a4" / "spike" / "42-investigate.md"
-
-    rc, out = _run_pre_edit(hook_module, monkeypatch, tmp_path, new_file)
-
-    assert rc == 0
-    payload = json.loads(out.strip())
-    ctx = payload["hookSpecificOutput"]["additionalContext"]
-    assert "type: spike" in ctx
-    assert "spike-authoring.md" in ctx
-    assert "issue-family-lifecycle.md" in ctx
-
-
-def test_dedupe_same_file_same_session(
-    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _make_a4_layout(tmp_path)
-    new_file = tmp_path / "a4" / "task" / "7-foo.md"
-
-    rc1, out1 = _run_pre_edit(hook_module, monkeypatch, tmp_path, new_file)
-    assert rc1 == 0
-    assert out1.strip(), "first call should emit context"
-
-    rc2, out2 = _run_pre_edit(hook_module, monkeypatch, tmp_path, new_file)
-    assert rc2 == 0
-    assert out2 == "", "second call within same session must not re-inject"
-
-
-def test_dedupe_resets_across_sessions(
-    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _make_a4_layout(tmp_path)
-    new_file = tmp_path / "a4" / "task" / "9-bar.md"
-
-    rc1, out1 = _run_pre_edit(
-        hook_module, monkeypatch, tmp_path, new_file, session_id="s-A"
+    rc, out = _run_pre_edit(
+        hook_module, monkeypatch, tmp_path, new_file, session_id="sess-new"
     )
-    rc2, out2 = _run_pre_edit(
-        hook_module, monkeypatch, tmp_path, new_file, session_id="s-B"
-    )
-
-    assert rc1 == 0 and rc2 == 0
-    assert out1.strip() and out2.strip(), (
-        "different sessions should each get their own injection"
-    )
-
-
-def test_archive_path_skipped(
-    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    (tmp_path / "a4" / "archive" / "task").mkdir(parents=True, exist_ok=True)
-    archived = tmp_path / "a4" / "archive" / "task" / "1-old.md"
-
-    rc, out = _run_pre_edit(hook_module, monkeypatch, tmp_path, archived)
 
     assert rc == 0
     assert out == ""
+    prestatus_file = (
+        tmp_path
+        / ".claude"
+        / "tmp"
+        / "a4-edited"
+        / "a4-prestatus-sess-new.json"
+    )
+    assert not prestatus_file.exists()
 
 
-def test_non_a4_path_skipped(
-    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    other = tmp_path / "notes" / "scratch.md"
-    other.parent.mkdir(parents=True, exist_ok=True)
-
-    rc, out = _run_pre_edit(hook_module, monkeypatch, tmp_path, other)
-
-    assert rc == 0
-    assert out == ""
-
-
-def test_existing_file_edit_stashes_prestatus_and_injects(
+def test_existing_file_edit_stashes_prestatus_without_authoring_context(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _make_a4_layout(tmp_path)
@@ -179,11 +105,7 @@ def test_existing_file_edit_stashes_prestatus_and_injects(
     )
 
     assert rc == 0
-    payload = json.loads(out.strip())
-    assert "task-authoring.md" in payload["hookSpecificOutput"][
-        "additionalContext"
-    ]
-
+    assert out == ""
     prestatus_file = (
         tmp_path
         / ".claude"
@@ -196,10 +118,62 @@ def test_existing_file_edit_stashes_prestatus_and_injects(
     assert data[str(existing)] == "in_progress"
 
 
-def test_claude_common_fields_do_not_suppress_injection(
+def test_existing_file_without_status_emits_no_context_and_no_prestatus(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Claude Code also sends cwd/hook_event_name; they are not Codex signals."""
+    (tmp_path / "a4").mkdir(parents=True, exist_ok=True)
+    wiki_file = tmp_path / "a4" / "domain.md"
+    wiki_file.write_text("---\ntype: domain\n---\n\n# Domain\n", encoding="utf-8")
+
+    rc, out = _run_pre_edit(
+        hook_module,
+        monkeypatch,
+        tmp_path,
+        wiki_file,
+        session_id="sess-wiki",
+        tool_name="Edit",
+    )
+
+    assert rc == 0
+    assert out == ""
+    prestatus_file = (
+        tmp_path
+        / ".claude"
+        / "tmp"
+        / "a4-edited"
+        / "a4-prestatus-sess-wiki.json"
+    )
+    assert not prestatus_file.exists()
+
+
+def test_archive_path_emits_no_context(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    (tmp_path / "a4" / "archive" / "task").mkdir(parents=True, exist_ok=True)
+    archived = tmp_path / "a4" / "archive" / "task" / "1-old.md"
+
+    rc, out = _run_pre_edit(hook_module, monkeypatch, tmp_path, archived)
+
+    assert rc == 0
+    assert out == ""
+
+
+def test_non_a4_path_skipped(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    other = tmp_path / "notes" / "scratch.md"
+    other.parent.mkdir(parents=True, exist_ok=True)
+
+    rc, out = _run_pre_edit(hook_module, monkeypatch, tmp_path, other)
+
+    assert rc == 0
+    assert out == ""
+
+
+def test_claude_common_fields_still_emit_no_authoring_context(
+    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Claude Code common payload fields do not re-enable PreEdit guidance."""
     _make_a4_layout(tmp_path)
     existing = tmp_path / "a4" / "task" / "31-common-fields.md"
     existing.write_text(
@@ -228,10 +202,7 @@ def test_claude_common_fields_do_not_suppress_injection(
     )
 
     assert rc == 0
-    payload = json.loads(out.strip())
-    assert "task-authoring.md" in payload["hookSpecificOutput"][
-        "additionalContext"
-    ]
+    assert out == ""
 
 
 def test_claude_file_tool_signal_wins_over_inherited_codex_env(
@@ -257,23 +228,32 @@ def test_claude_file_tool_signal_wins_over_inherited_codex_env(
     )
 
     assert rc == 0
-    payload = json.loads(out.strip())
-    assert "task-authoring.md" in payload["hookSpecificOutput"][
-        "additionalContext"
-    ]
+    assert out == ""
 
 
 def test_claude_relative_file_path_resolves_from_project_dir(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _make_a4_layout(tmp_path)
+    existing = tmp_path / "a4" / "task" / "39-relative.md"
+    existing.write_text(
+        "---\n"
+        "type: task\n"
+        "id: 39\n"
+        "title: Relative\n"
+        "status: queued\n"
+        "---\n\n"
+        "## Description\nx\n",
+        encoding="utf-8",
+    )
+
     rc, out = _run_pre_edit(
         hook_module,
         monkeypatch,
         tmp_path,
         Path("a4/task/39-relative.md"),
         session_id="sess-claude-relative",
-        tool_name="Write",
+        tool_name="Edit",
         extra_payload={
             "cwd": str(tmp_path),
             "hook_event_name": "PreToolUse",
@@ -282,13 +262,19 @@ def test_claude_relative_file_path_resolves_from_project_dir(
     )
 
     assert rc == 0
-    payload = json.loads(out.strip())
-    assert "a4/task/39-relative.md" in payload["hookSpecificOutput"][
-        "additionalContext"
-    ]
+    assert out == ""
+    prestatus_file = (
+        tmp_path
+        / ".claude"
+        / "tmp"
+        / "a4-edited"
+        / "a4-prestatus-sess-claude-relative.json"
+    )
+    data = json.loads(prestatus_file.read_text(encoding="utf-8"))
+    assert data[str(existing)] == "queued"
 
 
-def test_codex_apply_patch_suppresses_pretooluse_context(
+def test_codex_apply_patch_emits_no_authoring_context(
     hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _make_a4_layout(tmp_path)
@@ -319,9 +305,7 @@ def test_codex_apply_patch_suppresses_pretooluse_context(
         "model": "gpt-5.5",
         "turn_id": "turn-1",
     }
-    monkeypatch.setattr(
-        hook_module.sys, "stdin", io.StringIO(json.dumps(payload))
-    )
+    monkeypatch.setattr(hook_module.sys, "stdin", io.StringIO(json.dumps(payload)))
     captured = io.StringIO()
     monkeypatch.setattr(hook_module.sys, "stdout", captured)
 
@@ -329,23 +313,3 @@ def test_codex_apply_patch_suppresses_pretooluse_context(
 
     assert rc == 0
     assert captured.getvalue() == ""
-
-def test_new_file_does_not_create_prestatus_entry(
-    hook_module, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    _make_a4_layout(tmp_path)
-    new_file = tmp_path / "a4" / "bug" / "5-crash.md"
-
-    rc, _ = _run_pre_edit(
-        hook_module, monkeypatch, tmp_path, new_file, session_id="sess-new"
-    )
-
-    assert rc == 0
-    prestatus_file = (
-        tmp_path
-        / ".claude"
-        / "tmp"
-        / "a4-edited"
-        / "a4-prestatus-sess-new.json"
-    )
-    assert not prestatus_file.exists()

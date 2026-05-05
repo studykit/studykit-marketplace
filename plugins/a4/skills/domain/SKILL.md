@@ -29,14 +29,6 @@ Reuse the `a4/` workspace resolved via `git rev-parse --show-toplevel`.
 - `a4/domain.md` — single wiki page covering Glossary, Relationships (PlantUML class diagram), State Transitions (PlantUML state diagrams).
 - `a4/review/<id>-<slug>.md` — per-finding review items emitted by the wrap-up reviewer.
 
-## Id Allocation
-
-When emitting review items:
-
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
-```
-
 ## Modes
 
 - **First Extraction** — `a4/domain.md` does not exist. Run Phase 1 → 2 → 3 in order.

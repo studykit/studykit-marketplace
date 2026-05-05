@@ -1,7 +1,5 @@
 # research Commit Points
 
-All commit subjects follow `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
-
 ## Author mode
 
 Single commit covers the new research task file. Suggest the commit when the user confirms; do not auto-commit.

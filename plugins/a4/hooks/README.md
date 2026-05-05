@@ -5,7 +5,7 @@ independent filesystem operations:
 
 - `cleanup-edited-a4.sh` — SessionEnd: delete this session's
   `a4-edited-<session_id>.txt`, `a4-resolved-ids-<session_id>.txt`,
-  `a4-prestatus-<session_id>.json`, and
+  `a4-prestatus-<session_id>.json`, and legacy
   `a4-injected-<session_id>.txt` record files.
 - `sweep-old-edited-a4.sh` — legacy SessionStart safety-net sweep for orphan
   record files older than 1 day. Active manifests use the Python
@@ -27,8 +27,9 @@ Lifecycle manifests:
   `A4_HOOK_RUNTIME=claude`.
 
 SessionStart runs the Python dispatcher (`session-start` sweeps stale state and
-injects the type → file-location map as additionalContext). SessionEnd fires
-only the bash cleanup above in the Claude Code manifest.
+injects the type → file-location map plus authoring entrypoints as
+additionalContext). SessionEnd fires only the bash cleanup above in the Claude
+Code manifest.
 
 ## Opt-in trace
 

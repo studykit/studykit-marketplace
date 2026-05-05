@@ -15,7 +15,6 @@ Pull unit-test commands from ci.md's ## How to run tests section.
 Implement the task and write its unit tests. All unit tests must pass.
 Commit code + unit tests (one commit per task) using subject form
   #<task-id> <type>(a4): <description>
-per ${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md.
 Return: result (pass/fail), summary of changes, any issues encountered.
 """)
 ```

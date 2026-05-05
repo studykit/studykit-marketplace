@@ -1,7 +1,5 @@
 # auto-coding Commit Points
 
-All commit subjects follow `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
-
 ## Per-task implementation
 
 `coder` commits its own code + unit tests per task as `#<task-id> <type>(a4): <description>` (`feat` / `fix` per task kind). `/a4:auto-coding` does not also commit those files.

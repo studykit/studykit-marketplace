@@ -70,7 +70,7 @@ Non-triggers on their own:
    - Inspect `git status --short` and `git diff --stat` before deciding.
    - Stage only changes that clearly belong to this session; leave unrelated user changes untouched and mention them in the report. Ask only if ownership is unclear.
    - Split commits by coherent meaning: a4 artifact authoring, wiki updates, implementation source, tests, or unrelated cleanup.
-   - Follow the project convention; for a4 files, consult `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
+   - Follow the project commit convention.
    - Skip this step if there are no relevant non-handoff changes. Never include a handoff file in these commits.
 
 3. **Apply the handoff gate.**

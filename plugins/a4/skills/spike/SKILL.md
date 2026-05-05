@@ -16,12 +16,11 @@ Seed: **$ARGUMENTS**
 
 - Project root: !`git rev-parse --show-toplevel 2>/dev/null || echo NOT_A_GIT_REPO`
 - Today: !`date +%Y-%m-%d`
-- Allocated id: !`"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4" 2>/dev/null || echo ALLOC_FAILED`
 
 If the project root resolved to `NOT_A_GIT_REPO` or `a4/` is missing, abort. Ensure `<project-root>/a4/spike/` exists (`mkdir -p` if missing).
 
 ## Author
 
-Use the allocated id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` for frontmatter, body shape, initial-status rules, and the `done` preflight. Write to `a4/spike/<id>-<slug>.md`. `implements:` / `spec:` / `cycle:` are forbidden — cite triggering UCs or specs from `## Description` body prose with markdown links if relevant.
+Allocate the next id immediately before writing; use it as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/spike-authoring.md` for frontmatter, body shape, initial-status rules, and the `done` preflight. Write to `a4/spike/<id>-<slug>.md`. `implements:` / `spec:` / `cycle:` are forbidden — cite triggering UCs or specs from `## Description` body prose with markdown links if relevant.
 
 Ask the user once whether to create the artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`. If yes, `mkdir -p` it after the file is written; a `.gitkeep` is optional. No commit; no implementation agent spawn.

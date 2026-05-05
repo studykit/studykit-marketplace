@@ -37,7 +37,6 @@ class EditTarget:
 
 class HookRuntimeStrategy(Protocol):
     name: HookRuntimeName
-    suppress_pretooluse_context: bool
     aggregate_posttooluse_output: bool
     project_root_env_vars: tuple[str, ...]
     plugin_root_env_vars: tuple[str, ...]
@@ -50,12 +49,10 @@ class ClaudeHookStrategy:
     """Claude Code strategy.
 
     Claude Code file-edit hooks expose one target path at
-    ``tool_input.file_path`` and can consume ``PreToolUse`` additionalContext,
-    so authoring-contract injection remains enabled.
+    ``tool_input.file_path``.
     """
 
     name: HookRuntimeName = "claude"
-    suppress_pretooluse_context = False
     aggregate_posttooluse_output = False
     project_root_env_vars = ("CLAUDE_PROJECT_DIR",)
     plugin_root_env_vars = ("CLAUDE_PLUGIN_ROOT",)
@@ -92,7 +89,6 @@ class CodexHookStrategy:
     """
 
     name: HookRuntimeName = "codex"
-    suppress_pretooluse_context = True
     aggregate_posttooluse_output = True
     project_root_env_vars = ()
     plugin_root_env_vars = ("PLUGIN_ROOT",)
@@ -124,7 +120,6 @@ class UnknownHookStrategy:
     """Fail-open strategy for unsupported or non-edit payloads."""
 
     name: HookRuntimeName = "unknown"
-    suppress_pretooluse_context = False
     aggregate_posttooluse_output = False
     project_root_env_vars = ()
     plugin_root_env_vars = ()

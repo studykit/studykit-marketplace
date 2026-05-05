@@ -50,12 +50,6 @@ boot=$(ls a4/ci.md 2>/dev/null)
 | present | missing | Halt. Tell the user: ci.md absent. Run `/a4:ci-setup` first to establish the test-execution contract; without it, derived tasks have no verification path. |
 | missing | missing | Halt. Tell the user: neither behavioral source nor ci.md is present. Ad-hoc work goes through `/a4:task`. |
 
-## Id Allocation
-
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
-```
-
 ## Modes
 
 - **Derivation mode** — entry gate passes AND there is unmapped behavioral material (UCs/specs without any `implements:` / `spec:` referencing task). Run Steps 1 → 4.

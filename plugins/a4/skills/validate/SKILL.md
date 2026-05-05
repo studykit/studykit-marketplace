@@ -62,7 +62,7 @@ When file arguments are passed, workspace-only checks (none today, but possible 
 
 - For schema and reverse-link issues, do **not** auto-fix. The relevant `/a4:*` iteration skill owns the fix.
 - If many violations cluster under a single file, suggest the iteration skill that owns that file (`/a4:usecase iterate`, `/a4:arch iterate`, `/a4:breakdown iterate`) to drive the fix through normal review-item flow.
-- For id uniqueness violations, recommend using `${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py` when renaming — never hand-pick an id.
+- For id uniqueness violations, recommend assigning a fresh workspace id when renaming — never hand-pick or reuse an id.
 - For status mismatches that look like missed `superseded` flips on a supersedes chain, suggest re-running with `--fix` (or `--fix --dry-run` first) to apply the recovery sweep.
 
 ## Non-Goals

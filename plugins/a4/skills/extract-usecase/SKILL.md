@@ -28,16 +28,6 @@ a4/
 
 Create `a4/`, `a4/usecase/`, `a4/review/`, `a4/research/` if missing.
 
-## Id Allocation
-
-Every new UC / review item uses the shared allocator:
-
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
-```
-
-Subagents (composer, reviser, reviewer, explorer) each call the allocator themselves at write time — do not batch ids in the main session.
-
 ## Shared References for Subagents
 
 Subagents read these directly — don't pull their contents into the main session.

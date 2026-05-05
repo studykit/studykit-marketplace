@@ -2,8 +2,6 @@
 
 Procedure for `/a4:auto-coding` Step 2 parallel execution and the merge sweep that integrates the resulting worktree branches. The default serial mode (no extra argument) is documented separately in `./serial-mode.md`.
 
-Commit message form for the merge commits is governed by `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.
-
 ## When to use
 
 Opt-in via `/a4:auto-coding parallel` or `/a4:auto-coding iterate parallel`.

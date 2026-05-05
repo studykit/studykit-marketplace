@@ -1,6 +1,6 @@
 # extract-usecase Commit Points
 
-All commit subjects follow `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`. Stage files under `a4/`.
+Stage files under `a4/`.
 
 ## Timing
 

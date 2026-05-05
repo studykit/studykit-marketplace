@@ -14,4 +14,3 @@ ci-setup: <fresh | update>
 
 Never skip hooks, amend, or force-push.
 
-Commit-subject conventions for other a4 commits live in `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`.

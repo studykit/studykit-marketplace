@@ -9,16 +9,17 @@ Write/Edit/MultiEdit, so this matters).
 Module map:
 - `_runtime`       — runtime Strategy implementations for Claude Code and
                      Codex payload shapes / output behavior.
-- `_state`         — module-level constants (`PLUGIN_ROOT`, `AUTHORING_DIR`),
-                     shared helpers (`record_dir`, `display_rel`, `emit`,
-                     `read_status_from_disk`, `resolve_type_from_path`,
-                     `unlink_silent`), and all session-state IO
+- `_state`         — module-level constants (`PLUGIN_ROOT`), shared helpers
+                     (`record_dir`, `display_rel`, `emit`,
+                     `read_status_from_disk`, `unlink_silent`), and
+                     session-state IO
                      (prestatus / injected / resolved-ids / edited).
-- `_pre_edit`      — PreToolUse subcommand and authoring-contract injection.
+- `_pre_edit`      — PreToolUse subcommand: pre-edit `status:` snapshot.
 - `_post_edit`     — PostToolUse subcommand: cascade + consistency.
 - `_stop`          — Stop subcommand: validators + decision-block emission.
 - `_user_prompt`   — UserPromptSubmit subcommand: `#<id>` resolution.
-- `_session_start` — SessionStart subcommand: type→location map injection.
+- `_session_start` — SessionStart subcommand: type→location map and
+                     authoring-entrypoint injection.
 
 Backward-compatible aliases (resolved lazily via PEP 562 ``__getattr__``):
 ``a4_hook._pre_edit`` / ``_post_edit`` / ``_stop`` / ``_user_prompt`` /

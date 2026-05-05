@@ -71,7 +71,6 @@ def test_claude_file_tool_strategy_wins_over_inherited_codex_env(
     )
 
     assert strategy.name == "claude"
-    assert not strategy.suppress_pretooluse_context
     assert not strategy.aggregate_posttooluse_output
 
 
@@ -125,7 +124,6 @@ def test_codex_strategy_extracts_apply_patch_targets(tmp_path: Path) -> None:
     targets = strategy.edit_targets(payload, str(tmp_path))
 
     assert strategy.name == "codex"
-    assert strategy.suppress_pretooluse_context
     assert strategy.aggregate_posttooluse_output
     assert [(t.path, t.is_new_file_intent) for t in targets] == [
         (str(tmp_path / "a4" / "task" / "3-new.md"), True),

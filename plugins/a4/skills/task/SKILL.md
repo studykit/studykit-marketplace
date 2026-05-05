@@ -16,10 +16,9 @@ Seed: **$ARGUMENTS**
 
 - Project root: !`git rev-parse --show-toplevel 2>/dev/null || echo NOT_A_GIT_REPO`
 - Today: !`date +%Y-%m-%d`
-- Next id: !`"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4" 2>/dev/null || echo ALLOC_FAILED`
 
 If the project root resolved to `NOT_A_GIT_REPO` or `a4/` is missing, abort. Ensure `<project-root>/a4/task/` exists (`mkdir -p` if missing).
 
 ## Author
 
-Use the next id above as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` for frontmatter, body shape, initial-status rules, and the `done` preflight. Write to `a4/task/<id>-<slug>.md`. No commit; no implementation agent spawn.
+Allocate the next id immediately before writing; use it as `id:` and the filename prefix. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/task-authoring.md` for frontmatter, body shape, initial-status rules, and the `done` preflight. Write to `a4/task/<id>-<slug>.md`. No commit; no implementation agent spawn.

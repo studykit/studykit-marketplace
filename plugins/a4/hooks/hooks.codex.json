@@ -1,5 +1,5 @@
 {
-  "description": "a4/ workspace lifecycle hooks for Codex. This manifest is referenced by `.codex-plugin/plugin.json` and intentionally contains only Codex-supported hook events. Commands set A4_HOOK_RUNTIME=codex and dispatch to `scripts/a4_hook.py` via PLUGIN_ROOT. The Python runtime layer resolves the plugin root from PLUGIN_ROOT and derives the project root from the official Codex hook stdin cwd field, using the git root when available and cwd otherwise. Session-scoped state is kept under `.claude/tmp/a4-edited/` in the active project. Codex apply_patch payloads are parsed from `tool_input.command`; PreToolUse stores pre-edit status state, PostToolUse records edits, runs status-change cascades, and reports status consistency, Stop validates edited a4 files, UserPromptSubmit resolves #id references, and SessionStart sweeps stale a4 hook state and injects the a4 workspace map.",
+  "description": "a4/ workspace lifecycle hooks for Codex. This manifest is referenced by `.codex-plugin/plugin.json` and intentionally contains only Codex-supported hook events. Commands set A4_HOOK_RUNTIME=codex and dispatch to `scripts/a4_hook.py` via PLUGIN_ROOT. The Python runtime layer resolves the plugin root from PLUGIN_ROOT and derives the project root from the official Codex hook stdin cwd field, using the git root when available and cwd otherwise. Session-scoped state is kept under `.claude/tmp/a4-edited/` in the active project. Codex apply_patch payloads are parsed from `tool_input.command`; PreToolUse stores pre-edit status state, PostToolUse records edits, runs status-change cascades, and reports status consistency, Stop validates edited a4 files, UserPromptSubmit resolves #id references, and SessionStart sweeps stale a4 hook state and injects the a4 workspace map plus the authoring entrypoint index.",
   "hooks": {
     "PreToolUse": [
       {
@@ -50,7 +50,7 @@
             "command": "A4_HOOK_RUNTIME=codex uv run \"${PLUGIN_ROOT}/scripts/a4_hook.py\" session-start",
             "timeout": 10,
             "statusMessage": "Loading a4 workspace map",
-            "description": "Sweep stale a4 hook state and inject type-to-file-location map as additionalContext"
+            "description": "Sweep stale a4 hook state and inject type-to-file-location map plus authoring entrypoints and commit convention as additionalContext"
           }
         ]
       }

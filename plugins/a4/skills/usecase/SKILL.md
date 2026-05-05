@@ -32,16 +32,6 @@ a4/
 
 Wiki pages are flat at `a4/` root. Issues each get their own file in the matching folder. Derived views (Use Case Diagram, Authorization Matrix, UC Relationships, Open Items dashboard) are produced on demand by grep over frontmatter — not files.
 
-## Id Allocation
-
-Every new issue file gets the next globally-unique id:
-
-```bash
-"${CLAUDE_PLUGIN_ROOT}/scripts/allocate_id.py" "$(git rev-parse --show-toplevel)/a4"
-```
-
-Run this **immediately before** writing a new UC, review item, etc. Ids are monotonic across the whole workspace; do not reuse or renumber.
-
 ## Body Conventions
 
 Body heading form and link form live in `${CLAUDE_PLUGIN_ROOT}/authoring/body-conventions.md`. The `## Change Logs` audit trail and the Wiki Update Protocol (used when this skill updates wiki pages) live in `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md`.

@@ -16,10 +16,8 @@ operate on normalized edit targets.
 Subcommand surface:
   pre-edit       PreToolUse on Write|Edit|MultiEdit or Codex apply_patch.
                  Stash on-disk
-                 ``status:`` for cascade detection AND inject the
-                 type-specific authoring-contract pointers as
-                 ``additionalContext`` once per type per session when the
-                 runtime supports PreToolUse context injection.
+                 ``status:`` for cascade detection. Authoring entrypoints
+                 are injected by ``session-start`` for all runtimes.
   post-edit      PostToolUse on Write|Edit|MultiEdit or Codex apply_patch.
                  Record edit, run ``status:`` transition cascade if
                  applicable, and report cross-file status-consistency
@@ -33,7 +31,7 @@ Subcommand surface:
                  `a4/<type>/<id>-<slug>.md` paths.
   session-start  SessionStart. Sweep stale session-state records, then inject
                  the type → file-location map + the runnable `allocate_id.py`
-                 command.
+                 command + per-type authoring entrypoints.
 
 SessionStart does not run workspace-wide status-consistency reporting —
 that sweep is manual via `/a4:validate` (or `validate.py`).
