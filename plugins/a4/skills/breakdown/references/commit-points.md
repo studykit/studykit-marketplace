@@ -30,6 +30,6 @@ Commit revised task files + resolved review items as one commit per review round
 
 ## Implement-loop commits
 
-Per-task implementation, per-cycle test results, merge-sweep integration, UC ship-transitions are owned by `/a4:auto-coding`.
+Per-task implementation, per-cycle test results, integration, and UC ship-transitions are outside breakdown's commit scope.
 
 Never skip hooks, amend, or force-push without explicit user instruction.

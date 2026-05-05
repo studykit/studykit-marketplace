@@ -15,7 +15,7 @@ Two stages over the tasks already authored under the four issue family folders (
 
 Reads `a4/ci.md` for test / smoke / isolation commands — ci.md is the single source of truth for test execution. See `${CLAUDE_PLUGIN_ROOT}/authoring/ci-authoring.md` for the page contract.
 
-Authoring is out of scope: `/a4:breakdown` writes the UC/spec-batch tasks; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` write single ad-hoc tasks. This skill assumes both have already produced the task files it consumes.
+Authoring is out of scope. This skill assumes executable task files already exist and only consumes them.
 
 ## Workspace Layout
 
@@ -25,7 +25,7 @@ Resolve `a4/` via `git rev-parse --show-toplevel`.
 
 - `a4/<type>/<id>-<slug>.md` (under `task/`, `bug/`, `spike/`, or `research/`) — required. The set of executable units this run consumes.
 - `a4/ci.md` — required. Single source of truth for test-execution commands.
-- `a4/architecture.md` — passed to agents for contract context.
+- Task-referenced docs — files linked via `implements:`, `spec:`, `related:`, `## References`, and `## Interface Contracts`; the coder resolves and reads them per task.
 - `a4/usecase/*.md` — read for UC ship-review candidates (Step 4b). Absent in UC-less projects; that's fine.
 - `a4/review/*.md` — open review items influence ready-set selection and resume behavior.
 
@@ -66,7 +66,7 @@ grep -lhr '^status: failing' a4/task a4/bug a4/spike a4/research 2>/dev/null
 ls a4/review/*.md | xargs grep -l 'status: open\|target: task/\|target: bug/\|target: spike/\|target: research/'
 ```
 
-If no tasks exist at all: halt and tell the user to run `/a4:breakdown` (UC/spec-driven batch) or one of `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` (single ad-hoc) first.
+If no tasks exist at all: halt and tell the user to create task files first, then rerun this skill.
 
 ## Resume Hygiene
 
@@ -104,22 +104,19 @@ When all tasks are `done` and all tests pass (or when the user ends the session)
 
 Context is passed via file paths, not agent memory.
 
-- **`coder`** — `Agent(subagent_type: "a4:coder")`. Implements one task + its unit tests; commits code + tests. Never reads other tasks' files.
+- **`coder`** — `Agent(subagent_type: "a4:coder")`. Implements one task + its unit tests; commits code + tests. Reads only the assigned task plus files that task references.
 - **`test-runner`** — `Agent(subagent_type: "a4:test-runner")`. Runs integration + smoke tests; emits per-failure review items. Does not classify failures.
-
-`breakdown-reviewer` is **not** invoked from `/a4:auto-coding` directly.
 
 ## Out of Scope
 
-- **Authoring** — task files, specs, UCs are written elsewhere. `/a4:auto-coding` only reads them.
+- **Authoring** — task files, specs, and UCs are written elsewhere. This skill only reads them.
 - **"Best-effort auto-detect" of test commands without `ci.md`.** Auto-detection of commands is intentionally out of scope.
-- **breakdown-reviewer scoped re-runs** — `/a4:auto-coding` Step 4a currently recommends `/a4:breakdown iterate` rather than spawning the reviewer inline.
 - **Per-cycle parallelism beyond independent ready tasks** — coder parallelism is bounded by the dependency graph.
 - **Auto-resolution of merge conflicts** — Step 2.5 conflicts halt for the user.
 
 ## Non-Goals
 
-- Do not rebuild Phase 1. `/a4:breakdown` owns batch task derivation; `/a4:task`, `/a4:bug`, `/a4:spike`, `/a4:research` own single-task authoring.
+- Do not derive or author task files. Consume existing executable tasks only.
 - Do not split coder / test-runner into sub-skills.
 - Do not split post-loop review (Step 4) into a separate skill, and do not delegate failure classification or UC ship to an agent.
 - Do not emit aggregated test reports. All findings are per-review-item files.

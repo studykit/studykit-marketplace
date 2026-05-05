@@ -62,7 +62,7 @@ Per-status meaning:
 
 - `draft` — Spec is still being shaped; not ready for implementation.
 - `ready` — Spec is closed; ready to be picked up. Requires non-empty `actors:`; an empty actor list at `ready` (or later) is a post-draft authoring violation.
-- `implementing` — A coding agent is actively working on the UC.
+- `implementing` — Implementation work is actively underway for the UC.
 - `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`done` tasks stay.
 - `shipped` — The running system reflects this UC. Forward-path terminal. Cascades: `supersedes:` targets flip `shipped → superseded`.
 - `superseded` — A newer UC declared `supersedes: [<this>]` and shipped. Terminal.

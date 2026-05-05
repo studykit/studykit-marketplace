@@ -71,4 +71,4 @@ Single-valued optional fields (e.g., `parent`) follow the same rule: omit the fi
 
 ## Unknown fields
 
-Unknown fields are **not errors** — treated as extension metadata. Skills may carry additional fields (`tags`, `labels`) per the per-type tables.
+Unknown fields are **not errors** — treated as extension metadata. Producers may carry additional fields (`tags`, `labels`) per the per-type tables.

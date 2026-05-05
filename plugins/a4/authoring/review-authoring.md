@@ -6,7 +6,7 @@ A review item at `a4/review/<id>-<slug>.md` is the **unified conduit for finding
 - `gap` — something is missing that ought to exist (a UC that no spec covers, an architectural choice nobody recorded, a wiki page that has not been updated to reflect a confirmed change).
 - `question` — an open question the conversation could not resolve in place.
 
-Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. Emitted by reviewer agents and by single-edit defer paths (`source: self`).
+Review items are **never the user's primary product** — they are the deferred-work mailbox between stages. Emitted by reviewers and by single-edit defer paths (`source: self`).
 
 Companion to `./frontmatter-issue.md`, `./issue-body.md`.
 
@@ -19,7 +19,7 @@ id: <int — globally monotonic across the workspace>
 kind: finding | gap | question
 status: open | in-progress | resolved | discarded
 target: []                # issue paths and/or wiki basenames; empty for cross-cutting
-source: self | <reviewer-agent-name>
+source: self | <producer-name>
 priority: high | medium | low
 labels: []                # free-form
 ---
@@ -32,7 +32,7 @@ labels: []                # free-form
 | `kind` | yes | enum | `finding` \| `gap` \| `question` |
 | `status` | yes | enum | `open` \| `in-progress` \| `resolved` \| `discarded` |
 | `target` | no | list of paths | issue paths (e.g., `usecase/3-search`) and/or wiki basenames (e.g., `architecture`) this review is about. May mix both. Empty list / omitted is allowed for cross-cutting items. |
-| `source` | yes | enum \| string | `self` \| `<reviewer-agent-name>` (e.g., `usecase-reviewer-r2`) |
+| `source` | yes | enum \| string | `self` \| `<producer-name>` (e.g., `usecase-reviewer-r2`) |
 | `priority` | no | enum | `high` \| `medium` \| `low` |
 | `labels` | no | list of strings | free-form |
 
@@ -43,7 +43,7 @@ labels: []                # free-form
   - `gap` body explains what is missing and why it should exist.
   - `question` body states the open question and what would resolve it.
 - `target:` is a **list** mixing issue paths (`usecase/<id>-<slug>`, `task/<id>-<slug>`, `bug/<id>-<slug>`, `spike/<id>-<slug>`, `research/<id>-<slug>`, `spec/<id>-<slug>`) and wiki basenames (`architecture`, `domain`, `context`, `actors`, `nfr`, `ci`). The list names every artifact this review is about; entries that resolve to wiki pages additionally drive the close guard at resolve-time. **Leave `target:` empty (or `[]`) when the concern is cross-cutting** — do not invent a placeholder.
-- `source:` records who emitted the item. Any string accepted, but the conventional set is `self` and reviewer-agent names. Do not invent new values without first documenting them here.
+- `source:` records who emitted the item. Any string accepted, but the conventional set is `self` and documented reviewer / producer names. Do not invent new values without first documenting them here.
 - `priority:` drives ordering in iterate backlog presentation (High → Medium → Low).
 - `labels:` are free-form.
 

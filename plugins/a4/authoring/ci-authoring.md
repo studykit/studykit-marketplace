@@ -10,13 +10,13 @@ Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md
 
 **Required:**
 
-- `## How to run tests` — the per-tier executable contract. The verified literal commands that exited 0 during ci-setup. Each row covers one tier (unit / integration / E2E). May include a `### Multi-tier run` subsection capturing the single command (or short script) that exercises every in-scope tier — the smoke check used by implementation skills.
+- `## How to run tests` — the per-tier executable contract. The verified literal commands that exited 0 during setup. Each row covers one tier (unit / integration / E2E). May include a `### Multi-tier run` subsection capturing the single command (or short script) that exercises every in-scope tier — the smoke check used after implementation.
 - `## Test layout` — where tests live and how they are organized: per-tier path, naming convention, runner config file. Lets the LLM put new tests in the right place without guessing.
 
 **Optional H2:**
 
 - `## Smoke scenario` — a single minimal user-observable interaction the running app produces. Used as the post-implementation smoke check.
-- `## Issues` — links to `./review-authoring.md` review items emitted during the ci-setup run that produced this page, grouped by classification (architecture / environment) and status (open / resolved). Omit when no review items were emitted.
+- `## Issues` — links to `./review-authoring.md` review items emitted during the setup run that produced this page, grouped by classification (architecture / environment) and status (open / resolved). Omit when no review items were emitted.
 - `## Change Logs` — append-only audit trail (dated bullets with backlinks to the causing review item or architecture spec). Format: `./wiki-body.md`.
 
 Free-form additional H2 sections are tolerated.
@@ -35,7 +35,7 @@ Unknown H2 / H3 headings are tolerated.
 
 ## Change Log triggers
 
-Most bullets that land here cite either a `target: architecture` review item that triggered a re-derive, or a test-strategy adjustment (new tier, new runner, isolation change).
+Most bullets that land here cite either a `target: architecture` review item that triggered a test-contract refresh, or a test-strategy adjustment (new tier, new runner, isolation change).
 
 ## Common mistakes (ci-specific)
 

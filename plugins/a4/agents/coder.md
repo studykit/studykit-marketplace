@@ -25,14 +25,21 @@ Subagents do not inherit the PreToolUse contract injection of the parent session
 
 ## What You Receive
 
-From the invoking `run` skill:
+From the invoking implementation workflow:
 
-- **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `task/`, `bug/`, `spike/`, `research/`; the folder must match the file's `type:` frontmatter).
+- **Task file path** — absolute path to `a4/<type>/<id>-<slug>.md` (under one of `task/`, `bug/`, `spike/`, `research`; the folder must match the file's `type:` frontmatter).
 - **ci file path** — absolute path to `a4/ci.md` (single source of truth for test execution).
-- **Architecture file path** — absolute path to `a4/architecture.md` (for component responsibilities and interface contracts).
-- **UC file paths** — absolute paths to each `a4/usecase/<id>-<slug>.md` referenced in the task's `implements:` frontmatter.
+- **a4 workspace path** — absolute path to the `a4/` directory, used to resolve frontmatter references and body backlinks.
 
-Read the task file first, then ci.md's `## How to run tests` section, then the relevant architecture section (inside `## Components`, find the `### <name>` subsection for the component your task touches). Read the implemented UCs for `## Flow`, `## Validation`, `## Error Handling`, `## Expected Outcome`. If the task's `## Description` records a Shared Integration Points pattern (a file modified by 3+ tasks), follow that pattern when touching the shared file. If a `## Change Plan` section is present, treat it as the path-level scope fence (see step 2 below).
+Read the task file first. Then read:
+
+1. `ci.md`'s `## How to run tests` section.
+2. Every UC in the task's `implements:` frontmatter for `## Flow`, `## Validation`, `## Error Handling`, and `## Expected Outcome`.
+3. Every spec in the task's `spec:` frontmatter for the governing specification.
+4. Every a4 path in `related:` that is relevant to implementation.
+5. Every document linked from the task's optional `## References` and `## Interface Contracts` sections. Resolve a4 backlinks relative to the task file and repo-doc links relative to the repository root / task file path as written.
+
+The task file is the implementation contract. `## Change Plan` is the path-level scope fence when present. `## References` and `related:` provide implementation context; they do not expand the task scope or override `implements:` / `spec:` acceptance criteria. If a referenced document conflicts with current code structure, prefer the code for concrete paths and return the conflict as an issue rather than guessing.
 
 ## What You Do
 
@@ -47,7 +54,7 @@ Read the task file first, then ci.md's `## How to run tests` section, then the r
    Do this **before** beginning implementation so the workspace reflects active work.
 
 2. **Honor the task's scope fence.** If the task has a `## Change Plan` section, create / modify only files listed there (or frontmatter `artifacts:`); do not touch files outside that list. If `## Change Plan` is absent, derive the scope from `## Description` + `## Acceptance Criteria` and stay within files those sections imply — when in doubt, prefer fewer touched files and surface the gap as an issue in the return value rather than expanding scope silently.
-3. **Implement** — follow the task's `## Description`, consuming / providing the Interface Contracts noted in `## Interface Contracts`. Use domain terminology from `a4/domain.md`'s `## Concepts` when choosing names.
+3. **Implement** — follow the task's `## Description`, `## References`, and `## Interface Contracts`. Use domain terminology from referenced domain docs when choosing names.
 4. **Write unit tests** — at the test-file paths listed. Cover the scenarios in the task's `## Unit Test Strategy` section, using the declared isolation strategy (mocks / stubs / test containers).
 5. **Verify** — run the unit-test command from `ci.md`'s `## How to run tests` section. All unit tests must pass before returning success.
 6. **Commit** — one commit per task, including code + unit tests + any UC status flips from step 1. Subject form per `${CLAUDE_PLUGIN_ROOT}/authoring/commit-message-convention.md`:
@@ -78,7 +85,7 @@ This exit is parallel to the spec-ambiguity exit — same halt + review-item sha
 ## Rules
 
 - Implement only the assigned task.
-- Do not modify other task files, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking skill decides how to reflect them.
+- Do not modify other task files, `architecture.md`, domain files, or review items beyond what the protocols in "What You Do" permit. State findings in your return value; the invoking workflow decides how to reflect them.
 - **UC files**: edit `status:` directly to flip lifecycle. The hook does **not** write into `## Log`; that body section is optional and hand-maintained. Permitted transitions: `ready → implementing` (step 1), `implementing → revising` (spec-ambiguity exit). All other flips are the wrong path — return failure with a concrete message instead of writing.
 - A UC at `status: draft`, `revising`, `discarded`, `superseded`, or `blocked` is not implementable. Return failure instead of starting; do not write any status onto that UC.
 - Record **factual results only** — do not classify issues as task / arch / usecase. Surface observations neutrally.

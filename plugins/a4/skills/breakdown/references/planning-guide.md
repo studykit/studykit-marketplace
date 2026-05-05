@@ -62,6 +62,23 @@ Merge when a task:
 
 If `ci.md` is absent, the entry gate halts before reaching this step. If `ci.md` is stale (codebase no longer matches verify commands), re-run `/a4:ci-setup` rather than working around it here. The `breakdown-reviewer` flags task AC that disagrees with ci.md's commands as a finding.
 
+## Supporting Reference Selection
+
+Use supporting documents to make each task implementable without rediscovery. Select references after reading the candidate UC/spec and before finalizing `## Change Plan` / tests.
+
+Cite a document when it affects at least one of:
+
+- terminology or domain rules;
+- component responsibility or interface contracts;
+- external API, protocol, schema, or vendor behavior;
+- prior research / spike evidence;
+- repository-specific convention not obvious from the target file;
+- test fixture, test isolation, or smoke-check expectations.
+
+Do not cite documents that only provide broad background. A useful reference has a clear reason attached in `## References`; an implementer should know exactly why to open it.
+
+Use `related:` for a4 references that should be searchable, and `## References` for both a4 backlinks and repo documentation.
+
 ## Dependency Analysis
 
 ### Finding Dependencies
@@ -102,13 +119,13 @@ For each spec assigned to a task: derive scenarios from the `## Specification` b
 
 ## Shared File Integration
 
-When the file mapping shows 3+ tasks modifying the same file, that file is a **shared integration point**. Without explicit coordination, each task's coder agent adds its piece in isolation — message handlers get registered but components never get mounted, routes get defined but never wired to the app.
+When the file mapping shows 3+ tasks modifying the same file, that file is a **shared integration point**. Without explicit coordination, each task implementer adds their piece in isolation — message handlers get registered but components never get mounted, routes get defined but never wired to the app.
 
 After completing all task file mappings, scan for shared integration points:
 
 1. **Identify shared files** — any file appearing in 3+ tasks' `## Change Plan` table.
 2. **Define the integration pattern** — for each shared file, describe how the contributions from different tasks compose into a working whole.
-3. **Inline the integration pattern in each contributing task's `## Description`** so each `coder` agent sees both its piece and the overall pattern.
+3. **Inline the integration pattern in each contributing task's `## Description`** so each implementer sees both their piece and the overall pattern.
 
 Example pattern (inlined inside every contributing task's `## Description`):
 
@@ -119,7 +136,7 @@ This task's contribution: <task-specific piece>.
 Other contributors: task/<id1> (initial setup), task/<id2> (ConversationView), task/<id3> (Sidebar).
 ```
 
-This is included in the prompt for every coder agent that touches the file, so each agent knows both its contribution AND the overall integration pattern.
+This is included in every contributing task, so each implementer knows both their contribution and the overall integration pattern.
 
 ## File Mapping
 

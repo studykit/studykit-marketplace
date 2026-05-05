@@ -24,8 +24,8 @@ discarded → (terminal)
 
 - `open` — Backlog (kanban "todo"). Captured but not yet committed to the work queue. Not picked up by the implement loop; transition `open → queued` to enqueue.
 - `queued` — In the work queue, awaiting an implementer. Default ready-set entry for the implement loop.
-- `progress` — A `coder` agent (or investigator, for `research`) is working (or crashed mid-work — reset to `queued` on session resume).
-- `holding` — Work was started but is **temporarily paused by an explicit human or agent decision** (e.g., blocking dependency surfaced, awaiting an external answer, scope of the in-flight work needs broader thought before resuming). Distinct from `failing` (the iteration ran and did not succeed) and from `queued` (work has not started yet). Not picked up by the implement loop — resume requires a manual `holding → progress` flip.
+- `progress` — Implementation or investigation is actively underway (or crashed mid-work — reset to `queued` on session resume).
+- `holding` — Work was started but is **temporarily paused by an explicit decision** (e.g., blocking dependency surfaced, awaiting an external answer, scope of the in-flight work needs broader thought before resuming). Distinct from `failing` (the iteration ran and did not succeed) and from `queued` (work has not started yet). Resume requires a manual `holding → progress` flip.
 - `done` — Work succeeded against the family's success criterion (unit tests passed, hypothesis validated, investigation finalized). **Not** a forward-path terminal — UC `revising` cascade can return tasks to `queued`.
 - `failing` — Work could not succeed on this iteration. Resumed via `failing → progress` (immediate retry, same cycle for families that carry `cycle:`) or deferred via `failing → queued` (next cycle, `cycle:` bumps where applicable).
 - `discarded` — Abandoned. Terminal. Reached via UC `discarded` cascade or an explicit task-discard.
@@ -34,7 +34,7 @@ discarded → (terminal)
 
 - **Allowed initial statuses on file create:** `open` (default — backlog), `queued` (queue-fill intent), `done` (post-hoc documentation; work already done).
 - `progress`, `holding`, and `failing` are **writer-only** — never used as initial statuses. The writer produces them as a result of transitions on a file already in the workspace.
-- `open → progress` is allowed (e.g., a `coder` spawned outside the batch loop, or the user starts investigating directly). The `queued` step expresses queue intent; skip it when the queue is not the entry path.
+- `open → progress` is allowed (e.g., work starts directly without queueing first). The `queued` step expresses queue intent; skip it when the queue is not the entry path.
 - `open → done` is allowed for post-hoc closure of backlog items finished outside the implement loop. Required body sections and the `done` initial-status preflight still apply.
 - There is **no `queued → open` reverse** — once enqueued, a task cannot be returned to backlog.
 - `holding` is reachable only from `progress` (i.e., work that was actually started, then paused). Reaching `holding` from any other state is illegal — if work has not begun yet, leave the file at `open` / `queued`. Resume via `holding → progress`; abandon via `holding → discarded`. There is no automatic exit; a paused task stays paused until a writer flips it.

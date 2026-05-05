@@ -6,8 +6,6 @@ Skill-specific addendum. Walk open review items targeting this stage as a stage-
 
 Open review items whose `target:` list contains a task path under one of the four issue family folders (`task/`, `bug/`, `spike/`, `research/`).
 
-`target: roadmap` is no longer accepted (the type was retired with the prior `roadmap` skill). Older review items still carrying `target: roadmap` are stale; surface them to the user with a recommendation to retarget at `task/<id>-<slug>` or `architecture` and close.
-
 ## Breakdown-specific work between writer calls
 
 - **Re-emit revised task files** in place of hand-edits when the resolution restructures dependency or scope. Allocate fresh ids only for genuinely new tasks; re-use existing ids when the resolution is a body / frontmatter edit on an existing task.

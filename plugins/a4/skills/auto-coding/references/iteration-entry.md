@@ -6,8 +6,6 @@ Self-contained iterate procedure for `auto-coding`. Walk open review items as a 
 
 Open review items where `target: task/*` / `target: bug/*` / `target: spike/*` / `target: research/*`.
 
-`target: roadmap` is no longer a valid target (the type was retired with the prior `roadmap` skill). Stale items still carrying it should be retargeted at `task/<id>-<slug>` or `architecture` and closed.
-
 ## Run-specific work between writer calls
 
 - **Cycle counter** — task `cycle:` increments at every revise → re-run pass; the writer's `--reason` cites the cycle number.

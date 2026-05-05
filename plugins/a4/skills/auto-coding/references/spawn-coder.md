@@ -6,10 +6,10 @@ For each ready task, spawn one `Agent` call with `subagent_type: "a4:coder"` and
 Agent(subagent_type: "a4:coder", isolation: "worktree", prompt: """
 Task file: <absolute path to a4/<type>/<id>-<slug>.md, where <type> ∈ {task, bug, spike, research}>
 ci file: <absolute path to a4/ci.md>  # single source of truth for test execution
-Architecture file: <absolute path to a4/architecture.md>
-Relevant UC files: <paths referenced by the task's implements:; empty list when implements: is empty>
+a4 path: <absolute path to a4/>
 
-Read the task file for ## Description, ## Change Plan (if present — path-level scope fence), ## Unit Test Strategy, ## Acceptance Criteria.
+Read the task file for ## Description, ## References, ## Interface Contracts, ## Change Plan (if present — path-level scope fence), ## Unit Test Strategy, and ## Acceptance Criteria.
+Resolve and read the task's implements:, spec:, related:, ## References, and ## Interface Contracts links before coding.
 Pull unit-test commands from ci.md's ## How to run tests section.
 
 Implement the task and write its unit tests. All unit tests must pass.

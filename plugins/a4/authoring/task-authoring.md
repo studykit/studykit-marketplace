@@ -35,6 +35,7 @@ labels: []             # free-form tags
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
 | `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this task descends from, **or** an `umbrella/<id>-<slug>` aggregating this task with siblings. Cross-type within the issue family is allowed (e.g., `parent: spike/12-cache-shape`). See "Parent and shared narrative" below. |
+| `related` | no | list of paths | Catchall a4 cross-references useful for implementation context but not acceptance-criteria anchoring, such as `architecture`, `domain`, `research/<id>`, or `spike/<id>`. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/task/<id>-<slug>/`. Empty list is the typical default. Production source paths are not duplicated in frontmatter; git history is authoritative, and the optional body `## Change Plan` serves as a forward-looking scope fence when needed. |
 | `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
@@ -44,6 +45,7 @@ labels: []             # free-form tags
 - `implements:` lists `usecase/<id>-<slug>` paths the task delivers. Declare whenever UC-driven.
 - `spec:` lists `spec/<id>-<slug>` paths backing the task. Declare in UC-less projects (the spec's `## Specification` body + relevant `architecture.md` section becomes the AC source).
 - `implements:` and `spec:` are **optional and orthogonal** — zero, one, or both. See the smell check below for the zero-anchor case.
+- `related:` is for a4 cross-references that are useful during implementation but are not AC anchors. Use `implements:` / `spec:` for AC sources.
 - `artifacts:` is artifact-only — paths must point under `artifacts/task/<id>-<slug>/...`. Typically empty for task work shipping only production source. Production source paths are not duplicated in frontmatter; git history is authoritative. The optional body `## Change Plan` may name them as a forward-looking scope fence. See "Artifacts directory" below.
 - `cycle` starts at `1`; bumped on `failing → queued` next-cycle defers.
 
@@ -100,7 +102,8 @@ Task-specific notes:
 
 **Optional, emit only when there is content for them:**
 
-- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Useful when (a) the task is one of several in a batch and parallel coder agents need a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./umbrella-authoring.md`). Auto-populated by `/a4:breakdown` for batch-derived tasks.
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Useful when (a) the task is one of several related tasks and needs a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./umbrella-authoring.md`).
+- `## References` — supporting documents relevant to implementation. Use backlinks for a4 files (e.g., `` `../architecture.md#sessionservice` `` or `` `../research/12-cache-options.md` ``) and relative paths for repo docs (e.g., `` `../../docs/auth.md` ``), each with a short reason.
 - `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``). For UC-less work, link to the spec or relevant `architecture.md` section.
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `done` / `discarded`). See `./issue-body.md#resume`.
 - `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
