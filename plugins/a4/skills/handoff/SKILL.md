@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "Use only when the user explicitly invokes /a4:handoff. Refresh every touched mid-flight a4 issue-family file's `## Resume` (and `## Log` for narrative events), commit relevant non-handoff work, then create and commit `<repo-root>/.handoff/<n>-...md` only for residual session-level meta that cannot live in touched files, parent logs, or commit messages. If touched files plus git history are enough to resume, skip the handoff file."
+description: "Use only when the user explicitly invokes /a4:handoff. Refresh every touched mid-flight a4 issue-family file's `## Resume` (and `## Log` for narrative events), commit relevant non-handoff work, then create and commit `<repo-root>/.handoff/<n>-...md` only for residual session-level meta that cannot live in touched files, review items, umbrellas, specs/wiki, durable project guidance, or commit messages. If touched files plus git history are enough to resume, skip the handoff file."
 argument-hint: "[additional requirements]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep
@@ -14,7 +14,7 @@ Leave durable continuation context for a fresh session that cannot see this conv
 
 - Refresh in-file resume context first: for every touched mid-flight issue-family file under `a4/<type>/<id>-<slug>.md`, rewrite `## Resume` so the file alone shows current approach, blocker, open questions, and next step. Append to `## Log` only for narrative-worthy events: decision pivots, blocker resolutions, or approach changes. Follow `${CLAUDE_PLUGIN_ROOT}/authoring/issue-body.md`.
 - Wiki pages do not carry `## Resume` / `## Log`; follow `${CLAUDE_PLUGIN_ROOT}/authoring/wiki-body.md` for `## Change Logs`.
-- A handoff file is conditional. Write `<repo-root>/.handoff/<n>-...md` only for meta that cannot be folded into touched files, a common parent, or commit messages.
+- A handoff file is conditional. Write `<repo-root>/.handoff/<n>-...md` only for meta that cannot be folded into touched files, a review item, a common parent / umbrella, a spec or wiki page, durable project guidance, or commit messages.
 - When written, the handoff is a session index plus session-only meta. Link to workspace files, wiki sections, commits, and commands; do not restate per-artifact state, issue/wiki bodies, or large diffs.
 
 ## Handoff file gate
@@ -28,14 +28,14 @@ Try each candidate's natural anchor before treating it as a handoff trigger:
 | Candidate | Fold target first | Residual that can trigger a handoff |
 |-----------|-------------------|--------------------------------------|
 | **a4-anchorless work** — production source, build, tooling, config | Parent issue-family file `## Resume` / `## Log` when cleanly anchored; rationale in commit message | Unanchored change whose rationale still matters beyond the commit body |
-| **Session-level validation** — `/a4:auto-coding`, tests, lint, type-check, smoke checks | One task's `## Resume` Blocked-on slot if failing, or `## Log` if narrative-worthy | Genuinely cross-cutting validation whose result matters beyond a re-run |
-| **Important user dialog** — corrections, constraints, preferences | Single-file pivot/resolution in that file's `## Log`; unresolved constraint in that file's `## Resume` Open-questions slot | Dialog with no single-file anchor |
+| **Session-level validation** — `/a4:auto-coding`, tests, lint, type-check, smoke checks | One issue's `## Resume` Blocked-on slot if failing, or `## Log` if narrative-worthy | Genuinely cross-cutting validation whose result matters beyond a re-run |
+| **Important user dialog** — session-scoped corrections or constraints | Single-file pivot/resolution in that file's `## Log`; unresolved constraint in that file's `## Resume` Open-questions slot; unresolved finding/gap/question in `a4/review/` (`target: []` for cross-cutting); shared sibling narrative in an umbrella; design/product decision in spec/wiki; long-lived user or project preference in durable project guidance (`CLAUDE.md`, or project memory only when explicitly requested / available) | Session-scoped continuation note with no durable artifact home, too provisional to justify a review/spec/umbrella/wiki/guidance update |
 | **Branch / commit state** | Nothing when obvious from `git status` and `git log --oneline origin/main..HEAD` | Non-obvious state: mid-merge, mid-rebase, divergence, or opaque commits |
-| **Cross-cutting decision** | Common parent's `## Log`, with inline citations from affected children per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-issue.md` § `parent` | Decision spanning unrelated parents with no common anchor |
+| **Cross-cutting decision** | Common parent's `## Log`, with inline citations from affected children per `${CLAUDE_PLUGIN_ROOT}/authoring/frontmatter-issue.md` § `parent`; create an umbrella when sibling issue-family files need a shared narrative home; create a review item when the decision exposes a finding/gap/question; create or update spec/wiki when the decision should become durable product/design knowledge | Only session-ordering or handoff-time context that still has no sensible durable anchor after those folds |
 
 ### Stage 2 — residual check
 
-Ask: can the next session reach every mid-flight task's Next Steps slot by opening only the touched workspace files plus `git log --oneline origin/main..HEAD` and commit messages?
+Ask: can the next session reach every mid-flight issue's Next Steps slot by opening only the touched workspace files (including any review / umbrella / spec / wiki anchors) plus `git log --oneline origin/main..HEAD` and commit messages?
 
 - If yes, skip the handoff file and report: pre-handoff commit(s) or `skipped`, updated `## Resume` / `## Log` files, and `no session-level meta — handoff file skipped`.
 - If no, write a handoff file scoped only to the unreachable residual.
@@ -45,7 +45,7 @@ Non-triggers on their own:
 - Routine green validation.
 - General-guideline `CLAUDE.md` edits that are auto-loaded next session.
 - Test-infrastructure or tooling choices that are not future decision forks.
-- Background context rederivable from task docs and git history.
+- Background context rederivable from workspace docs and git history.
 
 ## Context
 
@@ -153,10 +153,10 @@ Section rules:
 - `a4 Workspace Touchpoints`: index only. List each workspace file touched or relied on as `path` → `status:` where applicable → one-line why. Do not restate file contents or current state; the file's own `## Resume` / `## Log` carries that. Drop if no a4 files were touched.
 - `Cross-Cutting Changes and Rationale`: substantive source, scaffolding, tooling, build, or config work that has no single a4 anchor. For anchored work, link via Touchpoints and let the anchor carry rationale.
 - `Related Wiki and External Links`: durable external links such as issues, PRs, design docs, dashboards, or vendor docs, with why each matters and its handoff-time state.
-- `Important Dialog`: high-signal user corrections, constraints, or preferences with no single-file anchor. Fold single-file pivots/resolutions into that file instead.
+- `Important Dialog`: session-scoped user corrections or constraints with no durable home after first trying the affected file, a review item, an umbrella, a spec/wiki page, durable project guidance, and commit messages. Do not use this section for long-lived preferences or unresolved findings/gaps/questions; those belong in durable guidance or `a4/review/`.
 - `Validation`: exact commands and outcomes already run; include important trailing failure output, trim noisy success output.
-- `Known Issues and Risks`: unfinished work, failing checks, edge cases, or user-visible risks not already captured in one workspace file's `## Resume`.
-- `Next Steps`: session-level ordering or non-task continuation steps, naming a4 entry points (`/a4:auto-coding`, `/a4:breakdown`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.). Per-task next steps stay in task `## Resume`.
+- `Known Issues and Risks`: unfinished work, failing checks, edge cases, or user-visible risks not already captured in a review item or one workspace file's `## Resume`.
+- `Next Steps`: session-level ordering or non-issue continuation steps, naming a4 entry points (`/a4:auto-coding`, `/a4:breakdown`, `/a4:bug`, `/a4:spec`, `/a4:validate`, etc.). Per-issue next steps stay in that issue's `## Resume`.
 - `Open Questions`: unresolved product/design/implementation questions not already captured in a review item or workspace `## Resume`.
 - `Useful Commands and Outputs`: only commands, output snippets, `git show` / `git diff` pointers, or expensive-to-rediscover `Glob` / `Grep` patterns that help resume quickly.
 

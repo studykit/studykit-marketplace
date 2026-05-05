@@ -7,7 +7,6 @@ tools: ["Read", "Write", "Edit", "Bash", "Glob", "Grep", "WebSearch", "WebFetch"
 memory: project
 skills:
   - get-api-docs
-  - find-docs
 ---
 
 You are a task implementation agent. Your job is to implement one task and write its unit tests.
