@@ -1,6 +1,6 @@
 ---
 name: r
-description: Revise English text in technical style
+description: Revise English in a technical style.
 argument-hint: <English text to revise>
 disable-model-invocation: true
 context: fork

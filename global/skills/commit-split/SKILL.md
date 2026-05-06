@@ -1,6 +1,6 @@
 ---
 name: commit-split
-description: "This skill should be used when the user explicitly invokes /commit-split. Splits staged git changes into multiple semantically grouped commits with options for issue prefixing and language selection."
+description: "Use on explicit /commit-split. Split staged git changes into semantic commits; supports issue prefixes and language selection."
 argument-hint: "[description] [--issue [ID]] [--lang <en|ko>]"
 version: 0.1.0
 disable-model-invocation: true

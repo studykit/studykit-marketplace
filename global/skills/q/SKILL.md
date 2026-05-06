@@ -1,6 +1,6 @@
 ---
 name: q
-description: Translate Korean text to English
+description: Translate Korean to English.
 argument-hint: <Korean text>
 disable-model-invocation: true
 context: fork

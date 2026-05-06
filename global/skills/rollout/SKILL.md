@@ -1,6 +1,6 @@
 ---
 name: rollout
-description: "This skill should be used when the user explicitly invokes /handoff. It writes a session handoff file so a fresh Claude Code session can resume the current work."
+description: "Use on explicit /handoff. Write a session handoff file for a fresh Claude Code session."
 argument-hint: "[additional requirements]"
 disable-model-invocation: true
 ---

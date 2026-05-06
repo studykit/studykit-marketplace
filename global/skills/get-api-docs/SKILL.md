@@ -1,11 +1,6 @@
 ---
 name: get-api-docs
-description: >
-  Use this skill when you need documentation for a third-party library, SDK, or API
-  before writing code that uses it — for example, "use the OpenAI API", "call the
-  Stripe API", "use the Anthropic SDK", "query Pinecone", or any time the user asks
-  you to write code against an external service and you need current API reference.
-  Fetch the docs with chub before answering, rather than relying on training knowledge.
+description: "Fetch current third-party library, SDK, or API docs with chub before coding against external services."
 model: sonnet
 context: fork  
 ---
