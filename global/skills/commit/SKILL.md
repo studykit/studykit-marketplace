@@ -13,14 +13,15 @@ model: sonnet
 ## Context
 
 - Recent commit style: !`git log --oneline --no-color -5`
-- Staged changes: !`git diff --cached --no-color`
+- Staged file summary: !`git diff --cached --name-status --find-renames`
+- Staged stats: !`git diff --cached --stat --summary`
 - Current branch: !`git branch --show-current`
 
 ## Arguments
 
 Parse `$ARGUMENTS` for:
 
-- **Positional `description`**: Any text not part of a flag. Use as the primary source for the commit message. If absent, infer from the diff.
+- **Positional `description`**: Any text not part of a flag. Use as the primary source for the commit message. If absent, infer from the staged summary and inspect patch content only when needed.
 - **`--issue [ID]`**: With value → use as prefix. Without value → auto-detect from branch name or recent commits (`PROJ-123`, `#123`, `GH-123`). If not found, ask user. If absent → no prefix.
 - **`--lang <en|ko>`**: Write commit message in specified language. If absent, decide based on context.
 
@@ -30,7 +31,11 @@ If nothing is staged, stop: "No staged changes found. Use `git add` to stage fil
 
 Based on the staged changes, create a single git commit. Never stage additional files. Never split into multiple commits — use `/commit-split` for that.
 
-Call multiple tools in a single response. Stage and create the commit using a single message. Do not use any other tools or do anything else. Do not send any other text or messages besides the tool calls.
+Use the staged file summary and stats first. They are enough for filename-only renames and deletions. Do not inspect deleted file contents, and do not read a full patch for pure rename/delete commits.
+
+Only inspect patch content when the summary, stats, and user description are not enough to write a useful commit message. In that case, inspect the smallest relevant non-deleted path set with `git diff --cached --no-color -- <path>`. Avoid unbounded `git diff --cached`.
+
+Call multiple tools in a single response when possible. Create the commit using a single message. Do not stage additional files. Do not send any other text or messages besides the tool calls.
 
 ### Commit message format
 
