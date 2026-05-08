@@ -1,6 +1,6 @@
 ---
 name: arch
-description: "This skill should be used when the user needs to design or iterate on system architecture — technology stack, external dependencies, component design, information flows, interface contracts, and test strategy. Common triggers include: 'architecture', 'design the system', 'component design', 'tech stack', 'how should we build this', 'system design', 'interface contracts', 'test strategy', 'what tools should we use'. Writes the result as a4/architecture.md (wiki page) following the spec-as-wiki+issues layout."
+description: "Design or revise a4 system architecture."
 argument-hint: '<optional: "iterate" to resume; otherwise the skill auto-detects existing a4/architecture.md>'
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Agent, Bash, Glob, Grep, WebSearch, WebFetch, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList

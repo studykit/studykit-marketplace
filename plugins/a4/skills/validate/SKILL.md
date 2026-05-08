@@ -1,6 +1,6 @@
 ---
 name: validate
-description: "This skill should be used when the user explicitly invokes /validate inside a project that uses the a4 plugin's a4/ workflow. Runs the registered markdown_validator checks (frontmatter + cross-file status consistency by default) against the project's a4/ workspace and reports any violations. With --fix, also runs the supersedes-chain recovery sweep for edits that bypassed the PostToolUse cascade hook. Useful before handoff or after manual edits to surface issues the drift detector does not cover."
+description: "Validate a4 workspace frontmatter and status consistency."
 argument-hint: "[file ...] [--only <list>] [--skip <list>] [--fix [--dry-run]] [--json]"
 disable-model-invocation: true
 allowed-tools: Bash, Read

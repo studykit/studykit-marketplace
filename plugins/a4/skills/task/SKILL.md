@@ -1,6 +1,6 @@
 ---
 name: task
-description: "This skill should be used when the user wants to author a task — a unit of regular implementation work (new functionality, extension, refactor). Common triggers: 'add a task', 'create a task', 'I need a task for', 'task for <UC>'. Optional implements: (UC paths) and/or spec: (spec paths); writes a4/task/<id>-<slug>.md. For bug/spike/research use the matching skill (/a4:bug, /a4:spike, /a4:research); to discard a task use /a4:discard."
+description: "Author a regular a4 implementation task."
 argument-hint: "[title or short description]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, TaskCreate, TaskUpdate, TaskList, WebSearch, WebFetch

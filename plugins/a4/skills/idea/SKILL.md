@@ -1,6 +1,6 @@
 ---
 name: idea
-description: "This skill should be used when the user explicitly invokes /a4:idea inside a project that uses the a4 plugin's a4/ workflow. Captures a one-line idea as a new issue file at a4/idea/<id>-<slug>.md, or discards an existing one. The skill allocates the next global id, slugifies the provided text, and writes the frontmatter + body so the user only has to type the idea itself."
+description: "Capture or discard a one-line a4 idea."
 argument-hint: "<one-line idea> | discard <id-or-slug> [reason]"
 disable-model-invocation: true
 allowed-tools: Bash, Write, Read, Edit, Glob

@@ -1,6 +1,6 @@
 ---
 name: auto-scaffold
-description: "This skill should be used when the user needs the LLM to perform project scaffolding — directory structure, dependency installation, build configuration, and a minimal running entry point. Common triggers include: 'scaffold the project', 'set up the project', 'bootstrap the project', 'create the dev environment'. Produces repo files only; does not author any wiki page. Test environment setup is owned by /a4:ci-setup, which can be invoked separately at any time."
+description: "Scaffold project structure and a minimal entry point."
 argument-hint: "(no argument) — scaffold against the current repo state. Idempotent for already-scaffolded projects."
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList

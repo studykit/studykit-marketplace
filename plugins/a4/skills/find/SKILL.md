@@ -1,6 +1,6 @@
 ---
 name: find
-description: "Use when the user wants to search, list, or query a4/ workspace items by frontmatter: open reviews, tasks/bugs/spikes/research, references to a use case, items touching wiki pages, custom fields, or labels/tags. Triggers include 'find', 'search', 'list', 'show me all', 'which tasks', 'which reviews', 'what references', 'what depends on', 'what implements', and 'find by tag'. Translates the request into one scripts/search.py invocation. Frontmatter only; use Grep for body text. For workspace aggregate snapshots, use workspace-assistant."
+description: "Search a4 workspace items by frontmatter."
 argument-hint: <natural-language query, or raw search.py flags>
 disable-model-invocation: true
 context: fork

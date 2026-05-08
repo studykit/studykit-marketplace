@@ -1,6 +1,6 @@
 ---
 name: auto-coding
-description: "This skill should be used when the user wants to drive the agent-based implement + test loop over the tasks already authored in a4/{task,bug,spike,research}/. Common triggers include: 'auto-coding', 'implement the tasks', 'run the implementation loop', 'kick off the agents', 'coder', 'agent loop'. Two stages: an autonomous loop body (pick → implement → test, up to 3 cycles), then a user-driven post-loop review that classifies failures or confirms UC ship. Works with or without UCs — UC ship-review is conditional on per-task implements: being non-empty."
+description: "Run the a4 implementation and test loop."
 argument-hint: "[iterate] [parallel]  # iterate = resume after halt; parallel = worktree-isolated parallel coders; no-arg = fresh serial run"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, TaskCreate, TaskUpdate, TaskList

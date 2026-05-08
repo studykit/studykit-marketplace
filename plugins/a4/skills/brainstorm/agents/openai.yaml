@@ -1,0 +1,6 @@
+interface:
+  display_name: "A4 Brainstorm"
+  short_description: "Facilitate structured brainstorming"
+
+policy:
+  allow_implicit_invocation: false

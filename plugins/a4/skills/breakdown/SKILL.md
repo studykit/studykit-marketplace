@@ -1,6 +1,6 @@
 ---
 name: breakdown
-description: "Use when the user needs to derive implementation-ready task files from existing usecase / spec inputs. Common triggers: 'breakdown', 'derive tasks', 'task batch', 'batch tasks from spec', 'plan the implementation tasks'. Reads relevant supporting docs (a4 wiki pages, research/spikes, repo docs) and cites them in each task so implementers know what to read. Writes a4/task/<id>-<slug>.md only — no wiki page output. Requires (usecase OR spec) AND ci.md; otherwise redirects to /a4:ci-setup, /a4:spec, /a4:usecase, or /a4:task."
+description: "Derive implementation tasks from use cases or specs."
 argument-hint: '<optional: "iterate" to walk task-targeted review items; auto-detects workspace state otherwise>'
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, EnterPlanMode, ExitPlanMode, TaskCreate, TaskUpdate, TaskList

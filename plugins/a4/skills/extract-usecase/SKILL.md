@@ -1,6 +1,6 @@
 ---
 name: extract-usecase
-description: "This skill should be used when the user wants the LLM to extract or batch-shape Use Cases from raw input — an existing codebase, an idea, brainstorm notes, or a file path — without an interactive interview. Triggers: 'extract use cases from code', 'extract use cases', 'auto-generate use cases', 'extract-usecase', 'generate use cases from this idea', 'no interview needed just generate', 'run extract-usecase on'. Writes per-UC files plus context.md / actors.md / nfr.md into <project-root>/a4/. Independent skill — does not assume any other skill ran before or runs after; the user picks the next step."
+description: "Generate use cases from raw inputs without an interview."
 argument-hint: <codebase path, idea, brainstorm text, or file path to extract use cases from>
 disable-model-invocation: true
 allowed-tools: Read, Write, Agent, Glob, Grep, Bash, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList

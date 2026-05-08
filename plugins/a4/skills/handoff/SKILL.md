@@ -1,6 +1,6 @@
 ---
 name: handoff
-description: "Use only when the user explicitly invokes /a4:handoff. Refresh every touched mid-flight a4 issue-family file's `## Resume` (and `## Log` for narrative events), commit relevant non-handoff work, then create and commit `<repo-root>/.handoff/<n>-...md` only for residual session-level meta that cannot live in touched files, review items, umbrellas, specs/wiki, durable project guidance, or commit messages. If touched files plus git history are enough to resume, skip the handoff file."
+description: "Write a resumable a4 session handoff."
 argument-hint: "[additional requirements]"
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep

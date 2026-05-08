@@ -1,6 +1,6 @@
 ---
 name: ci-setup
-description: "This skill should be used when the user needs the LLM to set up or update the CI / test environment — installing test runners (unit + integration), creating runner configuration, writing one minimal passing test per tier, wiring task entry points, and writing a4/ci.md as the test-execution reference. Common triggers include: 'set up testing', 'add integration tests', 'set up CI', 'write ci.md', 'update test environment'. Re-callable any time test infrastructure evolves."
+description: "Set up or update test infrastructure and a4/ci.md."
 argument-hint: "(no argument) — set up or update test environment against the current project state."
 disable-model-invocation: true
 allowed-tools: Read, Write, Edit, Bash, Glob, Grep, Agent, WebSearch, WebFetch, TaskCreate, TaskUpdate, TaskList
