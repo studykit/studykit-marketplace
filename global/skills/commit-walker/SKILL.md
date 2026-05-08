@@ -1,6 +1,6 @@
 ---
 name: commit-walker
-description: "Walk git history and explain project evolution commit by commit. Accepts an optional starting ref."
+description: "Walk git history commit by commit to study project evolution."
 argument-hint: "[start-ref]"
 context: fork
 disable-model-invocation: true

@@ -1,4 +1,4 @@
 # Enable project-local Codex hooks for this repository.
 # Hook definitions live in .codex/hooks.json.
 [features]
-codex_hooks = true
+hooks = true

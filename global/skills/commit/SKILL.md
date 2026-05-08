@@ -1,6 +1,6 @@
 ---
 name: commit
-description: "Use on explicit /commit. Commit staged git changes; supports issue prefixes and language selection."
+description: "Commit staged changes."
 argument-hint: "[description] [--issue [ID]] [--lang <en|ko>]"
 version: 0.1.0
 disable-model-invocation: true

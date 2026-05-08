@@ -1,6 +1,6 @@
 ---
 name: commit-split
-description: "Use on explicit /commit-split. Split staged git changes into semantic commits; supports issue prefixes and language selection."
+description: "Split staged changes into semantic commits."
 argument-hint: "[description] [--issue [ID]] [--lang <en|ko>]"
 version: 0.1.0
 disable-model-invocation: true
