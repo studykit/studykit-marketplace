@@ -1,0 +1,137 @@
+# a4 — usecase authoring
+
+A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. UCs are the user-facing scope unit — upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
+
+Companion to `./frontmatter-issue.md`, `./issue-body.md`.
+
+## Abstraction discipline
+
+Use cases stay at the **user level** — what the actor does, not what the system does internally. A UC saying "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
+
+Detailed enforcement — banned-term list, conversion table, per-field application — lives in `./usecase-abstraction-guard.md`.
+
+## Frontmatter contract (do not deviate)
+
+```yaml
+---
+type: usecase
+id: <int — globally monotonic across the workspace>
+title: "<short, human-readable phrase>"
+status: draft | ready | implementing | revising | shipped | superseded | discarded | blocked
+actors: [<slug>, ...]    # actor slugs as defined in actors.md
+supersedes: []           # list of paths to prior UCs this one replaces
+related: []              # catchall for cross-references
+labels: []               # free-form tags (incl. group slugs like screen-dashboard)
+---
+```
+
+| Field | Required | Type | Values / format |
+|-------|----------|------|-----------------|
+| `type` | yes | literal | `usecase` |
+| `id` | yes | int | monotonic global integer |
+| `title` | yes | string | human-readable |
+| `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `revising` \| `shipped` \| `superseded` \| `discarded` \| `blocked` |
+| `actors` | conditional | list of strings | actor slugs as defined in `actors.md`; **must be non-empty once `status >= ready`** (i.e., `ready` / `implementing` / `shipped` / `superseded`). Optional only at `status: draft`. |
+| `supersedes` | no | list of paths | prior use cases this UC replaces |
+| `related` | no | list of paths | catchall |
+| `labels` | no | list of strings | free-form tags |
+
+
+- `id:` see `./frontmatter-issue.md` § `id`.
+- `actors:` lists slugs defined in `actors.md`'s `## Roster` (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references by slug. Platform-capability UCs typically use `actors: [platform]`.
+- UC-to-UC ordering is **not** in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with backlinks.
+- UC-to-spec ties are **not** in frontmatter. When a spec governs the UC, cite from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via backlink (`` `../spec/<id>-<slug>.md` ``); add to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
+- `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
+- The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `../scripts/search.py`.
+- `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as backlinks in the body, not here.
+
+### Lifecycle and writer ownership
+
+```
+draft        → discarded | ready
+ready        → discarded | draft | implementing
+implementing → blocked | discarded | revising | shipped
+revising     → discarded | ready
+blocked      → discarded | ready
+shipped      → discarded | superseded
+discarded    → (terminal)
+superseded   → (terminal)
+```
+
+Per-status meaning:
+
+- `draft` — Spec is still being shaped; not ready for implementation.
+- `ready` — Spec is closed; ready to be picked up. Requires non-empty `actors:`; an empty actor list at `ready` (or later) is a post-draft authoring violation.
+- `implementing` — Implementation work is actively underway for the UC.
+- `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`done` tasks stay.
+- `shipped` — The running system reflects this UC. Forward-path terminal. Cascades: `supersedes:` targets flip `shipped → superseded`.
+- `superseded` — A newer UC declared `supersedes: [<this>]` and shipped. Terminal.
+- `discarded` — Abandoned. Terminal. Cascades: related tasks → `discarded`, open review items with `target: usecase/<this>` → `discarded`.
+- `blocked` — Implementation-time blocker surfaced; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`.
+
+Writer rules (UC-specific):
+
+- `draft` is the **only** initial status. Everything else is a transition.
+- **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
+- **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed.
+- **`revising` is in-place.** No new UC is created; the same file is edited, and the ready-gate re-approves `revising → ready`.
+- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are done; staging readiness and ship verdicts are author-driven.
+- `shipped → superseded` is **automatic** — fires when a successor UC with `supersedes: [<this>]` reaches `shipped`. Do not flip by hand.
+
+## Body shape
+
+**Required:**
+
+- `## Goal` — what the actor wants to accomplish, framed at the user level (the *why*).
+- `## Situation` — the trigger / current context. When does this UC apply? What's already happened? Concrete, not abstract.
+- `## Flow` — numbered list of user-visible steps. Actor's actions and the system's user-facing responses, **not** internal mechanics.
+- `## Expected Outcome` — what success looks like in user-observable terms (timing, content, state change). One input to AC for any task that `implements:` this UC.
+
+**Optional, emit only when there is content for them:**
+
+- `## Validation` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
+- `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
+- `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer in frontmatter, so this is the only place a UC declares cross-UC prerequisites.
+- `## Resume` — current-state snapshot for the next session. Strongly recommended while mid-flight (`draft` / `revising`); other non-terminal states (`ready` / `implementing` / `blocked`) reflect downstream-stage progress, not UC-authoring work. See `./issue-body.md#resume`.
+- `## Log` — append-only narrative of meaningful events. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
+
+Unknown H2 headings are tolerated.
+
+## In-situ wiki nudge — when a UC change implies a wiki edit
+
+Authoring or revising a UC frequently has side-effects on wiki pages:
+
+- New actor in `actors:` → `actors.md` `## Roster` row.
+- Concept used across 3+ UCs → `domain.md` `## Concepts` glossary entry.
+- Scope broadening (problem framing changes) → `context.md` `## Problem Framing` refinement.
+- New screen group → `context.md` `## Screens` section + UC `labels:`.
+- New non-functional requirement → `nfr.md` `## Requirements` row.
+
+When applying an in-situ wiki edit, follow the Wiki Update Protocol in `./wiki-body.md`.
+
+When deferring, open a review item with `kind: gap`, `source: self`, `target: [<causing UC path>, <affected wiki basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
+
+## Splitting a UC — preserve traceability
+
+When a UC turns out to be too large:
+
+1. Confirm the split with the user.
+2. Allocate new ids for each child UC.
+3. Write each child UC file at `status: draft`.
+4. Either delete the parent UC file, or keep it at `status: blocked` with `related: [<child paths>]` if the split history matters (the supersede chain is reserved for shipped predecessors).
+5. Update any UC that referenced the parent via `related` (or in `## Dependencies` body prose) to point at the appropriate child.
+
+Splits do **not** flow through the supersede mechanism — supersession presumes the predecessor was at one point shipped.
+
+## Common mistakes (UC-specific)
+
+- **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
+- **`actors:` empty at `status >= ready`.** Optional only at `draft`; advancing without filling it is a post-draft authoring violation.
+- **Placeholder in `title:` at `status >= ready`.** See `./frontmatter-issue.md#title-placeholders`.
+
+## Don't (UC-specific)
+
+- **Don't manually flip cascade-driven statuses.** UC `shipped` → predecessor's `superseded`, UC `discarded` → cascading task / review discards, UC `revising` → task `queued`-reset are all the writer's job.
+- **Don't write internal mechanics into the body.** Storage choices, service names, queue strategies, library calls — those live in `architecture.md` or specs. UC body stays at the user level.
+- **Don't author a UC for a routine framework-mandated behavior.** UCs describe user-visible interactions; if the only thing to say is "the framework does X," there is no UC there.
+- **Don't pack multiple goals into one UC.** Split when the actor's goal forks. One UC = one user-level goal.

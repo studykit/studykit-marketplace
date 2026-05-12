@@ -1,0 +1,35 @@
+# a4 — domain wiki authoring
+
+`a4/domain.md` is the **shared vocabulary wiki**. It catalogs the cross-cutting concepts every UC, spec, and architecture component references — entities, value objects, lifecycle states. Downstream of UCs (concepts surface during interview) and upstream of architecture (components depend on the agreed vocabulary).
+
+Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+
+## Body shape
+
+**Required:**
+
+- `## Concepts` — glossary of domain entities, value objects, and significant terms. Each entry includes a name, a one-paragraph definition, and (optionally) examples or invariants. Concepts are the terms UC bodies, spec bodies, and architecture component names must use consistently.
+
+**Optional, emit only when applicable:**
+
+- `## Relationships` — how concepts relate (associations, compositions, aggregates). Skip when concepts are independent and the relationship is obvious.
+- `## State Transitions` — for concepts whose lifecycle has named states, the transition graph (state, allowed next states, trigger). Common for entities tracked by the workspace (a `Session`'s state, a `Document`'s revision).
+- `## Change Logs` — append-only audit trail. Format: `./wiki-body.md`.
+
+Unknown H2 headings are tolerated.
+
+## Drift detection
+
+`domain` ↔ `architecture` term consistency is monitored: if a concept appears in `architecture.md` `## Components` but is missing from `domain.md` `## Concepts`, a `kind: gap` review item is emitted.
+
+## Common mistakes (domain-specific)
+
+- **Required section missing** (`## Concepts`).
+
+## Don't
+
+- **Don't put architecture component definitions here.** Components live in `architecture.md`'s `## Components` section. Concepts are the user-domain vocabulary; components are the runtime shape.
+- **Don't put framework-mandated terms here.** "Controller", "Repository", "DAO" are framework constructs, not domain concepts. They belong in `architecture.md`.
+- **Don't rename a concept silently.** Renames cascade to UCs, specs, architecture, and code. Open a review item to manage the cascade if the rename surface is large.
+- **Don't append `## Change Logs` bullets without a markdown link.** The link is what powers drift detection.
+- **Don't pack relationship or state diagrams inline as long prose.** Use mermaid / ASCII / table form; keep prose to invariants the diagram does not capture.
