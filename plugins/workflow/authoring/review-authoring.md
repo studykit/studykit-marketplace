@@ -160,7 +160,7 @@ Keep the issue body as the current compact summary.
 - Using a page comment instead of a review item for feedback that needs workflow tracking.
 - Marking `resolved` before the target artifact was updated.
 - Duplicating long discussion in the issue body instead of comments.
-- Using local a4 paths or local integer ids as provider-backed identity.
+- Using local projection paths or local integer ids as provider-backed identity.
 
 ## Do not
 

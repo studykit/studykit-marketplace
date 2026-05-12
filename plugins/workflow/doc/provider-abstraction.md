@@ -471,7 +471,7 @@ KnowledgeProvider
 Composite artifacts such as `usecase` and `research` need both:
 
 ```text
-A4CompositeArtifact
+WorkflowCompositeArtifact
   work_item: IssueProvider record
   knowledge_page: KnowledgeProvider record
 ```
@@ -593,6 +593,9 @@ Output:
     "provider": "github"
   },
   "required_authoring_files": [
+    "/absolute/path/to/plugins/workflow/authoring/metadata-contract.md",
+    "/absolute/path/to/plugins/workflow/authoring/body-conventions.md",
+    "/absolute/path/to/plugins/workflow/authoring/issue-body.md",
     "/absolute/path/to/plugins/workflow/authoring/review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-authoring.md"
   ]
@@ -608,6 +611,9 @@ Example:
 ```json
 {
   "read_authoring_files": [
+    "/absolute/path/to/plugins/workflow/authoring/metadata-contract.md",
+    "/absolute/path/to/plugins/workflow/authoring/body-conventions.md",
+    "/absolute/path/to/plugins/workflow/authoring/issue-body.md",
     "/absolute/path/to/plugins/workflow/authoring/review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-authoring.md"
   ]
@@ -622,13 +628,13 @@ required_authoring_files ⊆ read_authoring_files
 
 If any required authoring file has not been read, the write should be denied or delayed with a message that lists the absolute files to read.
 
-This rule applies to both local filesystem writes and remote provider writes through MCP tools.
+This rule applies to local filesystem projection writes and remote provider writes through native wrappers or MCP fallback tools.
 
 ## Skill Invocation Policy
 
-workflow skills are explicit commands, not automatic triggers.
+Workflow skills are explicit commands, not automatic triggers.
 
-When a user explicitly invokes an workflow skill, the skill may run its workflow and should call the authoring resolver internally before writing artifacts.
+When a user explicitly invokes a workflow skill, the skill may run its workflow and should call the authoring resolver internally before writing artifacts.
 
 When a user does not invoke a skill, the assistant should not auto-start a skill. It should still follow the SessionStart authoring policy and use the resolver before creating or editing workflow artifacts.
 
@@ -658,7 +664,7 @@ This separates workflow convenience from authoring enforcement:
 17. Authoring contracts are plugin-bundled Markdown files only for v1.
 18. The authoring resolver must return absolute paths to required authoring files.
 19. A session read ledger should record which required authoring files were actually read before local or remote writes.
-20. workflow skills are explicit commands and should not auto-trigger; authoring enforcement comes from SessionStart policy, resolver use, and write guards.
+20. Workflow skills are explicit commands and should not auto-trigger; authoring enforcement comes from SessionStart policy, resolver use, and write guards.
 21. Provider writes should go through workflow wrapper commands; native transports are primary and MCP is fallback.
 22. Add `workdoc-finder` as a read-only remote provider search agent, separate from `api-researcher`.
 

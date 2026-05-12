@@ -1,87 +1,174 @@
-# a4 — spec authoring
+# Workflow Spec Authoring
 
-A spec at `a4/spec/<id>-<slug>.md` is the **prescriptive implementation contract** for a single artifact — an API shape, schema, protocol, renderer rule, CLI surface, file format, or any other shape downstream code and review items must conform to.
+A workflow spec is a **knowledge-backed prescriptive implementation contract** for a single artifact: an API shape, schema, protocol, renderer rule, CLI surface, file format, integration contract, or other downstream implementation shape.
 
-Spec authoring is self-contained. Related artifacts (`usecase/`, `domain.md`, `architecture.md`) are helpful inputs when they exist — link from `## Context` or `related:` — but not prerequisites; a spec can be written when none of them exist yet.
+Specs are curated knowledge artifacts. They are stored in the configured knowledge backend, not the issue backend.
 
-Companion to `./frontmatter-issue.md`, `./issue-body.md`.
+Companion contracts:
 
-## Frontmatter contract (do not deviate)
+- `./metadata-contract.md`
+- `./knowledge-body.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
 
-```yaml
----
-type: spec
-id: <int — globally monotonic across the workspace>
-title: "<short, human-readable phrase>"
-status: <draft | active | deprecated | superseded>
-supersedes: []        # list of paths, e.g. [spec/8-caching-strategy]
-related: []           # catchall for cross-references — e.g. supporting research tasks
-labels: []            # free-form tags (alias: tags)
----
-```
+## Storage role
 
-| Field | Required | Type | Values / format |
-|-------|----------|------|-----------------|
-| `type` | yes | literal | `spec` |
-| `id` | yes | int | monotonic global integer |
-| `title` | yes | string | spec title |
-| `status` | yes | enum | `draft` \| `active` \| `deprecated` \| `superseded` |
-| `supersedes` | no | list of paths | prior specs replaced |
-| `related` | no | list of paths | catchall (use this slot for soft cross-references including any informing research task) |
-| `labels` | no | list of strings | free-form tags |
-| `tags` | no | list of strings | free-form (alias of `labels`; either is accepted) |
+`spec` is stored in the knowledge backend.
 
+Supported knowledge providers:
 
-- `id:` see `./frontmatter-issue.md` § `id`.
-- `supersedes:` lists prior specs this one replaces. The writer cascades `{active|deprecated} → superseded` on the listed targets during the new spec's `→ active` transition. Targets at `draft` are reported as `not-supersedable` and left alone.
-- `related:` is the soft-link slot — use for cross-references between issue-family artifacts, including any `type: research` task that informed this spec (e.g., `related: [research/42-grpc-streaming]`). No stored-reverse contract; reverse lookups are derived on demand via grep / `../scripts/search.py`.
+- Confluence
+- GitHub Wiki
 
-### Lifecycle and writer ownership
+Issue-backed work may create, review, or apply a spec, but the spec itself is a knowledge page.
 
-```
-draft      → active | deprecated
-active     → deprecated | superseded
+## Required metadata
+
+Represent this metadata using provider-native fields when available. If a provider cannot store a field structurally, include the value in the page body.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `spec`. Use page property, label, metadata block, or index metadata depending on provider. |
+| `title` | yes | Short human-readable spec title. |
+| `status` | yes | `draft`, `active`, `deprecated`, or `superseded`, mapped to provider metadata when possible. |
+| `supersedes` | optional | Prior spec or specs this page replaces. Must also appear in `## Supersedes` when present. |
+| `related` | optional | Work items, research, use cases, architecture, or domain pages related to the spec. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local integer ids. Use page identity from the knowledge provider.
+
+## Lifecycle
+
+Recommended semantic lifecycle:
+
+```text
+draft → active | deprecated
+active → deprecated | superseded
 deprecated → superseded
-superseded → (terminal)
+superseded → terminal
 ```
 
-- Edit `status:` directly. The transition runs any cross-file cascade.
-- `draft → superseded` is **disallowed** — supersession presumes the predecessor was at one point live.
-- `active → superseded` is **automatic** — fires when a successor spec with `supersedes: [<this>]` reaches `active`. Do not flip by hand.
-- `deprecated` is opt-in retirement, valid even before a successor exists. There is **no reverse path** from `deprecated → active`; author a new spec (with `supersedes:` pointing back) to revive the shape.
+Status meaning:
+
+- `draft` — The spec is being shaped and is not yet an implementation contract.
+- `active` — The spec is the current contract downstream work should follow.
+- `deprecated` — The spec is retired or discouraged but has no active replacement yet.
+- `superseded` — A newer spec replaces this one.
+
+Provider mappings may vary:
+
+- Confluence: page property or label such as `workflow:status/active`.
+- GitHub Wiki: page metadata block, frontmatter, or index metadata.
+
+Do not assume a local cascade will update superseded specs. Provider wrappers or validation may assist, but the author must ensure the supersession relationship is visible and correct.
+
+## Supersession
+
+`supersedes` is an explicit authoring decision.
+
+When a new spec replaces an older spec:
+
+1. Add the older spec under `## Supersedes`.
+2. Store structured metadata when the provider supports it.
+3. Update the older spec status to `superseded` when the replacement becomes `active`.
+4. Add `## Change Log` entries to affected pages as needed.
+
+Do not edit an old spec body merely to describe the new contract. The new spec carries the new contract; the old spec records its superseded status and points to the replacement when possible.
 
 ## Body shape
 
-**Required:**
+Required:
 
-- `## Context` — why this spec exists; what artifact it describes; the scope it covers.
-- `## Specification` — the prescriptive content. Grammar, fields, format rules, examples. The heart of the spec.
+```markdown
+## Context
 
-**Optional content sections, emit only when there is content:**
+<why this spec exists, what artifact it covers, and what is out of scope>
 
-- `## Open Questions` — unresolved aspects the spec deliberately defers. Better than forcing premature closure.
-- `## Consequences` — downstream effects (positive, negative, or neutral) the spec creates for code, tooling, or operations.
-- `## Examples` — concrete cases that pin down the prescriptive rules.
-- `## Resume` — current-state snapshot. Strongly recommended while at `draft` (the only mid-flight state — `active` is a stable contract, not in-flight). See `./issue-body.md#resume`.
-- `## Log` — append-only narrative of meaningful events. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
+## Specification
 
-**Optional appendum sections (record-keeping; emit only when there is content):**
+<prescriptive contract>
+```
 
-- `## Decision Log` — append-only, dated bullets recording what was chosen and why. Earlier entries never edited or removed; corrections are added as new entries explaining why prior reasoning no longer holds. Inline backlinks (e.g., `` `../research/42-grpc-streaming.md` ``) cite informing research tasks.
-- `## Rejected Alternatives` — the options considered and why they lost. Inline citations to research tasks land here too when the rejection rationale leans on the investigation.
+`## Specification` is the heart of the spec. It should contain rules, fields, grammar, examples, API shape, protocols, constraints, or other details downstream work must follow.
 
-Unknown H2 headings are tolerated (`## Benchmarks`, `## Migration Notes`, etc.). A `## Migration Plan` section is **not** used — migration work belongs in a task file under one of the issue family folders.
+Optional sections:
+
+- `## Supersedes` — required when the spec replaces prior specs.
+- `## Related Work` — tasks, reviews, use cases, research, or epics related to this spec.
+- `## Open Questions` — unresolved aspects the spec deliberately defers.
+- `## Consequences` — downstream effects for code, tooling, operations, or users.
+- `## Examples` — concrete cases that pin down the rules.
+- `## Decision Log` — concise rationale entries for decisions embedded in the spec.
+- `## Rejected Alternatives` — options considered and why they lost.
+- `## Change Log` — semantic cause index for material edits. See `./knowledge-body.md`.
+- `## Sources` — external sources or research reports used as evidence.
+
+Unknown Title Case H2 headings are tolerated when they clarify the contract.
+
+## Decision rationale
+
+Use `## Decision Log` for durable rationale.
+
+```markdown
+## Decision Log
+
+- 2026-05-13 — Chose opaque session tokens over JWTs because revocation latency is a hard requirement. Related: PROJ-123.
+```
+
+Earlier entries are append-only. If a decision changes, append a new entry explaining the correction.
+
+Do not introduce a separate decisions artifact for routine spec-local rationale.
+
+## Related work and research
+
+Specs may be informed by research, use cases, tasks, reviews, and architecture/domain pages.
+
+Use provider-native refs in body text:
+
+```markdown
+## Related Work
+
+- PROJ-123
+- #456
+- [OAuth Provider Evaluation](https://example.atlassian.net/wiki/spaces/ENG/pages/123456789/OAuth+Provider+Evaluation)
+```
+
+Research should provide evidence. The spec makes the decision.
+
+## Change log
+
+Every material update should add a concise `## Change Log` entry linking to the causing workflow artifact.
+
+```markdown
+## Change Log
+
+- 2026-05-13 — PROJ-123 — Activated initial auth session contract.
+```
+
+Do not duplicate issue discussion or review threads in the spec.
+
+## Activation rule
+
+A spec should not become `active` until:
+
+- `## Context` is present and clear.
+- `## Specification` is present and prescriptive.
+- Open questions that block implementation are resolved or explicitly deferred.
+- Supersession links are visible when replacing another spec.
+- Related work and sources needed to understand the decision are linked.
 
 ## Common mistakes
 
-- **`## Context` or `## Specification` missing.** Both required; the `→ active` flip is invalid until they are present and non-empty.
-- **Placeholder in `title:` at `status >= active`.** See `./frontmatter-issue.md#title-placeholders`.
+- Missing `## Context` or `## Specification`.
+- Treating the spec as a discussion thread instead of a curated contract.
+- Packing several unrelated contracts into one spec.
+- Hiding implementation decisions in task issues instead of updating or creating a spec.
+- Marking a spec `active` while blocking open questions remain unresolved.
+- Using local projection paths or local integer ids as provider-backed identity.
 
-## Don't
+## Do not
 
-- **Don't auto-populate `supersedes:`.** It is an explicit user decision in the authoring conversation.
-- **Don't edit a prior spec's body to mark it superseded.** Supersession is captured in the *new* spec's frontmatter `supersedes:`; the prior spec's status flips automatically when the successor reaches `active`.
-- **Don't pack multiple distinct artifacts into one spec.** One artifact per spec — one OpenAPI document, one schema, one protocol. Multiple artifacts → multiple specs, each with its own id and supersede chain.
-- **Don't let the spec body absorb other concerns.** `## Specification` is the prescriptive shape only. User flows, domain glossaries, and runtime component layouts have their own homes (`usecase/`, `domain.md`, `architecture.md`).
-- **Don't author a spec for routine choices.** Variable names, folder layout, formatting belong in style guides or simply in the code.
-- **Don't introduce a separate `decisions/` slot.** Decision rationale lives in `## Decision Log`.
+- Do not store specs as issue-backed tasks.
+- Do not author specs for routine implementation details such as variable names or formatting choices.
+- Do not make research conclusions directly prescriptive; cite research and record the spec decision separately.
+- Do not use local Markdown frontmatter as the only source of metadata in provider-backed mode.
+- Do not auto-trigger a skill just because a spec is being written; follow the authoring resolver policy.

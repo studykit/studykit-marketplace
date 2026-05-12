@@ -1,111 +1,191 @@
-# a4 — spike authoring
+# Workflow Spike Authoring
 
-A spike at `a4/spike/<id>-<slug>.md` is a **time-boxed exploration to unblock a decision** (XP sense). PoC, investigation, benchmark — throwaway code. Accompanying code lives in the spike's artifact directory at `<project-root>/artifacts/spike/<id>-<slug>/`, **outside** the `a4/` workspace. For pure written investigation without throwaway code, use `type: research`.
+A workflow spike is an **issue-backed, time-boxed exploration to unblock a decision**. It may involve throwaway code, a proof of concept, benchmark, integration probe, or focused technical experiment.
 
-The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders sharing the same lifecycle, each with its own authoring contract. Cross-family conventions for artifact directories: `./artifacts.md`.
+Use `research` for written investigation without throwaway code. Use `task` when the implementation path is known and production work can begin.
 
-Companion to `./frontmatter-issue.md`, `./issue-body.md`.
+Spikes are stored in the configured issue backend. They are not local Markdown files in provider-backed mode.
 
-## Frontmatter contract (do not deviate)
+Companion contracts:
 
-```yaml
----
-type: spike
-id: <int — globally monotonic across the workspace>
-title: "<short, human-readable phrase>"
-status: open | queued | progress | holding | done | failing | discarded
-depends_on: []         # list of paths to other tasks
-parent:                # optional: an issue (task / bug / spike / research) this spike descends from
-related: []            # catchall for cross-references
-artifacts: []          # paths under artifacts/spike/<id>-<slug>/ — never project source tree
-labels: []             # free-form tags
----
+- `./metadata-contract.md`
+- `./issue-body.md`
+- Provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+
+## Storage role
+
+`spike` is stored in the issue backend.
+
+Supported issue providers:
+
+- GitHub Issues
+- Jira
+
+Provider identity replaces local integer ids. Use GitHub issue numbers or Jira keys.
+
+## Required metadata
+
+Represent this metadata using provider-native fields when available. If a provider cannot store a field structurally, include the value in the issue body.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `spike`. Use issue type, label, or field depending on provider. |
+| `title` | yes | Short description of the question or experiment. |
+| `status` | yes | Provider-backed lifecycle status. |
+| `depends_on` | optional | Work items that must finish first. |
+| `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. |
+| `related` | optional | Specs, use cases, research, reviews, pages, or issues relevant to the experiment. |
+| `artifact_links` | recommended when PoC exists | Links to branch, gist, repository path, build output, benchmark result, or other throwaway artifact. |
+| `labels` | optional | Provider labels/tags. |
+
+Do not use implementation-only fields such as `implements` or implementation cycle counters for spikes.
+
+## Lifecycle
+
+Recommended semantic lifecycle:
+
+```text
+open → queued → progress → done
+open → discarded
+queued → progress | holding | discarded
+progress → holding | failing | done | discarded
+holding → queued | progress | discarded
+failing → queued | discarded
+done → terminal
+discarded → terminal
 ```
 
-| Field | Required | Type | Values / format |
-|-------|----------|------|-----------------|
-| `type` | yes | literal | `spike` |
-| `id` | yes | int | monotonic global integer |
-| `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `done` \| `failing` \| `discarded` |
-| `depends_on` | no | list of paths | other tasks this one needs first |
-| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `epic/<id>-<slug>` coordinating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See "Parent and shared narrative" below. |
-| `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at production source — production paths the spike may touch are recorded by git history, and the optional body `## Change Plan` may name them as a forward-looking scope fence. |
-| `labels` | no | list of strings | free-form tags |
+Status meaning:
 
+- `open` — Captured but not yet scoped.
+- `queued` — Hypothesis and validation method are clear enough to run.
+- `progress` — Experiment is active.
+- `holding` — Paused for access, input, or sequencing.
+- `failing` — Experiment failed, framing is wrong, or the validation method is blocked.
+- `done` — The spike answered the question or clearly invalidated the hypothesis.
+- `discarded` — No longer needed.
 
-`implements` / `spec` / `cycle` are not part of the spike schema — declaring them is an error.
+Provider mappings may vary:
 
-- `id:` see `./frontmatter-issue.md` § `id`.
-- `implements:` is **forbidden** on spike — spikes are exploratory, never UC deliverables. If a spike's outcome validates a UC, author a follow-up `type: task` with `implements: [usecase/<id>-<slug>]` and link the spike from its `## Description`.
-- `spec:` is **forbidden** on spike. Cite the triggering spec from the spike's `## Description` body via backlink.
-- `cycle:` is **forbidden** on spike; the spike either succeeds, fails (re-attempt without bumping), or is discarded — there is no multi-cycle implement loop for exploratory work.
-- `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/...` (or `artifacts/spike/archive/<id>-<slug>/...` after archive). **Never** point at production source.
+- GitHub: Issue Field status when available.
+- Jira: configured Jira workflow statuses.
 
-### Parent and shared narrative
+## Spike vs task vs research
 
-`parent:` is optional. Two cases:
+Use `spike` when:
 
-- **Derivation parent** — set when this spike was spawned from another issue: typically a `task` whose work hit a question that needed exploration. Cross-type within the issue family allowed.
-- **Coordination parent (epic)** — set to `epic/<id>-<slug>` when this spike is one of several children grouped under an epic. See `./epic-authoring.md`.
+- A concrete experiment is needed.
+- Throwaway code or a proof of concept may be created.
+- A decision is blocked by technical uncertainty.
+- The output is evidence that enables a later task or spec.
 
-The parent file is the agreed home for **narrative shared across siblings**. Record in the parent's `## Log`. When a child entry depends on a parent decision, inline-cite per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`.
+Use `task` when:
 
-### Lifecycle and writer ownership
+- The implementation approach is known.
+- Work should go directly into production code.
+- Acceptance criteria are already clear.
 
-Lifecycle, status enum, writer rules, and `done` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
+Use `research` when:
 
-Spike-specific notes:
-
-- `done` means the hypothesis was validated.
-- No `cycle:` field — `failing` re-attempts do not bump a counter.
-- `artifacts:` paths must live under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/` after archive); the preflight existence check uses these paths.
-- Required body sections for the `done` preflight: `## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`. (`## Change Plan` is optional.)
+- The output is written evidence, source review, or comparison.
+- No throwaway code or runnable experiment is needed.
 
 ## Body shape
 
-**Required:**
+Required:
 
-- `## Description` — the question being explored and why a spike (vs. a regular task). State the hypothesis and the decision the spike's outcome will inform.
-- `## Unit Test Strategy` — may be a one-line "validate hypothesis via <method>" (benchmark, integration probe, sample-driven check). Section still required.
-- `## Acceptance Criteria` — checklist. AC source: **hypothesis + expected result, the spike's own body** — what observable outcome proves or refutes the question. Section must exist regardless.
+```markdown
+## Description
 
-**Optional, emit only when there is content for them:**
+<question being explored, why a spike is needed, and what decision it will inform>
 
-- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing artifact paths under `artifacts/spike/<id>-<slug>/` the spike plans to create, plus any production source paths the spike may probe or temporarily touch (for reader context). (Frontmatter `artifacts:` is artifact-only.)
-- `## Interface Contracts` — contracts the spike consumes or proposes, with backlinks to `architecture.md` sections.
-- `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal. See `./issue-body.md#resume`.
-- `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
-- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
+## Hypothesis
 
-Unknown H2 headings are tolerated.
+<what the spike is trying to prove, disprove, or measure>
 
-## Artifacts directory
+## Validation Method
 
-For every spike task, accompanying PoC code lives at `<project-root>/artifacts/spike/<id>-<slug>/`, parallel to (not inside) `a4/`:
+<experiment, benchmark, integration probe, prototype, or sample-driven check>
 
-```
-<project-root>/
-  a4/spike/<id>-<slug>.md             # task markdown — type: spike
-  artifacts/spike/<id>-<slug>/        # PoC code, data, scratch notes
-    *.py *.json ...
+## Acceptance Criteria
+
+- <observable outcome that answers the question>
 ```
 
-Spike-specific notes:
+Optional sections:
 
-- The directory is the spike's primary deliverable while exploration is underway. Most active spikes have one.
-- When the spike is done (or fails), `git mv` it to `artifacts/spike/archive/<id>-<slug>/` and update `artifacts:` paths to match. The move is **never automated**.
+- `## Artifact Links` — branch, gist, repository path, benchmark output, screenshots, or other throwaway evidence.
+- `## Change Plan` — planned experiment files, temporary branches, scripts, or environments.
+- `## Related` or `## References` — supporting specs, architecture pages, research, tasks, or reviews.
+- `## Follow-Up` — task, spec, review, or research item that should exist after the spike.
+- `## Resume` — current-state snapshot while mid-flight. See `./issue-body.md`.
+- `## Log` — use sparingly; prefer provider comments for discussion and routine logs. See `./issue-body.md`.
+- `## Why Discarded` — reason when discarded. See `./issue-body.md`.
 
-Cross-family conventions live in `./artifacts.md` and apply to `type: spike` as written there.
+Unknown Title Case H2 headings are tolerated.
 
-## Common mistakes (spike-specific)
+## Artifact handling
 
-- **Required section missing** (`## Description`, `## Unit Test Strategy`, `## Acceptance Criteria`).
-- **Wrong `type:` value or wrong folder.** A file under `a4/spike/` must declare `type: spike`. Mismatched declarations are a folder-routing error.
-- **`artifacts:` paths under the project source tree, not under `artifacts/spike/<id>-<slug>/`** — breaks the throwaway contract; production source paths the spike may temporarily touch are recorded by git history (and may be named in the optional body `## Change Plan`).
+Provider-backed spikes should link to artifacts instead of assuming a local artifact directory.
 
-## Don't (spike-specific)
+Acceptable artifact links include:
 
-- **Don't put `implements:`, `cycle:`, or `spec:` on a spike.** All three are forbidden. If the outcome warrants UC delivery, author a follow-up `type: task`.
-- **Don't auto-delete or auto-archive `artifacts/spike/<id>-<slug>/`** on discard. Archiving is a user-driven `git mv`.
-- **Don't write production source from a spike.** `artifacts:` paths staying under `artifacts/spike/<id>-<slug>/` is the contract that keeps PoC code throwaway. If the outcome warrants production work, follow up with a `task`.
+- A throwaway branch.
+- A gist or scratch repository.
+- A local projection path when explicitly configured.
+- Benchmark output.
+- Screenshots or traces.
+- Prototype code under a clearly marked scratch location.
+
+PoC code should remain throwaway. If the outcome should become production code, create a follow-up `task` rather than turning the spike into the task.
+
+## Done rule
+
+A spike should not be marked `done` until:
+
+- The hypothesis is answered or invalidated.
+- Evidence is linked or summarized.
+- The decision impact is clear.
+- Follow-up work is captured as a task, spec, research item, or review when needed.
+- Any curated knowledge page that should record the outcome has been updated.
+
+`done` does not mean production code shipped. It means the exploration produced an answer.
+
+## Follow-up work
+
+Common follow-ups:
+
+- `task` — implement the chosen approach.
+- `spec` — record a contract or decision discovered by the spike.
+- `research` — perform deeper written investigation.
+- `review` — capture a gap, question, or finding surfaced by the spike.
+
+Link follow-ups visibly in `## Follow-Up` or provider comments.
+
+## Comments and discussion
+
+Use provider comments for:
+
+- Experiment notes.
+- Intermediate command output.
+- Failed attempts.
+- Links discovered midstream.
+- Discussion of what the evidence means.
+
+Keep the spike body as the current compact experiment contract.
+
+## Common mistakes
+
+- Using `spike` for production implementation work.
+- Missing `## Hypothesis` or `## Validation Method`.
+- Marking `done` without evidence.
+- Letting throwaway PoC code become production code without a follow-up task.
+- Using spike when a written `research` item would be enough.
+- Using local projection paths or local integer ids as provider-backed identity.
+
+## Do not
+
+- Do not use `implements` or implementation cycle fields on spikes.
+- Do not mark a spike `done` just because time expired; record `failing`, `holding`, or `discarded` if the question was not answered.
+- Do not use closing keywords or Smart Commit commands unless the workflow intentionally wants provider side effects.
+- Do not auto-trigger a skill just because a spike is being written; follow the authoring resolver policy.

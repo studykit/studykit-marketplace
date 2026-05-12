@@ -1,141 +1,280 @@
-# a4 — research authoring
+# Workflow Research Authoring
 
-A research item at `a4/research/<id>-<slug>.md` is a **time-boxed investigation** of a technical topic or comparison of alternatives. The body itself is the deliverable — sources consulted, findings, options. No production code; downstream specs or tasks may cite via `related:` or markdown body links.
+A workflow research item is a **time-boxed investigation** of a question, technical topic, product question, or comparison of alternatives.
 
-The four issue families (`task`, `bug`, `spike`, `research`) are sibling top-level folders sharing the same lifecycle, each with its own authoring contract. Cross-family conventions for artifact directories: `./artifacts.md`.
+Research is a dual artifact:
 
-Companion to `./frontmatter-issue.md`, `./issue-body.md`.
+1. An issue-backed workflow artifact for scope, questions, discussion, status, and review.
+2. A knowledge-backed curated report for final findings, evidence, options, and recommendation-neutral conclusions.
 
-## When a research task is warranted
+The issue artifact is always created first. The curated report is created or updated when there is stable research output worth publishing.
 
-A research task is the right slot when:
+Companion contracts:
 
-- The next step is **evidence-gathering**, not coding — the user needs to understand a topic before committing to a shape.
-- The output should be **citable** by a later spec, task, or design conversation.
-- The investigation has a **bounded scope** — a question, a topic, or a fixed set of options to compare.
+- `./metadata-contract.md`
+- `./issue-body.md`
+- `./knowledge-body.md`
+- Issue provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
 
-If the user is already converging on a shape and only needs to capture rationale, that is a `spec` (with optional `## Decision Log` entries). If the work is exploratory PoC code rather than written investigation, that is a `type: spike` task with an `artifacts/spike/<id>-<slug>/` directory.
+## When research is warranted
 
-## Frontmatter contract (do not deviate)
+Use research when the next step is evidence-gathering, not implementation.
 
-```yaml
----
-type: research
-id: <int — globally monotonic across the workspace>
-title: "<short, human-readable phrase>"
-status: open | queued | progress | holding | done | failing | discarded
-mode: comparative | single
-options: [name-a, name-b, name-c]   # only when mode: comparative
-depends_on: []                       # other tasks this one needs first
-parent:                              # optional: an issue (task / bug / spike / research) this research descends from
-related: []                          # catchall — typically the spec(s) or task(s) this research informs
-artifacts: []                        # typically empty; if used, paths under artifacts/research/<id>-<slug>/
-labels: []                           # free-form tags
----
+Good research inputs:
+
+- Compare alternatives.
+- Understand a provider, API, SDK, or integration.
+- Gather evidence before committing to a spec.
+- Investigate feasibility, cost, risk, or constraints.
+- Produce citable findings for later specs, tasks, or decisions.
+
+Use `spike` instead when the output is exploratory code or a runnable proof of concept.
+
+Use `spec` instead when the decision is already known and the task is to write the prescriptive contract.
+
+## Storage role
+
+`research` has two roles.
+
+| Role | Provider | Purpose |
+| --- | --- | --- |
+| Workflow issue | GitHub Issues or Jira | Scope, questions, discussion, status, review, and follow-up tracking. |
+| Curated knowledge report | Confluence or GitHub Wiki | Final findings, sources, comparisons, and reusable evidence. |
+
+The workflow issue may exist without a curated report while the investigation is in progress. The curated report should link back to the workflow issue when published.
+
+## Workflow issue metadata
+
+Represent this metadata using provider-native fields when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | `research`, or provider issue type/label/field equivalent. |
+| `title` | yes | Short investigation title. |
+| `status` | yes | Provider-backed lifecycle status. |
+| `mode` | yes | `comparative` or `single`. |
+| `options` | required for comparative | Alternatives being compared. |
+| `knowledge_page` | optional until published | Link to curated report after publication. |
+| `depends_on` | optional | Work items that must finish first. |
+| `parent` | optional | Epic or parent issue coordinating this research. |
+| `related` | optional | Specs, tasks, use cases, reviews, or pages this research informs. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local integer ids. Use GitHub issue numbers or Jira keys for the workflow issue.
+
+Do not use implementation-only fields such as `implements` or `cycle` for research.
+
+## Curated report metadata
+
+Represent this metadata using provider-native page properties, labels, metadata block, or index metadata when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | `research`. |
+| `title` | yes | Same or clearer title than the workflow issue. |
+| `source_issue` | yes | Link back to the workflow issue that owns discussion and status. |
+| `mode` | yes | `comparative` or `single`. |
+| `options` | required for comparative | Alternatives covered by the report. |
+| `related` | optional | Specs, tasks, use cases, reviews, architecture, or domain pages. |
+| `labels` | optional | Provider labels/tags. |
+
+## Lifecycle
+
+Recommended workflow issue lifecycle:
+
+```text
+open → queued → progress → done
+open → discarded
+queued → progress | holding | discarded
+progress → holding | failing | done | discarded
+holding → queued | progress | discarded
+failing → queued | discarded
+done → terminal
+discarded → terminal
 ```
 
-| Field | Required | Type | Values / format |
-|-------|----------|------|-----------------|
-| `type` | yes | literal | `research` |
-| `id` | yes | int | monotonic global integer |
-| `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `done` \| `failing` \| `discarded` |
-| `mode` | yes | enum | `comparative` \| `single` |
-| `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
-| `depends_on` | no | list of paths | other tasks this one needs first |
-| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this research descends from, **or** an `epic/<id>-<slug>` coordinating this research with siblings. Cross-type within the issue family is allowed. See "Parent and shared narrative" below. |
-| `related` | no | list of paths | soft links — typically the spec(s) or task(s) this research informs |
-| `artifacts` | no | list of strings | artifact paths under `artifacts/research/<id>-<slug>/` (typically empty — research output lives in the body) |
-| `labels` | no | list of strings | free-form tags |
+Status meaning:
 
+- `open` — Captured but not yet ready to run.
+- `queued` — Scoped and ready for investigation.
+- `progress` — Investigation is active.
+- `holding` — Paused for input, access, or sequencing.
+- `failing` — Investigation is blocked by inaccessible sources, bad framing, or contradictory evidence.
+- `done` — Curated report is published or the issue clearly records why no report is needed.
+- `discarded` — No longer needed.
 
-`implements` / `spec` / `cycle` are not part of the research schema — declaring them is an error.
+Provider mappings may vary:
 
-- `id:` see `./frontmatter-issue.md` § `id`.
-- `mode:` is required. `comparative` for option-comparison investigations; `single` for a flat topic / question.
-- `options:` is required when `mode: comparative` — list option names that the body's `## Options` section will cover, one subsection per option. Forbidden when `mode: single`.
-- `implements:` is **forbidden** on research. If scoped to a specific UC's open question, link the UC from `## Context` body prose.
-- `spec:` is **forbidden** on research. Cite the triggering spec via backlink inside `## Context` body prose.
-- `cycle:` is **forbidden** on research; investigation work has no implement-loop cycle.
-- `artifacts:` is typically empty; research output lives entirely in the task body. Populate only when the investigation produced ancillary artifacts (raw data, evaluation scripts, charts) — paths must point under `artifacts/research/<id>-<slug>/...`.
+- GitHub: Issue Field status when available.
+- Jira: configured Jira workflow statuses.
 
-### Parent and shared narrative
+## Workflow issue body
 
-`parent:` is optional. Two cases:
+The workflow issue body should define the investigation scope and current state.
 
-- **Derivation parent** — set when this research was scoped from another issue: typically a `task` author who needed an investigation to settle an open question. Cross-type within the issue family allowed.
-- **Coordination parent (epic)** — set to `epic/<id>-<slug>` when grouped under an epic. See `./epic-authoring.md`.
+Recommended sections:
 
-The parent file is the agreed home for **narrative shared across siblings**. Record in the parent's `## Log`. When a child entry depends on a parent decision, inline-cite per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`.
+```markdown
+## Description
 
-### Lifecycle and writer ownership
+<why this research is needed and how the result will be used>
 
-Lifecycle, status enum, writer rules, and `done` initial-status preflight are shared across the four issue families — see `./issue-family-lifecycle.md`.
+## Research Question
 
-Research-specific notes:
+<single question or comparison objective>
 
-- `done` means the investigation is finalized: sources cited, findings written. Downstream callers may now cite this task.
-- `failing` typically signals scope mis-framing or inaccessible sources; deferred via `failing → queued` for re-framing.
-- No `cycle:` field.
-- No `artifacts:` existence check in the `done` preflight — research output lives in the body.
-- Required body sections for the `done` preflight: `## Context`, plus `## Options` (when `mode: comparative`) or `## Findings` (when `mode: single`).
+## Mode
 
-## Body shape
+comparative | single
 
-**Required:**
+## Options
 
-- `## Context` — why the research is needed. The specific question or comparison purpose. 1–3 sentences.
+- <option A>
+- <option B>
 
-**Required by mode (one of these, never both):**
+## Related
 
-- `## Options` — for `mode: comparative`. One H3 subsection per option name listed in `options:` frontmatter. Each subsection contains:
-  - **Sources consulted** — bullet list of URLs, document paths, or explicit search queries.
-  - **Key findings** — paragraph(s) with inline citations to the sources.
-  - **Raw excerpts** — concrete evidence (quotes, benchmark numbers, API signatures), preferably wrapped in `<details><summary>Raw excerpts</summary>...</details>`.
-- `## Findings` — for `mode: single`. Same structure (Sources consulted / Key findings / Raw excerpts) but flat — no per-option split.
-
-**Optional:**
-
-- `## Resume` — current-state snapshot. Strongly recommended while non-terminal. See `./issue-body.md#resume`.
-- `## Log` — append-only narrative. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
-- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
-
-Unknown H2 headings are tolerated.
-
-## Artifacts directory
-
-A research task may have a sibling artifact directory at `<project-root>/artifacts/research/<id>-<slug>/` for ancillary artifacts that don't belong in the body — comparison raw data, charts, evaluation scripts, downloaded sources too large or binary to embed:
-
-```
-<project-root>/
-  a4/research/<id>-<slug>.md             # task markdown — type: research
-  artifacts/research/<id>-<slug>/        # raw data, scripts, charts (opt-in)
-    *.csv *.png *.py ...
+- <provider-native ref or URL>
 ```
 
-Research-specific notes:
+Optional sections:
 
-- The directory is **opt-in**. Most research tasks need none — the body is the deliverable. Add only when raw evidence cited from the body needs to live alongside.
-- When `artifacts:` is non-empty, every entry must point under `artifacts/research/<id>-<slug>/...`.
-- No archive convention — closed research tasks archive their markdown to `a4/archive/` independently; the artifact directory stays in place.
+- `## Scope` — in-scope and out-of-scope boundaries.
+- `## Sources To Check` — initial source list or search plan.
+- `## Resume` — current-state snapshot while in progress. See `./issue-body.md`.
+- `## Log` — use sparingly; prefer provider comments for discussion. See `./issue-body.md`.
 
-Cross-family conventions live in `./artifacts.md` and apply to `type: research` as written there.
+Use provider comments for ongoing notes, links discovered midstream, and review discussion. Promote stable findings into the curated report.
 
-## Reviewing a research task
+## Curated report body
 
-A structured quality pass walks the task body before it flips to `done`. The review checks source quality, option balance (in comparative mode), claim grounding, bias, completeness, and decision neutrality. Output is advisory; the user accepts, modifies, or dismisses each finding.
+The curated report is the citable research deliverable.
 
-## Citing a research task from a spec or task
+Required:
 
-Citations are **soft** — there is no stored-reverse contract. Two paths:
+```markdown
+## Context
 
-- **From a spec body.** Add a backlink inside an appropriate spec section (e.g., `## Decision Log` or `## Rejected Alternatives`): `` `../research/<id>-<slug>.md` ``. Optionally add the path to the spec's `related:` for frontmatter-level discoverability.
-- **From a task body.** Same — link inside `## Description` or `## Interface Contracts` and optionally add to `related:`.
+<why the research was needed and what question it answers>
+```
 
-Reverse lookups (which specs cite a research task) are derived on demand via grep / `../scripts/search.py`.
+Required by mode:
 
-## Don't (research-specific)
+### Comparative mode
 
-- **Don't put `implements:`, `cycle:`, or `spec:` on a research task.** All three are forbidden. Cite triggering specs via backlinks in `## Context` body prose; record the implementing UC the same way.
-- **Don't make the decision in the research body.** Research describes evidence; the decision belongs in a spec's `## Decision Log` (or in conversation that converges on a spec). Sentences like "Therefore X is the right choice" violate decision neutrality and should be removed.
-- **Don't write a research task as a placeholder for a spec.** If the user has already converged on a shape, capture it as a spec; if the user wants to capture rationale, use the spec's `## Decision Log`.
+```markdown
+## Options
+
+### <Option A>
+
+**Sources Consulted**
+
+- <source>
+
+**Key Findings**
+
+<findings with citations>
+
+### <Option B>
+
+...
+```
+
+### Single mode
+
+```markdown
+## Findings
+
+**Sources Consulted**
+
+- <source>
+
+**Key Findings**
+
+<findings with citations>
+```
+
+Optional sections:
+
+- `## Summary` — concise result overview.
+- `## Criteria` — comparison criteria and why they matter.
+- `## Raw Evidence` — compact excerpts, benchmark numbers, API signatures, or tables.
+- `## Limitations` — known uncertainty, missing access, or confidence boundaries.
+- `## Related Work` — specs, tasks, use cases, or reviews that cite or depend on the research.
+- `## Change Log` — required for material updates. See `./knowledge-body.md`.
+- `## Sources` — bibliography-style source list when not already covered in each option/finding.
+
+## Decision neutrality
+
+Research describes evidence. Specs make decisions.
+
+Avoid prescriptive language such as:
+
+- "Therefore we should choose X."
+- "The implementation must use Y."
+- "X is the correct architecture."
+
+Prefer evidence-oriented language:
+
+- "X has lower operational overhead under these constraints."
+- "Y lacks feature Z in the documented API."
+- "The evidence supports X if revocation latency is the primary criterion."
+
+If a decision is reached, record it in a spec `## Decision Log` or another appropriate knowledge artifact, and cite the research.
+
+## Publishing rule
+
+Publish or update the curated report when:
+
+- The research question is clear.
+- Sources consulted are listed.
+- Findings are grounded in sources.
+- Comparative reports cover each option with similar depth or explain why not.
+- Limitations or confidence boundaries are visible.
+- The report can be cited by a spec, task, or review without relying on hidden discussion.
+
+The first publication should add a `## Change Log` entry linking to the workflow issue.
+
+## Review before done
+
+Before marking research `done`, perform or request a quality review for:
+
+- Source quality.
+- Claim grounding.
+- Option balance in comparative mode.
+- Missing criteria.
+- Bias or premature decision-making.
+- Clear limitations.
+
+Review findings should become `review` items if they need workflow tracking.
+
+## Citing research
+
+Specs and tasks should cite the curated report, not a long issue comment thread.
+
+Use provider-native refs or links:
+
+```markdown
+## Related Work
+
+- [OAuth Provider Evaluation](https://example.atlassian.net/wiki/spaces/ENG/pages/123456789/OAuth+Provider+Evaluation)
+```
+
+The workflow issue remains useful for audit and discussion, but the curated report is the stable citation target.
+
+## Common mistakes
+
+- Publishing raw notes as the curated report.
+- Making a decision in research instead of in a spec.
+- Comparing options with uneven evidence without explaining why.
+- Marking research `done` before a citable report exists or before the issue explains why no report is needed.
+- Hiding source links in comments instead of the curated report.
+- Using local projection paths or local integer ids as provider-backed identity.
+
+## Do not
+
+- Do not use `implements` or implementation cycle fields on research.
+- Do not store the final research deliverable only in an issue body when a knowledge backend is configured.
+- Do not create the curated report before the workflow issue unless importing existing documents.
+- Do not auto-trigger a skill just because research is being written; follow the authoring resolver policy.

@@ -1,45 +1,136 @@
-# a4 — actors wiki authoring
+# Workflow Actors Authoring
 
-`a4/actors.md` is the **actor roster wiki**. It defines every person or system actor that UCs reference via `actors: [<slug>]`. The roster is the single source of truth for actor slugs — UC frontmatter is validated against it.
+An actors page is a **knowledge-backed actor roster**. It defines people, organizations, systems, and external services that use cases reference.
 
-Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Actors are curated knowledge. They are stored in the configured knowledge backend, not the issue backend.
+
+Companion contracts:
+
+- `./metadata-contract.md`
+- `./knowledge-body.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+
+## Storage role
+
+`actors` is stored in the knowledge backend.
+
+Supported knowledge providers:
+
+- Confluence
+- GitHub Wiki
+
+Issue-backed work may cause actor updates, but the actors page itself is a knowledge page.
+
+## Purpose
+
+Use actors for the canonical roster of roles that participate in use cases.
+
+Actors may be:
+
+- People.
+- Teams.
+- Organizations.
+- External systems.
+- Platform/system actors.
+
+Actor names or slugs should be reused consistently in use cases, specs, tasks, and reviews.
+
+## Required metadata
+
+Represent this metadata using provider-native fields when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `actors`. Use page property, label, metadata block, or index metadata depending on provider. |
+| `title` | yes | Usually `Actors` or project-specific equivalent. |
+| `related` | optional | Use cases, context, specs, reviews, or tasks related to actor changes. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local file path identity. Use page identity from the knowledge provider.
 
 ## Body shape
 
-**Required:**
+Required:
 
-- `## Roster` — the actor table. One row per actor:
-  - **Slug** — kebab-case identifier (e.g., `meeting-organizer`, `team-member`, `platform`). Referenced from UC frontmatter `actors: [<slug>]`.
-  - **Type** — `person` or `system`.
-  - **Role / privileges** — what this actor is allowed to do; the privilege level relative to other actors.
-  - **Description** — short prose paragraph explaining who this actor is.
+```markdown
+## Roster
 
-**Optional:**
+| Slug | Type | Role / Privileges | Description |
+| --- | --- | --- | --- |
+| meeting-organizer | person | Creates and shares meeting summaries | Person responsible for meeting follow-up. |
+| platform | system | Performs automated background actions | The product system itself. |
+```
 
-- `## Change Logs` — append-only audit trail of why this page was edited (dated bullets with backlinks to the causing UC, review item, or spec). Format: `./wiki-body.md`.
+Recommended columns:
 
-Unknown H2 headings are tolerated.
+- **Slug** — stable kebab-case or provider-approved identifier.
+- **Type** — `person`, `team`, `organization`, `system`, or configured equivalent.
+- **Role / Privileges** — what this actor is allowed to do.
+- **Description** — short explanation of who or what the actor is.
 
-### Slug discipline
+Optional:
 
-Actor slugs are referenced from UC frontmatter `actors:` lists. Renaming a slug breaks every UC that references it. **Always treat a rename as a structural change** and open a review item explaining the cascade — even when the rename feels obvious.
+- `## Authorization Notes` — cross-cutting authorization notes that affect several use cases.
+- `## Related Work` — use cases, reviews, specs, or tasks related to actor changes.
+- `## Change Log` — required for material updates. See `./knowledge-body.md`.
 
-A new actor's slug should:
+Unknown Title Case H2 headings are tolerated when they clarify actors or authorization context.
+
+## Slug discipline
+
+Actor slugs are referenced by use cases and sometimes by tasks, specs, or reviews.
+
+A slug should:
 
 - Match the user-facing role, not an implementation detail.
-- Not collide with an existing slug. Uniqueness is not currently enforced automatically; visual review at edit time is the gate.
+- Be stable.
+- Be unique within the roster.
+- Be concise and readable.
 
-## Drift detection
+Do not rename a slug silently. If a rename is needed:
 
-Drift detection cross-checks UC `actors:` lists against the roster — a UC referencing an unknown slug emits a `kind: finding` review item.
+1. Update the actors page.
+2. Add a `## Change Log` entry with the causing workflow artifact.
+3. Update affected use cases, tasks, specs, and reviews, or create review items for deferred updates.
 
-## Common mistakes (actors-specific)
+## Authorization guidance
 
-- **Required section missing** (`## Roster`).
+Keep the roster concise.
 
-## Don't
+- Actor privilege summaries belong in `## Roster`.
+- Per-use-case authorization behavior belongs in curated use case pages.
+- Technical enforcement details belong in `architecture` or `spec`.
+- Product/problem framing belongs in `context`.
 
-- **Don't rename a slug without a review item** when the cascade touches more than one or two UCs.
-- **Don't put authorization rules here as prose.** The roster carries privilege levels; per-UC authorization is encoded in UC `## Flow` / `## Validation` (and in `architecture.md` for technical enforcement details).
-- **Don't pack actor backstories.** The description column is one paragraph. Longer narratives belong in `context.md`'s `## Problem Framing`.
-- **Don't append `## Change Logs` bullets without a backlink path.**
+## Drift and feedback
+
+If a use case references an actor not present in the roster, create a `review` item with `kind: finding` targeting the use case and actors page.
+
+If a new actor appears during use case discovery, update the roster or create a `review` item with `kind: gap` if the update is deferred.
+
+## Change log
+
+Every material actors change should include a `## Change Log` entry linking to the causing workflow artifact.
+
+```markdown
+## Change Log
+
+- 2026-05-13 — PROJ-123 — Added billing-admin actor.
+```
+
+Do not duplicate issue discussion in the page.
+
+## Common mistakes
+
+- Missing `## Roster`.
+- Renaming a slug without updating downstream use cases.
+- Using implementation details as actor names.
+- Putting long actor backstories here instead of context.
+- Putting detailed authorization flows here instead of use cases/specs.
+- Using local projection paths or local file identity as provider-backed identity.
+
+## Do not
+
+- Do not store actors as an issue.
+- Do not use page comments as a substitute for review items when actor feedback needs workflow tracking.
+- Do not auto-trigger a skill just because actors are being written; follow the authoring resolver policy.

@@ -1,130 +1,212 @@
-# a4 — epic authoring
+# Workflow Epic Authoring
 
-An epic at `a4/epic/<id>-<slug>.md` is a **multi-issue coordination parent** for a larger goal delivered by multiple child issues (`task` / `bug` / `spike` / `research`).
+A workflow epic is an **issue-backed coordination parent** for a larger goal delivered by multiple child work items.
 
-An epic may represent a user-facing feature, platform capability, subsystem implementation effort, migration, stabilization campaign, or cross-cutting quality initiative. It is *not* an implementation unit: an epic has no `## Change Plan`, no `## Unit Test Strategy`, no per-cycle implement loop. The work is done by its children.
+An epic may represent a user-facing feature, platform capability, subsystem implementation effort, migration, stabilization campaign, or cross-cutting quality initiative. It is not an implementation unit. The work is done by its children.
 
-The epic coordinates the child set by recording membership, optional integration-level acceptance criteria, current coordination state, and the shared narrative that spans multiple children. **Epic coordinates work; it does not define the product, architecture, or implementation contract.** User-facing behavior belongs in `usecase/`, implementation contracts in `spec/`, component shape in `architecture.md`, vocabulary in `domain.md`, and non-functional requirements in `nfr.md`.
+Epics are stored in the configured issue backend.
 
-Companion to `./frontmatter-issue.md`, `./issue-body.md`. Shared narrative semantics (entry format, inline cross-references): `./issue-body.md#log`. The `parent:` discovery contract: `./frontmatter-issue.md` § `parent` and shared narrative.
+Companion contracts:
+
+- `./metadata-contract.md`
+- `./issue-body.md`
+- Provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+
+## Storage role
+
+`epic` is stored in the issue backend.
+
+Supported issue providers:
+
+- GitHub Issues
+- Jira
+
+Provider identity replaces local integer ids. Use GitHub issue numbers or Jira keys.
 
 ## When to create an epic
 
-Create one when at least one of the following holds:
+Create an epic when one or more of these holds:
 
-- **Pre-decomposition** — A larger piece of work is going to be split into ≥ 2 children before any child is written. Author the epic first; subsequent children carry `parent: epic/<id>-<slug>` from creation.
-- **Retroactive coordination** — ≥ 2 sibling issues already exist and a cross-cutting decision has come up that affects more than one of them. At the moment that decision needs a recorded home, create the epic, set each affected child's `parent:` to it, and record the decision in the epic's `## Log`.
-- **Repeated cross-cutting decisions** — When the cross-cutting narrative is no longer a one-off (≥ 2 distinct decisions affect the same sibling group), prefer an epic over duplicating notes in each child's `## Log`.
+- A larger goal will be split into multiple child work items.
+- Several existing issues need a shared coordination home.
+- Cross-cutting decisions affect more than one child.
+- Integration-level acceptance criteria span several children.
+- A feature, migration, or stabilization campaign needs progress visibility.
 
-Do **not** create an epic when:
+Do not create an epic when:
 
-- A single child is enough — no coordination parent. The child's own `## Log` is sufficient.
-- Sibling children exist but are genuinely unrelated. No shared narrative to home.
-- Two siblings + one cross-cutting decision. Borderline — recording the decision inline once in each child (with cross-reference per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`) is acceptable; promote to an epic when a second decision arrives.
+- One child issue is enough.
+- Issues are unrelated and have no shared narrative.
+- A spec or architecture page is the real home for the decision.
+- The work is only a single implementation task.
 
-Derivation parents (a follow-up `task` whose `parent:` is the originating `spike`, a `bug` spawned from a `task`) are a different mechanism — those use another issue-family file as parent and do not need an epic. Epic exists for *coordination*, not *derivation*.
+## Required metadata
 
-## Frontmatter contract (do not deviate)
+Represent this metadata using provider-native fields when available. If a provider cannot store a field structurally, include the value in the issue body.
 
-```yaml
----
-type: epic
-id: <int — globally monotonic across the workspace>
-title: "<short, human-readable phrase>"
-status: open | done | discarded
-related: []            # catchall for cross-references
-labels: []             # free-form tags
----
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `epic`. Use issue type, hierarchy type, label, or field depending on provider. |
+| `title` | yes | Short summary of the coordinated goal. |
+| `status` | yes | Provider-backed lifecycle status. |
+| `children` | recommended | Child issues. Use provider parent/sub-issue/hierarchy links when available and always include `## Children`. |
+| `related` | optional | Related specs, use cases, research, reviews, pages, or issues. |
+| `labels` | optional | Provider labels/tags. |
+
+Do not use implementation-only fields such as `implements`, `spec`, `depends_on`, artifact links, or implementation cycle counters on an epic. Children carry implementation anchors and dependencies.
+
+## Lifecycle
+
+Recommended semantic lifecycle:
+
+```text
+open → done | discarded
+done → open | discarded
+discarded → terminal
 ```
 
-| Field | Required | Type | Values / format |
-|-------|----------|------|-----------------|
-| `type` | yes | literal | `epic` |
-| `id` | yes | int | monotonic global integer |
-| `title` | yes | string | human-readable |
-| `status` | yes | enum | `open` \| `done` \| `discarded` |
-| `related` | no | list of paths | catchall cross-references |
-| `labels` | no | list of strings | free-form tags |
+Status meaning:
 
+- `open` — Active coordination home for one or more child items.
+- `done` — The coordinated outcome is complete or no longer active.
+- `discarded` — The grouping is no longer valid or useful.
 
-`implements` / `spec` / `depends_on` / `artifacts` / `cycle` / `parent` are **forbidden** on epic — declaring any is an error:
+Provider mappings may vary:
 
-- `implements` / `spec` — children carry these forward anchors; the epic does not deliver UCs or follow specs directly. If children all implement the same UC, that's already visible from each child's `implements:`.
-- `depends_on` — sequencing belongs to children.
-- `artifacts` — epics hold no artifact directory. Per-child artifacts use `artifacts/<type>/<child-id>-<child-slug>/`.
-- `cycle` — epics have no implement loop. Children carry their own cycles.
-- `parent` — nested epics are not supported in this revision. Each epic is a top-level coordination parent.
+- GitHub: Issue Field status when available. GitHub sub-issues may represent children.
+- Jira: Epic/hierarchy status or configured workflow statuses.
 
-- `title` required and must not be a placeholder; `<title>`-shaped strings are invalid.
-- `type: epic` is fixed for files under `a4/epic/`.
-- `id:` see `./frontmatter-issue.md` § `id`.
+`done` is author-judged. Do not assume children automatically close the epic. If one child remains active, prefer keeping the epic `open` unless the remaining work has moved elsewhere.
 
-### Lifecycle
+Discarding an epic does not automatically discard children. Move or update children explicitly when the grouping changes.
 
-| Status | Meaning | Allowed transitions |
-|--------|---------|---------------------|
-| `open` | Active coordination home for at least one mid-flight child | → `done`, → `discarded` |
-| `done` | Author judges the epic's purpose fulfilled — usually after all relevant children reach `done` and the integration outcome is met | → `open` (re-open if work resumes), → `discarded` |
-| `discarded` | The epic is no longer the right grouping (children moved under a different parent or stand alone). Write `## Why Discarded` |  — (terminal) |
+## Children and membership
 
-`done` is **author-judged** — no automatic cascade from child status. The author flips `status:` directly when the integration outcome is met. If a single child remains mid-flight, prefer keeping the epic `open`.
+Use provider-native hierarchy when available:
 
-When all children are `done` or `discarded` and the epic is still `open`, the workspace state is mildly inconsistent but not an error — the author may have intentionally left the epic open for further follow-up children.
+- GitHub sub-issues.
+- Jira epic link, parent field, or configured hierarchy.
 
-No automatic cascade flips epic status based on children. There is no epic-driven cascade onto children either: discarding an epic does not discard its children. If the children should also be discarded, flip them individually.
+Always include a visible `## Children` section as the human-readable index.
+
+```markdown
+## Children
+
+- #123 — Add login API
+- #124 — Add login retry tests
+- PROJ-456 — Fix token refresh regression
+```
+
+Keep child entries readable. If a child moves, is discarded, or changes scope, annotate the entry or add a new note rather than silently deleting history.
+
+## Shared narrative
+
+The epic is the home for narrative that spans children:
+
+- Cross-child decisions.
+- Integration constraints.
+- Shared blockers.
+- Sequencing choices.
+- Scope changes that affect several children.
+
+Use provider comments for discussion. Keep the epic body as the current coordination summary.
+
+Children should link to the epic when their own approach depends on epic-level narrative.
 
 ## Body shape
 
-**Required:**
-
-- `## Description` — what the children together accomplish. Brief — one or two paragraphs. Link the children inline by backlink when narratively useful.
-- `## Children` — explicit append-only list of child paths as timestamped backlink bullets, one bullet per child. Bullet form per `./body-conventions.md` § Bullet backlink. The reverse-`parent:` lookup remains the authoritative membership; this section exists so a human reader sees the membership at a glance.
-
-  ```markdown
-  ## Children
-
-  - 2026-04-23 09:14 `../task/17-search-history.md`
-  - 2026-04-25 14:02 `../task/18-search-pagination.md`
-  - 2026-05-01 11:30 `../bug/9-cache-key-collision.md`
-  ```
-
-  Order is the order in which children were added (chronological). When a child is later discarded or moves under a different parent, leave the bullet but annotate (`— moved to epic/22-...`, `— discarded 2026-05-08 14:32`) — append-only history beats silent deletion.
-
-- `## Log` — the shared coordination narrative. This is the epic's shared narrative contract: decisions, pivots, blockers, integration constraints, and cross-child trade-offs that span multiple children. Format and inline cross-reference rules per `./issue-body.md#log`. Decisions recorded here are the *source* that children inline-cite from their own `## Log` entries.
-
-**Optional, emit only when applicable:**
-
-- `## Acceptance Criteria` — integration outcome that is not naturally any single child's AC. Skip when implicit ("all children deliver and tests pass"). Use it when the epic has its own observable (e.g., "search-history feature works end-to-end across UC 3 and UC 7").
-- `## Resume` — current-state snapshot. Strongly recommended while at `open` (the only mid-flight state). See `./issue-body.md#resume`.
-- `## Why Discarded` — populated on `discarded`. Format: `./issue-body.md` § `## Why Discarded`.
-
-Unknown H2 headings are tolerated.
-
-## Authoring children that point at an epic
-
-Set the child's frontmatter `parent: epic/<id>-<slug>` at creation (or as soon as the epic exists). Without this, the epic is unreachable from the child file.
-
-When the child writes a `## Resume` or `## Log` entry that depends on the epic's narrative, inline-cite the epic path inside the entry per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`:
+Required:
 
 ```markdown
-## Log
+## Description
 
-- Approach: follow the caching strategy decided in `../epic/5-search.md` `## Log`. This child only diverges on test-fixture shape.
+<what the children together accomplish and why they are grouped>
+
+## Children
+
+- <child ref> — <short label>
 ```
 
-Frontmatter `parent:` makes the epic *discoverable*; the inline citation makes it *necessary to read* — only when the entry actually depends on it. Self-contained child entries need no cross-reference.
+Recommended:
+
+```markdown
+## Coordination Notes
+
+<current cross-child decisions, constraints, or sequencing notes>
+```
+
+Optional sections:
+
+- `## Acceptance Criteria` — integration outcome not naturally owned by a single child.
+- `## Related Work` — use cases, specs, research, reviews, architecture, domain, or NFR pages.
+- `## Resume` — current-state snapshot while open. See `./issue-body.md`.
+- `## Log` — use sparingly for durable cross-child narrative; prefer provider comments for routine discussion. See `./issue-body.md`.
+- `## Why Discarded` — reason when discarded. See `./issue-body.md`.
+
+Unknown Title Case H2 headings are tolerated.
+
+## Acceptance criteria
+
+Epic acceptance criteria are optional.
+
+Use them only for integration outcomes that are not already covered by child issues.
+
+Examples:
+
+- End-to-end flow works across several tasks.
+- Migration is complete across all components.
+- Stabilization campaign reduces a class of failures below a target threshold.
+
+Do not duplicate every child acceptance criterion in the epic.
+
+## Relationship to knowledge artifacts
+
+Epics coordinate work. They do not define the product, architecture, or implementation contract.
+
+Use knowledge artifacts for durable content:
+
+- User-facing behavior → use case curated page.
+- Implementation contract → spec.
+- Component shape → architecture.
+- Vocabulary → domain.
+- Non-functional target → nfr.
+
+If an epic discussion creates durable knowledge, update the relevant knowledge page and add a `## Change Log` entry there.
+
+## Done rule
+
+An epic should not be marked `done` until:
+
+- The coordinated outcome has been reached or explicitly descoped.
+- Children are done, discarded, or moved elsewhere.
+- Integration-level acceptance criteria are satisfied or explicitly waived.
+- Relevant knowledge pages are updated.
+- Remaining feedback is captured as review items or follow-up issues.
+
+## Comments and discussion
+
+Use provider comments for:
+
+- Coordination discussion.
+- Cross-child progress updates.
+- Blocker resolution.
+- Scope negotiation.
+
+Keep the epic body as the current compact coordination surface.
 
 ## Common mistakes
 
-- **Required section missing** (`## Description`, `## Children`, `## Log`).
-- **Children listed only via reverse-`parent:`** — emit the body `## Children` section as the human-readable index.
-- **Forbidden field set** (`implements`, `spec`, `depends_on`, `artifacts`, `cycle`, `parent`) — declaring any is invalid. Move the field to the children where it belongs.
-- **Wrong folder** — epic files must live under `a4/epic/`. A `type: epic` file outside that folder is a routing error.
+- Using an epic as a spec or architecture document.
+- Duplicating all child details in the epic body.
+- Missing `## Children`.
+- Marking `done` while active children still depend on the epic.
+- Nesting epics without explicit provider support and configuration.
+- Using local projection paths or local integer ids as provider-backed identity.
 
-## Don't
+## Do not
 
-- **Don't author implementation in the epic.** No `## Change Plan`, no `## Unit Test Strategy`. The work belongs to children.
-- **Don't treat the epic as a decision document.** Long-lived design decisions belong in `spec/`. The epic's `## Log` carries shared coordination narrative that spans children.
-- **Don't nest epics.** `parent:` on an epic is forbidden in this revision.
-- **Don't delete an epic after its purpose ends.** Flip to `done` or `discarded` and let the file stay; reverse `parent:` lookups from children remain valid.
-- **Don't duplicate the epic's narrative across children.** That defeats the point. Each child's `## Log` carries only what is local to that child plus inline citations to the epic when they share a decision.
+- Do not put implementation details or unit test strategy in the epic.
+- Do not use `implements`, `spec`, `depends_on`, or implementation cycle fields on an epic.
+- Do not discard children automatically when discarding an epic.
+- Do not store durable design decisions only in the epic; update the relevant knowledge artifact.
+- Do not auto-trigger a skill just because an epic is being written; follow the authoring resolver policy.

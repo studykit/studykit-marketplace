@@ -1,36 +1,141 @@
-# a4 — context wiki authoring
+# Workflow Context Authoring
 
-`a4/context.md` is the **upstream framing wiki**. It records the original idea, the problem framing the workspace is shaped around, and (optionally) the screen-navigation narrative that ties UI use cases together. Every other wiki page and every issue family indirectly assumes the framing this page captures.
+A context page is a **knowledge-backed framing reference**. It records the original idea, problem framing, scope boundaries, and optional UI/navigation framing that other workflow artifacts assume.
 
-Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Context is curated knowledge. It is stored in the configured knowledge backend, not the issue backend.
+
+Companion contracts:
+
+- `./metadata-contract.md`
+- `./knowledge-body.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+
+## Storage role
+
+`context` is stored in the knowledge backend.
+
+Supported knowledge providers:
+
+- Confluence
+- GitHub Wiki
+
+Issue-backed work may cause context updates, but the context page itself is a knowledge page.
+
+## Purpose
+
+Use context for upstream framing:
+
+- Original idea or starting prompt.
+- Problem framing.
+- Scope boundaries.
+- Coarse success definition.
+- UI screen/navigation narrative when useful.
+
+Every other workflow artifact indirectly assumes the framing captured here.
+
+Do not use context for detailed use case flows, domain glossary, implementation design, or task plans.
+
+## Required metadata
+
+Represent this metadata using provider-native fields when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `context`. Use page property, label, metadata block, or index metadata depending on provider. |
+| `title` | yes | Usually `Context` or project-specific equivalent. |
+| `related` | optional | Use cases, specs, epics, reviews, research, or pages related to framing changes. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local file path identity. Use page identity from the knowledge provider.
 
 ## Body shape
 
-**Required:**
+Required:
 
-- `## Original Idea` — the user's input, captured **verbatim** at workspace creation. Do not paraphrase. Subsequent edits append follow-up clarifications as new paragraphs; the original quote stays.
-- `## Problem Framing` — the shape the team commits to working on: who has the problem, what current solution is failing, what success looks like at a coarse level. Refined progressively over the workspace lifetime.
+```markdown
+## Original Idea
 
-**Optional, emit only when applicable:**
+<verbatim original user input or imported project brief>
 
-- `## Screens` — for projects with UI use cases, the screen-navigation narrative grouping UCs into screens. Each screen block lists the screen slug (also added to UC `labels:`) and the UCs that participate, with backlinks. Skip for headless, non-UI, or single-screen projects.
-- `## Change Logs` — append-only audit trail. Format: `./wiki-body.md`.
+## Problem Framing
 
-Unknown H2 headings are tolerated.
+<who has the problem, what is failing, and what success looks like at a coarse level>
+```
 
-## Change Log triggers
+Optional:
 
-The wiki close guard surfaces missing bullets when a review item whose `target:` lists `context` transitions to `resolved`.
+- `## Scope` — explicit in-scope and out-of-scope boundaries.
+- `## Screens` — UI screen/navigation grouping when the project has UI flows.
+- `## Success Criteria` — coarse project-level success definition.
+- `## Related Work` — use cases, epics, specs, research, or reviews related to framing.
+- `## Change Log` — required for material updates. See `./knowledge-body.md`.
 
-## Common mistakes (context-specific)
+Unknown Title Case H2 headings are tolerated when they clarify project framing.
 
-- **Required section missing** (`## Original Idea`, `## Problem Framing`).
+## Original idea rule
 
-## Don't
+Preserve the original input as faithfully as possible.
 
-- **Don't paraphrase `## Original Idea`.** It is the verbatim user input. Edits append; the original block stays.
-- **Don't write detailed UC flows here.** Use cases live in `a4/usecase/<id>-<slug>.md`. `context.md` carries framing only.
-- **Don't put domain concepts here.** Cross-cutting concepts belong in `domain.md`'s `## Concepts` section.
-- **Don't write actor rosters here.** Actor definitions belong in `actors.md`'s `## Roster` section.
-- **Don't pack screen mockups inline.** HTML mocks live under `a4/mock/<screen-slug>/`; reference them from `## Screens` if useful.
-- **Don't append `## Change Logs` bullets without a backlink path.**
+If context is created from a conversation, quote or clearly mark the initial user-provided idea. Later clarifications should be appended or summarized separately; do not rewrite the original idea so heavily that the starting point disappears.
+
+If importing an existing project, use the imported project brief or source link instead of inventing an original idea.
+
+## Problem framing rule
+
+`## Problem Framing` should answer:
+
+- Who has the problem?
+- What current situation or solution is failing?
+- Why does it matter?
+- What would coarse success look like?
+
+Keep this section at framing level. Detailed flows belong in use case pages. Implementation shape belongs in architecture or specs.
+
+## Screens
+
+Use `## Screens` only for UI-heavy projects where navigation framing helps organize use cases.
+
+Each screen entry should include:
+
+- Screen name or slug.
+- Purpose.
+- Related use cases.
+- Optional mockup or prototype link.
+
+Do not embed large mockups inline. Link to design artifacts or generated previews.
+
+## Change log
+
+Every material context change should include a `## Change Log` entry linking to the causing workflow artifact.
+
+```markdown
+## Change Log
+
+- 2026-05-13 — PROJ-123 — Narrowed initial scope to admin onboarding.
+```
+
+Do not duplicate issue discussion in the page.
+
+## Relationship to other knowledge pages
+
+- Use `actors` for actor roster and definitions.
+- Use `domain` for shared vocabulary and concepts.
+- Use `usecase` curated pages for detailed user-visible flows.
+- Use `architecture` for system shape.
+- Use `spec` for implementation contracts.
+- Use `nfr` for non-functional targets.
+
+## Common mistakes
+
+- Missing `## Original Idea` or `## Problem Framing`.
+- Rewriting the original idea until the starting point is lost.
+- Putting detailed use case flows in context.
+- Putting domain concepts or actor rosters in context.
+- Using context as a roadmap or task list.
+- Using local projection paths or local file identity as provider-backed identity.
+
+## Do not
+
+- Do not store context as an issue.
+- Do not use page comments as a substitute for review items when framing feedback needs workflow tracking.
+- Do not auto-trigger a skill just because context is being written; follow the authoring resolver policy.

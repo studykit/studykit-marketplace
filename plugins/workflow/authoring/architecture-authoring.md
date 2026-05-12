@@ -1,43 +1,142 @@
-# a4 — architecture wiki authoring
+# Workflow Architecture Authoring
 
-`a4/architecture.md` is the **most-depended-on wiki page** in the workspace. Read directly by `ci.md` (test-execution contract) and every task file across the four issue family folders (`task/`, `bug/`, `spike/`, `research/`) — their `## Interface Contracts` sections link into it. It is design-intent reference; the codebase remains structural ground truth for concrete file paths and module boundaries. Allowing in-situ edits from non-architecture contexts would let contract drift propagate before review — hence the single-author rule.
+An architecture page is a **knowledge-backed design-intent reference** for the current system shape: components, responsibilities, integration boundaries, technology stack, and test strategy.
 
-Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+Architecture is curated knowledge. It is stored in the configured knowledge backend, not the issue backend.
 
-Note: "first appeared" content lives in `context.md` `## Original Idea`.
+Companion contracts:
+
+- `./metadata-contract.md`
+- `./knowledge-body.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+
+## Storage role
+
+`architecture` is stored in the knowledge backend.
+
+Supported knowledge providers:
+
+- Confluence
+- GitHub Wiki
+
+Issue-backed tasks, bugs, spikes, reviews, use cases, and research may cause architecture updates, but the architecture page itself is a knowledge page.
+
+## Purpose
+
+Architecture records the current design shape that implementation work should align with.
+
+Use it for:
+
+- System overview.
+- Component responsibilities.
+- Interfaces exposed or consumed by components.
+- Cross-component dependencies.
+- Technology stack.
+- Testing strategy at the system level.
+
+Do not use it for:
+
+- Long decision rationale.
+- Raw discussion.
+- Roadmaps.
+- Task-level implementation plans.
+- Detailed API/schema contracts that belong in specs.
+
+## Required metadata
+
+Represent this metadata using provider-native fields when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `architecture`. Use page property, label, metadata block, or index metadata depending on provider. |
+| `title` | yes | Usually `Architecture` or project-specific equivalent. |
+| `status` | optional | Use when the provider supports page lifecycle state. |
+| `related` | optional | Specs, epics, tasks, reviews, use cases, or research that materially relate to the page. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local file path identity. Use page identity from the knowledge provider.
 
 ## Body shape
 
-**Required:**
+Required:
 
-- `## Overview` — high-level architectural narrative; how the system fits together, what trade-offs shaped it.
-- `## Components` — per-component definitions. Each component lists its responsibility, the interface it exposes (consumed by tasks via `## Interface Contracts` links), and any cross-component dependencies.
-- `## Technology Stack` — runtime, framework, libraries, persistence, build tooling. The chosen stack — not a "considered options" list (that belongs in a spec).
-- `## Test Strategy` — how the system is tested. Unit / integration / e2e split, isolation strategy, fixtures. Consistency here matters because every implementation reads it to align test code.
+```markdown
+## Overview
 
-**Optional, emit only when the conversation produced content for them:**
+<high-level architectural narrative>
 
-- `## Component Diagram` — diagrams (mermaid, ASCII, or links to external SVG / PNG kept under `a4/diagrams/`). Skip when prose + table is clearer.
-- `## External Dependencies` — third-party services, vendor APIs, or upstream systems. Skip when self-contained.
-- `## Change Logs` — append-only audit trail. The Wiki Update Protocol requires a bullet whenever a non-trivial change lands. Format: `./wiki-body.md`.
+## Components
 
-Unknown H2 headings are tolerated.
+<component definitions, responsibilities, interfaces, and dependencies>
 
-### Component anchor stability
+## Technology Stack
 
-`## Components` exposes anchor-targeted headings that tasks reference in their `## Interface Contracts` section (`` `../architecture.md#sessionservice` ``). Keep component heading text stable — renaming requires a review item explaining the cascade because every task that links into it is affected.
+<chosen runtime, framework, libraries, persistence, build tooling>
 
-## Common mistakes (architecture-specific)
+## Test Strategy
 
-- **Required section missing** (`## Overview`, `## Components`, `## Technology Stack`, `## Test Strategy`).
-- **`type:` mismatch** with filename — the `type:` value must equal the file basename.
+<unit/integration/e2e split, isolation strategy, fixtures, and test boundaries>
+```
 
-## Don't (architecture-specific)
+Optional:
 
-(Universal Don'ts — non-primary-author edits, hand-editing writer-owned fields, bare-text `## Change Logs` bullets — apply on top of these.)
+- `## Component Diagram` — Mermaid, ASCII, or link to external diagram artifact.
+- `## External Dependencies` — third-party services, vendor APIs, upstream systems.
+- `## Related Work` — issues, specs, reviews, use cases, or research that inform the architecture.
+- `## Change Log` — required for material updates. See `./knowledge-body.md`.
 
-- **Don't write executable test commands here.** Those belong in `ci.md`'s `## How to run tests` section, the single source of truth. Reference ci.md by backlink if needed.
-- **Don't write a roadmap / milestone schedule here.** Phase narrative — when a project benefits from one — belongs in a separate user-maintained wiki page.
-- **Don't list considered options in `## Technology Stack`.** The chosen stack lives here; the comparison and rejected alternatives belong in a spec under `a4/spec/`.
-- **Don't rename a component heading silently.** Renames cascade to every task's `## Interface Contracts` link. Open a review item.
-- **Don't pack a decision rationale into `## Overview`.** Decisions belong in a spec's `## Decision Log`. The architecture page records the *current* shape, not how it was reached.
+Unknown Title Case H2 headings are tolerated when they clarify current architecture.
+
+## Component anchors
+
+Component headings are reference targets for tasks, bugs, specs, and reviews.
+
+Keep component names stable. If a component is renamed:
+
+1. Update the architecture page.
+2. Add a `## Change Log` entry with the causing workflow artifact.
+3. Update affected specs/tasks/reviews or create review items for deferred updates.
+
+Do not silently rename component headings.
+
+## Decision rationale
+
+Architecture records the current shape. Durable rationale belongs in specs, especially `## Decision Log` or `## Rejected Alternatives`.
+
+A short rationale sentence is acceptable when it helps readers understand the current shape. Long comparisons and rejected options belong in a spec or research report.
+
+## Change log
+
+Every material architecture change should include a `## Change Log` entry linking to the causing workflow artifact.
+
+```markdown
+## Change Log
+
+- 2026-05-13 — PROJ-123 — Split AuthService and SessionService responsibilities.
+```
+
+Do not duplicate the issue discussion in the page.
+
+## Relationship to other knowledge pages
+
+- Use `domain` for vocabulary, concepts, relationships, and state transitions.
+- Use `context` for problem framing, product scope, and original idea.
+- Use `nfr` for non-functional requirements.
+- Use `ci` for exact test commands and CI execution contract.
+- Use `spec` for prescriptive API/schema/protocol contracts.
+
+## Common mistakes
+
+- Missing `## Overview`, `## Components`, `## Technology Stack`, or `## Test Strategy`.
+- Writing executable test commands here instead of `ci`.
+- Using architecture as a roadmap or milestone plan.
+- Listing considered options in `## Technology Stack` instead of recording chosen stack only.
+- Packing long decision rationale into `## Overview` instead of a spec.
+- Renaming component headings without updating references or creating review items.
+- Using local projection paths or local file identity as provider-backed identity.
+
+## Do not
+
+- Do not store architecture as an issue.
+- Do not use page comments as a substitute for review items when feedback needs workflow tracking.
+- Do not auto-trigger a skill just because architecture is being written; follow the authoring resolver policy.

@@ -1,52 +1,164 @@
-# a4 — ci wiki authoring
+# Workflow CI Authoring
 
-`a4/ci.md` is the workspace's reference for **how the LLM (or a human) verifies any feature change**: which test commands to run, where tests live, how tier isolation is configured. Anything implementing or modifying behavior reads this file as the test-execution contract.
+Authoring contract for the `ci` knowledge artifact.
 
-There is exactly one ci page per workspace: `a4/ci.md`. No per-topic / per-slug variant.
+The CI artifact is the workspace reference for how agents and humans verify behavior changes: commands, test layers, fixture assumptions, and provider CI expectations.
 
-Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+The canonical CI artifact is knowledge-backed:
 
-## Body shape
+- GitHub Wiki page when the knowledge provider is GitHub Wiki.
+- Confluence page when the knowledge provider is Confluence.
+- Optional filesystem projection only when configured.
 
-**Required:**
+Common body rules: `./body-conventions.md`.
+Knowledge body rules: `./knowledge-body.md`.
+Shared metadata rules: `./metadata-contract.md`.
+Provider-specific page rules: `./providers/github-wiki-authoring.md` or `./providers/confluence-page-authoring.md`.
 
-- `## How to run tests` — the per-tier executable contract. The verified literal commands that exited 0 during setup. Each row covers one tier (unit / integration / E2E). May include a `### Multi-tier run` subsection capturing the single command (or short script) that exercises every in-scope tier — the smoke check used after implementation.
-- `## Test layout` — where tests live and how they are organized: per-tier path, naming convention, runner config file. Lets the LLM put new tests in the right place without guessing.
+## Purpose
 
-**Optional H2:**
+The CI artifact records the executable verification contract for the project.
 
-- `## Smoke scenario` — a single minimal user-observable interaction the running app produces. Used as the post-implementation smoke check.
-- `## Issues` — links to `./review-authoring.md` review items emitted during the setup run that produced this page, grouped by classification (architecture / environment) and status (open / resolved). Omit when no review items were emitted.
-- `## Change Logs` — append-only audit trail (dated bullets with backlinks to the causing review item or architecture spec). Format: `./wiki-body.md`.
+Architecture explains the testing strategy. CI records the actual commands and environment assumptions that authors should use before marking implementation work done.
 
-Free-form additional H2 sections are tolerated.
+## Identity
 
-### Canonical H3 subsections
+Use provider-native page identity.
 
-When partitioning a section into named subsections (rather than free-form prose / a single table), use these canonical H3 names:
+Suggested title: `CI` or `Test And CI`.
 
-- Under `## How to run tests`: `### Multi-tier run`, `### Test isolation flags`.
+Do not require a legacy local CI file path or workflow-local numeric ID.
 
-Unknown H2 / H3 headings are tolerated.
+## Required body sections
 
-### Why `## How to run tests` lives only here
+### `## How To Run Tests`
 
-`## How to run tests` is the single executable contract that drives implementation verification. Duplicating it into `architecture.md` (Test Strategy) would create drift. Architecture's `## Test Strategy` describes the **strategy** (which tiers, what isolation philosophy, what the framework family is); ci's `## How to run tests` records the **executable contract** (the actual commands that exited 0). The two are complementary.
+Required.
 
-## Change Log triggers
+Record the literal commands that are expected to work in the current project.
 
-Most bullets that land here cite either a `target: architecture` review item that triggered a test-contract refresh, or a test-strategy adjustment (new tier, new runner, isolation change).
+Include:
 
-## Common mistakes (ci-specific)
+- Unit-test command.
+- Integration-test command, if applicable.
+- End-to-end or browser-test command, if applicable.
+- Multi-tier verification command, if available.
+- Required environment variables or setup steps that are safe to document.
 
-- **Required section missing** (`## How to run tests`, `## Test layout`).
-- **Recording unverified commands.** ci.md records what exited 0 during ci-setup. Speculative commands belong in research, not here.
-- **Per-task content leaking in.** Per-task verification belongs in the task's `## Unit Test Strategy`, not in ci.md.
+Example:
 
-## Don't
+```markdown
+## How To Run Tests
 
-- **Don't write commands that have not been verified.** ci.md records what *succeeded*; speculative commands belong in a spec or research artifact.
-- **Don't duplicate `## How to run tests` content into `architecture.md`.** It references, it does not duplicate.
-- **Don't write architecture rationale here.** The why behind the test strategy lives in `architecture.md` and the spec(s) that shaped it.
-- **Don't write task-level information here.** Per-task verification belongs in the task's body.
-- **Don't append `## Change Logs` bullets without a backlink path.**
+| Layer | Command | Notes |
+| --- | --- | --- |
+| Unit | `npm test -- --runInBand` | No external services. |
+| Integration | `npm run test:integration` | Requires local PostgreSQL. |
+| All | `npm test` | Smoke check before implementation handoff. |
+```
+
+Do not record speculative commands as verified commands. If a command is unverified, label it clearly or move the investigation to a research item.
+
+### `## Test Layout`
+
+Required.
+
+Describe where tests live and how they are named.
+
+Include:
+
+- Test directories by layer.
+- Naming conventions.
+- Runner configuration files.
+- Shared fixtures or test utilities.
+
+### `## CI Pipeline`
+
+Required when the project has provider CI.
+
+Describe the provider pipeline that validates branches and pull requests.
+
+Include:
+
+- Provider and pipeline name.
+- Trigger events.
+- Required checks.
+- Relevant workflow file or pipeline URL.
+
+Provider examples:
+
+- GitHub Actions workflow URL or workflow filename.
+- Jira/Bitbucket pipeline URL when Jira is paired with another SCM.
+- External CI dashboard URL.
+
+## Optional body sections
+
+### `## Smoke Scenario`
+
+Use for one minimal user-observable interaction that proves the system starts and performs the core behavior.
+
+### `## Fixtures And Environment`
+
+Use for test databases, service emulators, seed data, secrets handling, or container setup.
+
+Do not store secrets.
+
+### `## Troubleshooting`
+
+Use for known local failure modes and fixes.
+
+### `## Related Work`
+
+Use for workflow items that changed the CI contract.
+
+### `## Change Log`
+
+Required for material updates. See `./knowledge-body.md`.
+
+## Update rules
+
+Update the CI artifact when a workflow item changes the verification contract.
+
+Examples:
+
+- A task adds a new test layer.
+- A bug fix introduces a regression-test convention.
+- A spec changes performance or compatibility verification.
+- An architecture decision changes test isolation.
+- A review item identifies missing verification guidance.
+
+Every material update should add a `## Change Log` entry linking to the causing workflow artifact.
+
+Example:
+
+```markdown
+## Change Log
+
+- 2026-05-13 — #456 — Added browser smoke check for the checkout flow.
+```
+
+## Relationship to other artifacts
+
+- Architecture `## Test Strategy` explains why the test layers exist.
+- CI `## How To Run Tests` records how to run them.
+- Task `## Unit Test Strategy` records task-specific verification.
+- Bug `## Unit Test Strategy` records regression coverage for that bug.
+
+Do not duplicate the full CI command table into task or architecture bodies. Link to the CI artifact instead.
+
+## Done criteria
+
+A CI artifact update is done when:
+
+- Required sections are present.
+- Commands are verified or explicitly marked as unverified.
+- Provider CI links are current when applicable.
+- The update has a `## Change Log` entry for the causing workflow item.
+
+## Common mistakes
+
+- Recording commands that have not been run and presenting them as verified.
+- Duplicating architecture rationale instead of linking to architecture.
+- Adding task-specific verification details that belong in a task or bug.
+- Relying on a legacy local CI file as canonical identity in provider-backed mode.
+- Omitting the workflow item that caused a CI contract change.

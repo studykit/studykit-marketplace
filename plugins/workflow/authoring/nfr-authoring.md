@@ -1,41 +1,147 @@
-# a4 — NFR wiki authoring
+# Workflow NFR Authoring
 
-`a4/nfr.md` is the **non-functional requirements wiki**. It records performance targets, security requirements, scalability bounds, accessibility requirements, compliance constraints, and other cross-cutting properties that affect every UC and architecture decision. NFRs are optional — small or exploratory projects may have none, in which case the file simply does not exist.
+An NFR page is a **knowledge-backed non-functional requirements reference**. It records measurable cross-cutting properties such as performance, security, scalability, accessibility, reliability, privacy, compliance, and operational constraints.
 
-Frontmatter contract: `./frontmatter-wiki.md`. Body conventions: `./wiki-body.md` (`## Change Logs`, Wiki Update Protocol).
+NFR is curated knowledge. It is stored in the configured knowledge backend, not the issue backend.
+
+Companion contracts:
+
+- `./metadata-contract.md`
+- `./knowledge-body.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+
+## Storage role
+
+`nfr` is stored in the knowledge backend.
+
+Supported knowledge providers:
+
+- Confluence
+- GitHub Wiki
+
+Issue-backed work may cause NFR updates, but the NFR page itself is a knowledge page.
+
+## Purpose
+
+Use NFR for measurable cross-cutting requirements:
+
+- Performance targets.
+- Security requirements.
+- Scalability bounds.
+- Accessibility requirements.
+- Reliability and availability targets.
+- Privacy or compliance constraints.
+- Operational constraints.
+
+NFRs should affect use cases, architecture, specs, tests, or implementation priorities.
+
+Do not use NFR for functional behavior. Functional behavior belongs in use cases and specs.
+
+## Required metadata
+
+Represent this metadata using provider-native fields when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | Always `nfr`. Use page property, label, metadata block, or index metadata depending on provider. |
+| `title` | yes | Usually `Non-Functional Requirements` or project-specific equivalent. |
+| `related` | optional | Use cases, specs, architecture, tasks, reviews, research, or pages related to NFR changes. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local file path identity. Use page identity from the knowledge provider.
 
 ## Body shape
 
-**Required:**
-
-- `## Requirements` — the NFR table. One row per requirement:
-  - **Description** — the requirement in prose (e.g., "Cold-start response under 200 ms p95").
-  - **Affected UCs** — backlinks to UCs the requirement constrains (e.g., `` `usecase/3-search-history.md` ``). Use `(all)` when workspace-wide.
-  - **Measurable criteria** — concrete threshold or check (timing, error rate, compliance standard reference). NFRs only earn their slot when they have a measurable shape.
-
-**Optional:**
-
-- `## Change Logs` — append-only audit trail. Format: `./wiki-body.md`.
-
-Unknown H2 headings are tolerated.
-
-Architecture footnote annotations may attach to an existing NFR row to point at the architecture decision that satisfies it:
+Required:
 
 ```markdown
-- Cold-start response under 200 ms p95 — `usecase/3-search-history.md`, `usecase/5-render-mock.md` — p95 < 200 ms across all responses[^1]
+## Requirements
 
-[^1]: Addressed by SessionService caching layer — see `architecture.md#sessionservice`.
+| ID | Description | Affected Scope | Measurable Criteria | Verification |
+| --- | --- | --- | --- | --- |
+| NFR-1 | Cold-start response latency | All login flows | p95 < 200 ms | Performance test or production metric |
 ```
 
-The footnote points at the architecture decision that satisfies the NFR. Do not introduce footnotes that edit the requirement text itself.
+Recommended columns:
 
-## Common mistakes (nfr-specific)
+- **ID** — stable short identifier, useful for references.
+- **Description** — concise requirement statement.
+- **Affected Scope** — use cases, specs, systems, or `(all)`.
+- **Measurable Criteria** — threshold, standard, check, or measurable condition.
+- **Verification** — how the requirement is verified.
 
-- **Required section missing** (`## Requirements`).
+Optional:
 
-## Don't
+- `## Rationale` — why the NFR matters when not obvious.
+- `## Related Work` — issues, specs, reviews, research, use cases, or architecture pages related to NFR changes.
+- `## Change Log` — required for material updates. See `./knowledge-body.md`.
 
-- **Don't write aspirational requirements without a measurable criterion.** "Should be fast" is not an NFR. "p95 < 200 ms" is.
-- **Don't list functional behavior here.** Functional requirements belong in UCs (`## Flow`, `## Validation`, `## Error Handling`). NFRs are cross-cutting properties.
-- **Don't put implementation strategies here.** "We will use Redis for caching" belongs in `architecture.md`. The NFR is the target; the architecture page records the response.
-- **Don't append `## Change Logs` bullets without a backlink path.**
+Unknown Title Case H2 headings are tolerated when they clarify NFRs.
+
+## Measurability rule
+
+Every NFR should be measurable.
+
+Avoid vague requirements:
+
+- "The app should be fast."
+- "Security should be strong."
+- "The UI should be accessible."
+
+Prefer measurable forms:
+
+- "p95 response latency under 200 ms for authenticated search."
+- "All admin actions require audit log entries with actor, timestamp, action, and target."
+- "UI meets WCAG 2.2 AA for the onboarding flow."
+
+If a requirement cannot yet be measured, create a `review` item with `kind: question` or `gap` rather than adding an aspirational NFR.
+
+## Relationship to architecture and CI
+
+NFR records the target.
+
+- `architecture` records the design response.
+- `ci` records how tests/checks run.
+- `spec` records precise contracts when an NFR affects an API, schema, protocol, or format.
+
+Do not put implementation strategies in the NFR page unless they are part of the requirement itself.
+
+## Verification
+
+Each NFR should have a verification path:
+
+- Automated test.
+- CI check.
+- Monitoring query.
+- Audit process.
+- Manual review procedure.
+- Compliance evidence.
+
+If verification is not yet known, mark it as an open question and create a review item if it blocks work.
+
+## Change log
+
+Every material NFR change should include a `## Change Log` entry linking to the causing workflow artifact.
+
+```markdown
+## Change Log
+
+- 2026-05-13 — PROJ-123 — Added p95 latency target for login flow.
+```
+
+Do not duplicate issue discussion in the page.
+
+## Common mistakes
+
+- Missing `## Requirements`.
+- Writing aspirational requirements without measurable criteria.
+- Putting functional behavior here instead of use cases/specs.
+- Putting implementation strategy here instead of architecture/spec.
+- Adding NFRs with no verification path or follow-up review item.
+- Using local projection paths or local file identity as provider-backed identity.
+
+## Do not
+
+- Do not store NFRs as issues.
+- Do not use page comments as a substitute for review items when NFR feedback needs workflow tracking.
+- Do not auto-trigger a skill just because NFRs are being written; follow the authoring resolver policy.

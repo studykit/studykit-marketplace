@@ -1,137 +1,246 @@
-# a4 — usecase authoring
+# Workflow Use Case Authoring
 
-A use case at `a4/usecase/<id>-<slug>.md` is a **concrete description of how a user (actor) interacts with the system** to achieve a goal in a specific situation, with a defined flow and an expected outcome. UCs are the user-facing scope unit — upstream of tasks (which deliver them) and downstream of `context.md` (which frames the problem). They hand off to implementation when their `## Flow` / `## Validation` / `## Error Handling` close enough to drive AC for tasks.
+A workflow use case describes **how an actor interacts with the system to achieve a goal in a specific situation**, with a user-visible flow and expected outcome.
 
-Companion to `./frontmatter-issue.md`, `./issue-body.md`.
+Use cases are dual artifacts:
+
+1. An issue-backed workflow artifact for discovery, questions, discussion, status, and feedback.
+2. A knowledge-backed curated page for the settled use case content.
+
+The issue artifact is always created first. The curated knowledge page is created or updated when there is stable content worth publishing.
+
+Companion contracts:
+
+- `./metadata-contract.md`
+- `./issue-body.md`
+- `./knowledge-body.md`
+- Issue provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+
+## Storage role
+
+`usecase` has two roles.
+
+| Role | Provider | Purpose |
+| --- | --- | --- |
+| Workflow issue | GitHub Issues or Jira | Discovery, questions, review, status, discussion, and task linkage. |
+| Curated knowledge page | Confluence or GitHub Wiki | Stable use case content used by implementation and testing. |
+
+The workflow issue may exist without a curated page while the use case is being shaped. The curated page should link back to the workflow issue when published.
 
 ## Abstraction discipline
 
-Use cases stay at the **user level** — what the actor does, not what the system does internally. A UC saying "the system stores the record in PostgreSQL" is wrong shape; "the user submits the form and sees a confirmation" is right. Internal mechanics belong to `architecture.md` and tasks.
+Use cases stay at the user level.
 
-Detailed enforcement — banned-term list, conversion table, per-field application — lives in `./usecase-abstraction-guard.md`.
+Write:
 
-## Frontmatter contract (do not deviate)
+- What the actor does.
+- What the actor sees.
+- What outcome the actor expects.
+- User-visible validation and error behavior.
 
-```yaml
----
-type: usecase
-id: <int — globally monotonic across the workspace>
-title: "<short, human-readable phrase>"
-status: draft | ready | implementing | revising | shipped | superseded | discarded | blocked
-actors: [<slug>, ...]    # actor slugs as defined in actors.md
-supersedes: []           # list of paths to prior UCs this one replaces
-related: []              # catchall for cross-references
-labels: []               # free-form tags (incl. group slugs like screen-dashboard)
----
+Do not write:
+
+- Database tables.
+- Queue names.
+- Service internals.
+- Framework mechanics.
+- Implementation algorithms.
+
+Internal mechanics belong in `architecture`, `spec`, or implementation tasks.
+
+## Workflow issue metadata
+
+Represent this metadata using provider-native fields when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | `usecase`, or provider issue type/label/field equivalent. |
+| `title` | yes | Short user-facing goal. |
+| `status` | yes | Workflow status mapped to provider status. |
+| `knowledge_page` | optional until published | Link to curated page after publication. |
+| `actors` | recommended | Actor names or slugs. Metadata when possible; body otherwise. |
+| `supersedes` | optional | Prior use case this one replaces. Visible body section required when present. |
+| `related` | optional | Related tasks, specs, reviews, research, or pages. |
+| `labels` | optional | Provider labels/tags. |
+
+Provider identity replaces local integer ids. Use GitHub issue numbers or Jira keys for the workflow issue.
+
+## Curated page metadata
+
+Represent this metadata using provider-native page properties, labels, metadata block, or index metadata when available.
+
+| Field | Required | Notes |
+| --- | --- | --- |
+| `type` | yes | `usecase`. |
+| `title` | yes | Same or clearer title than the workflow issue. |
+| `source_issue` | yes | Link back to the workflow issue that owns discovery and discussion. |
+| `status` | recommended | Published/stable state when supported by provider. |
+| `actors` | recommended | Actor names or slugs. |
+| `supersedes` | optional | Prior curated use case page. |
+| `related` | optional | Related tasks, specs, reviews, research, architecture, or domain pages. |
+
+## Lifecycle
+
+Recommended workflow issue lifecycle:
+
+```text
+draft → ready | discarded
+ready → implementing | draft | discarded
+implementing → revising | blocked | shipped | discarded
+revising → ready | discarded
+blocked → ready | discarded
+shipped → superseded | discarded
+superseded → terminal
+discarded → terminal
 ```
 
-| Field | Required | Type | Values / format |
-|-------|----------|------|-----------------|
-| `type` | yes | literal | `usecase` |
-| `id` | yes | int | monotonic global integer |
-| `title` | yes | string | human-readable |
-| `status` | yes | enum | `draft` \| `ready` \| `implementing` \| `revising` \| `shipped` \| `superseded` \| `discarded` \| `blocked` |
-| `actors` | conditional | list of strings | actor slugs as defined in `actors.md`; **must be non-empty once `status >= ready`** (i.e., `ready` / `implementing` / `shipped` / `superseded`). Optional only at `status: draft`. |
-| `supersedes` | no | list of paths | prior use cases this UC replaces |
-| `related` | no | list of paths | catchall |
-| `labels` | no | list of strings | free-form tags |
+Status meaning:
 
+- `draft` — The use case is being discovered or shaped.
+- `ready` — The curated content is sufficient to drive implementation work.
+- `implementing` — Tasks are actively implementing the use case.
+- `revising` — Implementation surfaced a use case change; curated content needs revision.
+- `blocked` — Progress is blocked by a decision or missing input.
+- `shipped` — Running system reflects the use case.
+- `superseded` — A newer use case replaces this one.
+- `discarded` — No longer applicable.
 
-- `id:` see `./frontmatter-issue.md` § `id`.
-- `actors:` lists slugs defined in `actors.md`'s `## Roster` (e.g., `meeting-organizer`, `team-member`, `platform`). New actors flow through `actors.md` first; UC frontmatter references by slug. Platform-capability UCs typically use `actors: [platform]`.
-- UC-to-UC ordering is **not** in frontmatter. Implementation ordering belongs to tasks via `task.depends_on:`; soft narrative dependencies between UCs go in `## Dependencies` body prose with backlinks.
-- UC-to-spec ties are **not** in frontmatter. When a spec governs the UC, cite from `## Situation` / `## Validation` / `## Error Handling` / `## Dependencies` body prose via backlink (`` `../spec/<id>-<slug>.md` ``); add to `related:` only when it is a soft cross-reference worth indexing in frontmatter searches.
-- `supersedes:` lists prior UC paths this one replaces. The writer cascades `shipped → superseded` on the listed targets when this UC reaches `shipped`. Do not hand-flip the predecessor's status.
-- The reverse view of `task.implements:` (which tasks deliver this UC) is computed on demand by `../scripts/search.py`.
-- `related:` is the catchall for cross-references between issue-family artifacts. Soft mentions belong as backlinks in the body, not here.
+Provider mappings may vary:
 
-### Lifecycle and writer ownership
+- GitHub: Issue Field status when available.
+- Jira: configured Jira workflow statuses.
 
+The curated page should reflect stable content. Workflow transitions and discussion live on the issue.
+
+## Workflow issue body
+
+The workflow issue body should summarize discovery state and link to the curated page when available.
+
+Recommended sections:
+
+```markdown
+## Description
+
+<why this use case is being explored and who needs it>
+
+## Actors
+
+- <actor>
+
+## Current Draft
+
+<short current summary or link to curated page draft>
+
+## Open Questions
+
+- <question>
+
+## Related
+
+- <provider-native ref or URL>
 ```
-draft        → discarded | ready
-ready        → discarded | draft | implementing
-implementing → blocked | discarded | revising | shipped
-revising     → discarded | ready
-blocked      → discarded | ready
-shipped      → discarded | superseded
-discarded    → (terminal)
-superseded   → (terminal)
+
+Optional sections:
+
+- `## Target` — when the issue exists to revise or review an existing use case page.
+- `## Resume` — current-state snapshot while shaping. See `./issue-body.md`.
+- `## Log` — use sparingly; prefer provider comments for discussion. See `./issue-body.md`.
+
+Use provider comments for conversation, interview notes, and feedback threads.
+
+## Curated page body
+
+The curated use case page should contain the stable user-facing content.
+
+Required:
+
+```markdown
+## Goal
+
+<what the actor wants to accomplish>
+
+## Situation
+
+<trigger and context>
+
+## Flow
+
+1. <user-visible step>
+2. <user-visible response or next action>
+
+## Expected Outcome
+
+<observable successful outcome>
 ```
 
-Per-status meaning:
+Optional:
 
-- `draft` — Spec is still being shaped; not ready for implementation.
-- `ready` — Spec is closed; ready to be picked up. Requires non-empty `actors:`; an empty actor list at `ready` (or later) is a post-draft authoring violation.
-- `implementing` — Implementation work is actively underway for the UC.
-- `revising` — Implementation paused for in-place spec edit. Re-enters `ready` on re-approval. Cascades: tasks at `progress`/`failing` reset to `queued`; `open`/`queued`/`holding`/`done` tasks stay.
-- `shipped` — The running system reflects this UC. Forward-path terminal. Cascades: `supersedes:` targets flip `shipped → superseded`.
-- `superseded` — A newer UC declared `supersedes: [<this>]` and shipped. Terminal.
-- `discarded` — Abandoned. Terminal. Cascades: related tasks → `discarded`, open review items with `target: usecase/<this>` → `discarded`.
-- `blocked` — Implementation-time blocker surfaced; crosscutting. Resolved via `blocked → ready` or `blocked → discarded`.
+- `## Actors` — actor list when not obvious from metadata.
+- `## Validation` — user-visible input constraints, limits, or required formats.
+- `## Error Handling` — what the actor sees when things fail.
+- `## Dependencies` — narrative dependencies on other use cases, specs, or pages.
+- `## Related Work` — workflow issues, tasks, specs, or research.
+- `## Supersedes` — prior use case page when replacing one.
+- `## Change Log` — required for material updates. See `./knowledge-body.md`.
 
-Writer rules (UC-specific):
+Do not include raw discovery discussion in the curated page.
 
-- `draft` is the **only** initial status. Everything else is a transition.
-- **`implementing → draft` is disallowed.** Once code has started, the UC cannot roll back. Use `implementing → revising` for in-place edit or `implementing → discarded` for abandonment.
-- **`shipped` never returns to `implementing`/`draft`.** Post-ship requirement changes are modeled as either (a) a **new** UC with `supersedes: [usecase/<old>]` — when that ships, the old one flips to `superseded`; or (b) `shipped → discarded` when the feature is being removed.
-- **`revising` is in-place.** No new UC is created; the same file is edited, and the ready-gate re-approves `revising → ready`.
-- **No mechanical task gate on `ready → implementing` or `implementing → shipped`.** The writer accepts both transitions regardless of whether tasks declaring `implements: [usecase/<this>]` exist or are done; staging readiness and ship verdicts are author-driven.
-- `shipped → superseded` is **automatic** — fires when a successor UC with `supersedes: [<this>]` reaches `shipped`. Do not flip by hand.
+## Publishing rule
 
-## Body shape
+Publish or update the curated page when:
 
-**Required:**
+- The actor and goal are clear.
+- The flow is stable enough to guide tasks.
+- Expected outcome is explicit.
+- Blocking open questions are resolved or intentionally deferred.
+- User-visible validation and error handling are known or explicitly out of scope.
 
-- `## Goal` — what the actor wants to accomplish, framed at the user level (the *why*).
-- `## Situation` — the trigger / current context. When does this UC apply? What's already happened? Concrete, not abstract.
-- `## Flow` — numbered list of user-visible steps. Actor's actions and the system's user-facing responses, **not** internal mechanics.
-- `## Expected Outcome` — what success looks like in user-observable terms (timing, content, state change). One input to AC for any task that `implements:` this UC.
+The first publication should add a `## Change Log` entry linking to the workflow issue.
 
-**Optional, emit only when there is content for them:**
+## Task linkage
 
-- `## Validation` — input constraints, limits, required formats. Stays user-visible (length limits, allowed characters, required fields) — internal validation rules belong to spec/architecture.
-- `## Error Handling` — what the user sees when things fail. Boundary conditions (empty input, max items, concurrent access, timeouts).
-- `## Dependencies` — narrative on which other UCs (or specs / wiki pages) this one depends on, with markdown links. UC ordering is no longer in frontmatter, so this is the only place a UC declares cross-UC prerequisites.
-- `## Resume` — current-state snapshot for the next session. Strongly recommended while mid-flight (`draft` / `revising`); other non-terminal states (`ready` / `implementing` / `blocked`) reflect downstream-stage progress, not UC-authoring work. See `./issue-body.md#resume`.
-- `## Log` — append-only narrative of meaningful events. Do not duplicate `## Resume` content here. See `./issue-body.md#log`.
+Tasks that implement the use case should link to the curated page or workflow issue in `## Implements`.
 
-Unknown H2 headings are tolerated.
+Prefer the curated page when it exists, because it contains the stable implementation-facing content. Use the workflow issue when the curated page has not been published yet.
 
-## In-situ wiki nudge — when a UC change implies a wiki edit
+## Wiki/knowledge side effects
 
-Authoring or revising a UC frequently has side-effects on wiki pages:
+Authoring or revising a use case may require updates to other knowledge pages:
 
-- New actor in `actors:` → `actors.md` `## Roster` row.
-- Concept used across 3+ UCs → `domain.md` `## Concepts` glossary entry.
-- Scope broadening (problem framing changes) → `context.md` `## Problem Framing` refinement.
-- New screen group → `context.md` `## Screens` section + UC `labels:`.
-- New non-functional requirement → `nfr.md` `## Requirements` row.
+- New actor → `actors` page.
+- New domain concept → `domain` page.
+- Scope or problem framing change → `context` page.
+- New screen or interaction group → `context` or product-facing page.
+- New non-functional requirement → `nfr` page.
+- New implementation contract → `spec` page.
 
-When applying an in-situ wiki edit, follow the Wiki Update Protocol in `./wiki-body.md`.
+If the update is deferred, create a `review` item with `kind: gap` targeting the affected knowledge page and the causing use case issue/page.
 
-When deferring, open a review item with `kind: gap`, `source: self`, `target: [<causing UC path>, <affected wiki basenames>]`. The wiki close guard re-surfaces unresolved impact at session close.
+## Splitting a use case
 
-## Splitting a UC — preserve traceability
+Split a use case when the actor goal forks or the flow contains multiple independent goals.
 
-When a UC turns out to be too large:
+When splitting:
 
 1. Confirm the split with the user.
-2. Allocate new ids for each child UC.
-3. Write each child UC file at `status: draft`.
-4. Either delete the parent UC file, or keep it at `status: blocked` with `related: [<child paths>]` if the split history matters (the supersede chain is reserved for shipped predecessors).
-5. Update any UC that referenced the parent via `related` (or in `## Dependencies` body prose) to point at the appropriate child.
+2. Create separate workflow issues for the child use cases.
+3. Publish or update curated pages when each child is stable.
+4. Link parent and child artifacts using provider relationships when available and body links always.
+5. Do not use supersession unless an older shipped/published use case is being replaced.
 
-Splits do **not** flow through the supersede mechanism — supersession presumes the predecessor was at one point shipped.
+## Common mistakes
 
-## Common mistakes (UC-specific)
+- Writing internal system mechanics into the use case.
+- Publishing a curated page before the user-visible flow is stable.
+- Leaving the workflow issue without a link to the curated page after publication.
+- Putting long discovery discussion into the curated page.
+- Creating tasks from a use case whose flow or expected outcome is still unclear.
+- Using local projection paths or local integer ids as provider-backed identity.
 
-- **Required section missing** (`## Goal`, `## Situation`, `## Flow`, `## Expected Outcome`).
-- **`actors:` empty at `status >= ready`.** Optional only at `draft`; advancing without filling it is a post-draft authoring violation.
-- **Placeholder in `title:` at `status >= ready`.** See `./frontmatter-issue.md#title-placeholders`.
+## Do not
 
-## Don't (UC-specific)
-
-- **Don't manually flip cascade-driven statuses.** UC `shipped` → predecessor's `superseded`, UC `discarded` → cascading task / review discards, UC `revising` → task `queued`-reset are all the writer's job.
-- **Don't write internal mechanics into the body.** Storage choices, service names, queue strategies, library calls — those live in `architecture.md` or specs. UC body stays at the user level.
-- **Don't author a UC for a routine framework-mandated behavior.** UCs describe user-visible interactions; if the only thing to say is "the framework does X," there is no UC there.
-- **Don't pack multiple goals into one UC.** Split when the actor's goal forks. One UC = one user-level goal.
+- Do not create the curated page before the workflow issue unless importing existing documents.
+- Do not store use case discussion only in the knowledge page.
+- Do not pack multiple actor goals into one use case.
+- Do not auto-trigger a skill just because a use case is being written; follow the authoring resolver policy.

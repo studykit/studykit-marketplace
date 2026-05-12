@@ -135,7 +135,7 @@ Avoid naming new remote-native pieces `a4.*` unless compatibility with the old l
 
 ## Initial Work Order
 
-1. Keep documenting the design under root `doc/`.
+1. Keep documenting the design under `plugins/workflow/doc/`.
 2. Create `plugins/workflow` only after the main decisions are captured.
 3. Scaffold plugin metadata.
 4. Copy selected authoring documents from `plugins/a4/authoring/`.
@@ -169,12 +169,24 @@ The clean-break plugin should preserve these decisions from the provider abstrac
 16. Native transports are primary; MCP is fallback.
 17. `workdoc-finder` is the remote provider search agent.
 
+## Implementation Progress
+
+Completed so far:
+
+- Created `plugins/workflow` documentation.
+- Added plugin manifests for Codex and Claude-compatible plugin discovery.
+- Copied and rewrote provider-backed authoring contracts.
+- Added provider-specific authoring contracts.
+- Added the authoring resolver skeleton at `plugins/workflow/scripts/authoring_resolver.py`.
+- Added the session authoring read ledger skeleton at `plugins/workflow/scripts/authoring_ledger.py`.
+- Added the authoring write guard skeleton at `plugins/workflow/scripts/authoring_guard.py`.
+- Added resolver, ledger, and guard tests under `plugins/workflow/tests/`.
+
 ## Open Questions
 
-1. Which authoring files should be copied first for the minimum viable workflow plugin?
-2. How much of the a4 lifecycle model should be retained for provider-backed status mapping?
-3. What should the first `workflow.config.yml` schema support?
-4. Should GitHub and Jira support ship together, or should one issue provider come first?
-5. Should Confluence be the first knowledge provider, with GitHub Wiki added later?
-6. How should legacy a4 projects migrate, if at all?
+1. How much of the legacy lifecycle model should be retained for provider-backed status mapping?
+2. What should the first `workflow.config.yml` schema support?
+3. Should GitHub and Jira support ship together, or should one issue provider come first?
+4. Should Confluence be the first knowledge provider, with GitHub Wiki added later?
+5. How should legacy a4 projects migrate, if at all?
 

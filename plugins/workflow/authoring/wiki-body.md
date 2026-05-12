@@ -1,68 +1,109 @@
-# a4 Wiki Body Conventions
+# Workflow Knowledge Page Body Conventions
 
-Body-level rules for wiki pages (`actors.md`, `architecture.md`, `ci.md`, `context.md`, `domain.md`, `nfr.md`). Wiki pages have no lifecycle (no `status:` field — see `./frontmatter-wiki.md`); they are continuously updated as issues land. The `## Change Logs` audit trail and the Wiki Update Protocol below record that continuous update.
+Compatibility document for legacy references to `wiki-body.md`.
 
-Common body rules (heading form, backlink form): `./body-conventions.md`.
+New authoring contracts should prefer `./knowledge-body.md`. This file keeps the wiki-page name because GitHub Wiki remains one supported knowledge provider, but the rules apply to both GitHub Wiki and Confluence pages.
 
-## `## Change Logs` audit trail
+Common body rules: `./body-conventions.md`.
+Knowledge body rules: `./knowledge-body.md`.
+Shared metadata rules: `./metadata-contract.md`.
 
-Every wiki page carries a `## Change Logs` section once a substantive edit has happened. Optional in every authoring contract — emit only once it has content.
+## Knowledge pages are curated
+
+Knowledge pages contain durable reference content, not raw workflow discussion.
+
+Use knowledge pages for:
+
+- Specs.
+- Architecture.
+- Domain vocabulary.
+- Context and actors.
+- Non-functional requirements.
+- CI and test execution contracts.
+- Curated use case summaries.
+- Curated research reports.
+
+Use issue-backed artifacts for:
+
+- Task execution.
+- Review feedback.
+- Discussion and triage.
+- Raw investigation notes.
+- Work logs.
+
+## `## Change Log`
+
+Every material page edit should include a concise `## Change Log` entry.
+
+Provider history records author, timestamp, and diff. The body `## Change Log` records why the page changed and which workflow item caused it.
 
 Format:
 
 ```markdown
-## Change Logs
+## Change Log
 
-- 2026-04-23 09:14 `usecase/1-share-summary.md`
-- 2026-04-24 11:02 `usecase/3-search-history.md`
-- 2026-04-24 16:48 `spec/8-caching-strategy.md`
+- 2026-05-13 — #123 — Added checkout actor after use case refinement.
+- 2026-05-14 — PROJ-456 — Updated timeout requirement after production incident review.
 ```
 
 Rules:
 
-- One bullet per material edit. Newest last (chronological).
-- Each bullet follows the timestamped-bullet form from `./body-conventions.md` § Bullet backlink: `- YYYY-MM-DD HH:mm \`<relpath>/<file>.md\``. Optional trailing prose after the closing backtick records a one-line note (`- 2026-04-24 16:48 \`spec/8-caching-strategy.md\` — renamed Session → Conversation`).
-- The backlink points to the **causing issue** — a UC, task, spec, or architecture-section anchor. Never a review item; review items are the surface where the user *picks* an edit, but the change-log records *why* the wiki page changed and that "why" is the underlying issue.
-- Bullets are append-only. Do not reorder, edit, or remove old entries; corrections accrete as new entries.
+- One bullet per material edit.
+- New entries are appended in chronological order.
+- Link to the causing workflow issue, review item, task, use case workflow issue, or research workflow issue.
+- Keep the reason short.
+- Do not paste the discussion transcript into the page.
 
-## Wiki Update Protocol
+## Update protocol
 
-Wiki pages have no lifecycle. They are updated when an **issue state change** affects their content — create, status transition, resolve.
+Update a knowledge page when issue-backed workflow changes affect curated content.
 
-### When to update
+Examples:
 
-Update a wiki page when an issue change affects its content:
+- A use case changes actors, flow, or scope.
+- A task discovers implementation detail that changes architecture documentation.
+- A research item produces a final recommendation.
+- A spec supersedes an older decision.
+- A review item resolves with a required documentation update.
 
-- **New UC, actor, or concept** — affected wiki page (typically `actors.md`, `domain.md`, `context.md`) needs a section entry.
-- **UC refinement** — may change framing in `context.md` or a concept definition in `domain.md`.
-- **Architectural decision or component revision** — updates `architecture.md` (and occasionally `domain.md` when terminology shifts).
-- **Resolved review item whose `target:` list contains a wiki basename** — triggers the close guard below.
+Update steps:
 
-Skip: typo fixes, metadata-only tweaks, internal notes that don't change semantics.
+1. Read the type-specific authoring file and provider-specific page authoring file returned by the authoring resolver.
+2. Edit the affected curated section.
+3. Add or update visible relationships such as `## Related Work` or `## Supersedes` when needed.
+4. Append a `## Change Log` entry with the causing workflow artifact.
+5. Use provider metadata such as labels, page properties, or hierarchy when available.
 
-### How to update
+## Deferred updates
 
-1. Edit the affected `## <Section>` content.
-2. Append a dated bullet to the page's `## Change Logs` section: `- YYYY-MM-DD HH:mm \`<relpath>/<file>.md\``. Create the section if it does not yet exist.
+If a needed knowledge update cannot be completed immediately, create or update a review item in the issue backend.
 
-### Deferring the update
+The review item should include:
 
-If the user chooses not to update the wiki page immediately, open a review item so the gap does not disappear:
+- `## Target` pointing to the affected knowledge page.
+- A clear description of the missing or stale content.
+- Links to the causing workflow item.
 
-1. Allocate an id via the id allocator.
-2. Write `a4/review/<id>-<slug>.md` with:
-   - `type: review`
-   - `kind: gap`
-   - `status: open`
-   - `source: self`
-   - `target: [<causing-issue-path>, <affected wiki basenames>]`
-3. The wiki close guard (at session close) and drift detection (between sessions) re-surface the unresolved impact.
+Do not rely on a page comment as the only deferred-work record when the update needs triage, ownership, or lifecycle tracking.
 
-### Close guard
+## Provider notes
 
-When a review item transitions to `status: resolved` and its `target:` list contains one or more wiki basenames, each referenced wiki page should contain a `## Change Logs` bullet whose backlink points at the review item itself. This is an authoring invariant; nothing automated currently catches the omission, so the author is the only line of defense. Run `uv run ../scripts/validate.py <a4-dir>` after wiki edits if you want a sweep.
+### GitHub Wiki
+
+Use page title, wiki URL, or provider-native wiki links for page references.
+
+Remember that GitHub Wiki page identity is path/title based. Renames can change the primary locator.
+
+### Confluence
+
+Use page title, Smart Link, or full URL for page references.
+
+When provider metadata is available, keep the Confluence page ID as the stable identity and use title or Smart Link for body display.
 
 ## Cross-references
 
-- `./body-conventions.md` — common body rules (heading form, backlink form).
-- `./<type>-authoring.md` — per-type authoring contracts for individual wiki pages.
+- `./knowledge-body.md` — canonical knowledge body rules.
+- `./body-conventions.md` — common heading and reference rules.
+- `./review-authoring.md` — review items for deferred feedback and documentation gaps.
+- `./providers/github-wiki-authoring.md` — GitHub Wiki page rules.
+- `./providers/confluence-page-authoring.md` — Confluence page rules.
