@@ -1,6 +1,6 @@
 # Workflow Knowledge Body Conventions
 
-Body-level rules for workflow artifacts stored in a knowledge backend such as Confluence or GitHub Wiki.
+Body-level rules for workflow artifacts stored in a knowledge backend such as Confluence or GitHub repository `wiki/`.
 
 Knowledge-backed artifacts include `spec`, `architecture`, `domain`, `context`, `actors`, `nfr`, `ci`, and the curated output side of `usecase` and `research`.
 
@@ -119,6 +119,6 @@ If feedback must be triaged, prioritized, assigned, or resolved through workflow
 Store metadata in provider-native fields when available:
 
 - Confluence labels or page properties.
-- GitHub Wiki page frontmatter or index page metadata when needed.
+- GitHub repository `wiki/` page frontmatter or index page metadata when needed.
 
 The visible body remains the fallback for humans and agents.

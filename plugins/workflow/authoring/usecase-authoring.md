@@ -15,7 +15,7 @@ Companion contracts:
 - `./issue-body.md`
 - `./knowledge-body.md`
 - Issue provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
-- Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+- Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-knowledge-authoring.md`
 
 ## Storage role
 
@@ -24,7 +24,7 @@ Companion contracts:
 | Role | Provider | Purpose |
 | --- | --- | --- |
 | Workflow issue | GitHub Issues or Jira | Discovery, questions, review, status, discussion, and task linkage. |
-| Curated knowledge page | Confluence or GitHub Wiki | Stable use case content used by implementation and testing. |
+| Curated knowledge page | Confluence or GitHub repository `wiki/` | Stable use case content used by implementation and testing. |
 
 The workflow issue may exist without a curated page while the use case is being shaped. The curated page should link back to the workflow issue when published.
 

@@ -13,7 +13,7 @@ Use provider-native identity.
 | GitHub Issues | `#123` in the configured repository, or `owner/repo#123` across repositories |
 | Jira | `PROJ-123` |
 | Confluence | Page ID scoped by site; display as page title or Smart Link |
-| GitHub Wiki | Wiki path/title scoped by repository |
+| GitHub knowledge files | Repository-relative path under `wiki/` |
 | Filesystem projection | Provider-resolved reference; local paths are projections, not identity |
 
 Do not require a local monotonic integer id in provider-backed mode.
@@ -49,7 +49,7 @@ Examples:
 - GitHub issue type, issue fields, labels, sub-issues, dependencies, comments, and timeline.
 - Jira issue type, status, custom fields, issue links, remote links, comments, and history.
 - Confluence page properties, labels, page tree, links, comments, and version history.
-- GitHub Wiki page body, wiki path, git history, and optional page metadata blocks.
+- GitHub repository `wiki/` file body, repository path, git history, and optional page metadata blocks.
 
 Every relationship that matters to readers must also appear in the body. Provider metadata is useful for automation; body sections are the portable fallback.
 

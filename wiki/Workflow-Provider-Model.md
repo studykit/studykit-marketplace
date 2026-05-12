@@ -1,4 +1,6 @@
-# Workflow Provider Abstraction Notes
+# Workflow Provider Model
+
+Source document: [`plugins/workflow/doc/provider-abstraction.md`](../plugins/workflow/doc/provider-abstraction.md)
 
 Date: 2026-05-13
 
@@ -698,3 +700,7 @@ This separates workflow convenience from authoring enforcement:
 3. How should provider adapters expose validation errors without local files?
 4. What is the minimal MCP contract required for each provider?
 5. Should setup create provider metadata, or only report missing metadata and ask for confirmation?
+
+## Change Log
+
+- 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Published curated knowledge page in repository `wiki/` directory.

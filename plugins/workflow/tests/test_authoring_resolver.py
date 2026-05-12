@@ -61,7 +61,7 @@ providers:
   issues:
     kind: jira
   knowledge:
-    kind: github-wiki
+    kind: github
 """.lstrip(),
         encoding="utf-8",
     )
@@ -71,13 +71,13 @@ providers:
 
     assert issue_resolution.provider == "jira"
     assert "providers/jira-issue-authoring.md" in _rel_paths(issue_resolution.files)
-    assert knowledge_resolution.provider == "github-wiki"
-    assert "providers/github-wiki-authoring.md" in _rel_paths(knowledge_resolution.files)
+    assert knowledge_resolution.provider == "github"
+    assert "providers/github-knowledge-authoring.md" in _rel_paths(knowledge_resolution.files)
 
 
 def test_invalid_provider_for_role_is_rejected() -> None:
     with pytest.raises(ResolverError, match="not valid for role 'knowledge'"):
-        resolve_authoring("spec", provider="github")
+        resolve_authoring("spec", provider="jira")
 
 
 def test_require_config_fails_when_missing(tmp_path: Path) -> None:

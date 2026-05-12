@@ -33,13 +33,28 @@ GitHub Enterprise host, owner, and repo should be inferred from the configured r
 
 ## Type mapping
 
-Prefer GitHub Issue Types when available.
+Use labels as the v1 type mapping for GitHub Issues.
+
+GitHub Issue Types are not consistently available across repositories and organizations. The GitHub provider should therefore treat labels as the portable default.
+
+Recommended labels:
+
+- `task`
+- `bug`
+- `spike`
+- `epic`
+- `review`
+- `usecase`
+- `research`
+
+Do not require a scope label by default. Repository-specific scope labels may be configured later when a project needs extra filtering.
 
 Fallback order:
 
-1. GitHub Issue Type.
-2. Label such as `workflow/type:review`.
-3. Structured body section or hidden marker only when metadata is unavailable.
+1. artifact-type label.
+2. Repository-specific configured label mapping.
+3. GitHub Issue Type only when setup explicitly enables it.
+4. Structured body section or hidden marker only when metadata is unavailable.
 
 ## Status mapping
 
@@ -62,14 +77,14 @@ Use native GitHub relationships when they match workflow semantics.
 - Dependencies: GitHub issue dependencies when available.
 - Labels and fields: use for type, status, priority, and routing metadata.
 
-Always include visible body sections for relationships, even when native metadata exists.
+Do not duplicate provider-native parent/child or dependency relationships in body sections when GitHub stores them natively.
 
 Required body sections by relationship:
 
 - `target` → `## Target`
 - `implements` → `## Implements`
-- `depends_on` → `## Dependencies`
 - `related` → `## Related`
+- `depends_on` → `## Dependencies` only when GitHub dependency metadata is unavailable or when the blocking reason needs explanation.
 
 ## Review items
 

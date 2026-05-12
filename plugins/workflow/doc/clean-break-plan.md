@@ -6,7 +6,7 @@ Date: 2026-05-13
 
 Create a new `plugins/workflow` plugin instead of turning `plugins/a4` into a remote-native provider workflow system.
 
-`plugins/a4` should remain the existing local Markdown workflow plugin. `plugins/workflow` should be a clean-break implementation for provider-backed workflow over GitHub, Jira, GitHub Wiki, and Confluence.
+`plugins/a4` should remain the existing local Markdown workflow plugin. `plugins/workflow` should be a clean-break implementation for provider-backed workflow over GitHub, Jira, repository `wiki/` directories, and Confluence.
 
 ## Rationale
 
@@ -20,7 +20,7 @@ The new direction is materially different:
 
 - Issue and knowledge providers are separate.
 - GitHub or Jira can be the issue source of truth.
-- GitHub Wiki or Confluence can be the knowledge source of truth.
+- repository `wiki/` directory or Confluence can be the knowledge source of truth.
 - Local files are optional projections, not required canonical state.
 - Authoring is resolved by artifact type, role, and provider, not by local path.
 
@@ -44,7 +44,7 @@ New provider-backed workflow plugin:
 
 - `workflow.config.yml` at repository root.
 - Issue provider: GitHub Issues or Jira.
-- Knowledge provider: GitHub Wiki or Confluence.
+- Knowledge provider: repository `wiki/` directory or Confluence.
 - Native provider references in body text.
 - Provider wrapper commands for reads and writes.
 - Native transports first, MCP fallback.
@@ -181,12 +181,19 @@ Completed so far:
 - Added the session authoring read ledger skeleton at `plugins/workflow/scripts/authoring_ledger.py`.
 - Added the authoring write guard skeleton at `plugins/workflow/scripts/authoring_guard.py`.
 - Added resolver, ledger, and guard tests under `plugins/workflow/tests/`.
+- Registered the MVP backlog as GitHub Issues #28 through #36.
+- Linked #29 through #36 as native GitHub sub-issues of #28.
+- Added native GitHub issue dependencies for hard blocking order.
+- Added plain artifact-type labels as GitHub issue type mapping for the dogfooding backlog.
+- Removed duplicate body order sections from the GitHub backlog issues.
+- Recorded issue relationship, ordering, and label type policy in `plugins/workflow/doc/issue-relationship-policy.md`.
+- Recorded GitHub Issue history access notes in `plugins/workflow/doc/github-issue-history.md` and tracked the research as #37.
 
 ## Open Questions
 
 1. How much of the legacy lifecycle model should be retained for provider-backed status mapping?
 2. What should the first `workflow.config.yml` schema support?
 3. Should GitHub and Jira support ship together, or should one issue provider come first?
-4. Should Confluence be the first knowledge provider, with GitHub Wiki added later?
+4. Should Confluence be the first knowledge provider, with repository `wiki/` directory added later?
 5. How should legacy a4 projects migrate, if at all?
 

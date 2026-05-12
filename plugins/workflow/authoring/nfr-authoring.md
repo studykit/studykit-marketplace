@@ -8,7 +8,7 @@ Companion contracts:
 
 - `./metadata-contract.md`
 - `./knowledge-body.md`
-- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-knowledge-authoring.md`
 
 ## Storage role
 
@@ -17,7 +17,7 @@ Companion contracts:
 Supported knowledge providers:
 
 - Confluence
-- GitHub Wiki
+- GitHub repository `wiki/`
 
 Issue-backed work may cause NFR updates, but the NFR page itself is a knowledge page.
 

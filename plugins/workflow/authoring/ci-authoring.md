@@ -6,14 +6,14 @@ The CI artifact is the workspace reference for how agents and humans verify beha
 
 The canonical CI artifact is knowledge-backed:
 
-- GitHub Wiki page when the knowledge provider is GitHub Wiki.
+- GitHub repository `wiki/` page when the knowledge provider is GitHub repository `wiki/`.
 - Confluence page when the knowledge provider is Confluence.
 - Optional filesystem projection only when configured.
 
 Common body rules: `./body-conventions.md`.
 Knowledge body rules: `./knowledge-body.md`.
 Shared metadata rules: `./metadata-contract.md`.
-Provider-specific page rules: `./providers/github-wiki-authoring.md` or `./providers/confluence-page-authoring.md`.
+Provider-specific page rules: `./providers/github-knowledge-authoring.md` or `./providers/confluence-page-authoring.md`.
 
 ## Purpose
 

@@ -19,7 +19,7 @@ Supported issue providers:
 - GitHub Issues
 - Jira
 
-Do not store workflow review items as Confluence comments, GitHub Wiki notes, or knowledge-page sections. Page comments may point to a review item, but they do not replace it.
+Do not store workflow review items as Confluence comments, GitHub repository `wiki/` notes, or knowledge-page sections. Page comments may point to a review item, but they do not replace it.
 
 ## Review kinds
 

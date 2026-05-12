@@ -15,7 +15,7 @@ Companion contracts:
 - `./issue-body.md`
 - `./knowledge-body.md`
 - Issue provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
-- Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+- Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-knowledge-authoring.md`
 
 ## When research is warranted
 
@@ -40,7 +40,7 @@ Use `spec` instead when the decision is already known and the task is to write t
 | Role | Provider | Purpose |
 | --- | --- | --- |
 | Workflow issue | GitHub Issues or Jira | Scope, questions, discussion, status, review, and follow-up tracking. |
-| Curated knowledge report | Confluence or GitHub Wiki | Final findings, sources, comparisons, and reusable evidence. |
+| Curated knowledge report | Confluence or GitHub repository `wiki/` | Final findings, sources, comparisons, and reusable evidence. |
 
 The workflow issue may exist without a curated report while the investigation is in progress. The curated report should link back to the workflow issue when published.
 

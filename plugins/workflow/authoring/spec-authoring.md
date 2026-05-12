@@ -8,7 +8,7 @@ Companion contracts:
 
 - `./metadata-contract.md`
 - `./knowledge-body.md`
-- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-wiki-authoring.md`
+- Provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-knowledge-authoring.md`
 
 ## Storage role
 
@@ -17,7 +17,7 @@ Companion contracts:
 Supported knowledge providers:
 
 - Confluence
-- GitHub Wiki
+- GitHub repository `wiki/`
 
 Issue-backed work may create, review, or apply a spec, but the spec itself is a knowledge page.
 
@@ -57,7 +57,7 @@ Status meaning:
 Provider mappings may vary:
 
 - Confluence: page property or label such as `workflow:status/active`.
-- GitHub Wiki: page metadata block, frontmatter, or index metadata.
+- GitHub repository `wiki/`: page metadata block, frontmatter, or index metadata.
 
 Do not assume a local cascade will update superseded specs. Provider wrappers or validation may assist, but the author must ensure the supersession relationship is visible and correct.
 

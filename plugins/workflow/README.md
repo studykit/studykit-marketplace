@@ -1,6 +1,6 @@
 # Workflow Plugin
 
-Provider-backed workflow over GitHub Issues, Jira, GitHub Wiki, and Confluence.
+Provider-backed workflow over GitHub Issues, Jira, GitHub repository `wiki/` directory, and Confluence.
 
 The plugin separates issue-backed work tracking from knowledge-backed documentation. Local files are optional projections, not the source of truth in provider-backed mode.
 

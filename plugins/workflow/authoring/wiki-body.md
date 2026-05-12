@@ -2,7 +2,7 @@
 
 Compatibility document for legacy references to `wiki-body.md`.
 
-New authoring contracts should prefer `./knowledge-body.md`. This file keeps the wiki-page name because GitHub Wiki remains one supported knowledge provider, but the rules apply to both GitHub Wiki and Confluence pages.
+New authoring contracts should prefer `./knowledge-body.md`. This file keeps the wiki-page name for compatibility, but the rules apply to both repository `wiki/` Markdown pages and Confluence pages.
 
 Common body rules: `./body-conventions.md`.
 Knowledge body rules: `./knowledge-body.md`.
@@ -88,11 +88,11 @@ Do not rely on a page comment as the only deferred-work record when the update n
 
 ## Provider notes
 
-### GitHub Wiki
+### Repository `wiki/` directory
 
-Use page title, wiki URL, or provider-native wiki links for page references.
+Use repository-relative Markdown links or full GitHub file URLs for page references.
 
-Remember that GitHub Wiki page identity is path/title based. Renames can change the primary locator.
+Remember that repository `wiki/` page identity is path based. Renames can change the primary locator.
 
 ### Confluence
 
@@ -105,5 +105,5 @@ When provider metadata is available, keep the Confluence page ID as the stable i
 - `./knowledge-body.md` — canonical knowledge body rules.
 - `./body-conventions.md` — common heading and reference rules.
 - `./review-authoring.md` — review items for deferred feedback and documentation gaps.
-- `./providers/github-wiki-authoring.md` — GitHub Wiki page rules.
+- `./providers/github-knowledge-authoring.md` — GitHub repository `wiki/` directory page rules.
 - `./providers/confluence-page-authoring.md` — Confluence page rules.

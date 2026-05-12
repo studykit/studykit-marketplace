@@ -25,7 +25,7 @@ DUAL_TYPES = {"usecase", "research"}
 ALL_TYPES = ISSUE_TYPES | KNOWLEDGE_TYPES | DUAL_TYPES
 
 ISSUE_PROVIDERS = {"github", "jira", "filesystem"}
-KNOWLEDGE_PROVIDERS = {"github-wiki", "confluence", "filesystem"}
+KNOWLEDGE_PROVIDERS = {"github", "confluence", "filesystem"}
 
 PROVIDER_ALIASES = {
     "fs": "filesystem",
@@ -35,10 +35,11 @@ PROVIDER_ALIASES = {
     "github-issues": "github",
     "github_issue": "github",
     "github-issue": "github",
-    "github-wikis": "github-wiki",
-    "github_wiki": "github-wiki",
-    "githubwiki": "github-wiki",
-    "wiki": "github-wiki",
+    "github-wiki": "github",
+    "github_wiki": "github",
+    "githubwiki": "github",
+    "repo-wiki": "github",
+    "wiki": "github",
 }
 
 ISSUE_PROVIDER_FILES = {
@@ -47,7 +48,7 @@ ISSUE_PROVIDER_FILES = {
 }
 
 KNOWLEDGE_PROVIDER_FILES = {
-    "github-wiki": "providers/github-wiki-authoring.md",
+    "github": "providers/github-knowledge-authoring.md",
     "confluence": "providers/confluence-page-authoring.md",
 }
 
@@ -271,7 +272,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--type", required=True, help="workflow artifact type")
     parser.add_argument("--role", help="issue or knowledge; required for usecase/research")
-    parser.add_argument("--provider", help="provider override, such as github, jira, confluence, github-wiki")
+    parser.add_argument("--provider", help="provider override, such as github, jira, or confluence")
     parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path used to find workflow.config.yml")
     parser.add_argument("--require-config", action="store_true", help="fail when workflow.config.yml is absent")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of one path per line")

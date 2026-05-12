@@ -87,7 +87,7 @@ source_of_truth:
   issues:
     provider: jira
   knowledge:
-    provider: github-wiki
+    provider: github
 ```
 
 Explicit `--provider` wins over configuration.
@@ -108,7 +108,7 @@ Provider-specific files:
 | --- | --- | --- |
 | issue | GitHub | `providers/github-issue-authoring.md` |
 | issue | Jira | `providers/jira-issue-authoring.md` |
-| knowledge | GitHub Wiki | `providers/github-wiki-authoring.md` |
+| knowledge | GitHub repository `wiki/` | `providers/github-knowledge-authoring.md` |
 | knowledge | Confluence | `providers/confluence-page-authoring.md` |
 
 Filesystem provider support intentionally has no provider-specific authoring file yet.

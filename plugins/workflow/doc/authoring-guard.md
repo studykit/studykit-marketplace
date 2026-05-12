@@ -59,7 +59,7 @@ Exit codes:
 
 ## Intended callers
 
-- Provider wrapper commands before `gh`, Jira REST, Confluence REST, GitHub Wiki git writes, or MCP fallback writes.
+- Provider wrapper commands before `gh`, Jira REST, Confluence REST, GitHub repository `wiki/` git writes, or MCP fallback writes.
 - Session hooks before local projection writes.
 - Skills that create or update workflow artifacts.
 

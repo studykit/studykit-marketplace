@@ -66,7 +66,7 @@ Use provider-native references in body text.
 | GitHub issue or pull request in another repository on the same host | `owner/repo#123` |
 | Jira issue | `PROJ-123` |
 | Confluence page | Page title, Smart Link, or full URL |
-| GitHub Wiki page | Page title, wiki URL, or provider-native wiki link |
+| GitHub repository `wiki/` page | Repository-relative path or Markdown link |
 | External source | Standard Markdown link |
 
 Examples:

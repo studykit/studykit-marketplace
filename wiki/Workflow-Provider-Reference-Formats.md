@@ -1,5 +1,7 @@
 # Workflow Provider Reference Formats
 
+Source document: [`plugins/workflow/doc/provider-reference-formats.md`](../plugins/workflow/doc/provider-reference-formats.md)
+
 Date: 2026-05-13
 
 ## Summary recommendation
@@ -282,3 +284,7 @@ Relationship body sections should keep raw provider-native refs. Relationship me
 7. Decide whether Confluence `space_id` or space key should be displayed in workflow refs. Space keys are readable; page IDs are more stable.
 8. Define parser precedence for ambiguous text such as `ABC-123` in GitHub comments where custom autolinks may also exist.
 9. Define how aliases are updated after provider redirects, repository renames, issue transfers, Jira project moves, or page renames.
+
+## Change Log
+
+- 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Published curated knowledge page in repository `wiki/` directory.
