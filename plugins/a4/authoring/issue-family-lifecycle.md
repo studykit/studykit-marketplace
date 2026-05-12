@@ -2,7 +2,7 @@
 
 The four issue families (`task`, `bug`, `spike`, `research`) share **one** lifecycle, status enum, writer rules, and `done` initial-status preflight. This file is the single source of truth; per-family authoring files cite it and add only family-specific deltas.
 
-> `umbrella` is **not** part of the issue family. It is a narrative-aggregation parent with its own lifecycle (`open | done | discarded`), no implement loop, and no UC-cascade. See `./umbrella-authoring.md`.
+> `epic` is **not** part of the issue family. It is a multi-issue coordination parent with its own lifecycle (`open | done | discarded`), no implement loop, and no UC-cascade. See `./epic-authoring.md`.
 
 ## Status enum
 

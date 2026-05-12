@@ -26,7 +26,7 @@ in sync when the model changes.
 
 Keys are folder names under `<a4-dir>/`: `usecase`, the four issue
 families that share the task lifecycle (`task`, `bug`, `spike`,
-`research`), `review`, `spec`, `idea`, `brainstorm`.
+`research`), `epic`, `review`, `spec`, `idea`, `brainstorm`.
 
 a4 v12.0.0 split the previous combined `task` folder (with a `kind:`
 discriminator) into four sibling top-level folders that share the same
@@ -83,7 +83,7 @@ STATUS_BY_FOLDER: dict[str, frozenset[str]] = {
     "spec": frozenset({"draft", "active", "deprecated", "superseded"}),
     "idea": frozenset({"open", "promoted", "discarded"}),
     "brainstorm": frozenset({"open", "promoted", "discarded"}),
-    "umbrella": frozenset({"open", "done", "discarded"}),
+    "epic": frozenset({"open", "done", "discarded"}),
 }
 
 
@@ -129,7 +129,7 @@ SPEC_TRANSITIONS: dict[str, frozenset[str]] = {
     "deprecated": frozenset({"superseded"}),
 }
 
-UMBRELLA_TRANSITIONS: dict[str, frozenset[str]] = {
+EPIC_TRANSITIONS: dict[str, frozenset[str]] = {
     "open": frozenset({"done", "discarded"}),
     "done": frozenset({"open", "discarded"}),
 }
@@ -142,7 +142,7 @@ FAMILY_TRANSITIONS: dict[str, dict[str, frozenset[str]]] = {
     "research": ISSUE_FAMILY_TRANSITIONS,
     "review": REVIEW_TRANSITIONS,
     "spec": SPEC_TRANSITIONS,
-    "umbrella": UMBRELLA_TRANSITIONS,
+    "epic": EPIC_TRANSITIONS,
 }
 
 
@@ -163,7 +163,7 @@ TERMINAL_STATUSES: dict[str, frozenset[str]] = {
     "spec": frozenset({"deprecated", "superseded"}),
     "idea": frozenset({"promoted", "discarded"}),
     "brainstorm": frozenset({"promoted", "discarded"}),
-    "umbrella": frozenset({"done", "discarded"}),
+    "epic": frozenset({"done", "discarded"}),
 }
 
 IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
@@ -176,7 +176,7 @@ IN_PROGRESS_STATUSES: dict[str, frozenset[str]] = {
     "spec": frozenset(),
     "idea": frozenset(),
     "brainstorm": frozenset(),
-    "umbrella": frozenset(),
+    "epic": frozenset(),
 }
 
 BLOCKED_STATUSES: frozenset[str] = frozenset({"blocked"})

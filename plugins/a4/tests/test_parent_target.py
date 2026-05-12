@@ -4,7 +4,7 @@ Covers `_validate_parent_target` in
 ``markdown_validator.frontmatter``:
 
   - issue-family files (task / bug / spike / research) accept any
-    issue-family parent or an umbrella parent (cross-type allowed);
+    issue-family parent or an epic parent (cross-type allowed);
   - usecase and spec accept same-type parents only;
   - any file's `parent:` pointing at itself is a self-reference error.
 """
@@ -36,9 +36,9 @@ def test_task_with_spike_parent_allowed(a4_workspace: A4Workspace) -> None:
     assert not _has(violations, path="task/2-follow.md", rule="parent-target-type")
 
 
-def test_task_with_umbrella_parent_allowed(a4_workspace: A4Workspace) -> None:
-    a4_workspace.write("umbrella", 1, "search")
-    a4_workspace.write("task", 2, "list", parent="umbrella/1-search")
+def test_task_with_epic_parent_allowed(a4_workspace: A4Workspace) -> None:
+    a4_workspace.write("epic", 1, "search")
+    a4_workspace.write("task", 2, "list", parent="epic/1-search")
 
     violations = _run_violations(a4_workspace.root)
 

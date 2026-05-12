@@ -9,7 +9,7 @@ Every markdown file under `a4/` carries YAML frontmatter. Two families:
 | Family | Examples | Location |
 |--------|----------|----------|
 | **Wiki page** | `context.md`, `domain.md`, `architecture.md`, `actors.md`, `nfr.md`, `ci.md` | `a4/` root |
-| **Issue** | use case, task, bug, spike, research, umbrella, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
+| **Issue** | use case, task, bug, spike, research, epic, review item, spec, idea, brainstorm | `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/epic/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/` |
 
 The four **issue families** (`task`, `bug`, `spike`, `research`) are siblings — one shared status enum and lifecycle (see `./issue-family-lifecycle.md`), each with its own per-type schema. `task` is the default (Jira-style "Task"); `bug` / `spike` / `research` are specialized variants. Cross-family operations (UC cascades, status reset on revising) walk all four; single-family authoring uses the matching folder.
 
@@ -30,7 +30,7 @@ Every file declares `type:` in frontmatter. The value selects the per-type contr
 | Issue — bug | `bug` |
 | Issue — spike | `spike` |
 | Issue — research | `research` |
-| Issue — umbrella | `umbrella` |
+| Issue — epic | `epic` |
 | Issue — review | `review` |
 | Issue — spec | `spec` |
 | Issue — idea | `idea` |
@@ -47,7 +47,7 @@ Rules:
 
 Frontmatter fields referencing other files (`depends_on`, `implements`, `target`, `spec`, `supersedes`, `related`, `parent`, `promoted`) accept any of the following. All resolve to the same file — pick whichever reads best.
 
-- **`<id>` integer short form.** Issue folders only. Bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `umbrella/`, `review/`, `spec/`, `idea/`, `brainstorm/` carries `id: 3`. Slug-drift-proof. Any path-ref beginning with `#` is invalid (legacy `#<id>` removed in a4 v11.0.0).
+- **`<id>` integer short form.** Issue folders only. Bare YAML integer `3` resolves to whichever file under `usecase/`, `task/`, `bug/`, `spike/`, `research/`, `epic/`, `review/`, `spec/`, `idea/`, `brainstorm/` carries `id: 3`. Slug-drift-proof. Any path-ref beginning with `#` is invalid (legacy `#<id>` removed in a4 v11.0.0).
 - **`<folder>/<id>` slug-less form.** Issue folders only. `usecase/3` resolves to the usecase with id 3 regardless of slug. Adds folder hint.
 - **`<folder>/<id>-<slug>` slug-ful form.** `usecase/3-search-history`. Most self-describing — preferred for human-authored frontmatter. Slug is a hint; on slug rename, id wins and the mismatch is silently ignored.
 - **Bare `<id>-<slug>`.** `3-search-history`. Permitted; folder-prefixed form is preferred for readability.

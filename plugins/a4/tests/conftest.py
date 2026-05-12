@@ -65,7 +65,7 @@ _DEFAULT_BODY: dict[str, str] = {
         "## Description\nx\n\n"
         "## Decision\nx\n"
     ),
-    "umbrella": (
+    "epic": (
         "## Description\nx\n\n"
         "## Children\n- (none yet)\n\n"
         "## Log\n- ok\n"
@@ -88,7 +88,7 @@ class A4Workspace:
             "bug",
             "spike",
             "research",
-            "umbrella",
+            "epic",
             "usecase",
             "spec",
         ):

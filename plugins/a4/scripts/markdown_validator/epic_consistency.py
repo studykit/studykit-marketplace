@@ -1,34 +1,34 @@
-"""Umbrella consistency + drift validator (library).
+"""Epic consistency + drift validator (library).
 
-`umbrella-authoring.md` declares the validator's reverse-`parent:`
-resolver as authoritative for membership; the umbrella body's
+`epic-authoring.md` declares the validator's reverse-`parent:`
+resolver as authoritative for membership; the epic body's
 `## Children` section is the human-readable mirror. Drift between the
-two surfaces — and the soft signal that an umbrella's children are all
-terminal while the umbrella itself is still `open` — is silent without
+two surfaces — and the soft signal that an epic's children are all
+terminal while the epic itself is still `open` — is silent without
 this check.
 
 Three signals are surfaced:
 
-  - ``umbrella-child-not-listed`` *(error)* — a file's frontmatter
-    ``parent:`` resolves to this umbrella but the umbrella body's
+  - ``epic-child-not-listed`` *(error)* — a file's frontmatter
+    ``parent:`` resolves to this epic but the epic body's
     ``## Children`` section does not list it. The doc names this as a
     common mistake ("Children listed only via reverse-`parent:`").
-  - ``umbrella-stale-listing`` *(error)* — the umbrella body's
+  - ``epic-stale-listing`` *(error)* — the epic body's
     ``## Children`` section lists a child (without an annotation
     suffix) but no file's frontmatter ``parent:`` resolves to this
-    umbrella. Annotated bullets (``— moved to umbrella/22-...``,
+    epic. Annotated bullets (``— moved to epic/22-...``,
     ``— discarded 2026-05-08``) are explicitly historical per the
     authoring doc and are excluded from this check.
-  - ``umbrella-children-all-terminal`` *(warning)* — the umbrella is
+  - ``epic-children-all-terminal`` *(warning)* — the epic is
     at ``status: open`` but every child reached a terminal status
     (``done`` / ``discarded``) for its family. The doc explicitly
     declares this state "mildly inconsistent but not an error" — the
-    author may have intentionally kept the umbrella open for follow-up
+    author may have intentionally kept the epic open for follow-up
     children. Surfaced as a warning so authors can review and either
-    flip the umbrella to ``done`` or knowingly leave it open.
+    flip the epic to ``done`` or knowingly leave it open.
 
 The check is workspace-only — file-scope mode is not supported in v1
-because the relationship is inherently cross-file (an umbrella's
+because the relationship is inherently cross-file (an epic's
 membership state can only be derived from every issue-family file's
 ``parent:`` field). Pure library — no stdout / stderr / exit.
 """
@@ -131,28 +131,28 @@ def _extract_children_entries(body_text: str) -> list[_ChildEntry]:
     return entries
 
 
-def _collect_umbrellas(a4_dir: Path) -> list[tuple[Path, str]]:
-    """Return (path, canonical) pairs for every `umbrella/*.md` file."""
+def _collect_epics(a4_dir: Path) -> list[tuple[Path, str]]:
+    """Return (path, canonical) pairs for every `epic/*.md` file."""
     out: list[tuple[Path, str]] = []
-    for p in iter_issue_files(a4_dir, "umbrella"):
-        out.append((p, f"umbrella/{p.stem}"))
+    for p in iter_issue_files(a4_dir, "epic"):
+        out.append((p, f"epic/{p.stem}"))
     return out
 
 
 def _collect_parent_pointers(
     a4_dir: Path, index: RefIndex
 ) -> dict[str, list[tuple[str, str, str]]]:
-    """Build {umbrella-canonical → list of (canonical, folder, status)} from `parent:`.
+    """Build {epic-canonical → list of (canonical, folder, status)} from `parent:`.
 
     Walks all issue-family folders (task / bug / spike / research / and
     others that may grow ``parent:`` later) and collects every file
-    whose ``parent:`` resolves to an umbrella. Status is captured
+    whose ``parent:`` resolves to an epic. Status is captured
     alongside the canonical so the drift detector can evaluate
     terminal-set membership without a second pass.
     """
     out: dict[str, list[tuple[str, str, str]]] = {}
     for folder in ISSUE_FOLDERS:
-        if folder == "umbrella":
+        if folder == "epic":
             continue
         for p in iter_issue_files(a4_dir, folder):
             fm = read_fm(p)
@@ -164,7 +164,7 @@ def _collect_parent_pointers(
             if isinstance(raw, str) and not raw.strip():
                 continue
             resolved = index.resolve(raw)
-            if resolved is None or resolved.folder != "umbrella":
+            if resolved is None or resolved.folder != "epic":
                 continue
             status = fm.get("status")
             status_str = status if isinstance(status, str) else ""
@@ -179,11 +179,11 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
     ignored — the relationship is inherently cross-file and a single-file
     scope would produce a partial view."""
     index = RefIndex(a4_dir)
-    umbrellas = _collect_umbrellas(a4_dir)
+    epics = _collect_epics(a4_dir)
     parent_map = _collect_parent_pointers(a4_dir, index)
 
     mismatches: list[Mismatch] = []
-    for path, canonical in umbrellas:
+    for path, canonical in epics:
         body = extract_body(path).content
         entries = _extract_children_entries(body)
 
@@ -209,7 +209,7 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
             mismatches.append(
                 Mismatch(
                     path=rel,
-                    rule="umbrella-child-not-listed",
+                    rule="epic-child-not-listed",
                     field="Children",
                     message=(
                         f"`{child_canonical}` declares "
@@ -223,7 +223,7 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
             mismatches.append(
                 Mismatch(
                     path=rel,
-                    rule="umbrella-stale-listing",
+                    rule="epic-stale-listing",
                     field="Children",
                     message=(
                         f"`{listed_canonical}` is listed in `## Children` "
@@ -234,9 +234,9 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
                 )
             )
 
-        umbrella_fm = read_fm(path) or {}
+        epic_fm = read_fm(path) or {}
         if (
-            umbrella_fm.get("status") == "open"
+            epic_fm.get("status") == "open"
             and children
             and all(
                 status in TERMINAL_STATUSES.get(folder, frozenset())
@@ -246,12 +246,12 @@ def run(a4_dir: Path, _file: Path | None = None) -> list[Mismatch]:
             mismatches.append(
                 Mismatch(
                     path=rel,
-                    rule="umbrella-children-all-terminal",
+                    rule="epic-children-all-terminal",
                     field="status",
                     message=(
-                        "umbrella `status: open` but every child has reached "
+                        "epic `status: open` but every child has reached "
                         "a terminal status (`done` / `discarded`); "
-                        "consider flipping the umbrella to `done`, or "
+                        "consider flipping the epic to `done`, or "
                         "leave open intentionally for follow-up children"
                     ),
                     severity="warning",

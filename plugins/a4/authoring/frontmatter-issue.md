@@ -1,6 +1,6 @@
 # a4 Issue Frontmatter
 
-Issue-side frontmatter rules — every file under `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/umbrella/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/`. Per-type field tables: each `<type>-authoring.md`. Cross-cutting rules shared with wiki pages (`type:`, path-reference format, empty collections, unknown fields) live in `./frontmatter-common.md`.
+Issue-side frontmatter rules — every file under `a4/usecase/`, `a4/task/`, `a4/bug/`, `a4/spike/`, `a4/research/`, `a4/epic/`, `a4/review/`, `a4/spec/`, `a4/idea/`, `a4/brainstorm/`. Per-type field tables: each `<type>-authoring.md`. Cross-cutting rules shared with wiki pages (`type:`, path-reference format, empty collections, unknown fields) live in `./frontmatter-common.md`.
 
 ## `id`
 
@@ -80,7 +80,7 @@ Shared across all issue types. Omit empty fields, or use `[]`. `null` (or `~`, o
 | `spec` | task (`task` / `bug` only) | spec | Specs that govern this task |
 | `supersedes` | spec, usecase | prior spec(s) / usecase(s) | This item replaces the referenced item(s) of the same family |
 | `promoted` | idea, brainstorm | spec, usecase, task, brainstorm | Where this item's content graduated to (brainstorm: many ideas → concrete artifacts; idea: one captured thought → concrete artifact) |
-| `parent` | any issue except `umbrella` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or `umbrella`; `usecase` / `spec` parents restricted to same-type; `umbrella` itself takes no parent) | Parent in a decomposition / derivation hierarchy or aggregation grouping. Home for narrative shared across siblings — see `./issue-body.md` § `## Log` and `./umbrella-authoring.md`. The child's `parent:` makes the parent discoverable for reverse `children` lookup |
+| `parent` | any issue except `epic` | issue (issue-family children — `task` / `bug` / `spike` / `research` — accept any issue-family parent or `epic`; `usecase` / `spec` parents restricted to same-type; `epic` itself takes no parent) | Parent in a decomposition / derivation hierarchy or coordination grouping. Home for narrative shared across siblings — see `./issue-body.md` § `## Log` and `./epic-authoring.md`. The child's `parent:` makes the parent discoverable for reverse `children` lookup |
 | `related` | any | any | Generic catchall for ties not fitting other fields but warranting frontmatter-level searchability |
 
 Soft references (see-also, mentions) are backtick-wrapped backlinks (`` `../usecase/3-search-history.md` ``) in body prose, not frontmatter.
@@ -90,11 +90,11 @@ Soft references (see-also, mentions) are backtick-wrapped backlinks (`` `../usec
 `parent` plays two roles, sharing the field:
 
 - **Derivation parent** — `parent` points at the issue this one was spawned from. A `bug` from a `task` may set `parent: task/<id>-<slug>`; a follow-up `task` from a `spike` may set `parent: spike/<id>-<slug>`. Cross-type within the issue family (`task` / `bug` / `spike` / `research`) is allowed.
-- **Aggregation parent** — `parent` points at an `umbrella/<id>-<slug>`, a file purpose-built to host shared narrative for several sibling children. See `./umbrella-authoring.md`.
+- **Coordination parent** — `parent` points at an `epic/<id>-<slug>`, a multi-issue coordination parent that hosts shared narrative for several sibling children. See `./epic-authoring.md`.
 
 Both forms use the same `parent:` field, so reverse `children` lookups (`grep`, `scripts/search.py --references-via parent`) find every child regardless of parent type.
 
-`usecase` and `spec` use `parent` only in same-type form (UC split, spec supersedes-chain hierarchies). `umbrella` itself takes no parent — nested umbrellas are not supported in this revision.
+`usecase` and `spec` use `parent` only in same-type form (UC split, spec supersedes-chain hierarchies). `epic` itself takes no parent — nested epics are not supported in this revision.
 
 The parent is the agreed home for **narrative spanning its children** — decisions affecting several siblings, shared approach, cross-sibling trade-offs. That belongs in the parent's `## Log`, not duplicated across each child. See `./issue-body.md#log` for entry format and `./issue-body.md#inline-cross-references-for-cross-cutting-narrative` for the inline cross-reference rule (a child entry depending on a parent decision must inline-cite the parent path so a session reading the child alone can discover the next file to open).
 

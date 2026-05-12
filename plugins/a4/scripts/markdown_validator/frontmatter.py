@@ -214,14 +214,14 @@ SCHEMAS: dict[str, Schema] = {
         int_fields=frozenset({"id"}),
         path_list_fields=frozenset({"promoted"}),
     ),
-    "umbrella": Schema(
-        name="umbrella",
+    "epic": Schema(
+        name="epic",
         required=frozenset(
             {"type", "id", "title", "status"}
         ),
         enums={
-            "type": frozenset({"umbrella"}),
-            "status": STATUS_BY_FOLDER["umbrella"],
+            "type": frozenset({"epic"}),
+            "status": STATUS_BY_FOLDER["epic"],
         },
         int_fields=frozenset({"id"}),
         path_list_fields=frozenset({"related"}),
@@ -544,10 +544,10 @@ def validate_file(
 
 
 _PARENT_ALLOWED_FOLDERS: dict[str, frozenset[str]] = {
-    "task": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
-    "bug": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
-    "spike": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
-    "research": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"umbrella"}),
+    "task": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"epic"}),
+    "bug": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"epic"}),
+    "spike": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"epic"}),
+    "research": frozenset(ISSUE_FAMILY_TYPES) | frozenset({"epic"}),
     "usecase": frozenset({"usecase"}),
     "spec": frozenset({"spec"}),
 }
@@ -589,7 +589,7 @@ def _validate_parent_target(
         if ftype in ISSUE_FAMILY_TYPES:
             allowed_label = (
                 "issue-family folders (task / bug / spike / research) "
-                "or umbrella"
+                "or epic"
             )
         else:
             allowed_label = f"`{ftype}` (same-type)"

@@ -34,7 +34,7 @@ labels: []             # free-form tags
 | `implements` | no | list of paths | use cases delivered (often empty for bug work that does not implement a UC) |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
-| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this bug descends from, **or** an `umbrella/<id>-<slug>` aggregating this bug with siblings. Cross-type within the issue family is allowed. See "Parent and shared narrative" below. |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this bug descends from, **or** an `epic/<id>-<slug>` coordinating this bug with siblings. Cross-type within the issue family is allowed. See "Parent and shared narrative" below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/bug/<id>-<slug>/` (typically empty — repro/logs/screenshots only when worth keeping) |
 | `cycle` | no | int | implementation cycle number |
 | `labels` | no | list of strings | free-form tags |
@@ -56,7 +56,7 @@ A bug without a reproducible failure path is exploratory until reproduction is c
 `parent:` is optional. Two cases:
 
 - **Derivation parent** — set when this bug descends from another issue: most commonly a `task` whose work surfaced the regression, or a sibling `bug` whose investigation spun this one off. Cross-type within the issue family allowed.
-- **Aggregation parent (umbrella)** — set to `umbrella/<id>-<slug>` when this bug is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md`.
+- **Coordination parent (epic)** — set to `epic/<id>-<slug>` when this bug is one of several children grouped under an epic for shared narrative. See `./epic-authoring.md`.
 
 The parent file is the agreed home for **narrative shared across siblings**. Record in the parent's `## Log`, not duplicated in each child. When a child entry depends on a parent decision, inline-cite the parent path per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`.
 

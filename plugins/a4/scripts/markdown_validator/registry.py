@@ -119,21 +119,21 @@ def _from_transition(v) -> Issue:
     )
 
 
-def _umbrella_workspace(a4_dir: Path) -> list[Issue]:
-    from . import umbrella_consistency as vuc
+def _epic_workspace(a4_dir: Path) -> list[Issue]:
+    from . import epic_consistency as vuc
 
-    return [_from_umbrella(m) for m in vuc.run(a4_dir, None)]
-
-
-def _umbrella_file(a4_dir: Path, file: Path) -> list[Issue]:
-    from . import umbrella_consistency as vuc
-
-    return [_from_umbrella(m) for m in vuc.run(a4_dir, file)]
+    return [_from_epic(m) for m in vuc.run(a4_dir, None)]
 
 
-def _from_umbrella(m) -> Issue:
+def _epic_file(a4_dir: Path, file: Path) -> list[Issue]:
+    from . import epic_consistency as vuc
+
+    return [_from_epic(m) for m in vuc.run(a4_dir, file)]
+
+
+def _from_epic(m) -> Issue:
     return Issue(
-        category="umbrella",
+        category="epic",
         path=m.path,
         rule=m.rule,
         message=m.message,
@@ -175,16 +175,16 @@ CHECKS: dict[str, Check] = {
         run_workspace=_transitions_workspace,
         run_file=_transitions_file,
     ),
-    "umbrella": Check(
-        name="umbrella",
+    "epic": Check(
+        name="epic",
         description=(
-            "Umbrella `## Children` body list ↔ reverse-`parent:` "
+            "Epic `## Children` body list ↔ reverse-`parent:` "
             "consistency. Catches children present in the body but not "
             "via `parent:`, and children via `parent:` not listed in "
             "the body. Workspace-only (relationship is cross-file)."
         ),
         supports_file_scope=False,
-        run_workspace=_umbrella_workspace,
-        run_file=_umbrella_file,
+        run_workspace=_epic_workspace,
+        run_file=_epic_file,
     ),
 }

@@ -53,7 +53,7 @@ def _run_pre_edit(
 
 
 def _make_a4_layout(project_dir: Path) -> None:
-    for folder in ("task", "spike", "bug", "research", "umbrella"):
+    for folder in ("task", "spike", "bug", "research", "epic"):
         (project_dir / "a4" / folder).mkdir(parents=True, exist_ok=True)
 
 

@@ -2,7 +2,7 @@
 """Compute the next globally-unique id for an a4/ workspace.
 
 Scans all issue files across the canonical issue folders (usecase/,
-task/, bug/, spike/, research/, umbrella/, review/, spec/, idea/,
+task/, bug/, spike/, research/, epic/, review/, spec/, idea/,
 brainstorm/) for filenames of the form ``<id>-<slug>.md`` and returns
 ``max(id) + 1``. Filenames are the source of truth for id allocation —
 the validator (`/a4:validate`) independently verifies that each file's

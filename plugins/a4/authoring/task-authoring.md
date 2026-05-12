@@ -34,7 +34,7 @@ labels: []             # free-form tags
 | `implements` | no | list of paths | use cases delivered |
 | `depends_on` | no | list of paths | other tasks this one needs first |
 | `spec` | no | list of paths | specs governing this task |
-| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this task descends from, **or** an `umbrella/<id>-<slug>` aggregating this task with siblings. Cross-type within the issue family is allowed (e.g., `parent: spike/12-cache-shape`). See "Parent and shared narrative" below. |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this task descends from, **or** an `epic/<id>-<slug>` coordinating this task with siblings. Cross-type within the issue family is allowed (e.g., `parent: spike/12-cache-shape`). See "Parent and shared narrative" below. |
 | `related` | no | list of paths | Catchall a4 cross-references useful for implementation context but not acceptance-criteria anchoring, such as `architecture`, `domain`, `research/<id>`, or `spike/<id>`. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/task/<id>-<slug>/`. Empty list is the typical default. Production source paths are not duplicated in frontmatter; git history is authoritative, and the optional body `## Change Plan` serves as a forward-looking scope fence when needed. |
 | `cycle` | no | int | implementation cycle number |
@@ -54,7 +54,7 @@ labels: []             # free-form tags
 `parent:` is optional. Two cases:
 
 - **Derivation parent** — set when this task descends from another issue: a follow-up `task` from a `spike`, a `task` decomposed into smaller `task`s, a `task` spawned to fix a bug surfaced by another `task`. Cross-type within the issue family allowed.
-- **Aggregation parent (umbrella)** — set to `umbrella/<id>-<slug>` when this task is one of several children grouped under an umbrella for shared narrative. See `./umbrella-authoring.md`.
+- **Coordination parent (epic)** — set to `epic/<id>-<slug>` when this task is one of several children grouped under an epic for shared narrative. See `./epic-authoring.md`.
 
 The parent file is the agreed home for **narrative shared across siblings**. Record in the parent's `## Log`, not duplicated in each child. When a child entry depends on a parent decision, inline-cite the parent path per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`.
 
@@ -66,7 +66,7 @@ Empty anchors are not always a problem — small UI tweaks, single-property vali
 
 ### Granularity — split signals
 
-Split into multiple task files when a single task would span multiple unrelated edits, distinct AC sets, or independent test surfaces. Each split file allocates its own globally-monotonic `id:` and stands on its own. Use `depends_on:` between split tasks when one must land before another, and a shared `parent:` (issue or `umbrella/<id>-<slug>`) when the siblings warrant cross-cutting narrative per `./umbrella-authoring.md`.
+Split into multiple task files when a single task would span multiple unrelated edits, distinct AC sets, or independent test surfaces. Each split file allocates its own globally-monotonic `id:` and stands on its own. Use `depends_on:` between split tasks when one must land before another, and a shared `parent:` (issue or `epic/<id>-<slug>`) when the siblings warrant cross-cutting narrative per `./epic-authoring.md`.
 
 ### Evidence-readiness — sister rule
 
@@ -102,7 +102,7 @@ Task-specific notes:
 
 **Optional, emit only when there is content for them:**
 
-- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Useful when (a) the task is one of several related tasks and needs a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./umbrella-authoring.md`).
+- `## Change Plan` — forward-looking scope fence. Action / path / change table (or bullet list) listing production source paths the task plans to write or modify, plus any artifact paths under `artifacts/task/<id>-<slug>/`. Useful when (a) the task is one of several related tasks and needs a per-task path-level scope fence, (b) the file set is non-obvious and warrants explicit handoff, or (c) the same file is touched by multiple sibling tasks (3+ overlap signals a shared integration point — see `./epic-authoring.md`).
 - `## References` — supporting documents relevant to implementation. Use backlinks for a4 files (e.g., `` `../architecture.md#sessionservice` `` or `` `../research/12-cache-options.md` ``) and relative paths for repo docs (e.g., `` `../../docs/auth.md` ``), each with a short reason.
 - `## Interface Contracts` — contracts this task consumes or provides, with backlinks to `architecture.md` sections (e.g., `` `../architecture.md#sessionservice` ``). For UC-less work, link to the spec or relevant `architecture.md` section.
 - `## Resume` — current-state snapshot for the next session. Strongly recommended while non-terminal (any status other than `done` / `discarded`). See `./issue-body.md#resume`.

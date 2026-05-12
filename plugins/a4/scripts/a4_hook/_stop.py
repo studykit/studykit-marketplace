@@ -211,7 +211,7 @@ _STATUS_VALUE_ORDER: dict[str, tuple[str, ...]] = {
     "spec": ("draft", "active", "deprecated", "superseded"),
     "idea": ("open", "promoted", "discarded"),
     "brainstorm": ("open", "promoted", "discarded"),
-    "umbrella": ("open", "done", "discarded"),
+    "epic": ("open", "done", "discarded"),
 }
 
 _FIELD_VALUE_ORDER: dict[str, tuple[str, ...]] = {

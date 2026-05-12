@@ -43,7 +43,7 @@ labels: []                           # free-form tags
 | `mode` | yes | enum | `comparative` \| `single` |
 | `options` | conditional | list of strings | option names — required when `mode: comparative`; forbidden when `mode: single` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
-| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this research descends from, **or** an `umbrella/<id>-<slug>` aggregating this research with siblings. Cross-type within the issue family is allowed. See "Parent and shared narrative" below. |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this research descends from, **or** an `epic/<id>-<slug>` coordinating this research with siblings. Cross-type within the issue family is allowed. See "Parent and shared narrative" below. |
 | `related` | no | list of paths | soft links — typically the spec(s) or task(s) this research informs |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/research/<id>-<slug>/` (typically empty — research output lives in the body) |
 | `labels` | no | list of strings | free-form tags |
@@ -64,7 +64,7 @@ labels: []                           # free-form tags
 `parent:` is optional. Two cases:
 
 - **Derivation parent** — set when this research was scoped from another issue: typically a `task` author who needed an investigation to settle an open question. Cross-type within the issue family allowed.
-- **Aggregation parent (umbrella)** — set to `umbrella/<id>-<slug>` when grouped under an umbrella. See `./umbrella-authoring.md`.
+- **Coordination parent (epic)** — set to `epic/<id>-<slug>` when grouped under an epic. See `./epic-authoring.md`.
 
 The parent file is the agreed home for **narrative shared across siblings**. Record in the parent's `## Log`. When a child entry depends on a parent decision, inline-cite per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`.
 

@@ -1,6 +1,6 @@
 # a4 Issue Body Conventions
 
-Body-level rules for issue files (`usecase`, `task`, `bug`, `spike`, `research`, `umbrella`, `review`, `spec`, `idea`, `brainstorm`). Defines two optional sections that keep a mid-flight issue file self-sufficient for the next session: `## Resume` (current-state snapshot) and `## Log` (narrative-worthy events).
+Body-level rules for issue files (`usecase`, `task`, `bug`, `spike`, `research`, `epic`, `review`, `spec`, `idea`, `brainstorm`). Defines two optional sections that keep a mid-flight issue file self-sufficient for the next session: `## Resume` (current-state snapshot) and `## Log` (narrative-worthy events).
 
 Common body rules (heading form, backlink form): `./body-conventions.md`.
 
@@ -68,7 +68,7 @@ When a slot's value changes, **rewrite the slot in place** — do not keep the o
 
 Purpose: **append-only narrative of meaningful events** that have shaped the work — decision pivots, blocker resolutions, approach changes worth remembering. Routine progress is not narrative; do not log "started today" or "moved to progress". The section earns its place when the *why* of a past change adds context the current state alone cannot supply.
 
-For an `umbrella/<id>-<slug>` file, `## Log` is the umbrella's **reason for existing** — the cross-cutting narrative spanning its children. Per `./umbrella-authoring.md`, children inline-cite the umbrella path in their own entries when they depend on a decision recorded there.
+For an `epic/<id>-<slug>` file, `## Log` carries the epic's **shared coordination narrative** — decisions, pivots, blockers, integration constraints, and cross-child trade-offs spanning its children. Per `./epic-authoring.md`, children inline-cite the epic path in their own entries when they depend on a decision recorded there.
 
 Write entries when:
 
@@ -102,9 +102,9 @@ Use the body backlink form (`` `<relpath>/<file>.md` `` or `` `<file>.md` `` per
 ```markdown
 ## Resume
 
-**Approach.** follow the caching strategy decided in `../umbrella/5-search.md` `## Log`. This child only diverges on test-fixture shape.
+**Approach.** follow the caching strategy decided in `../epic/5-search.md` `## Log`. This child only diverges on test-fixture shape.
 
-**Blocked on.** cache eviction timing — local to this task, not covered by the umbrella decision.
+**Blocked on.** cache eviction timing — local to this task, not covered by the epic decision.
 ```
 
 Without this inline citation, the parent's `## Log` is invisible to a session that started from the child file. Frontmatter `parent:` makes the parent *discoverable* (reverse children lookup); the inline citation makes it *necessary to read* — only when the entry actually depends on it. Self-contained entries need no cross-reference.
@@ -126,7 +126,7 @@ Rules:
 - Format `- <YYYY-MM-DD HH:mm> <reason text>`. Timestamp is KST. When the reason cites another file, use the backtick-wrapped backlink form per `./body-conventions.md`.
 - Append-only — never edit or remove the bullet. If the discard rationale is later understood differently, append a second bullet rather than rewriting the first.
 - Emit only when the file is at `status: discarded`. Files in any other lifecycle state must not carry this section.
-- Applies uniformly to every issue type that has a `discarded` terminal status (`task`, `bug`, `spike`, `research`, `umbrella`, `usecase`, `spec`, `idea`, `brainstorm`). Per-type contracts do not redefine the format.
+- Applies uniformly to every issue type that has a `discarded` terminal status (`task`, `bug`, `spike`, `research`, `epic`, `usecase`, `spec`, `idea`, `brainstorm`). Per-type contracts do not redefine the format.
 
 ## Cross-references
 

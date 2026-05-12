@@ -29,7 +29,7 @@ labels: []             # free-form tags
 | `title` | yes | string | human-readable |
 | `status` | yes | enum | `open` \| `queued` \| `progress` \| `holding` \| `done` \| `failing` \| `discarded` |
 | `depends_on` | no | list of paths | other tasks this one needs first |
-| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `umbrella/<id>-<slug>` aggregating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See "Parent and shared narrative" below. |
+| `parent` | no | path | An issue-family file (`task` / `bug` / `spike` / `research`) this spike descends from, **or** an `epic/<id>-<slug>` coordinating this spike with siblings. Cross-type within the issue family is allowed (e.g., a spike spun out of a stuck task: `parent: task/17-search-history`). See "Parent and shared narrative" below. |
 | `artifacts` | no | list of strings | artifact paths under `artifacts/spike/<id>-<slug>/` (or `artifacts/spike/archive/<id>-<slug>/...` once archived). **Never** point at production source — production paths the spike may touch are recorded by git history, and the optional body `## Change Plan` may name them as a forward-looking scope fence. |
 | `labels` | no | list of strings | free-form tags |
 
@@ -47,7 +47,7 @@ labels: []             # free-form tags
 `parent:` is optional. Two cases:
 
 - **Derivation parent** — set when this spike was spawned from another issue: typically a `task` whose work hit a question that needed exploration. Cross-type within the issue family allowed.
-- **Aggregation parent (umbrella)** — set to `umbrella/<id>-<slug>` when this spike is one of several children grouped under an umbrella. See `./umbrella-authoring.md`.
+- **Coordination parent (epic)** — set to `epic/<id>-<slug>` when this spike is one of several children grouped under an epic. See `./epic-authoring.md`.
 
 The parent file is the agreed home for **narrative shared across siblings**. Record in the parent's `## Log`. When a child entry depends on a parent decision, inline-cite per `./issue-body.md#inline-cross-references-for-cross-cutting-narrative`.
 

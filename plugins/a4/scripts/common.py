@@ -28,7 +28,7 @@ ISSUE_FOLDERS: tuple[str, ...] = (
     "bug",
     "spike",
     "research",
-    "umbrella",
+    "epic",
     "review",
     "spec",
     "idea",

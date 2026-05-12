@@ -1,6 +1,6 @@
-"""Umbrella frontmatter schema checks.
+"""Epic frontmatter schema checks.
 
-Covers the `umbrella` schema in ``markdown_validator.frontmatter``:
+Covers the `epic` schema in ``markdown_validator.frontmatter``:
 
   - required fields are enforced;
   - `implements` / `spec` / `depends_on` / `artifacts` / `cycle` /
@@ -34,107 +34,107 @@ def _has(violations, *, path: str, rule: str, field: str | None = None) -> bool:
     return False
 
 
-def test_minimal_valid_umbrella(a4_workspace: A4Workspace) -> None:
-    a4_workspace.write("umbrella", 1, "ok")
+def test_minimal_valid_epic(a4_workspace: A4Workspace) -> None:
+    a4_workspace.write("epic", 1, "ok")
 
     violations = _run_violations(a4_workspace.root)
 
-    file_violations = [v for v in violations if v.path == "umbrella/1-ok.md"]
+    file_violations = [v for v in violations if v.path == "epic/1-ok.md"]
     assert file_violations == []
 
 
-def test_umbrella_implements_forbidden(a4_workspace: A4Workspace) -> None:
+def test_epic_implements_forbidden(a4_workspace: A4Workspace) -> None:
     a4_workspace.write("usecase", 5, "x")
-    a4_workspace.write("umbrella", 1, "x", implements=["usecase/5-x"])
+    a4_workspace.write("epic", 1, "x", implements=["usecase/5-x"])
 
     violations = _run_violations(a4_workspace.root)
 
     assert _has(
         violations,
-        path="umbrella/1-x.md",
+        path="epic/1-x.md",
         rule="type-field-forbidden",
         field="implements",
     )
 
 
-def test_umbrella_spec_forbidden(a4_workspace: A4Workspace) -> None:
+def test_epic_spec_forbidden(a4_workspace: A4Workspace) -> None:
     a4_workspace.write("spec", 5, "decision")
-    a4_workspace.write("umbrella", 1, "x", spec=["spec/5-decision"])
+    a4_workspace.write("epic", 1, "x", spec=["spec/5-decision"])
 
     violations = _run_violations(a4_workspace.root)
 
     assert _has(
         violations,
-        path="umbrella/1-x.md",
+        path="epic/1-x.md",
         rule="type-field-forbidden",
         field="spec",
     )
 
 
-def test_umbrella_depends_on_forbidden(a4_workspace: A4Workspace) -> None:
+def test_epic_depends_on_forbidden(a4_workspace: A4Workspace) -> None:
     a4_workspace.write("task", 5, "dep")
-    a4_workspace.write("umbrella", 1, "x", depends_on=["task/5-dep"])
+    a4_workspace.write("epic", 1, "x", depends_on=["task/5-dep"])
 
     violations = _run_violations(a4_workspace.root)
 
     assert _has(
         violations,
-        path="umbrella/1-x.md",
+        path="epic/1-x.md",
         rule="type-field-forbidden",
         field="depends_on",
     )
 
 
-def test_umbrella_artifacts_forbidden(a4_workspace: A4Workspace) -> None:
+def test_epic_artifacts_forbidden(a4_workspace: A4Workspace) -> None:
     a4_workspace.write(
-        "umbrella",
+        "epic",
         1,
         "x",
-        artifacts=["artifacts/umbrella/1-x/note.md"],
+        artifacts=["artifacts/epic/1-x/note.md"],
     )
 
     violations = _run_violations(a4_workspace.root)
 
     assert _has(
         violations,
-        path="umbrella/1-x.md",
+        path="epic/1-x.md",
         rule="type-field-forbidden",
         field="artifacts",
     )
 
 
-def test_umbrella_cycle_forbidden(a4_workspace: A4Workspace) -> None:
-    a4_workspace.write("umbrella", 1, "x", cycle=2)
+def test_epic_cycle_forbidden(a4_workspace: A4Workspace) -> None:
+    a4_workspace.write("epic", 1, "x", cycle=2)
 
     violations = _run_violations(a4_workspace.root)
 
     assert _has(
         violations,
-        path="umbrella/1-x.md",
+        path="epic/1-x.md",
         rule="type-field-forbidden",
         field="cycle",
     )
 
 
-def test_umbrella_parent_forbidden(a4_workspace: A4Workspace) -> None:
-    a4_workspace.write("umbrella", 5, "outer")
-    a4_workspace.write("umbrella", 1, "inner", parent="umbrella/5-outer")
+def test_epic_parent_forbidden(a4_workspace: A4Workspace) -> None:
+    a4_workspace.write("epic", 5, "outer")
+    a4_workspace.write("epic", 1, "inner", parent="epic/5-outer")
 
     violations = _run_violations(a4_workspace.root)
 
     assert _has(
         violations,
-        path="umbrella/1-inner.md",
+        path="epic/1-inner.md",
         rule="type-field-forbidden",
         field="parent",
     )
 
 
-def test_umbrella_empty_forbidden_fields_tolerated(
+def test_epic_empty_forbidden_fields_tolerated(
     a4_workspace: A4Workspace,
 ) -> None:
     a4_workspace.write(
-        "umbrella",
+        "epic",
         1,
         "x",
         implements=[],
@@ -148,6 +148,6 @@ def test_umbrella_empty_forbidden_fields_tolerated(
     forbidden = [
         v
         for v in violations
-        if v.path == "umbrella/1-x.md" and v.rule == "type-field-forbidden"
+        if v.path == "epic/1-x.md" and v.rule == "type-field-forbidden"
     ]
     assert forbidden == []
