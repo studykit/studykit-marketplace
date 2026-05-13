@@ -1,7 +1,5 @@
 # Workflow Issue Relationship Policy
 
-Source document: [`plugins/workflow/doc/issue-relationship-policy.md`](../../plugins/workflow/doc/issue-relationship-policy.md)
-
 Date: 2026-05-13
 
 ## Decision
@@ -72,7 +70,7 @@ GitHub Issue Types may be supported later as an optional setup-enabled mapping, 
 
 ## Related Guidance
 
-- [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
+- [GitHub Issues Usage For Workflow](github-issues-usage-for-workflow.md)
 
 ## Parent/child relationship
 

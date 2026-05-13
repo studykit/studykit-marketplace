@@ -10,7 +10,7 @@ This plugin is a clean-break implementation in progress.
 
 Implemented so far:
 
-- Provider-backed design notes in `doc/`.
+- Provider-backed knowledge and design notes in `../../wiki/workflow/`.
 - Workflow configuration schema and shared loader in `scripts/workflow_config.py`.
 - Authoring contracts in `authoring/`.
 - Authoring resolver script in `scripts/authoring_resolver.py`.
@@ -45,7 +45,7 @@ commit_refs:
   style: provider-native
 ```
 
-See `doc/workflow-config.md` for the version 1 schema, provider aliases, and validation rules.
+See `../../wiki/workflow/workflow-configuration.md` for the version 1 schema, provider aliases, and validation rules.
 
 Inspect the resolved configuration:
 

@@ -1,11 +1,5 @@
 # Workflow Authoring Enforcement
 
-Source documents:
-
-- [`plugins/workflow/doc/authoring-resolver.md`](../../plugins/workflow/doc/authoring-resolver.md)
-- [`plugins/workflow/doc/authoring-ledger.md`](../../plugins/workflow/doc/authoring-ledger.md)
-- [`plugins/workflow/doc/authoring-guard.md`](../../plugins/workflow/doc/authoring-guard.md)
-
 ## Purpose
 
 Workflow authoring enforcement ensures that agents read the correct plugin-bundled authoring contracts before creating or editing workflow artifacts.
@@ -15,6 +9,12 @@ The rule is:
 ```text
 required_authoring_files ⊆ read_authoring_files
 ```
+
+## Authoring Contract Source
+
+Runtime authoring contracts live under [`plugins/workflow/authoring/`](../../plugins/workflow/authoring/).
+
+This wiki page describes the enforcement model and links to the contract directory when needed. It should not duplicate the full contract bodies from `authoring/`.
 
 ## Components
 

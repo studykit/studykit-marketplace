@@ -1,4 +1,4 @@
-# Workflow Provider Abstraction Notes
+# Workflow Provider Model
 
 Date: 2026-05-13
 
@@ -268,7 +268,7 @@ implements:
   - confluence:123456
 ```
 
-See `issue-relationship-policy.md` for the GitHub issue relationship policy used by the workflow MVP backlog.
+See `workflow-issue-relationship-policy.md` for the GitHub issue relationship policy used by the workflow MVP backlog.
 
 ## GitHub Mapping
 
@@ -436,7 +436,7 @@ Recommended log storage:
 
 The workflow normalized view can render a log section from provider-native events.
 
-For GitHub Issues, use REST timeline/events for relationship, label, dependency, and status history. Use GraphQL `userContentEdits` when description/body edit history is required. See `github-issue-history.md`.
+For GitHub Issues, use REST timeline/events for relationship, label, dependency, and status history. Use GraphQL `userContentEdits` when description/body edit history is required. See `github-issue-history-access.md`.
 
 ## Knowledge Page Change Log
 
@@ -699,3 +699,7 @@ This separates workflow convenience from authoring enforcement:
 3. How should provider adapters expose validation errors without local files?
 4. What is the minimal MCP contract required for each provider?
 5. Should setup create provider metadata, or only report missing metadata and ask for confirmation?
+
+## Change Log
+
+- 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Published curated knowledge page in repository `wiki/` directory.

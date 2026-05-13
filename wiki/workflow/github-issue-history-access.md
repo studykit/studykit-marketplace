@@ -1,7 +1,5 @@
 # GitHub Issue History Access
 
-Source document: [`plugins/workflow/doc/github-issue-history.md`](../../plugins/workflow/doc/github-issue-history.md)
-
 Date: 2026-05-13
 
 ## Purpose
@@ -129,7 +127,7 @@ Issue [#30](https://github.com/studykit/studykit-plugins/issues/30) showed:
 
 ## Related Guidance
 
-- [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
+- [GitHub Issues Usage For Workflow](github-issues-usage-for-workflow.md)
 
 ## References
 

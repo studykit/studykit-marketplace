@@ -1,7 +1,5 @@
 # Workflow Clean Break Decision
 
-Source document: [`plugins/workflow/doc/clean-break-plan.md`](../../plugins/workflow/doc/clean-break-plan.md)
-
 ## Decision
 
 Create a new `plugins/workflow` plugin instead of turning `plugins/a4` into a remote-native provider workflow system.

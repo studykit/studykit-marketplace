@@ -55,12 +55,12 @@ Store or resolve:
 - Owner.
 - Repository.
 - Branch or commit when versioned identity is needed.
-- Repository-relative path, such as `wiki/workflow/Workflow-Provider-Model.md`.
+- Repository-relative path, such as `wiki/<plugin>/<page>.md`.
 
 Use normal Markdown links in visible text:
 
 ```markdown
-[Workflow Provider Model](wiki/workflow/Workflow-Provider-Model.md)
+[Example Page](wiki/<plugin>/<page>.md)
 ```
 
 Use full GitHub URLs when text must be portable outside the repository.
@@ -93,7 +93,7 @@ Examples:
 ```markdown
 ## Supersedes
 
-- [Auth Session v1](Auth-Session-v1.md)
+- [Auth Session v1](auth-session-v1.md)
 ```
 
 If a relationship points to a GitHub Issue, store the structured relationship on the issue side when possible and keep the knowledge page link as human-readable context.

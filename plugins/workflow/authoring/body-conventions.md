@@ -152,4 +152,3 @@ If an adapter creates local Markdown files, treat them as projections of provide
 - `./metadata-contract.md` — shared metadata and identity rules.
 - `./issue-body.md` — issue-backed body rules.
 - `./knowledge-body.md` — knowledge-backed body rules.
-- `../doc/provider-reference-formats.md` — reference-format research and provider implications.

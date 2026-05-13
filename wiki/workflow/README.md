@@ -4,16 +4,18 @@ This directory is the GitHub-backed knowledge backend for the workflow plugin do
 
 It intentionally uses a normal repository directory instead of the separate GitHub Wiki feature.
 
+Runtime authoring contracts remain under [`plugins/workflow/authoring/`](../../plugins/workflow/authoring/). Wiki pages may link to those contracts, but should not duplicate their full rule bodies.
+
 ## Pages
 
-- [Workflow Provider Model](Workflow-Provider-Model.md)
-- [Workflow Issue Relationship Policy](Workflow-Issue-Relationship-Policy.md)
-- [Workflow Provider Reference Formats](Workflow-Provider-Reference-Formats.md)
-- [GitHub Issue History Access](GitHub-Issue-History-Access.md)
-- [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
-- [Workflow Authoring Enforcement](Workflow-Authoring-Enforcement.md)
-- [Workflow Clean Break Decision](Workflow-Clean-Break-Decision.md)
-- [Workflow Configuration](Workflow-Configuration.md)
+- [Workflow Provider Model](workflow-provider-model.md)
+- [Workflow Issue Relationship Policy](workflow-issue-relationship-policy.md)
+- [Workflow Provider Reference Formats](workflow-provider-reference-formats.md)
+- [GitHub Issue History Access](github-issue-history-access.md)
+- [GitHub Issues Usage For Workflow](github-issues-usage-for-workflow.md)
+- [Workflow Authoring Enforcement](workflow-authoring-enforcement.md)
+- [Workflow Clean Break Decision](workflow-clean-break-decision.md)
+- [Workflow Configuration](workflow-configuration.md)
 
 ## Tracking
 

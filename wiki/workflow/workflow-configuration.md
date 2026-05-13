@@ -1,7 +1,5 @@
 # Workflow Configuration
 
-Source document: [`plugins/workflow/doc/workflow-config.md`](../../plugins/workflow/doc/workflow-config.md)
-
 Date: 2026-05-13
 
 ## Context

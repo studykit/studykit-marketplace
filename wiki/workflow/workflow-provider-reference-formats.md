@@ -1,7 +1,5 @@
 # Workflow Provider Reference Formats
 
-Source document: [`plugins/workflow/doc/provider-reference-formats.md`](../../plugins/workflow/doc/provider-reference-formats.md)
-
 Date: 2026-05-13
 
 ## Summary recommendation
@@ -18,7 +16,7 @@ Recommended author-facing references:
 - Jira issue: `PROJ-123`.
 - Jira issue in GitHub comments when using GitHub for Atlassian: `[PROJ-123]`.
 - Confluence page: page title or Smart Link; use full URL when creating portable text links.
-- GitHub repository `wiki/` page: repository-relative Markdown path such as `wiki/workflow/Home.md`, or a full GitHub file URL when portability matters.
+- GitHub repository `wiki/` page: repository-relative Markdown path such as `wiki/workflow/home.md`, or a full GitHub file URL when portability matters.
 
 The adapter should resolve author-facing refs into provider-native identity objects when it needs to call APIs, validate relationships, or write metadata.
 
@@ -77,14 +75,14 @@ When GitHub is the knowledge provider, workflow should use a normal `wiki/` dire
 A repository `wiki/` page is an ordinary Markdown file, for example:
 
 ```text
-wiki/workflow/Workflow-Provider-Model.md
+wiki/workflow/workflow-provider-model.md
 ```
 
 Implications for workflow:
 
 - Treat `wiki/<plugin>/<page>.md` as a repository file provider object for plugin-specific knowledge.
 - Store `host`, `owner`, `repo`, `path`, and optionally branch or commit SHA when versioned identity is needed.
-- Use normal Markdown links for visible references, such as `[Provider Model](wiki/workflow/Workflow-Provider-Model.md)`.
+- Use normal Markdown links for visible references, such as `[Provider Model](workflow-provider-model.md)`.
 - Use full GitHub file URLs outside repository context.
 - Git history is the audit trail for page edits.
 - Page `## Change Log` records semantic cause, not the full diff.
@@ -223,11 +221,11 @@ authority: github.com
 native:
   owner: octo-org
   repo: octo-repo
-  path: wiki/workflow/Home.md
+  path: wiki/workflow/home.md
   title: Home
   last_seen_commit: abc1234
-url: https://github.com/octo-org/octo-repo/blob/main/wiki/workflow/Home.md
-display: wiki/workflow/Home.md
+url: https://github.com/octo-org/octo-repo/blob/main/wiki/workflow/home.md
+display: wiki/workflow/home.md
 ```
 
 ```yaml

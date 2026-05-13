@@ -144,7 +144,6 @@ Repository Markdown files do not reliably autolink issue references. Use explici
 This applies to files under:
 
 - `wiki/<plugin>/`
-- `plugins/workflow/doc/`
 - README files
 - other checked-in Markdown documents
 
@@ -171,7 +170,7 @@ Use provider-native history instead of duplicating routine logs in the body.
 | Relationship, label, dependency, and timeline events | REST timeline/events APIs | Good for workflow event history. |
 | Description/body edit history | GraphQL `userContentEdits` | Provides edit timestamps and diffs. |
 
-See [GitHub Issue History Access](GitHub-Issue-History-Access.md) for details and example commands.
+See [GitHub Issue History Access](github-issue-history-access.md) for details and example commands.
 
 ## Current Dogfooding Backlog
 
