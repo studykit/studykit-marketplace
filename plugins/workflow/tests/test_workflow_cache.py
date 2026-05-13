@@ -71,6 +71,10 @@ def repo() -> GitHubRepository:
     return GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
 
 
+def external_repo() -> GitHubRepository:
+    return GitHubRepository(host="github.com", owner="other", name="repo")
+
+
 def issue_payload(*, body: str = "Raw issue body.", updated_at: str = "2026-05-13T12:00:00Z") -> dict[str, object]:
     return {
         "number": 39,
@@ -122,6 +126,7 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
 
     write = cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-13T12:34:56Z")
 
+    assert write.issue_dir == tmp_path / ".workflow-cache" / "issues" / "39"
     issue_text = write.issue_file.read_text(encoding="utf-8")
     assert "title: \"Add local cache for workflow provider reads\"" in issue_text
     assert "provider:" not in issue_text
@@ -145,6 +150,16 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
     assert relationships["parent"]["number"] == 28
     assert relationships["children"][0]["number"] == 41
     assert relationships["dependencies"]["blocked_by"][0]["state_reason"] == "completed"
+
+
+def test_configured_repo_cache_is_shallow_and_external_repo_cache_is_namespaced(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+
+    assert cache.issue_dir(repo(), 39) == tmp_path / ".workflow-cache" / "issues" / "39"
+    assert (
+        cache.issue_dir(external_repo(), 39)
+        == tmp_path / ".workflow-cache" / "github.com" / "other" / "repo" / "issues" / "39"
+    )
 
 
 def test_cache_read_can_skip_raw_markdown_bodies(tmp_path: Path) -> None:

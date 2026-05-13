@@ -66,7 +66,7 @@ Workflow relationships include:
 | `parent` | Work item belongs under an epic or parent work item | Body mention recommended when narrative depends on parent |
 | `depends_on` | Work item is blocked by another work item | Required as `## Dependencies` when present |
 
-Use provider-native short references in body text. Resolve them through `workflow.config.yml` and provider context.
+Use provider-native short references in body text. Resolve them through `.workflow/config.yml` and provider context.
 
 Examples:
 

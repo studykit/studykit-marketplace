@@ -57,8 +57,14 @@ def allow_guard(calls: list[tuple[str, Mapping[str, Any]]]):
     return guard
 
 
+def _config_path(project: Path) -> Path:
+    path = project / ".workflow" / "config.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def test_resolves_github_repository_from_workflow_config(tmp_path: Path) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: 1
 providers:

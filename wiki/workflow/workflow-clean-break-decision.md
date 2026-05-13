@@ -34,7 +34,7 @@ Use for the local Markdown workflow.
 
 Use for provider-backed workflow:
 
-- `workflow.config.yml` at repository root.
+- `.workflow/config.yml` at repository root.
 - Issue provider: GitHub Issues or Jira.
 - Knowledge provider: repository `wiki/` directory or Confluence.
 - Provider-native references in body text.

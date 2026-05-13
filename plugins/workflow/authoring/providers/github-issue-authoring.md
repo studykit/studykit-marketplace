@@ -27,7 +27,7 @@ Use GitHub-native references in visible text.
 - Cross repository on the same host: `owner/repo#123`.
 - Outside GitHub-native contexts or when ambiguous: full issue URL.
 
-Resolve `#123` using `workflow.config.yml` first, then the configured git remote, then `origin`.
+Resolve `#123` using `.workflow/config.yml` first, then the configured git remote, then `origin`.
 
 GitHub Enterprise host, owner, and repo should be inferred from the configured remote when explicit config is absent.
 

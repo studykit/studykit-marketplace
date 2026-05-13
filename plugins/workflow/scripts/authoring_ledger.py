@@ -151,7 +151,7 @@ def build_parser() -> argparse.ArgumentParser:
     record = subparsers.add_parser("record", help="record authoring files as read")
     record.add_argument("--json", action="store_true", default=argparse.SUPPRESS, help="emit JSON")
     record.add_argument("paths", nargs="+", type=Path, help="authoring file paths that were read")
-    record.add_argument("--require-config", action="store_true", help="fail when workflow.config.yml is absent")
+    record.add_argument("--require-config", action="store_true", help="fail when .workflow/config.yml is absent")
 
     check = subparsers.add_parser("check", help="check that required authoring files were read")
     check.add_argument("--json", action="store_true", default=argparse.SUPPRESS, help="emit JSON")

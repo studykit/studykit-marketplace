@@ -29,7 +29,7 @@ Examples:
 - `[PROJ-123]` in GitHub comments when GitHub for Atlassian should create a Jira link.
 - Full Jira URL when outside Jira/Atlassian-aware contexts or when a portable link is needed.
 
-Resolve keys using `workflow.config.yml`, especially the Jira site.
+Resolve keys using `.workflow/config.yml`, especially the Jira site.
 
 ## Type mapping
 

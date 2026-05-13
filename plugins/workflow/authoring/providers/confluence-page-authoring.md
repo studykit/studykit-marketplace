@@ -29,7 +29,7 @@ Use full page URLs when writing portable Markdown-like text or when the target c
 
 Provider metadata should use page ID scoped by Confluence site.
 
-Resolve page references using `workflow.config.yml`, including site and space.
+Resolve page references using `.workflow/config.yml`, including site and space.
 
 ## Type mapping
 

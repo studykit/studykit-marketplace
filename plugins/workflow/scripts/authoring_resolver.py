@@ -166,8 +166,8 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--type", required=True, help="workflow artifact type")
     parser.add_argument("--role", help="issue or knowledge; required for usecase/research")
     parser.add_argument("--provider", help="provider override, such as github, jira, or confluence")
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path used to find workflow.config.yml")
-    parser.add_argument("--require-config", action="store_true", help="fail when workflow.config.yml is absent")
+    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path used to find .workflow/config.yml")
+    parser.add_argument("--require-config", action="store_true", help="fail when .workflow/config.yml is absent")
     parser.add_argument("--json", action="store_true", help="emit JSON instead of one path per line")
     return parser
 

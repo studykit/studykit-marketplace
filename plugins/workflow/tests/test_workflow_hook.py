@@ -18,8 +18,15 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from authoring_ledger import read_ledger, record_reads  # noqa: E402
 from authoring_resolver import resolve_authoring  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
-from workflow_github import DEFAULT_ISSUE_FIELDS  # noqa: E402
-from workflow_hook import post_read, pre_write, session_start, stop, user_prompt_submit  # noqa: E402
+from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
+from workflow_hook import (  # noqa: E402
+    extract_issue_numbers,
+    post_read,
+    pre_write,
+    session_start,
+    stop,
+    user_prompt_submit,
+)
 
 
 class FakeRunner:
@@ -70,7 +77,9 @@ def _write_config(project: Path, *, projection_path: str | None = None) -> None:
     if projection_path is not None:
         projection = f"  mode: persistent\n  path: {projection_path}\n"
 
-    (project / "workflow.config.yml").write_text(
+    config_path = project / ".workflow" / "config.yml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
         f"""
 version: 1
 providers:
@@ -80,6 +89,7 @@ providers:
   knowledge:
     kind: github
     path: wiki/workflow
+issue_id_format: github
 local_projection:
 {projection.rstrip()}
 commit_refs:
@@ -127,6 +137,17 @@ def test_session_start_emits_nothing_without_workflow_config(
     out = _run_session_start(tmp_path, monkeypatch, runtime=runtime)
 
     assert out == ""
+
+
+def test_extract_issue_numbers_respects_issue_id_format() -> None:
+    repo = GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
+    text = (
+        "Review #45, GH-46, issue 47, studykit/studykit-plugins#48, "
+        "other/repo#49, and https://github.com/studykit/studykit-plugins/issues/50."
+    )
+
+    assert extract_issue_numbers(text, repo=repo, issue_id_format="github") == ["45", "48", "50"]
+    assert extract_issue_numbers(text, issue_id_format="jira") == []
 
 
 def _hook_env(
@@ -279,23 +300,24 @@ def test_session_start_injects_policy_for_configured_project(
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
     assert "## workflow authoring policy" in context
-    assert f"Config file: `{tmp_path / 'workflow.config.yml'}`" in context
+    assert f"Config file: `{tmp_path / '.workflow/config.yml'}`" in context
+    assert f"Workflow plugin root: `{_PLUGIN_ROOT}`" in context
     assert "Issue provider: `github`" in context
+    assert "Issue ID format: `github`" in context
     assert "Knowledge provider: `github`" in context
     assert "Local projection: `none`" in context
     assert "Commit references: `provider-native`" in context
-    assert str(_PLUGIN_ROOT / "scripts" / "authoring_resolver.py") in context
-    assert str(_PLUGIN_ROOT / "scripts" / "authoring_ledger.py") in context
-    assert str(_PLUGIN_ROOT / "scripts" / "authoring_guard.py") in context
+    assert 'WORKFLOW_PLUGIN_ROOT="' in context
+    assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_resolver.py' in context
+    assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_ledger.py' in context
+    assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_guard.py' in context
+    assert str(_PLUGIN_ROOT / "scripts" / "authoring_resolver.py") not in context
     assert "`required_authoring_files`" in context
     assert "every path in that list is absolute" in context
     assert "does not auto-trigger workflow skills" in context
     assert "## workflow provider cache context" in context
     assert "Workflow cache root: `.workflow-cache/`" in context
-    assert (
-        "GitHub issue cache base: "
-        "`.workflow-cache/github/github.com/studykit/studykit-plugins/issues/`"
-    ) in context
+    assert "GitHub issue cache base: `.workflow-cache/issues/`" in context
     assert "Hook-reported issue cache paths are relative to the GitHub issue cache base" in context
 
 
@@ -311,7 +333,7 @@ def test_session_start_discovers_config_from_nested_project_path(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert f"Config file: `{tmp_path / 'workflow.config.yml'}`" in context
+    assert f"Config file: `{tmp_path / '.workflow/config.yml'}`" in context
 
 
 def test_user_prompt_caches_issue_and_injects_issue_base_relative_path(
@@ -349,10 +371,6 @@ def test_user_prompt_caches_issue_and_injects_issue_base_relative_path(
     assert (
         tmp_path
         / ".workflow-cache"
-        / "github"
-        / "github.com"
-        / "studykit"
-        / "studykit-plugins"
         / "issues"
         / "45"
         / "issue.md"
@@ -410,7 +428,7 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
             "session_id": "s2",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
-            "transcript": "The assistant referenced GH-46 during the turn.",
+            "transcript": "The assistant referenced #46 during the turn.",
         },
         stdout=captured,
         runner=runner,
@@ -428,10 +446,6 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
     issue_file = (
         tmp_path
         / ".workflow-cache"
-        / "github"
-        / "github.com"
-        / "studykit"
-        / "studykit-plugins"
         / "issues"
         / "46"
         / "issue.md"
@@ -462,7 +476,9 @@ def test_session_start_emits_nothing_for_invalid_config(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    config_path = tmp_path / ".workflow" / "config.yml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
         """
 version: 1
 providers:

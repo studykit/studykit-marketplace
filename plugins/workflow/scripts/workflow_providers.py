@@ -331,7 +331,7 @@ class GitHubIssueNativeProvider(IssueProvider):
         include_comments = bool(request.payload.get("include_comments", True))
         include_relationships = bool(request.payload.get("include_relationships", True))
         repo = resolve_github_repository(request.context.project, runner=self.runner)
-        cache = GitHubIssueCache.for_project(request.context.project)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
 
         if request.context.cache_policy == CACHE_POLICY_DEFAULT:
             try:
@@ -464,7 +464,7 @@ class GitHubIssueNativeProvider(IssueProvider):
             return
 
         repo = resolve_github_repository(request.context.project, runner=self.runner)
-        cache = GitHubIssueCache.for_project(request.context.project)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
         metadata: FreshnessMetadata | None
         try:
             metadata = cache.read_freshness_metadata(repo, issue_number, target=spec["target"])

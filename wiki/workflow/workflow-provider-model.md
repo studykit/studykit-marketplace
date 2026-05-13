@@ -60,7 +60,7 @@ Remote-native mode still needs a repository-local configuration file, even when 
 Use a root-level config file:
 
 ```text
-workflow.config.yml
+.workflow/config.yml
 ```
 
 Do not use `.a4/` as the primary configuration location. A hidden `.a4/` directory suggests the legacy local a4 workspace or persistent local state, which conflicts with remote-native operation. If ephemeral cache is needed, keep it outside the canonical config path, such as an OS temp directory or an explicit cache directory.
@@ -537,7 +537,7 @@ Scope:
 - No status transitions.
 - No comments or logs.
 
-The agent should read `workflow.config.yml`, determine configured issue and knowledge providers, then query those providers through workflow wrapper read commands when available. Direct provider tools may be used only as an implementation detail until wrapper read commands exist.
+The agent should read `.workflow/config.yml`, determine configured issue and knowledge providers, then query those providers through workflow wrapper read commands when available. Direct provider tools may be used only as an implementation detail until wrapper read commands exist.
 
 Relationship to existing agents:
 
@@ -555,9 +555,10 @@ It should ask or infer:
 2. Knowledge provider.
 3. Type mapping.
 4. Identity authority.
-5. Commit reference style.
-6. Local projection mode.
-7. Provider metadata conventions.
+5. Issue ID format.
+6. Commit reference style.
+7. Local projection mode.
+8. Provider metadata conventions.
 
 Example configuration:
 
@@ -575,6 +576,8 @@ providers:
     site: company.atlassian.net
     space: ENG
 
+issue_id_format: github
+
 local_projection:
   mode: none # none | ephemeral | persistent
 
@@ -586,7 +589,7 @@ commit_refs:
 The configuration file should be stored at the repository root:
 
 ```text
-workflow.config.yml
+.workflow/config.yml
 ```
 
 ## Authoring Resolver and Read Ledger
@@ -603,7 +606,7 @@ Inputs:
 
 - Artifact type, such as `task`, `review`, `spec`, or `architecture`.
 - Artifact role, usually `issue` or `knowledge`.
-- Provider, resolved from `workflow.config.yml` when possible.
+- Provider, resolved from `.workflow/config.yml` when possible.
 - Optional local path for filesystem-backed legacy artifacts.
 
 Output:
@@ -680,7 +683,7 @@ This separates workflow convenience from authoring enforcement:
 10. Discussion, questions, and work logs should stay in the issue backend.
 11. `review` is always issue-backed because it represents feedback workflow, not page-local commentary.
 12. `review.target` should use provider metadata when available, but each review item must also include a human-readable `## Target` body section.
-13. Remote-native configuration should live in `workflow.config.yml`, not `.a4/`.
+13. Remote-native configuration should live in `.workflow/config.yml`, not `.a4/`.
 14. GitHub workflow type should use plain artifact-type labels by default; scope labels are optional and GitHub Issue Types are setup-enabled metadata.
 15. GitHub canonical status should use Issue Fields when available; Project fields are for planning views.
 16. Provider-native relationships and ordering should not be duplicated in the body; body sections are fallback or explanatory surface when provider metadata is unavailable or insufficient.

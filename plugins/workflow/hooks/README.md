@@ -31,9 +31,9 @@ Behavior:
 
 Behavior:
 
-- If the active project has no `workflow.config.yml`, the hook emits nothing.
-- If the active project has a valid `workflow.config.yml`, the hook injects a concise authoring resolver policy and provider cache-base context as `additionalContext`.
-- The policy points to the shared resolver, ledger, and guard commands.
+- If the active project has no `.workflow/config.yml`, the hook emits nothing.
+- If the active project has a valid `.workflow/config.yml`, the hook injects a concise authoring resolver policy and provider cache-base context as `additionalContext`.
+- The policy announces the workflow plugin root and points to the shared resolver, ledger, and guard commands with root-relative script paths.
 - The cache context announces the workflow cache root and, for GitHub issue providers, the GitHub issue cache base.
 - Later hook-reported issue cache paths are relative to the announced GitHub issue cache base.
 - The hook does not start workflow skills.
@@ -45,7 +45,7 @@ Behavior:
 
 Behavior:
 
-- Scans the submitted prompt for same-repository issue references such as `#45`, `issue 45`, `GH-45`, and matching GitHub issue URLs.
+- Scans the submitted prompt for same-repository issue references such as `#45`, `owner/repo#45`, and matching GitHub issue URLs.
 - Reads each detected issue through the workflow provider read path with the default cache policy.
 - Uses existing cache projections on cache hits; fetches provider data and writes the cache on misses.
 - Emits concise `additionalContext` only for issue numbers not already announced in the current session.

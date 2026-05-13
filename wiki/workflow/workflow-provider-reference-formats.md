@@ -4,7 +4,7 @@ Date: 2026-05-13
 
 ## Summary recommendation
 
-`plugins/workflow` should prefer provider-native short references in bodies, commits, branch names, PR titles, and comments. The provider adapter resolves those short references using `workflow.config.yml`, git remotes, and provider context.
+`plugins/workflow` should prefer provider-native short references in bodies, commits, branch names, PR titles, and comments. The provider adapter resolves those short references using `.workflow/config.yml`, git remotes, and provider context.
 
 Use full normalized references only when local context is ambiguous or when writing machine-only metadata that needs a stable provider object.
 
@@ -60,7 +60,8 @@ GitHub GraphQL global node IDs are available as REST `node_id` and GraphQL `id`.
 Implications for workflow:
 
 - Resolve `#number` using the configured GitHub provider context.
-- The GitHub provider context should come from `workflow.config.yml` first, then the configured git remote, then `origin`.
+- The GitHub provider context should come from `.workflow/config.yml` first, then the configured git remote, then `origin`.
+- Record `issue_id_format: github` in `.workflow/config.yml` so hooks can use the configured issue ID format when scanning prompts and hook payloads.
 - GitHub Enterprise host, owner, and repo can usually be inferred from the git remote URL.
 - Store or compute `host`, `owner`, `repo`, `number`, and optionally `node_id` when metadata or API calls need a resolved identity.
 - Same-repo body/comment display should be `#number`; cross-repo display should be `owner/repo#number`.
@@ -122,7 +123,7 @@ Smart Commits are relevant if workflow writes commit messages for Jira-backed wo
 Implications for workflow:
 
 - Use `PROJ-123` as the normal author-facing ref.
-- Resolve Jira keys using `workflow.config.yml` provider context, especially the Jira `site`.
+- Resolve Jira keys using `.workflow/config.yml` provider context, especially the Jira `site`.
 - Store or compute `site`, `issue_key`, and optionally immutable numeric `issue_id` when metadata or API calls need a resolved identity.
 - Display `issue_key` in commits, branches, PR titles, comments, and page content.
 - For GitHub comments with GitHub for Atlassian, use `[PROJ-123]` when a clickable Jira link is desired.
@@ -179,7 +180,7 @@ Use raw provider-native references in body sections by default:
 - [Auth Session v2](https://acme.atlassian.net/wiki/spaces/ENG/pages/123456789/Auth+Session+v2)
 ```
 
-When provider metadata supports structured relationships, store a resolved object. The object can be generated from the raw ref and `workflow.config.yml`.
+When provider metadata supports structured relationships, store a resolved object. The object can be generated from the raw ref and `.workflow/config.yml`.
 
 ```yaml
 input: "#123"

@@ -2,7 +2,7 @@
 """Workflow hook dispatcher.
 
 SessionStart injects a concise workflow authoring policy only when the active
-project has a valid ``workflow.config.yml``. The hook never starts workflow
+project has a valid ``.workflow/config.yml``. The hook never starts workflow
 skills and never blocks session startup.
 """
 
@@ -40,7 +40,10 @@ MAX_ISSUE_REFS = 20
 HOOK_STATE_DIR_NAME = "hook-state"
 
 ISSUE_HASH_RE = re.compile(r"(?<![\w#])#([1-9]\d*)\b")
-ISSUE_WORD_RE = re.compile(r"\b(?:issues?|gh)[\s:#-]+([1-9]\d*)\b", re.IGNORECASE)
+ISSUE_REPO_RE = re.compile(
+    r"(?<![\w/.-])(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)#(?P<num>[1-9]\d*)\b",
+    re.IGNORECASE,
+)
 ISSUE_URL_RE = re.compile(
     r"https?://(?P<host>[^/\s]+)/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/issues/(?P<num>[1-9]\d*)\b",
     re.IGNORECASE,
@@ -190,7 +193,11 @@ def user_prompt_submit(
     pending_numbers = sorted(read_session_issues(config.root, session_id, "pending"), key=int)
     issue_numbers = _ordered_issue_union(
         pending_numbers,
-        extract_issue_numbers(prompt_from_payload(payload), repo=repo),
+        extract_issue_numbers(
+            prompt_from_payload(payload),
+            repo=repo,
+            issue_id_format=config.issue_id_format,
+        ),
     )
     if not issue_numbers:
         return 0
@@ -251,7 +258,11 @@ def stop(
 
     session_id = session_id_from_payload(payload)
     issue_numbers = sorted(read_session_issues(config.root, session_id, "mentioned"), key=int)
-    for number in extract_issue_numbers(text_from_payload(payload), repo=repo):
+    for number in extract_issue_numbers(
+        text_from_payload(payload),
+        repo=repo,
+        issue_id_format=config.issue_id_format,
+    ):
         if number not in issue_numbers:
             issue_numbers.append(number)
     if not issue_numbers:
@@ -317,9 +328,9 @@ def pre_write(
 def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> str:
     """Build the context block injected for configured workflow projects."""
 
-    resolver = plugin_root / "scripts" / "authoring_resolver.py"
-    ledger = plugin_root / "scripts" / "authoring_ledger.py"
-    guard = plugin_root / "scripts" / "authoring_guard.py"
+    resolver = "scripts/authoring_resolver.py"
+    ledger = "scripts/authoring_ledger.py"
+    guard = "scripts/authoring_guard.py"
 
     commit_ref = "disabled"
     if config.commit_refs.enabled:
@@ -331,7 +342,9 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         "## workflow authoring policy\n\n"
         f"Configured workflow project: `{config.root}`\n"
         f"Config file: `{config.path}`\n"
+        f"Workflow plugin root: `{plugin_root}`\n"
         f"Issue provider: `{config.issues.kind}`\n"
+        f"Issue ID format: `{config.issue_id_format}`\n"
         f"Knowledge provider: `{config.knowledge.kind}`\n"
         f"Local projection: `{config.local_projection.mode}`\n"
         f"Commit references: `{commit_ref}`\n\n"
@@ -339,7 +352,8 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         "or local projection, resolve and read the required authoring contracts.\n\n"
         "Resolver command:\n\n"
         "```bash\n"
-        f'python3 "{resolver}" --project "{config.root}" --type <artifact-type> '
+        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{resolver}" --project "{config.root}" --type <artifact-type> '
         "[--role issue|knowledge] --json\n"
         "```\n\n"
         "Use `--role issue` or `--role knowledge` for dual artifacts such as "
@@ -348,12 +362,14 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         "in that list is absolute. Read every listed file before writing.\n\n"
         "When a wrapper or hook requires ledger enforcement, record reads with:\n\n"
         "```bash\n"
-        f'python3 "{ledger}" --project "{config.root}" --session <session-id> '
+        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{ledger}" --project "{config.root}" --session <session-id> '
         "record --json <absolute-authoring-file>...\n"
         "```\n\n"
         "Check write readiness with:\n\n"
         "```bash\n"
-        f'python3 "{guard}" --project "{config.root}" --session <session-id> '
+        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{guard}" --project "{config.root}" --session <session-id> '
         "--type <artifact-type> [--role issue|knowledge] --json\n"
         "```\n\n"
         "SessionStart only injects this policy and cache context. It does not "
@@ -423,7 +439,7 @@ def github_repo_for_config(
 def github_issue_cache_base(config: WorkflowConfig, repo: GitHubRepository) -> Path:
     """Return the issue-number parent directory for the configured repo cache."""
 
-    cache = GitHubIssueCache.for_project(config.root)
+    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
     return cache.issue_dir(repo, "1").parent
 
 
@@ -437,7 +453,7 @@ def cache_issue_references(
     """Read issues through the provider cache path and return hook context."""
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
-    cache = GitHubIssueCache.for_project(config.root)
+    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
     issue_base = github_issue_cache_base(config, repo)
     contexts: list[IssueCacheContext] = []
 
@@ -540,8 +556,16 @@ def text_from_payload(payload: dict[str, Any]) -> str:
     return "\n".join(chunks)
 
 
-def extract_issue_numbers(text: str, *, repo: GitHubRepository | None = None) -> list[str]:
+def extract_issue_numbers(
+    text: str,
+    *,
+    repo: GitHubRepository | None = None,
+    issue_id_format: str = "github",
+) -> list[str]:
     """Extract same-repository issue references in first-seen order."""
+
+    if issue_id_format != "github":
+        return []
 
     numbers: list[str] = []
     seen: set[str] = set()
@@ -560,22 +584,50 @@ def extract_issue_numbers(text: str, *, repo: GitHubRepository | None = None) ->
         numbers.append(normalized)
 
     for match in ISSUE_URL_RE.finditer(text):
-        if repo is not None:
-            host = match.group("host").lower()
-            owner = match.group("owner").lower()
-            repo_name = match.group("repo").removesuffix(".git").lower()
-            if (host, owner, repo_name) != (repo.host.lower(), repo.owner.lower(), repo.name.lower()):
-                continue
+        if repo is not None and not _same_github_repo(
+            repo,
+            host=match.group("host"),
+            owner=match.group("owner"),
+            repo_name=match.group("repo"),
+        ):
+            continue
         candidates.append((match.start(), match.group("num")))
 
-    for pattern in (ISSUE_HASH_RE, ISSUE_WORD_RE):
-        for match in pattern.finditer(text):
-            candidates.append((match.start(), match.group(1)))
+    for match in ISSUE_REPO_RE.finditer(text):
+        if repo is not None and not _same_github_repo(
+            repo,
+            host=repo.host,
+            owner=match.group("owner"),
+            repo_name=match.group("repo"),
+        ):
+            continue
+        candidates.append((match.start(), match.group("num")))
+
+    for match in ISSUE_HASH_RE.finditer(text):
+        candidates.append((match.start(), match.group(1)))
 
     for _, raw in sorted(candidates, key=lambda item: item[0]):
         add(raw)
 
     return numbers
+
+
+def _same_github_repo(
+    repo: GitHubRepository,
+    *,
+    host: str,
+    owner: str,
+    repo_name: str,
+) -> bool:
+    return (
+        host.lower(),
+        owner.lower(),
+        repo_name.removesuffix(".git").lower(),
+    ) == (
+        repo.host.lower(),
+        repo.owner.lower(),
+        repo.name.lower(),
+    )
 
 
 def _ordered_issue_union(*groups: list[str]) -> list[str]:

@@ -139,4 +139,4 @@ Use provider-native short references where possible:
 - Jira issue: `PROJ-123`.
 - Confluence page: page title, Smart Link, or full URL.
 
-The provider adapter resolves these through `workflow.config.yml`.
+The provider adapter resolves these through `.workflow/config.yml`.

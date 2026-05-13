@@ -11,7 +11,7 @@ The file declares where issue-backed artifacts and knowledge-backed artifacts li
 The configuration file is:
 
 ```text
-workflow.config.yml
+.workflow/config.yml
 ```
 
 It belongs at the repository root. Do not use `.a4/` as the workflow configuration location.
@@ -22,6 +22,7 @@ Schema version 1 supports:
 
 - Issue provider.
 - Knowledge provider.
+- Issue ID format.
 - Local projection mode.
 - Commit reference style.
 
@@ -39,6 +40,8 @@ providers:
   knowledge:
     kind: github
     path: wiki/workflow
+
+issue_id_format: github
 
 local_projection:
   mode: none
@@ -81,6 +84,19 @@ Supported knowledge provider kinds:
 - `filesystem`
 
 When the knowledge provider is `github`, workflow uses the main repository `wiki/` directory, such as `wiki/workflow/`. It does not use GitHub's separate wiki feature.
+
+### Issue ID Format
+
+Supported issue ID formats:
+
+- `github`
+- `jira`
+- `number`
+- `provider-native`
+
+The default is `provider-native`. The loader resolves `provider-native` to the configured issue provider's native format: `github` for GitHub Issues, `jira` for Jira, and `number` for filesystem-backed issues.
+
+For GitHub-backed projects, hooks use `issue_id_format: github` to scan prompts and stop payloads for same-repository issue references such as `#123`, `owner/repo#123`, and matching GitHub issue URLs.
 
 ### Local Projection
 
@@ -141,7 +157,7 @@ Shared loader:
 plugins/workflow/scripts/workflow_config.py
 ```
 
-The loader discovers `workflow.config.yml` from the project path upward.
+The loader discovers `.workflow/config.yml` from the project path upward.
 
 It validates:
 
@@ -149,6 +165,7 @@ It validates:
 - Provider-role compatibility.
 - Local projection mode.
 - Commit reference style.
+- Issue ID format compatibility with the configured issue provider.
 - Schema version.
 
 ## Change Log

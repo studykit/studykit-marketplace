@@ -213,17 +213,27 @@ def require_provider_freshness(
 class GitHubIssueCache:
     """Repo-local cache for GitHub issue read projections."""
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, *, configured_repo: GitHubRepository | None = None):
         self.root = root
+        self.configured_repo = configured_repo
 
     @classmethod
-    def for_project(cls, project: Path) -> GitHubIssueCache:
-        return cls(project.expanduser().resolve(strict=False) / CACHE_ROOT_NAME)
+    def for_project(
+        cls,
+        project: Path,
+        *,
+        configured_repo: GitHubRepository | None = None,
+    ) -> GitHubIssueCache:
+        return cls(
+            project.expanduser().resolve(strict=False) / CACHE_ROOT_NAME,
+            configured_repo=configured_repo,
+        )
 
     def issue_dir(self, repo: GitHubRepository, issue: int | str) -> Path:
+        if self.configured_repo is None or _same_github_repo(repo, self.configured_repo):
+            return self.root / "issues" / normalize_issue_number(issue)
         return (
             self.root
-            / "github"
             / _safe_path_segment(repo.host)
             / _safe_path_segment(repo.owner)
             / _safe_path_segment(repo.name)
@@ -1050,6 +1060,18 @@ def _timestamp_from_comment_filename(file_name: str) -> str | None:
 
 def _utc_now() -> str:
     return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+
+
+def _same_github_repo(left: GitHubRepository, right: GitHubRepository) -> bool:
+    return (
+        left.host.lower(),
+        left.owner.lower(),
+        left.name.lower(),
+    ) == (
+        right.host.lower(),
+        right.owner.lower(),
+        right.name.lower(),
+    )
 
 
 def _safe_path_segment(value: str) -> str:

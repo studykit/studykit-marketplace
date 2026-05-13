@@ -15,6 +15,12 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from authoring_resolver import ResolverError, resolve_authoring  # noqa: E402
 
 
+def _config_path(project: Path) -> Path:
+    path = project / ".workflow" / "config.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def _rel_paths(paths: tuple[Path, ...]) -> list[str]:
     return [str(path.relative_to(_PLUGIN_ROOT / "authoring")) for path in paths]
 
@@ -54,7 +60,7 @@ def test_dual_artifact_requires_explicit_role() -> None:
 
 
 def test_provider_can_be_inferred_from_workflow_config(tmp_path: Path) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: 1
 providers:
@@ -81,5 +87,5 @@ def test_invalid_provider_for_role_is_rejected() -> None:
 
 
 def test_require_config_fails_when_missing(tmp_path: Path) -> None:
-    with pytest.raises(ResolverError, match="workflow.config.yml was not found"):
+    with pytest.raises(ResolverError, match=".workflow/config.yml was not found"):
         resolve_authoring("task", project=tmp_path, require_config=True)

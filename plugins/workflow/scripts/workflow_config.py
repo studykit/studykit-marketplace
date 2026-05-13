@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Load and validate repository-local workflow configuration.
 
-The workflow plugin uses a repository-root ``workflow.config.yml`` even when
+The workflow plugin uses a repository-root ``.workflow/config.yml`` even when
 the canonical artifacts live in remote issue and knowledge providers. This
 module is the shared loader for resolver, hooks, setup, and provider wrappers.
 """
@@ -15,7 +15,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
-CONFIG_NAME = "workflow.config.yml"
+CONFIG_DIR_NAME = ".workflow"
+CONFIG_FILE_NAME = "config.yml"
+CONFIG_NAME = f"{CONFIG_DIR_NAME}/{CONFIG_FILE_NAME}"
+CONFIG_RELATIVE_PATH = Path(CONFIG_DIR_NAME) / CONFIG_FILE_NAME
 
 ISSUE_PROVIDERS = {"github", "jira", "filesystem"}
 KNOWLEDGE_PROVIDERS = {"github", "confluence", "filesystem"}
@@ -88,9 +91,28 @@ COMMIT_REF_STYLE_ALIASES = {
     "false": "disabled",
 }
 
+ISSUE_ID_FORMATS = {"github", "jira", "number"}
+ISSUE_ID_FORMAT_ALIASES = {
+    "gh": "github",
+    "github-issue": "github",
+    "github-issues": "github",
+    "github-native": "github",
+    "jira-issue": "jira",
+    "jira-issues": "jira",
+    "jira-native": "jira",
+    "numeric": "number",
+    "plain-number": "number",
+    "plain_number": "number",
+}
+PROVIDER_NATIVE_ISSUE_ID_FORMATS = {
+    "github": "github",
+    "jira": "jira",
+    "filesystem": "number",
+}
+
 
 class WorkflowConfigError(ValueError):
-    """Raised when ``workflow.config.yml`` is missing or invalid."""
+    """Raised when ``.workflow/config.yml`` is missing or invalid."""
 
 
 @dataclass(frozen=True)
@@ -149,6 +171,7 @@ class WorkflowConfig:
     mode: str
     issues: ProviderConfig
     knowledge: ProviderConfig
+    issue_id_format: str
     local_projection: LocalProjectionConfig
     commit_refs: CommitRefsConfig
     raw: Mapping[str, Any] = field(default_factory=dict)
@@ -169,26 +192,29 @@ class WorkflowConfig:
                 "issues": self.issues.to_json(),
                 "knowledge": self.knowledge.to_json(),
             },
+            "issue_id_format": self.issue_id_format,
             "local_projection": self.local_projection.to_json(),
             "commit_refs": self.commit_refs.to_json(),
         }
 
 
 def find_workflow_config(project: Path) -> Path | None:
-    """Find ``workflow.config.yml`` from ``project`` upward."""
+    """Find ``.workflow/config.yml`` from ``project`` upward."""
 
     current = project.expanduser().resolve()
+    if current.is_file() and _is_workflow_config_path(current):
+        return current
     if current.is_file():
         current = current.parent
     for candidate_dir in (current, *current.parents):
-        candidate = candidate_dir / CONFIG_NAME
+        candidate = candidate_dir / CONFIG_RELATIVE_PATH
         if candidate.exists():
             return candidate
     return None
 
 
 def load_workflow_config(project: Path, *, require: bool = False) -> WorkflowConfig | None:
-    """Load and validate ``workflow.config.yml`` for ``project``.
+    """Load and validate ``.workflow/config.yml`` for ``project``.
 
     Returns ``None`` when the file is absent and ``require`` is false.
     """
@@ -211,20 +237,37 @@ def parse_workflow_config(raw: Mapping[str, Any], *, path: Path) -> WorkflowConf
 
     issues = _parse_provider(raw, role="issue", slot="issues", path=path)
     knowledge = _parse_provider(raw, role="knowledge", slot="knowledge", path=path)
+    issue_id_format = _parse_issue_id_format(
+        raw.get("issue_id_format"),
+        issue_provider=issues.kind,
+        path=path,
+    )
     local_projection = _parse_local_projection(raw.get("local_projection"), path=path)
     commit_refs = _parse_commit_refs(raw.get("commit_refs"), path=path)
 
     return WorkflowConfig(
         path=path.resolve(),
-        root=path.resolve().parent,
+        root=_project_root_from_config_path(path),
         version=version,
         mode=mode,
         issues=issues,
         knowledge=knowledge,
+        issue_id_format=issue_id_format,
         local_projection=local_projection,
         commit_refs=commit_refs,
         raw=dict(raw),
     )
+
+
+def _is_workflow_config_path(path: Path) -> bool:
+    return path.name == CONFIG_FILE_NAME and path.parent.name == CONFIG_DIR_NAME
+
+
+def _project_root_from_config_path(path: Path) -> Path:
+    resolved = path.resolve()
+    if _is_workflow_config_path(resolved):
+        return resolved.parent.parent
+    return resolved.parent
 
 
 def normalize_role(value: str) -> str:
@@ -341,6 +384,36 @@ def _normalize_commit_ref_style(value: str | None, *, path: Path) -> str:
             f"commit_refs.style '{value}' is invalid in {path}. Use one of: {choices}"
         )
     return normalized
+
+
+def _parse_issue_id_format(value: Any, *, issue_provider: str, path: Path) -> str:
+    raw = _scalar_string(value)
+    if raw is None:
+        return _provider_native_issue_id_format(issue_provider, path=path)
+
+    normalized = raw.strip().lower().replace("_", "-")
+    if normalized in {"provider-native", "native", "provider"}:
+        return _provider_native_issue_id_format(issue_provider, path=path)
+    normalized = ISSUE_ID_FORMAT_ALIASES.get(normalized, normalized)
+    if normalized not in ISSUE_ID_FORMATS:
+        choices = ", ".join(sorted(ISSUE_ID_FORMATS | {"provider-native"}))
+        raise WorkflowConfigError(
+            f"issue_id_format '{value}' is invalid in {path}. Use one of: {choices}"
+        )
+
+    expected = _provider_native_issue_id_format(issue_provider, path=path)
+    if normalized != expected:
+        raise WorkflowConfigError(
+            f"issue_id_format '{value}' is invalid for issue provider '{issue_provider}' in {path}"
+        )
+    return normalized
+
+
+def _provider_native_issue_id_format(issue_provider: str, *, path: Path) -> str:
+    try:
+        return PROVIDER_NATIVE_ISSUE_ID_FORMATS[issue_provider]
+    except KeyError as exc:
+        raise WorkflowConfigError(f"unsupported issue provider for issue_id_format: {issue_provider}") from exc
 
 
 def _parse_version(value: Any, *, path: Path) -> int:

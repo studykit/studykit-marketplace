@@ -1,4 +1,4 @@
-"""Tests for workflow.config.yml loading and validation."""
+"""Tests for .workflow/config.yml loading and validation."""
 
 from __future__ import annotations
 
@@ -15,11 +15,17 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from workflow_config import WorkflowConfigError, load_workflow_config  # noqa: E402
 
 
+def _config_path(project: Path) -> Path:
+    path = project / ".workflow" / "config.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    return path
+
+
 def test_loads_github_issues_and_repository_wiki_knowledge(tmp_path: Path) -> None:
     project = tmp_path / "repo"
     nested = project / "src" / "feature"
     nested.mkdir(parents=True)
-    (project / "workflow.config.yml").write_text(
+    _config_path(project).write_text(
         """
 version: 1
 mode: remote-native
@@ -30,6 +36,7 @@ providers:
   knowledge:
     kind: repo-wiki
     path: wiki/workflow
+issue_id_format: github
 local_projection:
   mode: none
 commit_refs:
@@ -42,10 +49,11 @@ commit_refs:
     config = load_workflow_config(nested)
 
     assert config is not None
-    assert config.path == project / "workflow.config.yml"
+    assert config.path == _config_path(project)
     assert config.root == project
     assert config.issues.kind == "github"
     assert config.issues.settings["repo"] == "studykit/studykit-plugins"
+    assert config.issue_id_format == "github"
     assert config.knowledge.kind == "github"
     assert config.knowledge.settings["path"] == "wiki/workflow"
     assert config.local_projection.mode == "none"
@@ -56,7 +64,7 @@ commit_refs:
 def test_loads_jira_issues_and_confluence_knowledge_from_source_of_truth_shape(
     tmp_path: Path,
 ) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: "1"
 source_of_truth:
@@ -80,6 +88,7 @@ commit_refs:
 
     assert config is not None
     assert config.issues.kind == "jira"
+    assert config.issue_id_format == "jira"
     assert config.issues.settings["site"] == "acme.atlassian.net"
     assert config.knowledge.kind == "confluence"
     assert config.knowledge.settings["space"] == "ENG"
@@ -88,7 +97,7 @@ commit_refs:
 
 
 def test_loads_filesystem_only_config(tmp_path: Path) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: 1
 providers:
@@ -111,6 +120,7 @@ commit_refs:
 
     assert config is not None
     assert config.issues.kind == "filesystem"
+    assert config.issue_id_format == "number"
     assert config.knowledge.kind == "filesystem"
     assert config.local_projection.mode == "persistent"
     assert config.local_projection.path == "workflow"
@@ -121,7 +131,7 @@ commit_refs:
 def test_missing_config_returns_none_and_can_be_required(tmp_path: Path) -> None:
     assert load_workflow_config(tmp_path) is None
 
-    with pytest.raises(WorkflowConfigError, match="workflow.config.yml was not found"):
+    with pytest.raises(WorkflowConfigError, match=".workflow/config.yml was not found"):
         load_workflow_config(tmp_path, require=True)
 
 
@@ -138,7 +148,7 @@ def test_invalid_provider_role_combinations_are_rejected(
     knowledge_provider: str,
     message: str,
 ) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         f"""
 version: 1
 providers:
@@ -155,7 +165,7 @@ providers:
 
 
 def test_config_requires_issue_and_knowledge_provider_slots(tmp_path: Path) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: 1
 providers:
@@ -170,7 +180,7 @@ providers:
 
 
 def test_invalid_local_projection_mode_is_rejected(tmp_path: Path) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: 1
 providers:
@@ -189,7 +199,7 @@ local_projection:
 
 
 def test_invalid_commit_reference_style_is_rejected(tmp_path: Path) -> None:
-    (tmp_path / "workflow.config.yml").write_text(
+    _config_path(tmp_path).write_text(
         """
 version: 1
 providers:
@@ -204,4 +214,22 @@ commit_refs:
     )
 
     with pytest.raises(WorkflowConfigError, match="commit_refs.style"):
+        load_workflow_config(tmp_path)
+
+
+def test_issue_id_format_must_match_issue_provider(tmp_path: Path) -> None:
+    _config_path(tmp_path).write_text(
+        """
+version: 1
+providers:
+  issues:
+    kind: github
+  knowledge:
+    kind: github
+issue_id_format: jira
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(WorkflowConfigError, match="issue_id_format"):
         load_workflow_config(tmp_path)

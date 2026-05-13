@@ -53,5 +53,5 @@ def test_require_config_fails_when_missing(tmp_path: Path) -> None:
     project = tmp_path / "project"
     project.mkdir()
 
-    with pytest.raises(LedgerError, match="workflow.config.yml was not found"):
+    with pytest.raises(LedgerError, match=".workflow/config.yml was not found"):
         record_reads([tmp_path / "contract.md"], project=project, session_id="s1", require_config=True)

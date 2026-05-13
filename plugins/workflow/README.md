@@ -23,7 +23,7 @@ Implemented so far:
 
 ## Configuration
 
-A configured project uses a repository-root `workflow.config.yml`.
+A configured project uses a repository-root `.workflow/config.yml`.
 
 Example:
 
@@ -39,6 +39,8 @@ providers:
     kind: confluence
     site: example.atlassian.net
     space: ENG
+
+issue_id_format: github
 
 local_projection:
   mode: none
@@ -78,10 +80,21 @@ GitHub issue write operations can request a freshness check by setting `freshnes
 
 GitHub issue reads can be cached under repository-local `.workflow-cache/` projections. The cache root is ignored by Git.
 
-Current projection shape:
+Current configured-repository projection shape:
 
 ```text
-.workflow-cache/github/github.com/OWNER/REPO/issues/ISSUE_NUMBER/
+.workflow-cache/issues/ISSUE_NUMBER/
+  issue.md
+  comments/
+    index.yml
+    YYYY-MM-DDTHHMMSSZ-PROVIDER_COMMENT_ID.md
+  relationships.yml
+```
+
+External GitHub repositories use a namespaced projection shape:
+
+```text
+.workflow-cache/github.com/OWNER/REPO/issues/ISSUE_NUMBER/
   issue.md
   comments/
     index.yml
@@ -122,9 +135,9 @@ The resolver returns absolute plugin-bundled authoring file paths.
 
 ## SessionStart policy
 
-Configured projects receive a concise SessionStart policy only when `workflow.config.yml` exists.
+Configured projects receive a concise SessionStart policy only when `.workflow/config.yml` exists.
 
-The hook injects the resolver command, provider cache-base context, and reminders to read every path from `required_authoring_files` before writing workflow artifacts. It does not auto-trigger workflow skills.
+The hook injects the workflow plugin root, resolver command, provider cache-base context, and reminders to read every path from `required_authoring_files` before writing workflow artifacts. Script paths in the injected commands are relative to the workflow plugin root. It does not auto-trigger workflow skills.
 
 ## Hook enforcement
 

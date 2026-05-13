@@ -91,7 +91,7 @@ Rules:
 - Use full URLs when a short reference would be ambiguous outside its provider.
 - Do not require local Markdown paths for provider-backed artifacts.
 - Do not introduce workflow-local numeric IDs when provider identity already exists.
-- The adapter resolves references through `workflow.config.yml`, provider context, and git remotes.
+- The adapter resolves references through `.workflow/config.yml`, provider context, and git remotes.
 
 ## Relationship sections
 

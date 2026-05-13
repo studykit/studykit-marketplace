@@ -371,8 +371,9 @@ def test_request_from_config_selects_provider_for_role(tmp_path: Path) -> None:
                 "issues": {"kind": "github"},
                 "knowledge": {"kind": "confluence"},
             },
+            "issue_id_format": "github",
         },
-        path=tmp_path / "workflow.config.yml",
+        path=tmp_path / ".workflow/config.yml",
     )
 
     issue = request_from_config(config, role="issue", operation="get", artifact_type="task")

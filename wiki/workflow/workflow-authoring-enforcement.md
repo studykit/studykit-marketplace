@@ -22,7 +22,7 @@ This wiki page describes the enforcement model and links to the contract directo
 
 Script: `plugins/workflow/scripts/authoring_resolver.py`
 
-The resolver decides which authoring files are required for a workflow artifact. It uses artifact type, role, provider, and `workflow.config.yml` when available.
+The resolver decides which authoring files are required for a workflow artifact. It uses artifact type, role, provider, and `.workflow/config.yml` when available.
 
 Every resolution includes:
 
@@ -38,7 +38,7 @@ The resolver returns absolute paths so the agent does not guess relative locatio
 
 Script: `plugins/workflow/scripts/workflow_hook.py`
 
-SessionStart injects a concise workflow authoring policy only when the active project has `workflow.config.yml`.
+SessionStart injects a concise workflow authoring policy only when the active project has `.workflow/config.yml`.
 
 The injected policy includes:
 
@@ -85,7 +85,7 @@ Exit codes:
 
 ## Intended Flow
 
-1. SessionStart injects the policy only when `workflow.config.yml` exists.
+1. SessionStart injects the policy only when `.workflow/config.yml` exists.
 2. Before a write, the caller resolves required authoring files.
 3. The agent reads every required authoring file.
 4. The runtime or wrapper records those reads in the ledger.
