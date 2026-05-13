@@ -106,6 +106,31 @@ Use GitHub comments for discussion, feedback, and work logs.
 
 Use GitHub timeline/events as provider audit history. Do not duplicate routine status changes in the issue body.
 
+## Implementation summary comments
+
+When updating an issue after implementation, keep the comment concise.
+
+Recommended shape:
+
+```markdown
+Implemented <short outcome>.
+
+Summary:
+- <material change>
+- <material change>
+
+Validation: local workflow checks passed.
+
+- <short-sha>
+```
+
+Rules:
+
+- Do not paste unit test output, test file lists, or verbose validation logs into issue comments.
+- Do not include full commit URLs when GitHub can autolink a short SHA.
+- Prefer one short SHA bullet per relevant commit.
+- Keep implementation details high-level; link or reference changed files only when the distinction matters.
+
 ## Closing keywords
 
 Only generate GitHub closing keywords such as `Fixes #123` when the workflow intentionally wants GitHub to auto-close an issue.
