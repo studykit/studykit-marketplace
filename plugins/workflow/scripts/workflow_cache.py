@@ -30,6 +30,14 @@ class WorkflowCacheCorrupt(WorkflowCacheError):
     """Raised when a cache projection exists but cannot be parsed."""
 
 
+class WorkflowFreshnessConflict(WorkflowCacheError):
+    """Raised when cache freshness metadata blocks a provider write."""
+
+    def __init__(self, result: FreshnessCheckResult):
+        super().__init__(result.message)
+        self.result = result
+
+
 @dataclass(frozen=True)
 class CacheWriteResult:
     """Paths written for one cache projection refresh."""
@@ -46,6 +54,160 @@ class CacheWriteResult:
             "comments_index": str(self.comments_index),
             "relationships_file": str(self.relationships_file),
         }
+
+
+@dataclass(frozen=True)
+class FreshnessMetadata:
+    """Local cache freshness metadata for one write-back target."""
+
+    source_updated_at: str | None
+    fetched_at: str | None
+    path: Path | None = None
+    target: str = "artifact"
+
+    def to_json(self) -> dict[str, str | None]:
+        result: dict[str, str | None] = {
+            "target": self.target,
+            "source_updated_at": self.source_updated_at,
+            "fetched_at": self.fetched_at,
+        }
+        if self.path is not None:
+            result["path"] = str(self.path)
+        return result
+
+
+@dataclass(frozen=True)
+class FreshnessCheckResult:
+    """Result of comparing local cache metadata with provider state."""
+
+    ok: bool
+    status: str
+    message: str
+    artifact: str
+    source_updated_at: str | None = None
+    fetched_at: str | None = None
+    provider_updated_at: str | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "ok": self.ok,
+            "status": self.status,
+            "message": self.message,
+            "artifact": self.artifact,
+            "source_updated_at": self.source_updated_at,
+            "fetched_at": self.fetched_at,
+            "provider_updated_at": self.provider_updated_at,
+        }
+
+
+def check_provider_freshness(
+    metadata: FreshnessMetadata | None,
+    *,
+    provider_updated_at: str | None,
+    artifact: str,
+    pending_new: bool = False,
+) -> FreshnessCheckResult:
+    """Compare local cache metadata with the current provider timestamp."""
+
+    if pending_new:
+        return FreshnessCheckResult(
+            ok=True,
+            status="pending_new",
+            message=f"{artifact} is pending creation; no provider freshness check is required.",
+            artifact=artifact,
+            provider_updated_at=provider_updated_at,
+        )
+
+    if metadata is None or not metadata.source_updated_at or not metadata.fetched_at:
+        return FreshnessCheckResult(
+            ok=False,
+            status="missing_metadata",
+            message=(
+                f"Cannot safely write {artifact}: cache freshness metadata is missing. "
+                "Refresh the provider cache before writing."
+            ),
+            artifact=artifact,
+            source_updated_at=metadata.source_updated_at if metadata else None,
+            fetched_at=metadata.fetched_at if metadata else None,
+            provider_updated_at=provider_updated_at,
+        )
+
+    source_dt = _parse_freshness_timestamp(metadata.source_updated_at)
+    fetched_dt = _parse_freshness_timestamp(metadata.fetched_at)
+    if source_dt is None or fetched_dt is None:
+        return FreshnessCheckResult(
+            ok=False,
+            status="invalid_metadata",
+            message=(
+                f"Cannot safely write {artifact}: cache freshness timestamps are invalid. "
+                "Refresh the provider cache before writing."
+            ),
+            artifact=artifact,
+            source_updated_at=metadata.source_updated_at,
+            fetched_at=metadata.fetched_at,
+            provider_updated_at=provider_updated_at,
+        )
+
+    provider_dt = _parse_freshness_timestamp(provider_updated_at)
+    if provider_dt is None:
+        return FreshnessCheckResult(
+            ok=True,
+            status="provider_timestamp_unavailable",
+            message=(
+                f"{artifact} provider timestamp is unavailable; no stale-cache conflict "
+                "could be detected."
+            ),
+            artifact=artifact,
+            source_updated_at=metadata.source_updated_at,
+            fetched_at=metadata.fetched_at,
+            provider_updated_at=provider_updated_at,
+        )
+
+    if provider_dt > fetched_dt or provider_dt > source_dt:
+        return FreshnessCheckResult(
+            ok=False,
+            status="stale",
+            message=(
+                f"Stale workflow cache for {artifact}: provider timestamp "
+                f"{provider_updated_at} is newer than cached source_updated_at "
+                f"{metadata.source_updated_at} or fetched_at {metadata.fetched_at}. "
+                "Refresh the provider cache before writing."
+            ),
+            artifact=artifact,
+            source_updated_at=metadata.source_updated_at,
+            fetched_at=metadata.fetched_at,
+            provider_updated_at=provider_updated_at,
+        )
+
+    return FreshnessCheckResult(
+        ok=True,
+        status="fresh",
+        message=f"{artifact} cache is fresh enough for write-back.",
+        artifact=artifact,
+        source_updated_at=metadata.source_updated_at,
+        fetched_at=metadata.fetched_at,
+        provider_updated_at=provider_updated_at,
+    )
+
+
+def require_provider_freshness(
+    metadata: FreshnessMetadata | None,
+    *,
+    provider_updated_at: str | None,
+    artifact: str,
+    pending_new: bool = False,
+) -> FreshnessCheckResult:
+    """Return freshness status or raise when a write-back should be blocked."""
+
+    result = check_provider_freshness(
+        metadata,
+        provider_updated_at=provider_updated_at,
+        artifact=artifact,
+        pending_new=pending_new,
+    )
+    if not result.ok:
+        raise WorkflowFreshnessConflict(result)
+    return result
 
 
 class GitHubIssueCache:
@@ -81,8 +243,44 @@ class GitHubIssueCache:
     def relationships_file(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.issue_dir(repo, issue) / "relationships.yml"
 
+    def freshness_file(self, repo: GitHubRepository, issue: int | str, target: str) -> Path:
+        normalized = _normalize_freshness_target(target)
+        if normalized == "issue":
+            return self.issue_file(repo, issue)
+        if normalized == "comments":
+            return self.comments_index_file(repo, issue)
+        if normalized == "relationships":
+            return self.relationships_file(repo, issue)
+        raise WorkflowCacheError(f"unsupported freshness target: {target}")
+
     def has_issue_projection(self, repo: GitHubRepository, issue: int | str) -> bool:
         return self.issue_file(repo, issue).is_file()
+
+    def read_freshness_metadata(
+        self,
+        repo: GitHubRepository,
+        issue: int | str,
+        *,
+        target: str = "issue",
+    ) -> FreshnessMetadata:
+        """Read freshness metadata for issue, comments, or relationships."""
+
+        normalized = _normalize_freshness_target(target)
+        path = self.freshness_file(repo, issue, normalized)
+        if not path.is_file():
+            raise WorkflowCacheMiss(f"freshness cache does not exist: {path}")
+
+        if normalized == "issue":
+            data, _body = _read_frontmatter_markdown(path)
+        else:
+            data = _read_yaml_mapping(path)
+        _require_schema(data, path)
+        return FreshnessMetadata(
+            source_updated_at=_normalize_optional(data.get("source_updated_at")),
+            fetched_at=_normalize_optional(data.get("fetched_at")),
+            path=path,
+            target=normalized,
+        )
 
     def read_issue(
         self,
@@ -343,6 +541,32 @@ def _read_frontmatter_markdown(path: Path) -> tuple[dict[str, Any], str]:
         body = body[1:]
     data = _loads_yaml_mapping(frontmatter_text, path)
     return data, body
+
+
+def _normalize_freshness_target(target: str) -> str:
+    normalized = str(target).strip().lower().replace("-", "_")
+    aliases = {
+        "issue_body": "issue",
+        "body": "issue",
+        "comment": "comments",
+        "issue_comments": "comments",
+        "relationship": "relationships",
+        "issue_relationships": "relationships",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _parse_freshness_timestamp(value: str | None) -> datetime | None:
+    text = _normalize_optional(value)
+    if text is None:
+        return None
+    try:
+        parsed = datetime.fromisoformat(text.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        return parsed.replace(tzinfo=UTC)
+    return parsed.astimezone(UTC)
 
 
 def _read_yaml_mapping(path: Path) -> dict[str, Any]:

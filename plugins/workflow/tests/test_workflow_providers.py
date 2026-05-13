@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from typing import Any, Mapping
@@ -13,7 +14,10 @@ _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
+from workflow_cache import GitHubIssueCache  # noqa: E402
+from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_config import parse_workflow_config  # noqa: E402
+from workflow_github import GitHubRepository  # noqa: E402
 from workflow_providers import (  # noqa: E402
     CACHE_POLICY_REFRESH,
     ISSUE_PROVIDER_OPERATIONS,
@@ -25,6 +29,7 @@ from workflow_providers import (  # noqa: E402
     KnowledgeProvider,
     ProviderContext,
     ProviderDispatcher,
+    ProviderFreshnessError,
     ProviderGuardError,
     ProviderRegistry,
     ProviderRequest,
@@ -84,6 +89,40 @@ def knowledge_request(operation: str, context: ProviderContext, **payload: Any) 
         context=context,
         payload=payload,
     )
+
+
+def git_args(project: Path, *args: str) -> tuple[str, ...]:
+    return ("git", "-C", str(project.resolve(strict=False)), *args)
+
+
+def gh_issue_freshness_args(issue: int | str) -> tuple[str, ...]:
+    return (
+        "gh",
+        "issue",
+        "view",
+        str(issue),
+        "--repo",
+        "studykit/studykit-plugins",
+        "--json",
+        "number,updatedAt",
+    )
+
+
+def github_repo() -> GitHubRepository:
+    return GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
+
+
+def cached_issue_payload(*, updated_at: str = "2026-05-13T12:00:00Z") -> dict[str, object]:
+    return {
+        "number": 39,
+        "title": "Write-back freshness checks",
+        "state": "OPEN",
+        "stateReason": None,
+        "body": "Cached body.",
+        "labels": [],
+        "updatedAt": updated_at,
+        "comments": [],
+    }
 
 
 def test_provider_operation_sets_cover_issue_and_knowledge_contracts() -> None:
@@ -182,6 +221,101 @@ def test_write_operations_require_guard(context: ProviderContext) -> None:
         dispatcher.dispatch(issue_request("update", context, id="T-1"))
 
     assert events == []
+
+
+def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_path: Path) -> None:
+    GitHubIssueCache.for_project(tmp_path).write_issue_bundle(
+        github_repo(),
+        cached_issue_payload(),
+        fetched_at="2026-05-13T12:34:56Z",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args == gh_issue_freshness_args(39):
+            events.append("freshness")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"number": 39, "updatedAt": "2026-05-13T12:00:00Z"}),
+            )
+        if request.args[:3] == ("gh", "issue", "edit"):
+            events.append("edit")
+            body_file = Path(request.args[request.args.index("--body-file") + 1])
+            assert body_file.read_text(encoding="utf-8") == "Updated body."
+            assert events == ["guard:update", "freshness", "edit"]
+            return CommandResult(request=request, returncode=0)
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    response = dispatcher.dispatch(
+        ProviderRequest(
+            role="issue",
+            kind="github",
+            operation="update",
+            context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+            payload={"issue": 39, "body": "Updated body.", "freshness_check": True},
+        )
+    )
+
+    assert response.payload["operation"] == "edit_issue_body"
+    assert events == ["guard:update", "freshness", "edit"]
+
+
+def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Path) -> None:
+    GitHubIssueCache.for_project(tmp_path).write_issue_bundle(
+        github_repo(),
+        cached_issue_payload(),
+        fetched_at="2026-05-13T12:34:56Z",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args == gh_issue_freshness_args(39):
+            events.append("freshness")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"number": 39, "updatedAt": "2026-05-13T13:00:00Z"}),
+            )
+        if request.args[:3] == ("gh", "issue", "edit"):
+            events.append("edit")
+            return CommandResult(request=request, returncode=0)
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    with pytest.raises(ProviderFreshnessError, match="Refresh the provider cache before writing"):
+        dispatcher.dispatch(
+            ProviderRequest(
+                role="issue",
+                kind="github",
+                operation="update",
+                context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+                payload={"issue": 39, "body": "Updated body.", "freshness_check": True},
+            )
+        )
+
+    assert events == ["guard:update", "freshness"]
 
 
 def test_read_operations_do_not_require_guard(context: ProviderContext) -> None:

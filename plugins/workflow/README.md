@@ -19,6 +19,7 @@ Implemented so far:
 - Workflow hooks in `scripts/workflow_hook.py` for SessionStart policy/cache context injection, prompt/stop issue cache preparation, authoring read recording, and local projection write guarding.
 - Provider interface scaffold in `scripts/workflow_providers.py` for issue and knowledge provider dispatch.
 - Repo-local provider read cache projections in `scripts/workflow_cache.py`.
+- Opt-in provider write-back freshness checks that compare cache projection timestamps with current provider state before mutation.
 
 ## Configuration
 
@@ -70,6 +71,8 @@ Transport priority is represented in code as:
 The default registry currently wires the GitHub Issues native transport to `scripts/workflow_github.py`. Knowledge transports and MCP fallback adapters are scaffolded by interface and can be registered as they are implemented.
 
 Write-capable provider operations must pass through the dispatcher with an authoring guard callback before mutation. Read-capable provider operations use `ProviderContext.cache_policy` to choose local-cache-first, refresh, or bypass behavior where cache support exists.
+
+GitHub issue write operations can request a freshness check by setting `freshness_check` in the provider payload. The check compares the relevant cache projection metadata (`source_updated_at` and `fetched_at`) with the current provider timestamp before writing. Supported targets are `issue`, `comments`, and `relationships`; omit `freshness_target` to use the operation default. Stale or missing local freshness metadata blocks writes to existing provider artifacts with a refresh-first remediation message. Pending new artifacts can set `pending_new` to skip remote freshness checks for an artifact that does not exist yet.
 
 ## Provider read cache
 

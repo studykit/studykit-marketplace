@@ -16,7 +16,13 @@ from authoring_guard import evaluate_authoring_guard
 from authoring_ledger import LedgerError
 from authoring_resolver import ResolverError
 from workflow_command import CommandRunner
-from workflow_cache import GitHubIssueCache, WorkflowCacheError
+from workflow_cache import (
+    FreshnessMetadata,
+    GitHubIssueCache,
+    WorkflowCacheError,
+    WorkflowFreshnessConflict,
+    require_provider_freshness,
+)
 from workflow_config import ProviderConfig, WorkflowConfig, normalize_role
 from workflow_github import (
     DEFAULT_ISSUE_FIELDS,
@@ -26,6 +32,7 @@ from workflow_github import (
     issue_body_edit_history,
     issue_events,
     issue_timeline,
+    normalize_issue_number,
     reopen_issue,
     resolve_github_repository,
     view_issue,
@@ -78,6 +85,10 @@ class ProviderNotFoundError(ProviderError):
 
 class ProviderGuardError(ProviderError):
     """Raised when an authoring guard blocks or cannot evaluate a write."""
+
+
+class ProviderFreshnessError(ProviderError):
+    """Raised when a provider write is blocked by stale cache metadata."""
 
 
 @dataclass(frozen=True)
@@ -346,6 +357,7 @@ class GitHubIssueNativeProvider(IssueProvider):
     def update(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
         body = _required_payload_value(request, "body")
+        self._require_write_freshness(request, issue, default_target="issue")
         return edit_issue_body(
             issue,
             body=str(body),
@@ -357,6 +369,7 @@ class GitHubIssueNativeProvider(IssueProvider):
     def add_comment(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
         body = _required_payload_value(request, "body")
+        self._require_write_freshness(request, issue, default_target="comments")
         return comment_issue(
             issue,
             body=str(body),
@@ -369,6 +382,7 @@ class GitHubIssueNativeProvider(IssueProvider):
         issue = _required_payload_value(request, "issue")
         reason = str(request.payload.get("reason") or "completed")
         comment = request.payload.get("comment")
+        self._require_write_freshness(request, issue, default_target="issue")
         return close_issue(
             issue,
             project=request.context.project,
@@ -381,6 +395,7 @@ class GitHubIssueNativeProvider(IssueProvider):
     def reopen(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
         comment = request.payload.get("comment")
+        self._require_write_freshness(request, issue, default_target="issue")
         return reopen_issue(
             issue,
             project=request.context.project,
@@ -425,6 +440,78 @@ class GitHubIssueNativeProvider(IssueProvider):
     def comments(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = self.get(request)
         return {"comments": issue.get("comments", [])}
+
+    def _require_write_freshness(
+        self,
+        request: ProviderRequest,
+        issue: Any,
+        *,
+        default_target: str,
+    ) -> None:
+        spec = _freshness_spec(request.payload, default_target=default_target)
+        if spec is None:
+            return
+
+        issue_number = normalize_issue_number(issue)
+        artifact = f"GitHub issue #{issue_number} {spec['target']}"
+        if spec["pending_new"]:
+            require_provider_freshness(
+                None,
+                provider_updated_at=None,
+                artifact=artifact,
+                pending_new=True,
+            )
+            return
+
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project)
+        metadata: FreshnessMetadata | None
+        try:
+            metadata = cache.read_freshness_metadata(repo, issue_number, target=spec["target"])
+        except WorkflowCacheError:
+            metadata = FreshnessMetadata(
+                source_updated_at=None,
+                fetched_at=None,
+                path=cache.freshness_file(repo, issue_number, spec["target"]),
+                target=spec["target"],
+            )
+
+        provider_updated_at = self._provider_freshness_timestamp(
+            issue_number,
+            request=request,
+            target=spec["target"],
+        )
+        try:
+            require_provider_freshness(
+                metadata,
+                provider_updated_at=provider_updated_at,
+                artifact=artifact,
+            )
+        except WorkflowFreshnessConflict as exc:
+            raise ProviderFreshnessError(str(exc)) from exc
+
+    def _provider_freshness_timestamp(
+        self,
+        issue: str,
+        *,
+        request: ProviderRequest,
+        target: str,
+    ) -> str | None:
+        fields = ("number", "updatedAt")
+        if target == "comments":
+            fields = ("number", "updatedAt", "comments")
+
+        payload = view_issue(
+            issue,
+            project=request.context.project,
+            fields=fields,
+            runner=self.runner,
+        )
+        if target == "comments":
+            return _latest_provider_comment_timestamp(payload.get("comments")) or _optional_string(
+                payload.get("updatedAt")
+            )
+        return _optional_string(payload.get("updatedAt"))
 
 
 class ProviderRegistry:
@@ -575,6 +662,100 @@ def _required_payload_value(request: ProviderRequest, key: str) -> Any:
     if value is None or value == "":
         raise ProviderOperationError(f"{request.operation} requires payload.{key}")
     return value
+
+
+def _freshness_spec(payload: Mapping[str, Any], *, default_target: str) -> dict[str, Any] | None:
+    raw = payload.get("freshness_check")
+    if raw is None:
+        raw = payload.get("check_freshness")
+    if raw is None:
+        raw = payload.get("freshness")
+    if raw is None or raw is False:
+        return None
+
+    enabled = True
+    target: Any = payload.get("freshness_target") or payload.get("freshness_scope") or default_target
+    pending_new = _truthy(payload.get("pending_new")) or _truthy(payload.get("pending_new_artifact"))
+    pending_new = pending_new or payload.get("provider_artifact_exists") is False
+
+    if isinstance(raw, Mapping):
+        if raw.get("enabled") is not None:
+            enabled = _truthy(raw.get("enabled"))
+        target = raw.get("target") or raw.get("scope") or target
+        pending_new = (
+            pending_new
+            or _truthy(raw.get("pending_new"))
+            or _truthy(raw.get("pending_new_artifact"))
+            or raw.get("provider_artifact_exists") is False
+        )
+    elif isinstance(raw, str):
+        normalized_raw = raw.strip().lower()
+        if normalized_raw in {"0", "false", "no", "off"}:
+            return None
+        if normalized_raw not in {"1", "true", "yes", "on"}:
+            target = raw
+
+    if not enabled:
+        return None
+
+    normalized_target = _normalize_freshness_target(str(target))
+    if normalized_target not in {"issue", "comments", "relationships"}:
+        raise ProviderOperationError(f"unsupported freshness target: {target}")
+    return {"target": normalized_target, "pending_new": pending_new}
+
+
+def _normalize_freshness_target(target: str) -> str:
+    normalized = target.strip().lower().replace("-", "_")
+    aliases = {
+        "body": "issue",
+        "issue_body": "issue",
+        "comment": "comments",
+        "issue_comments": "comments",
+        "relationship": "relationships",
+        "issue_relationships": "relationships",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _latest_provider_comment_timestamp(value: Any) -> str | None:
+    comments = value
+    if isinstance(comments, Mapping):
+        nodes = comments.get("nodes")
+        if isinstance(nodes, list):
+            comments = nodes
+    if not isinstance(comments, list):
+        return None
+
+    values = [
+        str(timestamp)
+        for comment in comments
+        if isinstance(comment, Mapping)
+        for timestamp in (
+            comment.get("updatedAt"),
+            comment.get("updated_at"),
+            comment.get("createdAt"),
+            comment.get("created_at"),
+        )
+        if timestamp
+    ]
+    if not values:
+        return None
+    return max(values)
+
+
+def _optional_string(value: Any) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _truthy(value: Any) -> bool:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, str):
+        return value.strip().lower() in {"1", "true", "yes", "on"}
+    return bool(value)
 
 
 def _already_guarded(_operation: str, _payload: Mapping[str, Any]) -> None:
