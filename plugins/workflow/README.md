@@ -113,11 +113,23 @@ Cache policies:
 Hook cache context:
 
 - `SessionStart` announces the workflow cache root and the GitHub issue cache base once per session.
+- `SessionStart` points agents to `scripts/workflow_cache_fetch.py` for explicit issue cache fetches from the shell tool.
 - `UserPromptSubmit` detects same-repository issue references and reads them through the default provider cache policy.
 - `Stop` records session-mentioned issue references as pending without provider reads.
 - The next `UserPromptSubmit` reads pending issue references through the default provider cache policy and injects their cache paths.
 - Hook-injected issue cache paths are relative to the GitHub issue cache base, for example `45/`.
 - Direct `.workflow-cache/` inspection is reserved for cache debugging; issue awareness should use hook-provided context or provider read wrappers.
+
+Agent-facing explicit cache fetch:
+
+```bash
+python3 plugins/workflow/scripts/workflow_cache_fetch.py \
+  --project . \
+  --json \
+  42
+```
+
+Use `--cache-policy refresh` when the agent intentionally needs to refresh provider data instead of accepting an existing local projection.
 
 ## Authoring resolver
 

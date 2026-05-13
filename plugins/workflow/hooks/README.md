@@ -37,6 +37,7 @@ Behavior:
 - For GitHub issue providers, the policy tells agents to use `../scripts/workflow_github.py` for guarded `edit-body`, `close`, and `reopen` mutations instead of paired ad hoc `gh` write/read calls.
 - The cache context announces the workflow cache root and, for GitHub issue providers, the GitHub issue cache base.
 - Later hook-reported issue cache paths are relative to the announced GitHub issue cache base.
+- The cache context points agents to `../scripts/workflow_cache_fetch.py` for explicit cache fetches through the same shared provider cache path used by `UserPromptSubmit`.
 - The hook does not start workflow skills.
 - The hook always exits `0`.
 

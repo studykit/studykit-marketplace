@@ -30,24 +30,14 @@ from workflow_command import CommandRunner  # noqa: E402
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
 from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_issue_number  # noqa: E402
 from workflow_github import resolve_github_repository  # noqa: E402
-from workflow_providers import CACHE_POLICY_DEFAULT, ProviderDispatcher, default_provider_registry  # noqa: E402
-from workflow_providers import request_from_config  # noqa: E402
+from workflow_issue_cache import cache_issue_references, display_project_path  # noqa: E402
+from workflow_issue_cache import extract_issue_numbers, format_issue_cache_context  # noqa: E402
+from workflow_issue_cache import github_issue_cache_base  # noqa: E402
 
 RUNTIME_ENV_VAR = "WORKFLOW_HOOK_RUNTIME"
 STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
 CLAUDE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
-MAX_ISSUE_REFS = 20
 HOOK_STATE_DIR_NAME = "hook-state"
-
-ISSUE_HASH_RE = re.compile(r"(?<![\w#])#([1-9]\d*)\b")
-ISSUE_REPO_RE = re.compile(
-    r"(?<![\w/.-])(?P<owner>[A-Za-z0-9_.-]+)/(?P<repo>[A-Za-z0-9_.-]+)#(?P<num>[1-9]\d*)\b",
-    re.IGNORECASE,
-)
-ISSUE_URL_RE = re.compile(
-    r"https?://(?P<host>[^/\s]+)/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/issues/(?P<num>[1-9]\d*)\b",
-    re.IGNORECASE,
-)
 
 
 @dataclass(frozen=True)
@@ -65,17 +55,6 @@ class ArtifactMetadata:
     artifact_type: str
     role: str | None = None
     provider: str | None = None
-
-
-@dataclass(frozen=True)
-class IssueCacheContext:
-    """Concise hook context for one cache-aware GitHub issue read."""
-
-    number: str
-    relative_issue_dir: str
-    title: str
-    state: str
-    cache_hit: bool | None = None
 
 
 def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | None = None) -> int:
@@ -337,7 +316,7 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
     if config.commit_refs.enabled:
         commit_ref = config.commit_refs.style
 
-    cache_context = build_cache_session_context(config)
+    cache_context = build_cache_session_context(config, plugin_root)
 
     return (
         "## workflow authoring policy\n\n"
@@ -403,7 +382,7 @@ def build_github_wrapper_session_context(config: WorkflowConfig, plugin_root: Pa
     )
 
 
-def build_cache_session_context(config: WorkflowConfig) -> str:
+def build_cache_session_context(config: WorkflowConfig, plugin_root: Path) -> str:
     """Build SessionStart guidance for workflow provider read caches."""
 
     cache_root = GitHubIssueCache.for_project(config.root).root
@@ -426,6 +405,13 @@ def build_cache_session_context(config: WorkflowConfig) -> str:
                 "",
                 "Hook-reported issue cache paths are relative to the GitHub issue "
                 "cache base unless another base is explicitly stated.",
+                "For explicit agent cache fetches, use the shared cache fetch script:",
+                "",
+                "```bash",
+                f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
+                f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_fetch.py" --project "{config.root}" '
+                "--json [--cache-policy refresh] <issue-number-or-ref>...",
+                "```",
             ]
         )
     else:
@@ -461,94 +447,6 @@ def github_repo_for_config(
         return None
 
 
-def github_issue_cache_base(config: WorkflowConfig, repo: GitHubRepository) -> Path:
-    """Return the issue-number parent directory for the configured repo cache."""
-
-    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
-    return cache.issue_dir(repo, "1").parent
-
-
-def cache_issue_references(
-    config: WorkflowConfig,
-    issue_numbers: list[str],
-    *,
-    repo: GitHubRepository,
-    runner: CommandRunner | None = None,
-) -> list[IssueCacheContext]:
-    """Read issues through the provider cache path and return hook context."""
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
-    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
-    issue_base = github_issue_cache_base(config, repo)
-    contexts: list[IssueCacheContext] = []
-
-    for number in issue_numbers:
-        try:
-            normalized = normalize_issue_number(number)
-            request = request_from_config(
-                config,
-                role="issue",
-                operation="get",
-                artifact_type="task",
-                payload={
-                    "issue": normalized,
-                    "include_body": False,
-                    "include_comments": False,
-                    "include_relationships": False,
-                },
-                cache_policy=CACHE_POLICY_DEFAULT,
-            )
-            response = dispatcher.dispatch(request)
-            issue_dir = cache.issue_dir(repo, normalized)
-            relative_issue_dir = issue_dir.relative_to(issue_base).as_posix() + "/"
-            contexts.append(
-                IssueCacheContext(
-                    number=normalized,
-                    relative_issue_dir=relative_issue_dir,
-                    title=str(response.payload.get("title") or ""),
-                    state=str(response.payload.get("state") or ""),
-                    cache_hit=cache_hit_from_payload(response.payload),
-                )
-            )
-        except Exception:
-            continue
-
-    return contexts
-
-
-def cache_hit_from_payload(payload: Mapping[str, Any]) -> bool | None:
-    cache_data = payload.get("cache")
-    if isinstance(cache_data, Mapping):
-        hit = cache_data.get("hit")
-        if isinstance(hit, bool):
-            return hit
-    return None
-
-
-def format_issue_cache_context(contexts: list[IssueCacheContext]) -> str:
-    """Render issue cache context using issue-cache-base-relative paths."""
-
-    lines = ["Workflow issue cache:"]
-    for context in contexts:
-        details: list[str] = []
-        state = context.state.strip()
-        if state:
-            details.append(state.lower())
-        title = compact_title(context.title)
-        if title:
-            details.append(title)
-        suffix = f" — {' — '.join(details)}" if details else ""
-        lines.append(f"- #{context.number} → `{context.relative_issue_dir}`{suffix}")
-    return "\n".join(lines)
-
-
-def compact_title(value: str, *, limit: int = 96) -> str:
-    title = " ".join(value.split())
-    if len(title) <= limit:
-        return title
-    return title[: limit - 1].rstrip() + "…"
-
-
 def prompt_from_payload(payload: dict[str, Any]) -> str:
     for key in ("prompt", "user_prompt", "message"):
         value = payload.get(key)
@@ -579,80 +477,6 @@ def text_from_payload(payload: dict[str, Any]) -> str:
 
     visit(payload)
     return "\n".join(chunks)
-
-
-def extract_issue_numbers(
-    text: str,
-    *,
-    repo: GitHubRepository | None = None,
-    issue_id_format: str = "github",
-) -> list[str]:
-    """Extract same-repository issue references in first-seen order."""
-
-    if issue_id_format != "github":
-        return []
-
-    numbers: list[str] = []
-    seen: set[str] = set()
-    candidates: list[tuple[int, str]] = []
-
-    def add(raw: str) -> None:
-        if len(numbers) >= MAX_ISSUE_REFS:
-            return
-        try:
-            normalized = normalize_issue_number(raw)
-        except Exception:
-            return
-        if normalized in seen:
-            return
-        seen.add(normalized)
-        numbers.append(normalized)
-
-    for match in ISSUE_URL_RE.finditer(text):
-        if repo is not None and not _same_github_repo(
-            repo,
-            host=match.group("host"),
-            owner=match.group("owner"),
-            repo_name=match.group("repo"),
-        ):
-            continue
-        candidates.append((match.start(), match.group("num")))
-
-    for match in ISSUE_REPO_RE.finditer(text):
-        if repo is not None and not _same_github_repo(
-            repo,
-            host=repo.host,
-            owner=match.group("owner"),
-            repo_name=match.group("repo"),
-        ):
-            continue
-        candidates.append((match.start(), match.group("num")))
-
-    for match in ISSUE_HASH_RE.finditer(text):
-        candidates.append((match.start(), match.group(1)))
-
-    for _, raw in sorted(candidates, key=lambda item: item[0]):
-        add(raw)
-
-    return numbers
-
-
-def _same_github_repo(
-    repo: GitHubRepository,
-    *,
-    host: str,
-    owner: str,
-    repo_name: str,
-) -> bool:
-    return (
-        host.lower(),
-        owner.lower(),
-        repo_name.removesuffix(".git").lower(),
-    ) == (
-        repo.host.lower(),
-        repo.owner.lower(),
-        repo.name.lower(),
-    )
 
 
 def _ordered_issue_union(*groups: list[str]) -> list[str]:
@@ -735,17 +559,6 @@ def remove_session_issues(project: Path, session_id: str, issues: list[str], kin
         path.write_text("\n".join(ordered) + "\n", encoding="utf-8")
     except OSError:
         return
-
-
-def display_project_path(path: Path, project: Path, *, trailing_slash: bool = False) -> str:
-    resolved = path.expanduser().resolve(strict=False)
-    try:
-        display = resolved.relative_to(project.expanduser().resolve(strict=False)).as_posix()
-    except ValueError:
-        display = str(resolved)
-    if trailing_slash and not display.endswith("/"):
-        display += "/"
-    return display
 
 
 def local_projection_guard_reason(
