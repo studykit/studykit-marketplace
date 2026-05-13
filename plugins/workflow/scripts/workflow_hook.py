@@ -331,6 +331,7 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
     resolver = "scripts/authoring_resolver.py"
     ledger = "scripts/authoring_ledger.py"
     guard = "scripts/authoring_guard.py"
+    github = "scripts/workflow_github.py"
 
     commit_ref = "disabled"
     if config.commit_refs.enabled:
@@ -372,9 +373,33 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f'python3 "$WORKFLOW_PLUGIN_ROOT/{guard}" --project "{config.root}" --session <session-id> '
         "--type <artifact-type> [--role issue|knowledge] --json\n"
         "```\n\n"
+        f"{build_github_wrapper_session_context(config, plugin_root, github)}"
         "SessionStart only injects this policy and cache context. It does not "
         "auto-trigger workflow skills."
         f"{cache_context}"
+    )
+
+
+def build_github_wrapper_session_context(config: WorkflowConfig, plugin_root: Path, script: str) -> str:
+    """Build SessionStart guidance for guarded GitHub issue write wrappers."""
+
+    if config.issues.kind != "github":
+        return ""
+
+    return (
+        "Use guarded GitHub issue write wrappers for supported mutations instead "
+        "of paired ad hoc `gh` write/read calls. The wrappers verify by default "
+        "after mutation, raise on verification failure, and return compact "
+        "`operation`, `issue`, and `verified` payloads.\n\n"
+        "```bash\n"
+        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
+        "edit-body <issue> --body-file <body-file> --guard-type <artifact-type> --session <session-id>\n"
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
+        "close <issue> --guard-type <artifact-type> --session <session-id> --reason completed [--comment <text>]\n"
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
+        "reopen <issue> --guard-type <artifact-type> --session <session-id> [--comment <text>]\n"
+        "```\n\n"
     )
 
 

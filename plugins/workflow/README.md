@@ -137,7 +137,7 @@ The resolver returns absolute plugin-bundled authoring file paths.
 
 Configured projects receive a concise SessionStart policy only when `.workflow/config.yml` exists.
 
-The hook injects the workflow plugin root, resolver command, provider cache-base context, and reminders to read every path from `required_authoring_files` before writing workflow artifacts. Script paths in the injected commands are relative to the workflow plugin root. It does not auto-trigger workflow skills.
+The hook injects the workflow plugin root, resolver command, provider cache-base context, guarded GitHub issue write wrapper usage, and reminders to read every path from `required_authoring_files` before writing workflow artifacts. Script paths in the injected commands are relative to the workflow plugin root. It does not auto-trigger workflow skills.
 
 ## Hook enforcement
 

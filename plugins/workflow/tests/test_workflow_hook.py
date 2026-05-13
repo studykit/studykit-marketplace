@@ -311,6 +311,13 @@ def test_session_start_injects_policy_for_configured_project(
     assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_resolver.py' in context
     assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_ledger.py' in context
     assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_guard.py' in context
+    assert '$WORKFLOW_PLUGIN_ROOT/scripts/workflow_github.py' in context
+    assert "guarded GitHub issue write wrappers" in context
+    assert "verify by default" in context
+    assert "`operation`, `issue`, and `verified`" in context
+    assert "edit-body <issue> --body-file <body-file>" in context
+    assert "close <issue> --guard-type <artifact-type> --session <session-id>" in context
+    assert "reopen <issue> --guard-type <artifact-type> --session <session-id>" in context
     assert str(_PLUGIN_ROOT / "scripts" / "authoring_resolver.py") not in context
     assert "`required_authoring_files`" in context
     assert "every path in that list is absolute" in context
