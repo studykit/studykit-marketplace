@@ -6,7 +6,7 @@ Date: 2026-05-13
 
 ## Purpose
 
-Research issue: #37
+Research issue: [#37](https://github.com/studykit/studykit-plugins/issues/37)
 
 Record how workflow can read GitHub Issue history when GitHub Issues are used as the issue provider.
 
@@ -106,13 +106,13 @@ The `diff` field contains the edited body content diff supplied by GitHub GraphQ
 
 ## Dogfooding observations
 
-Issue #28 showed:
+Issue [#28](https://github.com/studykit/studykit-plugins/issues/28) showed:
 
 - Sub-issue additions in REST timeline/events.
 - Label add/remove events in REST timeline/events.
 - Body edits in GraphQL `userContentEdits`, including edits that removed duplicate `## Children` and `## Suggested Order` sections.
 
-Issue #30 showed:
+Issue [#30](https://github.com/studykit/studykit-plugins/issues/30) showed:
 
 - Parent relationship history as `parent_issue_added`.
 - Dependency history as `blocked_by_added` and `blocking_added`.
@@ -126,6 +126,10 @@ Issue #30 showed:
 - Use GraphQL `userContentEdits` when an agent needs to inspect description/body changes.
 - Provider wrappers should expose body edit history as a read operation, not as body content.
 - `workdoc-finder` can use current body for summaries and timeline/events for recent activity.
+
+## Related Guidance
+
+- [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
 
 ## References
 

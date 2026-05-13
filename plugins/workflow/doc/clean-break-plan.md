@@ -181,13 +181,13 @@ Completed so far:
 - Added the session authoring read ledger skeleton at `plugins/workflow/scripts/authoring_ledger.py`.
 - Added the authoring write guard skeleton at `plugins/workflow/scripts/authoring_guard.py`.
 - Added resolver, ledger, and guard tests under `plugins/workflow/tests/`.
-- Registered the MVP backlog as GitHub Issues #28 through #36.
-- Linked #29 through #36 as native GitHub sub-issues of #28.
+- Registered the MVP backlog as GitHub Issues [#28](https://github.com/studykit/studykit-plugins/issues/28) through [#36](https://github.com/studykit/studykit-plugins/issues/36).
+- Linked [#29](https://github.com/studykit/studykit-plugins/issues/29) through [#36](https://github.com/studykit/studykit-plugins/issues/36) as native GitHub sub-issues of [#28](https://github.com/studykit/studykit-plugins/issues/28).
 - Added native GitHub issue dependencies for hard blocking order.
 - Added plain artifact-type labels as GitHub issue type mapping for the dogfooding backlog.
 - Removed duplicate body order sections from the GitHub backlog issues.
 - Recorded issue relationship, ordering, and label type policy in `plugins/workflow/doc/issue-relationship-policy.md`.
-- Recorded GitHub Issue history access notes in `plugins/workflow/doc/github-issue-history.md` and tracked the research as #37.
+- Recorded GitHub Issue history access notes in `plugins/workflow/doc/github-issue-history.md` and tracked the research as [#37](https://github.com/studykit/studykit-plugins/issues/37).
 
 ## Open Questions
 

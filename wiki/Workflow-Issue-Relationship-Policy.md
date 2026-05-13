@@ -23,13 +23,13 @@ The issue body remains the fallback only when a relationship is not available as
 
 The workflow MVP backlog is tracked in GitHub Issues:
 
-- Parent: #28
-- Sub-issues: #29, #30, #31, #32, #33, #34, #35, #36, #37
+- Parent: [#28](https://github.com/studykit/studykit-plugins/issues/28)
+- Sub-issues: [#29](https://github.com/studykit/studykit-plugins/issues/29), [#30](https://github.com/studykit/studykit-plugins/issues/30), [#31](https://github.com/studykit/studykit-plugins/issues/31), [#32](https://github.com/studykit/studykit-plugins/issues/32), [#33](https://github.com/studykit/studykit-plugins/issues/33), [#34](https://github.com/studykit/studykit-plugins/issues/34), [#35](https://github.com/studykit/studykit-plugins/issues/35), [#36](https://github.com/studykit/studykit-plugins/issues/36), [#37](https://github.com/studykit/studykit-plugins/issues/37)
 
 These are linked with GitHub native sub-issue relationships.
 
-The body of #28 should not maintain duplicate `## Children` or `## Suggested Order` sections.
-The bodies of #29 through #36 should not maintain duplicate `## Parent` sections.
+The body of [#28](https://github.com/studykit/studykit-plugins/issues/28) should not maintain duplicate `## Children` or `## Suggested Order` sections.
+The bodies of [#29](https://github.com/studykit/studykit-plugins/issues/29) through [#36](https://github.com/studykit/studykit-plugins/issues/36) should not maintain duplicate `## Parent` sections.
 
 Use native relationships to express work order:
 
@@ -38,17 +38,17 @@ Use native relationships to express work order:
 
 Current hard dependency relationships:
 
-- #30 is blocked by #29.
-- #31 is blocked by #30.
-- #32 is blocked by #29 and #37.
-- #33 is blocked by #29.
-- #34 is blocked by #32.
-- #35 is blocked by #29.
-- #36 is blocked by #31, #32, and #33.
+- [#30](https://github.com/studykit/studykit-plugins/issues/30) is blocked by [#29](https://github.com/studykit/studykit-plugins/issues/29).
+- [#31](https://github.com/studykit/studykit-plugins/issues/31) is blocked by [#30](https://github.com/studykit/studykit-plugins/issues/30).
+- [#32](https://github.com/studykit/studykit-plugins/issues/32) is blocked by [#29](https://github.com/studykit/studykit-plugins/issues/29) and [#37](https://github.com/studykit/studykit-plugins/issues/37).
+- [#33](https://github.com/studykit/studykit-plugins/issues/33) is blocked by [#29](https://github.com/studykit/studykit-plugins/issues/29).
+- [#34](https://github.com/studykit/studykit-plugins/issues/34) is blocked by [#32](https://github.com/studykit/studykit-plugins/issues/32).
+- [#35](https://github.com/studykit/studykit-plugins/issues/35) is blocked by [#29](https://github.com/studykit/studykit-plugins/issues/29).
+- [#36](https://github.com/studykit/studykit-plugins/issues/36) is blocked by [#31](https://github.com/studykit/studykit-plugins/issues/31), [#32](https://github.com/studykit/studykit-plugins/issues/32), and [#33](https://github.com/studykit/studykit-plugins/issues/33).
 
 These are linked with GitHub native issue dependency relationships.
 
-- #37 is a research item for GitHub issue history APIs.
+- [#37](https://github.com/studykit/studykit-plugins/issues/37) is a research item for GitHub issue history APIs.
 
 ## Labels and type mapping
 
@@ -62,13 +62,17 @@ Recommended labels:
 
 Current dogfooding backlog labels:
 
-- #28: `epic`
-- #29 through #36: `task`
-- #37: `research`
+- [#28](https://github.com/studykit/studykit-plugins/issues/28): `epic`
+- [#29](https://github.com/studykit/studykit-plugins/issues/29) through [#36](https://github.com/studykit/studykit-plugins/issues/36): `task`
+- [#37](https://github.com/studykit/studykit-plugins/issues/37): `research`
 
 Do not require a scope label by default. A repository-specific scope label may be configured later when a project needs extra filtering, but the default GitHub mapping should stay close to normal GitHub issue usage.
 
 GitHub Issue Types may be supported later as an optional setup-enabled mapping, but labels are the default because they are portable across repositories.
+
+## Related Guidance
+
+- [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
 
 ## Parent/child relationship
 

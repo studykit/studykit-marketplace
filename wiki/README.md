@@ -10,6 +10,7 @@ It intentionally uses a normal repository directory instead of the separate GitH
 - [Workflow Issue Relationship Policy](Workflow-Issue-Relationship-Policy.md)
 - [Workflow Provider Reference Formats](Workflow-Provider-Reference-Formats.md)
 - [GitHub Issue History Access](GitHub-Issue-History-Access.md)
+- [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
 - [Workflow Authoring Enforcement](Workflow-Authoring-Enforcement.md)
 - [Workflow Clean Break Decision](Workflow-Clean-Break-Decision.md)
 
