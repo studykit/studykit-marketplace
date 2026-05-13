@@ -14,12 +14,18 @@ _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from workflow_hook import session_start  # noqa: E402
+from authoring_ledger import read_ledger, record_reads  # noqa: E402
+from authoring_resolver import resolve_authoring  # noqa: E402
+from workflow_hook import post_read, pre_write, session_start  # noqa: E402
 
 
-def _write_config(project: Path) -> None:
+def _write_config(project: Path, *, projection_path: str | None = None) -> None:
+    projection = "  mode: none\n"
+    if projection_path is not None:
+        projection = f"  mode: persistent\n  path: {projection_path}\n"
+
     (project / "workflow.config.yml").write_text(
-        """
+        f"""
 version: 1
 providers:
   issues:
@@ -29,7 +35,7 @@ providers:
     kind: github
     path: wiki/workflow
 local_projection:
-  mode: none
+{projection.rstrip()}
 commit_refs:
   enabled: true
   style: provider-native
@@ -75,6 +81,142 @@ def test_session_start_emits_nothing_without_workflow_config(
     out = _run_session_start(tmp_path, monkeypatch, runtime=runtime)
 
     assert out == ""
+
+
+def _hook_env(
+    monkeypatch: pytest.MonkeyPatch,
+    project: Path,
+    *,
+    runtime: str = "codex",
+) -> None:
+    if runtime == "codex":
+        monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "codex")
+        monkeypatch.setenv("PLUGIN_ROOT", str(_PLUGIN_ROOT))
+        monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
+        monkeypatch.delenv("CLAUDE_PLUGIN_ROOT", raising=False)
+    else:
+        monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "claude")
+        monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
+        monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+        monkeypatch.delenv("PLUGIN_ROOT", raising=False)
+
+
+def test_post_read_records_authoring_file_by_absolute_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    state_dir = tmp_path / "state"
+    authoring_file = (_PLUGIN_ROOT / "authoring" / "metadata-contract.md").resolve()
+    _hook_env(monkeypatch, tmp_path)
+
+    captured = io.StringIO()
+    assert post_read(
+        {
+            "session_id": "s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "tool_name": "Read",
+            "tool_input": {"file_path": str(authoring_file)},
+        },
+        stdout=captured,
+        state_dir=state_dir,
+    ) == 0
+
+    assert captured.getvalue() == ""
+    ledger = read_ledger(tmp_path, "s1", state_dir)
+    assert ledger.read_authoring_files == (authoring_file,)
+
+
+def test_pre_write_blocks_local_projection_when_reads_are_missing(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, projection_path="workflow")
+    target = tmp_path / "workflow" / "task.md"
+    _hook_env(monkeypatch, tmp_path)
+
+    captured = io.StringIO()
+    assert pre_write(
+        {
+            "session_id": "s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": str(target),
+                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
+            },
+        },
+        stdout=captured,
+        state_dir=tmp_path / "state",
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    reason = payload["reason"]
+    assert payload["decision"] == "block"
+    assert "workflow authoring guard blocked" in reason
+    assert f"Target: {target}" in reason
+    assert "Artifact type: task" in reason
+    assert str(_PLUGIN_ROOT / "authoring" / "metadata-contract.md") in reason
+    assert str(_PLUGIN_ROOT / "authoring" / "providers" / "github-issue-authoring.md") in reason
+
+
+def test_pre_write_allows_local_projection_after_required_reads(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, projection_path="workflow")
+    state_dir = tmp_path / "state"
+    target = tmp_path / "workflow" / "task.md"
+    _hook_env(monkeypatch, tmp_path)
+
+    resolution = resolve_authoring("task", project=tmp_path, require_config=True)
+    record_reads(resolution.files, project=tmp_path, session_id="s1", state_dir=state_dir)
+
+    captured = io.StringIO()
+    assert pre_write(
+        {
+            "session_id": "s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": str(target),
+                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
+            },
+        },
+        stdout=captured,
+        state_dir=state_dir,
+    ) == 0
+
+    assert captured.getvalue() == ""
+
+
+def test_pre_write_emits_nothing_for_non_workflow_project(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    target = tmp_path / "workflow" / "task.md"
+    _hook_env(monkeypatch, tmp_path)
+
+    captured = io.StringIO()
+    assert pre_write(
+        {
+            "session_id": "s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": str(target),
+                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
+            },
+        },
+        stdout=captured,
+        state_dir=tmp_path / "state",
+    ) == 0
+
+    assert captured.getvalue() == ""
 
 
 @pytest.mark.parametrize("runtime", ["claude", "codex"])

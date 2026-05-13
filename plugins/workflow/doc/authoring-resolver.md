@@ -127,6 +127,11 @@ plugins/workflow/scripts/workflow_hook.py session-start
 
 The injected policy is intentionally concise. It points to the resolver, ledger, and guard commands; it does not auto-trigger workflow skills.
 
+Additional hooks record authoring file reads and guard local projection writes:
+
+- `workflow_hook.py post-read` records reads of plugin-bundled authoring files by absolute path.
+- `workflow_hook.py pre-write` checks local projection writes against the resolver and session ledger.
+
 Before writing a workflow artifact:
 
 1. Call the resolver with the artifact type, role, and provider context.

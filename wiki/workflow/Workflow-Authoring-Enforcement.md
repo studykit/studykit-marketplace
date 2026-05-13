@@ -50,6 +50,19 @@ The injected policy includes:
 
 SessionStart does not auto-trigger workflow skills.
 
+### Hook Read Recording And Local Projection Guard
+
+Script: `plugins/workflow/scripts/workflow_hook.py`
+
+Workflow hooks also connect the read ledger and write guard:
+
+- `post-read` records reads of plugin-bundled authoring files by absolute path.
+- `pre-write` checks local projection writes before mutation.
+- Missing reads block the write and list absolute authoring file paths to read.
+- Non-workflow projects receive no workflow hook output.
+
+The write guard is transport-neutral. Future provider wrappers should call the same guard before GitHub, Jira, Confluence, repository `wiki/`, or MCP writes.
+
 ### Authoring Read Ledger
 
 Script: `plugins/workflow/scripts/authoring_ledger.py`
@@ -92,7 +105,7 @@ This enforcement applies to:
 
 ## Current Limitations
 
-- SessionStart policy injection is implemented, but provider wrapper hook integration is not implemented yet.
+- Local projection write guarding is implemented for configured local projection and filesystem provider paths.
 - Provider write wrappers are not implemented yet.
 - The ledger records that a file was read; it cannot prove semantic use.
 
@@ -100,3 +113,4 @@ This enforcement applies to:
 
 - 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Published curated authoring enforcement page in repository `wiki/` directory.
 - 2026-05-13 — [#30](https://github.com/studykit/studykit-plugins/issues/30) — Documented SessionStart authoring policy injection.
+- 2026-05-13 — [#31](https://github.com/studykit/studykit-plugins/issues/31) — Documented hook read recording and local projection write guarding.

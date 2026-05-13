@@ -2,6 +2,29 @@
 
 Workflow hooks are adapters around shared scripts in `../scripts/`.
 
+## PostToolUse Read
+
+`PostToolUse` on `Read` dispatches to `../scripts/workflow_hook.py post-read`.
+
+Behavior:
+
+- Records reads of plugin-bundled workflow authoring files under `../authoring/`.
+- Records paths by absolute path in the session read ledger.
+- Emits nothing on success.
+- Emits nothing outside configured workflow projects.
+
+## PreToolUse Write/Edit
+
+`PreToolUse` on file writes dispatches to `../scripts/workflow_hook.py pre-write`.
+
+Behavior:
+
+- Checks local workflow projection writes before mutation.
+- Uses the shared resolver and ledger guard.
+- Blocks the write when required authoring files are missing.
+- The block message lists absolute authoring file paths to read.
+- Emits nothing for non-workflow projects or non-projection writes.
+
 ## SessionStart
 
 `SessionStart` dispatches to `../scripts/workflow_hook.py session-start`.

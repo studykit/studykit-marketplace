@@ -26,6 +26,41 @@ def build_result(required: tuple[Path, ...], missing: tuple[Path, ...]) -> dict[
     }
 
 
+def evaluate_authoring_guard(
+    artifact_type: str,
+    *,
+    project: Path,
+    session_id: str,
+    role: str | None = None,
+    provider: str | None = None,
+    state_dir: Path | None = None,
+    require_config: bool = False,
+) -> dict[str, Any]:
+    """Resolve required authoring files and compare them with the read ledger.
+
+    This function is transport-neutral. Hook adapters and future provider
+    wrappers can call it before any local, native-provider, REST, or MCP write.
+    """
+
+    resolution = resolve_authoring(
+        artifact_type,
+        role=role,
+        provider=provider,
+        project=project,
+        require_config=require_config,
+    )
+    missing = missing_reads(
+        resolution.files,
+        project=project,
+        session_id=session_id,
+        state_dir=state_dir,
+    )
+    result = build_result(resolution.files, missing)
+    result["artifact"] = resolution.to_json()["artifact"]
+    result["config_path"] = resolution.to_json()["config_path"]
+    return result
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
@@ -45,34 +80,27 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         session_id = args.session or default_session_id()
-        resolution = resolve_authoring(
+        result = evaluate_authoring_guard(
             args.type,
-            role=args.role,
-            provider=args.provider,
-            project=args.project,
-            require_config=args.require_config,
-        )
-        missing = missing_reads(
-            resolution.files,
             project=args.project,
             session_id=session_id,
+            role=args.role,
+            provider=args.provider,
             state_dir=args.state_dir.resolve() if args.state_dir else None,
+            require_config=args.require_config,
         )
     except (ResolverError, LedgerError) as exc:
         print(f"authoring guard error: {exc}", file=sys.stderr)
         return 2
 
-    result = build_result(resolution.files, missing)
     if args.json:
-        result["artifact"] = resolution.to_json()["artifact"]
-        result["config_path"] = resolution.to_json()["config_path"]
         print(json.dumps(result, indent=2, sort_keys=False))
-    elif missing:
+    elif result["missing_authoring_files"]:
         print("missing required authoring reads:")
-        for path in missing:
+        for path in result["missing_authoring_files"]:
             print(f"- {path}")
 
-    return 3 if missing else 0
+    return 0 if result["ok"] else 3
 
 
 if __name__ == "__main__":

@@ -190,6 +190,7 @@ Completed so far:
 - Recorded GitHub Issue history access notes in `plugins/workflow/doc/github-issue-history.md` and tracked the research as [#37](https://github.com/studykit/studykit-plugins/issues/37).
 - Added `workflow.config.yml` schema documentation and the shared loader at `plugins/workflow/scripts/workflow_config.py`.
 - Added SessionStart authoring policy injection through `plugins/workflow/scripts/workflow_hook.py`.
+- Integrated workflow hook read recording and local projection write guarding with the authoring ledger.
 
 ## Open Questions
 

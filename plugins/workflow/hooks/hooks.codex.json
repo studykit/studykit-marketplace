@@ -1,6 +1,34 @@
 {
   "description": "Workflow hooks for Codex. SessionStart injects the provider-backed workflow authoring policy only when workflow.config.yml exists in the active project.",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|apply_patch",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" pre-write",
+            "timeout": 5,
+            "statusMessage": "Checking workflow authoring ledger",
+            "description": "Block local workflow projection writes until required authoring files were read"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" post-read",
+            "timeout": 5,
+            "statusMessage": "Recording workflow authoring read",
+            "description": "Record reads of workflow authoring files in the session ledger"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

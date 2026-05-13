@@ -63,6 +63,22 @@ Exit codes:
 - Session hooks before local projection writes.
 - Skills that create or update workflow artifacts.
 
+## Hook integration
+
+The workflow `PreToolUse` write hook checks local projection writes before mutation.
+
+The hook:
+
+1. Loads `workflow.config.yml`.
+2. Checks whether the target path is under a configured local projection path or filesystem provider path.
+3. Infers artifact `type`, `role`, and optional `provider` from simple Markdown metadata.
+4. Resolves required authoring files through the shared resolver.
+5. Blocks the write when the session ledger is missing required reads.
+
+The block message lists absolute authoring file paths to read.
+
+Provider wrapper commands should call the same transport-neutral guard logic before future remote writes.
+
 ## Config behavior
 
 Use `--require-config` when the caller should only operate in configured workflow projects.

@@ -16,7 +16,7 @@ Implemented so far:
 - Authoring resolver script in `scripts/authoring_resolver.py`.
 - Session authoring read ledger in `scripts/authoring_ledger.py`.
 - Authoring write guard in `scripts/authoring_guard.py`.
-- SessionStart authoring policy hook in `scripts/workflow_hook.py`.
+- Workflow hooks in `scripts/workflow_hook.py` for SessionStart policy injection, authoring read recording, and local projection write guarding.
 
 ## Configuration
 
@@ -75,6 +75,15 @@ The resolver returns absolute plugin-bundled authoring file paths.
 Configured projects receive a concise SessionStart policy only when `workflow.config.yml` exists.
 
 The hook injects the resolver command and reminds the assistant to read every path from `required_authoring_files` before writing workflow artifacts. It does not auto-trigger workflow skills.
+
+## Hook enforcement
+
+Workflow hooks integrate the ledger and guard:
+
+- `PostToolUse` on `Read` records plugin-bundled authoring file reads by absolute path.
+- `PreToolUse` on writes checks local projection targets before mutation.
+- Missing reads block local projection writes with a message listing absolute paths to read.
+- Non-workflow projects receive no workflow hook output.
 
 ## Authoring read ledger
 

@@ -1,6 +1,32 @@
 {
   "description": "Workflow hooks. SessionStart injects the provider-backed workflow authoring policy only when workflow.config.yml exists in the active project.",
   "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=claude python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook.py\" pre-write",
+            "timeout": 5,
+            "description": "Block local workflow projection writes until required authoring files were read"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=claude python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook.py\" post-read",
+            "timeout": 5,
+            "description": "Record reads of workflow authoring files in the session ledger"
+          }
+        ]
+      }
+    ],
     "SessionStart": [
       {
         "hooks": [

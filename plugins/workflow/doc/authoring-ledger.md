@@ -59,6 +59,8 @@ python3 plugins/workflow/scripts/authoring_ledger.py \
   /absolute/path/to/contract.md
 ```
 
+The workflow `PostToolUse` read hook records plugin-bundled authoring files automatically when a configured project reads a file under `plugins/workflow/authoring/`.
+
 ## Check reads
 
 ```bash
@@ -98,5 +100,5 @@ Typical write guard flow:
 ## Current limitations
 
 - The ledger cannot prove that an LLM semantically used a file. It records that the runtime or wrapper marked the file as read.
-- Hook integration is not implemented yet.
+- Hook integration records plugin-bundled authoring file reads, but it does not observe non-tool reads outside the host runtime.
 - Remote provider write wrappers are not implemented yet.
