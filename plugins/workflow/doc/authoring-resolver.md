@@ -117,7 +117,15 @@ Filesystem provider support intentionally has no provider-specific authoring fil
 
 ## SessionStart and write guard integration
 
-SessionStart should only inject the workflow authoring policy when `workflow.config.yml` exists for the current project.
+SessionStart injects the workflow authoring policy only when `workflow.config.yml` exists for the current project.
+
+Hook entry point:
+
+```text
+plugins/workflow/scripts/workflow_hook.py session-start
+```
+
+The injected policy is intentionally concise. It points to the resolver, ledger, and guard commands; it does not auto-trigger workflow skills.
 
 Before writing a workflow artifact:
 

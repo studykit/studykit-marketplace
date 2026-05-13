@@ -34,6 +34,22 @@ Every resolution includes:
 
 The resolver returns absolute paths so the agent does not guess relative locations.
 
+### SessionStart Policy
+
+Script: `plugins/workflow/scripts/workflow_hook.py`
+
+SessionStart injects a concise workflow authoring policy only when the active project has `workflow.config.yml`.
+
+The injected policy includes:
+
+- The resolved config file path.
+- The issue provider and knowledge provider.
+- The authoring resolver command.
+- The ledger and write guard commands.
+- A reminder that `required_authoring_files` contains absolute paths to read before writing.
+
+SessionStart does not auto-trigger workflow skills.
+
 ### Authoring Read Ledger
 
 Script: `plugins/workflow/scripts/authoring_ledger.py`
@@ -76,10 +92,11 @@ This enforcement applies to:
 
 ## Current Limitations
 
-- Hook integration is not implemented yet.
+- SessionStart policy injection is implemented, but provider wrapper hook integration is not implemented yet.
 - Provider write wrappers are not implemented yet.
 - The ledger records that a file was read; it cannot prove semantic use.
 
 ## Change Log
 
 - 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Published curated authoring enforcement page in repository `wiki/` directory.
+- 2026-05-13 — [#30](https://github.com/studykit/studykit-plugins/issues/30) — Documented SessionStart authoring policy injection.

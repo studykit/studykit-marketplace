@@ -1,0 +1,18 @@
+{
+  "description": "Workflow hooks for Codex. SessionStart injects the provider-backed workflow authoring policy only when workflow.config.yml exists in the active project.",
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" session-start",
+            "timeout": 5,
+            "statusMessage": "Loading workflow authoring policy",
+            "description": "Inject workflow authoring resolver policy for configured workflow projects"
+          }
+        ]
+      }
+    ]
+  }
+}

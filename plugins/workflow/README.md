@@ -16,6 +16,7 @@ Implemented so far:
 - Authoring resolver script in `scripts/authoring_resolver.py`.
 - Session authoring read ledger in `scripts/authoring_ledger.py`.
 - Authoring write guard in `scripts/authoring_guard.py`.
+- SessionStart authoring policy hook in `scripts/workflow_hook.py`.
 
 ## Configuration
 
@@ -68,6 +69,12 @@ python3 plugins/workflow/scripts/authoring_resolver.py \
 ```
 
 The resolver returns absolute plugin-bundled authoring file paths.
+
+## SessionStart policy
+
+Configured projects receive a concise SessionStart policy only when `workflow.config.yml` exists.
+
+The hook injects the resolver command and reminds the assistant to read every path from `required_authoring_files` before writing workflow artifacts. It does not auto-trigger workflow skills.
 
 ## Authoring read ledger
 

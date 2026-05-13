@@ -27,5 +27,6 @@
       "Read",
       "Write"
     ]
-  }
+  },
+  "hooks": "./hooks/hooks.codex.json"
 }
