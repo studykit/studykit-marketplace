@@ -17,6 +17,7 @@ Implemented so far:
 - Session authoring read ledger in `scripts/authoring_ledger.py`.
 - Authoring write guard in `scripts/authoring_guard.py`.
 - Workflow hooks in `scripts/workflow_hook.py` for SessionStart policy injection, authoring read recording, and local projection write guarding.
+- Provider interface scaffold in `scripts/workflow_providers.py` for issue and knowledge provider dispatch.
 
 ## Configuration
 
@@ -55,6 +56,19 @@ python3 plugins/workflow/scripts/workflow_config.py \
   --require \
   --json
 ```
+
+## Provider interfaces
+
+Provider operations should use `scripts/workflow_providers.py` instead of direct ad-hoc provider calls. The scaffold defines issue and knowledge provider interfaces, a transport registry, and a dispatcher.
+
+Transport priority is represented in code as:
+
+1. Native wrapper transport.
+2. MCP fallback transport.
+
+The default registry currently wires the GitHub Issues native transport to `scripts/workflow_github.py`. Knowledge transports and MCP fallback adapters are scaffolded by interface and can be registered as they are implemented.
+
+Write-capable provider operations must pass through the dispatcher with an authoring guard callback before mutation. The provider request also carries a `cache_policy` field so the future local read cache can sit above provider transports without changing provider implementations.
 
 ## Authoring resolver
 
