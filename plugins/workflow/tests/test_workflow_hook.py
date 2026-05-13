@@ -307,11 +307,14 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Knowledge provider: `github`" in context
     assert "Local projection: `none`" in context
     assert "Commit references: `provider-native`" in context
-    assert "Delegate workflow script operations to the `workflow-operator` agent" in context
+    assert "Workflow script command recipes are intentionally not injected here" in context
+    assert "Use the `workflow-operator` agent as the operational boundary" in context
     assert "cache-aware provider reads" in context
     assert "guarded GitHub issue writes" in context
     assert "authoring resolver/ledger/guard execution" in context
+    assert "main assistant should pass workflow intent, issue refs, artifact type, and session id" in context
     assert "Provider writes must use guarded workflow wrappers" in context
+    assert "keep those wrapper calls behind the `workflow-operator` boundary" in context
     assert "does not auto-trigger workflow skills or agents" in context
     assert "WORKFLOW_PLUGIN_ROOT=" not in context
     assert "$WORKFLOW_PLUGIN_ROOT/scripts/" not in context
@@ -323,7 +326,7 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Workflow cache root: `.workflow-cache/`" in context
     assert "GitHub issue cache base: `.workflow-cache/issues/`" in context
     assert "Hook-reported issue cache paths are relative to the GitHub issue cache base" in context
-    assert "delegate to the `workflow-operator` agent" in context
+    assert "use the `workflow-operator` boundary instead of carrying script commands" in context
     assert "scripts/workflow_cache_fetch.py" not in context
     assert "scripts/workflow_cache_writeback.py" not in context
     assert "scripts/workflow_cache_comments.py" not in context

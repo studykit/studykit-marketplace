@@ -323,15 +323,18 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f"Knowledge provider: `{config.knowledge.kind}`\n"
         f"Local projection: `{config.local_projection.mode}`\n"
         f"Commit references: `{commit_ref}`\n\n"
-        "Delegate workflow script operations to the `workflow-operator` agent. "
-        "That agent owns cache-aware provider reads, guarded GitHub issue "
-        "writes, pending cache write-back, pending comment append, and "
-        "authoring resolver/ledger/guard execution.\n\n"
+        "Workflow script command recipes are intentionally not injected here. "
+        "Use the `workflow-operator` agent as the operational boundary for "
+        "cache-aware provider reads, guarded GitHub issue writes, pending "
+        "cache write-back, pending comment append, and authoring "
+        "resolver/ledger/guard execution. The main assistant should pass "
+        "workflow intent, issue refs, artifact type, and session id instead "
+        "of carrying exact script commands in context.\n\n"
         "Before creating or editing any workflow issue, knowledge artifact, "
         "or local projection, required authoring contracts must be resolved "
         "and read. Provider writes must use guarded workflow wrappers instead "
-        "of raw provider write commands; delegate those wrapper calls to "
-        "`workflow-operator`.\n\n"
+        "of raw provider write commands; keep those wrapper calls behind the "
+        "`workflow-operator` boundary.\n\n"
         "SessionStart only injects this policy and cache context. It does not "
         "auto-trigger workflow skills or agents."
         f"{cache_context}"
@@ -362,7 +365,8 @@ def build_cache_session_context(config: WorkflowConfig) -> str:
                 "Hook-reported issue cache paths are relative to the GitHub issue "
                 "cache base unless another base is explicitly stated.",
                 "For explicit cache fetch, cache write-back, or pending comment "
-                "append operations, delegate to the `workflow-operator` agent.",
+                "append operations, use the `workflow-operator` boundary instead "
+                "of carrying script commands in the main context.",
             ]
         )
     else:

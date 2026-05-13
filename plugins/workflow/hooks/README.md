@@ -32,14 +32,14 @@ Behavior:
 Behavior:
 
 - If the active project has no `.workflow/config.yml`, the hook emits nothing.
-- If the active project has a valid `.workflow/config.yml`, the hook injects a concise authoring resolver policy and provider cache-base context as `additionalContext`.
-- The policy announces the workflow plugin root and points to the shared resolver, ledger, guard, and GitHub issue write wrapper commands with root-relative script paths.
-- For GitHub issue providers, the policy tells agents to use `../scripts/workflow_github.py` for guarded `create`, `edit-body`, `close`, and `reopen` mutations instead of paired ad hoc `gh` write/read calls.
+- If the active project has a valid `.workflow/config.yml`, the hook injects a concise workflow policy and provider cache-base context as `additionalContext`.
+- The policy announces provider configuration and deliberately avoids injecting exact workflow script command recipes into the main assistant context.
+- Workflow script operations should stay behind the `../agents/workflow-operator.md` boundary. The main assistant passes workflow intent, issue refs, artifact type, and session id rather than carrying command syntax in context.
+- Provider writes must use guarded workflow wrappers instead of raw provider write commands; wrapper invocation details belong to the workflow operator.
 - The cache context announces the workflow cache root and, for GitHub issue providers, the GitHub issue cache base.
 - Later hook-reported issue cache paths are relative to the announced GitHub issue cache base.
-- The cache context points agents to `../scripts/workflow_cache_fetch.py` for explicit cache fetches through the same shared provider cache path used by `UserPromptSubmit`.
-- The cache context points agents to `../scripts/workflow_cache_writeback.py` for explicit guarded write-back of existing issue cache projections.
-- The hook does not start workflow skills.
+- The cache context points to the workflow operator boundary for explicit cache fetch, cache write-back, or pending comment append operations.
+- The hook does not start workflow skills or agents.
 - The hook always exits `0`.
 
 ## UserPromptSubmit
