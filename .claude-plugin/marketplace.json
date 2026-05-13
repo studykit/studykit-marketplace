@@ -8,11 +8,10 @@
     "version": "1.0.0"
   },
   "plugins": [
-{
+    {
       "name": "doc",
       "source": "./plugins/doc",
       "description": "A plugin for reading and searching various document formats including CHM files",
-      "version": "0.0.1",
       "author": {
         "name": "studykit"
       },
@@ -25,7 +24,6 @@
       "name": "jdk-source",
       "source": "./plugins/jdk-source",
       "description": "View JDK internal source code for Java development and debugging",
-      "version": "0.1.0",
       "author": {
         "name": "studykit"
       },
@@ -38,7 +36,6 @@
       "name": "korea-gov-data",
       "source": "./plugins/korea-gov-data",
       "description": "Extract and organize Open API specifications from data.go.kr (Korea Public Data Portal)",
-      "version": "0.1.0",
       "author": {
         "name": "studykit"
       },
@@ -51,7 +48,6 @@
       "name": "dom-analyzer",
       "source": "./plugins/dom-analyzer",
       "description": "HTML/XML DOM structure analysis toolkit with hierarchy visualization and CSS selector discovery",
-      "version": "0.1.2",
       "author": {
         "name": "studykit"
       },
@@ -64,7 +60,6 @@
       "name": "a4",
       "source": "./plugins/a4",
       "description": "a4/ workspace management — wiki + issues spec authoring, usecase / domain / architecture design with task batch derivation (/a4:breakdown) and autonomous implementation, brainstorming, and decision-making",
-      "version": "0.27.0",
       "author": {
         "name": "studykit"
       },
@@ -77,7 +72,6 @@
       "name": "obsidian",
       "source": "./plugins/obsidian",
       "description": "Generate query blocks, modify templates, and guide plugin usage for Obsidian knowledge management (Dataview, Tasks, Jira Issue, Templater, CLI)",
-      "version": "0.4.0",
       "author": {
         "name": "studykit"
       },
@@ -90,7 +84,6 @@
       "name": "plantuml",
       "source": "./plugins/plantuml",
       "description": "PlantUML diagram reference, creation, and validation plugin",
-      "version": "0.3.0",
       "author": {
         "name": "studykit"
       },
@@ -103,7 +96,6 @@
       "name": "structurizr",
       "source": "./plugins/structurizr",
       "description": "Structurizr DSL diagram composition, C4 model visualization, and architecture documentation plugin",
-      "version": "0.2.0",
       "author": {
         "name": "studykit"
       },
@@ -116,7 +108,6 @@
       "name": "d2",
       "source": "./plugins/d2",
       "description": "D2 diagram composition, rendering, and visualization plugin",
-      "version": "0.2.0",
       "author": {
         "name": "studykit"
       },
@@ -129,7 +120,6 @@
       "name": "spawn",
       "source": "./plugins/spawn",
       "description": "Spawn and orchestrate child Claude Code sessions in iTerm2 with session lifecycle management",
-      "version": "0.2.1",
       "author": {
         "name": "studykit"
       },
@@ -142,7 +132,6 @@
       "name": "dev-rules",
       "source": "./plugins/dev-rules",
       "description": "Inject coding rule sets (logging conventions; extensible by category) into Claude's context on file edits via PreToolUse hook. Rulesets are organized as `rulesets/<category>/<key>.md`; the hook emits absolute pointer paths (not bodies) with an imperative read directive so the model Reads the rule files itself, landing them in the transcript as its own tool-result. Per `<category>:<key>` dedup keeps each pointer to once per session.",
-      "version": "0.3.1",
       "author": {
         "name": "studykit"
       },

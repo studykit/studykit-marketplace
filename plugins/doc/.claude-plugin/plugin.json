@@ -1,5 +1,6 @@
 {
   "name": "doc-plugin",
+  "version": "0.0.1",
   "description": "A plugin for reading and searching various document formats including CHM files",
   "author": {
     "name": "studykit"

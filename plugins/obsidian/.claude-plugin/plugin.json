@@ -1,5 +1,6 @@
 {
   "name": "obsidian",
+  "version": "0.4.0",
   "description": "Generate query blocks, modify templates, and run CLI commands for Obsidian knowledge management (Dataview, Tasks, Jira Issue, Templater, CLI)",
   "author": {
     "name": "studykit"

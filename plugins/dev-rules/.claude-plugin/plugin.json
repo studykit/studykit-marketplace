@@ -1,5 +1,6 @@
 {
   "name": "dev-rules",
+  "version": "0.3.1",
   "description": "Inject coding rule sets (logging conventions) into Claude's context on file edits via PreToolUse hook. Per-language dedup ensures each ruleset is injected at most once per session.",
   "author": {
     "name": "studykit"

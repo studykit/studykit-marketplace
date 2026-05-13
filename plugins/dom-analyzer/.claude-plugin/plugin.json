@@ -1,5 +1,6 @@
 {
   "name": "dom-analyzer",
+  "version": "0.1.2",
   "description": "HTML/XML DOM structure analysis toolkit with hierarchy visualization",
   "author": {
     "name": "myungo"

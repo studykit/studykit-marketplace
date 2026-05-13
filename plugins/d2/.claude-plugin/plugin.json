@@ -1,5 +1,6 @@
 {
   "name": "d2",
+  "version": "0.2.0",
   "description": "D2 diagram composition, rendering, and visualization plugin",
   "author": {
     "name": "studykit"

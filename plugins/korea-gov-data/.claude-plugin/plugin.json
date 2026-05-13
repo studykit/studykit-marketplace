@@ -1,5 +1,6 @@
 {
   "name": "korea-gov-data",
+  "version": "0.1.0",
   "description": "Extract and organize Open API specifications from Korean government data portals (data.go.kr, KOSIS)",
   "author": {
     "name": "studykit"

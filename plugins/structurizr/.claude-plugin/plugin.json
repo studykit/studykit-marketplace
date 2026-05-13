@@ -1,5 +1,6 @@
 {
   "name": "structurizr",
+  "version": "0.2.0",
   "description": "Structurizr DSL diagram composition, C4 model visualization, and architecture documentation plugin",
   "author": {
     "name": "studykit"
