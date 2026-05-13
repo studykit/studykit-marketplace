@@ -194,6 +194,59 @@ Draft body.
     assert draft.body == "Draft body.\n"
 
 
+def test_pending_issue_comments_parse_frontmatter_and_raw_body(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    pending_dir = cache.comments_pending_dir(repo(), 39)
+    pending_dir.mkdir(parents=True)
+    pending_path = pending_dir / "2026-05-14T000000Z-local.md"
+    pending_path.write_text(
+        """---
+schema_version: 1
+author: local
+---
+
+Raw provider comment body.
+""",
+        encoding="utf-8",
+    )
+
+    comments = cache.read_pending_issue_comments(repo(), 39)
+
+    assert len(comments) == 1
+    assert comments[0].target_kind == "issue"
+    assert comments[0].target_id == "39"
+    assert comments[0].file_name == "2026-05-14T000000Z-local.md"
+    assert comments[0].body == "Raw provider comment body.\n"
+
+    removed = cache.remove_pending_issue_comments(repo(), 39, comments)
+
+    assert removed == [pending_path]
+    assert not pending_path.exists()
+    assert not pending_dir.exists()
+
+
+def test_pending_draft_comments_parse_frontmatter_and_raw_body(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    pending_dir = cache.pending_issue_comments_pending_dir(repo(), "draft-1")
+    pending_dir.mkdir(parents=True)
+    pending_path = pending_dir / "2026-05-14T000000Z-local.md"
+    pending_path.write_text(
+        """---
+author: local
+---
+
+Draft comment body.
+""",
+        encoding="utf-8",
+    )
+
+    comments = cache.read_pending_draft_comments(repo(), "draft-1")
+
+    assert comments[0].target_kind == "pending_issue"
+    assert comments[0].target_id == "draft-1"
+    assert comments[0].body == "Draft comment body.\n"
+
+
 def test_finalize_pending_issue_creation_archives_draft_and_moves_sidecars(tmp_path: Path) -> None:
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     pending_dir = cache.pending_issue_dir(repo(), "draft-1")

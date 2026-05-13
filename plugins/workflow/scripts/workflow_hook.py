@@ -378,6 +378,8 @@ def build_github_wrapper_session_context(config: WorkflowConfig, plugin_root: Pa
         f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
         "edit-body <issue> --body-file <body-file> --guard-type <artifact-type> --session <session-id>\n"
         f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
+        "comment <issue> --body-file <body-file> --guard-type <artifact-type> --session <session-id>\n"
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
         "close <issue> --guard-type <artifact-type> --session <session-id> --reason completed [--comment <text>]\n"
         f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
         "reopen <issue> --guard-type <artifact-type> --session <session-id> [--comment <text>]\n"
@@ -420,6 +422,13 @@ def build_cache_session_context(config: WorkflowConfig, plugin_root: Path) -> st
                 "```bash",
                 f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
                 f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" --project "{config.root}" '
+                "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>...",
+                "```",
+                "For explicit agent append of pending local comment files, use:",
+                "",
+                "```bash",
+                f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
+                f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" --project "{config.root}" '
                 "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>...",
                 "```",
             ]

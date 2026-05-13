@@ -80,6 +80,28 @@ class PendingIssueDraft:
 
 
 @dataclass(frozen=True)
+class PendingIssueComment:
+    """Parsed pending provider issue comment body."""
+
+    target_kind: str
+    target_id: str
+    path: Path
+    body: str
+
+    @property
+    def file_name(self) -> str:
+        return self.path.name
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "target_kind": self.target_kind,
+            "target_id": self.target_id,
+            "file": self.file_name,
+            "path": str(self.path),
+        }
+
+
+@dataclass(frozen=True)
 class FreshnessMetadata:
     """Local cache freshness metadata for one write-back target."""
 
@@ -308,6 +330,12 @@ class GitHubIssueCache:
     def comments_index_file(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.comments_dir(repo, issue) / "index.yml"
 
+    def comments_pending_dir(self, repo: GitHubRepository, issue: int | str) -> Path:
+        return self.issue_dir(repo, issue) / "comments-pending"
+
+    def pending_issue_comments_pending_dir(self, repo: GitHubRepository, local_id: str) -> Path:
+        return self.pending_issue_dir(repo, local_id) / "comments-pending"
+
     def relationships_file(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.issue_dir(repo, issue) / "relationships.yml"
 
@@ -354,6 +382,76 @@ class GitHubIssueCache:
             state=state,
             state_reason=state_reason,
         )
+
+    def read_pending_issue_comments(
+        self,
+        repo: GitHubRepository,
+        issue: int | str,
+    ) -> list[PendingIssueComment]:
+        """Read pending comment files for an existing issue projection."""
+
+        issue_number = normalize_issue_number(issue)
+        return _read_pending_comments(
+            self.comments_pending_dir(repo, issue_number),
+            target_kind="issue",
+            target_id=issue_number,
+        )
+
+    def read_pending_draft_comments(
+        self,
+        repo: GitHubRepository,
+        local_id: str,
+    ) -> list[PendingIssueComment]:
+        """Read pending comment files for a pending issue projection."""
+
+        safe_local_id = _safe_path_segment(local_id)
+        return _read_pending_comments(
+            self.pending_issue_comments_pending_dir(repo, safe_local_id),
+            target_kind="pending_issue",
+            target_id=safe_local_id,
+        )
+
+    def remove_pending_issue_comments(
+        self,
+        repo: GitHubRepository,
+        issue: int | str,
+        comments: Iterable[PendingIssueComment],
+    ) -> list[Path]:
+        """Remove successfully consumed pending comment files."""
+
+        issue_number = normalize_issue_number(issue)
+        pending_dir = self.comments_pending_dir(repo, issue_number)
+        removed: list[Path] = []
+        for comment in comments:
+            path = comment.path
+            if path.parent.resolve(strict=False) != pending_dir.resolve(strict=False):
+                raise WorkflowCacheError(f"pending comment is outside issue pending directory: {path}")
+            if path.exists():
+                path.unlink()
+                removed.append(path)
+        _remove_empty_parents(pending_dir, stop_at=self.issue_dir(repo, issue_number))
+        return removed
+
+    def remove_pending_draft_comments(
+        self,
+        repo: GitHubRepository,
+        local_id: str,
+        comments: Iterable[PendingIssueComment],
+    ) -> list[Path]:
+        """Remove successfully consumed pending comment files from a draft."""
+
+        safe_local_id = _safe_path_segment(local_id)
+        pending_dir = self.pending_issue_comments_pending_dir(repo, safe_local_id)
+        removed: list[Path] = []
+        for comment in comments:
+            path = comment.path
+            if path.parent.resolve(strict=False) != pending_dir.resolve(strict=False):
+                raise WorkflowCacheError(f"pending comment is outside draft pending directory: {path}")
+            if path.exists():
+                path.unlink()
+                removed.append(path)
+        _remove_empty_parents(pending_dir, stop_at=self.pending_issue_dir(repo, safe_local_id))
+        return removed
 
     def finalize_pending_issue_creation(
         self,
@@ -671,6 +769,35 @@ def _read_frontmatter_markdown(path: Path) -> tuple[dict[str, Any], str]:
         body = body[1:]
     data = _loads_yaml_mapping(frontmatter_text, path)
     return data, body
+
+
+def _read_pending_comments(
+    pending_dir: Path,
+    *,
+    target_kind: str,
+    target_id: str,
+) -> list[PendingIssueComment]:
+    if not pending_dir.exists():
+        return []
+    if not pending_dir.is_dir():
+        raise WorkflowCacheCorrupt(f"pending comments path is not a directory: {pending_dir}")
+
+    comments: list[PendingIssueComment] = []
+    for path in sorted(pending_dir.glob("*.md")):
+        frontmatter, body = _read_frontmatter_markdown(path)
+        if frontmatter.get("schema_version") is not None:
+            _require_schema(frontmatter, path)
+        if not body.strip():
+            raise WorkflowCacheCorrupt(f"pending comment body is empty: {path}")
+        comments.append(
+            PendingIssueComment(
+                target_kind=target_kind,
+                target_id=target_id,
+                path=path,
+                body=body,
+            )
+        )
+    return comments
 
 
 def _normalize_freshness_target(target: str) -> str:

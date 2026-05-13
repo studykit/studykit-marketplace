@@ -164,6 +164,28 @@ def writeback_issue_payload() -> dict[str, object]:
     }
 
 
+def commented_issue_payload() -> dict[str, object]:
+    return {
+        "number": 39,
+        "title": "Issue with comment",
+        "state": "OPEN",
+        "stateReason": None,
+        "body": "Issue body.",
+        "labels": [],
+        "updatedAt": "2026-05-14T00:10:00Z",
+        "comments": [
+            {
+                "id": "IC_kwDOQplzFM8AAAABCKrz_g",
+                "url": "https://github.com/studykit/studykit-plugins/issues/39#issuecomment-4440388606",
+                "author": {"login": "studykit"},
+                "body": "Pending comment body.\n",
+                "createdAt": "2026-05-14T00:00:00Z",
+                "updatedAt": "2026-05-14T00:00:00Z",
+            }
+        ],
+    }
+
+
 def test_provider_operation_sets_cover_issue_and_knowledge_contracts() -> None:
     assert ISSUE_PROVIDER_OPERATIONS >= {
         "create",
@@ -606,6 +628,70 @@ Draft body.
     assert not draft_path.exists()
     assert Path(response.payload["pending"]["archived_issue"]).is_file()
     assert events == ["guard:create", "create", "verify", "refresh"]
+
+
+def test_github_issue_add_comment_from_pending_files_dispatches_and_refreshes_cache(
+    tmp_path: Path,
+) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=github_repo())
+    cache.write_issue_bundle(github_repo(), cached_issue_payload(), fetched_at="2026-05-14T00:00:00Z")
+    pending_dir = cache.comments_pending_dir(github_repo(), 39)
+    pending_dir.mkdir(parents=True)
+    pending_file = pending_dir / "2026-05-14T000000Z-local.md"
+    pending_file.write_text(
+        """---
+schema_version: 1
+---
+
+Pending comment body.
+""",
+        encoding="utf-8",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args[:3] == ("gh", "issue", "comment"):
+            events.append("comment")
+            body_file = Path(request.args[request.args.index("--body-file") + 1])
+            assert body_file.read_text(encoding="utf-8") == "Pending comment body.\n"
+            assert events == ["guard:add_comment", "comment"]
+            return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(39, ",".join(DEFAULT_ISSUE_FIELDS)):
+            events.append("refresh")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(commented_issue_payload()))
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    response = dispatcher.dispatch(
+        ProviderRequest(
+            role="issue",
+            kind="github",
+            operation="add_comment",
+            context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+            payload={"issue": 39, "from_pending": True},
+        )
+    )
+
+    assert response.payload["operation"] == "append_pending_comments"
+    assert response.payload["issue"] == "39"
+    assert response.payload["appended"] == 1
+    assert response.payload["cache_refreshed"] is True
+    assert response.payload["pending_files"] == ["2026-05-14T000000Z-local.md"]
+    assert not pending_file.exists()
+    cached = cache.read_comments(github_repo(), 39)
+    assert cached["comments"][0]["id"] == "4440388606"
+    assert cached["comments"][0]["body"] == "Pending comment body.\n"
+    assert events == ["guard:add_comment", "comment", "refresh"]
 
 
 def test_read_operations_do_not_require_guard(context: ProviderContext) -> None:

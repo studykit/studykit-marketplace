@@ -477,6 +477,9 @@ class GitHubIssueNativeProvider(IssueProvider):
 
     def add_comment(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
+        if _truthy(request.payload.get("from_pending")) or _truthy(request.payload.get("pending_comments")):
+            return self._add_pending_comments(request, issue)
+
         body = _required_payload_value(request, "body")
         self._require_write_freshness(request, issue, default_target="comments")
         return comment_issue(
@@ -486,6 +489,56 @@ class GitHubIssueNativeProvider(IssueProvider):
             guard=_already_guarded,
             runner=self.runner,
         )
+
+    def _add_pending_comments(self, request: ProviderRequest, issue: Any) -> Mapping[str, Any]:
+        issue_number = normalize_issue_number(issue)
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
+        pending_local_id = _optional_string(
+            request.payload.get("pending_local_id") or request.payload.get("local_id")
+        )
+        if pending_local_id:
+            pending_comments = cache.read_pending_draft_comments(repo, pending_local_id)
+            pending_source = "pending_issue"
+        else:
+            pending_comments = cache.read_pending_issue_comments(repo, issue_number)
+            pending_source = "issue"
+
+        if not pending_comments:
+            if pending_local_id:
+                raise ProviderOperationError(
+                    f"no pending comment files found for GitHub pending issue {pending_local_id}"
+                )
+            raise ProviderOperationError(f"no pending comment files found for GitHub issue #{issue_number}")
+
+        self._require_write_freshness(request, issue_number, default_target="comments")
+        appended = [
+            comment_issue(
+                issue_number,
+                body=pending.body,
+                project=request.context.project,
+                guard=_already_guarded,
+                runner=self.runner,
+            )
+            for pending in pending_comments
+        ]
+        refreshed = view_issue(issue_number, project=request.context.project, runner=self.runner)
+        write_result = cache.write_issue_bundle(repo, refreshed)
+        if pending_local_id:
+            removed = cache.remove_pending_draft_comments(repo, pending_local_id, pending_comments)
+        else:
+            removed = cache.remove_pending_issue_comments(repo, issue_number, pending_comments)
+
+        return {
+            "operation": "append_pending_comments",
+            "issue": issue_number,
+            "appended": len(appended),
+            "pending_source": pending_source,
+            "pending_files": [pending.file_name for pending in pending_comments],
+            "removed_pending_files": [str(path) for path in removed],
+            "cache_refreshed": True,
+            "cache": write_result.to_json(),
+        }
 
     def close(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")

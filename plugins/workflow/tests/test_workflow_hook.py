@@ -317,6 +317,7 @@ def test_session_start_injects_policy_for_configured_project(
     assert "`operation`, `issue`, and `verified`" in context
     assert "create --title <title> --body-file <body-file>" in context
     assert "edit-body <issue> --body-file <body-file>" in context
+    assert "comment <issue> --body-file <body-file>" in context
     assert "close <issue> --guard-type <artifact-type> --session <session-id>" in context
     assert "reopen <issue> --guard-type <artifact-type> --session <session-id>" in context
     assert str(_PLUGIN_ROOT / "scripts" / "authoring_resolver.py") not in context
@@ -331,6 +332,7 @@ def test_session_start_injects_policy_for_configured_project(
     assert "--json [--cache-policy refresh] <issue-number-or-ref>..." in context
     assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" in context
     assert "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>..." in context
+    assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" in context
 
 
 def test_session_start_discovers_config_from_nested_project_path(
