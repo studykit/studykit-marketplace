@@ -13,6 +13,7 @@ It intentionally uses a normal repository directory instead of the separate GitH
 - [GitHub Issues Usage For Workflow](GitHub-Issues-Usage-For-Workflow.md)
 - [Workflow Authoring Enforcement](Workflow-Authoring-Enforcement.md)
 - [Workflow Clean Break Decision](Workflow-Clean-Break-Decision.md)
+- [Workflow Configuration](Workflow-Configuration.md)
 
 ## Tracking
 
@@ -22,3 +23,4 @@ It intentionally uses a normal repository directory instead of the separate GitH
 ## Change Log
 
 - 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Created repository `wiki/workflow/` directory as the GitHub knowledge backend for the workflow plugin.
+- 2026-05-13 — [#29](https://github.com/studykit/studykit-plugins/issues/29) — Added the workflow configuration schema page.

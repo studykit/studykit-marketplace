@@ -188,6 +188,7 @@ Completed so far:
 - Removed duplicate body order sections from the GitHub backlog issues.
 - Recorded issue relationship, ordering, and label type policy in `plugins/workflow/doc/issue-relationship-policy.md`.
 - Recorded GitHub Issue history access notes in `plugins/workflow/doc/github-issue-history.md` and tracked the research as [#37](https://github.com/studykit/studykit-plugins/issues/37).
+- Added `workflow.config.yml` schema documentation and the shared loader at `plugins/workflow/scripts/workflow_config.py`.
 
 ## Open Questions
 
@@ -196,4 +197,3 @@ Completed so far:
 3. Should GitHub and Jira support ship together, or should one issue provider come first?
 4. Should Confluence be the first knowledge provider, with repository `wiki/` directory added later?
 5. How should legacy a4 projects migrate, if at all?
-

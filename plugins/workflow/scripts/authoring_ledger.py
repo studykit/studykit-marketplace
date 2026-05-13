@@ -18,7 +18,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
-CONFIG_NAME = "workflow.config.yml"
+from workflow_config import CONFIG_NAME, find_workflow_config
+
 STATE_ROOT_NAME = "workflow-plugin"
 LEDGER_DIR_NAME = "authoring-ledger"
 
@@ -46,14 +47,7 @@ class Ledger:
 
 
 def find_config(project: Path) -> Path | None:
-    current = project.resolve()
-    if current.is_file():
-        current = current.parent
-    for candidate_dir in (current, *current.parents):
-        candidate = candidate_dir / CONFIG_NAME
-        if candidate.exists():
-            return candidate
-    return None
+    return find_workflow_config(project)
 
 
 def default_session_id() -> str:

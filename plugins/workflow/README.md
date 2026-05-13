@@ -11,6 +11,7 @@ This plugin is a clean-break implementation in progress.
 Implemented so far:
 
 - Provider-backed design notes in `doc/`.
+- Workflow configuration schema and shared loader in `scripts/workflow_config.py`.
 - Authoring contracts in `authoring/`.
 - Authoring resolver script in `scripts/authoring_resolver.py`.
 - Session authoring read ledger in `scripts/authoring_ledger.py`.
@@ -37,6 +38,21 @@ providers:
 
 local_projection:
   mode: none
+
+commit_refs:
+  enabled: true
+  style: provider-native
+```
+
+See `doc/workflow-config.md` for the version 1 schema, provider aliases, and validation rules.
+
+Inspect the resolved configuration:
+
+```bash
+python3 plugins/workflow/scripts/workflow_config.py \
+  --project . \
+  --require \
+  --json
 ```
 
 ## Authoring resolver

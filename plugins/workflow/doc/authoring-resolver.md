@@ -70,7 +70,7 @@ This prevents accidentally reading issue authoring rules when editing the curate
 
 ## Provider inference
 
-When `--provider` is omitted, the resolver looks for `workflow.config.yml` from the project path upward.
+When `--provider` is omitted, the resolver uses the shared workflow config loader to find and validate `workflow.config.yml` from the project path upward.
 
 Supported config shapes:
 
@@ -91,6 +91,8 @@ source_of_truth:
 ```
 
 Explicit `--provider` wins over configuration.
+
+See `workflow-config.md` for the full schema, provider aliases, local projection modes, and commit reference styles.
 
 ## Required file set
 
@@ -131,4 +133,3 @@ The resolver does not itself record reads or enforce writes. It is the single so
 - No project-local authoring overrides.
 - No provider metadata discovery beyond provider kind inference.
 - No transport calls.
-- No read ledger or write guard implementation yet.

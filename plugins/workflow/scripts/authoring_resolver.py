@@ -15,32 +15,21 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from workflow_config import (
+    CONFIG_NAME,
+    WorkflowConfigError,
+    load_workflow_config,
+    normalize_provider,
+    validate_provider_for_role,
+)
+
 PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 AUTHORING_DIR = PLUGIN_ROOT / "authoring"
-CONFIG_NAME = "workflow.config.yml"
 
 ISSUE_TYPES = {"task", "bug", "spike", "epic", "review"}
 KNOWLEDGE_TYPES = {"spec", "architecture", "domain", "context", "actors", "nfr", "ci"}
 DUAL_TYPES = {"usecase", "research"}
 ALL_TYPES = ISSUE_TYPES | KNOWLEDGE_TYPES | DUAL_TYPES
-
-ISSUE_PROVIDERS = {"github", "jira", "filesystem"}
-KNOWLEDGE_PROVIDERS = {"github", "confluence", "filesystem"}
-
-PROVIDER_ALIASES = {
-    "fs": "filesystem",
-    "file": "filesystem",
-    "files": "filesystem",
-    "local": "filesystem",
-    "github-issues": "github",
-    "github_issue": "github",
-    "github-issue": "github",
-    "github-wiki": "github",
-    "github_wiki": "github",
-    "githubwiki": "github",
-    "repo-wiki": "github",
-    "wiki": "github",
-}
 
 ISSUE_PROVIDER_FILES = {
     "github": "providers/github-issue-authoring.md",
@@ -112,106 +101,6 @@ def normalize_role(value: str | None, artifact_type: str) -> str:
     return normalized
 
 
-def normalize_provider(value: str | None) -> str | None:
-    if value is None or not value.strip():
-        return None
-    normalized = value.strip().lower().replace("_", "-")
-    return PROVIDER_ALIASES.get(normalized, normalized)
-
-
-def find_config(project: Path) -> Path | None:
-    current = project.resolve()
-    if current.is_file():
-        current = current.parent
-    for candidate_dir in (current, *current.parents):
-        candidate = candidate_dir / CONFIG_NAME
-        if candidate.exists():
-            return candidate
-    return None
-
-
-def _load_yaml(path: Path) -> dict[str, Any]:
-    try:
-        import yaml  # type: ignore
-    except Exception:
-        return _load_minimal_config(path)
-
-    data = yaml.safe_load(path.read_text(encoding="utf-8"))
-    if data is None:
-        return {}
-    if not isinstance(data, dict):
-        raise ResolverError(f"config must be a mapping: {path}")
-    return data
-
-
-def _load_minimal_config(path: Path) -> dict[str, Any]:
-    """Fallback parser for the simple provider shape used by workflow config.
-
-    This is not a general YAML parser. It only extracts provider kind/provider
-    values under `providers.issues`, `providers.knowledge`,
-    `source_of_truth.issues`, and `source_of_truth.knowledge`.
-    """
-
-    result: dict[str, Any] = {"providers": {}, "source_of_truth": {}}
-    stack: list[tuple[int, dict[str, Any]]] = [(-1, result)]
-
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = raw_line.split("#", 1)[0].rstrip()
-        if not line.strip() or ":" not in line:
-            continue
-        indent = len(line) - len(line.lstrip(" "))
-        key, value = line.strip().split(":", 1)
-        value = value.strip().strip('"\'')
-
-        while stack and indent <= stack[-1][0]:
-            stack.pop()
-        parent = stack[-1][1]
-
-        if value:
-            parent[key] = value
-            continue
-
-        child: dict[str, Any] = {}
-        parent[key] = child
-        stack.append((indent, child))
-
-    return result
-
-
-def _dig(data: dict[str, Any], *keys: str) -> Any:
-    current: Any = data
-    for key in keys:
-        if not isinstance(current, dict):
-            return None
-        current = current.get(key)
-    return current
-
-
-def provider_from_config(config: dict[str, Any], role: str) -> str | None:
-    slot = "issues" if role == "issue" else "knowledge"
-    candidates = [
-        _dig(config, "providers", slot, "kind"),
-        _dig(config, "providers", slot, "provider"),
-        _dig(config, "source_of_truth", slot, "provider"),
-        _dig(config, "source_of_truth", slot, "kind"),
-    ]
-    for candidate in candidates:
-        if isinstance(candidate, str) and candidate.strip():
-            return normalize_provider(candidate)
-    return None
-
-
-def validate_provider(role: str, provider: str | None) -> None:
-    if provider is None:
-        return
-    allowed = ISSUE_PROVIDERS if role == "issue" else KNOWLEDGE_PROVIDERS
-    if provider not in allowed:
-        choices = ", ".join(sorted(allowed))
-        raise ResolverError(
-            f"provider '{provider}' is not valid for role '{role}'. Use one of: {choices}"
-        )
-
-
 def absolute_authoring_paths(parts: Iterable[str]) -> tuple[Path, ...]:
     paths: list[Path] = []
     for rel in parts:
@@ -235,17 +124,21 @@ def resolve_authoring(
 
     config_path: Path | None = None
     config_provider: str | None = None
-    if project is not None:
-        config_path = find_config(project)
-        if config_path is not None:
-            config_provider = provider_from_config(_load_yaml(config_path), normalized_role)
-
-    if require_config and config_path is None:
-        project_label = str(project) if project is not None else "current project"
-        raise ResolverError(f"{CONFIG_NAME} was not found for {project_label}")
+    if project is not None or require_config:
+        try:
+            config = load_workflow_config(project or Path.cwd(), require=require_config)
+        except WorkflowConfigError as exc:
+            raise ResolverError(str(exc)) from exc
+        if config is not None:
+            config_path = config.path
+            config_provider = config.provider_for_role(normalized_role)
 
     normalized_provider = normalize_provider(provider) or config_provider
-    validate_provider(normalized_role, normalized_provider)
+    if normalized_provider is not None:
+        try:
+            validate_provider_for_role(normalized_role, normalized_provider)
+        except WorkflowConfigError as exc:
+            raise ResolverError(str(exc)) from exc
 
     parts = [
         "metadata-contract.md",
