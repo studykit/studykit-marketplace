@@ -389,7 +389,7 @@ def test_user_prompt_dedupes_announced_issue_paths_within_session(
     assert second.getvalue() == ""
 
 
-def test_stop_caches_unannounced_issue_reference_from_payload(
+def test_stop_caches_unannounced_issue_reference_from_payload_without_output(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -416,11 +416,35 @@ def test_stop_caches_unannounced_issue_reference_from_payload(
         runner=runner,
     ) == 0
 
-    payload = json.loads(captured.getvalue())
+    assert captured.getvalue() == ""
+    assert (
+        tmp_path
+        / ".workflow-cache"
+        / "github"
+        / "github.com"
+        / "studykit"
+        / "studykit-plugins"
+        / "issues"
+        / "46"
+        / "issue.md"
+    ).is_file()
+
+    prompt_context = io.StringIO()
+    assert user_prompt_submit(
+        {
+            "session_id": "s2",
+            "turn_id": "turn-2",
+            "cwd": str(tmp_path),
+            "prompt": "Now inspect #46.",
+        },
+        stdout=prompt_context,
+        runner=runner,
+    ) == 0
+
+    payload = json.loads(prompt_context.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert payload["hookSpecificOutput"]["hookEventName"] == "Stop"
+    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
     assert "- #46 → `46/` — open — Stop hook cache finalization" in context
-    assert ".workflow-cache" not in context
 
 
 def test_session_start_emits_nothing_for_invalid_config(

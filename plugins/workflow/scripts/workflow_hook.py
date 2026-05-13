@@ -224,7 +224,9 @@ def stop(
         payload = _read_payload()
     if payload.get("stop_hook_active") is True:
         return 0
-    output = stdout or sys.stdout
+    # Stop hook JSON output is reserved for block decisions. Context injection
+    # happens in UserPromptSubmit so Stop can never fail host output validation.
+    _ = stdout
 
     project_dir = project_dir_from_payload(payload)
     if project_dir is None:
@@ -250,22 +252,7 @@ def stop(
         return 0
 
     record_session_issues(config.root, session_id, issue_numbers, "mentioned")
-    already_announced = read_session_issues(config.root, session_id, "announced")
-    contexts = cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
-    fresh_contexts = [context for context in contexts if context.number not in already_announced]
-    if not fresh_contexts:
-        return 0
-
-    record_session_issues(config.root, session_id, [context.number for context in fresh_contexts], "announced")
-    emit(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "Stop",
-                "additionalContext": format_issue_cache_context(fresh_contexts),
-            }
-        },
-        stdout=output,
-    )
+    cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
     return 0
 
 
@@ -397,9 +384,9 @@ def build_cache_session_context(config: WorkflowConfig) -> str:
 
     lines.extend(
         [
-            "UserPromptSubmit and Stop hooks may pre-read mentioned issue "
-            "references through cache-aware provider reads and inject concise "
-            "additionalContext.",
+            "UserPromptSubmit may pre-read mentioned issue references through "
+            "cache-aware provider reads and inject concise additionalContext.",
+            "Stop may refresh session-mentioned issue cache projections silently.",
             "Use hook-provided issue context before ad hoc reads.",
             f"Do not inspect `{CACHE_ROOT_NAME}` directly unless the user explicitly "
             "asks to debug cache contents, layout, or invalidation.",

@@ -60,7 +60,7 @@ Behavior:
 
 - Rechecks issue references recorded by `UserPromptSubmit` and any issue references found in the stop payload.
 - Ensures those issues have cache projections through the same default provider cache policy.
-- Emits `additionalContext` only for issue cache paths that were not already announced earlier in the session.
+- Emits no JSON output; `Stop` output is reserved for host-supported block decisions.
 - Skips when `stop_hook_active` is true to avoid hook loops.
 - Emits nothing for clean no-op cases and never blocks the stop flow.
 
