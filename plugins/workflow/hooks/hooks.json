@@ -1,5 +1,5 @@
 {
-  "description": "Workflow hooks. SessionStart injects the provider-backed workflow authoring policy only when workflow.config.yml exists in the active project.",
+  "description": "Workflow hooks. SessionStart injects provider-backed workflow authoring policy and cache-base context only when workflow.config.yml exists in the active project. UserPromptSubmit and Stop pre-read mentioned GitHub issue references through cache-aware provider reads and inject issue-cache-base-relative paths as additionalContext.",
   "hooks": {
     "PreToolUse": [
       {
@@ -35,6 +35,30 @@
             "command": "WORKFLOW_HOOK_RUNTIME=claude python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook.py\" session-start",
             "timeout": 5,
             "description": "Inject workflow authoring resolver policy for configured workflow projects"
+          }
+        ]
+      }
+    ],
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=claude python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook.py\" user-prompt",
+            "timeout": 10,
+            "description": "Cache mentioned GitHub issue references and inject issue-cache-base-relative paths as additionalContext"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "WORKFLOW_HOOK_RUNTIME=claude python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook.py\" stop",
+            "timeout": 10,
+            "description": "Ensure session-mentioned GitHub issues have cache projections; inject only newly announced relative paths"
           }
         ]
       }

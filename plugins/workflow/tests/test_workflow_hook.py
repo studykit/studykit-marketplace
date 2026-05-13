@@ -6,6 +6,7 @@ import io
 import json
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -16,7 +17,52 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from authoring_ledger import read_ledger, record_reads  # noqa: E402
 from authoring_resolver import resolve_authoring  # noqa: E402
-from workflow_hook import post_read, pre_write, session_start  # noqa: E402
+from workflow_command import CommandRequest, CommandResult  # noqa: E402
+from workflow_github import DEFAULT_ISSUE_FIELDS  # noqa: E402
+from workflow_hook import post_read, pre_write, session_start, stop, user_prompt_submit  # noqa: E402
+
+
+class FakeRunner:
+    def __init__(self, responses: dict[tuple[str, ...], CommandResult]):
+        self.responses = responses
+        self.requests: list[CommandRequest] = []
+
+    def __call__(self, request: CommandRequest) -> CommandResult:
+        self.requests.append(request)
+        response = self.responses.get(request.args)
+        if response is None:
+            return CommandResult(request=request, returncode=127, stderr="unexpected command")
+        return response
+
+
+def result(args: tuple[str, ...], stdout: str = "", stderr: str = "", returncode: int = 0) -> CommandResult:
+    return CommandResult(request=CommandRequest(args=args), returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def gh_issue_view_args(issue: int | str) -> tuple[str, ...]:
+    return (
+        "gh",
+        "issue",
+        "view",
+        str(issue),
+        "--repo",
+        "studykit/studykit-plugins",
+        "--json",
+        ",".join(DEFAULT_ISSUE_FIELDS),
+    )
+
+
+def issue_payload(number: int, *, title: str = "Implement workflow hook cache context") -> dict[str, Any]:
+    return {
+        "number": number,
+        "title": title,
+        "state": "OPEN",
+        "stateReason": None,
+        "body": "Issue body.",
+        "labels": [{"name": "workflow"}],
+        "updatedAt": "2026-05-14T00:00:00Z",
+        "comments": [],
+    }
 
 
 def _write_config(project: Path, *, projection_path: str | None = None) -> None:
@@ -244,6 +290,13 @@ def test_session_start_injects_policy_for_configured_project(
     assert "`required_authoring_files`" in context
     assert "every path in that list is absolute" in context
     assert "does not auto-trigger workflow skills" in context
+    assert "## workflow provider cache context" in context
+    assert "Workflow cache root: `.workflow-cache/`" in context
+    assert (
+        "GitHub issue cache base: "
+        "`.workflow-cache/github/github.com/studykit/studykit-plugins/issues/`"
+    ) in context
+    assert "Hook-reported issue cache paths are relative to the GitHub issue cache base" in context
 
 
 def test_session_start_discovers_config_from_nested_project_path(
@@ -259,6 +312,115 @@ def test_session_start_discovers_config_from_nested_project_path(
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert f"Config file: `{tmp_path / 'workflow.config.yml'}`" in context
+
+
+def test_user_prompt_caches_issue_and_injects_issue_base_relative_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(45): result(
+                gh_issue_view_args(45),
+                stdout=json.dumps(issue_payload(45, title="Write-back freshness checks")),
+            )
+        }
+    )
+
+    captured = io.StringIO()
+    assert user_prompt_submit(
+        {
+            "session_id": "s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "prompt": "#45 작업 내용 확인",
+        },
+        stdout=captured,
+        runner=runner,
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert "- #45 → `45/` — open — Write-back freshness checks" in context
+    assert ".workflow-cache" not in context
+    assert (
+        tmp_path
+        / ".workflow-cache"
+        / "github"
+        / "github.com"
+        / "studykit"
+        / "studykit-plugins"
+        / "issues"
+        / "45"
+        / "issue.md"
+    ).is_file()
+
+
+def test_user_prompt_dedupes_announced_issue_paths_within_session(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(45): result(
+                gh_issue_view_args(45),
+                stdout=json.dumps(issue_payload(45)),
+            )
+        }
+    )
+    payload = {
+        "session_id": "s1",
+        "turn_id": "turn-1",
+        "cwd": str(tmp_path),
+        "prompt": "Please inspect #45.",
+    }
+
+    first = io.StringIO()
+    assert user_prompt_submit(payload, stdout=first, runner=runner) == 0
+    second = io.StringIO()
+    assert user_prompt_submit(payload, stdout=second, runner=runner) == 0
+
+    assert first.getvalue()
+    assert second.getvalue() == ""
+
+
+def test_stop_caches_unannounced_issue_reference_from_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(46): result(
+                gh_issue_view_args(46),
+                stdout=json.dumps(issue_payload(46, title="Stop hook cache finalization")),
+            )
+        }
+    )
+
+    captured = io.StringIO()
+    assert stop(
+        {
+            "session_id": "s2",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "transcript": "The assistant referenced GH-46 during the turn.",
+        },
+        stdout=captured,
+        runner=runner,
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert payload["hookSpecificOutput"]["hookEventName"] == "Stop"
+    assert "- #46 → `46/` — open — Stop hook cache finalization" in context
+    assert ".workflow-cache" not in context
 
 
 def test_session_start_emits_nothing_for_invalid_config(

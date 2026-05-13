@@ -16,7 +16,7 @@ Implemented so far:
 - Authoring resolver script in `scripts/authoring_resolver.py`.
 - Session authoring read ledger in `scripts/authoring_ledger.py`.
 - Authoring write guard in `scripts/authoring_guard.py`.
-- Workflow hooks in `scripts/workflow_hook.py` for SessionStart policy injection, authoring read recording, and local projection write guarding.
+- Workflow hooks in `scripts/workflow_hook.py` for SessionStart policy/cache context injection, prompt/stop issue cache preparation, authoring read recording, and local projection write guarding.
 - Provider interface scaffold in `scripts/workflow_providers.py` for issue and knowledge provider dispatch.
 - Repo-local provider read cache projections in `scripts/workflow_cache.py`.
 
@@ -94,6 +94,14 @@ Cache policies:
 - `refresh`: fetch provider data and overwrite the cache.
 - `bypass`: fetch provider data without reading or writing the cache.
 
+Hook cache context:
+
+- `SessionStart` announces the workflow cache root and the GitHub issue cache base once per session.
+- `UserPromptSubmit` detects same-repository issue references and reads them through the default provider cache policy.
+- `Stop` rechecks session-mentioned issue references through the same cache-aware provider path.
+- Hook-injected issue cache paths are relative to the GitHub issue cache base, for example `45/`.
+- Direct `.workflow-cache/` inspection is reserved for cache debugging; issue awareness should use hook-provided context or provider read wrappers.
+
 ## Authoring resolver
 
 Resolve required authoring files before creating or editing workflow artifacts:
@@ -112,12 +120,14 @@ The resolver returns absolute plugin-bundled authoring file paths.
 
 Configured projects receive a concise SessionStart policy only when `workflow.config.yml` exists.
 
-The hook injects the resolver command and reminds the assistant to read every path from `required_authoring_files` before writing workflow artifacts. It does not auto-trigger workflow skills.
+The hook injects the resolver command, provider cache-base context, and reminders to read every path from `required_authoring_files` before writing workflow artifacts. It does not auto-trigger workflow skills.
 
 ## Hook enforcement
 
 Workflow hooks integrate the ledger and guard:
 
+- `UserPromptSubmit` prepares cache projections for mentioned GitHub issue references and injects issue-cache-base-relative paths.
+- `Stop` rechecks session-mentioned issue references through provider cache reads and injects only newly announced relative paths.
 - `PostToolUse` on `Read` records plugin-bundled authoring file reads by absolute path.
 - `PreToolUse` on writes checks local projection targets before mutation.
 - Missing reads block local projection writes with a message listing absolute paths to read.

@@ -69,6 +69,18 @@
       "keywords": ["a4", "spec", "wiki", "issues", "usecase", "architecture", "planning", "workflow"]
     },
     {
+      "name": "workflow",
+      "source": "./plugins/workflow",
+      "description": "Provider-backed workflow over GitHub Issues, Jira, GitHub repository wiki directory, and Confluence with issue and knowledge authoring contracts",
+      "author": {
+        "name": "studykit"
+      },
+      "repository": "https://github.com/studykit/studykit-plugins",
+      "license": "MIT",
+      "category": "development",
+      "keywords": ["workflow", "github", "jira", "confluence", "wiki", "issues", "spec", "authoring"]
+    },
+    {
       "name": "obsidian",
       "source": "./plugins/obsidian",
       "description": "Generate query blocks, modify templates, and guide plugin usage for Obsidian knowledge management (Dataview, Tasks, Jira Issue, Templater, CLI)",

@@ -1,0 +1,18 @@
+version: 1
+mode: remote-native
+
+providers:
+  issues:
+    kind: github
+    repo: studykit/studykit-plugins
+
+  knowledge:
+    kind: github
+    path: wiki/workflow
+
+local_projection:
+  mode: none
+
+commit_refs:
+  enabled: true
+  style: provider-native

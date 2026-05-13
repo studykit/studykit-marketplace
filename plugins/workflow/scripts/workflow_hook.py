@@ -10,8 +10,10 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TextIO
@@ -23,11 +25,26 @@ if _SCRIPTS_DIR not in sys.path:
 from authoring_guard import evaluate_authoring_guard  # noqa: E402
 from authoring_ledger import LedgerError, record_reads  # noqa: E402
 from authoring_resolver import ALL_TYPES, DUAL_TYPES, ResolverError  # noqa: E402
+from workflow_cache import CACHE_ROOT_NAME, GitHubIssueCache  # noqa: E402
+from workflow_command import CommandRunner  # noqa: E402
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
+from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_issue_number  # noqa: E402
+from workflow_github import resolve_github_repository  # noqa: E402
+from workflow_providers import CACHE_POLICY_DEFAULT, ProviderDispatcher, default_provider_registry  # noqa: E402
+from workflow_providers import request_from_config  # noqa: E402
 
 RUNTIME_ENV_VAR = "WORKFLOW_HOOK_RUNTIME"
 STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
 CLAUDE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
+MAX_ISSUE_REFS = 20
+HOOK_STATE_DIR_NAME = "hook-state"
+
+ISSUE_HASH_RE = re.compile(r"(?<![\w#])#([1-9]\d*)\b")
+ISSUE_WORD_RE = re.compile(r"\b(?:issues?|gh)[\s:#-]+([1-9]\d*)\b", re.IGNORECASE)
+ISSUE_URL_RE = re.compile(
+    r"https?://(?P<host>[^/\s]+)/(?P<owner>[^/\s]+)/(?P<repo>[^/\s]+)/issues/(?P<num>[1-9]\d*)\b",
+    re.IGNORECASE,
+)
 
 
 @dataclass(frozen=True)
@@ -45,6 +62,17 @@ class ArtifactMetadata:
     artifact_type: str
     role: str | None = None
     provider: str | None = None
+
+
+@dataclass(frozen=True)
+class IssueCacheContext:
+    """Concise hook context for one cache-aware GitHub issue read."""
+
+    number: str
+    relative_issue_dir: str
+    title: str
+    state: str
+    cache_hit: bool | None = None
 
 
 def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | None = None) -> int:
@@ -131,6 +159,116 @@ def post_read(
     return 0
 
 
+def user_prompt_submit(
+    payload: dict[str, Any] | None = None,
+    *,
+    stdout: TextIO | None = None,
+    runner: CommandRunner | None = None,
+) -> int:
+    """Cache issue references from a user prompt and inject concise context."""
+
+    if payload is None:
+        payload = _read_payload()
+    output = stdout or sys.stdout
+
+    project_dir = project_dir_from_payload(payload)
+    if project_dir is None:
+        return 0
+
+    try:
+        config = load_workflow_config(project_dir)
+    except WorkflowConfigError:
+        return 0
+    if config is None or config.issues.kind != "github":
+        return 0
+
+    repo = github_repo_for_config(config, runner=runner)
+    if repo is None:
+        return 0
+
+    issue_numbers = extract_issue_numbers(prompt_from_payload(payload), repo=repo)
+    if not issue_numbers:
+        return 0
+
+    session_id = session_id_from_payload(payload)
+    record_session_issues(config.root, session_id, issue_numbers, "mentioned")
+
+    already_announced = read_session_issues(config.root, session_id, "announced")
+    contexts = cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
+    fresh_contexts = [context for context in contexts if context.number not in already_announced]
+    if not fresh_contexts:
+        return 0
+
+    record_session_issues(config.root, session_id, [context.number for context in fresh_contexts], "announced")
+    emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "UserPromptSubmit",
+                "additionalContext": format_issue_cache_context(fresh_contexts),
+            }
+        },
+        stdout=output,
+    )
+    return 0
+
+
+def stop(
+    payload: dict[str, Any] | None = None,
+    *,
+    stdout: TextIO | None = None,
+    runner: CommandRunner | None = None,
+) -> int:
+    """Refresh/cache issue references known to the session before stopping."""
+
+    if payload is None:
+        payload = _read_payload()
+    if payload.get("stop_hook_active") is True:
+        return 0
+    output = stdout or sys.stdout
+
+    project_dir = project_dir_from_payload(payload)
+    if project_dir is None:
+        return 0
+
+    try:
+        config = load_workflow_config(project_dir)
+    except WorkflowConfigError:
+        return 0
+    if config is None or config.issues.kind != "github":
+        return 0
+
+    repo = github_repo_for_config(config, runner=runner)
+    if repo is None:
+        return 0
+
+    session_id = session_id_from_payload(payload)
+    issue_numbers = sorted(read_session_issues(config.root, session_id, "mentioned"), key=int)
+    for number in extract_issue_numbers(text_from_payload(payload), repo=repo):
+        if number not in issue_numbers:
+            issue_numbers.append(number)
+    if not issue_numbers:
+        return 0
+
+    record_session_issues(config.root, session_id, issue_numbers, "mentioned")
+    already_announced = read_session_issues(config.root, session_id, "announced")
+    contexts = cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
+    fresh_contexts = [context for context in contexts if context.number not in already_announced]
+    if not fresh_contexts:
+        return 0
+
+    record_session_issues(config.root, session_id, [context.number for context in fresh_contexts], "announced")
+    emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "Stop",
+                "additionalContext": format_issue_cache_context(fresh_contexts),
+            }
+        },
+        stdout=output,
+    )
+    return 0
+
+
 def pre_write(
     payload: dict[str, Any] | None = None,
     *,
@@ -192,6 +330,8 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
     if config.commit_refs.enabled:
         commit_ref = config.commit_refs.style
 
+    cache_context = build_cache_session_context(config)
+
     return (
         "## workflow authoring policy\n\n"
         f"Configured workflow project: `{config.root}`\n"
@@ -221,9 +361,280 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f'python3 "{guard}" --project "{config.root}" --session <session-id> '
         "--type <artifact-type> [--role issue|knowledge] --json\n"
         "```\n\n"
-        "SessionStart only injects this policy. It does not auto-trigger "
-        "workflow skills."
+        "SessionStart only injects this policy and cache context. It does not "
+        "auto-trigger workflow skills."
+        f"{cache_context}"
     )
+
+
+def build_cache_session_context(config: WorkflowConfig) -> str:
+    """Build SessionStart guidance for workflow provider read caches."""
+
+    cache_root = GitHubIssueCache.for_project(config.root).root
+    cache_root_display = display_project_path(cache_root, config.root, trailing_slash=True)
+    lines = [
+        "",
+        "",
+        "## workflow provider cache context",
+        "",
+        f"Workflow cache root: `{cache_root_display}`",
+    ]
+
+    repo = github_repo_for_config(config)
+    if repo is not None:
+        issue_base = github_issue_cache_base(config, repo)
+        issue_base_display = display_project_path(issue_base, config.root, trailing_slash=True)
+        lines.extend(
+            [
+                f"GitHub issue cache base: `{issue_base_display}`",
+                "",
+                "Hook-reported issue cache paths are relative to the GitHub issue "
+                "cache base unless another base is explicitly stated.",
+            ]
+        )
+    else:
+        lines.append("")
+
+    lines.extend(
+        [
+            "UserPromptSubmit and Stop hooks may pre-read mentioned issue "
+            "references through cache-aware provider reads and inject concise "
+            "additionalContext.",
+            "Use hook-provided issue context before ad hoc reads.",
+            f"Do not inspect `{CACHE_ROOT_NAME}` directly unless the user explicitly "
+            "asks to debug cache contents, layout, or invalidation.",
+        ]
+    )
+    return "\n".join(lines)
+
+
+def github_repo_for_config(
+    config: WorkflowConfig,
+    *,
+    runner: CommandRunner | None = None,
+) -> GitHubRepository | None:
+    """Resolve the configured GitHub issue repository without failing hooks."""
+
+    if config.issues.kind != "github":
+        return None
+    try:
+        return resolve_github_repository(config.root, runner=runner)
+    except (GitHubRepositoryError, OSError, subprocess.SubprocessError):
+        return None
+
+
+def github_issue_cache_base(config: WorkflowConfig, repo: GitHubRepository) -> Path:
+    """Return the issue-number parent directory for the configured repo cache."""
+
+    cache = GitHubIssueCache.for_project(config.root)
+    return cache.issue_dir(repo, "1").parent
+
+
+def cache_issue_references(
+    config: WorkflowConfig,
+    issue_numbers: list[str],
+    *,
+    repo: GitHubRepository,
+    runner: CommandRunner | None = None,
+) -> list[IssueCacheContext]:
+    """Read issues through the provider cache path and return hook context."""
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
+    cache = GitHubIssueCache.for_project(config.root)
+    issue_base = github_issue_cache_base(config, repo)
+    contexts: list[IssueCacheContext] = []
+
+    for number in issue_numbers:
+        try:
+            normalized = normalize_issue_number(number)
+            request = request_from_config(
+                config,
+                role="issue",
+                operation="get",
+                artifact_type="task",
+                payload={
+                    "issue": normalized,
+                    "include_body": False,
+                    "include_comments": False,
+                    "include_relationships": False,
+                },
+                cache_policy=CACHE_POLICY_DEFAULT,
+            )
+            response = dispatcher.dispatch(request)
+            issue_dir = cache.issue_dir(repo, normalized)
+            relative_issue_dir = issue_dir.relative_to(issue_base).as_posix() + "/"
+            contexts.append(
+                IssueCacheContext(
+                    number=normalized,
+                    relative_issue_dir=relative_issue_dir,
+                    title=str(response.payload.get("title") or ""),
+                    state=str(response.payload.get("state") or ""),
+                    cache_hit=cache_hit_from_payload(response.payload),
+                )
+            )
+        except Exception:
+            continue
+
+    return contexts
+
+
+def cache_hit_from_payload(payload: Mapping[str, Any]) -> bool | None:
+    cache_data = payload.get("cache")
+    if isinstance(cache_data, Mapping):
+        hit = cache_data.get("hit")
+        if isinstance(hit, bool):
+            return hit
+    return None
+
+
+def format_issue_cache_context(contexts: list[IssueCacheContext]) -> str:
+    """Render issue cache context using issue-cache-base-relative paths."""
+
+    lines = ["Workflow issue cache:"]
+    for context in contexts:
+        details: list[str] = []
+        state = context.state.strip()
+        if state:
+            details.append(state.lower())
+        title = compact_title(context.title)
+        if title:
+            details.append(title)
+        suffix = f" — {' — '.join(details)}" if details else ""
+        lines.append(f"- #{context.number} → `{context.relative_issue_dir}`{suffix}")
+    return "\n".join(lines)
+
+
+def compact_title(value: str, *, limit: int = 96) -> str:
+    title = " ".join(value.split())
+    if len(title) <= limit:
+        return title
+    return title[: limit - 1].rstrip() + "…"
+
+
+def prompt_from_payload(payload: dict[str, Any]) -> str:
+    for key in ("prompt", "user_prompt", "message"):
+        value = payload.get(key)
+        if isinstance(value, str) and value:
+            return value
+    return ""
+
+
+def text_from_payload(payload: dict[str, Any]) -> str:
+    """Collect bounded string content from hook payloads for issue ref scans."""
+
+    chunks: list[str] = []
+
+    def visit(value: Any, *, depth: int = 0) -> None:
+        if len(chunks) >= 40 or depth > 5:
+            return
+        if isinstance(value, str):
+            if value:
+                chunks.append(value[:4000])
+            return
+        if isinstance(value, Mapping):
+            for item in value.values():
+                visit(item, depth=depth + 1)
+            return
+        if isinstance(value, (list, tuple)):
+            for item in value[:40]:
+                visit(item, depth=depth + 1)
+
+    visit(payload)
+    return "\n".join(chunks)
+
+
+def extract_issue_numbers(text: str, *, repo: GitHubRepository | None = None) -> list[str]:
+    """Extract same-repository issue references in first-seen order."""
+
+    numbers: list[str] = []
+    seen: set[str] = set()
+    candidates: list[tuple[int, str]] = []
+
+    def add(raw: str) -> None:
+        if len(numbers) >= MAX_ISSUE_REFS:
+            return
+        try:
+            normalized = normalize_issue_number(raw)
+        except Exception:
+            return
+        if normalized in seen:
+            return
+        seen.add(normalized)
+        numbers.append(normalized)
+
+    for match in ISSUE_URL_RE.finditer(text):
+        if repo is not None:
+            host = match.group("host").lower()
+            owner = match.group("owner").lower()
+            repo_name = match.group("repo").removesuffix(".git").lower()
+            if (host, owner, repo_name) != (repo.host.lower(), repo.owner.lower(), repo.name.lower()):
+                continue
+        candidates.append((match.start(), match.group("num")))
+
+    for pattern in (ISSUE_HASH_RE, ISSUE_WORD_RE):
+        for match in pattern.finditer(text):
+            candidates.append((match.start(), match.group(1)))
+
+    for _, raw in sorted(candidates, key=lambda item: item[0]):
+        add(raw)
+
+    return numbers
+
+
+def workflow_hook_state_dir(project: Path) -> Path:
+    return GitHubIssueCache.for_project(project).root / HOOK_STATE_DIR_NAME
+
+
+def issue_state_path(project: Path, session_id: str, kind: str) -> Path | None:
+    if not session_id:
+        return None
+    safe_session = re.sub(r"[^A-Za-z0-9_.-]+", "_", session_id).strip("._-")
+    if not safe_session:
+        return None
+    return workflow_hook_state_dir(project) / f"workflow-{kind}-issues-{safe_session[:120]}.txt"
+
+
+def read_session_issues(project: Path, session_id: str, kind: str) -> set[str]:
+    path = issue_state_path(project, session_id, kind)
+    if path is None or not path.is_file():
+        return set()
+    try:
+        return {
+            normalize_issue_number(line)
+            for line in path.read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        }
+    except Exception:
+        return set()
+
+
+def record_session_issues(project: Path, session_id: str, issues: list[str], kind: str) -> None:
+    path = issue_state_path(project, session_id, kind)
+    if path is None:
+        return
+    existing = read_session_issues(project, session_id, kind)
+    for issue in issues:
+        try:
+            existing.add(normalize_issue_number(issue))
+        except Exception:
+            continue
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        ordered = sorted(existing, key=lambda value: int(value))
+        path.write_text("\n".join(ordered) + ("\n" if ordered else ""), encoding="utf-8")
+    except OSError:
+        return
+
+
+def display_project_path(path: Path, project: Path, *, trailing_slash: bool = False) -> str:
+    resolved = path.expanduser().resolve(strict=False)
+    try:
+        display = resolved.relative_to(project.expanduser().resolve(strict=False)).as_posix()
+    except ValueError:
+        display = str(resolved)
+    if trailing_slash and not display.endswith("/"):
+        display += "/"
+    return display
 
 
 def local_projection_guard_reason(
@@ -589,6 +1000,10 @@ def main(argv: list[str] | None = None) -> int:
         return post_read()
     if args[0] == "pre-write":
         return pre_write()
+    if args[0] in {"user-prompt", "user-prompt-submit"}:
+        return user_prompt_submit()
+    if args[0] == "stop":
+        return stop()
     return 0
 
 
