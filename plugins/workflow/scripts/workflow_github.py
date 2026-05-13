@@ -184,6 +184,73 @@ def _view_issue_with_repo(
     return _loads_json_object(result.stdout, "gh issue view")
 
 
+def create_issue(
+    *,
+    title: str,
+    body: str,
+    project: Path,
+    guard: WriteGuard,
+    labels: tuple[str, ...] = (),
+    state: str = "open",
+    state_reason: str | None = None,
+    verify: bool = True,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Create an issue after the caller-provided guard allows the write."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    normalized_state = _normalize_issue_state(state)
+    _require_write_guard(
+        guard,
+        "create_issue",
+        {"repository": repo.to_json(), "title": title, "labels": list(labels), "state": normalized_state},
+    )
+    with _body_file(body) as body_file:
+        args = [
+            "issue",
+            "create",
+            "--repo",
+            repo.slug,
+            "--title",
+            title,
+            "--body-file",
+            str(body_file),
+        ]
+        for label in labels:
+            if label:
+                args.extend(["--label", label])
+        result = _gh(args, project=project, runner=runner)
+
+    issue_number = _issue_number_from_create_output(result.stdout, repo)
+    if normalized_state == "CLOSED":
+        _gh(
+            [
+                "issue",
+                "close",
+                issue_number,
+                "--repo",
+                repo.slug,
+                "--reason",
+                _close_reason_from_state_reason(state_reason),
+            ],
+            project=project,
+            runner=runner,
+        )
+    if verify:
+        _verify_created_issue(
+            repo,
+            issue_number,
+            expected_title=title,
+            expected_body=body,
+            expected_labels=labels,
+            expected_state=normalized_state,
+            expected_state_reason=_expected_state_reason(normalized_state, state_reason),
+            project=project,
+            runner=runner,
+        )
+    return {"operation": "create_issue", "issue": issue_number, "verified": verify}
+
+
 def edit_issue_body(
     issue: int | str,
     *,
@@ -353,6 +420,52 @@ def _verify_issue_state(
         )
 
 
+def _verify_created_issue(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    expected_title: str,
+    expected_body: str,
+    expected_labels: tuple[str, ...],
+    expected_state: str,
+    expected_state_reason: str | None,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> None:
+    data = _view_issue_with_repo(
+        repo,
+        issue_number,
+        project=project,
+        fields=("title", "body", "labels", "state", "stateReason"),
+        runner=runner,
+    )
+    if data.get("title") != expected_title:
+        raise GitHubVerificationError(f"GitHub issue #{issue_number} title verification failed")
+    if data.get("body") != expected_body:
+        raise GitHubVerificationError(f"GitHub issue #{issue_number} body verification failed")
+    actual_labels = set(_label_names(data.get("labels")))
+    expected_label_set = {label for label in expected_labels if label}
+    if expected_label_set and not expected_label_set.issubset(actual_labels):
+        raise GitHubVerificationError(
+            f"GitHub issue #{issue_number} labels verification failed: "
+            f"expected {sorted(expected_label_set)}, got {sorted(actual_labels)}"
+        )
+
+    state = str(data.get("state") or "").upper()
+    state_reason = data.get("stateReason")
+    normalized_state_reason = str(state_reason).upper() if state_reason else None
+    if state != expected_state:
+        raise GitHubVerificationError(
+            f"GitHub issue #{issue_number} state verification failed: expected {expected_state}, got {state}"
+        )
+    if expected_state_reason is not None and normalized_state_reason != expected_state_reason:
+        raise GitHubVerificationError(
+            "GitHub issue "
+            f"#{issue_number} stateReason verification failed: "
+            f"expected {expected_state_reason}, got {normalized_state_reason}"
+        )
+
+
 def _expected_closed_state_reason(reason: str) -> str | None:
     normalized = reason.strip().lower().replace("_", "-")
     if normalized in {"completed", "complete", "done"}:
@@ -360,6 +473,65 @@ def _expected_closed_state_reason(reason: str) -> str | None:
     if normalized in {"not-planned", "not planned"}:
         return "NOT_PLANNED"
     return None
+
+
+def _expected_state_reason(state: str, state_reason: str | None) -> str | None:
+    if state != "CLOSED":
+        return None
+    if state_reason:
+        normalized = state_reason.strip().lower().replace("_", "-")
+        if normalized in {"completed", "complete", "done"}:
+            return "COMPLETED"
+        if normalized in {"not-planned", "not planned"}:
+            return "NOT_PLANNED"
+    return "COMPLETED"
+
+
+def _close_reason_from_state_reason(state_reason: str | None) -> str:
+    if state_reason:
+        normalized = state_reason.strip().lower().replace("_", "-")
+        if normalized in {"not-planned", "not planned"}:
+            return "not planned"
+    return "completed"
+
+
+def _normalize_issue_state(state: str) -> str:
+    normalized = state.strip().upper().replace("-", "_")
+    if normalized in {"OPEN", "CLOSED"}:
+        return normalized
+    raise GitHubParseError(f"unsupported issue state for creation: {state}")
+
+
+def _issue_number_from_create_output(output: str, repo: GitHubRepository) -> str:
+    patterns = (
+        rf"https?://{re.escape(repo.host)}/{re.escape(repo.owner)}/{re.escape(repo.name)}/issues/([1-9]\d*)",
+        r"/issues/([1-9]\d*)\b",
+        r"#([1-9]\d*)\b",
+    )
+    for pattern in patterns:
+        match = re.search(pattern, output.strip())
+        if match:
+            return normalize_issue_number(match.group(1))
+    raise GitHubParseError(f"could not determine created issue number from gh output: {output.strip()}")
+
+
+def _label_names(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, Mapping):
+        nodes = value.get("nodes")
+        if isinstance(nodes, list):
+            return _label_names(nodes)
+        name = value.get("name")
+        return [str(name)] if name else []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, list | tuple | set):
+        labels: list[str] = []
+        for item in value:
+            labels.extend(_label_names(item))
+        return labels
+    return [str(value)]
 
 
 def issue_timeline(
@@ -657,6 +829,13 @@ def build_parser() -> argparse.ArgumentParser:
         child = subparsers.add_parser(name, help=f"read issue {name}")
         child.add_argument("issue")
 
+    create_parser = _add_write_parser(subparsers, "create", "create issue")
+    create_parser.add_argument("--title", required=True)
+    create_parser.add_argument("--body-file", type=Path, required=True)
+    create_parser.add_argument("--label", action="append", default=[])
+    create_parser.add_argument("--state", default="open")
+    create_parser.add_argument("--state-reason")
+
     edit_parser = _add_write_parser(subparsers, "edit-body", "replace issue body")
     edit_parser.add_argument("issue")
     edit_parser.add_argument("--body-file", type=Path, required=True)
@@ -727,6 +906,16 @@ def _run_cli(args: argparse.Namespace) -> Any:
         return issue_body_edit_history(args.issue, project=project)
 
     guard = _guard_from_cli(args, project)
+    if args.command == "create":
+        return create_issue(
+            title=args.title,
+            body=args.body_file.read_text(encoding="utf-8"),
+            labels=tuple(args.label),
+            state=args.state,
+            state_reason=args.state_reason,
+            project=project,
+            guard=guard,
+        )
     if args.command == "edit-body":
         return edit_issue_body(
             args.issue,

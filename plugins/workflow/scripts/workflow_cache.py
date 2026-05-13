@@ -57,6 +57,29 @@ class CacheWriteResult:
 
 
 @dataclass(frozen=True)
+class PendingIssueDraft:
+    """Parsed pending provider issue draft."""
+
+    local_id: str
+    path: Path
+    title: str
+    body: str
+    labels: tuple[str, ...] = ()
+    state: str = "open"
+    state_reason: str | None = None
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "local_id": self.local_id,
+            "path": str(self.path),
+            "title": self.title,
+            "labels": list(self.labels),
+            "state": self.state,
+            "state_reason": self.state_reason,
+        }
+
+
+@dataclass(frozen=True)
 class FreshnessMetadata:
     """Local cache freshness metadata for one write-back target."""
 
@@ -241,6 +264,41 @@ class GitHubIssueCache:
             / normalize_issue_number(issue)
         )
 
+    def pending_issue_dir(self, repo: GitHubRepository, local_id: str) -> Path:
+        safe_local_id = _safe_path_segment(local_id)
+        if self.configured_repo is None or _same_github_repo(repo, self.configured_repo):
+            return self.root / "issues-pending" / safe_local_id
+        return (
+            self.root
+            / _safe_path_segment(repo.host)
+            / _safe_path_segment(repo.owner)
+            / _safe_path_segment(repo.name)
+            / "issues-pending"
+            / safe_local_id
+        )
+
+    def pending_issue_file(self, repo: GitHubRepository, local_id: str) -> Path:
+        return self.pending_issue_dir(repo, local_id) / "issue.md"
+
+    def created_issue_archive_dir(
+        self,
+        repo: GitHubRepository,
+        local_id: str,
+        issue: int | str,
+    ) -> Path:
+        safe_local_id = _safe_path_segment(local_id)
+        issue_number = normalize_issue_number(issue)
+        if self.configured_repo is None or _same_github_repo(repo, self.configured_repo):
+            return self.root / "issues-created" / f"{issue_number}-{safe_local_id}"
+        return (
+            self.root
+            / _safe_path_segment(repo.host)
+            / _safe_path_segment(repo.owner)
+            / _safe_path_segment(repo.name)
+            / "issues-created"
+            / f"{issue_number}-{safe_local_id}"
+        )
+
     def issue_file(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.issue_dir(repo, issue) / "issue.md"
 
@@ -265,6 +323,68 @@ class GitHubIssueCache:
 
     def has_issue_projection(self, repo: GitHubRepository, issue: int | str) -> bool:
         return self.issue_file(repo, issue).is_file()
+
+    def read_pending_issue_draft(self, repo: GitHubRepository, local_id: str) -> PendingIssueDraft:
+        """Read a pending issue draft from ``issues-pending/<local-id>/issue.md``."""
+
+        path = self.pending_issue_file(repo, local_id)
+        if not path.is_file():
+            raise WorkflowCacheMiss(f"pending issue draft does not exist: {path}")
+
+        frontmatter, body = _read_frontmatter_markdown(path)
+        schema_version = frontmatter.get("schema_version")
+        if schema_version is not None:
+            _require_schema(frontmatter, path)
+
+        title = str(frontmatter.get("title") or "").strip()
+        if not title:
+            raise WorkflowCacheCorrupt(f"pending issue draft is missing title: {path}")
+
+        labels = tuple(_label_names(frontmatter.get("labels")))
+        state = _normalize_state(frontmatter.get("state"))
+        if state not in {"open", "closed"}:
+            raise WorkflowCacheCorrupt(f"unsupported pending issue state: {state}: {path}")
+        state_reason = _normalize_state_reason(frontmatter.get("state_reason") or frontmatter.get("stateReason"))
+        return PendingIssueDraft(
+            local_id=_safe_path_segment(local_id),
+            path=path,
+            title=title,
+            body=body,
+            labels=labels,
+            state=state,
+            state_reason=state_reason,
+        )
+
+    def finalize_pending_issue_creation(
+        self,
+        repo: GitHubRepository,
+        local_id: str,
+        issue: int | str,
+    ) -> dict[str, str | None]:
+        """Archive the consumed draft and move pending sidecars to the new issue."""
+
+        pending_dir = self.pending_issue_dir(repo, local_id)
+        draft_path = pending_dir / "issue.md"
+        archive_dir = self.created_issue_archive_dir(repo, local_id, issue)
+        archived_issue: Path | None = None
+        if draft_path.exists():
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            archived_issue = archive_dir / "issue.md"
+            os.replace(draft_path, archived_issue)
+
+        issue_dir = self.issue_dir(repo, issue)
+        issue_dir.mkdir(parents=True, exist_ok=True)
+        moved_comments = _move_path_if_exists(pending_dir / "comments-pending", issue_dir / "comments-pending")
+        moved_relationships = _move_path_if_exists(
+            pending_dir / "relationships-pending.yml",
+            issue_dir / "relationships-pending.yml",
+        )
+        _remove_empty_parents(pending_dir, stop_at=self.root)
+        return {
+            "archived_issue": str(archived_issue) if archived_issue is not None else None,
+            "comments_pending": str(moved_comments) if moved_comments is not None else None,
+            "relationships_pending": str(moved_relationships) if moved_relationships is not None else None,
+        }
 
     def read_freshness_metadata(
         self,
@@ -853,6 +973,32 @@ def _atomic_write_text(path: Path, text: str) -> None:
         except OSError:
             pass
         raise
+
+
+def _move_path_if_exists(source: Path, destination: Path) -> Path | None:
+    if not source.exists():
+        return None
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        if destination.is_dir():
+            for child in source.iterdir():
+                os.replace(child, destination / child.name)
+            source.rmdir()
+            return destination
+        destination.unlink()
+    os.replace(source, destination)
+    return destination
+
+
+def _remove_empty_parents(path: Path, *, stop_at: Path) -> None:
+    current = path
+    stop = stop_at.resolve(strict=False)
+    while current.resolve(strict=False) != stop:
+        try:
+            current.rmdir()
+        except OSError:
+            return
+        current = current.parent
 
 
 def _normalize_state(value: Any) -> str:

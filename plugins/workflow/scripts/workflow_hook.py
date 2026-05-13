@@ -373,6 +373,9 @@ def build_github_wrapper_session_context(config: WorkflowConfig, plugin_root: Pa
         "```bash\n"
         f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
         f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
+        "create --title <title> --body-file <body-file> --label <label> "
+        "--guard-type <artifact-type> --session <session-id>\n"
+        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
         "edit-body <issue> --body-file <body-file> --guard-type <artifact-type> --session <session-id>\n"
         f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
         "close <issue> --guard-type <artifact-type> --session <session-id> --reason completed [--comment <text>]\n"

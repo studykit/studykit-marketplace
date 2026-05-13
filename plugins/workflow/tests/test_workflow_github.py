@@ -18,7 +18,7 @@ from workflow_command import CommandRequest, CommandResult, MissingCommandError 
 from workflow_command import WorkflowCommandError  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubGuardError, GitHubParseError  # noqa: E402
 from workflow_github import GitHubVerificationError  # noqa: E402
-from workflow_github import close_issue, comment_issue, edit_issue_body  # noqa: E402
+from workflow_github import close_issue, comment_issue, create_issue, edit_issue_body  # noqa: E402
 from workflow_github import issue_body_edit_history, issue_timeline  # noqa: E402
 from workflow_github import parse_github_remote_url, resolve_github_repository, view_issue  # noqa: E402
 from workflow_github import reopen_issue  # noqa: E402
@@ -257,6 +257,58 @@ def test_comment_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
     assert result_payload["operation"] == "comment_issue"
     assert guard_calls[0][0] == "comment_issue"
     assert guard_calls[0][1]["issue"] == "38"
+
+
+def test_create_issue_verifies_after_write(tmp_path: Path) -> None:
+    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args[:3] == ("gh", "issue", "create"):
+            body_file = Path(request.args[request.args.index("--body-file") + 1])
+            assert body_file.read_text(encoding="utf-8") == "Draft body."
+            assert "--title" in request.args
+            assert request.args[request.args.index("--title") + 1] == "Draft issue"
+            assert request.args.count("--label") == 2
+            assert guard_calls
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="https://github.com/studykit/studykit-plugins/issues/51\n",
+            )
+        if request.args == gh_issue_view_args(51, ("title", "body", "labels", "state", "stateReason")):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps(
+                    {
+                        "title": "Draft issue",
+                        "body": "Draft body.",
+                        "labels": [{"name": "task"}, {"name": "workflow"}],
+                        "state": "OPEN",
+                        "stateReason": None,
+                    }
+                ),
+            )
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    result_payload = create_issue(
+        title="Draft issue",
+        body="Draft body.",
+        labels=("task", "workflow"),
+        project=tmp_path,
+        guard=allow_guard(guard_calls),
+        runner=runner,
+    )
+
+    assert result_payload == {"operation": "create_issue", "issue": "51", "verified": True}
+    assert guard_calls[0][0] == "create_issue"
+    assert guard_calls[0][1]["title"] == "Draft issue"
 
 
 def test_edit_issue_body_verifies_after_write(tmp_path: Path) -> None:

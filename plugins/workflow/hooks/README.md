@@ -34,7 +34,7 @@ Behavior:
 - If the active project has no `.workflow/config.yml`, the hook emits nothing.
 - If the active project has a valid `.workflow/config.yml`, the hook injects a concise authoring resolver policy and provider cache-base context as `additionalContext`.
 - The policy announces the workflow plugin root and points to the shared resolver, ledger, guard, and GitHub issue write wrapper commands with root-relative script paths.
-- For GitHub issue providers, the policy tells agents to use `../scripts/workflow_github.py` for guarded `edit-body`, `close`, and `reopen` mutations instead of paired ad hoc `gh` write/read calls.
+- For GitHub issue providers, the policy tells agents to use `../scripts/workflow_github.py` for guarded `create`, `edit-body`, `close`, and `reopen` mutations instead of paired ad hoc `gh` write/read calls.
 - The cache context announces the workflow cache root and, for GitHub issue providers, the GitHub issue cache base.
 - Later hook-reported issue cache paths are relative to the announced GitHub issue cache base.
 - The cache context points agents to `../scripts/workflow_cache_fetch.py` for explicit cache fetches through the same shared provider cache path used by `UserPromptSubmit`.

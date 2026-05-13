@@ -315,6 +315,7 @@ def test_session_start_injects_policy_for_configured_project(
     assert "guarded GitHub issue write wrappers" in context
     assert "verify by default" in context
     assert "`operation`, `issue`, and `verified`" in context
+    assert "create --title <title> --body-file <body-file>" in context
     assert "edit-body <issue> --body-file <body-file>" in context
     assert "close <issue> --guard-type <artifact-type> --session <session-id>" in context
     assert "reopen <issue> --guard-type <artifact-type> --session <session-id>" in context

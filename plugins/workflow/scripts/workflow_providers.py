@@ -28,6 +28,7 @@ from workflow_github import (
     DEFAULT_ISSUE_FIELDS,
     close_issue,
     comment_issue,
+    create_issue,
     edit_issue_body,
     issue_body_edit_history,
     issue_events,
@@ -353,6 +354,54 @@ class GitHubIssueNativeProvider(IssueProvider):
         if request.context.cache_policy != CACHE_POLICY_BYPASS:
             cache.write_issue_bundle(repo, payload)
         return payload
+
+    def create(self, request: ProviderRequest) -> Mapping[str, Any]:
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
+        pending_local_id = _optional_string(
+            request.payload.get("pending_local_id") or request.payload.get("local_id")
+        )
+
+        if pending_local_id:
+            draft = cache.read_pending_issue_draft(repo, pending_local_id)
+            title = draft.title
+            body = draft.body
+            labels = draft.labels
+            state = draft.state
+            state_reason = draft.state_reason
+        else:
+            title = str(_required_payload_value(request, "title"))
+            body = str(_required_payload_value(request, "body"))
+            labels = tuple(_string_list(request.payload.get("labels")))
+            state = str(request.payload.get("state") or "open")
+            state_reason = _optional_string(request.payload.get("state_reason") or request.payload.get("stateReason"))
+
+        created = create_issue(
+            title=title,
+            body=body,
+            labels=labels,
+            state=state,
+            state_reason=state_reason,
+            project=request.context.project,
+            guard=_already_guarded,
+            runner=self.runner,
+        )
+        issue_number = normalize_issue_number(created["issue"])
+        refreshed = view_issue(issue_number, project=request.context.project, runner=self.runner)
+        write_result = cache.write_issue_bundle(repo, refreshed)
+
+        pending_result: dict[str, str | None] | None = None
+        if pending_local_id:
+            pending_result = cache.finalize_pending_issue_creation(repo, pending_local_id, issue_number)
+
+        return {
+            **created,
+            "cache_refreshed": True,
+            "cache": write_result.to_json(),
+            "pending_local_id": pending_local_id,
+            "pending_finalized": pending_result is not None,
+            "pending": pending_result,
+        }
 
     def update(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
@@ -748,6 +797,25 @@ def _optional_string(value: Any) -> str | None:
         return None
     text = str(value).strip()
     return text or None
+
+
+def _string_list(value: Any) -> list[str]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [item.strip() for item in value.split(",") if item.strip()]
+    if isinstance(value, Mapping):
+        nodes = value.get("nodes")
+        if nodes is not None:
+            return _string_list(nodes)
+        name = value.get("name")
+        return [str(name)] if name else []
+    if isinstance(value, list | tuple | set):
+        labels: list[str] = []
+        for item in value:
+            labels.extend(_string_list(item))
+        return labels
+    return [str(value)]
 
 
 def _truthy(value: Any) -> bool:

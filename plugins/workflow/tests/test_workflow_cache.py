@@ -156,10 +156,61 @@ def test_configured_repo_cache_is_shallow_and_external_repo_cache_is_namespaced(
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
 
     assert cache.issue_dir(repo(), 39) == tmp_path / ".workflow-cache" / "issues" / "39"
+    assert cache.pending_issue_dir(repo(), "local-1") == tmp_path / ".workflow-cache" / "issues-pending" / "local-1"
     assert (
         cache.issue_dir(external_repo(), 39)
         == tmp_path / ".workflow-cache" / "github.com" / "other" / "repo" / "issues" / "39"
     )
+    assert (
+        cache.pending_issue_dir(external_repo(), "local-1")
+        == tmp_path / ".workflow-cache" / "github.com" / "other" / "repo" / "issues-pending" / "local-1"
+    )
+
+
+def test_pending_issue_draft_parses_frontmatter_and_raw_body(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    draft_path = cache.pending_issue_file(repo(), "draft-1")
+    draft_path.parent.mkdir(parents=True)
+    draft_path.write_text(
+        """---
+title: "Draft issue"
+labels:
+  - task
+  - workflow
+state: open
+---
+
+Draft body.
+""",
+        encoding="utf-8",
+    )
+
+    draft = cache.read_pending_issue_draft(repo(), "draft-1")
+
+    assert draft.local_id == "draft-1"
+    assert draft.title == "Draft issue"
+    assert draft.labels == ("task", "workflow")
+    assert draft.state == "open"
+    assert draft.body == "Draft body.\n"
+
+
+def test_finalize_pending_issue_creation_archives_draft_and_moves_sidecars(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    pending_dir = cache.pending_issue_dir(repo(), "draft-1")
+    pending_dir.mkdir(parents=True)
+    (pending_dir / "issue.md").write_text("---\ntitle: Draft\n---\n\nBody\n", encoding="utf-8")
+    comments_pending = pending_dir / "comments-pending"
+    comments_pending.mkdir()
+    (comments_pending / "2026-05-14T000000Z-local.md").write_text("Comment\n", encoding="utf-8")
+    (pending_dir / "relationships-pending.yml").write_text("parent: 28\n", encoding="utf-8")
+    cache.write_issue_bundle(repo(), {**issue_payload(), "number": 51})
+
+    result = cache.finalize_pending_issue_creation(repo(), "draft-1", 51)
+
+    assert not (pending_dir / "issue.md").exists()
+    assert Path(result["archived_issue"]).is_file()
+    assert (cache.issue_dir(repo(), 51) / "comments-pending" / "2026-05-14T000000Z-local.md").is_file()
+    assert (cache.issue_dir(repo(), 51) / "relationships-pending.yml").is_file()
 
 
 def test_cache_read_can_skip_raw_markdown_bodies(tmp_path: Path) -> None:

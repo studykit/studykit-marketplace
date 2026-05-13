@@ -17,7 +17,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from workflow_cache import GitHubIssueCache  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_config import parse_workflow_config  # noqa: E402
-from workflow_github import GitHubRepository  # noqa: E402
+from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
 from workflow_providers import (  # noqa: E402
     CACHE_POLICY_REFRESH,
     ISSUE_PROVIDER_OPERATIONS,
@@ -134,6 +134,19 @@ def cached_issue_payload(*, updated_at: str = "2026-05-13T12:00:00Z") -> dict[st
         "body": "Cached body.",
         "labels": [],
         "updatedAt": updated_at,
+        "comments": [],
+    }
+
+
+def created_issue_payload() -> dict[str, object]:
+    return {
+        "number": 51,
+        "title": "Draft issue",
+        "state": "OPEN",
+        "stateReason": None,
+        "body": "Draft body.\n",
+        "labels": [{"name": "task"}, {"name": "workflow"}],
+        "updatedAt": "2026-05-14T00:00:00Z",
         "comments": [],
     }
 
@@ -337,6 +350,92 @@ def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Pa
         )
 
     assert events == ["guard:update", "freshness"]
+
+
+def test_github_issue_create_from_pending_draft_refreshes_cache_and_finalizes_pending(
+    tmp_path: Path,
+) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=github_repo())
+    draft_path = cache.pending_issue_file(github_repo(), "draft-1")
+    draft_path.parent.mkdir(parents=True)
+    draft_path.write_text(
+        """---
+title: "Draft issue"
+labels:
+  - task
+  - workflow
+state: open
+---
+
+Draft body.
+""",
+        encoding="utf-8",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args[:3] == ("gh", "issue", "create"):
+            events.append("create")
+            body_file = Path(request.args[request.args.index("--body-file") + 1])
+            assert body_file.read_text(encoding="utf-8") == "Draft body.\n"
+            assert request.args[request.args.index("--title") + 1] == "Draft issue"
+            assert request.args.count("--label") == 2
+            assert events == ["guard:create", "create"]
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="https://github.com/studykit/studykit-plugins/issues/51\n",
+            )
+        if request.args == gh_issue_view_args(51, "title,body,labels,state,stateReason"):
+            events.append("verify")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps(
+                    {
+                        "title": "Draft issue",
+                        "body": "Draft body.\n",
+                        "labels": [{"name": "task"}, {"name": "workflow"}],
+                        "state": "OPEN",
+                        "stateReason": None,
+                    }
+                ),
+            )
+        if request.args == gh_issue_view_args(51, ",".join(DEFAULT_ISSUE_FIELDS)):
+            events.append("refresh")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(created_issue_payload()))
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    response = dispatcher.dispatch(
+        ProviderRequest(
+            role="issue",
+            kind="github",
+            operation="create",
+            context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+            payload={"pending_local_id": "draft-1"},
+        )
+    )
+
+    assert response.payload["operation"] == "create_issue"
+    assert response.payload["issue"] == "51"
+    assert response.payload["verified"] is True
+    assert response.payload["cache_refreshed"] is True
+    assert response.payload["pending_finalized"] is True
+    assert cache.read_issue(github_repo(), 51)["body"] == "Draft body.\n"
+    assert not draft_path.exists()
+    assert Path(response.payload["pending"]["archived_issue"]).is_file()
+    assert events == ["guard:create", "create", "verify", "refresh"]
 
 
 def test_read_operations_do_not_require_guard(context: ProviderContext) -> None:
