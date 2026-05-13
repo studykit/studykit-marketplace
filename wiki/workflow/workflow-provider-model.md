@@ -594,13 +594,9 @@ The configuration file should be stored at the repository root:
 
 ## Authoring Resolver and Read Ledger
 
-Workflow authoring rules must still apply when users do not explicitly invoke a workflow skill. SessionStart should therefore inject a small policy in configured workflow projects:
+Workflow authoring rules must still apply when users do not explicitly invoke a workflow skill. SessionStart should therefore inject a small policy in configured workflow projects that tells the main assistant to delegate workflow provider, cache, write-back, comment append, and authoring guard operations to the workflow operator agent.
 
-1. Resolve the required authoring contracts before creating or editing any workflow artifact.
-2. Read every authoring file returned by the resolver in the current session.
-3. Only then write to the issue or knowledge provider.
-
-The resolver is the single entry point for deciding which authoring files apply.
+The workflow operator owns the resolver, read ledger, and guarded write sequence. The resolver is the single entry point for deciding which authoring files apply.
 
 Inputs:
 

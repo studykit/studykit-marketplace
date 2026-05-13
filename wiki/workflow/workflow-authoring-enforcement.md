@@ -44,11 +44,11 @@ The injected policy includes:
 
 - The resolved config file path.
 - The issue provider and knowledge provider.
-- The authoring resolver command.
-- The ledger and write guard commands.
-- A reminder that `required_authoring_files` contains absolute paths to read before writing.
+- A reminder to delegate workflow provider, cache, write-back, comment append, and authoring guard operations to `plugins/workflow/agents/workflow-operator.md`.
+- A role boundary that the workflow operator returns provider/cache metadata and paths only; issue and wiki content interpretation stays in the main assistant.
+- No output for spawned agent sessions.
 
-SessionStart does not auto-trigger workflow skills.
+SessionStart does not inject workflow script command recipes into the main assistant context.
 
 ### Hook Read Recording And Local Projection Guard
 

@@ -20,6 +20,7 @@ Implemented so far:
 - Provider interface scaffold in `scripts/workflow_providers.py` for issue and knowledge provider dispatch.
 - Repo-local provider read cache projections in `scripts/workflow_cache.py`.
 - Opt-in provider write-back freshness checks that compare cache projection timestamps with current provider state before mutation.
+- Pending GitHub relationship apply from `relationships-pending.yml` through provider wrapper operations.
 - Workflow operator agent in `agents/workflow-operator.md` for running provider/cache scripts without pushing command recipes into the main assistant context.
 
 ## Configuration
@@ -111,15 +112,21 @@ Cache policies:
 - `refresh`: fetch provider data and overwrite the cache.
 - `bypass`: fetch provider data without reading or writing the cache.
 
-Hook cache context:
+Hook issue cache behavior:
 
-- `SessionStart` announces the workflow cache root and the GitHub issue cache base once per session.
-- `SessionStart` points the main assistant to `agents/workflow-operator.md` for explicit provider/cache script operations.
+- `SessionStart` injects workflow authoring policy without cache location context.
+- `SessionStart` emits nothing for spawned agent sessions when the host exposes agent markers directly or, in Codex, when the documented `transcript_path` points at session metadata marked as a subagent thread.
+- `SessionStart` asks the main assistant to ask `agents/workflow-operator.md` which authoring file paths must be read before documentation or workflow artifact edits. The operator returns paths only; the main assistant reads them directly.
+- `SessionStart` tells the main assistant not to delegate issue or wiki content interpretation to `agents/workflow-operator.md`; the operator returns provider/cache metadata, issue relationship metadata, and paths only.
+- For GitHub issue providers, `SessionStart` asks the main assistant to delegate explicit provider/cache script operations and raw GitHub CLI (`gh`) operations to `agents/workflow-operator.md` first.
+- The workflow operator uses workflow scripts first, then falls back to raw `gh` when those scripts cannot support or complete the GitHub operation.
+- For filesystem issue providers, `SessionStart` describes local Markdown artifact editing instead of provider cache, write-back, comment append, or raw `gh` delegation.
+- The main assistant does not run raw `gh` for workflow operations; if the workflow operator cannot complete a GitHub operation, the main assistant reports that limitation.
 - `UserPromptSubmit` detects same-repository issue references and reads them through the default provider cache policy.
 - `Stop` records session-mentioned issue references as pending without provider reads.
 - The next `UserPromptSubmit` reads pending issue references through the default provider cache policy and injects their cache paths.
-- Hook-injected issue cache paths are relative to the GitHub issue cache base, for example `45/`.
-- Direct `.workflow-cache/` inspection is reserved for cache debugging; issue awareness should use hook-provided context or the workflow operator.
+- Hook-injected issue cache paths are project-relative, for example `.workflow-cache/issues/45/`.
+- Use hook-provided issue context before ad hoc provider reads when it is available.
 
 Operator-facing explicit cache fetch:
 
@@ -143,12 +150,18 @@ Use the operator agent for:
 - Guarded GitHub issue writes.
 - Local issue projection write-back.
 - Pending local comment append.
+- Authoring file path discovery before documentation or workflow artifact edits.
 - Authoring resolver, ledger, and guard execution.
 - Provider mutation verification and cache refresh.
 
 The operator owns exact commands and wrapper ordering. The main assistant keeps
 only workflow intent, issue refs, artifact type, and the session id needed by
 guarded writes.
+
+For path discovery requests, the operator returns required authoring file paths
+only. For issue or wiki context, it returns provider/cache metadata, issue
+relationship metadata, and paths only. The main assistant reads and summarizes
+artifact content directly.
 
 Operator-facing issue cache write-back:
 
@@ -162,6 +175,19 @@ python3 plugins/workflow/scripts/workflow_cache_writeback.py \
 ```
 
 Write-back reads `.workflow-cache/.../issues/<issue>/issue.md`, checks provider freshness, updates the provider through guarded wrapper operations, and refreshes the affected cache projection on success.
+
+Operator-facing pending relationship apply:
+
+```bash
+python3 plugins/workflow/scripts/workflow_cache_relationships.py \
+  --project . \
+  --session <session-id> \
+  --type task \
+  --json \
+  42
+```
+
+Relationship apply reads `.workflow-cache/.../issues/<issue>/relationships-pending.yml`, checks relationship freshness, applies supported GitHub parent, child, blocked-by, and blocking operations through provider wrappers, removes the consumed pending file, and refreshes `relationships.yml`.
 
 ## Authoring resolver
 
@@ -181,15 +207,15 @@ The resolver returns absolute plugin-bundled authoring file paths.
 
 Configured projects receive a concise SessionStart policy only when `.workflow/config.yml` exists.
 
-The hook injects the workflow plugin root, resolver command, provider cache-base context, guarded GitHub issue write wrapper usage, and reminders to read every path from `required_authoring_files` before writing workflow artifacts. Script paths in the injected commands are relative to the workflow plugin root. It does not auto-trigger workflow skills.
+The hook injects provider configuration and a reminder to ask `agents/workflow-operator.md` for required authoring file paths before documentation or workflow artifact edits. The operator returns paths only; it does not read or summarize the files for this discovery step. The policy also keeps issue and wiki content interpretation in the main assistant: the operator returns provider/cache metadata, issue relationship metadata, and paths only. For GitHub issue providers, the workflow operator uses workflow scripts first and falls back to raw `gh` when those scripts cannot support or complete the operation; the main assistant does not run raw `gh` for workflow operations. For filesystem issue providers, the hook points at local Markdown artifact editing instead of provider write-back or raw `gh` delegation. It does not inject cache locations or script command recipes into the main assistant context, and it emits nothing for spawned agent sessions when the host exposes agent markers directly or the Codex transcript metadata marks the thread as a subagent.
 
 ## Hook enforcement
 
 Workflow hooks integrate the ledger and guard:
 
-- `UserPromptSubmit` prepares cache projections for mentioned GitHub issue references and injects issue-cache-base-relative paths.
+- `UserPromptSubmit` prepares cache projections for mentioned GitHub issue references and injects project-relative cache paths.
 - `Stop` records session-mentioned issue references as pending without provider reads or JSON output.
-- The next `UserPromptSubmit` prepares pending issue cache projections and injects issue-cache-base-relative paths.
+- The next `UserPromptSubmit` prepares pending issue cache projections and injects project-relative cache paths.
 - `PostToolUse` on `Read` records plugin-bundled authoring file reads by absolute path.
 - `PreToolUse` on writes checks local projection targets before mutation.
 - Missing reads block local projection writes with a message listing absolute paths to read.

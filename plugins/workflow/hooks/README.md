@@ -32,14 +32,16 @@ Behavior:
 Behavior:
 
 - If the active project has no `.workflow/config.yml`, the hook emits nothing.
-- If the active project has a valid `.workflow/config.yml`, the hook injects a concise workflow policy and provider cache-base context as `additionalContext`.
-- The policy announces provider configuration and deliberately avoids injecting exact workflow script command recipes into the main assistant context.
-- Workflow script operations should stay behind the `../agents/workflow-operator.md` boundary. The main assistant passes workflow intent, issue refs, artifact type, and session id rather than carrying command syntax in context.
-- Provider writes must use guarded workflow wrappers instead of raw provider write commands; wrapper invocation details belong to the workflow operator.
-- The cache context announces the workflow cache root and, for GitHub issue providers, the GitHub issue cache base.
-- Later hook-reported issue cache paths are relative to the announced GitHub issue cache base.
-- The cache context points to the workflow operator boundary for explicit cache fetch, cache write-back, or pending comment append operations.
-- The hook does not start workflow skills or agents.
+- If the active project has a valid `.workflow/config.yml`, the hook injects concise workflow policy as `additionalContext`.
+- If the hook payload identifies a spawned agent session, the hook emits nothing.
+- In Codex, `SessionStart` does not provide a direct subagent field in the hook payload, so the adapter also checks the documented `transcript_path` for initial session metadata marked as a subagent thread.
+- The policy asks the main assistant to ask `../agents/workflow-operator.md` which authoring file paths must be read before documentation or workflow artifact edits. The operator returns paths only; the main assistant reads them directly.
+- The policy keeps content interpretation in the main assistant: the workflow operator returns provider/cache metadata, issue relationship metadata, and paths only, not issue or wiki content summaries.
+- For GitHub issue providers, the policy asks the main assistant to delegate workflow provider, cache, write-back, comment append, authoring guard operations, and any raw GitHub CLI (`gh`) operation to `../agents/workflow-operator.md` first.
+- The workflow operator uses workflow scripts first, then falls back to raw `gh` when those scripts cannot support or complete the GitHub operation.
+- For filesystem issue providers, the policy describes local Markdown artifact editing instead of provider cache, write-back, comment append, or raw `gh` delegation.
+- The main assistant does not run raw `gh` for workflow operations; if the workflow operator cannot complete a GitHub operation, the main assistant reports that limitation.
+- The main assistant passes workflow intent, issue refs, artifact type, and session id rather than carrying command syntax in context.
 - The hook always exits `0`.
 
 ## UserPromptSubmit
@@ -52,7 +54,7 @@ Behavior:
 - Reads each detected issue through the workflow provider read path with the default cache policy.
 - Uses existing cache projections on cache hits; fetches provider data and writes the cache on misses.
 - Emits concise `additionalContext` only for issue numbers not already announced in the current session.
-- Reports issue cache paths relative to the GitHub issue cache base announced by `SessionStart`, for example `45/`.
+- Reports project-relative issue cache paths, for example `.workflow-cache/issues/45/`.
 - Emits nothing for non-workflow projects, non-GitHub issue providers, missing issue references, or provider read failures.
 
 ## Stop

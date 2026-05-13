@@ -1,5 +1,5 @@
 {
-  "description": "Workflow hooks for Codex. SessionStart injects provider-backed workflow authoring policy and cache-base context only when .workflow/config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects issue-cache-base-relative paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
+  "description": "Workflow hooks for Codex. SessionStart injects provider-backed workflow authoring policy only for main sessions when .workflow/config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
   "hooks": {
     "PreToolUse": [
       {
@@ -31,13 +31,14 @@
     ],
     "SessionStart": [
       {
+        "matcher": "startup|resume|clear",
         "hooks": [
           {
             "type": "command",
             "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" session-start",
             "timeout": 5,
             "statusMessage": "Loading workflow authoring policy",
-            "description": "Inject workflow authoring resolver policy for configured workflow projects"
+            "description": "Inject workflow authoring resolver policy for configured workflow projects in main sessions"
           }
         ]
       }
@@ -50,7 +51,7 @@
             "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" user-prompt",
             "timeout": 10,
             "statusMessage": "Caching workflow issue references",
-            "description": "Cache mentioned GitHub issue references and inject issue-cache-base-relative paths as additionalContext"
+            "description": "Cache mentioned GitHub issue references and inject project-relative issue cache paths as additionalContext"
           }
         ]
       }
