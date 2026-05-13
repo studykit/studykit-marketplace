@@ -131,6 +131,19 @@ python3 plugins/workflow/scripts/workflow_cache_fetch.py \
 
 Use `--cache-policy refresh` when the agent intentionally needs to refresh provider data instead of accepting an existing local projection.
 
+Agent-facing issue cache write-back:
+
+```bash
+python3 plugins/workflow/scripts/workflow_cache_writeback.py \
+  --project . \
+  --session <session-id> \
+  --type task \
+  --json \
+  42
+```
+
+Write-back reads `.workflow-cache/.../issues/<issue>/issue.md`, checks provider freshness, updates the provider through guarded wrapper operations, and refreshes the affected cache projection on success.
+
 ## Authoring resolver
 
 Resolve required authoring files before creating or editing workflow artifacts:

@@ -329,6 +329,8 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Hook-reported issue cache paths are relative to the GitHub issue cache base" in context
     assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_fetch.py" in context
     assert "--json [--cache-policy refresh] <issue-number-or-ref>..." in context
+    assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" in context
+    assert "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>..." in context
 
 
 def test_session_start_discovers_config_from_nested_project_path(

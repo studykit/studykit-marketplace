@@ -38,6 +38,7 @@ Behavior:
 - The cache context announces the workflow cache root and, for GitHub issue providers, the GitHub issue cache base.
 - Later hook-reported issue cache paths are relative to the announced GitHub issue cache base.
 - The cache context points agents to `../scripts/workflow_cache_fetch.py` for explicit cache fetches through the same shared provider cache path used by `UserPromptSubmit`.
+- The cache context points agents to `../scripts/workflow_cache_writeback.py` for explicit guarded write-back of existing issue cache projections.
 - The hook does not start workflow skills.
 - The hook always exits `0`.
 

@@ -151,6 +151,19 @@ def created_issue_payload() -> dict[str, object]:
     }
 
 
+def writeback_issue_payload() -> dict[str, object]:
+    return {
+        "number": 39,
+        "title": "Cached write-back title",
+        "state": "CLOSED",
+        "stateReason": "COMPLETED",
+        "body": "Cached write-back body.",
+        "labels": [{"name": "task"}, {"name": "workflow"}],
+        "updatedAt": "2026-05-13T12:00:00Z",
+        "comments": [],
+    }
+
+
 def test_provider_operation_sets_cover_issue_and_knowledge_contracts() -> None:
     assert ISSUE_PROVIDER_OPERATIONS >= {
         "create",
@@ -346,6 +359,163 @@ def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Pa
                 operation="update",
                 context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
                 payload={"issue": 39, "body": "Updated body.", "freshness_check": True},
+            )
+        )
+
+    assert events == ["guard:update", "freshness"]
+
+
+def test_github_issue_update_from_cache_projection_checks_freshness_and_refreshes_cache(
+    tmp_path: Path,
+) -> None:
+    GitHubIssueCache.for_project(tmp_path).write_issue_bundle(
+        github_repo(),
+        writeback_issue_payload(),
+        fetched_at="2026-05-13T12:34:56Z",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args == gh_issue_view_args(39, "number,updatedAt,labels,state,stateReason"):
+            events.append("freshness")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps(
+                    {
+                        "number": 39,
+                        "updatedAt": "2026-05-13T12:00:00Z",
+                        "labels": [{"name": "task"}, {"name": "old"}],
+                        "state": "OPEN",
+                        "stateReason": None,
+                    }
+                ),
+            )
+        if request.args[:3] == ("gh", "issue", "edit"):
+            events.append("edit")
+            body_file = Path(request.args[request.args.index("--body-file") + 1])
+            assert body_file.read_text(encoding="utf-8") == "Cached write-back body."
+            assert request.args[request.args.index("--title") + 1] == "Cached write-back title"
+            assert ("--add-label", "workflow") in zip(request.args, request.args[1:])
+            assert ("--remove-label", "old") in zip(request.args, request.args[1:])
+            assert events == ["guard:update", "freshness", "edit"]
+            return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(39, "title,body,labels"):
+            events.append("verify-edit")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps(
+                    {
+                        "title": "Cached write-back title",
+                        "body": "Cached write-back body.",
+                        "labels": [{"name": "task"}, {"name": "workflow"}],
+                    }
+                ),
+            )
+        if request.args == (
+            "gh",
+            "issue",
+            "close",
+            "39",
+            "--repo",
+            "studykit/studykit-plugins",
+            "--reason",
+            "completed",
+        ):
+            events.append("close")
+            return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(39, "state,stateReason"):
+            events.append("verify-state")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"state": "CLOSED", "stateReason": "COMPLETED"}),
+            )
+        if request.args == gh_issue_view_args(39, ",".join(DEFAULT_ISSUE_FIELDS)):
+            events.append("refresh")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(writeback_issue_payload()))
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    response = dispatcher.dispatch(
+        ProviderRequest(
+            role="issue",
+            kind="github",
+            operation="update",
+            context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+            payload={"issue": 39, "from_cache": True},
+        )
+    )
+
+    assert response.payload["operation"] == "update_issue_from_cache"
+    assert response.payload["issue"] == "39"
+    assert response.payload["verified"] is True
+    assert response.payload["cache_refreshed"] is True
+    assert GitHubIssueCache.for_project(tmp_path).read_issue(github_repo(), 39)["body"] == "Cached write-back body."
+    assert events == ["guard:update", "freshness", "edit", "verify-edit", "close", "verify-state", "refresh"]
+
+
+def test_github_issue_update_from_cache_blocks_stale_projection_before_mutation(
+    tmp_path: Path,
+) -> None:
+    GitHubIssueCache.for_project(tmp_path).write_issue_bundle(
+        github_repo(),
+        writeback_issue_payload(),
+        fetched_at="2026-05-13T12:34:56Z",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args == gh_issue_view_args(39, "number,updatedAt,labels,state,stateReason"):
+            events.append("freshness")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps(
+                    {
+                        "number": 39,
+                        "updatedAt": "2026-05-13T13:00:00Z",
+                        "labels": [{"name": "task"}],
+                        "state": "OPEN",
+                        "stateReason": None,
+                    }
+                ),
+            )
+        if request.args[:3] == ("gh", "issue", "edit"):
+            events.append("edit")
+            return CommandResult(request=request, returncode=0)
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    with pytest.raises(ProviderFreshnessError, match="Refresh the provider cache before writing"):
+        dispatcher.dispatch(
+            ProviderRequest(
+                role="issue",
+                kind="github",
+                operation="update",
+                context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+                payload={"issue": 39, "from_cache": True},
             )
         )
 

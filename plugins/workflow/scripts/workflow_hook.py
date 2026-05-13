@@ -415,6 +415,13 @@ def build_cache_session_context(config: WorkflowConfig, plugin_root: Path) -> st
                 f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_fetch.py" --project "{config.root}" '
                 "--json [--cache-policy refresh] <issue-number-or-ref>...",
                 "```",
+                "For explicit agent cache write-back of existing issue projections, use:",
+                "",
+                "```bash",
+                f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
+                f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" --project "{config.root}" '
+                "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>...",
+                "```",
             ]
         )
     else:

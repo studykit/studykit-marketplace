@@ -251,6 +251,70 @@ def create_issue(
     return {"operation": "create_issue", "issue": issue_number, "verified": verify}
 
 
+def edit_issue(
+    issue: int | str,
+    *,
+    project: Path,
+    guard: WriteGuard,
+    title: str | None = None,
+    body: str | None = None,
+    labels: tuple[str, ...] | None = None,
+    current_labels: tuple[str, ...] | None = None,
+    operation: str = "edit_issue",
+    verify: bool = True,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Edit issue title, body, and labels after the caller-provided guard allows the write."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    issue_number = normalize_issue_number(issue)
+    _require_write_guard(
+        guard,
+        operation,
+        {
+            "repository": repo.to_json(),
+            "issue": issue_number,
+            "title": title,
+            "labels": list(labels) if labels is not None else None,
+        },
+    )
+
+    label_edits = _label_edit_args(
+        repo,
+        issue_number,
+        labels=labels,
+        current_labels=current_labels,
+        project=project,
+        runner=runner,
+    )
+    if title is None and body is None and not label_edits:
+        return {"operation": operation, "issue": issue_number, "verified": verify}
+
+    args = ["issue", "edit", issue_number, "--repo", repo.slug]
+    if title is not None:
+        args.extend(["--title", title])
+    args.extend(label_edits)
+    if body is None:
+        _gh(args, project=project, runner=runner)
+    else:
+        with _body_file(body) as body_file:
+            args.extend(["--body-file", str(body_file)])
+            _gh(args, project=project, runner=runner)
+
+    if verify:
+        _verify_issue_fields(
+            repo,
+            issue_number,
+            expected_title=title,
+            expected_body=body,
+            expected_labels=labels,
+            exact_labels=labels is not None,
+            project=project,
+            runner=runner,
+        )
+    return {"operation": operation, "issue": issue_number, "verified": verify}
+
+
 def edit_issue_body(
     issue: int | str,
     *,
@@ -262,22 +326,16 @@ def edit_issue_body(
 ) -> dict[str, Any]:
     """Replace an issue body after the caller-provided guard allows the write."""
 
-    repo = resolve_github_repository(project, runner=runner)
-    issue_number = normalize_issue_number(issue)
-    _require_write_guard(
-        guard,
-        "edit_issue_body",
-        {"repository": repo.to_json(), "issue": issue_number},
+    payload = edit_issue(
+        issue,
+        body=body,
+        project=project,
+        guard=guard,
+        operation="edit_issue_body",
+        verify=verify,
+        runner=runner,
     )
-    with _body_file(body) as body_file:
-        _gh(
-            ["issue", "edit", issue_number, "--repo", repo.slug, "--body-file", str(body_file)],
-            project=project,
-            runner=runner,
-        )
-    if verify:
-        _verify_issue_body(repo, issue_number, expected_body=body, project=project, runner=runner)
-    return {"operation": "edit_issue_body", "issue": issue_number, "verified": verify}
+    return {"operation": "edit_issue_body", "issue": payload["issue"], "verified": verify}
 
 
 def comment_issue(
@@ -389,6 +447,53 @@ def _verify_issue_body(
         raise GitHubVerificationError(f"GitHub issue #{issue_number} body verification failed")
 
 
+def _verify_issue_fields(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    expected_title: str | None,
+    expected_body: str | None,
+    expected_labels: tuple[str, ...] | None,
+    exact_labels: bool,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> None:
+    fields: list[str] = []
+    if expected_title is not None:
+        fields.append("title")
+    if expected_body is not None:
+        fields.append("body")
+    if expected_labels is not None:
+        fields.append("labels")
+    if not fields:
+        return
+
+    data = _view_issue_with_repo(
+        repo,
+        issue_number,
+        project=project,
+        fields=tuple(fields),
+        runner=runner,
+    )
+    if expected_title is not None and data.get("title") != expected_title:
+        raise GitHubVerificationError(f"GitHub issue #{issue_number} title verification failed")
+    if expected_body is not None and data.get("body") != expected_body:
+        raise GitHubVerificationError(f"GitHub issue #{issue_number} body verification failed")
+    if expected_labels is not None:
+        actual_labels = set(_label_names(data.get("labels")))
+        expected_label_set = {label for label in expected_labels if label}
+        if exact_labels and actual_labels != expected_label_set:
+            raise GitHubVerificationError(
+                f"GitHub issue #{issue_number} labels verification failed: "
+                f"expected {sorted(expected_label_set)}, got {sorted(actual_labels)}"
+            )
+        if not exact_labels and not expected_label_set.issubset(actual_labels):
+            raise GitHubVerificationError(
+                f"GitHub issue #{issue_number} labels verification failed: "
+                f"expected {sorted(expected_label_set)}, got {sorted(actual_labels)}"
+            )
+
+
 def _verify_issue_state(
     repo: GitHubRepository,
     issue_number: str,
@@ -493,6 +598,39 @@ def _close_reason_from_state_reason(state_reason: str | None) -> str:
         if normalized in {"not-planned", "not planned"}:
             return "not planned"
     return "completed"
+
+
+def _label_edit_args(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    labels: tuple[str, ...] | None,
+    current_labels: tuple[str, ...] | None,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> list[str]:
+    if labels is None:
+        return []
+
+    desired = {label for label in labels if label}
+    if current_labels is None:
+        data = _view_issue_with_repo(
+            repo,
+            issue_number,
+            project=project,
+            fields=("labels",),
+            runner=runner,
+        )
+        current = set(_label_names(data.get("labels")))
+    else:
+        current = {label for label in current_labels if label}
+
+    args: list[str] = []
+    for label in sorted(desired - current):
+        args.extend(["--add-label", label])
+    for label in sorted(current - desired):
+        args.extend(["--remove-label", label])
+    return args
 
 
 def _normalize_issue_state(state: str) -> str:
