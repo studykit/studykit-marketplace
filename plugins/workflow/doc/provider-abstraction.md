@@ -356,13 +356,14 @@ Recommended knowledge artifacts:
 - Curated `usecase` pages.
 - Curated `research` reports.
 
-A repository `wiki/` directory has normal git history, branch review, pull requests, CODEOWNERS, and CI integration. It does not have provider-native page metadata like Confluence, so workflow metadata may need to live in page metadata blocks or an index file under `wiki/`.
+A repository `wiki/` directory has normal git history, branch review, pull requests, CODEOWNERS, and CI integration. It does not have provider-native page metadata like Confluence, so workflow metadata may need to live in page metadata blocks or an index file under `wiki/<plugin>/`.
 
 Decision:
 
 - Do not use the separate GitHub Wiki feature as the workflow knowledge backend.
 - Use `wiki/` in the main repository when GitHub is the knowledge provider.
-- Treat `wiki/<page>.md` as the provider identity.
+- Use `wiki/<plugin>/` for plugin-specific knowledge pages in multi-plugin repositories.
+- Treat `wiki/<plugin>/<page>.md` as the provider identity for plugin-specific pages.
 
 ## Confluence Mapping
 

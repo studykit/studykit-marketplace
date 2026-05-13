@@ -1,6 +1,6 @@
 # Workflow Issue Relationship Policy
 
-Source document: [`plugins/workflow/doc/issue-relationship-policy.md`](../plugins/workflow/doc/issue-relationship-policy.md)
+Source document: [`plugins/workflow/doc/issue-relationship-policy.md`](../../plugins/workflow/doc/issue-relationship-policy.md)
 
 Date: 2026-05-13
 

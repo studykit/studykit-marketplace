@@ -2,9 +2,9 @@
 
 Source documents:
 
-- [`plugins/workflow/doc/authoring-resolver.md`](../plugins/workflow/doc/authoring-resolver.md)
-- [`plugins/workflow/doc/authoring-ledger.md`](../plugins/workflow/doc/authoring-ledger.md)
-- [`plugins/workflow/doc/authoring-guard.md`](../plugins/workflow/doc/authoring-guard.md)
+- [`plugins/workflow/doc/authoring-resolver.md`](../../plugins/workflow/doc/authoring-resolver.md)
+- [`plugins/workflow/doc/authoring-ledger.md`](../../plugins/workflow/doc/authoring-ledger.md)
+- [`plugins/workflow/doc/authoring-guard.md`](../../plugins/workflow/doc/authoring-guard.md)
 
 ## Purpose
 

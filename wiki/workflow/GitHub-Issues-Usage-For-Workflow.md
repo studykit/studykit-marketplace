@@ -143,7 +143,7 @@ Repository Markdown files do not reliably autolink issue references. Use explici
 
 This applies to files under:
 
-- `wiki/`
+- `wiki/<plugin>/`
 - `plugins/workflow/doc/`
 - README files
 - other checked-in Markdown documents

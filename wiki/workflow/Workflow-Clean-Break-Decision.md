@@ -1,6 +1,6 @@
 # Workflow Clean Break Decision
 
-Source document: [`plugins/workflow/doc/clean-break-plan.md`](../plugins/workflow/doc/clean-break-plan.md)
+Source document: [`plugins/workflow/doc/clean-break-plan.md`](../../plugins/workflow/doc/clean-break-plan.md)
 
 ## Decision
 

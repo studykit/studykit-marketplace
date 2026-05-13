@@ -1,6 +1,6 @@
 # GitHub Issue History Access
 
-Source document: [`plugins/workflow/doc/github-issue-history.md`](../plugins/workflow/doc/github-issue-history.md)
+Source document: [`plugins/workflow/doc/github-issue-history.md`](../../plugins/workflow/doc/github-issue-history.md)
 
 Date: 2026-05-13
 

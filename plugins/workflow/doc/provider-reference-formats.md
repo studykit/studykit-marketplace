@@ -16,7 +16,7 @@ Recommended author-facing references:
 - Jira issue: `PROJ-123`.
 - Jira issue in GitHub comments when using GitHub for Atlassian: `[PROJ-123]`.
 - Confluence page: page title or Smart Link; use full URL when creating portable text links.
-- GitHub repository `wiki/` page: repository-relative Markdown path such as `wiki/Home.md`, or a full GitHub file URL when portability matters.
+- GitHub repository `wiki/` page: repository-relative Markdown path such as `wiki/workflow/Home.md`, or a full GitHub file URL when portability matters.
 
 The adapter should resolve author-facing refs into provider-native identity objects when it needs to call APIs, validate relationships, or write metadata.
 
@@ -70,19 +70,19 @@ Implications for workflow:
 
 ### GitHub repository `wiki/` directory pages
 
-When GitHub is the knowledge provider, workflow should use a normal `wiki/` directory in the main repository. Do not use the separate GitHub Wiki feature or `.wiki.git` repository as the workflow knowledge backend.
+When GitHub is the knowledge provider, workflow should use a normal `wiki/` directory in the main repository. Do not use the separate GitHub Wiki feature or `.wiki.git` repository as the workflow knowledge backend. In repositories with multiple plugins, store plugin-specific pages under `wiki/<plugin>/` and keep `wiki/README.md` as the repository-wide index.
 
 A repository `wiki/` page is an ordinary Markdown file, for example:
 
 ```text
-wiki/Workflow-Provider-Model.md
+wiki/workflow/Workflow-Provider-Model.md
 ```
 
 Implications for workflow:
 
-- Treat `wiki/<page>.md` as a repository file provider object.
+- Treat `wiki/<plugin>/<page>.md` as a repository file provider object for plugin-specific knowledge.
 - Store `host`, `owner`, `repo`, `path`, and optionally branch or commit SHA when versioned identity is needed.
-- Use normal Markdown links for visible references, such as `[Provider Model](wiki/Workflow-Provider-Model.md)`.
+- Use normal Markdown links for visible references, such as `[Provider Model](wiki/workflow/Workflow-Provider-Model.md)`.
 - Use full GitHub file URLs outside repository context.
 - Git history is the audit trail for page edits.
 - Page `## Change Log` records semantic cause, not the full diff.
@@ -160,7 +160,7 @@ Implications for workflow:
 | Provider object | Preferred author-facing ref | Resolved identity for APIs/metadata | Main weakness |
 | --- | --- | --- | --- |
 | GitHub issue/PR | `#123` in configured repo; `owner/repo#123` cross-repo | host, owner, repo, number, optional `node_id` | `#123` is context-relative. |
-| GitHub repository `wiki/` page | `wiki/<page>.md` or full GitHub file URL | host, owner, repo, path, optional branch/commit | Path changes change identity; no page-level opaque ID. |
+| GitHub repository `wiki/` page | `wiki/<plugin>/<page>.md` for plugin-specific pages, or full GitHub file URL | host, owner, repo, path, optional branch/commit | Path changes change identity; no page-level opaque ID. |
 | Jira issue | `PROJ-123` | Jira site, key, optional numeric issue ID | Keys are site-scoped; key changes can happen after project moves or renames. |
 | Confluence page | Page title or Smart Link | Confluence site, page ID, space ID, URLs | Titles and spaces are readable but rename/move-sensitive. |
 | GitHub Project item/field | Project view field name | Project item/field IDs | Useful metadata target, not artifact identity. |
@@ -214,18 +214,18 @@ display: "#123"
 ```
 
 ```yaml
-input: "Home"
+input: "workflow/Home"
 provider: github
 kind: page
 authority: github.com
 native:
   owner: octo-org
   repo: octo-repo
-  path: wiki/Home.md
+  path: wiki/workflow/Home.md
   title: Home
   last_seen_commit: abc1234
-url: https://github.com/octo-org/octo-repo/blob/main/wiki/Home.md
-display: wiki/Home.md
+url: https://github.com/octo-org/octo-repo/blob/main/wiki/workflow/Home.md
+display: wiki/workflow/Home.md
 ```
 
 ```yaml

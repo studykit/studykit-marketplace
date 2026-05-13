@@ -25,19 +25,25 @@ Use this binding for knowledge-backed workflow artifacts stored in GitHub reposi
 
 ## Storage model
 
-The default storage root is:
+The default repository knowledge root is:
 
 ```text
 wiki/
 ```
 
+For plugin-specific knowledge, use a plugin subdirectory by default:
+
+```text
+wiki/<plugin>/
+```
+
 Recommended page shape:
 
 ```text
-wiki/<Page-Title>.md
+wiki/<plugin>/<Page-Title>.md
 ```
 
-A project may configure a different root later, but v1 should default to `wiki/`.
+A project may configure a different root later, but v1 should default to `wiki/<plugin>/` for plugin repositories and `wiki/` for single-purpose repositories.
 
 ## Identity and references
 
@@ -49,12 +55,12 @@ Store or resolve:
 - Owner.
 - Repository.
 - Branch or commit when versioned identity is needed.
-- Repository-relative path, such as `wiki/Workflow-Provider-Model.md`.
+- Repository-relative path, such as `wiki/workflow/Workflow-Provider-Model.md`.
 
 Use normal Markdown links in visible text:
 
 ```markdown
-[Workflow Provider Model](wiki/Workflow-Provider-Model.md)
+[Workflow Provider Model](wiki/workflow/Workflow-Provider-Model.md)
 ```
 
 Use full GitHub URLs when text must be portable outside the repository.
@@ -69,7 +75,8 @@ Recommended metadata surfaces:
 
 1. Git path and git history.
 2. Optional page metadata block in the Markdown file.
-3. Optional index file under `wiki/` when a project needs navigation metadata.
+3. Optional index file under `wiki/<plugin>/` when a plugin needs navigation metadata.
+4. Optional root `wiki/README.md` as a repository-wide plugin index.
 
 ## Relationships
 
