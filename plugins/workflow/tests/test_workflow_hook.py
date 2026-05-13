@@ -307,32 +307,26 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Knowledge provider: `github`" in context
     assert "Local projection: `none`" in context
     assert "Commit references: `provider-native`" in context
-    assert 'WORKFLOW_PLUGIN_ROOT="' in context
-    assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_resolver.py' in context
-    assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_ledger.py' in context
-    assert '$WORKFLOW_PLUGIN_ROOT/scripts/authoring_guard.py' in context
-    assert '$WORKFLOW_PLUGIN_ROOT/scripts/workflow_github.py' in context
-    assert "guarded GitHub issue write wrappers" in context
-    assert "verify by default" in context
-    assert "`operation`, `issue`, and `verified`" in context
-    assert "create --title <title> --body-file <body-file>" in context
-    assert "edit-body <issue> --body-file <body-file>" in context
-    assert "comment <issue> --body-file <body-file>" in context
-    assert "close <issue> --guard-type <artifact-type> --session <session-id>" in context
-    assert "reopen <issue> --guard-type <artifact-type> --session <session-id>" in context
-    assert str(_PLUGIN_ROOT / "scripts" / "authoring_resolver.py") not in context
-    assert "`required_authoring_files`" in context
-    assert "every path in that list is absolute" in context
-    assert "does not auto-trigger workflow skills" in context
+    assert "Delegate workflow script operations to the `workflow-operator` agent" in context
+    assert "cache-aware provider reads" in context
+    assert "guarded GitHub issue writes" in context
+    assert "authoring resolver/ledger/guard execution" in context
+    assert "Provider writes must use guarded workflow wrappers" in context
+    assert "does not auto-trigger workflow skills or agents" in context
+    assert "WORKFLOW_PLUGIN_ROOT=" not in context
+    assert "$WORKFLOW_PLUGIN_ROOT/scripts/" not in context
+    assert "scripts/authoring_resolver.py" not in context
+    assert "scripts/authoring_ledger.py" not in context
+    assert "scripts/authoring_guard.py" not in context
+    assert "scripts/workflow_github.py" not in context
     assert "## workflow provider cache context" in context
     assert "Workflow cache root: `.workflow-cache/`" in context
     assert "GitHub issue cache base: `.workflow-cache/issues/`" in context
     assert "Hook-reported issue cache paths are relative to the GitHub issue cache base" in context
-    assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_fetch.py" in context
-    assert "--json [--cache-policy refresh] <issue-number-or-ref>..." in context
-    assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" in context
-    assert "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>..." in context
-    assert "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" in context
+    assert "delegate to the `workflow-operator` agent" in context
+    assert "scripts/workflow_cache_fetch.py" not in context
+    assert "scripts/workflow_cache_writeback.py" not in context
+    assert "scripts/workflow_cache_comments.py" not in context
 
 
 def test_session_start_discovers_config_from_nested_project_path(

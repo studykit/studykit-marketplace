@@ -20,6 +20,7 @@ Implemented so far:
 - Provider interface scaffold in `scripts/workflow_providers.py` for issue and knowledge provider dispatch.
 - Repo-local provider read cache projections in `scripts/workflow_cache.py`.
 - Opt-in provider write-back freshness checks that compare cache projection timestamps with current provider state before mutation.
+- Workflow operator agent in `agents/workflow-operator.md` for running provider/cache scripts without pushing command recipes into the main assistant context.
 
 ## Configuration
 
@@ -113,14 +114,14 @@ Cache policies:
 Hook cache context:
 
 - `SessionStart` announces the workflow cache root and the GitHub issue cache base once per session.
-- `SessionStart` points agents to `scripts/workflow_cache_fetch.py` for explicit issue cache fetches from the shell tool.
+- `SessionStart` points the main assistant to `agents/workflow-operator.md` for explicit provider/cache script operations.
 - `UserPromptSubmit` detects same-repository issue references and reads them through the default provider cache policy.
 - `Stop` records session-mentioned issue references as pending without provider reads.
 - The next `UserPromptSubmit` reads pending issue references through the default provider cache policy and injects their cache paths.
 - Hook-injected issue cache paths are relative to the GitHub issue cache base, for example `45/`.
-- Direct `.workflow-cache/` inspection is reserved for cache debugging; issue awareness should use hook-provided context or provider read wrappers.
+- Direct `.workflow-cache/` inspection is reserved for cache debugging; issue awareness should use hook-provided context or the workflow operator.
 
-Agent-facing explicit cache fetch:
+Operator-facing explicit cache fetch:
 
 ```bash
 python3 plugins/workflow/scripts/workflow_cache_fetch.py \
@@ -131,7 +132,25 @@ python3 plugins/workflow/scripts/workflow_cache_fetch.py \
 
 Use `--cache-policy refresh` when the agent intentionally needs to refresh provider data instead of accepting an existing local projection.
 
-Agent-facing issue cache write-back:
+## Workflow operator agent
+
+The main assistant should not need to keep detailed workflow script usage in
+context. Delegate script operations to `agents/workflow-operator.md`.
+
+Use the operator agent for:
+
+- Cache-aware provider reads.
+- Guarded GitHub issue writes.
+- Local issue projection write-back.
+- Pending local comment append.
+- Authoring resolver, ledger, and guard execution.
+- Provider mutation verification and cache refresh.
+
+The operator owns exact commands and wrapper ordering. The main assistant keeps
+only workflow intent, issue refs, artifact type, and the session id needed by
+guarded writes.
+
+Operator-facing issue cache write-back:
 
 ```bash
 python3 plugins/workflow/scripts/workflow_cache_writeback.py \

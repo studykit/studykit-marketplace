@@ -307,16 +307,11 @@ def pre_write(
 def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> str:
     """Build the context block injected for configured workflow projects."""
 
-    resolver = "scripts/authoring_resolver.py"
-    ledger = "scripts/authoring_ledger.py"
-    guard = "scripts/authoring_guard.py"
-    github = "scripts/workflow_github.py"
-
     commit_ref = "disabled"
     if config.commit_refs.enabled:
         commit_ref = config.commit_refs.style
 
-    cache_context = build_cache_session_context(config, plugin_root)
+    cache_context = build_cache_session_context(config)
 
     return (
         "## workflow authoring policy\n\n"
@@ -328,66 +323,22 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f"Knowledge provider: `{config.knowledge.kind}`\n"
         f"Local projection: `{config.local_projection.mode}`\n"
         f"Commit references: `{commit_ref}`\n\n"
+        "Delegate workflow script operations to the `workflow-operator` agent. "
+        "That agent owns cache-aware provider reads, guarded GitHub issue "
+        "writes, pending cache write-back, pending comment append, and "
+        "authoring resolver/ledger/guard execution.\n\n"
         "Before creating or editing any workflow issue, knowledge artifact, "
-        "or local projection, resolve and read the required authoring contracts.\n\n"
-        "Resolver command:\n\n"
-        "```bash\n"
-        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{resolver}" --project "{config.root}" --type <artifact-type> '
-        "[--role issue|knowledge] --json\n"
-        "```\n\n"
-        "Use `--role issue` or `--role knowledge` for dual artifacts such as "
-        "`usecase` and `research`.\n\n"
-        "The resolver JSON contains `required_authoring_files`, and every path "
-        "in that list is absolute. Read every listed file before writing.\n\n"
-        "When a wrapper or hook requires ledger enforcement, record reads with:\n\n"
-        "```bash\n"
-        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{ledger}" --project "{config.root}" --session <session-id> '
-        "record --json <absolute-authoring-file>...\n"
-        "```\n\n"
-        "Check write readiness with:\n\n"
-        "```bash\n"
-        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{guard}" --project "{config.root}" --session <session-id> '
-        "--type <artifact-type> [--role issue|knowledge] --json\n"
-        "```\n\n"
-        f"{build_github_wrapper_session_context(config, plugin_root, github)}"
+        "or local projection, required authoring contracts must be resolved "
+        "and read. Provider writes must use guarded workflow wrappers instead "
+        "of raw provider write commands; delegate those wrapper calls to "
+        "`workflow-operator`.\n\n"
         "SessionStart only injects this policy and cache context. It does not "
-        "auto-trigger workflow skills."
+        "auto-trigger workflow skills or agents."
         f"{cache_context}"
     )
 
 
-def build_github_wrapper_session_context(config: WorkflowConfig, plugin_root: Path, script: str) -> str:
-    """Build SessionStart guidance for guarded GitHub issue write wrappers."""
-
-    if config.issues.kind != "github":
-        return ""
-
-    return (
-        "Use guarded GitHub issue write wrappers for supported mutations instead "
-        "of paired ad hoc `gh` write/read calls. The wrappers verify by default "
-        "after mutation, raise on verification failure, and return compact "
-        "`operation`, `issue`, and `verified` payloads.\n\n"
-        "```bash\n"
-        f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"\n'
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
-        "create --title <title> --body-file <body-file> --label <label> "
-        "--guard-type <artifact-type> --session <session-id>\n"
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
-        "edit-body <issue> --body-file <body-file> --guard-type <artifact-type> --session <session-id>\n"
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
-        "comment <issue> --body-file <body-file> --guard-type <artifact-type> --session <session-id>\n"
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
-        "close <issue> --guard-type <artifact-type> --session <session-id> --reason completed [--comment <text>]\n"
-        f'python3 "$WORKFLOW_PLUGIN_ROOT/{script}" --project "{config.root}" --json '
-        "reopen <issue> --guard-type <artifact-type> --session <session-id> [--comment <text>]\n"
-        "```\n\n"
-    )
-
-
-def build_cache_session_context(config: WorkflowConfig, plugin_root: Path) -> str:
+def build_cache_session_context(config: WorkflowConfig) -> str:
     """Build SessionStart guidance for workflow provider read caches."""
 
     cache_root = GitHubIssueCache.for_project(config.root).root
@@ -410,27 +361,8 @@ def build_cache_session_context(config: WorkflowConfig, plugin_root: Path) -> st
                 "",
                 "Hook-reported issue cache paths are relative to the GitHub issue "
                 "cache base unless another base is explicitly stated.",
-                "For explicit agent cache fetches, use the shared cache fetch script:",
-                "",
-                "```bash",
-                f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
-                f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_fetch.py" --project "{config.root}" '
-                "--json [--cache-policy refresh] <issue-number-or-ref>...",
-                "```",
-                "For explicit agent cache write-back of existing issue projections, use:",
-                "",
-                "```bash",
-                f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
-                f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" --project "{config.root}" '
-                "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>...",
-                "```",
-                "For explicit agent append of pending local comment files, use:",
-                "",
-                "```bash",
-                f'WORKFLOW_PLUGIN_ROOT="{plugin_root}"',
-                f'python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" --project "{config.root}" '
-                "--session <session-id> --type <artifact-type> --json <issue-number-or-ref>...",
-                "```",
+                "For explicit cache fetch, cache write-back, or pending comment "
+                "append operations, delegate to the `workflow-operator` agent.",
             ]
         )
     else:
