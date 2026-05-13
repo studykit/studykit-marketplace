@@ -70,6 +70,10 @@ class GitHubGuardError(PermissionError):
     """Raised when a write operation lacks or fails an authoring guard."""
 
 
+class GitHubVerificationError(RuntimeError):
+    """Raised when a GitHub write cannot be verified after mutation."""
+
+
 @dataclass(frozen=True)
 class GitHubRepository:
     """Resolved GitHub repository context."""
@@ -148,11 +152,27 @@ def view_issue(
     """Read one GitHub issue through ``gh issue view``."""
 
     repo = resolve_github_repository(project, runner=runner)
+    issue_number = normalize_issue_number(issue)
+    data = _view_issue_with_repo(repo, issue_number, project=project, fields=fields, runner=runner)
+    data.setdefault("repository", repo.to_json())
+    return data
+
+
+def _view_issue_with_repo(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    project: Path,
+    fields: tuple[str, ...],
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Read one GitHub issue when repository context is already resolved."""
+
     result = _gh(
         [
             "issue",
             "view",
-            normalize_issue_number(issue),
+            issue_number,
             "--repo",
             repo.slug,
             "--json",
@@ -161,9 +181,7 @@ def view_issue(
         project=project,
         runner=runner,
     )
-    data = _loads_json_object(result.stdout, "gh issue view")
-    data.setdefault("repository", repo.to_json())
-    return data
+    return _loads_json_object(result.stdout, "gh issue view")
 
 
 def edit_issue_body(
@@ -172,6 +190,7 @@ def edit_issue_body(
     body: str,
     project: Path,
     guard: WriteGuard,
+    verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
     """Replace an issue body after the caller-provided guard allows the write."""
@@ -189,7 +208,9 @@ def edit_issue_body(
             project=project,
             runner=runner,
         )
-    return {"repository": repo.to_json(), "issue": issue_number, "operation": "edit_issue_body"}
+    if verify:
+        _verify_issue_body(repo, issue_number, expected_body=body, project=project, runner=runner)
+    return {"operation": "edit_issue_body", "issue": issue_number, "verified": verify}
 
 
 def comment_issue(
@@ -225,6 +246,7 @@ def close_issue(
     reason: str = "completed",
     comment: str | None = None,
     guard: WriteGuard,
+    verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
     """Close an issue after the caller-provided guard allows the write."""
@@ -240,7 +262,16 @@ def close_issue(
     if comment:
         args.extend(["--comment", comment])
     _gh(args, project=project, runner=runner)
-    return {"repository": repo.to_json(), "issue": issue_number, "operation": "close_issue"}
+    if verify:
+        _verify_issue_state(
+            repo,
+            issue_number,
+            expected_state="CLOSED",
+            expected_state_reason=_expected_closed_state_reason(reason),
+            project=project,
+            runner=runner,
+        )
+    return {"operation": "close_issue", "issue": issue_number, "verified": verify}
 
 
 def reopen_issue(
@@ -249,6 +280,7 @@ def reopen_issue(
     project: Path,
     comment: str | None = None,
     guard: WriteGuard,
+    verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
     """Reopen an issue after the caller-provided guard allows the write."""
@@ -264,7 +296,70 @@ def reopen_issue(
     if comment:
         args.extend(["--comment", comment])
     _gh(args, project=project, runner=runner)
-    return {"repository": repo.to_json(), "issue": issue_number, "operation": "reopen_issue"}
+    if verify:
+        _verify_issue_state(
+            repo,
+            issue_number,
+            expected_state="OPEN",
+            expected_state_reason=None,
+            project=project,
+            runner=runner,
+        )
+    return {"operation": "reopen_issue", "issue": issue_number, "verified": verify}
+
+
+def _verify_issue_body(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    expected_body: str,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> None:
+    data = _view_issue_with_repo(repo, issue_number, project=project, fields=("body",), runner=runner)
+    actual_body = data.get("body")
+    if actual_body != expected_body:
+        raise GitHubVerificationError(f"GitHub issue #{issue_number} body verification failed")
+
+
+def _verify_issue_state(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    expected_state: str,
+    expected_state_reason: str | None,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> None:
+    data = _view_issue_with_repo(
+        repo,
+        issue_number,
+        project=project,
+        fields=("state", "stateReason"),
+        runner=runner,
+    )
+    state = str(data.get("state") or "").upper()
+    state_reason = data.get("stateReason")
+    normalized_state_reason = str(state_reason).upper() if state_reason else None
+    if state != expected_state:
+        raise GitHubVerificationError(
+            f"GitHub issue #{issue_number} state verification failed: expected {expected_state}, got {state}"
+        )
+    if expected_state_reason is not None and normalized_state_reason != expected_state_reason:
+        raise GitHubVerificationError(
+            "GitHub issue "
+            f"#{issue_number} stateReason verification failed: "
+            f"expected {expected_state_reason}, got {normalized_state_reason}"
+        )
+
+
+def _expected_closed_state_reason(reason: str) -> str | None:
+    normalized = reason.strip().lower().replace("_", "-")
+    if normalized in {"completed", "complete", "done"}:
+        return "COMPLETED"
+    if normalized in {"not-planned", "not planned"}:
+        return "NOT_PLANNED"
+    return None
 
 
 def issue_timeline(

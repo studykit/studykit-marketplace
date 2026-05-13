@@ -108,6 +108,19 @@ def gh_issue_freshness_args(issue: int | str) -> tuple[str, ...]:
     )
 
 
+def gh_issue_view_args(issue: int | str, fields: str) -> tuple[str, ...]:
+    return (
+        "gh",
+        "issue",
+        "view",
+        str(issue),
+        "--repo",
+        "studykit/studykit-plugins",
+        "--json",
+        fields,
+    )
+
+
 def github_repo() -> GitHubRepository:
     return GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
 
@@ -251,6 +264,13 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
             assert body_file.read_text(encoding="utf-8") == "Updated body."
             assert events == ["guard:update", "freshness", "edit"]
             return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(39, "body"):
+            events.append("verify")
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"body": "Updated body."}),
+            )
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
     def guard(request: ProviderRequest) -> None:
@@ -269,7 +289,8 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
     )
 
     assert response.payload["operation"] == "edit_issue_body"
-    assert events == ["guard:update", "freshness", "edit"]
+    assert response.payload["verified"] is True
+    assert events == ["guard:update", "freshness", "edit", "verify"]
 
 
 def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Path) -> None:

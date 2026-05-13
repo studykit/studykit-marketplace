@@ -17,7 +17,9 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from workflow_command import CommandRequest, CommandResult, MissingCommandError  # noqa: E402
 from workflow_command import WorkflowCommandError  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubGuardError, GitHubParseError  # noqa: E402
-from workflow_github import comment_issue, issue_body_edit_history, issue_timeline  # noqa: E402
+from workflow_github import GitHubVerificationError  # noqa: E402
+from workflow_github import close_issue, comment_issue, edit_issue_body  # noqa: E402
+from workflow_github import issue_body_edit_history, issue_timeline  # noqa: E402
 from workflow_github import parse_github_remote_url, resolve_github_repository, view_issue  # noqa: E402
 from workflow_github import reopen_issue  # noqa: E402
 
@@ -48,6 +50,19 @@ def gh_args(project: Path, *args: str) -> tuple[str, ...]:
 
 def git_args(project: Path, *args: str) -> tuple[str, ...]:
     return ("git", "-C", str(project.resolve(strict=False)), *args)
+
+
+def gh_issue_view_args(issue: int | str, fields: tuple[str, ...]) -> tuple[str, ...]:
+    return (
+        "gh",
+        "issue",
+        "view",
+        str(issue),
+        "--repo",
+        "studykit/studykit-plugins",
+        "--json",
+        ",".join(fields),
+    )
 
 
 def allow_guard(calls: list[tuple[str, Mapping[str, Any]]]):
@@ -244,6 +259,84 @@ def test_comment_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
     assert guard_calls[0][1]["issue"] == "38"
 
 
+def test_edit_issue_body_verifies_after_write(tmp_path: Path) -> None:
+    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args[:3] == ("gh", "issue", "edit"):
+            body_file = Path(request.args[request.args.index("--body-file") + 1])
+            assert body_file.read_text(encoding="utf-8") == "Updated body."
+            assert guard_calls
+            return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(38, ("body",)):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"body": "Updated body."}),
+            )
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    result_payload = edit_issue_body(
+        38,
+        body="Updated body.",
+        project=tmp_path,
+        guard=allow_guard(guard_calls),
+        runner=runner,
+    )
+
+    assert result_payload == {"operation": "edit_issue_body", "issue": "38", "verified": True}
+    assert guard_calls[0][0] == "edit_issue_body"
+    assert guard_calls[0][1]["issue"] == "38"
+
+
+def test_close_issue_verifies_after_write(tmp_path: Path) -> None:
+    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args == (
+            "gh",
+            "issue",
+            "close",
+            "38",
+            "--repo",
+            "studykit/studykit-plugins",
+            "--reason",
+            "completed",
+        ):
+            assert guard_calls
+            return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(38, ("state", "stateReason")):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"state": "CLOSED", "stateReason": "COMPLETED"}),
+            )
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    result_payload = close_issue(
+        38,
+        project=tmp_path,
+        guard=allow_guard(guard_calls),
+        runner=runner,
+    )
+
+    assert result_payload == {"operation": "close_issue", "issue": "38", "verified": True}
+    assert guard_calls[0][0] == "close_issue"
+    assert guard_calls[0][1]["issue"] == "38"
+
+
 def test_reopen_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
     guard_calls: list[tuple[str, Mapping[str, Any]]] = []
 
@@ -264,6 +357,12 @@ def test_reopen_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
         ):
             assert guard_calls
             return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(38, ("state", "stateReason")):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"state": "OPEN", "stateReason": None}),
+            )
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
     result_payload = reopen_issue(
@@ -273,9 +372,40 @@ def test_reopen_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
         runner=runner,
     )
 
-    assert result_payload["operation"] == "reopen_issue"
+    assert result_payload == {"operation": "reopen_issue", "issue": "38", "verified": True}
     assert guard_calls[0][0] == "reopen_issue"
     assert guard_calls[0][1]["issue"] == "38"
+
+
+def test_close_issue_raises_when_verification_fails(tmp_path: Path) -> None:
+    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout="git@github.com:studykit/studykit-plugins.git\n",
+            )
+        if request.args[:3] == ("gh", "issue", "close"):
+            return CommandResult(request=request, returncode=0)
+        if request.args == gh_issue_view_args(38, ("state", "stateReason")):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"state": "OPEN", "stateReason": None}),
+            )
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    with pytest.raises(GitHubVerificationError, match="state verification failed"):
+        close_issue(
+            38,
+            project=tmp_path,
+            guard=allow_guard(guard_calls),
+            runner=runner,
+        )
+
+    assert guard_calls[0][0] == "close_issue"
 
 
 def test_missing_gh_tool_is_reported(tmp_path: Path) -> None:
