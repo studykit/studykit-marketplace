@@ -217,3 +217,5 @@ session-tree.lock
 .obsidian/plugins/*/data.json
 .obsidian/backlink.json
 *.lock
+# Workflow provider read cache
+/.workflow-cache/

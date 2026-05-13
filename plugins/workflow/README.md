@@ -18,6 +18,7 @@ Implemented so far:
 - Authoring write guard in `scripts/authoring_guard.py`.
 - Workflow hooks in `scripts/workflow_hook.py` for SessionStart policy injection, authoring read recording, and local projection write guarding.
 - Provider interface scaffold in `scripts/workflow_providers.py` for issue and knowledge provider dispatch.
+- Repo-local provider read cache projections in `scripts/workflow_cache.py`.
 
 ## Configuration
 
@@ -68,7 +69,30 @@ Transport priority is represented in code as:
 
 The default registry currently wires the GitHub Issues native transport to `scripts/workflow_github.py`. Knowledge transports and MCP fallback adapters are scaffolded by interface and can be registered as they are implemented.
 
-Write-capable provider operations must pass through the dispatcher with an authoring guard callback before mutation. The provider request also carries a `cache_policy` field so the future local read cache can sit above provider transports without changing provider implementations.
+Write-capable provider operations must pass through the dispatcher with an authoring guard callback before mutation. Read-capable provider operations use `ProviderContext.cache_policy` to choose local-cache-first, refresh, or bypass behavior where cache support exists.
+
+## Provider read cache
+
+GitHub issue reads can be cached under repository-local `.workflow-cache/` projections. The cache root is ignored by Git.
+
+Current projection shape:
+
+```text
+.workflow-cache/github/github.com/OWNER/REPO/issues/ISSUE_NUMBER/
+  issue.md
+  comments/
+    index.yml
+    YYYY-MM-DDTHHMMSSZ-PROVIDER_COMMENT_ID.md
+  relationships.yml
+```
+
+`issue.md` stores minimal frontmatter and raw provider body Markdown. Comment history uses `comments/index.yml` plus one raw body file per remote comment. `relationships.yml` stores current provider-native relationship data only. Timeline, event, and body-edit reads stay remote provider operations and are not cached by this projection.
+
+Cache policies:
+
+- `default`: read existing cache first, otherwise fetch provider data and write the cache.
+- `refresh`: fetch provider data and overwrite the cache.
+- `bypass`: fetch provider data without reading or writing the cache.
 
 ## Authoring resolver
 

@@ -16,6 +16,7 @@ from authoring_guard import evaluate_authoring_guard
 from authoring_ledger import LedgerError
 from authoring_resolver import ResolverError
 from workflow_command import CommandRunner
+from workflow_cache import GitHubIssueCache, WorkflowCacheError
 from workflow_config import ProviderConfig, WorkflowConfig, normalize_role
 from workflow_github import (
     DEFAULT_ISSUE_FIELDS,
@@ -26,6 +27,7 @@ from workflow_github import (
     issue_events,
     issue_timeline,
     reopen_issue,
+    resolve_github_repository,
     view_issue,
 )
 
@@ -314,11 +316,32 @@ class GitHubIssueNativeProvider(IssueProvider):
 
     def get(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
+        include_body = bool(request.payload.get("include_body", True))
+        include_comments = bool(request.payload.get("include_comments", True))
+        include_relationships = bool(request.payload.get("include_relationships", True))
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project)
+
+        if request.context.cache_policy == CACHE_POLICY_DEFAULT:
+            try:
+                return cache.read_issue(
+                    repo,
+                    issue,
+                    include_body=include_body,
+                    include_comments=include_comments,
+                    include_relationships=include_relationships,
+                )
+            except WorkflowCacheError:
+                pass
+
         raw_fields = request.payload.get("fields")
         fields = DEFAULT_ISSUE_FIELDS
         if isinstance(raw_fields, (list, tuple)):
             fields = tuple(str(field) for field in raw_fields)
-        return view_issue(issue, project=request.context.project, fields=fields, runner=self.runner)
+        payload = view_issue(issue, project=request.context.project, fields=fields, runner=self.runner)
+        if request.context.cache_policy != CACHE_POLICY_BYPASS:
+            cache.write_issue_bundle(repo, payload)
+        return payload
 
     def update(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
