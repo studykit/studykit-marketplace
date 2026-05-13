@@ -11,7 +11,9 @@
     "**/.settings": true,
     "**/.factorypath": true,
     ".pytest_cache": true,
-    ".claude/tmp": false
+    ".claude/tmp": false,
+    "**/CLAUDE.md": true,
+    "**/*.lock": true
   },
   "explorerExclude.backup": {}
 }
