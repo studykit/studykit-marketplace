@@ -19,26 +19,33 @@ from workflow_command import CommandRunner
 from workflow_cache import (
     FreshnessMetadata,
     GitHubIssueCache,
+    PendingIssueRelationshipOperation,
     WorkflowCacheError,
     WorkflowFreshnessConflict,
     require_provider_freshness,
 )
-from workflow_config import ProviderConfig, WorkflowConfig, normalize_role
+from workflow_config import ProviderConfig, WorkflowConfig, WorkflowConfigError, load_workflow_config, normalize_role
 from workflow_github import (
     DEFAULT_ISSUE_FIELDS,
+    add_issue_dependency,
+    add_sub_issue,
     close_issue,
     comment_issue,
     create_issue,
     edit_issue,
     edit_issue_body,
+    issue_relationships,
     issue_body_edit_history,
     issue_events,
     issue_timeline,
     normalize_issue_number,
+    remove_issue_dependency,
+    remove_sub_issue,
     reopen_issue,
     resolve_github_repository,
     view_issue,
 )
+from workflow_refs import ProviderReferenceError, normalize_provider_reference
 
 ROLE_ISSUE = "issue"
 ROLE_KNOWLEDGE = "knowledge"
@@ -55,6 +62,7 @@ ISSUE_WRITE_OPERATIONS = frozenset(
         "add_comment",
         "set_parent",
         "set_dependency",
+        "apply_relationships",
         "close",
         "reopen",
     }
@@ -190,6 +198,22 @@ class ProviderResponse:
 GuardCallback = Callable[[ProviderRequest], None]
 
 
+@dataclass(frozen=True)
+class _ResolvedRelationshipOperation:
+    action: str
+    relationship: str
+    target_issue: str
+    replace_parent: bool = False
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "action": self.action,
+            "relationship": self.relationship,
+            "target_issue": self.target_issue,
+            "replace_parent": self.replace_parent,
+        }
+
+
 class ProviderTransport:
     """Base class for provider transport adapters."""
 
@@ -271,6 +295,9 @@ class IssueProvider(ProviderTransport):
 
     def set_dependency(self, request: ProviderRequest) -> Mapping[str, Any]:
         raise ProviderOperationError("issue set_dependency is not implemented")
+
+    def apply_relationships(self, request: ProviderRequest) -> Mapping[str, Any]:
+        raise ProviderOperationError("issue apply_relationships is not implemented")
 
     def close(self, request: ProviderRequest) -> Mapping[str, Any]:
         raise ProviderOperationError("issue close is not implemented")
@@ -539,6 +566,263 @@ class GitHubIssueNativeProvider(IssueProvider):
             "cache_refreshed": True,
             "cache": write_result.to_json(),
         }
+
+    def apply_relationships(self, request: ProviderRequest) -> Mapping[str, Any]:
+        issue = _required_payload_value(request, "issue")
+        if _truthy(request.payload.get("from_pending")) or _truthy(request.payload.get("pending_relationships")):
+            return self._apply_pending_relationships(request, issue)
+        raise ProviderOperationError("GitHub issue apply_relationships currently requires pending_relationships")
+
+    def set_parent(self, request: ProviderRequest) -> Mapping[str, Any]:
+        issue = normalize_issue_number(_required_payload_value(request, "issue"))
+        parent = _required_payload_value(request, "parent")
+        action = _relationship_action(request.payload.get("action") or request.payload.get("op") or "add")
+        operations = [
+            _ResolvedRelationshipOperation(
+                action=action,
+                relationship="parent",
+                target_issue=self._resolve_github_issue_reference(request, parent),
+                replace_parent=_truthy(request.payload.get("replace_parent") or request.payload.get("replaceParent")),
+            )
+        ]
+        return self._apply_relationship_operations(request, issue, operations, pending_operations=None)
+
+    def set_dependency(self, request: ProviderRequest) -> Mapping[str, Any]:
+        issue = normalize_issue_number(_required_payload_value(request, "issue"))
+        operations: list[_ResolvedRelationshipOperation] = []
+        for key, relationship in (("blocked_by", "blocked_by"), ("blockedBy", "blocked_by"), ("blocking", "blocking"), ("blocks", "blocking")):
+            if key not in request.payload:
+                continue
+            for value in _relationship_values(request.payload[key]):
+                operations.append(
+                    _ResolvedRelationshipOperation(
+                        action=_relationship_action(request.payload.get("action") or request.payload.get("op") or "add"),
+                        relationship=relationship,
+                        target_issue=self._resolve_github_issue_reference(request, value),
+                    )
+                )
+        if not operations:
+            target = _required_payload_value(request, "dependency")
+            operations.append(
+                _ResolvedRelationshipOperation(
+                    action=_relationship_action(request.payload.get("action") or request.payload.get("op") or "add"),
+                    relationship="blocked_by",
+                    target_issue=self._resolve_github_issue_reference(request, target),
+                )
+            )
+        return self._apply_relationship_operations(request, issue, operations, pending_operations=None)
+
+    def _apply_pending_relationships(self, request: ProviderRequest, issue: Any) -> Mapping[str, Any]:
+        issue_number = normalize_issue_number(issue)
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
+        pending_local_id = _optional_string(
+            request.payload.get("pending_local_id") or request.payload.get("local_id")
+        )
+        if pending_local_id:
+            pending_operations = cache.read_pending_draft_relationships(repo, pending_local_id)
+            pending_source = "pending_issue"
+        else:
+            pending_operations = cache.read_pending_issue_relationships(repo, issue_number)
+            pending_source = "issue"
+
+        if not pending_operations:
+            if pending_local_id:
+                raise ProviderOperationError(
+                    f"no pending relationship file found for GitHub pending issue {pending_local_id}"
+                )
+            raise ProviderOperationError(f"no pending relationship file found for GitHub issue #{issue_number}")
+
+        operations = [
+            _ResolvedRelationshipOperation(
+                action=operation.action,
+                relationship=operation.relationship,
+                target_issue=self._resolve_github_issue_reference(request, operation.target_ref),
+                replace_parent=operation.replace_parent,
+            )
+            for operation in pending_operations
+        ]
+        result = self._apply_relationship_operations(
+            request,
+            issue_number,
+            operations,
+            pending_operations=pending_operations,
+        )
+        if pending_local_id:
+            removed = cache.remove_pending_draft_relationships(repo, pending_local_id, pending_operations)
+        else:
+            removed = cache.remove_pending_issue_relationships(repo, issue_number, pending_operations)
+        return {
+            **result,
+            "pending_source": pending_source,
+            "pending_file": pending_operations[0].file_name,
+            "removed_pending_files": [str(path) for path in removed],
+        }
+
+    def _apply_relationship_operations(
+        self,
+        request: ProviderRequest,
+        issue_number: str,
+        operations: list[_ResolvedRelationshipOperation],
+        *,
+        pending_operations: list[PendingIssueRelationshipOperation] | None,
+    ) -> dict[str, Any]:
+        if not operations:
+            raise ProviderOperationError(f"no GitHub relationship operations found for issue #{issue_number}")
+        self._validate_relationship_operations(operations)
+        freshness_payload = dict(request.payload)
+        freshness_payload.setdefault("freshness_check", True)
+        freshness_payload.setdefault("freshness_target", "relationships")
+        self._require_write_freshness(
+            replace(request, payload=freshness_payload),
+            issue_number,
+            default_target="relationships",
+        )
+
+        applied: list[Mapping[str, Any]] = []
+        for operation in operations:
+            applied.append(self._dispatch_relationship_operation(issue_number, operation, request=request))
+
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
+        relationships = issue_relationships(
+            issue_number,
+            project=request.context.project,
+            runner=self.runner,
+        )
+        relationships_file = cache.write_relationships_projection(repo, issue_number, relationships)
+        return {
+            "operation": "apply_relationships",
+            "issue": issue_number,
+            "applied": len(applied),
+            "operations": [operation.to_json() for operation in operations],
+            "provider_results": [dict(item) for item in applied],
+            "pending_operations": [operation.to_json() for operation in pending_operations or []],
+            "cache_refreshed": True,
+            "relationships_file": str(relationships_file),
+        }
+
+    def _validate_relationship_operations(self, operations: list[_ResolvedRelationshipOperation]) -> None:
+        supported = {"parent", "child", "blocked_by", "blocking"}
+        for operation in operations:
+            if operation.relationship not in supported:
+                raise ProviderOperationError(
+                    f"unsupported GitHub relationship operation: {operation.relationship}"
+                )
+            if operation.action not in {"add", "remove"}:
+                raise ProviderOperationError(
+                    f"unsupported GitHub relationship action: {operation.action}"
+                )
+
+    def _dispatch_relationship_operation(
+        self,
+        issue_number: str,
+        operation: _ResolvedRelationshipOperation,
+        *,
+        request: ProviderRequest,
+    ) -> Mapping[str, Any]:
+        if operation.relationship == "parent":
+            if operation.action == "add":
+                return add_sub_issue(
+                    operation.target_issue,
+                    issue_number,
+                    project=request.context.project,
+                    guard=_already_guarded,
+                    replace_parent=operation.replace_parent,
+                    runner=self.runner,
+                )
+            return remove_sub_issue(
+                operation.target_issue,
+                issue_number,
+                project=request.context.project,
+                guard=_already_guarded,
+                runner=self.runner,
+            )
+
+        if operation.relationship == "child":
+            if operation.action == "add":
+                return add_sub_issue(
+                    issue_number,
+                    operation.target_issue,
+                    project=request.context.project,
+                    guard=_already_guarded,
+                    replace_parent=operation.replace_parent,
+                    runner=self.runner,
+                )
+            return remove_sub_issue(
+                issue_number,
+                operation.target_issue,
+                project=request.context.project,
+                guard=_already_guarded,
+                runner=self.runner,
+            )
+
+        if operation.relationship == "blocked_by":
+            if operation.action == "add":
+                return add_issue_dependency(
+                    issue_number,
+                    operation.target_issue,
+                    project=request.context.project,
+                    guard=_already_guarded,
+                    runner=self.runner,
+                )
+            return remove_issue_dependency(
+                issue_number,
+                operation.target_issue,
+                project=request.context.project,
+                guard=_already_guarded,
+                runner=self.runner,
+            )
+
+        if operation.relationship == "blocking":
+            if operation.action == "add":
+                return add_issue_dependency(
+                    operation.target_issue,
+                    issue_number,
+                    project=request.context.project,
+                    guard=_already_guarded,
+                    runner=self.runner,
+                )
+            return remove_issue_dependency(
+                operation.target_issue,
+                issue_number,
+                project=request.context.project,
+                guard=_already_guarded,
+                runner=self.runner,
+            )
+
+        raise ProviderOperationError(f"unsupported GitHub relationship operation: {operation.relationship}")
+
+    def _resolve_github_issue_reference(self, request: ProviderRequest, value: Any) -> str:
+        raw = str(value).strip()
+        if not raw:
+            raise ProviderOperationError("GitHub relationship target issue reference is empty")
+        config = _optional_workflow_config(request.context.project)
+        if config is None:
+            return normalize_issue_number(raw)
+        try:
+            ref = normalize_provider_reference(
+                raw,
+                config,
+                role="issue",
+                allow_bare_issue_number=True,
+                runner=self.runner,
+            )
+        except ProviderReferenceError as exc:
+            raise ProviderOperationError(str(exc)) from exc
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        native = ref.native
+        ref_repo = (
+            str(ref.authority).lower(),
+            str(native.get("owner") or "").lower(),
+            str(native.get("repo") or "").lower(),
+        )
+        current_repo = (repo.host.lower(), repo.owner.lower(), repo.name.lower())
+        if ref.provider != "github" or ref.kind != "issue" or ref_repo != current_repo:
+            raise ProviderOperationError(
+                f"GitHub relationship target must be in the configured repository: {raw}"
+            )
+        return normalize_issue_number(native.get("number") or "")
 
     def close(self, request: ProviderRequest) -> Mapping[str, Any]:
         issue = _required_payload_value(request, "issue")
@@ -853,6 +1137,13 @@ def _provider_config_for_role(config: WorkflowConfig, role: str) -> ProviderConf
     raise ProviderOperationError(f"unsupported provider role: {role}")
 
 
+def _optional_workflow_config(project: Path) -> WorkflowConfig | None:
+    try:
+        return load_workflow_config(project)
+    except WorkflowConfigError as exc:
+        raise ProviderOperationError(str(exc)) from exc
+
+
 def _required_payload_value(request: ProviderRequest, key: str) -> Any:
     value = request.payload.get(key)
     if value is None or value == "":
@@ -970,6 +1261,33 @@ def _close_reason_from_state_reason(value: Any) -> str:
     if text and text.strip().lower().replace("_", "-") in {"not-planned", "not planned"}:
         return "not planned"
     return "completed"
+
+
+def _relationship_action(value: Any) -> str:
+    normalized = str(value).strip().lower().replace("-", "_")
+    aliases = {
+        "set": "add",
+        "create": "add",
+        "append": "add",
+        "delete": "remove",
+        "unset": "remove",
+    }
+    action = aliases.get(normalized, normalized)
+    if action not in {"add", "remove"}:
+        raise ProviderOperationError(f"unsupported GitHub relationship action: {value}")
+    return action
+
+
+def _relationship_values(value: Any) -> list[Any]:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, Mapping):
+        return [value]
+    if isinstance(value, list | tuple | set):
+        return list(value)
+    return [value]
 
 
 def _truthy(value: Any) -> bool:

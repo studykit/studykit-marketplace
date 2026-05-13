@@ -31,6 +31,7 @@ from workflow_providers import (  # noqa: E402
     ProviderDispatcher,
     ProviderFreshnessError,
     ProviderGuardError,
+    ProviderOperationError,
     ProviderRegistry,
     ProviderRequest,
     default_provider_registry,
@@ -121,8 +122,30 @@ def gh_issue_view_args(issue: int | str, fields: str) -> tuple[str, ...]:
     )
 
 
+def gh_api_args(*args: str) -> tuple[str, ...]:
+    return ("gh", "api", *args)
+
+
 def github_repo() -> GitHubRepository:
     return GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
+
+
+def write_config(project: Path) -> None:
+    path = project / ".workflow" / "config.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        """
+version: 1
+providers:
+  issues:
+    kind: github
+    repo: studykit/studykit-plugins
+  knowledge:
+    kind: github
+issue_id_format: github
+""".lstrip(),
+        encoding="utf-8",
+    )
 
 
 def cached_issue_payload(*, updated_at: str = "2026-05-13T12:00:00Z") -> dict[str, object]:
@@ -197,6 +220,7 @@ def test_provider_operation_sets_cover_issue_and_knowledge_contracts() -> None:
         "add_comment",
         "set_parent",
         "set_dependency",
+        "apply_relationships",
     }
     assert KNOWLEDGE_PROVIDER_OPERATIONS >= {
         "create",
@@ -692,6 +716,173 @@ Pending comment body.
     assert cached["comments"][0]["id"] == "4440388606"
     assert cached["comments"][0]["body"] == "Pending comment body.\n"
     assert events == ["guard:add_comment", "comment", "refresh"]
+
+
+def test_github_issue_apply_relationships_from_pending_file_dispatches_refreshes_and_cleans(
+    tmp_path: Path,
+) -> None:
+    write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=github_repo())
+    cache.write_issue_bundle(
+        github_repo(),
+        {**cached_issue_payload(updated_at="2026-05-14T00:00:00Z"), "number": 44},
+        fetched_at="2026-05-14T00:00:00Z",
+    )
+    pending_path = cache.relationships_pending_file(github_repo(), 44)
+    pending_path.write_text(
+        """
+schema_version: 1
+operations:
+  - action: add
+    relationship: parent
+    issue: "#36"
+  - action: add
+    relationship: blocked_by
+    issue: "#33"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    events: list[str] = []
+    issue_44_reads = 0
+
+    def rest_issue(number: int, issue_id: int, *, updated_at: str = "2026-05-14T00:00:00Z") -> dict[str, object]:
+        return {
+            "id": issue_id,
+            "number": number,
+            "title": f"Issue {number}",
+            "state": "open",
+            "state_reason": None,
+            "updated_at": updated_at,
+        }
+
+    def runner(request: CommandRequest) -> CommandResult:
+        nonlocal issue_44_reads
+        if request.args == gh_issue_view_args(44, "number,updatedAt"):
+            events.append("freshness")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps({"number": 44, "updatedAt": "2026-05-14T00:00:00Z"}))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44"):
+            issue_44_reads += 1
+            events.append("issue-44-id" if issue_44_reads == 1 else "relationships-issue")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(44, 4400)))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/33"):
+            events.append("issue-33-id")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(33, 3300)))
+        if request.args == gh_api_args(
+            "-X",
+            "POST",
+            "repos/studykit/studykit-plugins/issues/36/sub_issues",
+            "-F",
+            "sub_issue_id=4400",
+            "-F",
+            "replace_parent=true",
+        ):
+            events.append("add-parent")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(44, 4400)))
+        if request.args == gh_api_args(
+            "-X",
+            "POST",
+            "repos/studykit/studykit-plugins/issues/44/dependencies/blocked_by",
+            "-F",
+            "issue_id=3300",
+        ):
+            events.append("add-dependency")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(33, 3300)))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44/parent"):
+            events.append("relationships-parent")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(36, 3600)))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44/sub_issues", "--paginate"):
+            events.append("relationships-children")
+            return CommandResult(request=request, returncode=0, stdout="[]")
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44/dependencies/blocked_by", "--paginate"):
+            events.append("relationships-blocked-by")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps([rest_issue(33, 3300)]))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44/dependencies/blocking", "--paginate"):
+            events.append("relationships-blocking")
+            return CommandResult(request=request, returncode=0, stdout="[]")
+        return CommandResult(request=request, returncode=127, stderr=f"unexpected command: {request.args}")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    response = dispatcher.dispatch(
+        ProviderRequest(
+            role="issue",
+            kind="github",
+            operation="apply_relationships",
+            context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+            payload={"issue": 44, "from_pending": True},
+        )
+    )
+
+    assert response.payload["operation"] == "apply_relationships"
+    assert response.payload["issue"] == "44"
+    assert response.payload["applied"] == 2
+    assert response.payload["cache_refreshed"] is True
+    assert response.payload["pending_file"] == "relationships-pending.yml"
+    assert not pending_path.exists()
+    relationships = cache.read_relationships(github_repo(), 44)
+    assert relationships["parent"]["number"] == 36
+    assert relationships["dependencies"]["blocked_by"][0]["number"] == 33
+    assert events == [
+        "guard:apply_relationships",
+        "freshness",
+        "issue-44-id",
+        "add-parent",
+        "issue-33-id",
+        "add-dependency",
+        "relationships-issue",
+        "relationships-parent",
+        "relationships-children",
+        "relationships-blocked-by",
+        "relationships-blocking",
+    ]
+
+
+def test_github_issue_apply_relationships_rejects_unsupported_without_mutation(tmp_path: Path) -> None:
+    write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=github_repo())
+    cache.write_issue_bundle(
+        github_repo(),
+        {**cached_issue_payload(updated_at="2026-05-14T00:00:00Z"), "number": 44},
+        fetched_at="2026-05-14T00:00:00Z",
+    )
+    pending_path = cache.relationships_pending_file(github_repo(), 44)
+    pending_path.write_text(
+        """
+schema_version: 1
+operations:
+  - action: add
+    relationship: related
+    issue: "#33"
+""".lstrip(),
+        encoding="utf-8",
+    )
+    events: list[str] = []
+
+    def runner(request: CommandRequest) -> CommandResult:
+        events.append("mutation" if request.args[:3] == ("gh", "api", "-X") else "read")
+        return CommandResult(request=request, returncode=127, stderr="unexpected command")
+
+    def guard(request: ProviderRequest) -> None:
+        events.append(f"guard:{request.operation}")
+
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+
+    with pytest.raises(ProviderOperationError, match="unsupported GitHub relationship operation"):
+        dispatcher.dispatch(
+            ProviderRequest(
+                role="issue",
+                kind="github",
+                operation="apply_relationships",
+                context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+                payload={"issue": 44, "from_pending": True},
+            )
+        )
+
+    assert "mutation" not in events
+    assert pending_path.exists()
 
 
 def test_read_operations_do_not_require_guard(context: ProviderContext) -> None:

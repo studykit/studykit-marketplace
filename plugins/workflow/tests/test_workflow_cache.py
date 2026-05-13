@@ -247,6 +247,70 @@ Draft comment body.
     assert comments[0].body == "Draft comment body.\n"
 
 
+def test_pending_issue_relationships_parse_operations_and_remove_file(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    pending_path = cache.relationships_pending_file(repo(), 39)
+    pending_path.parent.mkdir(parents=True)
+    pending_path.write_text(
+        """
+schema_version: 1
+operations:
+  - action: add
+    relationship: parent
+    issue: "#28"
+  - action: remove
+    relationship: blocked_by
+    target: "#32"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    operations = cache.read_pending_issue_relationships(repo(), 39)
+
+    assert [operation.action for operation in operations] == ["add", "remove"]
+    assert [operation.relationship for operation in operations] == ["parent", "blocked_by"]
+    assert [operation.target_ref for operation in operations] == ["#28", "#32"]
+    assert operations[0].replace_parent is True
+    removed = cache.remove_pending_issue_relationships(repo(), 39, operations)
+    assert removed == [pending_path]
+    assert not pending_path.exists()
+
+
+def test_pending_draft_relationships_parse_declarative_shape(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    pending_path = cache.pending_issue_relationships_pending_file(repo(), "draft-1")
+    pending_path.parent.mkdir(parents=True)
+    pending_path.write_text(
+        """
+schema_version: 1
+parent:
+  issue: "#28"
+  replace_parent: false
+children:
+  add:
+    - "#41"
+dependencies:
+  blocked_by:
+    - "#32"
+  blocking:
+    - issue: "#36"
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+    operations = cache.read_pending_draft_relationships(repo(), "draft-1")
+
+    assert [operation.target_kind for operation in operations] == ["pending_issue"] * 4
+    assert [operation.target_id for operation in operations] == ["draft-1"] * 4
+    assert [(operation.relationship, operation.target_ref) for operation in operations] == [
+        ("parent", "#28"),
+        ("child", "#41"),
+        ("blocked_by", "#32"),
+        ("blocking", "#36"),
+    ]
+    assert operations[0].replace_parent is False
+
+
 def test_finalize_pending_issue_creation_archives_draft_and_moves_sidecars(tmp_path: Path) -> None:
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     pending_dir = cache.pending_issue_dir(repo(), "draft-1")

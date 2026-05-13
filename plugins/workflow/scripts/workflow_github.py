@@ -17,7 +17,7 @@ from urllib.parse import urlparse
 from authoring_guard import evaluate_authoring_guard
 from authoring_ledger import LedgerError
 from authoring_resolver import ResolverError
-from workflow_command import CommandRunner, run_command
+from workflow_command import CommandRunner, WorkflowCommandError, run_command
 from workflow_config import WorkflowConfigError, load_workflow_config
 
 
@@ -431,6 +431,233 @@ def reopen_issue(
             runner=runner,
         )
     return {"operation": "reopen_issue", "issue": issue_number, "verified": verify}
+
+
+def add_sub_issue(
+    parent_issue: int | str,
+    child_issue: int | str,
+    *,
+    project: Path,
+    guard: WriteGuard,
+    replace_parent: bool = False,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Add a GitHub sub-issue after the caller-provided guard allows the write."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    parent_number = normalize_issue_number(parent_issue)
+    child_number = normalize_issue_number(child_issue)
+    _require_write_guard(
+        guard,
+        "add_sub_issue",
+        {
+            "repository": repo.to_json(),
+            "parent_issue": parent_number,
+            "child_issue": child_number,
+            "replace_parent": replace_parent,
+        },
+    )
+    child_id = issue_rest_id(child_number, project=project, runner=runner)
+    args = [
+        "api",
+        "-X",
+        "POST",
+        f"repos/{repo.slug}/issues/{parent_number}/sub_issues",
+        "-F",
+        f"sub_issue_id={child_id}",
+    ]
+    if replace_parent:
+        args.extend(["-F", "replace_parent=true"])
+    _gh(args, project=project, runner=runner)
+    return {
+        "operation": "add_sub_issue",
+        "parent_issue": parent_number,
+        "child_issue": child_number,
+    }
+
+
+def remove_sub_issue(
+    parent_issue: int | str,
+    child_issue: int | str,
+    *,
+    project: Path,
+    guard: WriteGuard,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Remove a GitHub sub-issue after the caller-provided guard allows the write."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    parent_number = normalize_issue_number(parent_issue)
+    child_number = normalize_issue_number(child_issue)
+    _require_write_guard(
+        guard,
+        "remove_sub_issue",
+        {"repository": repo.to_json(), "parent_issue": parent_number, "child_issue": child_number},
+    )
+    child_id = issue_rest_id(child_number, project=project, runner=runner)
+    _gh(
+        [
+            "api",
+            "-X",
+            "DELETE",
+            f"repos/{repo.slug}/issues/{parent_number}/sub_issue",
+            "-F",
+            f"sub_issue_id={child_id}",
+        ],
+        project=project,
+        runner=runner,
+    )
+    return {
+        "operation": "remove_sub_issue",
+        "parent_issue": parent_number,
+        "child_issue": child_number,
+    }
+
+
+def add_issue_dependency(
+    issue: int | str,
+    blocking_issue: int | str,
+    *,
+    project: Path,
+    guard: WriteGuard,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Add a GitHub dependency where ``issue`` is blocked by ``blocking_issue``."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    issue_number = normalize_issue_number(issue)
+    blocking_number = normalize_issue_number(blocking_issue)
+    _require_write_guard(
+        guard,
+        "add_issue_dependency",
+        {"repository": repo.to_json(), "issue": issue_number, "blocking_issue": blocking_number},
+    )
+    blocking_id = issue_rest_id(blocking_number, project=project, runner=runner)
+    _gh(
+        [
+            "api",
+            "-X",
+            "POST",
+            f"repos/{repo.slug}/issues/{issue_number}/dependencies/blocked_by",
+            "-F",
+            f"issue_id={blocking_id}",
+        ],
+        project=project,
+        runner=runner,
+    )
+    return {
+        "operation": "add_issue_dependency",
+        "issue": issue_number,
+        "blocking_issue": blocking_number,
+    }
+
+
+def remove_issue_dependency(
+    issue: int | str,
+    blocking_issue: int | str,
+    *,
+    project: Path,
+    guard: WriteGuard,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Remove a GitHub dependency where ``issue`` is blocked by ``blocking_issue``."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    issue_number = normalize_issue_number(issue)
+    blocking_number = normalize_issue_number(blocking_issue)
+    _require_write_guard(
+        guard,
+        "remove_issue_dependency",
+        {"repository": repo.to_json(), "issue": issue_number, "blocking_issue": blocking_number},
+    )
+    blocking_id = issue_rest_id(blocking_number, project=project, runner=runner)
+    _gh(
+        [
+            "api",
+            "-X",
+            "DELETE",
+            f"repos/{repo.slug}/issues/{issue_number}/dependencies/blocked_by/{blocking_id}",
+        ],
+        project=project,
+        runner=runner,
+    )
+    return {
+        "operation": "remove_issue_dependency",
+        "issue": issue_number,
+        "blocking_issue": blocking_number,
+    }
+
+
+def issue_rest_id(
+    issue: int | str,
+    *,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> str:
+    """Return the REST numeric id for an issue."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    issue_number = normalize_issue_number(issue)
+    data = _issue_rest_object(repo, issue_number, project=project, runner=runner)
+    raw_id = data.get("id")
+    if raw_id is None:
+        raise GitHubParseError(f"GitHub issue #{issue_number} REST payload is missing id")
+    return str(raw_id)
+
+
+def issue_relationships(
+    issue: int | str,
+    *,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    """Read current GitHub issue relationships through provider-native REST endpoints."""
+
+    repo = resolve_github_repository(project, runner=runner)
+    issue_number = normalize_issue_number(issue)
+    issue_data = _issue_rest_object(repo, issue_number, project=project, runner=runner)
+    parent = _optional_issue_rest_object(
+        repo,
+        f"repos/{repo.slug}/issues/{issue_number}/parent",
+        project=project,
+        runner=runner,
+    )
+    children = _issue_rest_items(
+        repo,
+        f"repos/{repo.slug}/issues/{issue_number}/sub_issues",
+        project=project,
+        runner=runner,
+    )
+    blocked_by = _issue_rest_items(
+        repo,
+        f"repos/{repo.slug}/issues/{issue_number}/dependencies/blocked_by",
+        project=project,
+        runner=runner,
+    )
+    blocking = _issue_rest_items(
+        repo,
+        f"repos/{repo.slug}/issues/{issue_number}/dependencies/blocking",
+        project=project,
+        runner=runner,
+    )
+
+    payload: dict[str, Any] = {
+        "repository": repo.to_json(),
+        "number": int(issue_number),
+        "updated_at": issue_data.get("updated_at") or issue_data.get("updatedAt"),
+    }
+    if parent:
+        payload["parent"] = parent
+    if children:
+        payload["children"] = children
+    dependency_payload: dict[str, Any] = {}
+    if blocked_by:
+        dependency_payload["blocked_by"] = blocked_by
+    if blocking:
+        dependency_payload["blocking"] = blocking
+    if dependency_payload:
+        payload["dependencies"] = dependency_payload
+    return payload
 
 
 def _verify_issue_body(
@@ -877,9 +1104,74 @@ def _git_remote_url(
     return value
 
 
-def _gh(args: list[str], *, project: Path, runner: CommandRunner | None = None):
+def _issue_rest_object(
+    repo: GitHubRepository,
+    issue_number: str,
+    *,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    return _gh_api_json_object(
+        f"repos/{repo.slug}/issues/{issue_number}",
+        project=project,
+        runner=runner,
+    )
+
+
+def _optional_issue_rest_object(
+    _repo: GitHubRepository,
+    path: str,
+    *,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any] | None:
+    result = _gh(["api", path], project=project, runner=runner, check=False)
+    if result.returncode == 404 or _gh_result_is_not_found(result):
+        return None
+    if result.returncode != 0:
+        _raise_gh_error(result)
+    return _loads_json_object(result.stdout, f"gh api {path}")
+
+
+def _issue_rest_items(
+    _repo: GitHubRepository,
+    path: str,
+    *,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> list[Any]:
+    result = _gh(["api", path, "--paginate"], project=project, runner=runner)
+    return _loads_json_items(result.stdout, f"gh api {path}")
+
+
+def _gh_api_json_object(
+    path: str,
+    *,
+    project: Path,
+    runner: CommandRunner | None = None,
+) -> dict[str, Any]:
+    result = _gh(["api", path], project=project, runner=runner)
+    return _loads_json_object(result.stdout, f"gh api {path}")
+
+
+def _gh(args: list[str], *, project: Path, runner: CommandRunner | None = None, check: bool = True):
     cwd = project.expanduser().resolve(strict=False)
-    return run_command(["gh", *args], cwd=cwd, runner=runner)
+    return run_command(["gh", *args], cwd=cwd, runner=runner, check=check)
+
+
+def _raise_gh_error(result) -> None:
+    stderr = result.stderr.strip()
+    detail = f": {stderr}" if stderr else ""
+    raise WorkflowCommandError(
+        f"command failed with exit code {result.returncode}: {result.request.args[0]}{detail}",
+        request=result.request,
+        result=result,
+    )
+
+
+def _gh_result_is_not_found(result) -> bool:
+    text = f"{result.stderr}\n{result.stdout}".lower()
+    return result.returncode != 0 and ("http 404" in text or "not found" in text)
 
 
 class _body_file:

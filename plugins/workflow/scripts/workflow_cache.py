@@ -102,6 +102,35 @@ class PendingIssueComment:
 
 
 @dataclass(frozen=True)
+class PendingIssueRelationshipOperation:
+    """Parsed pending provider-native relationship operation."""
+
+    target_kind: str
+    target_id: str
+    path: Path
+    action: str
+    relationship: str
+    target_ref: str
+    replace_parent: bool = False
+
+    @property
+    def file_name(self) -> str:
+        return self.path.name
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "target_kind": self.target_kind,
+            "target_id": self.target_id,
+            "file": self.file_name,
+            "path": str(self.path),
+            "action": self.action,
+            "relationship": self.relationship,
+            "target_ref": self.target_ref,
+            "replace_parent": self.replace_parent,
+        }
+
+
+@dataclass(frozen=True)
 class FreshnessMetadata:
     """Local cache freshness metadata for one write-back target."""
 
@@ -339,6 +368,12 @@ class GitHubIssueCache:
     def relationships_file(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.issue_dir(repo, issue) / "relationships.yml"
 
+    def relationships_pending_file(self, repo: GitHubRepository, issue: int | str) -> Path:
+        return self.issue_dir(repo, issue) / "relationships-pending.yml"
+
+    def pending_issue_relationships_pending_file(self, repo: GitHubRepository, local_id: str) -> Path:
+        return self.pending_issue_dir(repo, local_id) / "relationships-pending.yml"
+
     def freshness_file(self, repo: GitHubRepository, issue: int | str, target: str) -> Path:
         normalized = _normalize_freshness_target(target)
         if normalized == "issue":
@@ -411,6 +446,34 @@ class GitHubIssueCache:
             target_id=safe_local_id,
         )
 
+    def read_pending_issue_relationships(
+        self,
+        repo: GitHubRepository,
+        issue: int | str,
+    ) -> list[PendingIssueRelationshipOperation]:
+        """Read pending relationship operations for an existing issue projection."""
+
+        issue_number = normalize_issue_number(issue)
+        return _read_pending_relationships(
+            self.relationships_pending_file(repo, issue_number),
+            target_kind="issue",
+            target_id=issue_number,
+        )
+
+    def read_pending_draft_relationships(
+        self,
+        repo: GitHubRepository,
+        local_id: str,
+    ) -> list[PendingIssueRelationshipOperation]:
+        """Read pending relationship operations for a pending issue projection."""
+
+        safe_local_id = _safe_path_segment(local_id)
+        return _read_pending_relationships(
+            self.pending_issue_relationships_pending_file(repo, safe_local_id),
+            target_kind="pending_issue",
+            target_id=safe_local_id,
+        )
+
     def remove_pending_issue_comments(
         self,
         repo: GitHubRepository,
@@ -452,6 +515,53 @@ class GitHubIssueCache:
                 removed.append(path)
         _remove_empty_parents(pending_dir, stop_at=self.pending_issue_dir(repo, safe_local_id))
         return removed
+
+    def remove_pending_issue_relationships(
+        self,
+        repo: GitHubRepository,
+        issue: int | str,
+        operations: Iterable[PendingIssueRelationshipOperation],
+    ) -> list[Path]:
+        """Remove a successfully consumed pending relationship file."""
+
+        issue_number = normalize_issue_number(issue)
+        path = self.relationships_pending_file(repo, issue_number)
+        return self._remove_pending_relationship_file(path, operations, stop_at=self.issue_dir(repo, issue_number))
+
+    def remove_pending_draft_relationships(
+        self,
+        repo: GitHubRepository,
+        local_id: str,
+        operations: Iterable[PendingIssueRelationshipOperation],
+    ) -> list[Path]:
+        """Remove a consumed pending relationship file from a pending issue projection."""
+
+        safe_local_id = _safe_path_segment(local_id)
+        path = self.pending_issue_relationships_pending_file(repo, safe_local_id)
+        return self._remove_pending_relationship_file(
+            path,
+            operations,
+            stop_at=self.pending_issue_dir(repo, safe_local_id),
+        )
+
+    def _remove_pending_relationship_file(
+        self,
+        path: Path,
+        operations: Iterable[PendingIssueRelationshipOperation],
+        *,
+        stop_at: Path,
+    ) -> list[Path]:
+        expected = path.resolve(strict=False)
+        seen = False
+        for operation in operations:
+            seen = True
+            if operation.path.resolve(strict=False) != expected:
+                raise WorkflowCacheError(f"pending relationship operation is outside pending file: {operation.path}")
+        if not seen or not path.exists():
+            return []
+        path.unlink()
+        _remove_empty_parents(path.parent, stop_at=stop_at)
+        return [path]
 
     def finalize_pending_issue_creation(
         self,
@@ -645,6 +755,22 @@ class GitHubIssueCache:
         except Exception as exc:
             raise WorkflowCacheCorrupt(f"could not read relationships cache {path}: {exc}") from exc
 
+    def write_relationships_projection(
+        self,
+        repo: GitHubRepository,
+        issue: int | str,
+        relationship_payload: Mapping[str, Any],
+        *,
+        fetched_at: str | None = None,
+    ) -> Path:
+        """Write only the current relationship projection for one issue."""
+
+        now = fetched_at or _utc_now()
+        issue_number = normalize_issue_number(issue)
+        issue_dir = self.issue_dir(repo, issue_number)
+        issue_dir.mkdir(parents=True, exist_ok=True)
+        return self._write_relationships(repo, issue_number, relationship_payload, fetched_at=now)
+
     def write_issue_bundle(
         self,
         repo: GitHubRepository,
@@ -798,6 +924,295 @@ def _read_pending_comments(
             )
         )
     return comments
+
+
+def _read_pending_relationships(
+    path: Path,
+    *,
+    target_kind: str,
+    target_id: str,
+) -> list[PendingIssueRelationshipOperation]:
+    if not path.exists():
+        return []
+    if not path.is_file():
+        raise WorkflowCacheCorrupt(f"pending relationships path is not a file: {path}")
+
+    data = _read_yaml_mapping(path)
+    if data.get("schema_version") is not None:
+        _require_schema(data, path)
+
+    operations: list[PendingIssueRelationshipOperation] = []
+    raw_operations = data.get("operations")
+    if raw_operations is not None:
+        if not isinstance(raw_operations, list):
+            raise WorkflowCacheCorrupt(f"pending relationship operations must be a list: {path}")
+        for item in raw_operations:
+            operations.append(
+                _pending_relationship_operation_from_mapping(
+                    item,
+                    path=path,
+                    target_kind=target_kind,
+                    target_id=target_id,
+                )
+            )
+
+    operations.extend(
+        _pending_relationship_operations_from_declarative(
+            data,
+            path=path,
+            target_kind=target_kind,
+            target_id=target_id,
+        )
+    )
+
+    if not operations:
+        raise WorkflowCacheCorrupt(f"pending relationships file has no operations: {path}")
+    return operations
+
+
+def _pending_relationship_operation_from_mapping(
+    item: Any,
+    *,
+    path: Path,
+    target_kind: str,
+    target_id: str,
+) -> PendingIssueRelationshipOperation:
+    if not isinstance(item, Mapping):
+        raise WorkflowCacheCorrupt(f"pending relationship operation must be a mapping: {path}")
+    relationship = _normalize_relationship_name(
+        _required_relationship_value(item, path, "relationship", "type", "kind")
+    )
+    action = _normalize_relationship_action(item.get("action") or item.get("op") or "add", path)
+    target_ref = _relationship_target_ref(item, path)
+    replace_parent = bool(item.get("replace_parent") or item.get("replaceParent"))
+    if relationship == "parent" and action == "add" and not (
+        item.get("replace_parent") is not None or item.get("replaceParent") is not None
+    ):
+        replace_parent = True
+    return PendingIssueRelationshipOperation(
+        target_kind=target_kind,
+        target_id=target_id,
+        path=path,
+        action=action,
+        relationship=relationship,
+        target_ref=target_ref,
+        replace_parent=replace_parent,
+    )
+
+
+def _pending_relationship_operations_from_declarative(
+    data: Mapping[str, Any],
+    *,
+    path: Path,
+    target_kind: str,
+    target_id: str,
+) -> list[PendingIssueRelationshipOperation]:
+    operations: list[PendingIssueRelationshipOperation] = []
+    ignored = {"schema_version", "source_updated_at", "fetched_at", "operations"}
+
+    if "parent" in data:
+        operations.extend(
+            _declarative_relationship_values(
+                data["parent"],
+                relationship="parent",
+                path=path,
+                target_kind=target_kind,
+                target_id=target_id,
+                default_replace_parent=True,
+            )
+        )
+
+    if "children" in data:
+        operations.extend(
+            _declarative_relationship_values(
+                data["children"],
+                relationship="child",
+                path=path,
+                target_kind=target_kind,
+                target_id=target_id,
+            )
+        )
+
+    dependencies = data.get("dependencies")
+    if isinstance(dependencies, Mapping):
+        if "blocked_by" in dependencies or "blockedBy" in dependencies:
+            operations.extend(
+                _declarative_relationship_values(
+                    dependencies.get("blocked_by") or dependencies.get("blockedBy"),
+                    relationship="blocked_by",
+                    path=path,
+                    target_kind=target_kind,
+                    target_id=target_id,
+                )
+            )
+        if "blocking" in dependencies or "blocks" in dependencies:
+            operations.extend(
+                _declarative_relationship_values(
+                    dependencies.get("blocking") or dependencies.get("blocks"),
+                    relationship="blocking",
+                    path=path,
+                    target_kind=target_kind,
+                    target_id=target_id,
+                )
+            )
+    elif dependencies is not None:
+        raise WorkflowCacheCorrupt(f"pending relationship dependencies must be a mapping: {path}")
+
+    for key, relationship in (("blocked_by", "blocked_by"), ("blockedBy", "blocked_by"), ("blocking", "blocking"), ("blocks", "blocking"), ("related", "related")):
+        if key in data:
+            operations.extend(
+                _declarative_relationship_values(
+                    data[key],
+                    relationship=relationship,
+                    path=path,
+                    target_kind=target_kind,
+                    target_id=target_id,
+                )
+            )
+
+    unknown = sorted(str(key) for key in data if key not in ignored and key not in {"parent", "children", "dependencies", "blocked_by", "blockedBy", "blocking", "blocks", "related"})
+    if unknown:
+        raise WorkflowCacheCorrupt(f"unsupported pending relationship fields in {path}: {', '.join(unknown)}")
+    return operations
+
+
+def _declarative_relationship_values(
+    value: Any,
+    *,
+    relationship: str,
+    path: Path,
+    target_kind: str,
+    target_id: str,
+    default_replace_parent: bool = False,
+) -> list[PendingIssueRelationshipOperation]:
+    if value is None:
+        return []
+    if isinstance(value, Mapping) and any(key in value for key in ("add", "remove", "delete", "unset")):
+        operations: list[PendingIssueRelationshipOperation] = []
+        for key, action in (("add", "add"), ("remove", "remove"), ("delete", "remove"), ("unset", "remove")):
+            if key in value:
+                parsed = _declarative_relationship_values(
+                    value[key],
+                    relationship=relationship,
+                    path=path,
+                    target_kind=target_kind,
+                    target_id=target_id,
+                    default_replace_parent=default_replace_parent,
+                )
+                if action == "remove":
+                    parsed = [
+                        PendingIssueRelationshipOperation(
+                            target_kind=operation.target_kind,
+                            target_id=operation.target_id,
+                            path=operation.path,
+                            action="remove",
+                            relationship=operation.relationship,
+                            target_ref=operation.target_ref,
+                            replace_parent=operation.replace_parent,
+                        )
+                        for operation in parsed
+                    ]
+                operations.extend(parsed)
+        return operations
+    if isinstance(value, list | tuple | set):
+        result: list[PendingIssueRelationshipOperation] = []
+        for item in value:
+            result.extend(
+                _declarative_relationship_values(
+                    item,
+                    relationship=relationship,
+                    path=path,
+                    target_kind=target_kind,
+                    target_id=target_id,
+                    default_replace_parent=default_replace_parent,
+                )
+            )
+        return result
+
+    action = "add"
+    replace_parent = default_replace_parent
+    if isinstance(value, Mapping):
+        action = _normalize_relationship_action(value.get("action") or value.get("op") or action, path)
+        replace_parent = _relationship_bool(value, "replace_parent", "replaceParent", default=replace_parent)
+    target_ref = _relationship_target_ref(value, path)
+    return [
+        PendingIssueRelationshipOperation(
+            target_kind=target_kind,
+            target_id=target_id,
+            path=path,
+            action=action,
+            relationship=relationship,
+            target_ref=target_ref,
+            replace_parent=replace_parent,
+        )
+    ]
+
+
+def _required_relationship_value(item: Mapping[str, Any], path: Path, *keys: str) -> Any:
+    for key in keys:
+        value = item.get(key)
+        if value is not None:
+            return value
+    raise WorkflowCacheCorrupt(f"pending relationship operation is missing {keys[0]}: {path}")
+
+
+def _relationship_target_ref(value: Any, path: Path) -> str:
+    if isinstance(value, Mapping):
+        for key in ("issue", "target", "ref", "number", "id"):
+            raw = value.get(key)
+            if raw is not None:
+                text = str(raw).strip()
+                if text:
+                    return text
+        raise WorkflowCacheCorrupt(f"pending relationship operation is missing target issue: {path}")
+    text = str(value).strip()
+    if not text:
+        raise WorkflowCacheCorrupt(f"pending relationship target is empty: {path}")
+    return text
+
+
+def _normalize_relationship_name(value: Any) -> str:
+    normalized = str(value).strip().lower().replace("-", "_")
+    aliases = {
+        "children": "child",
+        "sub_issue": "child",
+        "sub_issues": "child",
+        "subissue": "child",
+        "subissues": "child",
+        "blockedby": "blocked_by",
+        "blocked_by": "blocked_by",
+        "depends_on": "blocked_by",
+        "dependency": "blocked_by",
+        "blocks": "blocking",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _normalize_relationship_action(value: Any, path: Path) -> str:
+    normalized = str(value).strip().lower().replace("-", "_")
+    aliases = {
+        "set": "add",
+        "create": "add",
+        "append": "add",
+        "delete": "remove",
+        "unset": "remove",
+    }
+    action = aliases.get(normalized, normalized)
+    if action not in {"add", "remove"}:
+        raise WorkflowCacheCorrupt(f"unsupported pending relationship action in {path}: {value}")
+    return action
+
+
+def _relationship_bool(value: Mapping[str, Any], *keys: str, default: bool) -> bool:
+    for key in keys:
+        if key in value:
+            raw = value.get(key)
+            if isinstance(raw, bool):
+                return raw
+            if isinstance(raw, str):
+                return raw.strip().lower() in {"1", "true", "yes", "on"}
+            return bool(raw)
+    return default
 
 
 def _normalize_freshness_target(target: str) -> str:
