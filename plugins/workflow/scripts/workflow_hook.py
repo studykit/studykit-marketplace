@@ -37,6 +37,8 @@ RUNTIME_ENV_VAR = "WORKFLOW_HOOK_RUNTIME"
 STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
 CLAUDE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
 HOOK_STATE_DIR_NAME = "hook-state"
+CODEX_SESSION_START_SOURCES = {"startup", "resume", "clear"}
+CLAUDE_SESSION_START_SOURCES = {"startup", "resume", "clear", "compact"}
 
 
 @dataclass(frozen=True)
@@ -77,6 +79,17 @@ def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | Non
     if config is None:
         return 0
 
+    runtime = hook_runtime(payload)
+    session_id = session_id_from_payload(payload)
+    if should_skip_session_start_policy(payload):
+        return 0
+    if not should_reinject_session_policy(payload) and session_policy_was_announced(
+        config.root,
+        runtime,
+        session_id,
+    ):
+        return 0
+
     plugin_root = plugin_root_from_payload(payload)
     context = build_session_start_context(config, plugin_root)
     emit(
@@ -88,6 +101,7 @@ def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | Non
         },
         stdout=output,
     )
+    record_session_policy_announced(config.root, runtime, session_id)
     return 0
 
 
@@ -320,10 +334,15 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f"Knowledge provider: `{config.knowledge.kind}`\n"
         f"Local projection: `{config.local_projection.mode}`\n"
         f"Commit references: `{commit_ref}`\n\n"
-        "Before documentation or workflow artifact edits, ask the "
-        "`workflow-operator` agent which authoring file paths must be read for "
-        "the artifact type and provider. The operator should return file paths "
-        "only; the main assistant reads those files directly before editing.\n\n"
+        "Before workflow artifact edits, or documentation edits that create or "
+        "update workflow-backed knowledge artifacts, ask the `workflow-operator` "
+        "agent which authoring file paths must be read for the artifact type and "
+        "provider. The operator should return file paths only; the main assistant "
+        "reads those files directly before editing. For non-workflow artifacts "
+        "such as repository instruction files, plugin README files, ordinary docs "
+        "outside configured workflow knowledge, or host configuration files, the "
+        "operator should return `NONE`; treat `NONE` as no workflow authoring "
+        "files required.\n\n"
         "Use the workflow operator only for workflow operations. Do not delegate "
         "issue or wiki content interpretation to it. For issue or knowledge "
         "context, the operator returns provider/cache metadata, issue relationship "
@@ -443,6 +462,59 @@ def issue_state_path(project: Path, session_id: str, kind: str) -> Path | None:
     if not safe_session:
         return None
     return workflow_hook_state_dir(project) / f"workflow-{kind}-issues-{safe_session[:120]}.txt"
+
+
+def session_policy_state_path(project: Path, runtime: str, session_id: str) -> Path | None:
+    if not session_id:
+        return None
+    safe_runtime = re.sub(r"[^A-Za-z0-9_.-]+", "_", runtime).strip("._-") or "unknown"
+    safe_session = re.sub(r"[^A-Za-z0-9_.-]+", "_", session_id).strip("._-")
+    if not safe_session:
+        return None
+    return workflow_hook_state_dir(project) / (
+        f"workflow-session-policy-{safe_runtime}-{safe_session[:120]}.txt"
+    )
+
+
+def session_policy_was_announced(project: Path, runtime: str, session_id: str) -> bool:
+    path = session_policy_state_path(project, runtime, session_id)
+    return bool(path is not None and path.is_file())
+
+
+def record_session_policy_announced(project: Path, runtime: str, session_id: str) -> None:
+    path = session_policy_state_path(project, runtime, session_id)
+    if path is None:
+        return
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("announced\n", encoding="utf-8")
+    except OSError:
+        return
+
+
+def session_start_source(payload: dict[str, Any]) -> str:
+    """Return the documented SessionStart source for the invoking runtime."""
+
+    value = payload.get("source")
+    if not isinstance(value, str):
+        return ""
+    source = value.strip().lower()
+    runtime = hook_runtime(payload)
+    if runtime == "codex":
+        return source if source in CODEX_SESSION_START_SOURCES else ""
+    if runtime == "claude":
+        return source if source in CLAUDE_SESSION_START_SOURCES else ""
+    return source
+
+
+def should_reinject_session_policy(payload: dict[str, Any]) -> bool:
+    return session_start_source(payload) == "clear"
+
+
+def should_skip_session_start_policy(payload: dict[str, Any]) -> bool:
+    if session_start_source(payload) != "compact":
+        return False
+    return hook_runtime(payload) in {"claude", "unknown"}
 
 
 def read_session_issues(project: Path, session_id: str, kind: str) -> set[str]:

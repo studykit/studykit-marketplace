@@ -195,6 +195,117 @@ def test_session_start_emits_nothing_without_workflow_config(
 
 
 @pytest.mark.parametrize("runtime", ["claude", "codex"])
+def test_session_start_injects_policy_once_per_session_except_clear(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    runtime: str,
+) -> None:
+    _write_config(tmp_path)
+
+    first = _run_session_start(tmp_path, monkeypatch, runtime=runtime)
+    second = _run_session_start(tmp_path, monkeypatch, runtime=runtime)
+    clear = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime=runtime,
+        payload_update={"source": "clear"},
+    )
+    after_clear = _run_session_start(tmp_path, monkeypatch, runtime=runtime)
+    third = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime=runtime,
+        payload_update={"session_id": f"{runtime}-session-2", "turn_id": "turn-2"},
+    )
+
+    assert first
+    assert second == ""
+    assert clear
+    assert after_clear == ""
+    assert third
+
+
+def test_session_start_policy_state_is_runtime_scoped(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    claude_first = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
+        payload_update={"session_id": "shared-session"},
+    )
+    codex_first = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"session_id": "shared-session"},
+    )
+    claude_second = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
+        payload_update={"session_id": "shared-session"},
+    )
+    codex_second = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"session_id": "shared-session"},
+    )
+
+    assert claude_first
+    assert codex_first
+    assert claude_second == ""
+    assert codex_second == ""
+
+
+def test_session_start_ignores_claude_compact_source(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    compact = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
+        payload_update={"source": "compact"},
+    )
+    startup = _run_session_start(tmp_path, monkeypatch, runtime="claude")
+
+    assert compact == ""
+    assert startup
+
+
+def test_session_start_clear_uses_documented_source_only(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    first = _run_session_start(tmp_path, monkeypatch, runtime="codex")
+    alias_clear = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"source": "", "matcher": "clear", "session_start_source": "clear"},
+    )
+    source_clear = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"source": "clear"},
+    )
+
+    assert first
+    assert alias_clear == ""
+    assert source_clear
+
+
+@pytest.mark.parametrize("runtime", ["claude", "codex"])
 @pytest.mark.parametrize(
     "payload_update",
     [
@@ -425,10 +536,14 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Knowledge provider: `github`" in context
     assert "Local projection: `none`" in context
     assert "Commit references: `provider-native`" in context
-    assert "Before documentation or workflow artifact edits" in context
+    assert "Before workflow artifact edits" in context
+    assert "documentation edits that create or update workflow-backed knowledge artifacts" in context
     assert "which authoring file paths must be read" in context
     assert "The operator should return file paths only" in context
     assert "the main assistant reads those files directly" in context
+    assert "For non-workflow artifacts" in context
+    assert "operator should return `NONE`" in context
+    assert "treat `NONE` as no workflow authoring files required" in context
     assert "Use the workflow operator only for workflow operations" in context
     assert "Do not delegate issue or wiki content interpretation to it" in context
     assert "provider/cache metadata, issue relationship metadata, and paths only" in context
@@ -477,8 +592,10 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
     assert "Edit issue Markdown under the configured issue or local projection paths directly" in context
     assert "required authoring contracts are read" in context
     assert "provider cache, write-back, and comment-append delegation does not apply" in context
-    assert "Before documentation or workflow artifact edits" in context
+    assert "Before workflow artifact edits" in context
+    assert "documentation edits that create or update workflow-backed knowledge artifacts" in context
     assert "The operator should return file paths only" in context
+    assert "operator should return `NONE`" in context
     assert "Use the workflow operator only for workflow operations" in context
     assert "Do not delegate issue or wiki content interpretation to it" in context
     assert "provider/cache metadata, issue relationship metadata, and paths only" in context

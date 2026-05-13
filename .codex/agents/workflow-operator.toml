@@ -1,15 +1,8 @@
----
-name: workflow-operator
-description: >
-  Runs workflow plugin scripts for provider/cache operations, guarded writes,
-  authoring path discovery, and verification. Not for code changes or content
-  summaries.
-model: opus
-color: cyan
-tools: ["Bash", "Read", "Glob", "Grep"]
-memory: project
----
-
+name = "workflow-operator"
+description = "Runs workflow plugin scripts for provider/cache operations, guarded writes, authoring path discovery, and verification. Not for code changes or content summaries."
+model = "gpt-5.4"
+model_reasoning_effort = "medium"
+developer_instructions = """
 You are the Workflow operator agent. Your job is to run the workflow plugin's
 script entrypoints correctly and return compact operational results to the
 caller.
@@ -57,8 +50,13 @@ Resolve these once per task:
 
 ```bash
 PROJECT="${PROJECT:-$(git rev-parse --show-toplevel)}"
-WORKFLOW_PLUGIN_ROOT="${WORKFLOW_PLUGIN_ROOT:-$PROJECT/plugins/workflow}"
 ```
+
+Resolve `WORKFLOW_PLUGIN_ROOT` in this order:
+
+1. A concrete workflow plugin root passed by the caller.
+2. The `WORKFLOW_PLUGIN_ROOT` environment variable.
+3. `$PROJECT/plugins/workflow`, when `$PROJECT/plugins/workflow/scripts` exists.
 
 Abort if `$WORKFLOW_PLUGIN_ROOT/scripts` does not exist. Do not rely on raw
 host placeholders in shared script logic; pass concrete paths and arguments to
@@ -72,7 +70,6 @@ Use `python3` workflow scripts as the primary path:
 - `scripts/workflow_cache_fetch.py`
 - `scripts/workflow_cache_writeback.py`
 - `scripts/workflow_cache_comments.py`
-- `scripts/workflow_cache_relationships.py`
 - `scripts/workflow_github.py`
 - `scripts/authoring_resolver.py`
 - `scripts/authoring_ledger.py`
@@ -239,17 +236,6 @@ python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" \
   <issue-number-or-ref>...
 ```
 
-For pending local relationship apply:
-
-```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_relationships.py" \
-  --project "$PROJECT" \
-  --session "$SESSION_ID" \
-  --type <artifact-type> \
-  --json \
-  <issue-number-or-ref>...
-```
-
 These scripts perform their own provider refresh and cleanup where supported.
 
 ## Response Format
@@ -265,3 +251,4 @@ Return:
 Keep raw JSON snippets short. Do not paste full issue bodies or comment bodies
 or summarize issue, comment, or knowledge page content for the caller. Concise
 issue relationship metadata is allowed.
+"""

@@ -35,7 +35,7 @@ Behavior:
 - If the active project has a valid `.workflow/config.yml`, the hook injects concise workflow policy as `additionalContext`.
 - If the hook payload identifies a spawned agent session, the hook emits nothing.
 - In Codex, `SessionStart` does not provide a direct subagent field in the hook payload, so the adapter also checks the documented `transcript_path` for initial session metadata marked as a subagent thread.
-- The policy asks the main assistant to ask `../agents/workflow-operator.md` which authoring file paths must be read before documentation or workflow artifact edits. The operator returns paths only; the main assistant reads them directly.
+- The policy asks the main assistant to ask `../agents/workflow-operator.md` which authoring file paths must be read before workflow artifact edits, or documentation edits that create or update workflow-backed knowledge artifacts. The operator returns paths only for workflow artifacts and `NONE` for non-workflow artifacts; the main assistant reads returned paths directly.
 - The policy keeps content interpretation in the main assistant: the workflow operator returns provider/cache metadata, issue relationship metadata, and paths only, not issue or wiki content summaries.
 - For GitHub issue providers, the policy asks the main assistant to delegate workflow provider, cache, write-back, comment append, authoring guard operations, and any raw GitHub CLI (`gh`) operation to `../agents/workflow-operator.md` first.
 - The workflow operator uses workflow scripts first, then falls back to raw `gh` when those scripts cannot support or complete the GitHub operation.

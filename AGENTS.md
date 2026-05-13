@@ -16,6 +16,8 @@ Plugins should be designed and maintained to run in both Claude Code and Codex w
 
 Start with `guide/AGENTS.md` when adding or changing plugin manifests, hooks, skills, agents, commands, runtime scripts, or marketplace metadata. Use `guide/cross-runtime-guide.md` for cross-runtime architecture and marketplace/version policy, and `guide/adapter-guide.md` for adapter, hook, skill, and script runtime compatibility.
 
+When developing or changing skills, hooks, plugins, or agents, always check the current official Claude Code and Codex documentation before relying on runtime behavior, manifest schemas, metadata fields, placeholders, environment variables, hook payloads, tool names, or marketplace behavior. Do not rely on memory or repository examples alone when an official behavior may have changed.
+
 ## Global Directory
 
 The `global/` directory manages rules, subagents, skills, hooks, and MCP configurations intended for installation to `~/.claude/`. These are user-level components that apply globally across all projects, not specific to any single plugin.
