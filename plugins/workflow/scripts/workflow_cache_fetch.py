@@ -77,7 +77,7 @@ def fetch_cache_payload(
         runner=runner,
         strict=True,
     )
-    return format_issue_cache_json(contexts, config=config, repo=repo, cache_policy=cache_policy)
+    return format_issue_cache_json(contexts, repo=repo, cache_policy=cache_policy)
 
 
 def main(
@@ -122,10 +122,11 @@ def format_issue_cache_context_from_payload(payload: dict[str, object]) -> str:
         contexts.append(
             IssueCacheContext(
                 number=str(item.get("issue") or ""),
-                relative_issue_dir=str(item.get("relative_issue_dir") or ""),
+                issue_dir=str(item.get("issue_dir") or ""),
                 title=str(item.get("title") or ""),
                 state=str(item.get("state") or ""),
                 cache_hit=cache_hit if isinstance(cache_hit, bool) else None,
+                relationship_summary=str(item.get("relationships") or ""),
             )
         )
 

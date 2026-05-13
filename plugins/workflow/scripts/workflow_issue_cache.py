@@ -34,19 +34,23 @@ class IssueCacheContext:
     """Concise context for one cache-aware GitHub issue read."""
 
     number: str
-    relative_issue_dir: str
+    issue_dir: str
     title: str
     state: str
     cache_hit: bool | None = None
+    relationship_summary: str = ""
 
     def to_json(self) -> dict[str, Any]:
-        return {
+        payload = {
             "issue": self.number,
-            "relative_issue_dir": self.relative_issue_dir,
+            "issue_dir": self.issue_dir,
             "title": self.title,
             "state": self.state,
             "cache_hit": self.cache_hit,
         }
+        if self.relationship_summary:
+            payload["relationships"] = self.relationship_summary
+        return payload
 
 
 def issue_numbers_from_references(
@@ -161,7 +165,6 @@ def cache_issue_references(
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
     cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
-    issue_base = github_issue_cache_base(config, repo)
     contexts: list[IssueCacheContext] = []
 
     for number in issue_numbers:
@@ -182,14 +185,16 @@ def cache_issue_references(
             )
             response = dispatcher.dispatch(request)
             issue_dir = cache.issue_dir(repo, normalized)
-            relative_issue_dir = issue_dir.relative_to(issue_base).as_posix() + "/"
+            project_issue_dir = display_project_path(issue_dir, config.root, trailing_slash=True)
+            relationship_summary = cached_relationship_summary(cache, repo, normalized)
             contexts.append(
                 IssueCacheContext(
                     number=normalized,
-                    relative_issue_dir=relative_issue_dir,
+                    issue_dir=project_issue_dir,
                     title=str(response.payload.get("title") or ""),
                     state=str(response.payload.get("state") or "").upper(),
                     cache_hit=cache_hit_from_payload(response.payload, default=False),
+                    relationship_summary=relationship_summary,
                 )
             )
         except Exception:
@@ -198,13 +203,6 @@ def cache_issue_references(
             continue
 
     return contexts
-
-
-def github_issue_cache_base(config: WorkflowConfig, repo: GitHubRepository) -> Path:
-    """Return the issue-number parent directory for the configured repo cache."""
-
-    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
-    return cache.issue_dir(repo, "1").parent
 
 
 def cache_hit_from_payload(payload: Mapping[str, Any], *, default: bool | None = None) -> bool | None:
@@ -216,27 +214,152 @@ def cache_hit_from_payload(payload: Mapping[str, Any], *, default: bool | None =
     return default
 
 
-def format_issue_cache_context(contexts: Sequence[IssueCacheContext]) -> str:
-    """Render issue cache context using issue-cache-base-relative paths."""
+def format_issue_cache_context(
+    contexts: Sequence[IssueCacheContext],
+    *,
+    include_details: bool = True,
+) -> str:
+    """Render issue cache context using project-relative cache issue files."""
 
-    lines = ["Workflow issue cache:"]
+    _ = include_details
+    shared_base = shared_issue_dir_base(contexts)
+    if shared_base is None:
+        lines = ["Workflow issue cache:"]
+    else:
+        lines = [f"Workflow issue cache: `{shared_base}`"]
     for context in contexts:
-        details: list[str] = []
-        state = context.state.strip()
-        if state:
-            details.append(state.lower())
-        title = compact_title(context.title)
-        if title:
-            details.append(title)
-        suffix = f" — {' — '.join(details)}" if details else ""
-        lines.append(f"- #{context.number} → `{context.relative_issue_dir}`{suffix}")
+        issue_path = issue_file_relative_to_base(context, shared_base)
+        relationship_suffix = f" — {context.relationship_summary}" if context.relationship_summary else ""
+        lines.append(f"- #{context.number} → `{issue_path}`{relationship_suffix}")
     return "\n".join(lines)
+
+
+def cached_relationship_summary(cache: GitHubIssueCache, repo: GitHubRepository, issue: str) -> str:
+    """Read cached relationships and return a compact relationship summary."""
+
+    try:
+        relationships = cache.read_relationships(repo, issue)
+    except Exception:
+        return ""
+    return compact_relationship_summary(relationships)
+
+
+def compact_relationship_summary(relationships: Mapping[str, Any]) -> str:
+    """Render relationship YAML as compact issue-reference groups."""
+
+    parts: list[str] = []
+    parent = relationship_numbers(relationships.get("parent"))
+    if parent:
+        parts.append(f"parent {format_issue_numbers(parent)}")
+
+    children = relationship_numbers(relationships.get("children"))
+    if children:
+        parts.append(f"children {format_issue_numbers(children)}")
+
+    dependencies = relationships.get("dependencies")
+    if isinstance(dependencies, Mapping):
+        blocked_by = relationship_numbers(dependencies.get("blocked_by"))
+        if blocked_by:
+            parts.append(f"blocked_by {format_issue_numbers(blocked_by)}")
+        blocking = relationship_numbers(dependencies.get("blocking"))
+        if blocking:
+            parts.append(f"blocking {format_issue_numbers(blocking)}")
+
+    related = relationship_numbers(relationships.get("related"))
+    if related:
+        parts.append(f"related {format_issue_numbers(related)}")
+
+    return "; ".join(parts)
+
+
+def relationship_numbers(value: Any) -> list[str]:
+    """Extract issue numbers from normalized relationship cache values."""
+
+    numbers: list[str] = []
+    seen: set[str] = set()
+
+    def add(raw: Any) -> None:
+        try:
+            normalized = normalize_issue_number(raw)
+        except Exception:
+            return
+        if normalized in seen:
+            return
+        seen.add(normalized)
+        numbers.append(normalized)
+
+    def visit(item: Any) -> None:
+        if item is None:
+            return
+        if isinstance(item, Mapping):
+            if "number" in item:
+                add(item.get("number"))
+                return
+            if "issue" in item:
+                add(item.get("issue"))
+                return
+            nodes = item.get("nodes")
+            if isinstance(nodes, list):
+                for node in nodes:
+                    visit(node)
+            return
+        if isinstance(item, list | tuple | set):
+            for child in item:
+                visit(child)
+            return
+        add(item)
+
+    visit(value)
+    return numbers
+
+
+def format_issue_numbers(numbers: Sequence[str], *, limit: int = 5) -> str:
+    visible = [f"#{number}" for number in numbers[:limit]]
+    if len(numbers) > limit:
+        visible.append(f"+{len(numbers) - limit}")
+    return ",".join(visible)
+
+
+def shared_issue_dir_base(contexts: Sequence[IssueCacheContext]) -> str | None:
+    """Return a shared issue directory prefix for multi-issue displays."""
+
+    if len(contexts) <= 1:
+        return None
+
+    bases: list[str] = []
+    for context in contexts:
+        issue_dir = ensure_trailing_slash(context.issue_dir.strip())
+        suffix = f"{context.number}/"
+        if not issue_dir.endswith(suffix):
+            return None
+        bases.append(issue_dir[: -len(suffix)])
+
+    if not bases:
+        return None
+    first = bases[0]
+    if not first or any(base != first for base in bases):
+        return None
+    return first
+
+
+def issue_file_relative_to_base(context: IssueCacheContext, base: str | None) -> str:
+    issue_dir = ensure_trailing_slash(context.issue_dir.strip())
+    issue_file = f"{issue_dir}issue.md"
+    if base is None or not issue_dir.startswith(base):
+        return issue_file
+    relative = f"{issue_dir[len(base) :]}issue.md"
+    return relative or issue_file
+
+
+def ensure_trailing_slash(value: str) -> str:
+    if not value or value.endswith("/"):
+        return value
+    return f"{value}/"
 
 
 def format_issue_cache_json(
     contexts: Sequence[IssueCacheContext],
     *,
-    config: WorkflowConfig,
     repo: GitHubRepository,
     cache_policy: str,
 ) -> dict[str, Any]:
@@ -248,16 +371,8 @@ def format_issue_cache_json(
         "kind": "github",
         "repository": repo.to_json(),
         "cache_policy": cache_policy,
-        "cache_base": display_project_path(github_issue_cache_base(config, repo), config.root, trailing_slash=True),
         "issues": [context.to_json() for context in contexts],
     }
-
-
-def compact_title(value: str, *, limit: int = 96) -> str:
-    title = " ".join(value.split())
-    if len(title) <= limit:
-        return title
-    return title[: limit - 1].rstrip() + "…"
 
 
 def display_project_path(path: Path, project: Path, *, trailing_slash: bool = False) -> str:

@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Workflow hook dispatcher.
 
-SessionStart injects a concise workflow authoring policy only when the active
-project has a valid ``.workflow/config.yml``. The hook never starts workflow
-skills and never blocks session startup.
+SessionStart injects a concise workflow authoring policy only for main sessions
+when the active project has a valid ``.workflow/config.yml``. The hook never
+starts workflow skills and never blocks session startup.
 """
 
 from __future__ import annotations
@@ -25,14 +25,13 @@ if _SCRIPTS_DIR not in sys.path:
 from authoring_guard import evaluate_authoring_guard  # noqa: E402
 from authoring_ledger import LedgerError, record_reads  # noqa: E402
 from authoring_resolver import ALL_TYPES, DUAL_TYPES, ResolverError  # noqa: E402
-from workflow_cache import CACHE_ROOT_NAME, GitHubIssueCache  # noqa: E402
+from workflow_cache import GitHubIssueCache  # noqa: E402
 from workflow_command import CommandRunner  # noqa: E402
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
 from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_issue_number  # noqa: E402
 from workflow_github import resolve_github_repository  # noqa: E402
-from workflow_issue_cache import cache_issue_references, display_project_path  # noqa: E402
+from workflow_issue_cache import cache_issue_references  # noqa: E402
 from workflow_issue_cache import extract_issue_numbers, format_issue_cache_context  # noqa: E402
-from workflow_issue_cache import github_issue_cache_base  # noqa: E402
 
 RUNTIME_ENV_VAR = "WORKFLOW_HOOK_RUNTIME"
 STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
@@ -62,6 +61,8 @@ def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | Non
 
     if payload is None:
         payload = _read_payload()
+    if is_agent_session(payload):
+        return 0
     output = stdout or sys.stdout
 
     project_dir = project_dir_from_payload(payload)
@@ -169,15 +170,13 @@ def user_prompt_submit(
         return 0
 
     session_id = session_id_from_payload(payload)
-    pending_numbers = sorted(read_session_issues(config.root, session_id, "pending"), key=int)
-    issue_numbers = _ordered_issue_union(
-        pending_numbers,
-        extract_issue_numbers(
-            prompt_from_payload(payload),
-            repo=repo,
-            issue_id_format=config.issue_id_format,
-        ),
+    prompt_numbers = extract_issue_numbers(
+        prompt_from_payload(payload),
+        repo=repo,
+        issue_id_format=config.issue_id_format,
     )
+    pending_numbers = sorted(read_session_issues(config.root, session_id, "pending"), key=int)
+    issue_numbers = _ordered_issue_union(pending_numbers, prompt_numbers)
     if not issue_numbers:
         return 0
 
@@ -196,7 +195,7 @@ def user_prompt_submit(
         {
             "hookSpecificOutput": {
                 "hookEventName": "UserPromptSubmit",
-                "additionalContext": format_issue_cache_context(fresh_contexts),
+                "additionalContext": format_issue_cache_context(fresh_contexts, include_details=False),
             }
         },
         stdout=output,
@@ -311,8 +310,6 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
     if config.commit_refs.enabled:
         commit_ref = config.commit_refs.style
 
-    cache_context = build_cache_session_context(config)
-
     return (
         "## workflow authoring policy\n\n"
         f"Configured workflow project: `{config.root}`\n"
@@ -323,68 +320,53 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f"Knowledge provider: `{config.knowledge.kind}`\n"
         f"Local projection: `{config.local_projection.mode}`\n"
         f"Commit references: `{commit_ref}`\n\n"
-        "Workflow script command recipes are intentionally not injected here. "
-        "Use the `workflow-operator` agent as the operational boundary for "
-        "cache-aware provider reads, guarded GitHub issue writes, pending "
-        "cache write-back, pending comment append, and authoring "
-        "resolver/ledger/guard execution. The main assistant should pass "
-        "workflow intent, issue refs, artifact type, and session id instead "
-        "of carrying exact script commands in context.\n\n"
-        "Before creating or editing any workflow issue, knowledge artifact, "
-        "or local projection, required authoring contracts must be resolved "
-        "and read. Provider writes must use guarded workflow wrappers instead "
-        "of raw provider write commands; keep those wrapper calls behind the "
-        "`workflow-operator` boundary.\n\n"
-        "SessionStart only injects this policy and cache context. It does not "
-        "auto-trigger workflow skills or agents."
-        f"{cache_context}"
+        "Before documentation or workflow artifact edits, ask the "
+        "`workflow-operator` agent which authoring file paths must be read for "
+        "the artifact type and provider. The operator should return file paths "
+        "only; the main assistant reads those files directly before editing.\n\n"
+        "Use the workflow operator only for workflow operations. Do not delegate "
+        "issue or wiki content interpretation to it. For issue or knowledge "
+        "context, the operator returns provider/cache metadata, issue relationship "
+        "metadata, and paths only; the main assistant reads and summarizes "
+        "artifact content directly.\n\n"
+        f"{build_issue_operation_policy(config)}"
     )
 
 
-def build_cache_session_context(config: WorkflowConfig) -> str:
-    """Build SessionStart guidance for workflow provider read caches."""
+def build_issue_operation_policy(config: WorkflowConfig) -> str:
+    """Build SessionStart operation guidance for the configured issue provider."""
 
-    cache_root = GitHubIssueCache.for_project(config.root).root
-    cache_root_display = display_project_path(cache_root, config.root, trailing_slash=True)
-    lines = [
-        "",
-        "",
-        "## workflow provider cache context",
-        "",
-        f"Workflow cache root: `{cache_root_display}`",
-    ]
-
-    repo = github_repo_for_config(config)
-    if repo is not None:
-        issue_base = github_issue_cache_base(config, repo)
-        issue_base_display = display_project_path(issue_base, config.root, trailing_slash=True)
-        lines.extend(
-            [
-                f"GitHub issue cache base: `{issue_base_display}`",
-                "",
-                "Hook-reported issue cache paths are relative to the GitHub issue "
-                "cache base unless another base is explicitly stated.",
-                "For explicit cache fetch, cache write-back, or pending comment "
-                "append operations, use the `workflow-operator` boundary instead "
-                "of carrying script commands in the main context.",
-            ]
+    if config.issues.kind == "github":
+        return (
+            "For workflow provider, cache, issue write-back, comment append, "
+            "authoring guard operations, or any raw GitHub CLI (`gh`) operation, "
+            "delegate to the `workflow-operator` agent first. Pass workflow intent, "
+            "issue refs, artifact type, and session id instead of carrying script "
+            "command recipes in the main context. The workflow operator should use "
+            "workflow scripts first and raw `gh` only when those scripts cannot "
+            "support or complete the GitHub operation. The main assistant should "
+            "not run raw `gh` for workflow operations; if the workflow operator "
+            "cannot complete the operation, report that limitation instead."
         )
-    else:
-        lines.append("")
 
-    lines.extend(
-        [
-            "UserPromptSubmit may pre-read mentioned issue references through "
-            "cache-aware provider reads and inject concise additionalContext.",
-            "Stop may record session-mentioned issue references as pending; "
-            "the next UserPromptSubmit performs provider reads and cache-path "
-            "context injection.",
-            "Use hook-provided issue context before ad hoc reads.",
-            f"Do not inspect `{CACHE_ROOT_NAME}` directly unless the user explicitly "
-            "asks to debug cache contents, layout, or invalidation.",
-        ]
+    if config.issues.kind == "filesystem":
+        return (
+            "Configured workflow issues are filesystem-backed local artifacts. "
+            "Edit issue Markdown under the configured issue or local projection "
+            "paths directly after required authoring contracts are read. Use the "
+            "`workflow-operator` agent for supported authoring resolver, ledger, "
+            "and guard operations when needed; provider cache, write-back, and "
+            "comment-append delegation does not apply to filesystem issue edits."
+        )
+
+    return (
+        f"Configured workflow issues use the `{config.issues.kind}` provider, not "
+        "GitHub Issues. Delegate supported workflow provider, cache, issue "
+        "write-back, comment append, and authoring guard operations to the "
+        "`workflow-operator` agent first. If the workflow operator cannot complete "
+        "the provider operation, state that limitation before using provider-specific "
+        "tools."
     )
-    return "\n".join(lines)
 
 
 def github_repo_for_config(
@@ -616,6 +598,122 @@ def session_id_from_payload(payload: dict[str, Any]) -> str:
         if isinstance(value, str) and value:
             return value
     return ""
+
+
+def is_agent_session(payload: dict[str, Any]) -> bool:
+    """Return true when a SessionStart payload is for a spawned agent."""
+
+    for key in ("is_agent", "is_subagent", "agent_session"):
+        if payload.get(key) is True:
+            return True
+
+    for key in (
+        "agent_id",
+        "agent_name",
+        "agent_path",
+        "subagent_id",
+        "subagent_type",
+        "parent_agent_id",
+        "parent_session_id",
+        "parent_thread_id",
+        "parent_conversation_id",
+    ):
+        value = payload.get(key)
+        if isinstance(value, str) and value.strip():
+            return True
+
+    agent_value = payload.get("agent")
+    if isinstance(agent_value, Mapping) and agent_value:
+        return True
+
+    agent_markers = {"agent", "subagent", "sub_agent", "child_agent", "spawned_agent"}
+    for key in ("source", "session_type", "session_kind", "conversation_type", "invocation", "origin"):
+        value = payload.get(key)
+        if not isinstance(value, str):
+            continue
+        normalized = value.strip().lower().replace("-", "_")
+        if normalized in agent_markers:
+            return True
+
+    if hook_runtime(payload) == "codex" and transcript_metadata_indicates_agent(payload):
+        return True
+
+    return False
+
+
+def transcript_metadata_indicates_agent(payload: dict[str, Any]) -> bool:
+    """Use Codex transcript metadata when hook payload lacks agent markers."""
+
+    transcript_path = payload.get("transcript_path")
+    if not isinstance(transcript_path, str) or not transcript_path:
+        return False
+
+    path = Path(transcript_path).expanduser()
+    if not path.is_file():
+        return False
+
+    try:
+        with path.open("r", encoding="utf-8") as handle:
+            for index, line in enumerate(handle):
+                if index >= 8:
+                    break
+                try:
+                    event = json.loads(line)
+                except json.JSONDecodeError:
+                    continue
+                if not isinstance(event, Mapping) or event.get("type") != "session_meta":
+                    continue
+                metadata = event.get("payload")
+                return session_metadata_indicates_agent(metadata)
+    except OSError:
+        return False
+
+    return False
+
+
+def session_metadata_indicates_agent(metadata: Any) -> bool:
+    if not isinstance(metadata, Mapping):
+        return False
+
+    thread_source = metadata.get("thread_source")
+    if isinstance(thread_source, str) and _agent_marker_value(thread_source):
+        return True
+
+    source = metadata.get("source")
+    if isinstance(source, Mapping) and _mapping_has_agent_marker(source):
+        return True
+
+    for key in ("agent_role", "agent_nickname", "agent_path"):
+        value = metadata.get(key)
+        if isinstance(value, str) and value.strip():
+            return True
+
+    return False
+
+
+def _mapping_has_agent_marker(value: Mapping[str, Any]) -> bool:
+    agent_keys = {
+        "agent",
+        "agent_id",
+        "agent_name",
+        "agent_nickname",
+        "agent_path",
+        "agent_role",
+        "parent_thread_id",
+        "subagent",
+        "thread_spawn",
+    }
+    for key, item in value.items():
+        if isinstance(key, str) and key in agent_keys:
+            return True
+        if isinstance(item, Mapping) and _mapping_has_agent_marker(item):
+            return True
+    return False
+
+
+def _agent_marker_value(value: str) -> bool:
+    normalized = value.strip().lower().replace("-", "_")
+    return normalized in {"agent", "subagent", "sub_agent", "child_agent", "spawned_agent"}
 
 
 def hook_runtime(payload: dict[str, Any]) -> str:

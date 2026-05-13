@@ -112,12 +112,71 @@ def test_cache_fetch_uses_cache_hit_without_remote_issue_view(tmp_path: Path) ->
 
     payload = json.loads(stdout.getvalue())
     assert code == 0
+    assert set(payload) == {"operation", "role", "kind", "repository", "cache_policy", "issues"}
     assert payload["operation"] == "cache_fetch"
-    assert payload["cache_base"] == ".workflow-cache/issues/"
     assert payload["issues"][0]["issue"] == "42"
-    assert payload["issues"][0]["relative_issue_dir"] == "42/"
+    assert set(payload["issues"][0]) == {"issue", "issue_dir", "title", "state", "cache_hit"}
+    assert payload["issues"][0]["issue_dir"] == ".workflow-cache/issues/42/"
     assert payload["issues"][0]["cache_hit"] is True
     assert runner.requests == []
+
+
+def test_cache_fetch_plain_output_uses_project_relative_issue_path(tmp_path: Path) -> None:
+    write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    cache.write_issue_bundle(repo(), issue_payload(42, body="Cached body."))
+    stdout = io.StringIO()
+
+    code = cache_fetch_main(
+        ["--project", str(tmp_path), "42"],
+        stdout=stdout,
+        runner=FakeRunner({}),
+    )
+
+    assert code == 0
+    assert "- #42 → `.workflow-cache/issues/42/issue.md`" in stdout.getvalue()
+
+
+def test_cache_fetch_plain_output_uses_shared_prefix_for_multiple_issues(tmp_path: Path) -> None:
+    write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    cache.write_issue_bundle(repo(), issue_payload(42, body="Cached body."))
+    cache.write_issue_bundle(repo(), issue_payload(43, body="Cached body."))
+    cache.relationships_file(repo(), 42).write_text(
+        """
+schema_version: 1
+source_updated_at: 2026-05-14T00:00:00Z
+fetched_at: 2026-05-14T00:00:00Z
+parent:
+  number: 40
+children:
+  - number: 44
+  - number: 45
+dependencies:
+  blocked_by:
+    - number: 41
+  blocking:
+    - number: 46
+""".lstrip(),
+        encoding="utf-8",
+    )
+    stdout = io.StringIO()
+
+    code = cache_fetch_main(
+        ["--project", str(tmp_path), "42", "43"],
+        stdout=stdout,
+        runner=FakeRunner({}),
+    )
+
+    assert code == 0
+    assert stdout.getvalue() == "\n".join(
+        [
+            "Workflow issue cache: `.workflow-cache/issues/`",
+            "- #42 → `42/issue.md` — parent #40; children #44,#45; blocked_by #41; blocking #46",
+            "- #43 → `43/issue.md`",
+            "",
+        ]
+    )
 
 
 def test_cache_fetch_refresh_reads_remote_and_updates_cache(tmp_path: Path) -> None:
