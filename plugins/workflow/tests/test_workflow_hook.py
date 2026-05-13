@@ -389,7 +389,7 @@ def test_user_prompt_dedupes_announced_issue_paths_within_session(
     assert second.getvalue() == ""
 
 
-def test_stop_caches_unannounced_issue_reference_from_payload_without_output(
+def test_stop_records_pending_issue_reference_without_provider_read_or_output(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -417,7 +417,15 @@ def test_stop_caches_unannounced_issue_reference_from_payload_without_output(
     ) == 0
 
     assert captured.getvalue() == ""
-    assert (
+    assert runner.requests == []
+    pending_file = (
+        tmp_path
+        / ".workflow-cache"
+        / "hook-state"
+        / "workflow-pending-issues-s2.txt"
+    )
+    assert pending_file.read_text(encoding="utf-8") == "46\n"
+    issue_file = (
         tmp_path
         / ".workflow-cache"
         / "github"
@@ -427,7 +435,8 @@ def test_stop_caches_unannounced_issue_reference_from_payload_without_output(
         / "issues"
         / "46"
         / "issue.md"
-    ).is_file()
+    )
+    assert not issue_file.exists()
 
     prompt_context = io.StringIO()
     assert user_prompt_submit(
@@ -435,12 +444,14 @@ def test_stop_caches_unannounced_issue_reference_from_payload_without_output(
             "session_id": "s2",
             "turn_id": "turn-2",
             "cwd": str(tmp_path),
-            "prompt": "Now inspect #46.",
+            "prompt": "Continue.",
         },
         stdout=prompt_context,
         runner=runner,
     ) == 0
 
+    assert issue_file.is_file()
+    assert not pending_file.exists()
     payload = json.loads(prompt_context.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"

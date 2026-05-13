@@ -186,16 +186,22 @@ def user_prompt_submit(
     if repo is None:
         return 0
 
-    issue_numbers = extract_issue_numbers(prompt_from_payload(payload), repo=repo)
+    session_id = session_id_from_payload(payload)
+    pending_numbers = sorted(read_session_issues(config.root, session_id, "pending"), key=int)
+    issue_numbers = _ordered_issue_union(
+        pending_numbers,
+        extract_issue_numbers(prompt_from_payload(payload), repo=repo),
+    )
     if not issue_numbers:
         return 0
 
-    session_id = session_id_from_payload(payload)
     record_session_issues(config.root, session_id, issue_numbers, "mentioned")
 
     already_announced = read_session_issues(config.root, session_id, "announced")
     contexts = cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
     fresh_contexts = [context for context in contexts if context.number not in already_announced]
+    if pending_numbers and contexts:
+        remove_session_issues(config.root, session_id, [context.number for context in contexts], "pending")
     if not fresh_contexts:
         return 0
 
@@ -218,7 +224,7 @@ def stop(
     stdout: TextIO | None = None,
     runner: CommandRunner | None = None,
 ) -> int:
-    """Refresh/cache issue references known to the session before stopping."""
+    """Record issue references known to the session before stopping."""
 
     if payload is None:
         payload = _read_payload()
@@ -252,7 +258,9 @@ def stop(
         return 0
 
     record_session_issues(config.root, session_id, issue_numbers, "mentioned")
-    cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
+    already_announced = read_session_issues(config.root, session_id, "announced")
+    pending_numbers = [number for number in issue_numbers if number not in already_announced]
+    record_session_issues(config.root, session_id, pending_numbers, "pending")
     return 0
 
 
@@ -386,7 +394,9 @@ def build_cache_session_context(config: WorkflowConfig) -> str:
         [
             "UserPromptSubmit may pre-read mentioned issue references through "
             "cache-aware provider reads and inject concise additionalContext.",
-            "Stop may refresh session-mentioned issue cache projections silently.",
+            "Stop may record session-mentioned issue references as pending; "
+            "the next UserPromptSubmit performs provider reads and cache-path "
+            "context injection.",
             "Use hook-provided issue context before ad hoc reads.",
             f"Do not inspect `{CACHE_ROOT_NAME}` directly unless the user explicitly "
             "asks to debug cache contents, layout, or invalidation.",
@@ -568,6 +578,22 @@ def extract_issue_numbers(text: str, *, repo: GitHubRepository | None = None) ->
     return numbers
 
 
+def _ordered_issue_union(*groups: list[str]) -> list[str]:
+    ordered: list[str] = []
+    seen: set[str] = set()
+    for group in groups:
+        for issue in group:
+            try:
+                normalized = normalize_issue_number(issue)
+            except Exception:
+                continue
+            if normalized in seen:
+                continue
+            seen.add(normalized)
+            ordered.append(normalized)
+    return ordered
+
+
 def workflow_hook_state_dir(project: Path) -> Path:
     return GitHubIssueCache.for_project(project).root / HOOK_STATE_DIR_NAME
 
@@ -597,7 +623,7 @@ def read_session_issues(project: Path, session_id: str, kind: str) -> set[str]:
 
 def record_session_issues(project: Path, session_id: str, issues: list[str], kind: str) -> None:
     path = issue_state_path(project, session_id, kind)
-    if path is None:
+    if path is None or not issues:
         return
     existing = read_session_issues(project, session_id, kind)
     for issue in issues:
@@ -609,6 +635,27 @@ def record_session_issues(project: Path, session_id: str, issues: list[str], kin
         path.parent.mkdir(parents=True, exist_ok=True)
         ordered = sorted(existing, key=lambda value: int(value))
         path.write_text("\n".join(ordered) + ("\n" if ordered else ""), encoding="utf-8")
+    except OSError:
+        return
+
+
+def remove_session_issues(project: Path, session_id: str, issues: list[str], kind: str) -> None:
+    path = issue_state_path(project, session_id, kind)
+    if path is None or not path.exists():
+        return
+    remove = set()
+    for issue in issues:
+        try:
+            remove.add(normalize_issue_number(issue))
+        except Exception:
+            continue
+    remaining = read_session_issues(project, session_id, kind) - remove
+    try:
+        if not remaining:
+            path.unlink()
+            return
+        ordered = sorted(remaining, key=lambda value: int(value))
+        path.write_text("\n".join(ordered) + "\n", encoding="utf-8")
     except OSError:
         return
 

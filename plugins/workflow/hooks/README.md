@@ -58,8 +58,8 @@ Behavior:
 
 Behavior:
 
-- Rechecks issue references recorded by `UserPromptSubmit` and any issue references found in the stop payload.
-- Ensures those issues have cache projections through the same default provider cache policy.
+- Records issue references from the stop payload and unannounced session-mentioned issues as pending.
+- Does not read providers or write issue cache projections; the next `UserPromptSubmit` performs that work.
 - Emits no JSON output; `Stop` output is reserved for host-supported block decisions.
 - Skips when `stop_hook_active` is true to avoid hook loops.
 - Emits nothing for clean no-op cases and never blocks the stop flow.

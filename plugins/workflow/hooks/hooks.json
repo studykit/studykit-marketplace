@@ -1,5 +1,5 @@
 {
-  "description": "Workflow hooks. SessionStart injects provider-backed workflow authoring policy and cache-base context only when workflow.config.yml exists in the active project. UserPromptSubmit pre-reads mentioned GitHub issue references through cache-aware provider reads and injects issue-cache-base-relative paths as additionalContext. Stop refreshes session-mentioned issue cache projections silently.",
+  "description": "Workflow hooks. SessionStart injects provider-backed workflow authoring policy and cache-base context only when workflow.config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects issue-cache-base-relative paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
   "hooks": {
     "PreToolUse": [
       {
@@ -58,7 +58,7 @@
             "type": "command",
             "command": "WORKFLOW_HOOK_RUNTIME=claude python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook.py\" stop",
             "timeout": 10,
-            "description": "Ensure session-mentioned GitHub issues have cache projections without emitting Stop JSON output"
+            "description": "Record session-mentioned GitHub issues as pending without provider reads or Stop JSON output"
           }
         ]
       }

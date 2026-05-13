@@ -101,7 +101,8 @@ Hook cache context:
 
 - `SessionStart` announces the workflow cache root and the GitHub issue cache base once per session.
 - `UserPromptSubmit` detects same-repository issue references and reads them through the default provider cache policy.
-- `Stop` silently rechecks session-mentioned issue references through the same cache-aware provider path.
+- `Stop` records session-mentioned issue references as pending without provider reads.
+- The next `UserPromptSubmit` reads pending issue references through the default provider cache policy and injects their cache paths.
 - Hook-injected issue cache paths are relative to the GitHub issue cache base, for example `45/`.
 - Direct `.workflow-cache/` inspection is reserved for cache debugging; issue awareness should use hook-provided context or provider read wrappers.
 
@@ -130,7 +131,8 @@ The hook injects the resolver command, provider cache-base context, and reminder
 Workflow hooks integrate the ledger and guard:
 
 - `UserPromptSubmit` prepares cache projections for mentioned GitHub issue references and injects issue-cache-base-relative paths.
-- `Stop` rechecks session-mentioned issue references through provider cache reads without emitting JSON output.
+- `Stop` records session-mentioned issue references as pending without provider reads or JSON output.
+- The next `UserPromptSubmit` prepares pending issue cache projections and injects issue-cache-base-relative paths.
 - `PostToolUse` on `Read` records plugin-bundled authoring file reads by absolute path.
 - `PreToolUse` on writes checks local projection targets before mutation.
 - Missing reads block local projection writes with a message listing absolute paths to read.
