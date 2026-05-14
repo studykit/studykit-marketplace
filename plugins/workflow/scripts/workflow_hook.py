@@ -7,6 +7,14 @@ intentionally narrow: it announces that the project is workflow-configured,
 names the issue provider, and tells the main assistant to delegate workflow
 operations to the ``workflow-operator`` agent. Detailed authoring resolver,
 ledger, guard, and script command syntax live in the operator's own prompt.
+
+For ``workflow-operator`` subagent invocations, the dispatcher emits the parent
+session id as ``additionalContext`` so the operator binds its ledger and guard
+lookups to the main session's read history. In Claude that injection rides on
+``SubagentStart`` (matcher ``workflow-operator``); Codex has no SubagentStart
+event, so the equivalent path lives inside ``SessionStart`` and extracts the
+parent thread id from the subagent transcript when the operator session starts.
+
 The hook never starts workflow skills and never blocks session startup.
 """
 
@@ -66,10 +74,10 @@ def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | Non
     """SessionStart entry point. Always exits 0."""
 
     if payload is None:
-        payload = _read_payload()
-    if is_agent_session(payload):
-        return 0
+        payload = read_payload()
     output = stdout or sys.stdout
+    if is_agent_session(payload):
+        return _emit_codex_operator_session(payload, output)
 
     project_dir = project_dir_from_payload(payload)
     if project_dir is None:
@@ -121,7 +129,7 @@ def post_read(
     """
 
     if payload is None:
-        payload = _read_payload()
+        payload = read_payload()
     project_dir = project_dir_from_payload(payload)
     session_id = session_id_from_payload(payload)
     if project_dir is None or not session_id:
@@ -169,7 +177,7 @@ def user_prompt_submit(
     """Cache issue references from a user prompt and inject concise context."""
 
     if payload is None:
-        payload = _read_payload()
+        payload = read_payload()
     output = stdout or sys.stdout
 
     project_dir = project_dir_from_payload(payload)
@@ -230,7 +238,7 @@ def stop(
     """Record issue references known to the session before stopping."""
 
     if payload is None:
-        payload = _read_payload()
+        payload = read_payload()
     if payload.get("stop_hook_active") is True:
         return 0
     # Stop hook JSON output is reserved for block decisions. Context injection
@@ -280,7 +288,7 @@ def pre_write(
     """Block local projection writes until required authoring files were read."""
 
     if payload is None:
-        payload = _read_payload()
+        payload = read_payload()
     output = stdout or sys.stdout
 
     project_dir = project_dir_from_payload(payload)
@@ -321,6 +329,52 @@ def pre_write(
     return 0
 
 
+def _emit_codex_operator_session(payload: dict[str, Any], output: TextIO) -> int:
+    """Emit operator subagent context when a codex subagent SessionStart is for workflow-operator.
+
+    Claude SubagentStart already covers the operator path natively (see
+    ``workflow_subagent_hook.py``), so this helper restricts injection to
+    codex. Non-operator subagents stay silent.
+    """
+
+    from workflow_subagent_hook import (
+        agent_name_matches_operator,
+        build_operator_subagent_context,
+        extract_codex_subagent_metadata,
+    )
+
+    if hook_runtime(payload) != "codex":
+        return 0
+
+    parent_thread_id, agent_name = extract_codex_subagent_metadata(payload)
+    if not parent_thread_id:
+        return 0
+    if not agent_name_matches_operator(agent_name):
+        return 0
+
+    project_dir = project_dir_from_payload(payload)
+    if project_dir is None:
+        return 0
+    try:
+        config = load_workflow_config(project_dir)
+    except WorkflowConfigError:
+        return 0
+    if config is None:
+        return 0
+
+    context = build_operator_subagent_context(parent_thread_id, config.root)
+    emit(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": context,
+            }
+        },
+        stdout=output,
+    )
+    return 0
+
+
 def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> str:
     """Build the context block injected for configured workflow projects."""
 
@@ -329,9 +383,10 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         f"This project is configured for the workflow plugin (issue provider: `{config.issues.kind}`). "
         "Delegate workflow operations — provider/cache reads, write-back, comment "
         "append, authoring path discovery, guarded writes — to the "
-        "`workflow-operator` agent. Pass workflow intent, issue refs, artifact "
-        "type, and session id; the operator runs workflow scripts and returns "
-        "provider/cache metadata, issue relationship metadata, and paths.\n\n"
+        "`workflow-operator` agent. Pass workflow intent, issue refs, and "
+        "artifact type; the operator picks up the parent session id from its "
+        "own start hook and returns provider/cache metadata, issue relationship "
+        "metadata, and paths.\n\n"
         "The operator does not interpret content. Read and summarize issue, "
         "comment, knowledge, or authoring file content directly from the paths "
         "it returns.\n\n"
@@ -1003,7 +1058,7 @@ def emit(payload: dict[str, Any], *, stdout: TextIO | None = None) -> None:
     output.write("\n")
 
 
-def _read_payload() -> dict[str, Any]:
+def read_payload() -> dict[str, Any]:
     try:
         raw = sys.stdin.read()
     except OSError:

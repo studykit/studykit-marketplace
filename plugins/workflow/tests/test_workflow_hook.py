@@ -29,6 +29,7 @@ from workflow_hook import (  # noqa: E402
     stop,
     user_prompt_submit,
 )
+from workflow_subagent_hook import subagent_start  # noqa: E402
 
 
 class FakeRunner:
@@ -533,8 +534,9 @@ def test_session_start_injects_policy_for_configured_project(
     assert "issue provider: `github`" in context
     assert "Delegate workflow operations" in context
     assert "`workflow-operator` agent" in context
-    assert "Pass workflow intent, issue refs, artifact type, and session id" in context
-    assert "operator runs workflow scripts" in context
+    assert "Pass workflow intent, issue refs, and artifact type" in context
+    assert ", and session id" not in context
+    assert "picks up the parent session id from its own start hook" in context
     assert "provider/cache metadata, issue relationship metadata, and paths" in context
     assert "The operator does not interpret content" in context
     assert "Read and summarize issue, comment, knowledge, or authoring file content directly" in context
@@ -614,6 +616,181 @@ def test_session_start_discovers_config_from_nested_project_path(
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert "## workflow authoring policy" in context
     assert "issue provider: `github`" in context
+
+
+def _run_subagent_start(
+    project: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    payload_update: dict[str, Any] | None = None,
+) -> str:
+    monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "claude")
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+    monkeypatch.delenv("PLUGIN_ROOT", raising=False)
+
+    payload: dict[str, Any] = {
+        "session_id": "claude-parent-session",
+        "cwd": str(project),
+        "hook_event_name": "SubagentStart",
+        "agent_type": "workflow-operator",
+        "agent_id": "agent-abc123",
+        "tool_name": "Agent",
+        "tool_input": {
+            "prompt": "Resolve authoring files for #45",
+            "description": "Workflow operator request",
+            "subagent_type": "workflow-operator",
+        },
+    }
+    if payload_update:
+        payload.update(payload_update)
+
+    captured = io.StringIO()
+    assert subagent_start(payload, stdout=captured) == 0
+    return captured.getvalue()
+
+
+def test_subagent_start_injects_parent_session_id_for_operator(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    out = _run_subagent_start(tmp_path, monkeypatch)
+
+    payload = json.loads(out)
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert payload["hookSpecificOutput"]["hookEventName"] == "SubagentStart"
+    assert "## workflow operator session" in context
+    assert "Parent session id: `claude-parent-session`" in context
+    assert f"Workflow project root: `{tmp_path}`" in context
+    assert "`--session`" in context
+    assert "guarded writes will fail" in context
+
+
+def test_subagent_start_emits_nothing_for_non_operator_agent(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    out = _run_subagent_start(
+        tmp_path,
+        monkeypatch,
+        payload_update={
+            "agent_type": "Explore",
+            "tool_input": {"prompt": "scan", "description": "scan", "subagent_type": "Explore"},
+        },
+    )
+
+    assert out == ""
+
+
+def test_subagent_start_emits_nothing_without_session_id(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    out = _run_subagent_start(
+        tmp_path,
+        monkeypatch,
+        payload_update={"session_id": ""},
+    )
+
+    assert out == ""
+
+
+def test_subagent_start_emits_nothing_without_workflow_config(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    out = _run_subagent_start(tmp_path, monkeypatch)
+    assert out == ""
+
+
+def _write_operator_subagent_transcript(path: Path) -> None:
+    path.write_text(
+        json.dumps(
+            {
+                "type": "session_meta",
+                "payload": {
+                    "thread_source": "subagent",
+                    "agent_role": "workflow-operator",
+                    "source": {
+                        "subagent": {
+                            "agent_name": "workflow-operator",
+                            "thread_spawn": {
+                                "parent_thread_id": "codex-main-thread",
+                                "agent_role": "workflow-operator",
+                            },
+                        }
+                    },
+                },
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+
+
+def test_session_start_injects_operator_context_for_codex_operator_subagent(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    transcript = tmp_path / "subagent-rollout.jsonl"
+    _write_operator_subagent_transcript(transcript)
+
+    out = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"source": "startup", "transcript_path": str(transcript)},
+    )
+
+    payload = json.loads(out)
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+    assert "## workflow operator session" in context
+    assert "Parent session id: `codex-main-thread`" in context
+    assert f"Workflow project root: `{tmp_path}`" in context
+    assert "## workflow authoring policy" not in context
+
+
+def test_session_start_skips_codex_subagent_when_not_operator(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    transcript = tmp_path / "subagent-rollout.jsonl"
+    _write_subagent_transcript(transcript)
+
+    out = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"source": "startup", "transcript_path": str(transcript)},
+    )
+
+    assert out == ""
+
+
+def test_session_start_skips_claude_subagent_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Claude routes the operator subagent through SubagentStart, not SessionStart."""
+
+    _write_config(tmp_path)
+    out = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
+        payload_update={"subagent_type": "workflow-operator"},
+    )
+
+    assert out == ""
 
 
 def test_user_prompt_caches_issue_and_injects_project_relative_path(

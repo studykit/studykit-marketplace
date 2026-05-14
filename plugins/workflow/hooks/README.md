@@ -33,13 +33,27 @@ Behavior:
 
 - If the active project has no `.workflow/config.yml`, the hook emits nothing.
 - If the active project has a valid `.workflow/config.yml`, the hook injects a concise routing policy as `additionalContext`. The policy is intentionally narrow: it announces that the project is workflow-configured, names the issue provider, tells the main assistant to delegate workflow operations to `../agents/workflow-operator.md`, and reiterates that the operator returns metadata and paths only — the main assistant reads artifact content directly.
-- If the hook payload identifies a spawned agent session, the hook emits nothing.
-- In Codex, `SessionStart` does not provide a direct subagent field in the hook payload, so the adapter also checks the documented `transcript_path` for initial session metadata marked as a subagent thread.
+- For Codex subagent SessionStart payloads, the hook checks `transcript_path` for `session_meta` records that identify the spawned agent. When the spawned agent matches `workflow-operator`, the hook injects a separate `## workflow operator session` block with the parent thread id extracted from the transcript so the operator can pass it to `--session` in every ledger and guard call.
+- For all other subagent SessionStart payloads (non-operator agents, or operator subagents without an extractable parent id), the hook emits nothing.
+- Claude does not fire `SessionStart` for subagents at all; the operator subagent path lives in `SubagentStart` instead (see below).
 - For GitHub issue providers, the policy adds that the main assistant does not run raw `gh` for workflow operations; the operator runs workflow scripts and may fall back to raw `gh` internally.
 - For filesystem issue providers, the policy adds that workflow issues are local Markdown artifacts edited directly at the paths the operator returns; provider cache, write-back, and comment-append delegation does not apply.
 - For other providers, the policy tells the main assistant to report any limitation when the operator cannot complete a provider operation, rather than reaching for provider-specific tools directly.
 - Detailed authoring resolver, ledger, guard, `NONE` convention, and script command syntax are not injected here — those live in `../agents/workflow-operator.md` and are discovered when the operator is consulted.
 - The hook always exits `0`.
+
+## SubagentStart (Claude only)
+
+Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/workflow_subagent_hook.py`.
+
+Behavior:
+
+- Validates that the payload targets `workflow-operator` (defensive re-check against the manifest matcher).
+- Loads the active project's `.workflow/config.yml`; on missing config or load failure the hook emits nothing.
+- Emits `additionalContext` titled `## workflow operator session` containing the parent session id (`session_id` field in the SubagentStart payload, which carries the main session's id) and the workflow project root.
+- The injected text instructs the operator to pass the parent session id as `--session` for every authoring ledger, guard, and provider script invocation. Reads recorded by the main session live under that id; defaulting to the subagent's own session id or environment variables would check the wrong ledger.
+- Codex has no `SubagentStart` event, so the same outcome is achieved via the Codex branch in the `SessionStart` handler above.
+- The hook never blocks (Claude `SubagentStart` has no decision control) and always exits `0`.
 
 ## UserPromptSubmit
 
