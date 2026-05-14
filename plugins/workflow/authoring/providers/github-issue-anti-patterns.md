@@ -4,11 +4,10 @@ GitHub Issues can store parent/sub-issue and dependency relationships as provide
 
 Read this with:
 
-- `../metadata-contract.md`
-- `../body-conventions.md`
-- `../issue-body.md`
-- `./issue-authoring.md`
-- `./github-issue-authoring.md`
+- `../common/metadata-contract.md`
+- `../common/body-conventions.md`
+- `../common/issue-authoring.md`
+- `./github-issue-convention.md`
 
 ## Relationship Body Sections
 
@@ -45,3 +44,7 @@ These relationship sections may still appear when they carry human-readable arti
 - `## Related`
 
 Do not use those sections as a disguised parent or blocked-by list.
+
+## Work History Body Sections
+
+Do not create `## Log` for GitHub Issue work history. Use GitHub comments for human-readable notes and timeline/events for audit history.

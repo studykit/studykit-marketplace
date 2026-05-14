@@ -615,11 +615,13 @@ Output:
     "provider": "github"
   },
   "required_authoring_files": [
-    "/absolute/path/to/plugins/workflow/authoring/metadata-contract.md",
-    "/absolute/path/to/plugins/workflow/authoring/body-conventions.md",
-    "/absolute/path/to/plugins/workflow/authoring/issue-body.md",
-    "/absolute/path/to/plugins/workflow/authoring/review-authoring.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-authoring.md"
+    "/absolute/path/to/plugins/workflow/authoring/common/metadata-contract.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/body-conventions.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/issue-authoring.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/review-authoring.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-convention.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-review-authoring.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-anti-patterns.md"
   ]
 }
 ```
@@ -633,11 +635,13 @@ Example:
 ```json
 {
   "read_authoring_files": [
-    "/absolute/path/to/plugins/workflow/authoring/metadata-contract.md",
-    "/absolute/path/to/plugins/workflow/authoring/body-conventions.md",
-    "/absolute/path/to/plugins/workflow/authoring/issue-body.md",
-    "/absolute/path/to/plugins/workflow/authoring/review-authoring.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-authoring.md"
+    "/absolute/path/to/plugins/workflow/authoring/common/metadata-contract.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/body-conventions.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/issue-authoring.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/review-authoring.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-convention.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-review-authoring.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-anti-patterns.md"
   ]
 }
 ```

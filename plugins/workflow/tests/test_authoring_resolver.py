@@ -32,12 +32,12 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
     assert resolution.role == "issue"
     assert resolution.provider == "github"
     assert _rel_paths(resolution.files) == [
-        "metadata-contract.md",
-        "body-conventions.md",
-        "issue-body.md",
-        "review-authoring.md",
-        "providers/issue-authoring.md",
-        "providers/github-issue-authoring.md",
+        "common/metadata-contract.md",
+        "common/body-conventions.md",
+        "common/issue-authoring.md",
+        "common/review-authoring.md",
+        "providers/github-issue-convention.md",
+        "providers/github-issue-review-authoring.md",
         "providers/github-issue-anti-patterns.md",
     ]
     assert all(path.is_absolute() for path in resolution.files)
@@ -48,11 +48,12 @@ def test_spec_confluence_knowledge_resolution() -> None:
 
     assert resolution.role == "knowledge"
     assert _rel_paths(resolution.files) == [
-        "metadata-contract.md",
-        "body-conventions.md",
-        "knowledge-body.md",
-        "spec-authoring.md",
-        "providers/confluence-page-authoring.md",
+        "common/metadata-contract.md",
+        "common/body-conventions.md",
+        "common/knowledge-body.md",
+        "common/spec-authoring.md",
+        "providers/confluence-page-convention.md",
+        "providers/confluence-page-spec-authoring.md",
     ]
 
 
@@ -78,10 +79,14 @@ providers:
     knowledge_resolution = resolve_authoring("architecture", project=tmp_path)
 
     assert issue_resolution.provider == "jira"
-    assert "providers/issue-authoring.md" in _rel_paths(issue_resolution.files)
-    assert "providers/jira-issue-authoring.md" in _rel_paths(issue_resolution.files)
+    assert "common/issue-authoring.md" in _rel_paths(issue_resolution.files)
+    assert "providers/jira-issue-convention.md" in _rel_paths(issue_resolution.files)
+    assert "providers/jira-issue-task-authoring.md" in _rel_paths(issue_resolution.files)
     assert knowledge_resolution.provider == "github"
-    assert "providers/github-knowledge-authoring.md" in _rel_paths(knowledge_resolution.files)
+    assert "providers/github-knowledge-convention.md" in _rel_paths(knowledge_resolution.files)
+    assert "providers/github-knowledge-architecture-authoring.md" in _rel_paths(
+        knowledge_resolution.files
+    )
 
 
 def test_invalid_provider_for_role_is_rejected() -> None:

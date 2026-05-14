@@ -36,20 +36,27 @@ DUAL_TYPES = {"usecase", "research"}
 ALL_TYPES = ISSUE_TYPES | KNOWLEDGE_TYPES | DUAL_TYPES
 
 ISSUE_PROVIDER_FILES = {
-    "github": (
-        "providers/issue-authoring.md",
-        "providers/github-issue-authoring.md",
-        "providers/github-issue-anti-patterns.md",
-    ),
-    "jira": (
-        "providers/issue-authoring.md",
-        "providers/jira-issue-authoring.md",
-    ),
+    "github": "providers/github-issue-convention.md",
+    "jira": "providers/jira-issue-convention.md",
 }
 
 KNOWLEDGE_PROVIDER_FILES = {
-    "github": "providers/github-knowledge-authoring.md",
-    "confluence": "providers/confluence-page-authoring.md",
+    "github": "providers/github-knowledge-convention.md",
+    "confluence": "providers/confluence-page-convention.md",
+}
+
+ISSUE_PROVIDER_TYPE_PATTERNS = {
+    "github": "providers/github-issue-{artifact_type}-authoring.md",
+    "jira": "providers/jira-issue-{artifact_type}-authoring.md",
+}
+
+KNOWLEDGE_PROVIDER_TYPE_PATTERNS = {
+    "github": "providers/github-knowledge-{artifact_type}-authoring.md",
+    "confluence": "providers/confluence-page-{artifact_type}-authoring.md",
+}
+
+PROVIDER_EXTRA_FILES = {
+    ("issue", "github"): ("providers/github-issue-anti-patterns.md",),
 }
 
 
@@ -152,16 +159,31 @@ def resolve_authoring(
             raise ResolverError(str(exc)) from exc
 
     parts = [
-        "metadata-contract.md",
-        "body-conventions.md",
-        "issue-body.md" if normalized_role == "issue" else "knowledge-body.md",
-        f"{normalized_type}-authoring.md",
+        "common/metadata-contract.md",
+        "common/body-conventions.md",
     ]
+    if normalized_role == "issue":
+        parts.append("common/issue-authoring.md")
+    else:
+        parts.append("common/knowledge-body.md")
+    parts.append(f"common/{normalized_type}-authoring.md")
 
     if normalized_role == "issue" and normalized_provider in ISSUE_PROVIDER_FILES:
-        parts.extend(ISSUE_PROVIDER_FILES[normalized_provider])
+        parts.append(ISSUE_PROVIDER_FILES[normalized_provider])
+        parts.append(
+            ISSUE_PROVIDER_TYPE_PATTERNS[normalized_provider].format(
+                artifact_type=normalized_type
+            )
+        )
     if normalized_role == "knowledge" and normalized_provider in KNOWLEDGE_PROVIDER_FILES:
         parts.append(KNOWLEDGE_PROVIDER_FILES[normalized_provider])
+        parts.append(
+            KNOWLEDGE_PROVIDER_TYPE_PATTERNS[normalized_provider].format(
+                artifact_type=normalized_type
+            )
+        )
+    if normalized_provider is not None:
+        parts.extend(PROVIDER_EXTRA_FILES.get((normalized_role, normalized_provider), ()))
 
     return Resolution(
         artifact_type=normalized_type,

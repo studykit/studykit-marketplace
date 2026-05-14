@@ -28,9 +28,11 @@ Every resolution includes:
 
 1. `metadata-contract.md`
 2. `body-conventions.md`
-3. `issue-body.md` or `knowledge-body.md`
+3. `issue-authoring.md` for issue-backed artifacts, or `knowledge-body.md` for knowledge-backed artifacts
 4. `<type>-authoring.md`
-5. Provider-specific authoring file when available
+5. Provider-wide authoring file when available
+6. Provider type-specific authoring file when available
+7. Provider guardrail files, such as anti-pattern files, when available
 
 The resolver returns absolute paths so the agent does not guess relative locations.
 
