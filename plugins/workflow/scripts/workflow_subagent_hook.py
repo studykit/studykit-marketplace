@@ -2,14 +2,11 @@
 """Workflow operator subagent start hook.
 
 Dedicated entry point invoked from ``plugins/workflow/agents/workflow-operator.md``
-frontmatter when Claude spawns the workflow-operator subagent. The hook emits
-the parent session id as ``additionalContext`` so the operator binds its
-ledger and guard lookups to the main session's read history.
+frontmatter when Claude spawns the workflow-operator subagent. Delegates to
+``ClaudeHook.handle_subagent_start`` for the actual context emission.
 
-Codex has no ``SubagentStart`` event, so the codex equivalent rides on
-``SessionStart`` inside ``workflow_hook.py`` and uses
-``CodexHookContext.subagent_metadata()`` from ``workflow_hook_context`` to
-extract the same parent thread id from the subagent rollout transcript.
+Codex has no ``SubagentStart`` event; its equivalent path lives in
+``CodexHook.handle_session_start`` and uses the same operator context helpers.
 """
 
 from __future__ import annotations
@@ -22,11 +19,7 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from workflow_hook_context import HookContext  # noqa: E402
-from workflow_operator_context import (  # noqa: E402
-    build_operator_subagent_context,
-    payload_targets_operator,
-)
+from workflow_hook import Hook  # noqa: E402
 
 
 def subagent_start(
@@ -34,39 +27,9 @@ def subagent_start(
     *,
     stdout: TextIO | None = None,
 ) -> int:
-    """SubagentStart entry point for the Claude workflow-operator subagent.
+    """Thin shim that delegates to ``ClaudeHook.handle_subagent_start``."""
 
-    Emits the parent session id as ``additionalContext`` so the operator
-    binds its ledger and guard lookups to the main session's read history.
-    The manifest matcher restricts firing to ``workflow-operator``; a
-    defensive re-check keeps unrelated payloads silent.
-    """
-
-    ctx = HookContext.from_payload_or_stdin(payload)
-    output = stdout or sys.stdout
-
-    if not payload_targets_operator(ctx.payload):
-        return 0
-
-    parent_session_id = ctx.session_id()
-    if not parent_session_id:
-        return 0
-
-    config = ctx.workflow_config()
-    if config is None:
-        return 0
-
-    context = build_operator_subagent_context(parent_session_id, config.root)
-    ctx.emit(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "SubagentStart",
-                "additionalContext": context,
-            }
-        },
-        stdout=output,
-    )
-    return 0
+    return Hook.from_payload_or_stdin(payload).handle_subagent_start(stdout=stdout)
 
 
 def main() -> int:

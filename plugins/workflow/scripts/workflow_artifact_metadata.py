@@ -24,7 +24,7 @@ if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 from authoring_resolver import ALL_TYPES, DUAL_TYPES  # noqa: E402
-from workflow_hook_context import EditTarget  # noqa: E402
+from workflow_edit_target import EditTarget  # noqa: E402
 
 _METADATA_KEYS = {"type", "role", "provider"}
 _FRONTMATTER_FENCE = "---"
