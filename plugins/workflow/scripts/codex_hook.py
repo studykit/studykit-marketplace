@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Codex hook implementation.
+"""Codex hook subtype.
 
 Hosts ``CodexHook``, the runtime-bound hook for Codex CLI. Inherits the
 abstract ``Hook`` from :mod:`workflow_hook`; payload/env helpers and
@@ -8,6 +8,8 @@ operator-context helpers come from the same module.
 Codex has no native ``SubagentStart`` event, so the operator-subagent
 context emission rides on ``handle_session_start`` via the
 ``_handle_agent_session_start`` override.
+
+The executable entry point lives in :mod:`hook_codex`.
 """
 
 from __future__ import annotations
@@ -19,7 +21,11 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TextIO
 
-from workflow_hook import (
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from workflow_hook import (  # noqa: E402
     CLAUDE_EDIT_TOOLS,
     CODEX_SESSION_START_SOURCES,
     EditTarget,
@@ -35,7 +41,7 @@ from workflow_hook import (
     _session_start_source_value,
     _string,
 )
-from workflow_operator_context import (
+from workflow_operator_context import (  # noqa: E402
     agent_name_matches_operator,
     build_operator_subagent_context,
 )

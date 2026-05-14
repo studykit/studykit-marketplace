@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" pre-write",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" pre-write",
             "timeout": 5,
             "statusMessage": "Checking workflow authoring ledger",
             "description": "Block local workflow projection writes until required authoring files were read"
@@ -21,7 +21,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" post-read",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" post-read",
             "timeout": 5,
             "statusMessage": "Recording workflow authoring read",
             "description": "Record reads of workflow authoring files in the session ledger"
@@ -35,7 +35,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" session-start",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" session-start",
             "timeout": 5,
             "statusMessage": "Loading workflow authoring policy",
             "description": "Inject workflow authoring resolver policy for configured workflow projects in main sessions"
@@ -48,7 +48,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" user-prompt",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" user-prompt",
             "timeout": 10,
             "statusMessage": "Caching workflow issue references",
             "description": "Cache mentioned GitHub issue references and inject project-relative issue cache paths as additionalContext"
@@ -61,7 +61,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/workflow_hook.py\" stop",
+            "command": "WORKFLOW_HOOK_RUNTIME=codex python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" stop",
             "timeout": 10,
             "statusMessage": "Finalizing workflow issue cache",
             "description": "Record session-mentioned GitHub issues as pending without provider reads or Stop JSON output"

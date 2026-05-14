@@ -29,7 +29,7 @@ from workflow_hook import (  # noqa: E402
     stop,
     user_prompt_submit,
 )
-from workflow_hook_claude import subagent_start  # noqa: E402
+from hook_claude import subagent_start  # noqa: E402
 
 
 class FakeRunner:

@@ -1,16 +1,12 @@
 #!/usr/bin/env python3
-"""Claude hook implementations and SubagentStart entry point.
+"""Claude hook subtype.
 
 Hosts ``ClaudeHook`` (the runtime-bound hook for Claude Code) and
 ``UnknownHook`` (the fallback when the host runtime cannot be inferred).
 Both inherit from the abstract ``Hook`` in :mod:`workflow_hook`; the base
 also owns the module-level payload/env helpers reused here.
 
-This module also doubles as the executable entry point for Claude's
-``SubagentStart`` hook on ``workflow-operator``. The agent frontmatter
-(``plugins/workflow/agents/workflow-operator.md``) invokes
-``python3 workflow_hook_claude.py``; the ``main`` function dispatches to
-``Hook.from_payload_or_stdin(payload).handle_subagent_start()``.
+The executable entry point lives in :mod:`hook_claude`.
 """
 
 from __future__ import annotations
@@ -18,7 +14,7 @@ from __future__ import annotations
 import os
 import sys
 from pathlib import Path
-from typing import Any, TextIO
+from typing import TextIO
 
 _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
@@ -114,21 +110,3 @@ class UnknownHook(ClaudeHook):
     @property
     def runtime(self) -> str:
         return "unknown"
-
-
-def subagent_start(
-    payload: dict[str, Any] | None = None,
-    *,
-    stdout: TextIO | None = None,
-) -> int:
-    """Thin shim that delegates to ``ClaudeHook.handle_subagent_start``."""
-
-    return Hook.from_payload_or_stdin(payload).handle_subagent_start(stdout=stdout)
-
-
-def main() -> int:
-    return subagent_start()
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

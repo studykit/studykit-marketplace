@@ -1,10 +1,18 @@
 # plugins/workflow/hooks/
 
-Workflow hooks are adapters around shared scripts in `../scripts/`.
+Workflow hooks dispatch through runtime-specific entry scripts:
+
+- Claude events run `../scripts/hook_claude.py <subcommand>`.
+- Codex events run `../scripts/hook_codex.py <subcommand>`.
+
+Both scripts inherit shared logic from `../scripts/workflow_hook.py` (the
+`Hook` ABC plus per-event shim functions) and only diverge for runtime
+specifics — payload/env extraction, the `apply_patch` edit-target parser
+(Codex), and the SubagentStart entry (Claude).
 
 ## PostToolUse Read
 
-`PostToolUse` on `Read` dispatches to `../scripts/workflow_hook.py post-read`.
+`PostToolUse` on `Read` dispatches to `post-read`.
 
 Behavior:
 
@@ -15,7 +23,7 @@ Behavior:
 
 ## PreToolUse Write/Edit
 
-`PreToolUse` on file writes dispatches to `../scripts/workflow_hook.py pre-write`.
+`PreToolUse` on file writes dispatches to `pre-write`.
 
 Behavior:
 
@@ -27,13 +35,13 @@ Behavior:
 
 ## SessionStart
 
-`SessionStart` dispatches to `../scripts/workflow_hook.py session-start`.
+`SessionStart` dispatches to `session-start`.
 
 Behavior:
 
 - If the active project has no `.workflow/config.yml`, the hook emits nothing.
 - If the active project has a valid `.workflow/config.yml`, the hook injects a concise routing policy as `additionalContext`. The policy is intentionally narrow: it announces that the project is workflow-configured, names the issue provider, tells the main assistant to delegate workflow operations to `../agents/workflow-operator.md`, and reiterates that the operator returns metadata and paths only — the main assistant reads artifact content directly.
-- For Codex subagent SessionStart payloads, the hook checks `transcript_path` for `session_meta` records that identify the spawned agent. When the spawned agent matches `workflow-operator`, the hook injects a separate `## workflow operator session` block with the parent thread id extracted from the transcript so the operator can pass it to `--session` in every ledger and guard call.
+- For Codex subagent SessionStart payloads, `hook_codex.py` checks `transcript_path` for `session_meta` records that identify the spawned agent. When the spawned agent matches `workflow-operator`, the hook injects a separate `## workflow operator session` block with the parent thread id extracted from the transcript so the operator can pass it to `--session` in every ledger and guard call.
 - For all other subagent SessionStart payloads (non-operator agents, or operator subagents without an extractable parent id), the hook emits nothing.
 - Claude does not fire `SessionStart` for subagents at all; the operator subagent path lives in `SubagentStart` instead (see below).
 - For GitHub issue providers, the policy adds that the main assistant does not run raw `gh` for workflow operations; the operator runs workflow scripts and may fall back to raw `gh` internally.
@@ -44,7 +52,7 @@ Behavior:
 
 ## SubagentStart (Claude only)
 
-Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/workflow_hook_claude.py`.
+Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/hook_claude.py` with no subcommand, which defaults to the SubagentStart shim.
 
 Behavior:
 
@@ -57,7 +65,7 @@ Behavior:
 
 ## UserPromptSubmit
 
-`UserPromptSubmit` dispatches to `../scripts/workflow_hook.py user-prompt`.
+`UserPromptSubmit` dispatches to `user-prompt`.
 
 Behavior:
 
@@ -70,7 +78,7 @@ Behavior:
 
 ## Stop
 
-`Stop` dispatches to `../scripts/workflow_hook.py stop`.
+`Stop` dispatches to `stop`.
 
 Behavior:
 
@@ -82,5 +90,5 @@ Behavior:
 
 ## Manifests
 
-- `hooks.json` is the Claude hook manifest.
-- `hooks.codex.json` is referenced by `../.codex-plugin/plugin.json`.
+- `hooks.json` is the Claude hook manifest; all event commands invoke `../scripts/hook_claude.py`.
+- `hooks.codex.json` is referenced by `../.codex-plugin/plugin.json`; all event commands invoke `../scripts/hook_codex.py`.

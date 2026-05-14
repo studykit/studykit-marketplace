@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Workflow hook runtime.
+"""Workflow hook runtime (library module).
 
 Defines the runtime-bound hook hierarchy (``Hook`` -> ``ClaudeHook`` /
 ``CodexHook`` / ``UnknownHook``). Each subclass owns the payload/environment
@@ -19,7 +19,12 @@ Everything runtime-agnostic (workflow policy text, issue-cache injection,
 local projection guards, session-state coordination) lives on the ``Hook``
 base so both runtimes share one implementation. Module-level
 ``session_start``/``post_read``/``pre_write``/``user_prompt_submit``/``stop``
-functions are thin shims kept for test imports and the CLI dispatcher.
+functions are thin shims kept for test imports and the runtime entry
+scripts (``hook_claude.py`` and ``hook_codex.py``).
+
+This module is import-only; the executable entry points are
+``hook_claude.py`` (Claude hook manifest + SubagentStart) and
+``hook_codex.py`` (Codex hook manifest).
 """
 
 from __future__ import annotations
@@ -928,31 +933,11 @@ def stop(
     return Hook.from_payload_or_stdin(payload).handle_stop(stdout=stdout, runner=runner)
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = argv if argv is not None else sys.argv[1:]
-    if not args:
-        return 0
-    if args[0] == "session-start":
-        return session_start()
-    if args[0] == "post-read":
-        return post_read()
-    if args[0] == "pre-write":
-        return pre_write()
-    if args[0] in {"user-prompt", "user-prompt-submit"}:
-        return user_prompt_submit()
-    if args[0] == "stop":
-        return stop()
-    return 0
-
-
 # Concrete subclasses are imported at module-load time so the ``_hook_for_payload``
 # factory above can resolve them. The bottom-of-file placement matters: each
 # subclass module imports the ``Hook`` ABC and module-level helpers defined
 # earlier in this file, so the abstract base must be fully defined before the
-# subclass modules load.
-from workflow_hook_claude import ClaudeHook, UnknownHook  # noqa: E402, F401
-from workflow_hook_codex import CodexHook  # noqa: E402, F401
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+# subclass modules load. ``workflow_hook`` itself is library-only; the
+# executable entry points live in ``hook_claude.py`` and ``hook_codex.py``.
+from claude_hook import ClaudeHook, UnknownHook  # noqa: E402, F401
+from codex_hook import CodexHook  # noqa: E402, F401
