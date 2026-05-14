@@ -33,6 +33,9 @@ STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
 CLAUDE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
 CODEX_SESSION_START_SOURCES = {"startup", "resume", "clear"}
 CLAUDE_SESSION_START_SOURCES = {"startup", "resume", "clear", "compact"}
+_SCAN_TEXT_MAX_CHUNKS = 40
+_SCAN_TEXT_MAX_DEPTH = 5
+_SCAN_TEXT_CHUNK_LIMIT = 4000
 _PAYLOAD_AGENT_BOOL_KEYS = ("is_agent", "is_subagent", "agent_session")
 _PAYLOAD_AGENT_STRING_KEYS = (
     "agent_id",
@@ -165,6 +168,38 @@ class HookContext(ABC):
         except WorkflowConfigError:
             return None
 
+    def user_prompt_text(self) -> str:
+        """Return the first non-empty user-prompt-shaped string in the payload."""
+
+        for key in ("prompt", "user_prompt", "message"):
+            value = _string(self.payload, key)
+            if value:
+                return value
+        return ""
+
+    def scan_text(self) -> str:
+        """Collect bounded string content from the payload for issue-ref scans."""
+
+        chunks: list[str] = []
+
+        def visit(value: Any, *, depth: int = 0) -> None:
+            if len(chunks) >= _SCAN_TEXT_MAX_CHUNKS or depth > _SCAN_TEXT_MAX_DEPTH:
+                return
+            if isinstance(value, str):
+                if value:
+                    chunks.append(value[:_SCAN_TEXT_CHUNK_LIMIT])
+                return
+            if isinstance(value, Mapping):
+                for item in value.values():
+                    visit(item, depth=depth + 1)
+                return
+            if isinstance(value, (list, tuple)):
+                for item in value[:_SCAN_TEXT_MAX_CHUNKS]:
+                    visit(item, depth=depth + 1)
+
+        visit(self.payload)
+        return "\n".join(chunks)
+
     def subagent_metadata(self) -> tuple[str, str | None]:
         """Return (parent_thread_id, agent_name) from a subagent transcript.
 
@@ -198,64 +233,6 @@ class HookContext(ABC):
             return cls.from_stdin()
         return cls.from_payload(payload)
 
-    # ----- shared payload helpers -----
-
-    def _payload_marks_agent(self) -> bool:
-        for key in _PAYLOAD_AGENT_BOOL_KEYS:
-            if self.payload.get(key) is True:
-                return True
-
-        for key in _PAYLOAD_AGENT_STRING_KEYS:
-            value = self.payload.get(key)
-            if isinstance(value, str) and value.strip():
-                return True
-
-        agent_value = self.payload.get("agent")
-        if isinstance(agent_value, Mapping) and agent_value:
-            return True
-
-        for key in _PAYLOAD_AGENT_SOURCE_KEYS:
-            value = self.payload.get(key)
-            if not isinstance(value, str):
-                continue
-            normalized = value.strip().lower().replace("-", "_")
-            if normalized in _AGENT_MARKER_VALUES:
-                return True
-
-        return False
-
-    def _session_start_source_value(self, allowed: set[str]) -> str:
-        value = self.payload.get("source")
-        if not isinstance(value, str):
-            return ""
-        source = value.strip().lower()
-        return source if source in allowed else ""
-
-    def _claude_edit_target(self) -> tuple[EditTarget, ...]:
-        tool_name = self.payload.get("tool_name")
-        tool_input = self.payload.get("tool_input") or {}
-        if not isinstance(tool_input, dict) or tool_name not in CLAUDE_EDIT_TOOLS:
-            return ()
-        file_path = tool_input.get("file_path") or ""
-        if not isinstance(file_path, str) or not file_path:
-            return ()
-        path = self.resolve_path(file_path)
-        content = tool_input.get("content") if tool_name == "Write" else None
-        if not isinstance(content, str):
-            content = None
-        return (EditTarget(path=path, content=content),)
-
-    def _read_target_default(self) -> Path | None:
-        if self.payload.get("tool_name") != "Read":
-            return None
-        tool_input = self.payload.get("tool_input") or {}
-        if not isinstance(tool_input, dict):
-            return None
-        file_path = tool_input.get("file_path") or tool_input.get("path") or ""
-        if not isinstance(file_path, str) or not file_path:
-            return None
-        return self.resolve_path(file_path)
-
 
 class ClaudeHookContext(HookContext):
     @property
@@ -275,20 +252,19 @@ class ClaudeHookContext(HookContext):
         return _default_plugin_root()
 
     def session_id(self) -> str:
-        value = self.payload.get("session_id")
-        return value if isinstance(value, str) and value else ""
+        return _string(self.payload, "session_id")
 
     def is_agent_session(self) -> bool:
-        return self._payload_marks_agent()
+        return _payload_marks_agent(self.payload)
 
     def edit_targets(self) -> tuple[EditTarget, ...]:
-        return self._claude_edit_target()
+        return _claude_edit_target(self.payload, self.resolve_path)
 
     def read_target(self) -> Path | None:
-        return self._read_target_default()
+        return _read_target_default(self.payload, self.resolve_path)
 
     def session_start_source(self) -> str:
-        return self._session_start_source_value(CLAUDE_SESSION_START_SOURCES)
+        return _session_start_source_value(self.payload, CLAUDE_SESSION_START_SOURCES)
 
 
 class CodexHookContext(HookContext):
@@ -307,13 +283,13 @@ class CodexHookContext(HookContext):
 
     def session_id(self) -> str:
         for key in ("session_id", "turn_id"):
-            value = self.payload.get(key)
-            if isinstance(value, str) and value:
+            value = _string(self.payload, key)
+            if value:
                 return value
         return ""
 
     def is_agent_session(self) -> bool:
-        if self._payload_marks_agent():
+        if _payload_marks_agent(self.payload):
             return True
         return self._transcript_marks_agent()
 
@@ -323,19 +299,19 @@ class CodexHookContext(HookContext):
         if not isinstance(tool_input, dict):
             return ()
         if tool_name in CLAUDE_EDIT_TOOLS:
-            return self._claude_edit_target()
+            return _claude_edit_target(self.payload, self.resolve_path)
         if tool_name == "apply_patch":
-            command = tool_input.get("command") or ""
-            if not isinstance(command, str) or not command:
+            command = _string(tool_input, "command")
+            if not command:
                 return ()
             return self._apply_patch_targets(command)
         return ()
 
     def read_target(self) -> Path | None:
-        return self._read_target_default()
+        return _read_target_default(self.payload, self.resolve_path)
 
     def session_start_source(self) -> str:
-        return self._session_start_source_value(CODEX_SESSION_START_SOURCES)
+        return _session_start_source_value(self.payload, CODEX_SESSION_START_SOURCES)
 
     def subagent_metadata(self) -> tuple[str, str | None]:
         metadata = self._read_session_meta()
@@ -489,6 +465,74 @@ def _default_plugin_root() -> Path:
     return Path(__file__).resolve().parent.parent
 
 
+def _string(mapping: Mapping[str, Any], key: str) -> str:
+    """Return the stripped string value at ``key`` or ``""`` when absent/blank."""
+
+    value = mapping.get(key)
+    if not isinstance(value, str):
+        return ""
+    stripped = value.strip()
+    return stripped if stripped else ""
+
+
+def _payload_marks_agent(payload: Mapping[str, Any]) -> bool:
+    for key in _PAYLOAD_AGENT_BOOL_KEYS:
+        if payload.get(key) is True:
+            return True
+
+    for key in _PAYLOAD_AGENT_STRING_KEYS:
+        if _string(payload, key):
+            return True
+
+    agent_value = payload.get("agent")
+    if isinstance(agent_value, Mapping) and agent_value:
+        return True
+
+    for key in _PAYLOAD_AGENT_SOURCE_KEYS:
+        value = payload.get(key)
+        if not isinstance(value, str):
+            continue
+        if value.strip().lower().replace("-", "_") in _AGENT_MARKER_VALUES:
+            return True
+
+    return False
+
+
+def _session_start_source_value(payload: Mapping[str, Any], allowed: set[str]) -> str:
+    value = payload.get("source")
+    if not isinstance(value, str):
+        return ""
+    source = value.strip().lower()
+    return source if source in allowed else ""
+
+
+def _claude_edit_target(payload: Mapping[str, Any], resolve_path: Any) -> tuple[EditTarget, ...]:
+    tool_name = payload.get("tool_name")
+    tool_input = payload.get("tool_input") or {}
+    if not isinstance(tool_input, dict) or tool_name not in CLAUDE_EDIT_TOOLS:
+        return ()
+    file_path = _string(tool_input, "file_path")
+    if not file_path:
+        return ()
+    path = resolve_path(file_path)
+    content = tool_input.get("content") if tool_name == "Write" else None
+    if not isinstance(content, str):
+        content = None
+    return (EditTarget(path=path, content=content),)
+
+
+def _read_target_default(payload: Mapping[str, Any], resolve_path: Any) -> Path | None:
+    if payload.get("tool_name") != "Read":
+        return None
+    tool_input = payload.get("tool_input") or {}
+    if not isinstance(tool_input, dict):
+        return None
+    file_path = _string(tool_input, "file_path") or _string(tool_input, "path")
+    if not file_path:
+        return None
+    return resolve_path(file_path)
+
+
 def _read_stdin_json() -> dict[str, Any]:
     try:
         raw = sys.stdin.read()
@@ -535,38 +579,39 @@ def _mapping_has_agent_marker(value: Mapping[str, Any]) -> bool:
 
 
 def _parent_thread_id_from_metadata(metadata: Mapping[str, Any]) -> str:
-    direct = metadata.get("parent_thread_id")
-    if isinstance(direct, str) and direct.strip():
-        return direct.strip()
-    source = metadata.get("source")
-    if isinstance(source, Mapping):
-        subagent = source.get("subagent")
-        if isinstance(subagent, Mapping):
-            spawn = subagent.get("thread_spawn")
-            if isinstance(spawn, Mapping):
-                value = spawn.get("parent_thread_id")
-                if isinstance(value, str) and value.strip():
-                    return value.strip()
+    direct = _string(metadata, "parent_thread_id")
+    if direct:
+        return direct
+    spawn = _nested_mapping(metadata, "source", "subagent", "thread_spawn")
+    if spawn is not None:
+        return _string(spawn, "parent_thread_id")
     return ""
 
 
 def _agent_name_from_metadata(metadata: Mapping[str, Any]) -> str | None:
     for key in ("agent_name", "agent_role", "agent_nickname", "agent_path"):
-        value = metadata.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-    source = metadata.get("source")
-    if isinstance(source, Mapping):
-        subagent = source.get("subagent")
-        if isinstance(subagent, Mapping):
-            for key in ("agent_name", "agent_role", "agent_nickname"):
-                value = subagent.get(key)
-                if isinstance(value, str) and value.strip():
-                    return value.strip()
-            spawn = subagent.get("thread_spawn")
-            if isinstance(spawn, Mapping):
-                for key in ("agent_name", "agent_role"):
-                    value = spawn.get(key)
-                    if isinstance(value, str) and value.strip():
-                        return value.strip()
+        value = _string(metadata, key)
+        if value:
+            return value
+    subagent = _nested_mapping(metadata, "source", "subagent")
+    if subagent is not None:
+        for key in ("agent_name", "agent_role", "agent_nickname"):
+            value = _string(subagent, key)
+            if value:
+                return value
+        spawn = subagent.get("thread_spawn")
+        if isinstance(spawn, Mapping):
+            for key in ("agent_name", "agent_role"):
+                value = _string(spawn, key)
+                if value:
+                    return value
     return None
+
+
+def _nested_mapping(root: Mapping[str, Any], *keys: str) -> Mapping[str, Any] | None:
+    current: Any = root
+    for key in keys:
+        if not isinstance(current, Mapping):
+            return None
+        current = current.get(key)
+    return current if isinstance(current, Mapping) else None

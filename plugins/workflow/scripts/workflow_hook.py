@@ -23,7 +23,6 @@ from __future__ import annotations
 import json
 import subprocess
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -160,7 +159,7 @@ def user_prompt_submit(
 
     session_id = ctx.session_id()
     prompt_numbers = extract_issue_numbers(
-        prompt_from_payload(ctx.payload),
+        ctx.user_prompt_text(),
         repo=repo,
         issue_id_format=config.issue_id_format,
     )
@@ -218,7 +217,7 @@ def stop(
     session_id = ctx.session_id()
     issue_numbers = sorted(read_session_issues(config.root, session_id, "mentioned"), key=int)
     for number in extract_issue_numbers(
-        text_from_payload(ctx.payload),
+        ctx.scan_text(),
         repo=repo,
         issue_id_format=config.issue_id_format,
     ):
@@ -369,38 +368,6 @@ def github_repo_for_config(
         return resolve_github_repository(config.root, runner=runner)
     except (GitHubRepositoryError, OSError, subprocess.SubprocessError):
         return None
-
-
-def prompt_from_payload(payload: dict[str, Any]) -> str:
-    for key in ("prompt", "user_prompt", "message"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ""
-
-
-def text_from_payload(payload: dict[str, Any]) -> str:
-    """Collect bounded string content from hook payloads for issue ref scans."""
-
-    chunks: list[str] = []
-
-    def visit(value: Any, *, depth: int = 0) -> None:
-        if len(chunks) >= 40 or depth > 5:
-            return
-        if isinstance(value, str):
-            if value:
-                chunks.append(value[:4000])
-            return
-        if isinstance(value, Mapping):
-            for item in value.values():
-                visit(item, depth=depth + 1)
-            return
-        if isinstance(value, (list, tuple)):
-            for item in value[:40]:
-                visit(item, depth=depth + 1)
-
-    visit(payload)
-    return "\n".join(chunks)
 
 
 def _ordered_issue_union(*groups: list[str]) -> list[str]:
