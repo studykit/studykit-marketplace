@@ -24,7 +24,6 @@ import json
 import subprocess
 import sys
 from collections.abc import Mapping
-from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -34,7 +33,11 @@ if _SCRIPTS_DIR not in sys.path:
 
 from authoring_guard import evaluate_authoring_guard  # noqa: E402
 from authoring_ledger import LedgerError, record_reads  # noqa: E402
-from authoring_resolver import ALL_TYPES, DUAL_TYPES, ResolverError  # noqa: E402
+from authoring_resolver import ResolverError  # noqa: E402
+from workflow_artifact_metadata import (  # noqa: E402
+    ArtifactMetadata,
+    infer_artifact_metadata,
+)
 from workflow_command import CommandRunner  # noqa: E402
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
 from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_issue_number  # noqa: E402
@@ -53,15 +56,6 @@ from workflow_session_state import (  # noqa: E402
     remove_session_issues,
     session_policy_was_announced,
 )
-
-@dataclass(frozen=True)
-class ArtifactMetadata:
-    """Workflow artifact metadata inferred from local projection content."""
-
-    artifact_type: str
-    role: str | None = None
-    provider: str | None = None
-
 
 def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | None = None) -> int:
     """SessionStart entry point. Always exits 0."""
@@ -555,68 +549,6 @@ def is_under(path: Path, root: Path) -> bool:
         return True
     except ValueError:
         return False
-
-
-def infer_artifact_metadata(target: EditTarget) -> ArtifactMetadata | None:
-    content = target.content
-    if content is None:
-        try:
-            content = target.path.read_text(encoding="utf-8")
-        except OSError:
-            content = ""
-
-    values = extract_metadata_values(content)
-    artifact_type = values.get("type")
-    if artifact_type is None:
-        return None
-
-    normalized_type = artifact_type.strip().lower().replace("_", "-")
-    if normalized_type == "use-case":
-        normalized_type = "usecase"
-    if normalized_type not in ALL_TYPES:
-        return None
-
-    role = values.get("role")
-    provider = values.get("provider")
-    if normalized_type in DUAL_TYPES and not role:
-        return None
-
-    return ArtifactMetadata(
-        artifact_type=normalized_type,
-        role=role.strip().lower().replace("_", "-") if role else None,
-        provider=provider.strip().lower().replace("_", "-") if provider else None,
-    )
-
-
-def extract_metadata_values(content: str) -> dict[str, str]:
-    """Extract simple scalar workflow metadata from Markdown content."""
-
-    lines = content.splitlines()
-    metadata_lines: list[str] = []
-    if lines and lines[0].strip() == "---":
-        for line in lines[1:]:
-            if line.strip() == "---":
-                break
-            metadata_lines.append(line)
-    else:
-        for line in lines[:80]:
-            stripped = line.strip()
-            if stripped.startswith("#"):
-                break
-            metadata_lines.append(line)
-
-    values: dict[str, str] = {}
-    for line in metadata_lines:
-        if ":" not in line:
-            continue
-        key, raw_value = line.split(":", 1)
-        key = key.strip().lower().replace("-", "_")
-        if key not in {"type", "role", "provider"}:
-            continue
-        value = raw_value.strip().strip("\"'")
-        if value:
-            values[key] = value
-    return values
 
 
 def main(argv: list[str] | None = None) -> int:
