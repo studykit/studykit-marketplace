@@ -57,10 +57,14 @@ Inspect resolved configuration:
   --json
 ```
 
-The `scripts/workflow` launcher normalizes shell-tool runtime state before it
-executes a workflow script. It preserves `WORKFLOW_PLUGIN_ROOT`,
-`WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID` so repeated shell commands do
-not need to pass plugin root, project root, or session id flags.
+The `scripts/workflow` launcher is the shell-tool entrypoint. It executes the
+requested workflow script directly for Claude sessions and sources the
+hook-generated Codex export file before execution for Codex sessions. In a
+plain terminal, it falls back to local defaults for `WORKFLOW`,
+`WORKFLOW_PLUGIN_ROOT`, and `WORKFLOW_PROJECT_DIR` without inventing a
+`WORKFLOW_SESSION_ID`. Hooks publish `WORKFLOW`, `WORKFLOW_PLUGIN_ROOT`,
+`WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID` so repeated assistant shell
+commands do not need to pass plugin root, project root, or session id flags.
 
 ## Authoring Policy
 

@@ -6,11 +6,10 @@ policy, ledger, guard, and issue-cache behavior lives in ``workflow_hook.py``
 as plain functions.
 
 The script is the executable entry point for Claude's hook manifest
-(``plugins/workflow/hooks/hooks.json``) and the SubagentStart hook declared in
-``plugins/workflow/agents/workflow-operator.md`` frontmatter. Each hook command
-invokes ``python3 hook_claude.py``; ``main`` dispatches by the
-``hook_event_name`` value in the hook payload. When this adapter writes hook
-output to stdout, it writes JSON only; no plain-text hook output is used.
+(``plugins/workflow/hooks/hooks.json``). Each hook command invokes ``python3
+hook_claude.py``; ``main`` dispatches by the ``hook_event_name`` value in the
+hook payload. When this adapter writes hook output to stdout, it writes JSON
+only; no plain-text hook output is used.
 """
 
 from __future__ import annotations
@@ -40,10 +39,6 @@ from util import as_string, emit_json, read_payload_or_stdin, resolve_file_path,
 from workflow_env import (  # noqa: E402
     CLAUDE_ENV_FILE_ENV,
     append_claude_env_file,
-)
-from workflow_operator_context import (  # noqa: E402
-    agent_name_matches_operator,
-    build_operator_subagent_context,
 )
 from workflow_session_state import (  # noqa: E402
     record_session_policy_announced,
@@ -110,19 +105,12 @@ class ClaudeStopPayload(ClaudeCommonPayload):
     last_assistant_message: str
 
 
-@dataclass(frozen=True)
-class ClaudeSubagentStartPayload(ClaudeCommonPayload):
-    agent_id: str | None
-    agent_type: str | None
-
-
 ClaudeEventPayload = (
     ClaudeSessionStartPayload
     | ClaudePreToolUsePayload
     | ClaudePostToolUsePayload
     | ClaudeUserPromptSubmitPayload
     | ClaudeStopPayload
-    | ClaudeSubagentStartPayload
 )
 
 
@@ -273,13 +261,6 @@ def _build_stop_payload(payload: dict[str, Any]) -> ClaudeStopPayload:
     )
 
 
-def _build_subagent_start_payload(payload: dict[str, Any]) -> ClaudeSubagentStartPayload:
-    return ClaudeSubagentStartPayload(
-        **_common_payload_fields(payload),
-        **_agent_payload_fields(payload),
-    )
-
-
 def parse_claude_event_payload(
     payload: Mapping[str, Any] | None = None,
 ) -> ClaudeEventPayload | None:
@@ -295,8 +276,6 @@ def parse_claude_event_payload(
         return _build_user_prompt_submit_payload(data)
     if event_name == "Stop":
         return _build_stop_payload(data)
-    if event_name == "SubagentStart":
-        return _build_subagent_start_payload(data)
     return None
 
 
@@ -312,7 +291,9 @@ def session_start(
         _persist_shell_env(config.root, event_payload.session_id)
 
     if event_payload.agent_type:
-        # Claude operator subagent context is injected through SubagentStart.
+        # Claude subagents receive the workflow shell environment persisted by
+        # the main session. Do not inject the main-session policy into subagent
+        # context.
         return 0
 
     return emit_session_start_policy(event_payload, config=config, stdout=stdout)
@@ -422,38 +403,6 @@ def stop(
     )
 
 
-def subagent_start(
-    event_payload: ClaudeSubagentStartPayload,
-    *,
-    stdout: TextIO | None = None,
-) -> int:
-    """Handle a Claude ``SubagentStart`` hook invocation."""
-
-    if not agent_name_matches_operator(event_payload.agent_type):
-        return 0
-
-    if not event_payload.session_id:
-        return 0
-
-    config = workflow_config_for_project(_project_dir())
-    if config is None:
-        return 0
-
-    emit_json(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "SubagentStart",
-                "additionalContext": build_operator_subagent_context(
-                    event_payload.session_id,
-                    config.root,
-                ),
-            }
-        },
-        stdout=stdout,
-    )
-    return 0
-
-
 def main(
     argv: list[str] | None = None,
     *,
@@ -472,8 +421,6 @@ def main(
         return user_prompt_submit(event_payload, stdout=stdout)
     if isinstance(event_payload, ClaudeStopPayload):
         return stop(event_payload, stdout=stdout)
-    if isinstance(event_payload, ClaudeSubagentStartPayload):
-        return subagent_start(event_payload, stdout=stdout)
     return 0
 
 

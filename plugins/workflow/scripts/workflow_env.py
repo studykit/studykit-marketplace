@@ -24,12 +24,14 @@ if _SCRIPTS_DIR not in sys.path:
 WORKFLOW_PLUGIN_ROOT_ENV = "WORKFLOW_PLUGIN_ROOT"
 WORKFLOW_PROJECT_DIR_ENV = "WORKFLOW_PROJECT_DIR"
 WORKFLOW_SESSION_ID_ENV = "WORKFLOW_SESSION_ID"
+WORKFLOW_LAUNCHER_ENV = "WORKFLOW"
 
 CLAUDE_ENV_FILE_ENV = "CLAUDE_ENV_FILE"
 CLAUDE_CODE_SESSION_ID_ENV = "CLAUDE_CODE_SESSION_ID"
 CODEX_THREAD_ID_ENV = "CODEX_THREAD_ID"
 
 _EXPORT_ORDER = (
+    WORKFLOW_LAUNCHER_ENV,
     WORKFLOW_PLUGIN_ROOT_ENV,
     WORKFLOW_PROJECT_DIR_ENV,
     WORKFLOW_SESSION_ID_ENV,
@@ -48,11 +50,18 @@ class ShellRuntime:
     session_id: str
 
 
-def workflow_env_values(*, plugin_root: Path, project_dir: Path, session_id: str) -> dict[str, str]:
+def workflow_env_values(
+    *,
+    plugin_root: Path,
+    project_dir: Path,
+    session_id: str,
+) -> dict[str, str]:
     """Build the normalized workflow shell environment values."""
 
+    resolved_plugin_root = plugin_root.expanduser().resolve()
     return {
-        WORKFLOW_PLUGIN_ROOT_ENV: str(plugin_root.expanduser().resolve()),
+        WORKFLOW_LAUNCHER_ENV: str(resolved_plugin_root / "scripts" / "workflow"),
+        WORKFLOW_PLUGIN_ROOT_ENV: str(resolved_plugin_root),
         WORKFLOW_PROJECT_DIR_ENV: str(project_dir.expanduser().resolve()),
         WORKFLOW_SESSION_ID_ENV: session_id,
     }
@@ -138,7 +147,11 @@ def append_claude_env_file(
         return False
     return append_shell_exports(
         Path(env_file),
-        workflow_env_values(plugin_root=plugin_root, project_dir=project_dir, session_id=session_id),
+        workflow_env_values(
+            plugin_root=plugin_root,
+            project_dir=project_dir,
+            session_id=session_id,
+        ),
     )
 
 
@@ -167,20 +180,20 @@ def workflow_session_id_from_env(*, environ: Mapping[str, str] | None = None) ->
 
 
 def detect_shell_runtime(*, environ: Mapping[str, str] | None = None) -> ShellRuntime:
-    """Detect the assistant shell runtime from exact session variables only."""
+    """Detect the assistant shell runtime from exact session variables only.
+
+    Claude takes precedence when both runtime markers are present. Claude
+    sessions already receive the persisted ``WORKFLOW_*`` contract, so callers
+    should not accidentally treat that shell as Codex.
+    """
 
     env = environ or os.environ
-    codex_session = env.get(CODEX_THREAD_ID_ENV) or ""
     claude_session = env.get(CLAUDE_CODE_SESSION_ID_ENV) or ""
-    if codex_session and claude_session:
-        raise WorkflowEnvError(
-            f"ambiguous workflow shell runtime: both {CODEX_THREAD_ID_ENV} and "
-            f"{CLAUDE_CODE_SESSION_ID_ENV} are set"
-        )
-    if codex_session:
-        return ShellRuntime(name="codex", session_id=codex_session)
     if claude_session:
         return ShellRuntime(name="claude", session_id=claude_session)
+    codex_session = env.get(CODEX_THREAD_ID_ENV) or ""
+    if codex_session:
+        return ShellRuntime(name="codex", session_id=codex_session)
     return ShellRuntime(name="", session_id="")
 
 

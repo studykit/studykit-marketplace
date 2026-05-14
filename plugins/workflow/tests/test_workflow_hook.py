@@ -24,11 +24,9 @@ from workflow_hook import (  # noqa: E402
 )
 from hook_claude import ClaudeCommonPayload, ClaudePreToolUsePayload  # noqa: E402
 from hook_claude import ClaudeSessionStartPayload  # noqa: E402
-from hook_claude import ClaudeSubagentStartPayload  # noqa: E402
 from hook_claude import main as claude_main  # noqa: E402
 from hook_claude import parse_claude_event_payload  # noqa: E402
 from hook_claude import session_start as claude_session_start  # noqa: E402
-from hook_claude import subagent_start  # noqa: E402
 from hook_codex import CodexSessionStartPayload  # noqa: E402
 from hook_codex import CodexStopPayload, CodexUserPromptSubmitPayload  # noqa: E402
 from hook_codex import parse_codex_event_payload  # noqa: E402
@@ -610,6 +608,7 @@ def test_claude_session_start_appends_workflow_env_file(
     )
 
     content = env_file.read_text(encoding="utf-8")
+    assert f"export WORKFLOW={_PLUGIN_ROOT / 'scripts' / 'workflow'}" in content
     assert f"export WORKFLOW_PLUGIN_ROOT={_PLUGIN_ROOT}" in content
     assert f"export WORKFLOW_PROJECT_DIR={tmp_path}" in content
     assert "export WORKFLOW_SESSION_ID=claude-shell-session" in content
@@ -630,6 +629,7 @@ def test_codex_session_start_writes_session_export_file(
 
     env_file = codex_env_file_path(tmp_path, "codex-shell-session")
     content = env_file.read_text(encoding="utf-8")
+    assert f"export WORKFLOW={_PLUGIN_ROOT / 'scripts' / 'workflow'}" in content
     assert f"export WORKFLOW_PLUGIN_ROOT={_PLUGIN_ROOT}" in content
     assert f"export WORKFLOW_PROJECT_DIR={tmp_path}" in content
     assert "export WORKFLOW_SESSION_ID=codex-shell-session" in content
@@ -680,91 +680,6 @@ def test_session_start_discovers_config_from_nested_project_path(
     assert "issue provider: `github`" in context
 
 
-def _run_subagent_start(
-    project: Path,
-    monkeypatch: pytest.MonkeyPatch,
-    *,
-    payload_update: dict[str, Any] | None = None,
-) -> str:
-    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
-    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
-    monkeypatch.delenv("PLUGIN_ROOT", raising=False)
-
-    payload: dict[str, Any] = {
-        "session_id": "claude-parent-session",
-        "cwd": str(project),
-        "hook_event_name": "SubagentStart",
-        "agent_type": "workflow-operator",
-        "agent_id": "agent-abc123",
-    }
-    if payload_update:
-        payload.update(payload_update)
-
-    captured = io.StringIO()
-    event_payload = parse_claude_event_payload(payload)
-    assert isinstance(event_payload, ClaudeSubagentStartPayload)
-    assert subagent_start(event_payload, stdout=captured) == 0
-    return captured.getvalue()
-
-
-def test_subagent_start_injects_parent_session_id_for_operator(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write_config(tmp_path)
-
-    out = _run_subagent_start(tmp_path, monkeypatch)
-
-    payload = json.loads(out)
-    context = payload["hookSpecificOutput"]["additionalContext"]
-    assert payload["hookSpecificOutput"]["hookEventName"] == "SubagentStart"
-    assert "## workflow operator session" in context
-    assert "Parent session id: `claude-parent-session`" in context
-    assert f"Workflow project root: `{tmp_path}`" in context
-    assert "`WORKFLOW_SESSION_ID`" in context
-    assert "guarded writes will fail" in context
-
-
-def test_subagent_start_emits_nothing_for_non_operator_agent(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write_config(tmp_path)
-
-    out = _run_subagent_start(
-        tmp_path,
-        monkeypatch,
-        payload_update={
-            "agent_type": "Explore",
-        },
-    )
-
-    assert out == ""
-
-
-def test_subagent_start_emits_nothing_without_session_id(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write_config(tmp_path)
-
-    out = _run_subagent_start(
-        tmp_path,
-        monkeypatch,
-        payload_update={"session_id": ""},
-    )
-
-    assert out == ""
-
-
-def test_subagent_start_emits_nothing_without_workflow_config(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    out = _run_subagent_start(tmp_path, monkeypatch)
-    assert out == ""
-
-
 def test_non_empty_hook_stdout_is_json_only(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -783,7 +698,6 @@ def test_non_empty_hook_stdout_is_json_only(
         runtime="claude",
         payload_update={"session_id": "claude-json-session"},
     )
-    claude_subagent = _run_subagent_start(tmp_path, monkeypatch)
 
     _hook_env(monkeypatch, tmp_path)
     runner = FakeRunner(
@@ -814,7 +728,6 @@ def test_non_empty_hook_stdout_is_json_only(
     outputs = [
         codex_session,
         claude_session,
-        claude_subagent,
         user_prompt_output.getvalue(),
     ]
     for output in outputs:
@@ -847,7 +760,7 @@ def _write_operator_subagent_transcript(path: Path) -> None:
     )
 
 
-def test_session_start_injects_operator_context_for_codex_operator_subagent(
+def test_session_start_prepares_codex_operator_env_file_and_bootstrap_context(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -865,12 +778,14 @@ def test_session_start_injects_operator_context_for_codex_operator_subagent(
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
-    assert "## workflow operator session" in context
-    assert "Parent session id: `codex-main-thread`" in context
-    assert f"Workflow project root: `{tmp_path}`" in context
-    assert "## workflow authoring policy" not in context
+    assert "## workflow operator bootstrap" in context
+    assert f"WORKFLOW={_PLUGIN_ROOT / 'scripts' / 'workflow'}" in context
+    assert "hook-state" not in context
+    assert "parent_thread_id" not in context
     env_file = codex_env_file_path(tmp_path, "codex-session")
-    assert "export WORKFLOW_SESSION_ID=codex-main-thread" in env_file.read_text(encoding="utf-8")
+    content = env_file.read_text(encoding="utf-8")
+    assert f"export WORKFLOW={_PLUGIN_ROOT / 'scripts' / 'workflow'}" in content
+    assert "export WORKFLOW_SESSION_ID=codex-main-thread" in content
 
 
 def test_session_start_skips_codex_subagent_when_not_operator(
@@ -895,17 +810,22 @@ def test_session_start_skips_claude_subagent_payload(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    """Claude routes the operator subagent through SubagentStart, not SessionStart."""
+    """Claude subagent SessionStart persists env but injects no policy."""
 
     _write_config(tmp_path)
+    env_file = tmp_path / "claude.env"
+    monkeypatch.setenv("CLAUDE_ENV_FILE", str(env_file))
     out = _run_session_start(
         tmp_path,
         monkeypatch,
         runtime="claude",
-        payload_update={"agent_type": "workflow-operator"},
+        payload_update={"agent_type": "workflow-operator", "session_id": "claude-subagent-session"},
     )
 
     assert out == ""
+    content = env_file.read_text(encoding="utf-8")
+    assert f"export WORKFLOW={_PLUGIN_ROOT / 'scripts' / 'workflow'}" in content
+    assert "export WORKFLOW_SESSION_ID=claude-subagent-session" in content
 
 
 def test_user_prompt_caches_issue_and_injects_project_relative_path(

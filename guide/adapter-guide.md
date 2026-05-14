@@ -86,8 +86,8 @@ A normalized environment contract is allowed when a plugin needs many repeated
 shell calls and explicit argv would make every command noisy or fragile. Keep
 that contract plugin-owned and host-neutral:
 
-- Use names controlled by the plugin, such as `WORKFLOW_PLUGIN_ROOT`,
-  `WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID`.
+- Use names controlled by the plugin, such as `WORKFLOW`,
+  `WORKFLOW_PLUGIN_ROOT`, `WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID`.
 - Populate the contract only from an adapter, hook, launcher, or generated
   state file.
 - Let command-line entrypoints read the contract as defaults for convenience.
@@ -98,7 +98,9 @@ The workflow plugin is the reference pattern: Claude and Codex hooks read their
 own runtime inputs, persist or generate normalized `WORKFLOW_*` values for
 later shell use, and workflow scripts consume those normalized values as
 defaults before calling shared workflow logic with concrete paths and session
-ids.
+ids. The `scripts/workflow` launcher may also run from a plain terminal; in
+that mode it sets local defaults for non-session values but does not synthesize
+`WORKFLOW_SESSION_ID`.
 
 When creating another plugin, use this sequence:
 
@@ -164,7 +166,10 @@ workflow shell wrapper that reads `CODEX_THREAD_ID` as the exact shell session
 marker, sources the generated workflow export file, and then invokes scripts
 with normalized `WORKFLOW_*` values. This is a repository convention based on
 the current Codex shell environment, not a documented Codex plugin or hook
-contract.
+contract. In Codex subagent shells, `CODEX_THREAD_ID` is the subagent's own
+thread id; a parent thread id is not exposed as a shell environment variable.
+When a subagent needs parent-session workflow state, prepare a generated export
+file at hook time from transcript metadata and let the wrapper source it.
 
 Keep this rule narrow:
 
@@ -177,14 +182,19 @@ When a plugin needs repeated shell-tool script calls, prefer a small normalized
 environment contract over repeated argv. For the workflow plugin, the contract
 is:
 
+- `WORKFLOW`
 - `WORKFLOW_PLUGIN_ROOT`
 - `WORKFLOW_PROJECT_DIR`
 - `WORKFLOW_SESSION_ID`
 
 Runtime detection for shell wrappers must use exact session variables, not
 prefix checks. Codex shell wrappers may use `CODEX_THREAD_ID`. Claude shell
-wrappers may use `CLAUDE_CODE_SESSION_ID`. If both are set, fail closed instead
-of guessing. Do not infer Claude from unrelated `CLAUDE_CODE_*` variables.
+wrappers may use `CLAUDE_CODE_SESSION_ID`. If both are possible in one wrapper,
+define the precedence explicitly or fail closed instead of guessing. Workflow's
+launcher and shell-runtime helper check `CLAUDE_CODE_SESSION_ID` first because
+Claude sessions already receive the persisted `WORKFLOW_*` contract and should
+not source Codex state. Do not infer Claude from unrelated `CLAUDE_CODE_*`
+variables.
 
 ## Skill Adapter Rules
 
@@ -297,7 +307,7 @@ Common process inputs are:
 
 In Claude Code v2.1.132 and later, scripts launched through the Bash tool also receive `CLAUDE_CODE_SESSION_ID` in the subprocess environment. That value matches the `session_id` passed to Claude hooks. Treat it as a Claude-specific process input for a script adapter, not as a SKILL.md string substitution and not as a Codex contract.
 
-In Codex, Studykit workflow wrappers launched through the shell tool may read `CODEX_THREAD_ID` when session-scoped state is needed. Treat it as a Codex shell-tool convention only; Codex hooks should use stdin `session_id`.
+In Codex, Studykit workflow wrappers launched through the shell tool may read `CODEX_THREAD_ID` when session-scoped state is needed. Treat it as a Codex shell-tool convention only; Codex hooks should use stdin `session_id`. In subagents this value identifies the subagent thread; parent-thread workflow state must come from a hook-prepared normalized export file.
 
 A skill-launched script should not assume it can read:
 
@@ -374,7 +384,7 @@ Hook behavior differs by host. Treat each item below as adapter-owned.
 | Project root | `CLAUDE_PROJECT_DIR` from the Claude hook environment | Resolve from payload `cwd` using git root fallback, then `cwd` |
 | Hook stdin shape | Claude hook payload schema | Codex hook payload schema |
 | File edit tools | `Write`, `Edit`, `MultiEdit` | `Write`, `Edit`, `MultiEdit`, plus Codex `apply_patch` command parsing |
-| Subagent start | Claude `SubagentStart` | No native `SubagentStart`; Codex operator context is emitted from `SessionStart` when transcript metadata identifies the operator agent |
+| Subagent start | Workflow does not use Claude `SubagentStart`; operator shells use the `WORKFLOW_*` contract persisted from `SessionStart` | No native `SubagentStart`; Codex prepares the operator export file from `SessionStart` transcript metadata and injects the launcher path when it identifies the operator agent |
 | Output | JSON-only stdout for non-empty hook output | JSON-only stdout for non-empty hook output |
 
 Do not copy environment names, matcher names, payload fields, or event behavior between hosts. Add the translation to the runtime adapter instead.
@@ -438,7 +448,7 @@ Rules:
 - Do not store adapter-derived values, normalized targets, or raw payload copies on Claude payload dataclasses. Compute derived values in the adapter handler before calling shared workflow logic.
 - Handler functions should receive parsed dataclass payloads, not raw `Mapping` objects.
 - `SessionStart` source handling is Claude-specific; `compact` is skipped and `clear` may reinject policy.
-- Claude operator subagent context is emitted from `SubagentStart`, not from `SessionStart`.
+- Claude operator subagents rely on the `WORKFLOW_*` shell contract persisted by `SessionStart`; do not inject a separate operator context unless a future runtime breaks that contract.
 
 ### Codex Hook Adapter Contract
 
@@ -449,9 +459,9 @@ Rules:
 - Read `PLUGIN_ROOT` for the plugin root from the Codex hook process environment used by this repository.
 - Resolve the project from payload `cwd` using git root fallback.
 - Keep Codex-only agent detection in `hook_codex.py`; do not move generic agent marker heuristics into shared workflow code.
-- Keep transcript metadata parsing in `hook_codex.py`.
+- Keep transcript metadata parsing in `hook_codex.py`. For workflow operator subagents, `CODEX_THREAD_ID` is the subagent thread id, so the adapter must extract the parent thread id from transcript metadata before writing the subagent export file.
 - Keep Codex `apply_patch` target parsing in `hook_codex.py`.
-- Codex operator subagent context is emitted from the Codex `SessionStart` path when transcript metadata identifies `workflow-operator`.
+- Codex operator subagent environment is prepared from the Codex `SessionStart` path when transcript metadata identifies `workflow-operator`. The hook should inject only the absolute workflow launcher path as bootstrap context; the operator instructions should not need plugin-root, env-file, or parent-thread implementation details.
 
 ### Hook Output
 
@@ -519,8 +529,8 @@ Claude command hooks are a documented exception to the general safety rule that 
 
 For workflow shell commands, Claude hooks may persist the normalized
 `WORKFLOW_*` contract by appending `export` statements to `CLAUDE_ENV_FILE`.
-Use `CLAUDE_CODE_SESSION_ID` only as the exact shell-tool session marker or as a
-wrapper fallback when the normalized contract is missing.
+The Claude workflow launcher should consume that persisted contract; it should
+not synthesize `WORKFLOW_SESSION_ID` from `CLAUDE_CODE_SESSION_ID`.
 
 ## Codex-Specific Inputs
 
@@ -533,6 +543,7 @@ Rules for this repository:
 - Codex hooks receive a JSON object on stdin with `session_id`; use that as the official hook session/thread identifier.
 - Current Codex skill docs do not define `$ARGUMENTS`, `CODEX_SKILL_DIR`, or `CODEX_PLUGIN_ROOT` skill-body placeholders. Do not design shared skill scripts around those names.
 - Studykit shell wrappers launched through the Codex shell tool may read `CODEX_THREAD_ID` at the wrapper boundary for session-scoped state. This is an observed shell-tool convention, not a documented Codex plugin or hook contract. Use it to locate a generated export file, source the normalized `WORKFLOW_*` contract, and then call shared scripts.
+- In Codex subagents, `CODEX_THREAD_ID` identifies the subagent thread, not the parent thread. If guarded workflow state belongs to the parent thread, extract that id from hook transcript metadata and write it into the generated `WORKFLOW_SESSION_ID` export.
 - If a Codex hook or lifecycle command needs plugin data paths, pass a concrete value through a wrapper, generated hook config, argv, stdin, or a documented manifest mechanism.
 
 ## Passing Values to Scripts

@@ -11,9 +11,11 @@ or MCP tools whose names vary, so the read ledger cannot be populated, and
 the matching write guard would block unconditionally. See the manifest
 description for the resulting Codex feature surface.
 
-Codex has no native ``SubagentStart`` event, so the operator-subagent context
-emission rides on the Codex ``SessionStart`` path when the transcript metadata
-identifies the spawned agent as ``workflow-operator``.
+Codex has no native ``SubagentStart`` event, so the operator-subagent
+environment file is prepared from the Codex ``SessionStart`` path when
+transcript metadata identifies the spawned agent as ``workflow-operator``. The
+same path injects a small bootstrap context with the absolute workflow launcher
+path, because the static Codex agent instructions cannot know the plugin root.
 
 The script is the executable entry point for Codex's hook manifest
 (``plugins/workflow/hooks/hooks.codex.json``). Dispatch reads
@@ -26,6 +28,7 @@ from __future__ import annotations
 
 import json
 import os
+import shlex
 import subprocess
 import sys
 from collections.abc import Mapping
@@ -46,10 +49,7 @@ from workflow_hook import (  # noqa: E402
 )
 from util import as_string, emit_json, read_payload_or_stdin, scan_text_values  # noqa: E402
 from workflow_env import write_codex_env_file  # noqa: E402
-from workflow_operator_context import (  # noqa: E402
-    agent_name_matches_operator,
-    build_operator_subagent_context,
-)
+from workflow_operator_context import agent_name_matches_operator  # noqa: E402
 from workflow_session_state import (  # noqa: E402
     record_session_policy_announced,
     session_policy_was_announced,
@@ -160,8 +160,8 @@ def _persist_codex_shell_env(
     project_dir: Path,
     codex_session_id: str,
     workflow_session_id: str,
-) -> None:
-    write_codex_env_file(
+) -> Path | None:
+    return write_codex_env_file(
         project_dir=project_dir,
         plugin_root=_plugin_root(),
         codex_session_id=codex_session_id,
@@ -180,6 +180,25 @@ def _user_prompt_text(payload: dict[str, Any]) -> str:
 
 def _stop_scan_text(payload: dict[str, Any]) -> str:
     return scan_text_values(as_string(payload.get("last_assistant_message")))
+
+
+def _operator_bootstrap_context(*, launcher: Path) -> str:
+    launcher_assignment = f"WORKFLOW={shlex.quote(str(launcher))}"
+    return "\n".join(
+        [
+            "## workflow operator bootstrap",
+            "",
+            "Use this workflow launcher path before running workflow commands:",
+            "",
+            "```bash",
+            launcher_assignment,
+            "```",
+            "",
+            "Use `$WORKFLOW` for bundled workflow scripts. The launcher owns Codex",
+            "session translation; do not derive the launcher from project layout",
+            "or inspect runtime-specific session files directly.",
+        ]
+    )
 
 
 def _payload_marks_agent(payload: Mapping[str, Any]) -> bool:
@@ -372,7 +391,7 @@ def _handle_agent_session_start(
     *,
     stdout: TextIO | None = None,
 ) -> int:
-    """Codex subagent SessionStart: emit operator context when matched."""
+    """Codex subagent SessionStart: prepare operator shell environment."""
 
     if metadata is None:
         return 0
@@ -397,9 +416,8 @@ def _handle_agent_session_start(
         {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",
-                "additionalContext": build_operator_subagent_context(
-                    parent_thread_id,
-                    config.root,
+                "additionalContext": _operator_bootstrap_context(
+                    launcher=_plugin_root() / "scripts" / "workflow"
                 ),
             }
         },

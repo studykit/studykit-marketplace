@@ -1,10 +1,34 @@
 #!/usr/bin/env bash
-# Runtime-aware workflow script launcher.
+# Workflow script launcher. Uses Claude's persisted environment as-is, sources
+# Codex's hook-generated environment, or falls back to local terminal defaults.
 
 set -euo pipefail
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 PLUGIN_ROOT="$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd -P)"
+
+if [ "$#" -lt 1 ]; then
+  echo "usage: workflow <script.py|command> [args...]" >&2
+  exit 2
+fi
+
+exec_workflow_command() {
+  local command="$1"
+  shift
+
+  local candidate
+  if [[ "$command" != */* ]]; then
+    candidate="$SCRIPT_DIR/$command"
+  else
+    candidate="$command"
+  fi
+
+  if [[ "$candidate" == *.py && -f "$candidate" ]]; then
+    exec uv run --script "$candidate" "$@"
+  fi
+
+  exec "$candidate" "$@"
+}
 
 resolve_project_dir() {
   if [ -n "${WORKFLOW_PROJECT_DIR:-}" ]; then
@@ -18,44 +42,34 @@ resolve_project_dir() {
   pwd -P
 }
 
-PROJECT_DIR="$(resolve_project_dir)"
+source_codex_env_file() {
+  local project_dir
+  project_dir="$(resolve_project_dir)"
 
-if [ -n "${CODEX_THREAD_ID:-}" ] && [ -n "${CLAUDE_CODE_SESSION_ID:-}" ]; then
-  echo "workflow: ambiguous shell runtime: both CODEX_THREAD_ID and CLAUDE_CODE_SESSION_ID are set" >&2
-  exit 2
-fi
-
-if [ -n "${CODEX_THREAD_ID:-}" ]; then
-  ENV_FILE="$(python3 "$SCRIPT_DIR/workflow_env.py" codex-env-path --project "$PROJECT_DIR" --session "$CODEX_THREAD_ID")"
-  if [ -f "$ENV_FILE" ]; then
+  local env_file
+  env_file="$(python3 "$SCRIPT_DIR/workflow_env.py" codex-env-path --project "$project_dir" --session "$CODEX_THREAD_ID")"
+  if [ -f "$env_file" ]; then
     # shellcheck disable=SC1090
-    . "$ENV_FILE"
-  else
-    export WORKFLOW_SESSION_ID="${WORKFLOW_SESSION_ID:-$CODEX_THREAD_ID}"
+    . "$env_file"
   fi
-elif [ -n "${CLAUDE_CODE_SESSION_ID:-}" ]; then
-  export WORKFLOW_SESSION_ID="${WORKFLOW_SESSION_ID:-$CLAUDE_CODE_SESSION_ID}"
-fi
+}
 
-export WORKFLOW_PLUGIN_ROOT="${WORKFLOW_PLUGIN_ROOT:-$PLUGIN_ROOT}"
-export WORKFLOW_PROJECT_DIR="${WORKFLOW_PROJECT_DIR:-$PROJECT_DIR}"
-
-if [ "$#" -lt 1 ]; then
-  echo "usage: workflow <script.py|command> [args...]" >&2
-  exit 2
-fi
+apply_terminal_environment() {
+  export WORKFLOW="$SCRIPT_DIR/workflow"
+  export WORKFLOW_PLUGIN_ROOT="$PLUGIN_ROOT"
+  export WORKFLOW_PROJECT_DIR="${WORKFLOW_PROJECT_DIR:-$(resolve_project_dir)}"
+}
 
 COMMAND="$1"
 shift
 
-if [[ "$COMMAND" != */* ]]; then
-  CANDIDATE="$SCRIPT_DIR/$COMMAND"
-else
-  CANDIDATE="$COMMAND"
+if [ -n "${CLAUDE_CODE_SESSION_ID:-}" ]; then
+  exec_workflow_command "$COMMAND" "$@"
+fi
+if [ -n "${CODEX_THREAD_ID:-}" ]; then
+  source_codex_env_file
+  exec_workflow_command "$COMMAND" "$@"
 fi
 
-if [[ "$CANDIDATE" == *.py && -f "$CANDIDATE" ]]; then
-  exec python3 "$CANDIDATE" "$@"
-fi
-
-exec "$CANDIDATE" "$@"
+apply_terminal_environment
+exec_workflow_command "$COMMAND" "$@"
