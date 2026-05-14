@@ -939,5 +939,5 @@ def stop(
 # earlier in this file, so the abstract base must be fully defined before the
 # subclass modules load. ``workflow_hook`` itself is library-only; the
 # executable entry points live in ``hook_claude.py`` and ``hook_codex.py``.
-from claude_hook import ClaudeHook, UnknownHook  # noqa: E402, F401
-from codex_hook import CodexHook  # noqa: E402, F401
+from hook_claude import ClaudeHook, UnknownHook  # noqa: E402, F401
+from hook_codex import CodexHook  # noqa: E402, F401
