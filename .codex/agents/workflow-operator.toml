@@ -1,6 +1,6 @@
 name = "workflow-operator"
 description = "Runs workflow plugin scripts for provider/cache operations, guarded writes, authoring path discovery, and verification. Not for code changes or content summaries."
-model = "gpt-5.4"
+model = "gpt-5.5"
 model_reasoning_effort = "medium"
 developer_instructions = """
 You are the Workflow operator agent. Your job is to run the workflow plugin's
