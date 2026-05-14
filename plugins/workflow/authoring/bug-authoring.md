@@ -8,7 +8,8 @@ Companion contracts:
 
 - `./metadata-contract.md`
 - `./issue-body.md`
-- Provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Issue provider binding: `./providers/issue-authoring.md`
+- Provider-specific binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
 
 ## Storage role
 
@@ -33,8 +34,8 @@ Represent this metadata using provider-native fields when available. If a provid
 | `severity` | recommended | Provider priority/severity if available. |
 | `implements` | optional | Use case affected by the bug. Metadata when possible, `## Implements` or `## Related` in body when present. |
 | `spec` | optional | Spec or knowledge artifact whose expected behavior is violated. |
-| `depends_on` | optional | Blocking or ordering dependency. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
-| `parent` | optional | Epic or parent issue coordinating the fix. |
+| `depends_on` | optional | Blocking or ordering dependency. Use provider-native metadata when available. Body fallback is provider-specific. |
+| `parent` | optional | Epic or parent issue coordinating the fix. Use provider-native metadata when available. Body fallback is provider-specific. |
 | `related` | optional | Non-blocking references useful for diagnosis or implementation. |
 | `labels` | optional | Provider labels/tags. |
 
@@ -114,7 +115,7 @@ Optional sections:
 
 - `## Environment` — version, browser, OS, tenant, data shape, feature flags, or deployment context.
 - `## Implements` — when the bug traces to a use case requirement.
-- `## Dependencies` — use only when the active provider binding requires a body fallback. Do not include blocked/dependency sections for GitHub Issues.
+- `## Dependencies` — use only when the active provider binding requires a body fallback.
 - `## Related` or `## References` — supporting knowledge pages, logs, prior issues, specs, or research.
 - `## Change Plan` — forward-looking scope fence naming files, packages, APIs, or migration steps expected to change.
 - `## Interface Contracts` — contracts the fix consumes or restores.

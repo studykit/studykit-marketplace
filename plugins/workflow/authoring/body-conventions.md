@@ -11,7 +11,7 @@ Provider-specific rules live under `./providers/`.
 
 These rules apply to the visible body text of every workflow artifact.
 
-The body is the portable human-readable fallback. Provider-native metadata may store the same relationships more precisely. Provider-specific bindings decide when a body fallback is required. For GitHub Issues, do not duplicate native dependency/blocking relationships as blocked or dependency sections in the issue body.
+The body is the portable human-readable fallback. Provider-native metadata may store the same relationships more precisely. Provider-specific bindings decide when a body fallback is required.
 
 ## Section heading form
 
@@ -47,7 +47,7 @@ Common H2 names:
 - `## Unit Test Strategy`
 - `## Target`
 - `## Implements`
-- `## Dependencies` (provider-dependent; not for GitHub native dependencies)
+- `## Dependencies` (provider-dependent)
 - `## Related`
 - `## Sources`
 - `## Change Log`
@@ -101,17 +101,19 @@ Use these section names consistently:
 
 - `## Target` — artifact reviewed or affected by a review item.
 - `## Implements` — use case, requirement, spec, or knowledge artifact implemented by a work item.
-- `## Dependencies` — blocking or ordering relationship only when the provider binding requires a body fallback. Do not use it for GitHub Issue native dependencies.
+- `## Dependencies` — blocking or ordering relationship only when the provider binding requires a body fallback.
 - `## Related` — useful non-blocking relationship.
 - `## Supersedes` — older knowledge artifact replaced by this one.
 - `## Sources` — external evidence, vendor docs, papers, or decision inputs.
 - `## Change Log` — semantic cause index on knowledge pages.
 
+Provider-specific bindings may prohibit relationship body sections when native metadata exists.
+
 ## Lists and bullets
 
 Use ordinary Markdown lists unless a type-specific contract gives a stricter shape.
 
-Relationship lists should keep one referenced artifact per bullet. This non-GitHub example applies only when the active provider binding allows a dependency body section:
+Relationship lists should keep one referenced artifact per bullet. This example applies only when the active provider binding allows a dependency body section:
 
 ```markdown
 ## Dependencies

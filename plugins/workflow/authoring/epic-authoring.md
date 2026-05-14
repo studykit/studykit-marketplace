@@ -10,7 +10,8 @@ Companion contracts:
 
 - `./metadata-contract.md`
 - `./issue-body.md`
-- Provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Issue provider binding: `./providers/issue-authoring.md`
+- Provider-specific binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
 
 ## Storage role
 

@@ -14,7 +14,8 @@ Companion contracts:
 - `./metadata-contract.md`
 - `./issue-body.md`
 - `./knowledge-body.md`
-- Issue provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Issue provider binding: `./providers/issue-authoring.md`
+- Provider-specific issue binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
 - Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-knowledge-authoring.md`
 
 ## Storage role
@@ -179,7 +180,7 @@ Optional:
 - `## Actors` — actor list when not obvious from metadata.
 - `## Validation` — user-visible input constraints, limits, or required formats.
 - `## Error Handling` — what the actor sees when things fail.
-- `## Dependencies` — narrative dependencies on other use cases, specs, or pages only when the active provider binding allows a body fallback. Do not include blocked/dependency sections for GitHub workflow issues.
+- `## Dependencies` — narrative dependencies on other use cases, specs, or pages only when the active provider binding allows a body fallback.
 - `## Related Work` — workflow issues, tasks, specs, or research.
 - `## Supersedes` — prior use case page when replacing one.
 - `## Change Log` — required for material updates. See `./knowledge-body.md`.
@@ -226,7 +227,7 @@ When splitting:
 1. Confirm the split with the user.
 2. Create separate workflow issues for the child use cases.
 3. Publish or update curated pages when each child is stable.
-4. Link parent and child artifacts using provider relationships when available and body links always.
+4. Link parent and child artifacts using provider relationships when available.
 5. Do not use supersession unless an older shipped/published use case is being replaced.
 
 ## Common mistakes

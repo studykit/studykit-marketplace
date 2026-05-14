@@ -8,7 +8,8 @@ Companion contracts:
 
 - `./metadata-contract.md`
 - `./issue-body.md`
-- Provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Issue provider binding: `./providers/issue-authoring.md`
+- Provider-specific binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
 
 ## Storage role
 
@@ -31,9 +32,9 @@ Represent this metadata using provider-native fields when available. If a provid
 | `title` | yes | Short human-readable work summary. |
 | `status` | yes | Provider-backed lifecycle status. |
 | `implements` | recommended when UC-driven | Use case or requirement this task delivers. Metadata when possible, `## Implements` in body when present. |
-| `depends_on` | optional | Blocking or ordering dependency. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
+| `depends_on` | optional | Blocking or ordering dependency. Use provider-native metadata when available. Body fallback is provider-specific. |
 | `spec` | recommended when governed by a spec | Knowledge artifact that defines the contract. Represent in body under `## Related` or `## References`. |
-| `parent` | optional | Epic or parent issue that coordinates this task. |
+| `parent` | optional | Epic or parent issue that coordinates this task. Use provider-native metadata when available. Body fallback is provider-specific. |
 | `related` | optional | Non-blocking references useful for implementation. |
 | `priority` | optional | Provider priority or field. |
 | `labels` | optional | Provider labels/tags. |
@@ -86,7 +87,7 @@ Anchorless tasks are allowed for small, obvious changes, but they should pass a 
 
 Do not hide design decisions only in the task body when they should become curated knowledge.
 
-## Parent and shared narrative
+## Parent metadata and shared narrative
 
 Use `parent` for:
 
@@ -94,7 +95,7 @@ Use `parent` for:
 - Decomposition from another issue.
 - Follow-up work from a spike, bug, research item, or task.
 
-Narrative that affects several children belongs in the parent issue comments or body. A child task should link to the parent when its approach depends on that shared narrative.
+Narrative that affects several children belongs in the parent issue comments or body. A child task should use provider-native parent metadata when available.
 
 ## Granularity
 
@@ -137,7 +138,7 @@ Acceptance criteria should be grounded in:
 Optional sections:
 
 - `## Implements` — required when `implements` exists.
-- `## Dependencies` — use only when the active provider binding requires a body fallback. Do not include blocked/dependency sections for GitHub Issues.
+- `## Dependencies` — use only when the active provider binding requires a body fallback.
 - `## Related` or `## References` — supporting knowledge pages, research, specs, or issues.
 - `## Change Plan` — forward-looking scope fence naming files, packages, APIs, or migration steps expected to change.
 - `## Interface Contracts` — contracts this task consumes or provides.

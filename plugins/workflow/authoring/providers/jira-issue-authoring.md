@@ -6,18 +6,11 @@ Read with the semantic authoring file for the artifact type, plus:
 
 - `../metadata-contract.md`
 - `../issue-body.md`
+- `./issue-authoring.md`
 
 ## Scope
 
-Use this binding for issue-backed workflow artifacts stored in Jira:
-
-- `task`
-- `bug`
-- `spike`
-- `epic`
-- `review`
-- workflow side of `usecase`
-- workflow side of `research`
+Use this binding for issue-backed workflow artifacts stored in Jira. Common issue-provider rules are in `./issue-authoring.md`.
 
 ## Identity and references
 

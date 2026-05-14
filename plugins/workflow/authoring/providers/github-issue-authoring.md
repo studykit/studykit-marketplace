@@ -6,18 +6,12 @@ Read with the semantic authoring file for the artifact type, plus:
 
 - `../metadata-contract.md`
 - `../issue-body.md`
+- `./issue-authoring.md`
+- `./github-issue-anti-patterns.md`
 
 ## Scope
 
-Use this binding for issue-backed workflow artifacts stored in GitHub Issues:
-
-- `task`
-- `bug`
-- `spike`
-- `epic`
-- `review`
-- workflow side of `usecase`
-- workflow side of `research`
+Use this binding for issue-backed workflow artifacts stored in GitHub Issues. Common issue-provider rules are in `./issue-authoring.md`.
 
 ## Identity and references
 
@@ -79,13 +73,14 @@ Use native GitHub relationships when they match workflow semantics.
 
 Do not duplicate provider-native parent/child or dependency relationships in body sections when GitHub stores them natively.
 
-Never write dedicated blocked/dependency sections for GitHub native dependency data. This includes `## Dependencies`, `## Blocked`, `## Blocked By`, `## Blocking`, and blocked-on resume slots. Use GitHub dependency metadata through the provider wrapper and put discussion or rationale in comments when needed.
+Never write dedicated parent or blocked/dependency sections in GitHub Issue bodies. Use GitHub parent/sub-issue and dependency metadata through the provider wrapper. See `./github-issue-anti-patterns.md`.
 
 Required body sections by relationship:
 
 - `target` → `## Target`
 - `implements` → `## Implements`
 - `related` → `## Related`
+- `parent` → GitHub parent/sub-issue metadata only. Do not add a `## Parent` body section.
 - `depends_on` → GitHub dependency metadata only. Do not add a blocked/dependency body section.
 
 ## Review items

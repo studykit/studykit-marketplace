@@ -17,6 +17,8 @@ Do not turn the issue body into a transcript. Keep it current and structured.
 
 When a relationship exists, represent it in the body unless the provider-specific binding stores it natively and forbids duplication.
 
+Provider-specific bindings decide which native relationships must not be duplicated in the issue body.
+
 ### `## Target`
 
 Required for `review` items. Lists the artifact or artifacts being reviewed.
@@ -42,9 +44,9 @@ Required when a work item implements a use case, requirement, or curated knowled
 
 Default body fallback for providers that do not store blocking or ordering dependencies natively.
 
-Do not add `## Dependencies`, `## Blocked`, `## Blocked By`, `## Blocking`, or equivalent blocked-related sections to GitHub issue bodies for native GitHub dependency relationships. Store those relationships through provider-native dependency metadata instead.
+Use `## Dependencies` only when the active provider binding requires a body fallback for dependencies.
 
-Non-GitHub fallback example:
+Fallback example:
 
 ```markdown
 ## Dependencies
@@ -96,7 +98,7 @@ Use when the item is mid-flight and the current state is not obvious from metada
 Suggested slots:
 
 - **Approach.** Current strategy.
-- **Waiting for.** External input or sequencing note, only when the provider binding allows it. Do not use this slot to duplicate GitHub native dependency metadata.
+- **Waiting for.** External input or sequencing note, only when the provider binding allows it.
 - **Open questions.** Questions awaiting input.
 - **Next.** Next concrete step.
 

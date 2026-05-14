@@ -14,7 +14,8 @@ Companion contracts:
 - `./metadata-contract.md`
 - `./issue-body.md`
 - `./knowledge-body.md`
-- Issue provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Issue provider binding: `./providers/issue-authoring.md`
+- Provider-specific issue binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
 - Knowledge provider binding: `./providers/confluence-page-authoring.md` or `./providers/github-knowledge-authoring.md`
 
 ## When research is warranted
@@ -56,8 +57,8 @@ Represent this metadata using provider-native fields when available.
 | `mode` | yes | `comparative` or `single`. |
 | `options` | required for comparative | Alternatives being compared. |
 | `knowledge_page` | optional until published | Link to curated report after publication. |
-| `depends_on` | optional | Work items that must finish first. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
-| `parent` | optional | Epic or parent issue coordinating this research. |
+| `depends_on` | optional | Work items that must finish first. Use provider-native metadata when available. Body fallback is provider-specific. |
+| `parent` | optional | Epic or parent issue coordinating this research. Use provider-native metadata when available. Body fallback is provider-specific. |
 | `related` | optional | Specs, tasks, use cases, reviews, or pages this research informs. |
 | `labels` | optional | Provider labels/tags. |
 

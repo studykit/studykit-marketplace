@@ -36,7 +36,9 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
         "body-conventions.md",
         "issue-body.md",
         "review-authoring.md",
+        "providers/issue-authoring.md",
         "providers/github-issue-authoring.md",
+        "providers/github-issue-anti-patterns.md",
     ]
     assert all(path.is_absolute() for path in resolution.files)
 
@@ -76,6 +78,7 @@ providers:
     knowledge_resolution = resolve_authoring("architecture", project=tmp_path)
 
     assert issue_resolution.provider == "jira"
+    assert "providers/issue-authoring.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-authoring.md" in _rel_paths(issue_resolution.files)
     assert knowledge_resolution.provider == "github"
     assert "providers/github-knowledge-authoring.md" in _rel_paths(knowledge_resolution.files)

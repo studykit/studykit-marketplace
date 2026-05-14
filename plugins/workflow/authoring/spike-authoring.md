@@ -10,7 +10,8 @@ Companion contracts:
 
 - `./metadata-contract.md`
 - `./issue-body.md`
-- Provider binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
+- Issue provider binding: `./providers/issue-authoring.md`
+- Provider-specific binding: `./providers/github-issue-authoring.md` or `./providers/jira-issue-authoring.md`
 
 ## Storage role
 
@@ -32,8 +33,8 @@ Represent this metadata using provider-native fields when available. If a provid
 | `type` | yes | Always `spike`. Use issue type, label, or field depending on provider. |
 | `title` | yes | Short description of the question or experiment. |
 | `status` | yes | Provider-backed lifecycle status. |
-| `depends_on` | optional | Work items that must finish first. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
-| `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. |
+| `depends_on` | optional | Work items that must finish first. Use provider-native metadata when available. Body fallback is provider-specific. |
+| `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. Use provider-native metadata when available. Body fallback is provider-specific. |
 | `related` | optional | Specs, use cases, research, reviews, pages, or issues relevant to the experiment. |
 | `artifact_links` | recommended when PoC exists | Links to branch, gist, repository path, build output, benchmark result, or other throwaway artifact. |
 | `labels` | optional | Provider labels/tags. |

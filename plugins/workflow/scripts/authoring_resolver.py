@@ -36,8 +36,15 @@ DUAL_TYPES = {"usecase", "research"}
 ALL_TYPES = ISSUE_TYPES | KNOWLEDGE_TYPES | DUAL_TYPES
 
 ISSUE_PROVIDER_FILES = {
-    "github": "providers/github-issue-authoring.md",
-    "jira": "providers/jira-issue-authoring.md",
+    "github": (
+        "providers/issue-authoring.md",
+        "providers/github-issue-authoring.md",
+        "providers/github-issue-anti-patterns.md",
+    ),
+    "jira": (
+        "providers/issue-authoring.md",
+        "providers/jira-issue-authoring.md",
+    ),
 }
 
 KNOWLEDGE_PROVIDER_FILES = {
@@ -152,7 +159,7 @@ def resolve_authoring(
     ]
 
     if normalized_role == "issue" and normalized_provider in ISSUE_PROVIDER_FILES:
-        parts.append(ISSUE_PROVIDER_FILES[normalized_provider])
+        parts.extend(ISSUE_PROVIDER_FILES[normalized_provider])
     if normalized_role == "knowledge" and normalized_provider in KNOWLEDGE_PROVIDER_FILES:
         parts.append(KNOWLEDGE_PROVIDER_FILES[normalized_provider])
 
