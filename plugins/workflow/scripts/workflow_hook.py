@@ -44,6 +44,10 @@ from workflow_github import resolve_github_repository  # noqa: E402
 from workflow_hook_context import EditTarget, HookContext  # noqa: E402
 from workflow_issue_cache import cache_issue_references  # noqa: E402
 from workflow_issue_cache import extract_issue_numbers, format_issue_cache_context  # noqa: E402
+from workflow_operator_context import (  # noqa: E402
+    agent_name_matches_operator,
+    build_operator_subagent_context,
+)
 
 HOOK_STATE_DIR_NAME = "hook-state"
 
@@ -317,11 +321,6 @@ def _emit_codex_operator_session(ctx: HookContext, output: TextIO) -> int:
     ``workflow_subagent_hook.py``), so this helper restricts injection to
     codex. Non-operator subagents stay silent.
     """
-
-    from workflow_subagent_hook import (
-        agent_name_matches_operator,
-        build_operator_subagent_context,
-    )
 
     if ctx.runtime != "codex":
         return 0

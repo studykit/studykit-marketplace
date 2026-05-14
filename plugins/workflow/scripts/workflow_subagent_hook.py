@@ -15,7 +15,6 @@ extract the same parent thread id from the subagent rollout transcript.
 from __future__ import annotations
 
 import sys
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, TextIO
 
@@ -25,8 +24,10 @@ if _SCRIPTS_DIR not in sys.path:
 
 from workflow_config import WorkflowConfigError, load_workflow_config  # noqa: E402
 from workflow_hook_context import HookContext  # noqa: E402
-
-WORKFLOW_OPERATOR_AGENT_NAME = "workflow-operator"
+from workflow_operator_context import (  # noqa: E402
+    build_operator_subagent_context,
+    payload_targets_operator,
+)
 
 
 def subagent_start(
@@ -74,42 +75,6 @@ def subagent_start(
         stdout=output,
     )
     return 0
-
-
-def build_operator_subagent_context(parent_session_id: str, project_root: Path) -> str:
-    """Build the additionalContext block injected when the operator subagent starts."""
-
-    return (
-        "## workflow operator session\n\n"
-        f"Parent session id: `{parent_session_id}`\n"
-        f"Workflow project root: `{project_root}`\n\n"
-        "Use this parent session id with `--session` for every authoring "
-        "ledger, guard, and provider script invocation in this subagent. Reads "
-        "recorded by the main session live under this id; defaulting to the "
-        "subagent's own session id or environment variables will check the "
-        "wrong ledger and your guarded writes will fail."
-    )
-
-
-def payload_targets_operator(payload: Mapping[str, Any]) -> bool:
-    """Return true when the SubagentStart payload targets workflow-operator."""
-
-    for key in ("agent_type", "agent_name", "subagent_type"):
-        value = payload.get(key)
-        if isinstance(value, str) and value.strip() == WORKFLOW_OPERATOR_AGENT_NAME:
-            return True
-
-    tool_input = payload.get("tool_input")
-    if isinstance(tool_input, Mapping):
-        for key in ("subagent_type", "agent_type", "agent_name"):
-            value = tool_input.get(key)
-            if isinstance(value, str) and value.strip() == WORKFLOW_OPERATOR_AGENT_NAME:
-                return True
-    return False
-
-
-def agent_name_matches_operator(name: str | None) -> bool:
-    return bool(name) and name.strip() == WORKFLOW_OPERATOR_AGENT_NAME
 
 
 def main() -> int:
