@@ -15,6 +15,7 @@ from workflow_config import WorkflowConfig
 from workflow_github import GitHubRepository, normalize_issue_number
 from workflow_providers import CACHE_POLICY_DEFAULT, ProviderDispatcher, default_provider_registry
 from workflow_providers import request_from_config
+from workflow_relationship_renderers import render_github_relationship_summary
 
 MAX_ISSUE_REFS = 20
 
@@ -241,83 +242,7 @@ def cached_relationship_summary(cache: GitHubIssueCache, repo: GitHubRepository,
         relationships = cache.read_relationships(repo, issue)
     except Exception:
         return ""
-    return compact_relationship_summary(relationships)
-
-
-def compact_relationship_summary(relationships: Mapping[str, Any]) -> str:
-    """Render relationship YAML as compact issue-reference groups."""
-
-    parts: list[str] = []
-    parent = relationship_numbers(relationships.get("parent"))
-    if parent:
-        parts.append(f"parent {format_issue_numbers(parent)}")
-
-    children = relationship_numbers(relationships.get("children"))
-    if children:
-        parts.append(f"children {format_issue_numbers(children)}")
-
-    dependencies = relationships.get("dependencies")
-    if isinstance(dependencies, Mapping):
-        blocked_by = relationship_numbers(dependencies.get("blocked_by"))
-        if blocked_by:
-            parts.append(f"blocked_by {format_issue_numbers(blocked_by)}")
-        blocking = relationship_numbers(dependencies.get("blocking"))
-        if blocking:
-            parts.append(f"blocking {format_issue_numbers(blocking)}")
-
-    related = relationship_numbers(relationships.get("related"))
-    if related:
-        parts.append(f"related {format_issue_numbers(related)}")
-
-    return "; ".join(parts)
-
-
-def relationship_numbers(value: Any) -> list[str]:
-    """Extract issue numbers from normalized relationship cache values."""
-
-    numbers: list[str] = []
-    seen: set[str] = set()
-
-    def add(raw: Any) -> None:
-        try:
-            normalized = normalize_issue_number(raw)
-        except Exception:
-            return
-        if normalized in seen:
-            return
-        seen.add(normalized)
-        numbers.append(normalized)
-
-    def visit(item: Any) -> None:
-        if item is None:
-            return
-        if isinstance(item, Mapping):
-            if "number" in item:
-                add(item.get("number"))
-                return
-            if "issue" in item:
-                add(item.get("issue"))
-                return
-            nodes = item.get("nodes")
-            if isinstance(nodes, list):
-                for node in nodes:
-                    visit(node)
-            return
-        if isinstance(item, list | tuple | set):
-            for child in item:
-                visit(child)
-            return
-        add(item)
-
-    visit(value)
-    return numbers
-
-
-def format_issue_numbers(numbers: Sequence[str], *, limit: int = 5) -> str:
-    visible = [f"#{number}" for number in numbers[:limit]]
-    if len(numbers) > limit:
-        visible.append(f"+{len(numbers) - limit}")
-    return ",".join(visible)
+    return render_github_relationship_summary(relationships)
 
 
 def shared_issue_dir_base(contexts: Sequence[IssueCacheContext]) -> str | None:
