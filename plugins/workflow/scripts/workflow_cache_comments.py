@@ -16,6 +16,7 @@ from workflow_github import GitHubRepositoryError, resolve_github_repository
 from workflow_issue_cache import issue_numbers_from_references
 from workflow_providers import ProviderDispatcher, ProviderRequest, default_provider_registry
 from workflow_providers import authoring_guard_callback, request_from_config
+from workflow_env import workflow_project_dir_from_env, workflow_session_id_from_env
 
 
 class WorkflowCacheCommentsError(RuntimeError):
@@ -24,8 +25,8 @@ class WorkflowCacheCommentsError(RuntimeError):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
-    parser.add_argument("--session", required=True, help="workflow session id for authoring guard")
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
+    parser.add_argument("--session", help="workflow session id for authoring guard; defaults to WORKFLOW_SESSION_ID")
     parser.add_argument("--type", default="task", help="workflow artifact type for authoring guard")
     parser.add_argument("--state-dir", type=Path, help="ledger state directory")
     parser.add_argument("--json", action="store_true", help="emit JSON")
@@ -114,7 +115,7 @@ def main(
             project=args.project,
             issues=list(args.issues),
             artifact_type=args.type,
-            session_id=args.session,
+            session_id=args.session or workflow_session_id_from_env(),
             state_dir=args.state_dir,
             runner=runner,
             guard=guard,

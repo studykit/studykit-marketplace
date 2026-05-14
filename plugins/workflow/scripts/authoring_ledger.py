@@ -11,13 +11,13 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-import os
 import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
 
+from workflow_env import workflow_project_dir_from_env, workflow_session_id_from_env
 from workflow_config import CONFIG_NAME, find_workflow_config
 
 STATE_ROOT_NAME = "workflow-plugin"
@@ -51,16 +51,10 @@ def find_config(project: Path) -> Path | None:
 
 
 def default_session_id() -> str:
-    for env_name in (
-        "WORKFLOW_SESSION_ID",
-        "CODEX_THREAD_ID",
-        "CLAUDE_SESSION_ID",
-        "CLAUDE_CONVERSATION_ID",
-    ):
-        value = os.environ.get(env_name)
-        if value:
-            return value
-    raise LedgerError("session id is required; pass --session or set WORKFLOW_SESSION_ID")
+    try:
+        return workflow_session_id_from_env()
+    except ValueError as exc:
+        raise LedgerError(str(exc)) from exc
 
 
 def normalize_path(path: Path) -> Path:
@@ -141,8 +135,8 @@ def missing_reads(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
-    parser.add_argument("--session", help="session id; defaults to WORKFLOW_SESSION_ID or runtime env")
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
+    parser.add_argument("--session", help="session id; defaults to WORKFLOW_SESSION_ID")
     parser.add_argument("--state-dir", type=Path, help="override ledger state root")
     parser.add_argument("--json", action="store_true", help="emit JSON")
 

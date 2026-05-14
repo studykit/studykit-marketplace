@@ -55,6 +55,14 @@ def session_policy_state_path(project: Path, runtime: str, session_id: str) -> P
     )
 
 
+def session_env_state_path(project: Path, runtime: str, session_id: str) -> Path | None:
+    safe_session = _safe_token(session_id)
+    if not safe_session:
+        return None
+    safe_runtime = _safe_token(runtime) or "unknown"
+    return workflow_hook_state_dir(project) / f"workflow-env-{safe_runtime}-{safe_session}.sh"
+
+
 def session_policy_was_announced(project: Path, runtime: str, session_id: str) -> bool:
     path = session_policy_state_path(project, runtime, session_id)
     return bool(path is not None and path.is_file())

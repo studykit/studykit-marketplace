@@ -10,8 +10,8 @@ Use these terms consistently across guide documents:
 
 - `host` means the application that invokes plugin behavior, such as Claude Code or Codex.
 - `shared implementation` means durable behavior, instructions, scripts, templates, or tests that should not depend on one host.
-- `adapter layer` means the host-specific boundary that translates host inputs, placeholders, paths, environment variables, tool names, and output formats into a shared contract.
-- `script adapter` means the script entrypoint or wrapper that reads host-specific runtime values and passes concrete arguments or normalized data into shared script logic.
+- `adapter layer` means the host-specific boundary that translates host raw inputs, placeholders, paths, environment variables, tool names, and output formats into concrete values or plugin-owned normalized contracts.
+- `script adapter` means the script entrypoint or wrapper that reads host-specific runtime values or plugin-owned normalized environment contracts and passes concrete arguments or host-neutral values into shared script logic.
 - `hook adapter` means the adapter layer for hook payloads and hook output.
 - `shared hook module` means a host-neutral hook logic module such as `plugins/<name>/scripts/<plugin>_hook.py`. It contains plain functions and receives concrete values from adapters; it does not parse stdin, argv, host environment variables, or raw host payloads.
 - `utility module` means a host-neutral helper module such as `plugins/<name>/scripts/util.py`. It contains generic helpers that do not know plugin business rules, host payload schemas, or host environment variables.
@@ -19,7 +19,7 @@ Use these terms consistently across guide documents:
 - `command text input` means values available while constructing a command string, such as template substitutions. These are not automatically process environment variables.
 - `process input` means values a launched script can read directly, such as environment variables, stdin, argv, cwd, and files.
 
-When shared behavior supports both Claude Code and Codex, implement an adapter layer. The adapter layer should identify the invoking host, resolve host-specific variables, normalize inputs, map tool names, and emit output in the invoking host's expected shape.
+When shared behavior supports both Claude Code and Codex, implement an adapter layer. The adapter layer should identify the invoking host, resolve host-specific variables, normalize inputs into plugin-owned values, map tool names, and emit output in the invoking host's expected shape.
 
 ## Document Ownership
 
@@ -55,10 +55,11 @@ Only the adapter layer should know host-specific details.
 
 - Shared instructions and scripts should not branch on Claude or Codex unless no adapter boundary is available.
 - Host-specific manifests, command wrappers, hook adapters, and runtime-specific examples may reference host variables and placeholders.
-- All scripts should access host-provided values through an adapter layer. The script adapter may read command text substitutions, environment variables, stdin, argv, or manifest values; shared script logic should receive concrete paths, arguments, host names, and normalized payloads.
+- All scripts should access host-provided values through an adapter layer. The script adapter may read command text substitutions, environment variables, stdin, argv, manifest values, or plugin-owned normalized environment contracts; shared script logic should receive concrete paths, arguments, host names, and host-neutral values.
 - Hook-invoked scripts, skill-invoked scripts, and assistant shell tool commands do not have the same runtime context. Do not copy variable assumptions from one context into another.
 - Cross-runtime hooks should normally use runtime-specific entrypoints (`hook_claude.py`, `hook_codex.py`) that call a shared hook module with concrete values.
-- If shared code needs `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_SKILL_DIR}`, `${PLUGIN_ROOT}`, a raw hook payload, or a host-specific tool name, move that concern into an adapter first.
+- If shared code needs `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_SKILL_DIR}`, `${PLUGIN_ROOT}`, `CODEX_THREAD_ID`, `CLAUDE_CODE_SESSION_ID`, a raw hook payload, or a host-specific tool name, move that concern into an adapter first.
+- Plugin-owned normalized environment contracts, such as workflow's `WORKFLOW_*` values, may be read by script entrypoints as defaults, but deeper shared logic should still receive concrete values.
 
 ## Layering Rule
 

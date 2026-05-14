@@ -19,6 +19,7 @@ from authoring_ledger import LedgerError
 from authoring_resolver import ResolverError
 from workflow_command import CommandRunner, WorkflowCommandError, run_command
 from workflow_config import WorkflowConfigError, load_workflow_config
+from workflow_env import workflow_project_dir_from_env, workflow_session_id_from_env
 
 
 DEFAULT_ISSUE_FIELDS = (
@@ -1244,7 +1245,7 @@ def _dig(data: Mapping[str, Any], *keys: str) -> Any:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
     parser.add_argument("--remote", default="origin", help="Git remote fallback name")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -1297,7 +1298,7 @@ def _add_write_parser(
     parser = subparsers.add_parser(name, help=help_text)
     parser.add_argument("--guard-type", required=True, help="workflow artifact type for guard")
     parser.add_argument("--guard-role", default="issue", help="workflow role for guard")
-    parser.add_argument("--session", required=True, help="workflow session id for guard")
+    parser.add_argument("--session", help="workflow session id for guard; defaults to WORKFLOW_SESSION_ID")
     parser.add_argument("--state-dir", type=Path, help="ledger state directory")
     return parser
 
@@ -1378,7 +1379,7 @@ def _guard_from_cli(args: argparse.Namespace, project: Path) -> WriteGuard:
         AuthoringGuardSpec(
             artifact_type=args.guard_type,
             project=project,
-            session_id=args.session,
+            session_id=args.session or workflow_session_id_from_env(),
             role=args.guard_role,
             provider="github",
             state_dir=args.state_dir,

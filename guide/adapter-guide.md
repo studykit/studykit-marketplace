@@ -35,11 +35,30 @@ Read this document when you are:
 
 ## Core Rule
 
-Do not let shared script logic read host-specific inputs directly.
+Do not let shared implementation read host-specific raw inputs directly.
 
-Every script that depends on host-provided values needs an adapter boundary. The adapter reads raw inputs once, validates them, and passes concrete values or a normalized structure into shared logic.
+Every plugin entrypoint that depends on host-provided values needs an adapter
+boundary. The adapter reads raw inputs for its invocation context, validates
+them, and converts them into one of these plugin-owned forms:
 
-Shared logic should receive values such as:
+- Concrete function arguments.
+- A host-neutral data structure.
+- A small normalized environment contract for repeated shell calls.
+- A generated file that stores normalized values for a later adapter to read.
+
+Host-specific raw inputs include:
+
+- Command text substitutions such as `${CLAUDE_PLUGIN_ROOT}`,
+  `${CLAUDE_SKILL_DIR}`, `$ARGUMENTS`, or host-specific placeholders.
+- Host environment variables such as `CLAUDE_ENV_FILE`,
+  `CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`, or repository-local hook
+  variables such as `PLUGIN_ROOT`.
+- Raw hook stdin JSON.
+- Runtime-specific payload fields, tool names, matcher names, transcript
+  metadata, or agent markers.
+
+Shared logic should receive concrete values or plugin-neutral structures such
+as:
 
 - `host`
 - `invocation`
@@ -48,13 +67,50 @@ Shared logic should receive values such as:
 - `project_root`
 - `cwd`
 - `session_id`
-- `argv`
-- `hook_payload`
+- `event_name`
 - `tool_name`
 - `tool_category`
+- `read_target`
+- `edit_targets`
+- `prompt_text`
+- `scan_text`
 - `user_config`
 
-Shared logic should not directly read `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_SKILL_DIR}`, `${PLUGIN_ROOT}`, `$ARGUMENTS`, `CLAUDE_CODE_SESSION_ID`, `CODEX_THREAD_ID`, `CLAUDE_ENV_FILE`, raw hook stdin, or shell-tool-only variables.
+Do not pass raw hook payloads into shared logic. Parse raw payloads in the
+runtime adapter, extract only the fields the operation needs, then pass those
+fields as concrete values. Runtime payload dataclasses or parser-only
+structures should stay inside the runtime adapter unless they are explicitly
+host-neutral.
+
+A normalized environment contract is allowed when a plugin needs many repeated
+shell calls and explicit argv would make every command noisy or fragile. Keep
+that contract plugin-owned and host-neutral:
+
+- Use names controlled by the plugin, such as `WORKFLOW_PLUGIN_ROOT`,
+  `WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID`.
+- Populate the contract only from an adapter, hook, launcher, or generated
+  state file.
+- Let command-line entrypoints read the contract as defaults for convenience.
+- Pass concrete values from the entrypoint into deeper shared modules.
+- Do not use host marker variables as the contract itself.
+
+The workflow plugin is the reference pattern: Claude and Codex hooks read their
+own runtime inputs, persist or generate normalized `WORKFLOW_*` values for
+later shell use, and workflow scripts consume those normalized values as
+defaults before calling shared workflow logic with concrete paths and session
+ids.
+
+When creating another plugin, use this sequence:
+
+1. List the raw inputs for each invocation context: hook, skill, shell, MCP,
+   LSP, lifecycle, or manifest template.
+2. Choose the adapter entrypoint that owns each raw input.
+3. Parse raw payloads into adapter-local structures.
+4. Decide whether repeated shell calls need a plugin-owned normalized
+   environment contract or whether argv/stdin is enough.
+5. Call shared functions with concrete values only.
+6. Test adapters with explicit fixtures and environment variables; test shared
+   functions without host-specific environment variables.
 
 ## Command Text Input vs Process Input
 
@@ -76,7 +132,7 @@ The safest pattern is:
 
 | Runtime context | Command text input | Process input visible to the launched command | Adapter rule |
 | --- | --- | --- | --- |
-| Assistant shell tool command | The command string authored by the assistant. Plugin placeholders are not expanded just because the assistant uses the shell tool. | The shell environment for the assistant session, cwd, argv, stdin if provided, and files. In Codex, `CODEX_THREAD_ID` is available in the shell tool environment in current observed runtimes, but it is not documented as a plugin or hook contract. | For Studykit scripts launched by the Codex shell tool, the adapter may read `CODEX_THREAD_ID` as the session id for session-scoped state. Keep that use at the adapter boundary and do not assume hooks, MCP servers, LSP servers, or non-shell-tool contexts can read it. |
+| Assistant shell tool command | The command string authored by the assistant. Plugin placeholders are not expanded just because the assistant uses the shell tool. | The shell environment for the assistant session, cwd, argv, stdin if provided, and files. In Codex, `CODEX_THREAD_ID` is available in the shell tool environment in current observed runtimes, but it is not documented as a plugin or hook contract. | For Studykit workflow scripts launched by the Codex shell tool, use a shell wrapper that reads `CODEX_THREAD_ID`, sources the generated workflow export file, and passes normalized `WORKFLOW_*` values to scripts. Keep that use at the wrapper boundary and do not assume hooks, MCP servers, LSP servers, or non-shell-tool contexts can read it. |
 | Claude skill content command | Claude skill substitutions such as `${CLAUDE_SKILL_DIR}`, `${CLAUDE_SESSION_ID}`, `${CLAUDE_EFFORT}`, `$ARGUMENTS`, `$ARGUMENTS[N]`, `$N`, and named `$name` arguments. | The child process environment inherited by the command, argv passed by the command, cwd, stdin if provided, and files. Skill substitutions are not guaranteed to appear as environment variables. Claude Code v2.1.132+ sets `CLAUDE_CODE_SESSION_ID` in Bash tool subprocesses, matching the hook `session_id`. | Treat the skill command or Bash-launched script entrypoint as the adapter. Pass needed substitution values explicitly as argv or stdin for portability. Claude-only Bash-launched adapters may read `CLAUDE_CODE_SESSION_ID`, then pass a normalized `session_id` to shared logic. |
 | Codex skill instruction | Current Codex skill docs do not define `$ARGUMENTS`, `CODEX_SKILL_DIR`, or `CODEX_PLUGIN_ROOT` skill-body placeholders. | The assistant resolves files and may run commands with explicit paths and argv. Do not assume a Codex skill placeholder exists unless documented. | Resolve paths relative to the active `SKILL.md` or known plugin files, then pass concrete values explicitly. |
 | Claude hook command | Hook manifest command text can use `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, command env assignments, and supported hook placeholders. | Hook subprocess environment, hook stdin payload, argv, cwd, and files. Some values such as `CLAUDE_ENV_FILE` exist only in supported hook contexts. | Treat the hook entrypoint as the adapter. Parse stdin once, read env once, then call shared logic with normalized data. |
@@ -103,14 +159,32 @@ The shell tool cannot assume:
 - Hook stdin payloads.
 - Plugin hook environment variables.
 
-For Studykit scripts launched through the Codex shell tool, use `CODEX_THREAD_ID` as the shell-tool session id when session-scoped state is needed. This is a repository convention based on the current Codex shell environment, not a documented Codex plugin or hook contract.
+For Studykit workflow scripts launched through the Codex shell tool, use a
+workflow shell wrapper that reads `CODEX_THREAD_ID` as the exact shell session
+marker, sources the generated workflow export file, and then invokes scripts
+with normalized `WORKFLOW_*` values. This is a repository convention based on
+the current Codex shell environment, not a documented Codex plugin or hook
+contract.
 
 Keep this rule narrow:
 
-- Shell-tool-launched Codex script adapters may read `CODEX_THREAD_ID`.
+- Shell-tool-launched Codex wrappers may read `CODEX_THREAD_ID`.
 - Codex hooks should read `session_id` from their stdin JSON payload instead.
 - Shared logic should receive a normalized `session_id`; it should not read `CODEX_THREAD_ID` directly.
 - Do not assume MCP servers, LSP servers, lifecycle commands, or future non-shell-tool contexts can read `CODEX_THREAD_ID` unless their adapter passes it explicitly.
+
+When a plugin needs repeated shell-tool script calls, prefer a small normalized
+environment contract over repeated argv. For the workflow plugin, the contract
+is:
+
+- `WORKFLOW_PLUGIN_ROOT`
+- `WORKFLOW_PROJECT_DIR`
+- `WORKFLOW_SESSION_ID`
+
+Runtime detection for shell wrappers must use exact session variables, not
+prefix checks. Codex shell wrappers may use `CODEX_THREAD_ID`. Claude shell
+wrappers may use `CLAUDE_CODE_SESSION_ID`. If both are set, fail closed instead
+of guessing. Do not infer Claude from unrelated `CLAUDE_CODE_*` variables.
 
 ## Skill Adapter Rules
 
@@ -223,7 +297,7 @@ Common process inputs are:
 
 In Claude Code v2.1.132 and later, scripts launched through the Bash tool also receive `CLAUDE_CODE_SESSION_ID` in the subprocess environment. That value matches the `session_id` passed to Claude hooks. Treat it as a Claude-specific process input for a script adapter, not as a SKILL.md string substitution and not as a Codex contract.
 
-In Codex, Studykit scripts launched through the shell tool may read `CODEX_THREAD_ID` in the script adapter when session-scoped state is needed. Treat it as a Codex shell-tool convention only; Codex hooks should use stdin `session_id`.
+In Codex, Studykit workflow wrappers launched through the shell tool may read `CODEX_THREAD_ID` when session-scoped state is needed. Treat it as a Codex shell-tool convention only; Codex hooks should use stdin `session_id`.
 
 A skill-launched script should not assume it can read:
 
@@ -240,7 +314,7 @@ Use this pattern for Claude-specific command snippets:
 
 Then read `session_id` and `arguments` from positional arguments inside the script adapter.
 
-For Claude-only scripts launched through the Bash tool on Claude Code v2.1.132 or later, the adapter may read `CLAUDE_CODE_SESSION_ID` when session correlation is needed. For Codex shell-tool scripts, the adapter may read `CODEX_THREAD_ID`. In both cases, pass a normalized `session_id` into shared logic so tests, hooks, and cross-runtime paths do not depend on shell-tool-only environment variables.
+For Claude-only scripts launched through the Bash tool on Claude Code v2.1.132 or later, the adapter may read `CLAUDE_CODE_SESSION_ID` when session correlation is needed. For Codex workflow shell commands, the wrapper may read `CODEX_THREAD_ID` to source normalized workflow exports. In both cases, pass a normalized `session_id` into shared logic so tests, hooks, and cross-runtime paths do not depend on shell-tool-only environment variables.
 
 Use this pattern for Codex-compatible instructions:
 
@@ -443,6 +517,11 @@ For Claude hooks that need to persist shell environment changes, use `CLAUDE_ENV
 
 Claude command hooks are a documented exception to the general safety rule that command text substitutions are not automatically process environment variables: Claude exports `CLAUDE_PROJECT_DIR`, `CLAUDE_PLUGIN_ROOT`, and `CLAUDE_PLUGIN_DATA` to command hook subprocesses. Keep shared logic portable by still normalizing those values at the adapter boundary.
 
+For workflow shell commands, Claude hooks may persist the normalized
+`WORKFLOW_*` contract by appending `export` statements to `CLAUDE_ENV_FILE`.
+Use `CLAUDE_CODE_SESSION_ID` only as the exact shell-tool session marker or as a
+wrapper fallback when the normalized contract is missing.
+
 ## Codex-Specific Inputs
 
 Codex plugin contexts have different documented surfaces.
@@ -453,7 +532,7 @@ Rules for this repository:
 - Do not copy Claude names such as `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, or `CLAUDE_PROJECT_DIR` into Codex hook logic.
 - Codex hooks receive a JSON object on stdin with `session_id`; use that as the official hook session/thread identifier.
 - Current Codex skill docs do not define `$ARGUMENTS`, `CODEX_SKILL_DIR`, or `CODEX_PLUGIN_ROOT` skill-body placeholders. Do not design shared skill scripts around those names.
-- Studykit scripts launched through the Codex shell tool may read `CODEX_THREAD_ID` at the script adapter boundary for session-scoped state. This is an observed shell-tool convention, not a documented Codex plugin or hook contract.
+- Studykit shell wrappers launched through the Codex shell tool may read `CODEX_THREAD_ID` at the wrapper boundary for session-scoped state. This is an observed shell-tool convention, not a documented Codex plugin or hook contract. Use it to locate a generated export file, source the normalized `WORKFLOW_*` contract, and then call shared scripts.
 - If a Codex hook or lifecycle command needs plugin data paths, pass a concrete value through a wrapper, generated hook config, argv, stdin, or a documented manifest mechanism.
 
 ## Passing Values to Scripts

@@ -45,6 +45,7 @@ from workflow_hook import (  # noqa: E402
     workflow_config_for_project,
 )
 from util import as_string, emit_json, read_payload_or_stdin, scan_text_values  # noqa: E402
+from workflow_env import write_codex_env_file  # noqa: E402
 from workflow_operator_context import (  # noqa: E402
     agent_name_matches_operator,
     build_operator_subagent_context,
@@ -152,6 +153,20 @@ def _project_dir(event_payload: CodexCommonPayload) -> Path | None:
 
 def _plugin_root() -> Path:
     return Path(os.environ["PLUGIN_ROOT"]).expanduser().resolve()
+
+
+def _persist_codex_shell_env(
+    *,
+    project_dir: Path,
+    codex_session_id: str,
+    workflow_session_id: str,
+) -> None:
+    write_codex_env_file(
+        project_dir=project_dir,
+        plugin_root=_plugin_root(),
+        codex_session_id=codex_session_id,
+        workflow_session_id=workflow_session_id,
+    )
 
 
 def _session_start_source(payload: dict[str, Any]) -> str:
@@ -372,6 +387,12 @@ def _handle_agent_session_start(
     if config is None:
         return 0
 
+    _persist_codex_shell_env(
+        project_dir=config.root,
+        codex_session_id=event_payload.session_id,
+        workflow_session_id=parent_thread_id,
+    )
+
     emit_json(
         {
             "hookSpecificOutput": {
@@ -397,6 +418,12 @@ def emit_session_start_policy(
     config = workflow_config_for_project(_project_dir(event_payload))
     if config is None:
         return 0
+
+    _persist_codex_shell_env(
+        project_dir=config.root,
+        codex_session_id=event_payload.session_id,
+        workflow_session_id=event_payload.session_id,
+    )
 
     if event_payload.source != "clear" and session_policy_was_announced(
         config.root, "codex", event_payload.session_id,

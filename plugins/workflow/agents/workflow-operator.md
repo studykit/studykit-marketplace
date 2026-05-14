@@ -55,19 +55,15 @@ The caller should provide:
 If the request is missing a required issue ref, artifact type, or body file,
 ask for exactly that missing value before running a write.
 
-## Parent Session Id
+## Session Context
 
-When this agent is spawned, the workflow plugin's start hook injects a context
-block titled `## workflow operator session` that includes the parent session
-id. Treat that id as the session id for every workflow script invocation in
-this subagent — pass it as `--session "$PARENT_SESSION_ID"` to authoring
-ledger, guard, and provider scripts so guarded writes verify against the read
-ledger that the main session populated.
+When this agent is spawned, an injected context block titled
+`## workflow operator session` may include the parent session id. Normal
+workflow launcher commands use the correct session context for guarded writes.
 
-If the start-hook context is missing (e.g., running this prompt outside a
-spawned subagent context, or the parent session id was not provided), ask the
-caller for the parent session id before performing any guarded write. Do not
-silently fall back to environment variables or default ids — that would check
+If that context is missing and a guarded command reports that its session id is
+missing, ask the caller for the parent session id before retrying. Do not
+silently fall back to the runtime's own subagent session id — that would check
 the wrong ledger and let writes through without the required authoring reads.
 
 ## Root Resolution
@@ -75,17 +71,17 @@ the wrong ledger and let writes through without the required authoring reads.
 Resolve these once per task:
 
 ```bash
-PROJECT="${PROJECT:-$(git rev-parse --show-toplevel)}"
-WORKFLOW_PLUGIN_ROOT="${WORKFLOW_PLUGIN_ROOT:-$PROJECT/plugins/workflow}"
+PROJECT="$(git rev-parse --show-toplevel)"
+WORKFLOW="${WORKFLOW:-$PROJECT/plugins/workflow/scripts/workflow}"
 ```
 
-Abort if `$WORKFLOW_PLUGIN_ROOT/scripts` does not exist. Do not rely on raw
-host placeholders in shared script logic; pass concrete paths and arguments to
-scripts.
+Abort if `$WORKFLOW` does not exist. Do not call bundled scripts directly with
+`python3` unless the launcher is unavailable and the caller explicitly asks for
+manual troubleshooting.
 
 ## Allowed Commands
 
-Use `python3` workflow scripts as the primary path:
+Use the workflow launcher as the primary path for bundled scripts:
 
 - `scripts/workflow_config.py`
 - `scripts/workflow_cache_fetch.py`
@@ -116,16 +112,15 @@ raw `gh` write fallback succeeds, refresh the affected issue cache with
 For explicit provider fetch or cache refresh operations:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_fetch.py" \
-  --project "$PROJECT" \
+"$WORKFLOW" workflow_cache_fetch.py \
   --json \
   [--cache-policy refresh] \
   <issue-number-or-ref>...
 ```
 
-Return only operational metadata from the wrapper, such as issue refs, titles,
+Return only operational metadata from the workflow command, such as issue refs, titles,
 state, URLs, cache paths, cache hit or refresh status, and script verification
-fields. Prefer hook-provided issue cache context when the caller already has it.
+fields. Prefer already provided issue cache context when the caller has it.
 
 If the caller asks what an issue is about or what its acceptance criteria are,
 do not answer from the issue body. Return the cache path and tell the caller
@@ -146,8 +141,7 @@ For workflow artifact edits, resolve the authoring files that the caller must
 read before editing:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_resolver.py" \
-  --project "$PROJECT" \
+"$WORKFLOW" authoring_resolver.py \
   --type <artifact-type> \
   [--role issue|knowledge] \
   [--provider github|jira|filesystem|confluence] \
@@ -173,13 +167,12 @@ Before any provider write:
 1. Resolve required authoring files.
 2. Read every path from `required_authoring_files`.
 3. Record the reads in the current session ledger.
-4. Run the requested guarded wrapper.
+4. Run the requested guarded workflow command.
 
 Resolver:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_resolver.py" \
-  --project "$PROJECT" \
+"$WORKFLOW" authoring_resolver.py \
   --type <artifact-type> \
   [--role issue|knowledge] \
   --provider github \
@@ -190,9 +183,7 @@ python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_resolver.py" \
 Ledger record:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_ledger.py" \
-  --project "$PROJECT" \
-  --session "$PARENT_SESSION_ID" \
+"$WORKFLOW" authoring_ledger.py \
   --json \
   record \
   <absolute-authoring-file>... \
@@ -202,9 +193,7 @@ python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_ledger.py" \
 Optional guard check:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_guard.py" \
-  --project "$PROJECT" \
-  --session "$PARENT_SESSION_ID" \
+"$WORKFLOW" authoring_guard.py \
   --type <artifact-type> \
   [--role issue|knowledge] \
   --provider github \
@@ -214,15 +203,13 @@ python3 "$WORKFLOW_PLUGIN_ROOT/scripts/authoring_guard.py" \
 
 ## GitHub Issue Writes
 
-Use guarded wrapper commands:
+Use guarded workflow commands:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_github.py" \
-  --project "$PROJECT" \
+"$WORKFLOW" workflow_github.py \
   --json \
   close <issue> \
   --guard-type <artifact-type> \
-  --session "$PARENT_SESSION_ID" \
   --reason completed \
   [--comment <text>]
 ```
@@ -239,9 +226,7 @@ mutations, refresh the affected issue cache with
 For existing local issue projection write-back:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" \
-  --project "$PROJECT" \
-  --session "$PARENT_SESSION_ID" \
+"$WORKFLOW" workflow_cache_writeback.py \
   --type <artifact-type> \
   --json \
   <issue-number-or-ref>...
@@ -250,9 +235,7 @@ python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_writeback.py" \
 For pending local comment append:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" \
-  --project "$PROJECT" \
-  --session "$PARENT_SESSION_ID" \
+"$WORKFLOW" workflow_cache_comments.py \
   --type <artifact-type> \
   --json \
   <issue-number-or-ref>...
@@ -261,9 +244,7 @@ python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_comments.py" \
 For pending local relationship apply:
 
 ```bash
-python3 "$WORKFLOW_PLUGIN_ROOT/scripts/workflow_cache_relationships.py" \
-  --project "$PROJECT" \
-  --session "$PARENT_SESSION_ID" \
+"$WORKFLOW" workflow_cache_relationships.py \
   --type <artifact-type> \
   --json \
   <issue-number-or-ref>...
@@ -278,7 +259,7 @@ Return:
 - Operation performed.
 - Issues or refs affected.
 - Commit SHA only if the caller asked about a commit or provider comment text includes it.
-- Verification outcome, including wrapper `verified` values or refreshed cache state.
+- Verification outcome, including workflow command `verified` values or refreshed cache state.
 - Any remaining local changes you intentionally left alone.
 
 Keep raw JSON snippets short. Do not paste full issue bodies or comment bodies

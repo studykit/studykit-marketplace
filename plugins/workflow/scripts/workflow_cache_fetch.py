@@ -15,6 +15,7 @@ from workflow_github import GitHubRepositoryError, resolve_github_repository
 from workflow_issue_cache import IssueCacheContext, cache_issue_references, format_issue_cache_context
 from workflow_issue_cache import format_issue_cache_json, issue_numbers_from_references
 from workflow_providers import CACHE_POLICY_DEFAULT, CACHE_POLICY_REFRESH
+from workflow_env import workflow_project_dir_from_env
 
 CACHE_FETCH_POLICIES = (CACHE_POLICY_DEFAULT, CACHE_POLICY_REFRESH)
 
@@ -25,7 +26,7 @@ class WorkflowCacheFetchError(RuntimeError):
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
     parser.add_argument(
         "--cache-policy",
         choices=CACHE_FETCH_POLICIES,

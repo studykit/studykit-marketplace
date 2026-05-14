@@ -34,6 +34,7 @@ from hook_codex import CodexStopPayload, CodexUserPromptSubmitPayload  # noqa: E
 from hook_codex import parse_codex_event_payload  # noqa: E402
 from hook_codex import session_start as codex_session_start  # noqa: E402
 from hook_codex import stop, user_prompt_submit  # noqa: E402
+from workflow_env import codex_env_file_path  # noqa: E402
 
 
 class FakeRunner:
@@ -550,9 +551,13 @@ def test_session_start_injects_policy_for_configured_project(
     assert "issue provider: `github`" in context
     assert "Delegate workflow operations" in context
     assert "`workflow-operator` agent" in context
-    assert "Pass workflow intent, issue refs, and artifact type" in context
+    assert "Pass workflow intent, issue refs, artifact type, and operation-specific inputs" in context
     assert ", and session id" not in context
-    assert "picks up the parent session id from its own start hook" in context
+    assert "session id" not in context
+    assert "script recipes" not in context
+    assert "hook" not in context.lower()
+    assert "wrapper" not in context
+    assert "WORKFLOW_*" not in context
     assert "provider/cache metadata, issue relationship metadata, and paths" in context
     assert "The operator does not interpret content" in context
     assert "Read and summarize issue, comment, knowledge, or authoring file content directly" in context
@@ -587,6 +592,47 @@ def test_session_start_injects_policy_for_configured_project(
     assert "scripts/workflow_cache_fetch.py" not in context
     assert "scripts/workflow_cache_writeback.py" not in context
     assert "scripts/workflow_cache_comments.py" not in context
+
+
+def test_claude_session_start_appends_workflow_env_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    env_file = tmp_path / "claude.env"
+    monkeypatch.setenv("CLAUDE_ENV_FILE", str(env_file))
+
+    _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
+        payload_update={"session_id": "claude-shell-session"},
+    )
+
+    content = env_file.read_text(encoding="utf-8")
+    assert f"export WORKFLOW_PLUGIN_ROOT={_PLUGIN_ROOT}" in content
+    assert f"export WORKFLOW_PROJECT_DIR={tmp_path}" in content
+    assert "export WORKFLOW_SESSION_ID=claude-shell-session" in content
+
+
+def test_codex_session_start_writes_session_export_file(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+
+    _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"session_id": "codex-shell-session"},
+    )
+
+    env_file = codex_env_file_path(tmp_path, "codex-shell-session")
+    content = env_file.read_text(encoding="utf-8")
+    assert f"export WORKFLOW_PLUGIN_ROOT={_PLUGIN_ROOT}" in content
+    assert f"export WORKFLOW_PROJECT_DIR={tmp_path}" in content
+    assert "export WORKFLOW_SESSION_ID=codex-shell-session" in content
 
 
 @pytest.mark.parametrize("runtime", ["claude", "codex"])
@@ -675,7 +721,7 @@ def test_subagent_start_injects_parent_session_id_for_operator(
     assert "## workflow operator session" in context
     assert "Parent session id: `claude-parent-session`" in context
     assert f"Workflow project root: `{tmp_path}`" in context
-    assert "`--session`" in context
+    assert "`WORKFLOW_SESSION_ID`" in context
     assert "guarded writes will fail" in context
 
 
@@ -823,6 +869,8 @@ def test_session_start_injects_operator_context_for_codex_operator_subagent(
     assert "Parent session id: `codex-main-thread`" in context
     assert f"Workflow project root: `{tmp_path}`" in context
     assert "## workflow authoring policy" not in context
+    env_file = codex_env_file_path(tmp_path, "codex-session")
+    assert "export WORKFLOW_SESSION_ID=codex-main-thread" in env_file.read_text(encoding="utf-8")
 
 
 def test_session_start_skips_codex_subagent_when_not_operator(

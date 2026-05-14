@@ -15,6 +15,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
+from workflow_env import workflow_project_dir_from_env
+
 CONFIG_DIR_NAME = ".workflow"
 CONFIG_FILE_NAME = "config.yml"
 CONFIG_NAME = f"{CONFIG_DIR_NAME}/{CONFIG_FILE_NAME}"
@@ -561,7 +563,7 @@ def _parse_minimal_scalar(value: str) -> Any:
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
     parser.add_argument("--require", action="store_true", help=f"fail when {CONFIG_NAME} is absent")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     return parser

@@ -37,6 +37,10 @@ from workflow_hook import (  # noqa: E402
     workflow_config_for_project,
 )
 from util import as_string, emit_json, read_payload_or_stdin, resolve_file_path, scan_text_values  # noqa: E402
+from workflow_env import (  # noqa: E402
+    CLAUDE_ENV_FILE_ENV,
+    append_claude_env_file,
+)
 from workflow_operator_context import (  # noqa: E402
     agent_name_matches_operator,
     build_operator_subagent_context,
@@ -128,6 +132,15 @@ def _project_dir() -> Path:
 
 def _plugin_root() -> Path:
     return Path(os.environ["CLAUDE_PLUGIN_ROOT"]).expanduser().resolve()
+
+
+def _persist_shell_env(project_dir: Path, session_id: str) -> None:
+    append_claude_env_file(
+        env_file=os.environ.get(CLAUDE_ENV_FILE_ENV, ""),
+        project_dir=project_dir,
+        plugin_root=_plugin_root(),
+        session_id=session_id,
+    )
 
 
 def _resolve_path(raw_path: str) -> Path:
@@ -294,21 +307,26 @@ def session_start(
 ) -> int:
     """Handle a Claude ``SessionStart`` hook invocation."""
 
+    config = workflow_config_for_project(_project_dir())
+    if config is not None:
+        _persist_shell_env(config.root, event_payload.session_id)
+
     if event_payload.agent_type:
         # Claude operator subagent context is injected through SubagentStart.
         return 0
 
-    return emit_session_start_policy(event_payload, stdout=stdout)
+    return emit_session_start_policy(event_payload, config=config, stdout=stdout)
 
 
 def emit_session_start_policy(
     event_payload: ClaudeSessionStartPayload,
     *,
+    config: Any | None = None,
     stdout: TextIO | None = None,
 ) -> int:
     """Emit the Claude workflow authoring policy for a main session."""
 
-    config = workflow_config_for_project(_project_dir())
+    config = config or workflow_config_for_project(_project_dir())
     if config is None:
         return 0
 

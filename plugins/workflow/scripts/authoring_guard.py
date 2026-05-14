@@ -16,6 +16,7 @@ from typing import Any
 
 from authoring_ledger import LedgerError, default_session_id, missing_reads
 from authoring_resolver import ResolverError, resolve_authoring
+from workflow_env import workflow_project_dir_from_env
 
 
 def build_result(required: tuple[Path, ...], missing: tuple[Path, ...]) -> dict[str, Any]:
@@ -63,8 +64,8 @@ def evaluate_authoring_guard(
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--project", type=Path, default=Path.cwd(), help="project path")
-    parser.add_argument("--session", help="session id; defaults to WORKFLOW_SESSION_ID or runtime env")
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
+    parser.add_argument("--session", help="session id; defaults to WORKFLOW_SESSION_ID")
     parser.add_argument("--state-dir", type=Path, help="override ledger state root")
     parser.add_argument("--type", required=True, help="workflow artifact type")
     parser.add_argument("--role", help="issue or knowledge; required for usecase/research")

@@ -1,5 +1,5 @@
 {
-  "description": "Workflow hooks. SessionStart injects provider-backed workflow authoring policy only for main sessions when .workflow/config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
+  "description": "Workflow hooks. SessionStart persists workflow shell environment exports and injects provider-backed workflow authoring policy only for main sessions when .workflow/config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
   "hooks": {
     "PreToolUse": [
       {

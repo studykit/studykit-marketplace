@@ -52,11 +52,15 @@ commit_refs:
 Inspect resolved configuration:
 
 ```bash
-python3 plugins/workflow/scripts/workflow_config.py \
-  --project . \
+"./plugins/workflow/scripts/workflow" workflow_config.py \
   --require \
   --json
 ```
+
+The `scripts/workflow` launcher normalizes shell-tool runtime state before it
+executes a workflow script. It preserves `WORKFLOW_PLUGIN_ROOT`,
+`WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID` so repeated shell commands do
+not need to pass plugin root, project root, or session id flags.
 
 ## Authoring Policy
 
@@ -75,8 +79,7 @@ host configuration files, the workflow operator returns `NONE`.
 Resolve authoring files:
 
 ```bash
-python3 plugins/workflow/scripts/authoring_resolver.py \
-  --project . \
+"./plugins/workflow/scripts/workflow" authoring_resolver.py \
   --type review \
   --role issue \
   --json
@@ -85,9 +88,7 @@ python3 plugins/workflow/scripts/authoring_resolver.py \
 Check the session authoring guard:
 
 ```bash
-python3 plugins/workflow/scripts/authoring_guard.py \
-  --project . \
-  --session SESSION_ID \
+"./plugins/workflow/scripts/workflow" authoring_guard.py \
   --type review \
   --role issue \
   --provider github \
@@ -156,8 +157,7 @@ Cache policies:
 Fetch issue cache explicitly:
 
 ```bash
-python3 plugins/workflow/scripts/workflow_cache_fetch.py \
-  --project . \
+"./plugins/workflow/scripts/workflow" workflow_cache_fetch.py \
   --json \
   42
 ```

@@ -24,11 +24,13 @@ def build_operator_subagent_context(parent_session_id: str, project_root: Path) 
         "## workflow operator session\n\n"
         f"Parent session id: `{parent_session_id}`\n"
         f"Workflow project root: `{project_root}`\n\n"
-        "Use this parent session id with `--session` for every authoring "
-        "ledger, guard, and provider script invocation in this subagent. Reads "
-        "recorded by the main session live under this id; defaulting to the "
-        "subagent's own session id or environment variables will check the "
-        "wrong ledger and your guarded writes will fail."
+        "Use workflow wrapper commands so the operator shell receives "
+        "`WORKFLOW_SESSION_ID` for this parent session before invoking workflow "
+        "scripts. Reads recorded by the main session live under this id; "
+        "defaulting to the subagent's own runtime session id will check the "
+        "wrong ledger and guarded writes will fail. If the workflow environment "
+        "contract is unavailable, pass this parent session id explicitly as "
+        "`--session`."
     )
 
 
