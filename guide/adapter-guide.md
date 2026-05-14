@@ -80,7 +80,7 @@ The safest pattern is:
 | Claude skill content command | Claude skill substitutions such as `${CLAUDE_SKILL_DIR}`, `${CLAUDE_SESSION_ID}`, `${CLAUDE_EFFORT}`, `$ARGUMENTS`, `$ARGUMENTS[N]`, `$N`, and named `$name` arguments. | The child process environment inherited by the command, argv passed by the command, cwd, stdin if provided, and files. Skill substitutions are not guaranteed to appear as environment variables. Claude Code v2.1.132+ sets `CLAUDE_CODE_SESSION_ID` in Bash tool subprocesses, matching the hook `session_id`. | Treat the skill command or Bash-launched script entrypoint as the adapter. Pass needed substitution values explicitly as argv or stdin for portability. Claude-only Bash-launched adapters may read `CLAUDE_CODE_SESSION_ID`, then pass a normalized `session_id` to shared logic. |
 | Codex skill instruction | Current Codex skill docs do not define `$ARGUMENTS`, `CODEX_SKILL_DIR`, or `CODEX_PLUGIN_ROOT` skill-body placeholders. | The assistant resolves files and may run commands with explicit paths and argv. Do not assume a Codex skill placeholder exists unless documented. | Resolve paths relative to the active `SKILL.md` or known plugin files, then pass concrete values explicitly. |
 | Claude hook command | Hook manifest command text can use `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, command env assignments, and supported hook placeholders. | Hook subprocess environment, hook stdin payload, argv, cwd, and files. Some values such as `CLAUDE_ENV_FILE` exist only in supported hook contexts. | Treat the hook entrypoint as the adapter. Parse stdin once, read env once, then call shared logic with normalized data. |
-| Codex hook command | Codex hook manifests support command text, matcher fields, `statusMessage`, and plugin manifest paths to lifecycle config files. Current official Codex docs do not document a plugin-root or plugin-data placeholder inside individual hook commands. | Hook subprocess environment, hook stdin payload, argv, cwd, and files. | Do not rely on undocumented hook command placeholders. Use a Codex-specific wrapper or generated concrete path when a hook needs bundled files, then normalize to `plugin_root`, `plugin_data`, and host-neutral fields. |
+| Codex hook command | Codex hook manifests support command text, matcher fields, `statusMessage`, and plugin manifest paths to lifecycle config files. Workflow hooks in this repository pass plugin root through the Codex hook process environment as `PLUGIN_ROOT`. | Hook subprocess environment, hook stdin payload, argv, cwd, and files. | Treat `PLUGIN_ROOT` as Codex-adapter input only. Do not let shared workflow logic read it directly. |
 | MCP, LSP, or lifecycle command | Host-specific manifest command text and supported plugin placeholders. | Subprocess environment, argv, cwd, stdin when the protocol provides it, and files. Claude may export `CLAUDE_PLUGIN_OPTION_<KEY>` for plugin user configuration in supported subprocess contexts. | Read host-specific configuration at the adapter boundary and pass validated values to shared logic. |
 | Plugin manifest or templated content | Manifest schema fields, user configuration placeholders, and host-specific template substitution. | Nothing reaches a child process unless the manifest command passes or exports it. | Do not expect manifest substitutions to appear in scripts automatically. |
 
@@ -205,7 +205,7 @@ Rules:
 | Skill directory placeholder | `${CLAUDE_SKILL_DIR}` in Claude skill content | No documented `CODEX_SKILL_DIR` placeholder; resolve paths relative to the loaded skill file when needed |
 | Plugin root placeholder in skill content | No documented `${CLAUDE_PLUGIN_ROOT}` skill-content substitution; use `${CLAUDE_SKILL_DIR}` for skill-local files | No documented `CODEX_PLUGIN_ROOT` skill placeholder; Codex plugin manifests use `./`-prefixed paths relative to plugin root |
 | Persistent plugin data | No documented `${CLAUDE_PLUGIN_DATA}` skill-content substitution; use documented plugin subprocess contexts or pass an explicit data path | Do not assume a skill-body placeholder; keep skill state project-local or pass a documented data path explicitly |
-| Hook plugin root | `${CLAUDE_PLUGIN_ROOT}` in Claude hook command text and exported hook subprocess environment | No documented Codex hook-command plugin-root placeholder at this revision; use a Codex-specific wrapper or generated concrete path |
+| Hook plugin root | `${CLAUDE_PLUGIN_ROOT}` in Claude hook command text and exported hook subprocess environment | `PLUGIN_ROOT` process environment for Studykit Codex hook adapters |
 | Hook plugin data | `${CLAUDE_PLUGIN_DATA}` in Claude hook command text and exported hook subprocess environment | No documented Codex hook-command plugin-data placeholder at this revision; keep hook data handling behind a hook adapter |
 | Tool names | Claude-specific tool names may appear in Claude-only instructions | Codex tool names may differ; avoid tool-name coupling in shared skills |
 
@@ -289,18 +289,21 @@ For Codex, declare structured tool dependencies in `agents/openai.yaml` when app
 
 ### Hook Compatibility Surfaces
 
-Hook behavior differs along these axes. Treat each as a place where compatibility work may be needed.
+Hook behavior differs by host. Treat each item below as adapter-owned.
 
 | Surface | Claude | Codex |
 | --- | --- | --- |
-| Manifest file | `hooks/hooks.json` | Default bundled path is `hooks/hooks.json`; Studykit may use `hooks/hooks.codex.json` when Codex hook syntax differs |
-| Plugin root in commands | `${CLAUDE_PLUGIN_ROOT}` | No documented hook-command placeholder at this revision; use a generated concrete path or wrapper |
-| Plugin data in commands | `${CLAUDE_PLUGIN_DATA}` | No documented hook-command placeholder at this revision; pass an explicit data path through the adapter |
-| File edit tool names | `Write`, `Edit` | Canonical hook tool name is `apply_patch`; matchers may also use `Edit` or `Write` aliases |
-| Hook stdin shape | Claude payload schema | Codex payload schema |
-| Output channels | Stdout, stderr, and JSON decisions per Claude rules | Stdout, stderr, and JSON decisions per Codex rules |
+| Manifest file | `hooks/hooks.json` | Use `hooks/hooks.codex.json` when Codex hook syntax differs; reference it from `.codex-plugin/plugin.json`. |
+| Entrypoint | `scripts/hook_claude.py` | `scripts/hook_codex.py` |
+| Dispatch | Payload `hook_event_name` | Manifest argv subcommand |
+| Plugin root | `CLAUDE_PLUGIN_ROOT` from the Claude hook environment | `PLUGIN_ROOT` from the Codex hook process environment used by this repository's Codex hook manifest or wrapper |
+| Project root | `CLAUDE_PROJECT_DIR` from the Claude hook environment | Resolve from payload `cwd` using git root fallback, then `cwd` |
+| Hook stdin shape | Claude hook payload schema | Codex hook payload schema |
+| File edit tools | `Write`, `Edit`, `MultiEdit` | `Write`, `Edit`, `MultiEdit`, plus Codex `apply_patch` command parsing |
+| Subagent start | Claude `SubagentStart` | No native `SubagentStart`; Codex operator context is emitted from `SessionStart` when transcript metadata identifies the operator agent |
+| Output | JSON-only stdout for non-empty hook output | JSON-only stdout for non-empty hook output |
 
-Do not rely on Claude-named aliases such as `${CLAUDE_PLUGIN_ROOT}` or generic names such as `${PLUGIN_ROOT}` in Codex hook commands unless Codex documentation explicitly supports them in the target runtime.
+Do not copy environment names, matcher names, payload fields, or event behavior between hosts. Add the translation to the runtime adapter instead.
 
 ### Hook File Pattern
 
@@ -309,146 +312,89 @@ Use this structure unless a plugin has a documented reason to differ:
 - `plugins/<name>/hooks/hooks.json` for Claude hook declarations.
 - `plugins/<name>/hooks/hooks.codex.json` for Codex hook declarations when Codex hook syntax differs. This filename is a Studykit convention, not the Codex default. Reference it from `.codex-plugin/plugin.json` via `"hooks": "./hooks/hooks.codex.json"`.
 - `plugins/<name>/hooks/README.md` for hook behavior notes when the hook system is non-trivial.
-- `plugins/<name>/scripts/<plugin>_hook.py` or an equivalent shared entrypoint.
 - `plugins/<name>/tests/` fixtures for host-specific hook payloads when hook logic is complex.
 
-### When to Split Hook Manifests
+### Runtime-Specific Entrypoints
 
-Create separate hook manifests when any of these differ between hosts:
+Do not use a shared hook driver that detects the host at runtime. Use one entrypoint per host:
 
-- Supported event names.
-- Tool matcher names.
-- Hook command environment variables.
-- Hook stdin payload shape.
-- Expected hook output format.
-- Manifest-only fields.
-- Timeout or UX requirements.
+- `scripts/hook_claude.py` owns Claude payload parsing, Claude environment variables, Claude event dispatch, Claude dataclass payload structures, and Claude hook output.
+- `scripts/hook_codex.py` owns Codex payload parsing, Codex environment variables, Codex argv dispatch, Codex transcript metadata parsing, Codex `apply_patch` target parsing, and Codex hook output.
 
-Do not create separate manifests only to copy the same command with cosmetic wording changes. Prefer one shared script with host-specific command wrappers.
+The runtime entrypoint may read stdin, argv, environment variables, and runtime-specific payload fields. Shared plugin functions must receive concrete values such as `project_dir`, `plugin_root`, `session_id`, `read_target`, `edit_targets`, `prompt_text`, or `scan_text`.
 
-### Hook Host Marker
+### Shared Hook Module
 
-Every shared hook script should know which host invoked it. Set an explicit host marker in the hook command.
+Use `scripts/<plugin>_hook.py` for host-neutral hook behavior. For example, the workflow plugin uses `scripts/workflow_hook.py`.
 
-Claude:
+The shared hook module should contain plain functions, not an abstract `Hook` class, runtime factory, driver, or `main` function. It should not read Claude or Codex environment variables, inspect raw hook payloads, branch on host payload schemas, or parse argv/stdin.
 
-```json
-{
-  "type": "command",
-  "command": "uv",
-  "args": ["run", "${CLAUDE_PLUGIN_ROOT}/scripts/example_hook.py", "post-edit", "--host", "claude"],
-  "timeout": 10
-}
-```
+Allowed responsibilities for a shared hook module include:
 
-Codex:
+- Building plugin-specific context text from concrete config and paths.
+- Applying host-neutral policy or validation after the adapter supplies normalized inputs.
+- Reading and writing plugin-owned state after the adapter supplies concrete state keys.
+- Loading plugin config from a concrete project directory.
+- Returning host-neutral decisions or data for the adapter to emit in host-specific JSON.
 
-```json
-{
-  "type": "command",
-  "command": "uv run \"/absolute/path/to/plugin/scripts/example_hook.py\" post-edit --host codex",
-  "timeout": 10,
-  "statusMessage": "Processing plugin hook"
-}
-```
+Workflow-specific examples include recording authoring reads, blocking unread local projection writes after the adapter supplies `EditTarget` values, injecting issue-cache context after the adapter supplies prompt text, and recording Stop issue references after the adapter supplies scan text.
 
-Use a clear host marker and document the accepted values. In the Codex example, replace the absolute plugin path through packaging, generation, or a wrapper; do not treat `/absolute/path/to/plugin` as a Codex placeholder.
+### Utility Module
 
-### Hook Script Context
+Use `scripts/util.py` only for host-neutral helpers that do not know workflow semantics or host payload schemas. Current utility helpers are:
 
-A hook script can see hook process input, not skill body input or assistant shell assumptions.
+- `as_string(value)` for value-level type narrowing.
+- `read_payload_or_stdin(payload)` and `_read_stdin_json()` for explicit payload or stdin JSON loading.
+- `scan_text_values(*values)` for bounded text collection from selected values.
+- `emit_json(payload, stdout=...)` for JSON-only hook stdout.
+- `resolve_file_path(raw_path, base_dir=...)` for path resolution after the adapter selected the base directory.
+- `is_markdown_path(path)`, `is_under(path, root)`, and `is_under_any(path, roots)` for generic path checks.
 
-Common hook inputs are:
+Do not put payload key extraction such as `tool_input.file_path`, `source`, `prompt`, `last_assistant_message`, or agent markers in `util.py`. Those belong in the runtime adapter.
 
-- Hook stdin payload.
-- Environment variables set by the host.
-- Environment variables assigned in the hook manifest command.
-- Manifest command substitutions documented for that host, such as Claude plugin root or plugin data paths, or explicit values generated by repository packaging.
-- `argv` passed by the hook manifest command.
-- `cwd` and files available to the hook subprocess.
+### Claude Hook Adapter Contract
 
-A hook script should not assume it can read:
-
-- `${CLAUDE_SKILL_DIR}` or `$ARGUMENTS`.
-- Shell-tool-only variables such as `CODEX_THREAD_ID`.
-- Plugin manifest placeholders that were not passed into the hook command.
-- Values from another host unless the hook command or adapter normalizes them.
-
-### Hook Stdin Normalization
-
-Parse host-specific hook stdin exactly once. The adapter should tolerate missing fields and produce a host-neutral structure.
-
-This example is the post-normalization shape produced by the adapter, not raw host stdin:
-
-```json
-{
-  "host": "codex",
-  "invocation": "hook",
-  "event": "post-edit",
-  "cwd": "/path/to/project",
-  "project_root": "/path/to/project",
-  "plugin_root": "/path/to/plugin",
-  "plugin_data": "/path/to/plugin-data",
-  "session_id": "session-or-fallback",
-  "tool_name": "apply_patch",
-  "tool_category": "patch_apply",
-  "tool_input": {},
-  "tool_result": {},
-  "prompt": null
-}
-```
+Claude hook commands should invoke `scripts/hook_claude.py` with no event subcommand. The adapter dispatches using the payload `hook_event_name`.
 
 Rules:
 
-- Treat unknown fields as optional.
-- Keep raw payloads available for diagnostics, but do not let business logic depend on raw host schemas.
-- Prefer the hook payload `cwd` when available.
-- Derive `project_root` from the git root when available, then fall back to `cwd`.
-- Never fail only because an optional host field is absent.
-- Fail clearly when a required field for a specific action is missing.
+- Read `CLAUDE_PLUGIN_ROOT` for the plugin root.
+- Read `CLAUDE_PROJECT_DIR` for the project directory. Do not resolve the Claude project from payload `cwd`.
+- Represent Claude payloads with dataclasses that mirror documented payload fields. Derived values should not be stored as dataclass fields unless they are part of the hook contract.
+- Keep `raw` on the common payload for diagnostics, but do not make shared workflow logic depend on it.
+- Handler functions should receive parsed dataclass payloads, not raw `Mapping` objects.
+- `SessionStart` source handling is Claude-specific; `compact` is skipped and `clear` may reinject policy.
+- Claude operator subagent context is emitted from `SubagentStart`, not from `SessionStart`.
 
-### Hook Events and Matchers
+### Codex Hook Adapter Contract
 
-Model behavior by lifecycle intent instead of event name:
+Codex hook commands should invoke `scripts/hook_codex.py <subcommand>`. The adapter dispatches by argv because Codex manifests already select the lifecycle command.
 
-| Lifecycle intent | Typical use |
-| --- | --- |
-| Session start | Clean stale state, load lightweight context, initialize session records. |
-| Before tool use | Snapshot state needed to compare pre-change and post-change behavior. |
-| After tool use | Record changed files, run reconciliation, emit guidance. |
-| Stop or finalization | Validate session changes; block or request continuation only when recovery is actionable. |
-| User prompt submit | Resolve references and inject additional context when supported. |
-| Session end | Clean session-scoped files when the host supports it. |
+Rules:
 
-Declare only events the target host supports. If one host lacks an equivalent event, ensure the shared script handles missing state safely.
-
-Keep matcher choices in the manifest. Convert host-specific tool names into shared categories such as:
-
-- `file_write`
-- `file_edit`
-- `patch_apply`
-- `prompt`
-- `unknown`
-
-Shared business logic should consume the category and normalized payload, not raw matcher strings.
+- Read `PLUGIN_ROOT` for the plugin root from the Codex hook process environment used by this repository.
+- Resolve the project from payload `cwd` using git root fallback.
+- Keep Codex-only agent detection in `hook_codex.py`; do not move generic agent marker heuristics into shared workflow code.
+- Keep transcript metadata parsing in `hook_codex.py`.
+- Keep Codex `apply_patch` target parsing in `hook_codex.py`.
+- Codex operator subagent context is emitted from the Codex `SessionStart` path when transcript metadata identifies `workflow-operator`.
 
 ### Hook Output
 
-Different hosts interpret stdout, stderr, JSON decisions, status messages, and injected context differently. Keep output formatting at the adapter boundary:
+Runtime adapters must emit JSON only when stdout is non-empty. Empty stdout means no-op success.
 
-- Use stdout for user-visible guidance only when the host expects it.
-- Use stderr for diagnostics only when the host surfaces it appropriately.
-- Emit block decisions only in the exact JSON shape expected by the target host.
-- Keep status text in manifest fields when the host supports them.
-- Keep injected context concise and deterministic.
+Allowed non-empty JSON output includes:
 
-Blocking responses must include enough context for the user or host to recover: what failed, which rule was triggered, and how to fix it.
+- `{"decision": "block", "reason": "..."}` for supported blocking hooks.
+- `{"hookSpecificOutput": {"hookEventName": "...", "additionalContext": "..."}}` for context injection.
+
+Do not emit plain text from hook scripts. Keep status text in manifest fields such as Codex `statusMessage` when the host supports them.
 
 ### Hook State
 
 Separate state by lifetime:
 
-- Persistent plugin data belongs in the host's plugin data directory.
+- Persistent plugin data belongs in the host's plugin data directory when the host provides one.
 - Project-local validation state belongs under a documented project-local directory.
 - Session-scoped state should include the session id and, when useful, the host name.
 
@@ -459,6 +405,20 @@ Use collision-resistant state file names so one host does not delete or reinterp
 ```
 
 Avoid using a Claude-named path for new host-neutral state. If a plugin already uses a path such as `.claude/tmp/` for historical reasons, keep path handling behind a helper.
+
+### Testing Hook Adapters
+
+Tests should not rely on the developer's current shell environment.
+
+Use fixtures and explicit inputs:
+
+- Provide hook stdin payload fixtures for each supported host.
+- Set required environment variables in the test harness.
+- Pass argv explicitly for Codex dispatch tests.
+- Parse Claude payloads through `parse_claude_event_payload()` before calling Claude handlers.
+- Assert non-empty hook stdout parses as a JSON object.
+- Include tests for missing optional fields and missing required fields.
+
 
 ## Claude-Specific Inputs
 
@@ -487,11 +447,12 @@ Codex plugin contexts have different documented surfaces.
 
 Rules for this repository:
 
-- Current Codex hook docs do not document `${PLUGIN_ROOT}`, `${PLUGIN_DATA}`, `${CLAUDE_PLUGIN_ROOT}`, or `${CLAUDE_PLUGIN_DATA}` as hook-command placeholders. Do not rely on those names in Codex hook commands.
+- Studykit Codex hook adapters read `PLUGIN_ROOT` from the hook process environment. Keep that read in `hook_codex.py`; shared hook modules must receive a concrete `plugin_root`.
+- Do not copy Claude names such as `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_PLUGIN_DATA}`, or `CLAUDE_PROJECT_DIR` into Codex hook logic.
 - Codex hooks receive a JSON object on stdin with `session_id`; use that as the official hook session/thread identifier.
 - Current Codex skill docs do not define `$ARGUMENTS`, `CODEX_SKILL_DIR`, or `CODEX_PLUGIN_ROOT` skill-body placeholders. Do not design shared skill scripts around those names.
 - Studykit scripts launched through the Codex shell tool may read `CODEX_THREAD_ID` at the script adapter boundary for session-scoped state. This is an observed shell-tool convention, not a documented Codex plugin or hook contract.
-- If a Codex hook or lifecycle command needs plugin root or data paths, pass a concrete value through a wrapper, generated hook config, argv, stdin, or a documented manifest mechanism.
+- If a Codex hook or lifecycle command needs plugin data paths, pass a concrete value through a wrapper, generated hook config, argv, stdin, or a documented manifest mechanism.
 
 ## Passing Values to Scripts
 
@@ -561,8 +522,8 @@ Before finishing an adapter-related change, verify:
 - Codex-facing skills have `agents/openai.yaml`.
 - Shared skill instructions avoid Claude-only placeholders unless clearly marked Claude-specific.
 - Hook manifests exist for every supported host that needs the hook.
-- Hook scripts receive an explicit host marker when shared.
-- Hook stdin is normalized in one adapter.
+- Hook scripts use runtime-specific entrypoints unless there is a documented reason to share a driver.
+- Hook stdin is parsed in one runtime adapter before shared workflow functions are called.
 - Hook scripts do not assume skill-only placeholders.
 - Skill-launched scripts do not assume hook-only payloads or variables.
 - Shell-tool-only variables are read only by shell script adapters and are passed to shared logic as normalized values.

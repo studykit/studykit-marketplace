@@ -2,17 +2,23 @@
 
 Workflow hooks dispatch through runtime-specific entry scripts:
 
-- Claude events run `../scripts/hook_claude.py <subcommand>`.
+- Claude events run `../scripts/hook_claude.py`; the script dispatches from
+  the payload `hook_event_name`.
 - Codex events run `../scripts/hook_codex.py <subcommand>`.
 
-Both scripts inherit shared logic from `../scripts/workflow_hook.py` (the
-`Hook` ABC plus per-event shim functions) and only diverge for runtime
-specifics — payload/env extraction, the `apply_patch` edit-target parser
-(Codex), and the SubagentStart entry (Claude).
+Both scripts own their runtime-specific dispatch and payload/env extraction.
+They call common plain functions from `../scripts/workflow_hook.py` for shared
+workflow behavior such as policy injection, authoring ledger updates, local
+projection guards, and issue-cache context. Codex also owns the `apply_patch`
+edit-target parser, and Claude owns the SubagentStart entry.
+
+When either runtime script writes hook output to stdout, it writes JSON only.
+Empty stdout is used for no-op hook runs.
 
 ## PostToolUse Read
 
-`PostToolUse` on `Read` dispatches to `post-read`.
+`PostToolUse` on `Read` records the read. Claude dispatches by payload event;
+Codex dispatches to `post-read`.
 
 Behavior:
 
@@ -23,7 +29,8 @@ Behavior:
 
 ## PreToolUse Write/Edit
 
-`PreToolUse` on file writes dispatches to `pre-write`.
+`PreToolUse` on file writes checks the write. Claude dispatches by payload
+event; Codex dispatches to `pre-write`.
 
 Behavior:
 
@@ -35,7 +42,8 @@ Behavior:
 
 ## SessionStart
 
-`SessionStart` dispatches to `session-start`.
+`SessionStart` injects workflow policy for configured projects. Claude
+dispatches by payload event; Codex dispatches to `session-start`.
 
 Behavior:
 
@@ -52,7 +60,7 @@ Behavior:
 
 ## SubagentStart (Claude only)
 
-Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/hook_claude.py` with no subcommand, which defaults to the SubagentStart shim.
+Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/hook_claude.py`, which dispatches from the payload `hook_event_name`.
 
 Behavior:
 
@@ -65,7 +73,8 @@ Behavior:
 
 ## UserPromptSubmit
 
-`UserPromptSubmit` dispatches to `user-prompt`.
+`UserPromptSubmit` caches issue references. Claude dispatches by payload event;
+Codex dispatches to `user-prompt`.
 
 Behavior:
 
@@ -78,7 +87,8 @@ Behavior:
 
 ## Stop
 
-`Stop` dispatches to `stop`.
+`Stop` records pending issue references. Claude dispatches by payload event;
+Codex dispatches to `stop`.
 
 Behavior:
 

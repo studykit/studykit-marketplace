@@ -22,14 +22,18 @@ from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
 from workflow_hook import (  # noqa: E402
     extract_issue_numbers,
-    post_read,
-    pre_write,
     record_session_issues,
-    session_start,
-    stop,
-    user_prompt_submit,
 )
+from hook_claude import ClaudeCommonPayload, ClaudePreToolUsePayload  # noqa: E402
+from hook_claude import ClaudeSessionStartPayload  # noqa: E402
+from hook_claude import ClaudeSubagentStartPayload  # noqa: E402
+from hook_claude import main as claude_main  # noqa: E402
+from hook_claude import parse_claude_event_payload  # noqa: E402
+from hook_claude import session_start as claude_session_start  # noqa: E402
 from hook_claude import subagent_start  # noqa: E402
+from hook_codex import post_read, pre_write  # noqa: E402
+from hook_codex import session_start as codex_session_start  # noqa: E402
+from hook_codex import stop, user_prompt_submit  # noqa: E402
 
 
 class FakeRunner:
@@ -47,6 +51,12 @@ class FakeRunner:
 
 def result(args: tuple[str, ...], stdout: str = "", stderr: str = "", returncode: int = 0) -> CommandResult:
     return CommandResult(request=CommandRequest(args=args), returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def _json_object(output: str) -> dict[str, Any]:
+    parsed = json.loads(output)
+    assert isinstance(parsed, dict)
+    return parsed
 
 
 def gh_issue_view_args(issue: int | str) -> tuple[str, ...]:
@@ -142,12 +152,10 @@ def _run_session_start(
     }
     if runtime == "codex":
         payload["turn_id"] = "turn-1"
-        monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "codex")
         monkeypatch.setenv("PLUGIN_ROOT", str(_PLUGIN_ROOT))
         monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
         monkeypatch.delenv("CLAUDE_PLUGIN_ROOT", raising=False)
     else:
-        monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "claude")
         monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
         monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
         monkeypatch.delenv("PLUGIN_ROOT", raising=False)
@@ -156,7 +164,12 @@ def _run_session_start(
         payload.update(payload_update)
 
     captured = io.StringIO()
-    assert session_start(payload, stdout=captured) == 0
+    if runtime == "codex":
+        assert codex_session_start(payload, stdout=captured) == 0
+    else:
+        event_payload = parse_claude_event_payload(payload)
+        assert isinstance(event_payload, ClaudeSessionStartPayload)
+        assert claude_session_start(event_payload, stdout=captured) == 0
     return captured.getvalue()
 
 
@@ -281,6 +294,96 @@ def test_session_start_ignores_claude_compact_source(
     assert startup
 
 
+def test_claude_entrypoint_owns_runtime_for_codex_shaped_payload(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+    monkeypatch.delenv("PLUGIN_ROOT", raising=False)
+
+    captured = io.StringIO()
+    event_payload = parse_claude_event_payload(
+        {
+            "session_id": "claude-session",
+            "turn_id": "codex-shaped-turn",
+            "cwd": str(tmp_path),
+            "hook_event_name": "SessionStart",
+            "source": "compact",
+        }
+    )
+    assert isinstance(event_payload, ClaudeSessionStartPayload)
+    assert claude_session_start(event_payload, stdout=captured) == 0
+
+    assert captured.getvalue() == ""
+
+
+def test_claude_main_dispatches_from_payload_event_name(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+    monkeypatch.delenv("PLUGIN_ROOT", raising=False)
+
+    captured = io.StringIO()
+    assert claude_main(
+        ["legacy-subcommand-ignored"],
+        payload={
+            "session_id": "claude-main-dispatch",
+            "cwd": str(tmp_path),
+            "hook_event_name": "SessionStart",
+            "source": "startup",
+        },
+        stdout=captured,
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
+
+
+def test_parse_claude_event_payload_builds_event_structures(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+
+    session_event = parse_claude_event_payload(
+        {
+            "session_id": "s1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "SessionStart",
+            "source": "startup",
+            "model": "claude-sonnet-4-6",
+        }
+    )
+    assert isinstance(session_event, ClaudeSessionStartPayload)
+    assert isinstance(session_event, ClaudeCommonPayload)
+    assert session_event.session_id == "s1"
+    assert session_event.cwd == str(tmp_path)
+    assert session_event.event_name == "SessionStart"
+    assert session_event.source == "startup"
+    assert session_event.model == "claude-sonnet-4-6"
+
+    target = tmp_path / "workflow" / "task.md"
+    tool_event = parse_claude_event_payload(
+        {
+            "session_id": "s1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {"file_path": "workflow/task.md", "content": "body"},
+        }
+    )
+    assert isinstance(tool_event, ClaudePreToolUsePayload)
+    assert tool_event.tool_name == "Write"
+    assert tool_event.edit_targets[0].path == target.resolve()
+    assert tool_event.edit_targets[0].content == "body"
+
+
 def test_session_start_clear_uses_documented_source_only(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -306,7 +409,6 @@ def test_session_start_clear_uses_documented_source_only(
     assert source_clear
 
 
-@pytest.mark.parametrize("runtime", ["claude", "codex"])
 @pytest.mark.parametrize(
     "payload_update",
     [
@@ -315,10 +417,9 @@ def test_session_start_clear_uses_documented_source_only(
         {"parent_session_id": "parent-session"},
     ],
 )
-def test_session_start_emits_nothing_for_agent_sessions(
+def test_codex_session_start_emits_nothing_for_agent_sessions(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
-    runtime: str,
     payload_update: dict[str, Any],
 ) -> None:
     _write_config(tmp_path)
@@ -326,7 +427,30 @@ def test_session_start_emits_nothing_for_agent_sessions(
     out = _run_session_start(
         tmp_path,
         monkeypatch,
-        runtime=runtime,
+        runtime="codex",
+        payload_update=payload_update,
+    )
+
+    assert out == ""
+
+
+@pytest.mark.parametrize(
+    "payload_update",
+    [
+        {"agent_type": "workflow-operator"},
+    ],
+)
+def test_claude_session_start_emits_nothing_for_agent_sessions(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    payload_update: dict[str, Any],
+) -> None:
+    _write_config(tmp_path)
+
+    out = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
         payload_update=payload_update,
     )
 
@@ -387,12 +511,10 @@ def _hook_env(
     runtime: str = "codex",
 ) -> None:
     if runtime == "codex":
-        monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "codex")
         monkeypatch.setenv("PLUGIN_ROOT", str(_PLUGIN_ROOT))
         monkeypatch.delenv("CLAUDE_PROJECT_DIR", raising=False)
         monkeypatch.delenv("CLAUDE_PLUGIN_ROOT", raising=False)
     else:
-        monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "claude")
         monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
         monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
         monkeypatch.delenv("PLUGIN_ROOT", raising=False)
@@ -624,7 +746,6 @@ def _run_subagent_start(
     *,
     payload_update: dict[str, Any] | None = None,
 ) -> str:
-    monkeypatch.setenv("WORKFLOW_HOOK_RUNTIME", "claude")
     monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(project))
     monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
     monkeypatch.delenv("PLUGIN_ROOT", raising=False)
@@ -646,7 +767,9 @@ def _run_subagent_start(
         payload.update(payload_update)
 
     captured = io.StringIO()
-    assert subagent_start(payload, stdout=captured) == 0
+    event_payload = parse_claude_event_payload(payload)
+    assert isinstance(event_payload, ClaudeSubagentStartPayload)
+    assert subagent_start(event_payload, stdout=captured) == 0
     return captured.getvalue()
 
 
@@ -707,6 +830,75 @@ def test_subagent_start_emits_nothing_without_workflow_config(
 ) -> None:
     out = _run_subagent_start(tmp_path, monkeypatch)
     assert out == ""
+
+
+def test_non_empty_hook_stdout_is_json_only(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path, projection_path="workflow")
+
+    codex_session = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="codex",
+        payload_update={"session_id": "codex-json-session"},
+    )
+    claude_session = _run_session_start(
+        tmp_path,
+        monkeypatch,
+        runtime="claude",
+        payload_update={"session_id": "claude-json-session"},
+    )
+    claude_subagent = _run_subagent_start(tmp_path, monkeypatch)
+
+    _hook_env(monkeypatch, tmp_path)
+    pre_write_output = io.StringIO()
+    assert pre_write(
+        {
+            "session_id": "codex-json-pre-write",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": str(tmp_path / "workflow" / "task.md"),
+                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
+            },
+        },
+        stdout=pre_write_output,
+        state_dir=tmp_path / "state",
+    ) == 0
+
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(45): result(
+                gh_issue_view_args(45),
+                stdout=json.dumps(issue_payload(45)),
+            )
+        }
+    )
+    user_prompt_output = io.StringIO()
+    assert user_prompt_submit(
+        {
+            "session_id": "codex-json-prompt",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "prompt": "Inspect #45.",
+        },
+        stdout=user_prompt_output,
+        runner=runner,
+    ) == 0
+
+    outputs = [
+        codex_session,
+        claude_session,
+        claude_subagent,
+        pre_write_output.getvalue(),
+        user_prompt_output.getvalue(),
+    ]
+    for output in outputs:
+        assert output
+        _json_object(output)
 
 
 def _write_operator_subagent_transcript(path: Path) -> None:
@@ -787,7 +979,7 @@ def test_session_start_skips_claude_subagent_payload(
         tmp_path,
         monkeypatch,
         runtime="claude",
-        payload_update={"subagent_type": "workflow-operator"},
+        payload_update={"agent_type": "workflow-operator"},
     )
 
     assert out == ""
@@ -993,7 +1185,7 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
             "session_id": "s2",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
-            "transcript": "The assistant referenced #46 during the turn.",
+            "last_assistant_message": "The assistant referenced #46 during the turn.",
         },
         stdout=captured,
         runner=runner,

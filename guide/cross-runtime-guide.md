@@ -74,13 +74,23 @@ Hook-invoked scripts, skill-invoked scripts, and assistant shell tool commands h
 
 Use this layering pattern:
 
-1. Shared behavior in `plugins/<name>/scripts/`, `plugins/<name>/skills/`, shared templates, or shared documentation.
-2. Host adapter code that translates host-specific inputs into shared inputs.
-3. Claude integration in `plugins/<name>/.claude-plugin/`, Claude hook manifests, or Claude-specific wrappers.
-4. Codex integration in `plugins/<name>/.codex-plugin/`, Codex hook manifests, or Codex-specific wrappers.
-5. Marketplace registration in the host-specific marketplace file.
+1. Host-specific entrypoints parse host inputs.
+2. Shared plugin modules receive concrete values, not host payloads.
+3. Utility modules contain only host-neutral helpers.
+4. Claude integration lives in `plugins/<name>/.claude-plugin/`, Claude hook manifests, Claude-specific agents, or Claude adapters.
+5. Codex integration lives in `plugins/<name>/.codex-plugin/`, Codex hook manifests, or Codex adapters.
+6. Marketplace registration lives in the host-specific marketplace file.
 
 Host-specific files should translate host inputs into shared inputs. They should not contain durable business logic.
+
+For cross-runtime hooks, use this concrete file split:
+
+- `plugins/<name>/scripts/hook_claude.py` for Claude hook dispatch, payload parsing, environment lookup, and Claude output.
+- `plugins/<name>/scripts/hook_codex.py` for Codex hook dispatch, payload parsing, environment lookup, Codex transcript metadata, and Codex output.
+- `plugins/<name>/scripts/<plugin>_hook.py` for shared hook behavior as plain functions only. For example, the workflow plugin uses `plugins/workflow/scripts/workflow_hook.py`.
+- `plugins/<name>/scripts/util.py` for host-neutral helpers only.
+
+Do not put an abstract `Hook` class, runtime factory, host detector, or shared hook `main` in the shared workflow module.
 
 ## Repository Layout
 
@@ -150,9 +160,12 @@ Read `guide/adapter-guide.md` when writing runtime-specific command examples, sk
 Hooks are host-sensitive. This guide only sets the architectural boundary:
 
 - Keep hook manifests thin.
-- Put durable hook behavior in shared scripts.
-- Use hook adapters to normalize host input and output.
+- Put durable hook behavior in `scripts/<plugin>_hook.py` or another host-neutral module.
+- Use runtime-specific hook adapters to normalize host input and output.
 - Keep Claude and Codex hook differences isolated.
+- Use JSON-only stdout for non-empty hook output.
+- Keep payload key extraction, environment variable reads, event dispatch, and tool-name parsing inside the runtime adapter.
+- Keep generic helpers in `scripts/util.py`; do not put host payload parsing there.
 
 For detailed hook adapter rules, read `guide/adapter-guide.md`. It owns hook command placeholders, environment variables, stdin normalization, output formatting, and state rules.
 

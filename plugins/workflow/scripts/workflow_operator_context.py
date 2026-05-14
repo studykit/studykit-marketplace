@@ -3,7 +3,7 @@
 
 Operator-specific detection and the ``additionalContext`` template are shared
 between Claude's ``SubagentStart`` entry (``hook_claude.py``) and the Codex
-``SessionStart`` operator branch (``workflow_hook.py``). Hosting
+``SessionStart`` operator branch (``hook_codex.py``). Hosting
 them here keeps a single home for operator-specific text and detection so
 neither hook script has to import the other.
 """

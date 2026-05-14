@@ -1,21 +1,22 @@
 #!/usr/bin/env python3
-"""Claude hook subtype and CLI entry point.
+"""Claude hook adapter and CLI entry point.
 
-Hosts ``ClaudeHook`` (the runtime-bound hook for Claude Code) and
-``UnknownHook`` (the fallback when the host runtime cannot be inferred).
-Both inherit from the abstract ``Hook`` in :mod:`workflow_hook`; the base
-also owns the module-level payload/env helpers reused here.
+This module owns Claude Code payload and environment handling. Shared workflow
+policy, ledger, guard, and issue-cache behavior lives in ``workflow_hook.py``
+as plain functions.
 
-This module also doubles as the executable entry point for Claude's hook
-manifest (``plugins/workflow/hooks/hooks.json``) and the SubagentStart hook
-declared in ``plugins/workflow/agents/workflow-operator.md`` frontmatter.
-Each event command invokes ``python3 hook_claude.py <subcommand>``; the
-agent frontmatter invokes it with no argument, which defaults to
-``subagent_start``.
+The script is the executable entry point for Claude's hook manifest
+(``plugins/workflow/hooks/hooks.json``) and the SubagentStart hook declared in
+``plugins/workflow/agents/workflow-operator.md`` frontmatter. Each hook command
+invokes ``python3 hook_claude.py``; ``main`` dispatches by the
+``hook_event_name`` value in the hook payload. When this adapter writes hook
+output to stdout, it writes JSON only; no plain-text hook output is used.
 """
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 import os
 import sys
 from pathlib import Path
@@ -25,132 +26,392 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
+from workflow_command import CommandRunner  # noqa: E402
 from workflow_hook import (  # noqa: E402
-    CLAUDE_SESSION_START_SOURCES,
     EditTarget,
-    Hook,
-    _claude_edit_target,
-    _default_plugin_root,
-    _payload_marks_agent,
-    _read_target_default,
-    _resolve_project_from_cwd,
-    _session_start_source_value,
-    _string,
-    post_read,
-    pre_write,
-    session_start,
-    stop,
-    user_prompt_submit,
+    block_unread_authoring_write,
+    build_session_start_context,
+    inject_prompt_issue_context,
+    record_authoring_read,
+    record_stop_issue_references,
+    workflow_config_for_project,
 )
+from util import as_string, emit_json, read_payload_or_stdin, resolve_file_path, scan_text_values  # noqa: E402
 from workflow_operator_context import (  # noqa: E402
     build_operator_subagent_context,
     payload_targets_operator,
 )
+from workflow_session_state import (  # noqa: E402
+    record_session_policy_announced,
+    session_policy_was_announced,
+)
+
+CLAUDE_FILE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
+CLAUDE_SESSION_START_SOURCES = {"startup", "resume", "clear", "compact"}
 
 
-class ClaudeHook(Hook):
-    @property
-    def runtime(self) -> str:
-        return "claude"
-
-    def project_dir(self) -> Path | None:
-        env_value = os.environ.get("CLAUDE_PROJECT_DIR")
-        if env_value:
-            return Path(env_value).expanduser().resolve()
-        return _resolve_project_from_cwd(self.payload.get("cwd"))
-
-    def plugin_root(self) -> Path:
-        env_value = os.environ.get("CLAUDE_PLUGIN_ROOT")
-        if env_value:
-            return Path(env_value).expanduser().resolve()
-        return _default_plugin_root()
-
-    def session_id(self) -> str:
-        return _string(self.payload, "session_id")
-
-    def is_agent_session(self) -> bool:
-        return _payload_marks_agent(self.payload)
-
-    def edit_targets(self) -> tuple[EditTarget, ...]:
-        return _claude_edit_target(self.payload, self.resolve_path)
-
-    def read_target(self) -> Path | None:
-        return _read_target_default(self.payload, self.resolve_path)
-
-    def session_start_source(self) -> str:
-        return _session_start_source_value(self.payload, CLAUDE_SESSION_START_SOURCES)
-
-    def handle_subagent_start(self, *, stdout: TextIO | None = None) -> int:
-        """SubagentStart for Claude: inject parent session id for workflow-operator."""
-
-        output = stdout or sys.stdout
-        if not payload_targets_operator(self.payload):
-            return 0
-
-        parent_session_id = self.session_id()
-        if not parent_session_id:
-            return 0
-
-        config = self.workflow_config()
-        if config is None:
-            return 0
-
-        context = build_operator_subagent_context(parent_session_id, config.root)
-        self.emit(
-            {
-                "hookSpecificOutput": {
-                    "hookEventName": "SubagentStart",
-                    "additionalContext": context,
-                }
-            },
-            stdout=output,
-        )
-        return 0
+@dataclass(frozen=True)
+class ClaudeCommonPayload:
+    raw: dict[str, Any]
+    event_name: str
+    session_id: str
+    transcript_path: str
+    cwd: str
+    permission_mode: str
 
 
-class UnknownHook(ClaudeHook):
-    """Fallback when the runtime cannot be inferred.
-
-    Behaves like Claude for payload access but reports its own runtime name so
-    callers can apply unknown-runtime policies (e.g.,
-    ``should_skip_session_start_policy`` treats ``compact`` as a skip-worthy
-    source for unknown runtimes the same way it does for Claude).
-    """
-
-    @property
-    def runtime(self) -> str:
-        return "unknown"
+@dataclass(frozen=True)
+class ClaudeSessionStartPayload(ClaudeCommonPayload):
+    source: str
+    model: str
+    agent_type: str
 
 
-def subagent_start(
-    payload: dict[str, Any] | None = None,
+@dataclass(frozen=True)
+class ClaudePreToolUsePayload(ClaudeCommonPayload):
+    tool_name: str
+    tool_input: dict[str, Any]
+    edit_targets: tuple[EditTarget, ...]
+
+
+@dataclass(frozen=True)
+class ClaudePostToolUsePayload(ClaudeCommonPayload):
+    tool_name: str
+    tool_input: dict[str, Any]
+    tool_response: Any
+    read_target: Path | None
+
+
+@dataclass(frozen=True)
+class ClaudeUserPromptSubmitPayload(ClaudeCommonPayload):
+    prompt_text: str
+
+
+@dataclass(frozen=True)
+class ClaudeStopPayload(ClaudeCommonPayload):
+    stop_hook_active: bool
+    last_assistant_message: str
+    scan_text: str
+
+
+@dataclass(frozen=True)
+class ClaudeSubagentStartPayload(ClaudeCommonPayload):
+    agent_id: str
+    agent_type: str
+    targets_operator: bool
+
+
+ClaudeEventPayload = (
+    ClaudeSessionStartPayload
+    | ClaudePreToolUsePayload
+    | ClaudePostToolUsePayload
+    | ClaudeUserPromptSubmitPayload
+    | ClaudeStopPayload
+    | ClaudeSubagentStartPayload
+)
+
+
+def _project_dir() -> Path:
+    return Path(os.environ["CLAUDE_PROJECT_DIR"]).expanduser().resolve()
+
+
+def _plugin_root() -> Path:
+    return Path(os.environ["CLAUDE_PLUGIN_ROOT"]).expanduser().resolve()
+
+
+def _resolve_path(raw_path: str) -> Path:
+    return resolve_file_path(raw_path, base_dir=_project_dir())
+
+
+def _edit_targets(payload: dict[str, Any]) -> tuple[EditTarget, ...]:
+    tool_name = payload.get("tool_name")
+    tool_input = payload.get("tool_input") or {}
+    if not isinstance(tool_input, dict) or tool_name not in CLAUDE_FILE_EDIT_TOOLS:
+        return ()
+    file_path = as_string(tool_input.get("file_path"))
+    if not file_path:
+        return ()
+    content = tool_input.get("content") if tool_name == "Write" else None
+    if not isinstance(content, str):
+        content = None
+    return (EditTarget(path=_resolve_path(file_path), content=content),)
+
+
+def _tool_input(payload: dict[str, Any]) -> dict[str, Any]:
+    value = payload.get("tool_input")
+    return dict(value) if isinstance(value, Mapping) else {}
+
+
+def _session_start_source(payload: dict[str, Any]) -> str:
+    source = as_string(payload.get("source")).lower()
+    return source if source in CLAUDE_SESSION_START_SOURCES else ""
+
+
+def _common_payload_fields(payload: dict[str, Any], event_name: str) -> dict[str, Any]:
+    return {
+        "raw": payload,
+        "event_name": as_string(payload.get("hook_event_name")) or event_name,
+        "session_id": as_string(payload.get("session_id")),
+        "transcript_path": as_string(payload.get("transcript_path")),
+        "cwd": as_string(payload.get("cwd")),
+        "permission_mode": as_string(payload.get("permission_mode")),
+    }
+
+
+def _build_session_start_payload(payload: dict[str, Any]) -> ClaudeSessionStartPayload:
+    return ClaudeSessionStartPayload(
+        **_common_payload_fields(payload, "SessionStart"),
+        source=_session_start_source(payload),
+        model=as_string(payload.get("model")),
+        agent_type=as_string(payload.get("agent_type")),
+    )
+
+
+def _build_pre_tool_use_payload(payload: dict[str, Any]) -> ClaudePreToolUsePayload:
+    return ClaudePreToolUsePayload(
+        **_common_payload_fields(payload, "PreToolUse"),
+        tool_name=as_string(payload.get("tool_name")),
+        tool_input=_tool_input(payload),
+        edit_targets=_edit_targets(payload),
+    )
+
+
+def _build_post_tool_use_payload(payload: dict[str, Any]) -> ClaudePostToolUsePayload:
+    tool_input = _tool_input(payload)
+    file_path = as_string(tool_input.get("file_path"))
+    return ClaudePostToolUsePayload(
+        **_common_payload_fields(payload, "PostToolUse"),
+        tool_name=as_string(payload.get("tool_name")),
+        tool_input=tool_input,
+        tool_response=payload.get("tool_response"),
+        read_target=_resolve_path(file_path) if file_path else None,
+    )
+
+
+def _build_user_prompt_submit_payload(
+    payload: dict[str, Any],
+) -> ClaudeUserPromptSubmitPayload:
+    return ClaudeUserPromptSubmitPayload(
+        **_common_payload_fields(payload, "UserPromptSubmit"),
+        prompt_text=_user_prompt_text(payload),
+    )
+
+
+def _build_stop_payload(payload: dict[str, Any]) -> ClaudeStopPayload:
+    return ClaudeStopPayload(
+        **_common_payload_fields(payload, "Stop"),
+        stop_hook_active=payload.get("stop_hook_active") is True,
+        last_assistant_message=as_string(payload.get("last_assistant_message")),
+        scan_text=_stop_scan_text(payload),
+    )
+
+
+def _user_prompt_text(payload: dict[str, Any]) -> str:
+    return as_string(payload.get("prompt"))
+
+
+def _stop_scan_text(payload: dict[str, Any]) -> str:
+    return scan_text_values(as_string(payload.get("last_assistant_message")))
+
+
+def _build_subagent_start_payload(payload: dict[str, Any]) -> ClaudeSubagentStartPayload:
+    return ClaudeSubagentStartPayload(
+        **_common_payload_fields(payload, "SubagentStart"),
+        agent_id=as_string(payload.get("agent_id")),
+        agent_type=as_string(payload.get("agent_type")),
+        targets_operator=payload_targets_operator(payload),
+    )
+
+
+def parse_claude_event_payload(
+    payload: Mapping[str, Any] | None = None,
+) -> ClaudeEventPayload | None:
+    data = read_payload_or_stdin(payload)
+    event_name = as_string(data.get("hook_event_name"))
+    if event_name == "SessionStart":
+        return _build_session_start_payload(data)
+    if event_name == "PreToolUse":
+        return _build_pre_tool_use_payload(data)
+    if event_name == "PostToolUse":
+        return _build_post_tool_use_payload(data)
+    if event_name == "UserPromptSubmit":
+        return _build_user_prompt_submit_payload(data)
+    if event_name == "Stop":
+        return _build_stop_payload(data)
+    if event_name == "SubagentStart":
+        return _build_subagent_start_payload(data)
+    return None
+
+
+def session_start(
+    event_payload: ClaudeSessionStartPayload,
     *,
     stdout: TextIO | None = None,
 ) -> int:
-    """Thin shim that delegates to ``ClaudeHook.handle_subagent_start``."""
+    """Handle a Claude ``SessionStart`` hook invocation."""
 
-    return Hook.from_payload_or_stdin(payload).handle_subagent_start(stdout=stdout)
+    if event_payload.agent_type:
+        # Claude operator subagent context is injected through SubagentStart.
+        return 0
+
+    return emit_session_start_policy(event_payload, stdout=stdout)
 
 
-def main(argv: list[str] | None = None) -> int:
-    args = argv if argv is not None else sys.argv[1:]
-    if not args:
-        # Claude's SubagentStart fires this script with no argv from the
-        # workflow-operator agent frontmatter.
-        return subagent_start()
-    cmd = args[0]
-    if cmd == "session-start":
-        return session_start()
-    if cmd == "post-read":
-        return post_read()
-    if cmd == "pre-write":
-        return pre_write()
-    if cmd in {"user-prompt", "user-prompt-submit"}:
-        return user_prompt_submit()
-    if cmd == "stop":
-        return stop()
-    if cmd == "subagent-start":
-        return subagent_start()
+def emit_session_start_policy(
+    event_payload: ClaudeSessionStartPayload,
+    *,
+    stdout: TextIO | None = None,
+) -> int:
+    """Emit the Claude workflow authoring policy for a main session."""
+
+    config = workflow_config_for_project(_project_dir())
+    if config is None:
+        return 0
+
+    if event_payload.source == "compact":
+        return 0
+    if event_payload.source != "clear" and session_policy_was_announced(
+        config.root,
+        "claude",
+        event_payload.session_id,
+    ):
+        return 0
+
+    emit_json(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "SessionStart",
+                "additionalContext": build_session_start_context(config, _plugin_root()),
+            }
+        },
+        stdout=stdout,
+    )
+    record_session_policy_announced(config.root, "claude", event_payload.session_id)
+    return 0
+
+
+def post_read(
+    event_payload: ClaudePostToolUsePayload,
+    *,
+    stdout: TextIO | None = None,
+    state_dir: Path | None = None,
+) -> int:
+    """Handle a Claude ``PostToolUse`` Read hook invocation."""
+
+    return record_authoring_read(
+        project_dir=_project_dir(),
+        plugin_root=_plugin_root(),
+        session_id=event_payload.session_id,
+        read_target=event_payload.read_target,
+        state_dir=state_dir,
+        stdout=stdout,
+    )
+
+
+def pre_write(
+    event_payload: ClaudePreToolUsePayload,
+    *,
+    stdout: TextIO | None = None,
+    state_dir: Path | None = None,
+) -> int:
+    """Handle a Claude ``PreToolUse`` write hook invocation."""
+
+    return block_unread_authoring_write(
+        project_dir=_project_dir(),
+        session_id=event_payload.session_id,
+        edit_targets=event_payload.edit_targets,
+        state_dir=state_dir,
+        stdout=stdout,
+    )
+
+
+def user_prompt_submit(
+    event_payload: ClaudeUserPromptSubmitPayload,
+    *,
+    stdout: TextIO | None = None,
+    runner: CommandRunner | None = None,
+) -> int:
+    """Handle a Claude ``UserPromptSubmit`` hook invocation."""
+
+    return inject_prompt_issue_context(
+        project_dir=_project_dir(),
+        session_id=event_payload.session_id,
+        prompt_text=event_payload.prompt_text,
+        stdout=stdout,
+        runner=runner,
+    )
+
+
+def stop(
+    event_payload: ClaudeStopPayload,
+    *,
+    stdout: TextIO | None = None,
+    runner: CommandRunner | None = None,
+) -> int:
+    """Handle a Claude ``Stop`` hook invocation."""
+
+    return record_stop_issue_references(
+        project_dir=_project_dir(),
+        session_id=event_payload.session_id,
+        scan_text=event_payload.scan_text,
+        stop_hook_active=event_payload.stop_hook_active,
+        stdout=stdout,
+        runner=runner,
+    )
+
+
+def subagent_start(
+    event_payload: ClaudeSubagentStartPayload,
+    *,
+    stdout: TextIO | None = None,
+) -> int:
+    """Handle a Claude ``SubagentStart`` hook invocation."""
+
+    if not event_payload.targets_operator:
+        return 0
+
+    if not event_payload.session_id:
+        return 0
+
+    config = workflow_config_for_project(_project_dir())
+    if config is None:
+        return 0
+
+    emit_json(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "SubagentStart",
+                "additionalContext": build_operator_subagent_context(
+                    event_payload.session_id,
+                    config.root,
+                ),
+            }
+        },
+        stdout=stdout,
+    )
+    return 0
+
+
+def main(
+    argv: list[str] | None = None,
+    *,
+    payload: Mapping[str, Any] | None = None,
+    stdout: TextIO | None = None,
+) -> int:
+    _ = argv
+    event_payload = parse_claude_event_payload(payload)
+    if isinstance(event_payload, ClaudeSessionStartPayload):
+        return session_start(event_payload, stdout=stdout)
+    if isinstance(event_payload, ClaudePostToolUsePayload):
+        return post_read(event_payload, stdout=stdout)
+    if isinstance(event_payload, ClaudePreToolUsePayload):
+        return pre_write(event_payload, stdout=stdout)
+    if isinstance(event_payload, ClaudeUserPromptSubmitPayload):
+        return user_prompt_submit(event_payload, stdout=stdout)
+    if isinstance(event_payload, ClaudeStopPayload):
+        return stop(event_payload, stdout=stdout)
+    if isinstance(event_payload, ClaudeSubagentStartPayload):
+        return subagent_start(event_payload, stdout=stdout)
     return 0
 
 

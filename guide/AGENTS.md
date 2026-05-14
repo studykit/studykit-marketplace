@@ -13,6 +13,8 @@ Use these terms consistently across guide documents:
 - `adapter layer` means the host-specific boundary that translates host inputs, placeholders, paths, environment variables, tool names, and output formats into a shared contract.
 - `script adapter` means the script entrypoint or wrapper that reads host-specific runtime values and passes concrete arguments or normalized data into shared script logic.
 - `hook adapter` means the adapter layer for hook payloads and hook output.
+- `shared hook module` means a host-neutral hook logic module such as `plugins/<name>/scripts/<plugin>_hook.py`. It contains plain functions and receives concrete values from adapters; it does not parse stdin, argv, host environment variables, or raw host payloads.
+- `utility module` means a host-neutral helper module such as `plugins/<name>/scripts/util.py`. It contains generic helpers that do not know plugin business rules, host payload schemas, or host environment variables.
 - `shell tool context` means the assistant's command-execution environment, such as a shell command run during development or validation. It is not a plugin hook, skill, MCP, or LSP runtime.
 - `command text input` means values available while constructing a command string, such as template substitutions. These are not automatically process environment variables.
 - `process input` means values a launched script can read directly, such as environment variables, stdin, argv, cwd, and files.
@@ -33,6 +35,7 @@ Use these routes before reading whole documents:
 - Adding a dual-runtime plugin: read `guide/cross-runtime-guide.md`, then `guide/adapter-guide.md` for skills, hooks, scripts, or runtime inputs.
 - Adding or changing a shared skill: read `guide/adapter-guide.md`.
 - Adding or changing a shared hook: read `guide/adapter-guide.md`.
+- Refactoring an existing hook for both Claude and Codex: read `guide/cross-runtime-guide.md` for the file split, then `guide/adapter-guide.md` for runtime entrypoints, payload parsing, JSON output, shared hook module boundaries, and utility-module boundaries.
 - Adding or changing shared runtime scripts: read `guide/adapter-guide.md`; keep host-specific inputs at adapter boundaries.
 - Updating Claude-only or Codex-only integration: read `guide/adapter-guide.md`, then keep limitations documented near the host-specific file.
 - Updating marketplace registration or plugin versions: read `guide/cross-runtime-guide.md`.
@@ -54,6 +57,7 @@ Only the adapter layer should know host-specific details.
 - Host-specific manifests, command wrappers, hook adapters, and runtime-specific examples may reference host variables and placeholders.
 - All scripts should access host-provided values through an adapter layer. The script adapter may read command text substitutions, environment variables, stdin, argv, or manifest values; shared script logic should receive concrete paths, arguments, host names, and normalized payloads.
 - Hook-invoked scripts, skill-invoked scripts, and assistant shell tool commands do not have the same runtime context. Do not copy variable assumptions from one context into another.
+- Cross-runtime hooks should normally use runtime-specific entrypoints (`hook_claude.py`, `hook_codex.py`) that call a shared hook module with concrete values.
 - If shared code needs `${CLAUDE_PLUGIN_ROOT}`, `${CLAUDE_SKILL_DIR}`, `${PLUGIN_ROOT}`, a raw hook payload, or a host-specific tool name, move that concern into an adapter first.
 
 ## Layering Rule
