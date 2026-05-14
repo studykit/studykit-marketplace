@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["python-frontmatter", "PyYAML"]
+# ///
 """Codex hook adapter and CLI entry point.
 
 This module owns Codex payload and environment handling. Shared workflow policy
@@ -18,10 +21,11 @@ same path injects a small bootstrap context with the absolute workflow launcher
 path, because the static Codex agent instructions cannot know the plugin root.
 
 The script is the executable entry point for Codex's hook manifest
-(``plugins/workflow/hooks/hooks.codex.json``). Dispatch reads
-``hook_event_name`` from the payload (per the official Codex schema). When
-this adapter writes hook output to stdout, it writes JSON only; no plain-text
-hook output is used.
+(``plugins/workflow/hooks/hooks.codex.json``). Each hook command invokes this
+script with ``uv run --script`` so inline script dependencies are available.
+Dispatch reads ``hook_event_name`` from the payload (per the official Codex
+schema). When this adapter writes hook output to stdout, it writes JSON only;
+no plain-text hook output is used.
 """
 
 from __future__ import annotations

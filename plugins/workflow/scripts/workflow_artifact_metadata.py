@@ -19,6 +19,8 @@ import sys
 from dataclasses import dataclass
 from pathlib import Path
 
+import frontmatter as frontmatter_lib
+
 _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
@@ -27,8 +29,8 @@ from authoring_resolver import ALL_TYPES, DUAL_TYPES  # noqa: E402
 from workflow_edit_target import EditTarget  # noqa: E402
 
 _METADATA_KEYS = {"type", "role", "provider"}
-_FRONTMATTER_FENCE = "---"
 _HEADER_SCAN_LIMIT = 80
+_FRONTMATTER_HANDLER = frontmatter_lib.YAMLHandler()
 
 
 @dataclass(frozen=True)
@@ -75,7 +77,35 @@ def infer_artifact_metadata(target: EditTarget) -> ArtifactMetadata | None:
 def extract_metadata_values(content: str) -> dict[str, str]:
     """Extract type/role/provider scalars from Markdown frontmatter or leading content."""
 
-    metadata_lines = _collect_metadata_lines(content)
+    frontmatter_values = _extract_frontmatter_metadata_values(content)
+    if frontmatter_values is not None:
+        return frontmatter_values
+    return _extract_line_metadata_values(_collect_metadata_lines(content))
+
+
+def _extract_frontmatter_metadata_values(content: str) -> dict[str, str] | None:
+    if not _FRONTMATTER_HANDLER.detect(content):
+        return None
+    try:
+        frontmatter_text, _body = _FRONTMATTER_HANDLER.split(content)
+        data = _FRONTMATTER_HANDLER.load(frontmatter_text)
+    except Exception:
+        return {}
+    if not isinstance(data, dict):
+        return {}
+
+    values: dict[str, str] = {}
+    for raw_key, raw_value in data.items():
+        key = str(raw_key).strip().lower().replace("-", "_")
+        if key not in _METADATA_KEYS or isinstance(raw_value, (dict, list)):
+            continue
+        value = str(raw_value).strip()
+        if value:
+            values[key] = value
+    return values
+
+
+def _extract_line_metadata_values(metadata_lines: list[str]) -> dict[str, str]:
     values: dict[str, str] = {}
     for line in metadata_lines:
         if ":" not in line:
@@ -92,14 +122,6 @@ def extract_metadata_values(content: str) -> dict[str, str]:
 
 def _collect_metadata_lines(content: str) -> list[str]:
     lines = content.splitlines()
-    if lines and lines[0].strip() == _FRONTMATTER_FENCE:
-        collected: list[str] = []
-        for line in lines[1:]:
-            if line.strip() == _FRONTMATTER_FENCE:
-                break
-            collected.append(line)
-        return collected
-
     collected = []
     for line in lines[:_HEADER_SCAN_LIMIT]:
         if line.strip().startswith("#"):

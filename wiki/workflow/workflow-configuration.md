@@ -121,19 +121,20 @@ The default is `provider-native`.
 
 When `commit_refs.enabled` is `false`, the loader normalizes the style to `disabled`.
 
-## Provider Aliases
+## Canonical Values
 
-The loader normalizes common provider aliases before validation.
+The loader accepts only canonical enum values.
 
-Examples:
+Provider kind values are:
 
-- `github-issues`, `github_issue`, and `gh-issue` normalize to `github`.
-- `repo-wiki`, `github-wiki`, and `wiki` normalize to `github`.
-- `jira-issue` and `jira-issues` normalize to `jira`.
-- `confluence-page` and `conf` normalize to `confluence`.
-- `fs`, `file`, `files`, and `local` normalize to `filesystem`.
+- `github`
+- `jira`
+- `confluence`
+- `filesystem`
 
-Aliases are still checked against the provider role. `confluence` is invalid for the issue provider, and `jira` is invalid for the knowledge provider.
+Use the values documented in each enum section exactly. Aliases such as `github-issues`, `repo-wiki`, `jira-issues`, `confluence-page`, `fs`, `local`, `temporary`, `mirror`, or `provider_native` are invalid.
+
+Provider values are still checked against the provider role. `confluence` is invalid for the issue provider, and `jira` is invalid for the knowledge provider.
 
 ## Compatibility Shape
 

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["PyYAML"]
+# ///
 """Resolve workflow authoring contracts for provider-backed artifacts.
 
 The resolver is intentionally small and deterministic. It returns absolute

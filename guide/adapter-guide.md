@@ -438,7 +438,7 @@ Do not put payload key extraction such as `tool_input.file_path`, `source`, `pro
 
 ### Claude Hook Adapter Contract
 
-Claude hook commands should invoke `scripts/hook_claude.py` with no event subcommand. The adapter dispatches using the payload `hook_event_name`.
+Claude hook commands should invoke `scripts/hook_claude.py` through `uv run --script` with no event subcommand. The adapter dispatches using the payload `hook_event_name`.
 
 Rules:
 
@@ -452,7 +452,7 @@ Rules:
 
 ### Codex Hook Adapter Contract
 
-Codex hook commands should invoke `scripts/hook_codex.py <subcommand>`. The adapter dispatches by argv because Codex manifests already select the lifecycle command.
+Codex hook commands should invoke `scripts/hook_codex.py` through `uv run --script` with no event subcommand. The adapter dispatches using the payload `hook_event_name`.
 
 Rules:
 
@@ -462,6 +462,11 @@ Rules:
 - Keep transcript metadata parsing in `hook_codex.py`. For workflow operator subagents, `CODEX_THREAD_ID` is the subagent thread id, so the adapter must extract the parent thread id from transcript metadata before writing the subagent export file.
 - Keep Codex `apply_patch` target parsing in `hook_codex.py`.
 - Codex operator subagent environment is prepared from the Codex `SessionStart` path when transcript metadata identifies `workflow-operator`. The hook should inject only the absolute workflow launcher path as bootstrap context; the operator instructions should not need plugin-root, env-file, or parent-thread implementation details.
+
+Hook entrypoints and workflow launcher-invoked Python scripts should use inline
+script dependencies when shared modules require third-party libraries. The
+workflow plugin uses this for `python-frontmatter` and `PyYAML`; host hook
+processes should not depend on globally installed Python packages.
 
 ### Hook Output
 

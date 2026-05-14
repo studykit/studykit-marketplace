@@ -47,7 +47,7 @@ source_codex_env_file() {
   project_dir="$(resolve_project_dir)"
 
   local env_file
-  env_file="$(python3 "$SCRIPT_DIR/workflow_env.py" codex-env-path --project "$project_dir" --session "$CODEX_THREAD_ID")"
+  env_file="$(uv run --script "$SCRIPT_DIR/workflow_env.py" codex-env-path --project "$project_dir" --session "$CODEX_THREAD_ID")"
   if [ -f "$env_file" ]; then
     # shellcheck disable=SC1090
     . "$env_file"

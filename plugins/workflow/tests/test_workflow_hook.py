@@ -120,10 +120,10 @@ def _write_filesystem_config(project: Path) -> None:
 version: 1
 providers:
   issues:
-    kind: fs
+    kind: filesystem
     path: workflow/issues
   knowledge:
-    kind: local
+    kind: filesystem
     path: workflow/knowledge
 issue_id_format: number
 local_projection:

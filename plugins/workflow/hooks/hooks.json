@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
+            "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
             "timeout": 5,
             "description": "Block local workflow projection writes until required authoring files were read"
           }
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
+            "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
             "timeout": 5,
             "description": "Record reads of workflow authoring files in the session ledger"
           }
@@ -32,7 +32,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
+            "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
             "timeout": 5,
             "description": "Inject workflow authoring resolver policy for configured workflow projects in main sessions"
           }
@@ -44,7 +44,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
+            "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
             "timeout": 10,
             "description": "Cache mentioned GitHub issue references and inject project-relative issue cache paths as additionalContext"
           }
@@ -56,7 +56,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
+            "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
             "timeout": 10,
             "description": "Record session-mentioned GitHub issues as pending without provider reads or Stop JSON output"
           }

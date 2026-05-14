@@ -128,7 +128,7 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
 
     assert write.issue_dir == tmp_path / ".workflow-cache" / "issues" / "39"
     issue_text = write.issue_file.read_text(encoding="utf-8")
-    assert "title: \"Add local cache for workflow provider reads\"" in issue_text
+    assert "title: Add local cache for workflow provider reads" in issue_text
     assert "provider:" not in issue_text
     assert "# Issue" not in issue_text
     assert issue_text.endswith("Raw issue body.")
@@ -142,7 +142,7 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
     comment_file = write.comments_index.parent / "2026-05-13T112053Z-4440388606.md"
     comment_text = comment_file.read_text(encoding="utf-8")
     assert "author: studykit" in comment_text
-    assert "updated_at: 2026-05-13T11:21:00Z" in comment_text
+    assert "updated_at: '2026-05-13T11:21:00Z'" in comment_text
     assert "provider_comment_id" not in comment_text
     assert comment_text.endswith("Raw provider comment body.")
 

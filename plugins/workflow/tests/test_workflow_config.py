@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
+import yaml
 
 _PLUGIN_ROOT = Path(__file__).resolve().parent.parent
 _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
@@ -21,7 +23,7 @@ def _config_path(project: Path) -> Path:
     return path
 
 
-def test_loads_github_issues_and_repository_wiki_knowledge(tmp_path: Path) -> None:
+def test_loads_github_issue_and_repository_knowledge_providers(tmp_path: Path) -> None:
     project = tmp_path / "repo"
     nested = project / "src" / "feature"
     nested.mkdir(parents=True)
@@ -31,10 +33,10 @@ version: 1
 mode: remote-native
 providers:
   issues:
-    kind: github-issues
+    kind: github
     repo: studykit/studykit-plugins
   knowledge:
-    kind: repo-wiki
+    kind: github
     path: wiki/workflow
 issue_id_format: github
 local_projection:
@@ -61,7 +63,7 @@ commit_refs:
     assert config.commit_refs.style == "provider-native"
 
 
-def test_loads_jira_issues_and_confluence_knowledge_from_source_of_truth_shape(
+def test_loads_jira_and_confluence_from_source_of_truth_shape(
     tmp_path: Path,
 ) -> None:
     _config_path(tmp_path).write_text(
@@ -69,15 +71,15 @@ def test_loads_jira_issues_and_confluence_knowledge_from_source_of_truth_shape(
 version: "1"
 source_of_truth:
   issues:
-    provider: jira-issues
+    provider: jira
     site: acme.atlassian.net
     project: PROJ
   knowledge:
-    provider: confluence-page
+    provider: confluence
     site: acme.atlassian.net
     space: ENG
 local_projection:
-  mode: temporary
+  mode: ephemeral
 commit_refs:
   style: issue-prefix
 """.lstrip(),
@@ -102,13 +104,13 @@ def test_loads_filesystem_only_config(tmp_path: Path) -> None:
 version: 1
 providers:
   issues:
-    kind: fs
+    kind: filesystem
     path: workflow/issues
   knowledge:
-    kind: local
+    kind: filesystem
     path: workflow/knowledge
 local_projection:
-  mode: mirror
+  mode: persistent
   path: workflow
 commit_refs:
   enabled: false
@@ -159,6 +161,44 @@ providers:
 """.lstrip(),
         encoding="utf-8",
     )
+
+    with pytest.raises(WorkflowConfigError, match=message):
+        load_workflow_config(tmp_path)
+
+
+@pytest.mark.parametrize(
+    ("field", "value", "message"),
+    [
+        ("providers.issues.kind", "GitHub", "not valid for role 'issue'"),
+        ("providers.issues.kind", "github-issues", "not valid for role 'issue'"),
+        ("providers.knowledge.kind", "repo-wiki", "not valid for role 'knowledge'"),
+        ("providers.issues.kind", "fs", "not valid for role 'issue'"),
+        ("local_projection.mode", "temporary", "local_projection.mode"),
+        ("commit_refs.style", "provider_native", "commit_refs.style"),
+        ("issue_id_format", "gh", "issue_id_format"),
+    ],
+)
+def test_non_canonical_config_enum_values_are_rejected(
+    tmp_path: Path,
+    field: str,
+    value: str,
+    message: str,
+) -> None:
+    config = {
+        "providers": {
+            "issues": {"kind": "github"},
+            "knowledge": {"kind": "github"},
+        },
+        "issue_id_format": "github",
+        "local_projection": {"mode": "none"},
+        "commit_refs": {"style": "provider-native"},
+    }
+    target: dict[str, Any] = config
+    parts = field.split(".")
+    for part in parts[:-1]:
+        target = target[part]
+    target[parts[-1]] = value
+    _config_path(tmp_path).write_text(yaml.safe_dump(config), encoding="utf-8")
 
     with pytest.raises(WorkflowConfigError, match=message):
         load_workflow_config(tmp_path)

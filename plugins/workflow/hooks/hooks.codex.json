@@ -7,7 +7,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
+            "command": "uv run --script \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
             "timeout": 5,
             "statusMessage": "Loading workflow authoring policy",
             "description": "Inject workflow authoring resolver policy for configured workflow projects in main sessions"
@@ -20,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
+            "command": "uv run --script \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
             "timeout": 10,
             "statusMessage": "Caching workflow issue references",
             "description": "Cache mentioned GitHub issue references and inject project-relative issue cache paths as additionalContext"
@@ -33,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
+            "command": "uv run --script \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
             "timeout": 10,
             "statusMessage": "Finalizing workflow issue cache",
             "description": "Record session-mentioned GitHub issues as pending without provider reads or Stop JSON output"

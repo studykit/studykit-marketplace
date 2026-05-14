@@ -65,6 +65,9 @@ plain terminal, it falls back to local defaults for `WORKFLOW`,
 `WORKFLOW_SESSION_ID`. Hooks publish `WORKFLOW`, `WORKFLOW_PLUGIN_ROOT`,
 `WORKFLOW_PROJECT_DIR`, and `WORKFLOW_SESSION_ID` so repeated assistant shell
 commands do not need to pass plugin root, project root, or session id flags.
+When the launcher runs bundled Python scripts, it uses `uv run --script` so
+scripts can declare inline dependencies such as `python-frontmatter` for
+Markdown frontmatter and `PyYAML` for `.workflow/config.yml`.
 
 ## Authoring Policy
 
@@ -171,5 +174,5 @@ Fetch issue cache explicitly:
 Run workflow plugin tests:
 
 ```bash
-uv run --with pytest pytest plugins/workflow/tests
+uv run --with pytest --with python-frontmatter --with PyYAML pytest plugins/workflow/tests
 ```

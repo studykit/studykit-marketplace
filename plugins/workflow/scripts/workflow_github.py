@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["PyYAML"]
+# ///
 """GitHub CLI wrapper utilities for workflow provider code."""
 
 from __future__ import annotations

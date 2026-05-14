@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["PyYAML"]
+# ///
 """Load and validate repository-local workflow configuration.
 
 The workflow plugin uses a repository-root ``.workflow/config.yml`` even when
@@ -15,6 +18,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping
 
+import yaml
+
 from workflow_env import workflow_project_dir_from_env
 
 CONFIG_DIR_NAME = ".workflow"
@@ -25,87 +30,11 @@ CONFIG_RELATIVE_PATH = Path(CONFIG_DIR_NAME) / CONFIG_FILE_NAME
 ISSUE_PROVIDERS = {"github", "jira", "filesystem"}
 KNOWLEDGE_PROVIDERS = {"github", "confluence", "filesystem"}
 
-PROVIDER_ALIASES = {
-    "fs": "filesystem",
-    "file": "filesystem",
-    "files": "filesystem",
-    "local": "filesystem",
-    "local-files": "filesystem",
-    "local_files": "filesystem",
-    "github-issues": "github",
-    "github_issue": "github",
-    "github-issue": "github",
-    "gh-issues": "github",
-    "gh_issue": "github",
-    "gh-issue": "github",
-    "github-wiki": "github",
-    "github_wiki": "github",
-    "githubwiki": "github",
-    "github-knowledge": "github",
-    "github_knowledge": "github",
-    "github-repo-wiki": "github",
-    "repo-wiki": "github",
-    "repo_wiki": "github",
-    "repository-wiki": "github",
-    "repository_wiki": "github",
-    "wiki": "github",
-    "jira-issue": "jira",
-    "jira_issue": "jira",
-    "jira-issues": "jira",
-    "jira_issues": "jira",
-    "confluence-page": "confluence",
-    "confluence_page": "confluence",
-    "confluence-pages": "confluence",
-    "confluence_pages": "confluence",
-    "conf": "confluence",
-}
-
 LOCAL_PROJECTION_MODES = {"none", "ephemeral", "persistent"}
-LOCAL_PROJECTION_ALIASES = {
-    "off": "none",
-    "disabled": "none",
-    "disable": "none",
-    "no": "none",
-    "false": "none",
-    "temp": "ephemeral",
-    "temporary": "ephemeral",
-    "cache": "ephemeral",
-    "cached": "ephemeral",
-    "mirror": "persistent",
-    "mirrored": "persistent",
-    "committed": "persistent",
-}
 
 COMMIT_REF_STYLES = {"provider-native", "issue-prefix", "issue-suffix", "disabled"}
-COMMIT_REF_STYLE_ALIASES = {
-    "provider_native": "provider-native",
-    "native": "provider-native",
-    "provider": "provider-native",
-    "issue_prefix": "issue-prefix",
-    "prefix": "issue-prefix",
-    "prefixed": "issue-prefix",
-    "issue_suffix": "issue-suffix",
-    "suffix": "issue-suffix",
-    "suffixed": "issue-suffix",
-    "none": "disabled",
-    "off": "disabled",
-    "disable": "disabled",
-    "false": "disabled",
-}
 
 ISSUE_ID_FORMATS = {"github", "jira", "number"}
-ISSUE_ID_FORMAT_ALIASES = {
-    "gh": "github",
-    "github-issue": "github",
-    "github-issues": "github",
-    "github-native": "github",
-    "jira-issue": "jira",
-    "jira-issues": "jira",
-    "jira-native": "jira",
-    "numeric": "number",
-    "plain-number": "number",
-    "plain_number": "number",
-}
 PROVIDER_NATIVE_ISSUE_ID_FORMATS = {
     "github": "github",
     "jira": "jira",
@@ -286,10 +215,10 @@ def normalize_role(value: str) -> str:
 def normalize_provider(value: str | None) -> str | None:
     if value is None:
         return None
-    normalized = value.strip().lower().replace("_", "-")
+    normalized = value.strip()
     if not normalized:
         return None
-    return PROVIDER_ALIASES.get(normalized, normalized)
+    return normalized
 
 
 def validate_provider_for_role(role: str, provider: str | None) -> None:
@@ -348,8 +277,7 @@ def _parse_local_projection(value: Any, *, path: Path) -> LocalProjectionConfig:
 def _normalize_local_projection_mode(value: str | None, *, path: Path) -> str:
     if value is None:
         return "none"
-    normalized = value.strip().lower().replace("_", "-")
-    normalized = LOCAL_PROJECTION_ALIASES.get(normalized, normalized)
+    normalized = value.strip()
     if normalized not in LOCAL_PROJECTION_MODES:
         choices = ", ".join(sorted(LOCAL_PROJECTION_MODES))
         raise WorkflowConfigError(
@@ -378,8 +306,7 @@ def _parse_commit_refs(value: Any, *, path: Path) -> CommitRefsConfig:
 def _normalize_commit_ref_style(value: str | None, *, path: Path) -> str:
     if value is None:
         return "provider-native"
-    normalized = value.strip().lower().replace("_", "-")
-    normalized = COMMIT_REF_STYLE_ALIASES.get(normalized, normalized)
+    normalized = value.strip()
     if normalized not in COMMIT_REF_STYLES:
         choices = ", ".join(sorted(COMMIT_REF_STYLES))
         raise WorkflowConfigError(
@@ -393,10 +320,9 @@ def _parse_issue_id_format(value: Any, *, issue_provider: str, path: Path) -> st
     if raw is None:
         return _provider_native_issue_id_format(issue_provider, path=path)
 
-    normalized = raw.strip().lower().replace("_", "-")
-    if normalized in {"provider-native", "native", "provider"}:
+    normalized = raw.strip()
+    if normalized == "provider-native":
         return _provider_native_issue_id_format(issue_provider, path=path)
-    normalized = ISSUE_ID_FORMAT_ALIASES.get(normalized, normalized)
     if normalized not in ISSUE_ID_FORMATS:
         choices = ", ".join(sorted(ISSUE_ID_FORMATS | {"provider-native"}))
         raise WorkflowConfigError(
@@ -473,92 +399,15 @@ def _dig(data: Mapping[str, Any], *keys: str) -> Any:
 
 def _load_yaml_mapping(path: Path) -> dict[str, Any]:
     try:
-        import yaml  # type: ignore
-    except Exception:
-        data = _load_minimal_yaml_mapping(path)
-    else:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    except yaml.YAMLError as exc:
+        raise WorkflowConfigError(f"could not parse YAML: {path}: {exc}") from exc
 
     if data is None:
         return {}
     if not isinstance(data, dict):
         raise WorkflowConfigError(f"config must be a mapping: {path}")
     return data
-
-
-def _load_minimal_yaml_mapping(path: Path) -> dict[str, Any]:
-    """Fallback parser for the simple mapping shape used by workflow config.
-
-    This is not a general YAML parser. It supports nested mappings and scalar
-    values, which is enough for the first workflow configuration schema when
-    PyYAML is unavailable.
-    """
-
-    result: dict[str, Any] = {}
-    stack: list[tuple[int, dict[str, Any]]] = [(-1, result)]
-
-    for raw_line in path.read_text(encoding="utf-8").splitlines():
-        line = _strip_yaml_comment(raw_line).rstrip()
-        if not line.strip() or ":" not in line:
-            continue
-
-        indent = len(line) - len(line.lstrip(" "))
-        key, value = line.strip().split(":", 1)
-        key = key.strip()
-        value = value.strip()
-
-        while stack and indent <= stack[-1][0]:
-            stack.pop()
-        if not stack:
-            raise WorkflowConfigError(f"invalid indentation in {path}")
-        parent = stack[-1][1]
-
-        if value:
-            parent[key] = _parse_minimal_scalar(value)
-            continue
-
-        child: dict[str, Any] = {}
-        parent[key] = child
-        stack.append((indent, child))
-
-    return result
-
-
-def _strip_yaml_comment(line: str) -> str:
-    quote: str | None = None
-    escaped = False
-    for index, char in enumerate(line):
-        if escaped:
-            escaped = False
-            continue
-        if char == "\\":
-            escaped = True
-            continue
-        if char in {"'", '"'}:
-            if quote is None:
-                quote = char
-            elif quote == char:
-                quote = None
-            continue
-        if char == "#" and quote is None and (index == 0 or line[index - 1].isspace()):
-            return line[:index]
-    return line
-
-
-def _parse_minimal_scalar(value: str) -> Any:
-    if (value.startswith('"') and value.endswith('"')) or (
-        value.startswith("'") and value.endswith("'")
-    ):
-        return value[1:-1]
-
-    lowered = value.lower()
-    if lowered in {"true", "false"}:
-        return lowered == "true"
-    if lowered in {"null", "none", "~"}:
-        return None
-    if value.isdigit():
-        return int(value)
-    return value
 
 
 def build_parser() -> argparse.ArgumentParser:

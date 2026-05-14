@@ -12,10 +12,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+import frontmatter as frontmatter_lib
+
 from workflow_github import GitHubRepository, normalize_issue_number
 
 CACHE_ROOT_NAME = ".workflow-cache"
 SCHEMA_VERSION = 1
+_FRONTMATTER_HANDLER = frontmatter_lib.YAMLHandler()
 
 
 class WorkflowCacheError(RuntimeError):
@@ -883,17 +886,15 @@ class GitHubIssueCache:
 
 def _read_frontmatter_markdown(path: Path) -> tuple[dict[str, Any], str]:
     text = path.read_text(encoding="utf-8")
-    if not text.startswith("---\n"):
+    if not _FRONTMATTER_HANDLER.detect(text):
         raise WorkflowCacheCorrupt(f"missing markdown frontmatter: {path}")
-    marker = "\n---\n"
-    end = text.find(marker, 4)
-    if end < 0:
-        raise WorkflowCacheCorrupt(f"unterminated markdown frontmatter: {path}")
-    frontmatter_text = text[4:end]
-    body = text[end + len(marker) :]
+    try:
+        frontmatter_text, body = _FRONTMATTER_HANDLER.split(text)
+    except ValueError as exc:
+        raise WorkflowCacheCorrupt(f"unterminated markdown frontmatter: {path}") from exc
     if body.startswith("\n"):
         body = body[1:]
-    data = _loads_yaml_mapping(frontmatter_text, path)
+    data = _loads_frontmatter_mapping(frontmatter_text, path)
     return data, body
 
 
@@ -1255,13 +1256,29 @@ def _loads_yaml_mapping(text: str, path: Path) -> dict[str, Any]:
     return value
 
 
+def _loads_frontmatter_mapping(text: str, path: Path) -> dict[str, Any]:
+    try:
+        value = _FRONTMATTER_HANDLER.load(text)
+    except Exception as exc:
+        raise WorkflowCacheCorrupt(f"could not parse YAML: {path}: {exc}") from exc
+    if value is None:
+        return {}
+    if not isinstance(value, dict):
+        raise WorkflowCacheCorrupt(f"YAML must be a mapping: {path}")
+    return value
+
+
 def _require_schema(data: Mapping[str, Any], path: Path) -> None:
     if data.get("schema_version") != SCHEMA_VERSION:
         raise WorkflowCacheCorrupt(f"unsupported schema_version in {path}")
 
 
 def _format_markdown(frontmatter: Mapping[str, Any], body: str) -> str:
-    return f"---\n{_dump_yaml(frontmatter)}---\n\n{body}"
+    return f"---\n{_dump_frontmatter_yaml(frontmatter)}---\n\n{body}"
+
+
+def _dump_frontmatter_yaml(data: Mapping[str, Any]) -> str:
+    return _FRONTMATTER_HANDLER.export(dict(data), sort_keys=False) + "\n"
 
 
 def _dump_yaml(data: Mapping[str, Any]) -> str:

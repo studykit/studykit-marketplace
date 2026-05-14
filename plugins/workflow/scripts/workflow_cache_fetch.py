@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["python-frontmatter", "PyYAML"]
+# ///
 """Agent-facing workflow provider cache fetch entrypoint."""
 
 from __future__ import annotations

@@ -85,7 +85,7 @@ Use the workflow launcher as the primary path for bundled scripts:
 - `scripts/authoring_guard.py`
 
 Use `git rev-parse --show-toplevel` only to resolve the project root. Use
-`uv run --with pytest pytest plugins/workflow/tests` only when validating
+`uv run --with pytest --with python-frontmatter --with PyYAML pytest plugins/workflow/tests` only when validating
 workflow plugin changes.
 
 If the workflow scripts do not support the requested GitHub operation or cannot

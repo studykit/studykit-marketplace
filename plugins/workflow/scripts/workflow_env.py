@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["python-frontmatter"]
+# ///
 """Workflow shell environment contract helpers.
 
 Hook adapters and shell wrappers use this module to publish the small

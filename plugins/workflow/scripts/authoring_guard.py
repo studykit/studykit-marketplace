@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["PyYAML"]
+# ///
 """Check whether workflow authoring files were read before a write.
 
 This script combines the authoring resolver with the session read ledger. It is

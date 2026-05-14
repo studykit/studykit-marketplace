@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["python-frontmatter", "PyYAML"]
+# ///
 """Claude hook adapter and CLI entry point.
 
 This module owns Claude Code payload and environment handling. Shared workflow
@@ -6,10 +9,11 @@ policy, ledger, guard, and issue-cache behavior lives in ``workflow_hook.py``
 as plain functions.
 
 The script is the executable entry point for Claude's hook manifest
-(``plugins/workflow/hooks/hooks.json``). Each hook command invokes ``python3
-hook_claude.py``; ``main`` dispatches by the ``hook_event_name`` value in the
-hook payload. When this adapter writes hook output to stdout, it writes JSON
-only; no plain-text hook output is used.
+(``plugins/workflow/hooks/hooks.json``). Each hook command invokes this script
+with ``uv run --script`` so inline script dependencies are available. ``main``
+dispatches by the ``hook_event_name`` value in the hook payload. When this
+adapter writes hook output to stdout, it writes JSON only; no plain-text hook
+output is used.
 """
 
 from __future__ import annotations

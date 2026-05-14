@@ -86,5 +86,6 @@ Behavior:
 
 ## Manifests
 
-- `hooks.json` is the Claude hook manifest; all event commands invoke `../scripts/hook_claude.py`.
-- `hooks.codex.json` is referenced by `../.codex-plugin/plugin.json`; all event commands invoke `../scripts/hook_codex.py`.
+- `hooks.json` is the Claude hook manifest; all event commands invoke `../scripts/hook_claude.py` through `uv run --script`.
+- `hooks.codex.json` is referenced by `../.codex-plugin/plugin.json`; all event commands invoke `../scripts/hook_codex.py` through `uv run --script`.
+- Hook entrypoints use inline script dependencies so hook-imported workflow modules can use `python-frontmatter` for Markdown frontmatter and `PyYAML` for `.workflow/config.yml` without relying on a host-global Python environment.

@@ -1,4 +1,7 @@
 #!/usr/bin/env python3
+# /// script
+# dependencies = ["PyYAML"]
+# ///
 """Session ledger for workflow authoring file reads.
 
 The ledger records absolute authoring contract paths that an agent has read in
