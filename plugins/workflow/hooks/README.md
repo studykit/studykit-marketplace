@@ -44,7 +44,7 @@ Behavior:
 
 ## SubagentStart (Claude only)
 
-Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/workflow_subagent_hook.py`.
+Claude fires `SubagentStart` with matcher `workflow-operator` from the `hooks` block defined inside `../agents/workflow-operator.md` frontmatter. The matcher restricts firing to the operator subagent. The hook command runs `../scripts/workflow_hook_claude.py`.
 
 Behavior:
 

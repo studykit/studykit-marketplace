@@ -1,19 +1,30 @@
 #!/usr/bin/env python3
-"""Claude hook implementations.
+"""Claude hook implementations and SubagentStart entry point.
 
 Hosts ``ClaudeHook`` (the runtime-bound hook for Claude Code) and
 ``UnknownHook`` (the fallback when the host runtime cannot be inferred).
 Both inherit from the abstract ``Hook`` in :mod:`workflow_hook`; the base
 also owns the module-level payload/env helpers reused here.
+
+This module also doubles as the executable entry point for Claude's
+``SubagentStart`` hook on ``workflow-operator``. The agent frontmatter
+(``plugins/workflow/agents/workflow-operator.md``) invokes
+``python3 workflow_hook_claude.py``; the ``main`` function dispatches to
+``Hook.from_payload_or_stdin(payload).handle_subagent_start()``.
 """
 
 from __future__ import annotations
 
 import os
+import sys
 from pathlib import Path
-from typing import TextIO
+from typing import Any, TextIO
 
-from workflow_hook import (
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from workflow_hook import (  # noqa: E402
     CLAUDE_SESSION_START_SOURCES,
     EditTarget,
     Hook,
@@ -25,7 +36,7 @@ from workflow_hook import (
     _session_start_source_value,
     _string,
 )
-from workflow_operator_context import (
+from workflow_operator_context import (  # noqa: E402
     build_operator_subagent_context,
     payload_targets_operator,
 )
@@ -66,8 +77,6 @@ class ClaudeHook(Hook):
     def handle_subagent_start(self, *, stdout: TextIO | None = None) -> int:
         """SubagentStart for Claude: inject parent session id for workflow-operator."""
 
-        import sys
-
         output = stdout or sys.stdout
         if not payload_targets_operator(self.payload):
             return 0
@@ -105,3 +114,21 @@ class UnknownHook(ClaudeHook):
     @property
     def runtime(self) -> str:
         return "unknown"
+
+
+def subagent_start(
+    payload: dict[str, Any] | None = None,
+    *,
+    stdout: TextIO | None = None,
+) -> int:
+    """Thin shim that delegates to ``ClaudeHook.handle_subagent_start``."""
+
+    return Hook.from_payload_or_stdin(payload).handle_subagent_start(stdout=stdout)
+
+
+def main() -> int:
+    return subagent_start()
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -2,10 +2,10 @@
 """Workflow operator subagent context helpers.
 
 Operator-specific detection and the ``additionalContext`` template are shared
-between Claude's ``SubagentStart`` entry (``workflow_subagent_hook.py``) and
+between Claude's ``SubagentStart`` entry (``workflow_hook_claude.py``) and
 the Codex ``SessionStart`` operator branch (``workflow_hook.py``). Hosting
-them here lets both hook scripts import statically and removes the previous
-``workflow_hook`` ↔ ``workflow_subagent_hook`` runtime import workaround.
+them here keeps a single home for operator-specific text and detection so
+neither hook script has to import the other.
 """
 
 from __future__ import annotations

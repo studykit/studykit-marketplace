@@ -12,7 +12,7 @@ hooks:
   SubagentStart:
     - hooks:
         - type: command
-          command: WORKFLOW_HOOK_RUNTIME=claude python3 "${CLAUDE_PLUGIN_ROOT}/scripts/workflow_subagent_hook.py"
+          command: WORKFLOW_HOOK_RUNTIME=claude python3 "${CLAUDE_PLUGIN_ROOT}/scripts/workflow_hook_claude.py"
           timeout: 5
 ---
 
