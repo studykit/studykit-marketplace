@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 """Workflow hook dispatcher.
 
-SessionStart injects a concise workflow authoring policy only for main sessions
-when the active project has a valid ``.workflow/config.yml``. The hook never
-starts workflow skills and never blocks session startup.
+SessionStart injects a concise workflow routing policy only for main sessions
+when the active project has a valid ``.workflow/config.yml``. The policy is
+intentionally narrow: it announces that the project is workflow-configured,
+names the issue provider, and tells the main assistant to delegate workflow
+operations to the ``workflow-operator`` agent. Detailed authoring resolver,
+ledger, guard, and script command syntax live in the operator's own prompt.
+The hook never starts workflow skills and never blocks session startup.
 """
 
 from __future__ import annotations
@@ -320,34 +324,17 @@ def pre_write(
 def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> str:
     """Build the context block injected for configured workflow projects."""
 
-    commit_ref = "disabled"
-    if config.commit_refs.enabled:
-        commit_ref = config.commit_refs.style
-
     return (
         "## workflow authoring policy\n\n"
-        f"Configured workflow project: `{config.root}`\n"
-        f"Config file: `{config.path}`\n"
-        f"Workflow plugin root: `{plugin_root}`\n"
-        f"Issue provider: `{config.issues.kind}`\n"
-        f"Issue ID format: `{config.issue_id_format}`\n"
-        f"Knowledge provider: `{config.knowledge.kind}`\n"
-        f"Local projection: `{config.local_projection.mode}`\n"
-        f"Commit references: `{commit_ref}`\n\n"
-        "Before workflow artifact edits, or documentation edits that create or "
-        "update workflow-backed knowledge artifacts, ask the `workflow-operator` "
-        "agent which authoring file paths must be read for the artifact type and "
-        "provider. The operator should return file paths only; the main assistant "
-        "reads those files directly before editing. For non-workflow artifacts "
-        "such as repository instruction files, plugin README files, ordinary docs "
-        "outside configured workflow knowledge, or host configuration files, the "
-        "operator should return `NONE`; treat `NONE` as no workflow authoring "
-        "files required.\n\n"
-        "Use the workflow operator only for workflow operations. Do not delegate "
-        "issue or wiki content interpretation to it. For issue or knowledge "
-        "context, the operator returns provider/cache metadata, issue relationship "
-        "metadata, and paths only; the main assistant reads and summarizes "
-        "artifact content directly.\n\n"
+        f"This project is configured for the workflow plugin (issue provider: `{config.issues.kind}`). "
+        "Delegate workflow operations — provider/cache reads, write-back, comment "
+        "append, authoring path discovery, guarded writes — to the "
+        "`workflow-operator` agent. Pass workflow intent, issue refs, artifact "
+        "type, and session id; the operator runs workflow scripts and returns "
+        "provider/cache metadata, issue relationship metadata, and paths.\n\n"
+        "The operator does not interpret content. Read and summarize issue, "
+        "comment, knowledge, or authoring file content directly from the paths "
+        "it returns.\n\n"
         f"{build_issue_operation_policy(config)}"
     )
 
@@ -357,34 +344,25 @@ def build_issue_operation_policy(config: WorkflowConfig) -> str:
 
     if config.issues.kind == "github":
         return (
-            "For workflow provider, cache, issue write-back, comment append, "
-            "authoring guard operations, or any raw GitHub CLI (`gh`) operation, "
-            "delegate to the `workflow-operator` agent first. Pass workflow intent, "
-            "issue refs, artifact type, and session id instead of carrying script "
-            "command recipes in the main context. The workflow operator should use "
-            "workflow scripts first and raw `gh` only when those scripts cannot "
-            "support or complete the GitHub operation. The main assistant should "
-            "not run raw `gh` for workflow operations; if the workflow operator "
-            "cannot complete the operation, report that limitation instead."
+            "Workflow issues live in GitHub. The main assistant should not run "
+            "raw `gh` for workflow operations — the operator handles GitHub via "
+            "workflow scripts with raw `gh` as its own fallback. If the operator "
+            "cannot complete a request, report that limitation instead of "
+            "running `gh` directly."
         )
 
     if config.issues.kind == "filesystem":
         return (
-            "Configured workflow issues are filesystem-backed local artifacts. "
-            "Edit issue Markdown under the configured issue or local projection "
-            "paths directly after required authoring contracts are read. Use the "
-            "`workflow-operator` agent for supported authoring resolver, ledger, "
-            "and guard operations when needed; provider cache, write-back, and "
-            "comment-append delegation does not apply to filesystem issue edits."
+            "Workflow issues are filesystem-backed local Markdown artifacts. "
+            "Edit them directly at the paths the operator returns after "
+            "required authoring contracts are read. Provider cache, write-back, "
+            "and comment-append delegation does not apply."
         )
 
     return (
-        f"Configured workflow issues use the `{config.issues.kind}` provider, not "
-        "GitHub Issues. Delegate supported workflow provider, cache, issue "
-        "write-back, comment append, and authoring guard operations to the "
-        "`workflow-operator` agent first. If the workflow operator cannot complete "
-        "the provider operation, state that limitation before using provider-specific "
-        "tools."
+        f"Workflow issues use the `{config.issues.kind}` provider, not GitHub. "
+        "If the operator cannot complete a provider operation, report that "
+        "limitation rather than reaching for provider-specific tools directly."
     )
 
 

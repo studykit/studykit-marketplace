@@ -529,32 +529,30 @@ def test_session_start_injects_policy_for_configured_project(
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
     assert "## workflow authoring policy" in context
-    assert f"Config file: `{tmp_path / '.workflow/config.yml'}`" in context
-    assert f"Workflow plugin root: `{_PLUGIN_ROOT}`" in context
-    assert "Issue provider: `github`" in context
-    assert "Issue ID format: `github`" in context
-    assert "Knowledge provider: `github`" in context
-    assert "Local projection: `none`" in context
-    assert "Commit references: `provider-native`" in context
-    assert "Before workflow artifact edits" in context
-    assert "documentation edits that create or update workflow-backed knowledge artifacts" in context
-    assert "which authoring file paths must be read" in context
-    assert "The operator should return file paths only" in context
-    assert "the main assistant reads those files directly" in context
-    assert "For non-workflow artifacts" in context
-    assert "operator should return `NONE`" in context
-    assert "treat `NONE` as no workflow authoring files required" in context
-    assert "Use the workflow operator only for workflow operations" in context
-    assert "Do not delegate issue or wiki content interpretation to it" in context
-    assert "provider/cache metadata, issue relationship metadata, and paths only" in context
-    assert "the main assistant reads and summarizes artifact content directly" in context
-    assert "delegate to the `workflow-operator` agent first" in context
-    assert "any raw GitHub CLI (`gh`) operation" in context
+    assert "This project is configured for the workflow plugin" in context
+    assert "issue provider: `github`" in context
+    assert "Delegate workflow operations" in context
+    assert "`workflow-operator` agent" in context
     assert "Pass workflow intent, issue refs, artifact type, and session id" in context
-    assert "script command recipes in the main context" in context
-    assert "workflow scripts first and raw `gh` only when those scripts cannot support or complete" in context
-    assert "main assistant should not run raw `gh` for workflow operations" in context
-    assert "report that limitation instead" in context
+    assert "operator runs workflow scripts" in context
+    assert "provider/cache metadata, issue relationship metadata, and paths" in context
+    assert "The operator does not interpret content" in context
+    assert "Read and summarize issue, comment, knowledge, or authoring file content directly" in context
+    assert "Workflow issues live in GitHub" in context
+    assert "should not run raw `gh` for workflow operations" in context
+    assert "raw `gh` as its own fallback" in context
+    assert "report that limitation instead of running `gh` directly" in context
+    assert "Configured workflow project:" not in context
+    assert "Config file:" not in context
+    assert "Workflow plugin root:" not in context
+    assert "Issue ID format:" not in context
+    assert "Knowledge provider:" not in context
+    assert "Local projection:" not in context
+    assert "Commit references:" not in context
+    assert "Before workflow artifact edits" not in context
+    assert "operator should return `NONE`" not in context
+    assert "treat `NONE`" not in context
+    assert "Use the workflow operator only for workflow operations" not in context
     assert "Workflow script command recipes are intentionally not injected here" not in context
     assert "Provider writes must use guarded workflow wrappers" not in context
     assert "does not auto-trigger workflow skills or agents" not in context
@@ -585,23 +583,21 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert "Issue provider: `filesystem`" in context
-    assert "Issue ID format: `number`" in context
-    assert "Local projection: `persistent`" in context
-    assert "Configured workflow issues are filesystem-backed local artifacts" in context
-    assert "Edit issue Markdown under the configured issue or local projection paths directly" in context
+    assert "issue provider: `filesystem`" in context
+    assert "Workflow issues are filesystem-backed local Markdown artifacts" in context
+    assert "Edit them directly at the paths the operator returns" in context
     assert "required authoring contracts are read" in context
-    assert "provider cache, write-back, and comment-append delegation does not apply" in context
-    assert "Before workflow artifact edits" in context
-    assert "documentation edits that create or update workflow-backed knowledge artifacts" in context
-    assert "The operator should return file paths only" in context
-    assert "operator should return `NONE`" in context
-    assert "Use the workflow operator only for workflow operations" in context
-    assert "Do not delegate issue or wiki content interpretation to it" in context
-    assert "provider/cache metadata, issue relationship metadata, and paths only" in context
-    assert "the main assistant reads and summarizes artifact content directly" in context
+    assert "Provider cache, write-back, and comment-append delegation does not apply" in context
+    assert "Delegate workflow operations" in context
+    assert "`workflow-operator` agent" in context
+    assert "The operator does not interpret content" in context
+    assert "Issue ID format:" not in context
+    assert "Local projection:" not in context
+    assert "Before workflow artifact edits" not in context
+    assert "operator should return `NONE`" not in context
+    assert "Use the workflow operator only for workflow operations" not in context
     assert "raw GitHub CLI (`gh`)" not in context
-    assert "main assistant should not run raw `gh`" not in context
+    assert "should not run raw `gh`" not in context
 
 
 def test_session_start_discovers_config_from_nested_project_path(
@@ -616,7 +612,8 @@ def test_session_start_discovers_config_from_nested_project_path(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert f"Config file: `{tmp_path / '.workflow/config.yml'}`" in context
+    assert "## workflow authoring policy" in context
+    assert "issue provider: `github`" in context
 
 
 def test_user_prompt_caches_issue_and_injects_project_relative_path(

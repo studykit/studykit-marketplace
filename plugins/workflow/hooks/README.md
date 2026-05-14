@@ -32,16 +32,13 @@ Behavior:
 Behavior:
 
 - If the active project has no `.workflow/config.yml`, the hook emits nothing.
-- If the active project has a valid `.workflow/config.yml`, the hook injects concise workflow policy as `additionalContext`.
+- If the active project has a valid `.workflow/config.yml`, the hook injects a concise routing policy as `additionalContext`. The policy is intentionally narrow: it announces that the project is workflow-configured, names the issue provider, tells the main assistant to delegate workflow operations to `../agents/workflow-operator.md`, and reiterates that the operator returns metadata and paths only — the main assistant reads artifact content directly.
 - If the hook payload identifies a spawned agent session, the hook emits nothing.
 - In Codex, `SessionStart` does not provide a direct subagent field in the hook payload, so the adapter also checks the documented `transcript_path` for initial session metadata marked as a subagent thread.
-- The policy asks the main assistant to ask `../agents/workflow-operator.md` which authoring file paths must be read before workflow artifact edits, or documentation edits that create or update workflow-backed knowledge artifacts. The operator returns paths only for workflow artifacts and `NONE` for non-workflow artifacts; the main assistant reads returned paths directly.
-- The policy keeps content interpretation in the main assistant: the workflow operator returns provider/cache metadata, issue relationship metadata, and paths only, not issue or wiki content summaries.
-- For GitHub issue providers, the policy asks the main assistant to delegate workflow provider, cache, write-back, comment append, authoring guard operations, and any raw GitHub CLI (`gh`) operation to `../agents/workflow-operator.md` first.
-- The workflow operator uses workflow scripts first, then falls back to raw `gh` when those scripts cannot support or complete the GitHub operation.
-- For filesystem issue providers, the policy describes local Markdown artifact editing instead of provider cache, write-back, comment append, or raw `gh` delegation.
-- The main assistant does not run raw `gh` for workflow operations; if the workflow operator cannot complete a GitHub operation, the main assistant reports that limitation.
-- The main assistant passes workflow intent, issue refs, artifact type, and session id rather than carrying command syntax in context.
+- For GitHub issue providers, the policy adds that the main assistant does not run raw `gh` for workflow operations; the operator runs workflow scripts and may fall back to raw `gh` internally.
+- For filesystem issue providers, the policy adds that workflow issues are local Markdown artifacts edited directly at the paths the operator returns; provider cache, write-back, and comment-append delegation does not apply.
+- For other providers, the policy tells the main assistant to report any limitation when the operator cannot complete a provider operation, rather than reaching for provider-specific tools directly.
+- Detailed authoring resolver, ledger, guard, `NONE` convention, and script command syntax are not injected here — those live in `../agents/workflow-operator.md` and are discovered when the operator is consulted.
 - The hook always exits `0`.
 
 ## UserPromptSubmit
