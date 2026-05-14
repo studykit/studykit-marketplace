@@ -7,14 +7,13 @@ the parent session id as ``additionalContext`` so the operator binds its
 ledger and guard lookups to the main session's read history.
 
 Codex has no ``SubagentStart`` event, so the codex equivalent rides on
-``SessionStart`` inside ``workflow_hook.py`` and reuses the helpers exported
-here (``build_operator_subagent_context``, ``extract_codex_subagent_metadata``,
-``payload_targets_operator``).
+``SessionStart`` inside ``workflow_hook.py`` and uses
+``CodexHookContext.subagent_metadata()`` from ``workflow_hook_context`` to
+extract the same parent thread id from the subagent rollout transcript.
 """
 
 from __future__ import annotations
 
-import json
 import sys
 from collections.abc import Mapping
 from pathlib import Path
@@ -25,12 +24,7 @@ if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
 from workflow_config import WorkflowConfigError, load_workflow_config  # noqa: E402
-from workflow_hook import (  # noqa: E402
-    emit,
-    project_dir_from_payload,
-    read_payload,
-    session_id_from_payload,
-)
+from workflow_hook_context import HookContext  # noqa: E402
 
 WORKFLOW_OPERATOR_AGENT_NAME = "workflow-operator"
 
@@ -48,14 +42,13 @@ def subagent_start(
     defensive re-check keeps unrelated payloads silent.
     """
 
-    if payload is None:
-        payload = read_payload()
+    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
     output = stdout or sys.stdout
 
-    if not payload_targets_operator(payload):
+    if not payload_targets_operator(ctx.payload):
         return 0
 
-    project_dir = project_dir_from_payload(payload)
+    project_dir = ctx.project_dir()
     if project_dir is None:
         return 0
 
@@ -66,12 +59,12 @@ def subagent_start(
     if config is None:
         return 0
 
-    parent_session_id = session_id_from_payload(payload)
+    parent_session_id = ctx.session_id()
     if not parent_session_id:
         return 0
 
     context = build_operator_subagent_context(parent_session_id, config.root)
-    emit(
+    ctx.emit(
         {
             "hookSpecificOutput": {
                 "hookEventName": "SubagentStart",
@@ -98,7 +91,7 @@ def build_operator_subagent_context(parent_session_id: str, project_root: Path) 
     )
 
 
-def payload_targets_operator(payload: dict[str, Any]) -> bool:
+def payload_targets_operator(payload: Mapping[str, Any]) -> bool:
     """Return true when the SubagentStart payload targets workflow-operator."""
 
     for key in ("agent_type", "agent_name", "subagent_type"):
@@ -117,82 +110,6 @@ def payload_targets_operator(payload: dict[str, Any]) -> bool:
 
 def agent_name_matches_operator(name: str | None) -> bool:
     return bool(name) and name.strip() == WORKFLOW_OPERATOR_AGENT_NAME
-
-
-def extract_codex_subagent_metadata(payload: dict[str, Any]) -> tuple[str, str | None]:
-    """Return (parent_thread_id, agent_name) from a codex subagent transcript.
-
-    Returns ("", None) when the transcript is unavailable or does not match
-    the expected subagent metadata shape.
-    """
-
-    transcript_path = payload.get("transcript_path")
-    if not isinstance(transcript_path, str) or not transcript_path:
-        return "", None
-    path = Path(transcript_path).expanduser()
-    if not path.is_file():
-        return "", None
-
-    try:
-        with path.open("r", encoding="utf-8") as handle:
-            for index, line in enumerate(handle):
-                if index >= 8:
-                    break
-                try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if not isinstance(event, Mapping) or event.get("type") != "session_meta":
-                    continue
-                metadata = event.get("payload")
-                if not isinstance(metadata, Mapping):
-                    continue
-                return (
-                    _parent_thread_id_from_metadata(metadata),
-                    _agent_name_from_metadata(metadata),
-                )
-    except OSError:
-        return "", None
-
-    return "", None
-
-
-def _parent_thread_id_from_metadata(metadata: Mapping[str, Any]) -> str:
-    direct = metadata.get("parent_thread_id")
-    if isinstance(direct, str) and direct.strip():
-        return direct.strip()
-    source = metadata.get("source")
-    if isinstance(source, Mapping):
-        subagent = source.get("subagent")
-        if isinstance(subagent, Mapping):
-            spawn = subagent.get("thread_spawn")
-            if isinstance(spawn, Mapping):
-                value = spawn.get("parent_thread_id")
-                if isinstance(value, str) and value.strip():
-                    return value.strip()
-    return ""
-
-
-def _agent_name_from_metadata(metadata: Mapping[str, Any]) -> str | None:
-    for key in ("agent_name", "agent_role", "agent_nickname", "agent_path"):
-        value = metadata.get(key)
-        if isinstance(value, str) and value.strip():
-            return value.strip()
-    source = metadata.get("source")
-    if isinstance(source, Mapping):
-        subagent = source.get("subagent")
-        if isinstance(subagent, Mapping):
-            for key in ("agent_name", "agent_role", "agent_nickname"):
-                value = subagent.get(key)
-                if isinstance(value, str) and value.strip():
-                    return value.strip()
-            spawn = subagent.get("thread_spawn")
-            if isinstance(spawn, Mapping):
-                for key in ("agent_name", "agent_role"):
-                    value = spawn.get(key)
-                    if isinstance(value, str) and value.strip():
-                        return value.strip()
-    return None
 
 
 def main() -> int:

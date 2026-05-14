@@ -21,7 +21,6 @@ The hook never starts workflow skills and never blocks session startup.
 from __future__ import annotations
 
 import json
-import os
 import re
 import subprocess
 import sys
@@ -42,23 +41,11 @@ from workflow_command import CommandRunner  # noqa: E402
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
 from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_issue_number  # noqa: E402
 from workflow_github import resolve_github_repository  # noqa: E402
+from workflow_hook_context import EditTarget, HookContext  # noqa: E402
 from workflow_issue_cache import cache_issue_references  # noqa: E402
 from workflow_issue_cache import extract_issue_numbers, format_issue_cache_context  # noqa: E402
 
-RUNTIME_ENV_VAR = "WORKFLOW_HOOK_RUNTIME"
-STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
-CLAUDE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
 HOOK_STATE_DIR_NAME = "hook-state"
-CODEX_SESSION_START_SOURCES = {"startup", "resume", "clear"}
-CLAUDE_SESSION_START_SOURCES = {"startup", "resume", "clear", "compact"}
-
-
-@dataclass(frozen=True)
-class EditTarget:
-    """Potential local workflow write target."""
-
-    path: Path
-    content: str | None = None
 
 
 @dataclass(frozen=True)
@@ -73,13 +60,12 @@ class ArtifactMetadata:
 def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | None = None) -> int:
     """SessionStart entry point. Always exits 0."""
 
-    if payload is None:
-        payload = read_payload()
+    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
     output = stdout or sys.stdout
-    if is_agent_session(payload):
-        return _emit_codex_operator_session(payload, output)
+    if ctx.is_agent_session():
+        return _emit_codex_operator_session(ctx, output)
 
-    project_dir = project_dir_from_payload(payload)
+    project_dir = ctx.project_dir()
     if project_dir is None:
         return 0
 
@@ -91,20 +77,19 @@ def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | Non
     if config is None:
         return 0
 
-    runtime = hook_runtime(payload)
-    session_id = session_id_from_payload(payload)
-    if should_skip_session_start_policy(payload):
+    session_id = ctx.session_id()
+    if ctx.should_skip_session_start_policy():
         return 0
-    if not should_reinject_session_policy(payload) and session_policy_was_announced(
+    if not ctx.should_reinject_session_policy() and session_policy_was_announced(
         config.root,
-        runtime,
+        ctx.runtime,
         session_id,
     ):
         return 0
 
-    plugin_root = plugin_root_from_payload(payload)
+    plugin_root = ctx.plugin_root()
     context = build_session_start_context(config, plugin_root)
-    emit(
+    ctx.emit(
         {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",
@@ -113,7 +98,7 @@ def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | Non
         },
         stdout=output,
     )
-    record_session_policy_announced(config.root, runtime, session_id)
+    record_session_policy_announced(config.root, ctx.runtime, session_id)
     return 0
 
 
@@ -128,10 +113,9 @@ def post_read(
     The hook is silent on success and on non-workflow projects.
     """
 
-    if payload is None:
-        payload = read_payload()
-    project_dir = project_dir_from_payload(payload)
-    session_id = session_id_from_payload(payload)
+    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    project_dir = ctx.project_dir()
+    session_id = ctx.session_id()
     if project_dir is None or not session_id:
         return 0
 
@@ -142,11 +126,11 @@ def post_read(
     if config is None:
         return 0
 
-    target = read_target_from_payload(payload)
+    target = ctx.read_target()
     if target is None:
         return 0
 
-    plugin_root = plugin_root_from_payload(payload)
+    plugin_root = ctx.plugin_root()
     authoring_file = workflow_authoring_file(target, plugin_root)
     if authoring_file is None:
         return 0
@@ -156,7 +140,7 @@ def post_read(
             [authoring_file],
             project=config.root,
             session_id=session_id,
-            state_dir=state_dir_from_env(state_dir),
+            state_dir=ctx.state_dir(state_dir),
             require_config=True,
         )
     except LedgerError:
@@ -176,11 +160,10 @@ def user_prompt_submit(
 ) -> int:
     """Cache issue references from a user prompt and inject concise context."""
 
-    if payload is None:
-        payload = read_payload()
+    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
     output = stdout or sys.stdout
 
-    project_dir = project_dir_from_payload(payload)
+    project_dir = ctx.project_dir()
     if project_dir is None:
         return 0
 
@@ -195,9 +178,9 @@ def user_prompt_submit(
     if repo is None:
         return 0
 
-    session_id = session_id_from_payload(payload)
+    session_id = ctx.session_id()
     prompt_numbers = extract_issue_numbers(
-        prompt_from_payload(payload),
+        prompt_from_payload(ctx.payload),
         repo=repo,
         issue_id_format=config.issue_id_format,
     )
@@ -217,7 +200,7 @@ def user_prompt_submit(
         return 0
 
     record_session_issues(config.root, session_id, [context.number for context in fresh_contexts], "announced")
-    emit(
+    ctx.emit(
         {
             "hookSpecificOutput": {
                 "hookEventName": "UserPromptSubmit",
@@ -237,15 +220,14 @@ def stop(
 ) -> int:
     """Record issue references known to the session before stopping."""
 
-    if payload is None:
-        payload = read_payload()
-    if payload.get("stop_hook_active") is True:
+    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    if ctx.payload.get("stop_hook_active") is True:
         return 0
     # Stop hook JSON output is reserved for block decisions. Context injection
     # happens in UserPromptSubmit so Stop can never fail host output validation.
     _ = stdout
 
-    project_dir = project_dir_from_payload(payload)
+    project_dir = ctx.project_dir()
     if project_dir is None:
         return 0
 
@@ -260,10 +242,10 @@ def stop(
     if repo is None:
         return 0
 
-    session_id = session_id_from_payload(payload)
+    session_id = ctx.session_id()
     issue_numbers = sorted(read_session_issues(config.root, session_id, "mentioned"), key=int)
     for number in extract_issue_numbers(
-        text_from_payload(payload),
+        text_from_payload(ctx.payload),
         repo=repo,
         issue_id_format=config.issue_id_format,
     ):
@@ -287,12 +269,11 @@ def pre_write(
 ) -> int:
     """Block local projection writes until required authoring files were read."""
 
-    if payload is None:
-        payload = read_payload()
+    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
     output = stdout or sys.stdout
 
-    project_dir = project_dir_from_payload(payload)
-    session_id = session_id_from_payload(payload)
+    project_dir = ctx.project_dir()
+    session_id = ctx.session_id()
     if project_dir is None or not session_id:
         return 0
 
@@ -309,7 +290,7 @@ def pre_write(
 
     targets = [
         target
-        for target in edit_targets_from_payload(payload)
+        for target in ctx.edit_targets()
         if is_markdown_path(target.path) and is_under_any(target.path, roots)
     ]
     if not targets:
@@ -320,16 +301,16 @@ def pre_write(
             target,
             config=config,
             session_id=session_id,
-            state_dir=state_dir_from_env(state_dir),
+            state_dir=ctx.state_dir(state_dir),
         )
         if block_reason:
-            emit({"decision": "block", "reason": block_reason}, stdout=output)
+            ctx.emit({"decision": "block", "reason": block_reason}, stdout=output)
             return 0
 
     return 0
 
 
-def _emit_codex_operator_session(payload: dict[str, Any], output: TextIO) -> int:
+def _emit_codex_operator_session(ctx: HookContext, output: TextIO) -> int:
     """Emit operator subagent context when a codex subagent SessionStart is for workflow-operator.
 
     Claude SubagentStart already covers the operator path natively (see
@@ -340,19 +321,18 @@ def _emit_codex_operator_session(payload: dict[str, Any], output: TextIO) -> int
     from workflow_subagent_hook import (
         agent_name_matches_operator,
         build_operator_subagent_context,
-        extract_codex_subagent_metadata,
     )
 
-    if hook_runtime(payload) != "codex":
+    if ctx.runtime != "codex":
         return 0
 
-    parent_thread_id, agent_name = extract_codex_subagent_metadata(payload)
+    parent_thread_id, agent_name = ctx.subagent_metadata()
     if not parent_thread_id:
         return 0
     if not agent_name_matches_operator(agent_name):
         return 0
 
-    project_dir = project_dir_from_payload(payload)
+    project_dir = ctx.project_dir()
     if project_dir is None:
         return 0
     try:
@@ -363,7 +343,7 @@ def _emit_codex_operator_session(payload: dict[str, Any], output: TextIO) -> int
         return 0
 
     context = build_operator_subagent_context(parent_thread_id, config.root)
-    emit(
+    ctx.emit(
         {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",
@@ -525,31 +505,6 @@ def record_session_policy_announced(project: Path, runtime: str, session_id: str
         return
 
 
-def session_start_source(payload: dict[str, Any]) -> str:
-    """Return the documented SessionStart source for the invoking runtime."""
-
-    value = payload.get("source")
-    if not isinstance(value, str):
-        return ""
-    source = value.strip().lower()
-    runtime = hook_runtime(payload)
-    if runtime == "codex":
-        return source if source in CODEX_SESSION_START_SOURCES else ""
-    if runtime == "claude":
-        return source if source in CLAUDE_SESSION_START_SOURCES else ""
-    return source
-
-
-def should_reinject_session_policy(payload: dict[str, Any]) -> bool:
-    return session_start_source(payload) == "clear"
-
-
-def should_skip_session_start_policy(payload: dict[str, Any]) -> bool:
-    if session_start_source(payload) != "compact":
-        return False
-    return hook_runtime(payload) in {"claude", "unknown"}
-
-
 def read_session_issues(project: Path, session_id: str, kind: str) -> set[str]:
     path = issue_state_path(project, session_id, kind)
     if path is None or not path.is_file():
@@ -654,292 +609,6 @@ def local_projection_guard_reason(
     )
 
 
-def project_dir_from_payload(payload: dict[str, Any]) -> Path | None:
-    """Resolve the active project directory from host-specific hook inputs."""
-
-    runtime = hook_runtime(payload)
-    if runtime == "claude":
-        project_env = os.environ.get("CLAUDE_PROJECT_DIR")
-        if project_env:
-            return Path(project_env).expanduser().resolve()
-
-    cwd = payload.get("cwd") or os.getcwd()
-    if not isinstance(cwd, str) or not cwd:
-        return None
-
-    cwd_path = Path(cwd).expanduser().resolve()
-    try:
-        proc = subprocess.run(
-            ["git", "-C", str(cwd_path), "rev-parse", "--show-toplevel"],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
-            text=True,
-        )
-    except (OSError, subprocess.CalledProcessError):
-        return cwd_path
-
-    root = proc.stdout.strip()
-    if not root:
-        return cwd_path
-    return Path(root).expanduser().resolve()
-
-
-def plugin_root_from_payload(payload: dict[str, Any]) -> Path:
-    """Resolve the workflow plugin root from host-specific adapter inputs."""
-
-    runtime = hook_runtime(payload)
-    env_names = ("CLAUDE_PLUGIN_ROOT",) if runtime == "claude" else ("PLUGIN_ROOT",)
-    for env_name in env_names:
-        explicit = os.environ.get(env_name)
-        if explicit:
-            return Path(explicit).expanduser().resolve()
-    return Path(__file__).resolve().parent.parent
-
-
-def session_id_from_payload(payload: dict[str, Any]) -> str:
-    for key in ("session_id", "turn_id"):
-        value = payload.get(key)
-        if isinstance(value, str) and value:
-            return value
-    return ""
-
-
-def is_agent_session(payload: dict[str, Any]) -> bool:
-    """Return true when a SessionStart payload is for a spawned agent."""
-
-    for key in ("is_agent", "is_subagent", "agent_session"):
-        if payload.get(key) is True:
-            return True
-
-    for key in (
-        "agent_id",
-        "agent_name",
-        "agent_path",
-        "subagent_id",
-        "subagent_type",
-        "parent_agent_id",
-        "parent_session_id",
-        "parent_thread_id",
-        "parent_conversation_id",
-    ):
-        value = payload.get(key)
-        if isinstance(value, str) and value.strip():
-            return True
-
-    agent_value = payload.get("agent")
-    if isinstance(agent_value, Mapping) and agent_value:
-        return True
-
-    agent_markers = {"agent", "subagent", "sub_agent", "child_agent", "spawned_agent"}
-    for key in ("source", "session_type", "session_kind", "conversation_type", "invocation", "origin"):
-        value = payload.get(key)
-        if not isinstance(value, str):
-            continue
-        normalized = value.strip().lower().replace("-", "_")
-        if normalized in agent_markers:
-            return True
-
-    if hook_runtime(payload) == "codex" and transcript_metadata_indicates_agent(payload):
-        return True
-
-    return False
-
-
-def transcript_metadata_indicates_agent(payload: dict[str, Any]) -> bool:
-    """Use Codex transcript metadata when hook payload lacks agent markers."""
-
-    transcript_path = payload.get("transcript_path")
-    if not isinstance(transcript_path, str) or not transcript_path:
-        return False
-
-    path = Path(transcript_path).expanduser()
-    if not path.is_file():
-        return False
-
-    try:
-        with path.open("r", encoding="utf-8") as handle:
-            for index, line in enumerate(handle):
-                if index >= 8:
-                    break
-                try:
-                    event = json.loads(line)
-                except json.JSONDecodeError:
-                    continue
-                if not isinstance(event, Mapping) or event.get("type") != "session_meta":
-                    continue
-                metadata = event.get("payload")
-                return session_metadata_indicates_agent(metadata)
-    except OSError:
-        return False
-
-    return False
-
-
-def session_metadata_indicates_agent(metadata: Any) -> bool:
-    if not isinstance(metadata, Mapping):
-        return False
-
-    thread_source = metadata.get("thread_source")
-    if isinstance(thread_source, str) and _agent_marker_value(thread_source):
-        return True
-
-    source = metadata.get("source")
-    if isinstance(source, Mapping) and _mapping_has_agent_marker(source):
-        return True
-
-    for key in ("agent_role", "agent_nickname", "agent_path"):
-        value = metadata.get(key)
-        if isinstance(value, str) and value.strip():
-            return True
-
-    return False
-
-
-def _mapping_has_agent_marker(value: Mapping[str, Any]) -> bool:
-    agent_keys = {
-        "agent",
-        "agent_id",
-        "agent_name",
-        "agent_nickname",
-        "agent_path",
-        "agent_role",
-        "parent_thread_id",
-        "subagent",
-        "thread_spawn",
-    }
-    for key, item in value.items():
-        if isinstance(key, str) and key in agent_keys:
-            return True
-        if isinstance(item, Mapping) and _mapping_has_agent_marker(item):
-            return True
-    return False
-
-
-def _agent_marker_value(value: str) -> bool:
-    normalized = value.strip().lower().replace("-", "_")
-    return normalized in {"agent", "subagent", "sub_agent", "child_agent", "spawned_agent"}
-
-
-def hook_runtime(payload: dict[str, Any]) -> str:
-    runtime = os.environ.get(RUNTIME_ENV_VAR, "").strip().lower()
-    if runtime in {"claude", "codex"}:
-        return runtime
-    if payload.get("turn_id"):
-        return "codex"
-    return "unknown"
-
-
-def read_target_from_payload(payload: dict[str, Any]) -> Path | None:
-    if payload.get("tool_name") != "Read":
-        return None
-    tool_input = payload.get("tool_input") or {}
-    if not isinstance(tool_input, dict):
-        return None
-    file_path = tool_input.get("file_path") or tool_input.get("path") or ""
-    if not isinstance(file_path, str) or not file_path:
-        return None
-    project_dir = project_dir_from_payload(payload)
-    return resolve_payload_path(file_path, payload, project_dir)
-
-
-def edit_targets_from_payload(payload: dict[str, Any]) -> tuple[EditTarget, ...]:
-    tool_name = payload.get("tool_name")
-    tool_input = payload.get("tool_input") or {}
-    if not isinstance(tool_input, dict):
-        return ()
-
-    if tool_name in CLAUDE_EDIT_TOOLS:
-        file_path = tool_input.get("file_path") or ""
-        if not isinstance(file_path, str) or not file_path:
-            return ()
-        path = resolve_payload_path(file_path, payload, project_dir_from_payload(payload))
-        content = tool_input.get("content") if tool_name == "Write" else None
-        if not isinstance(content, str):
-            content = None
-        return (EditTarget(path=path, content=content),)
-
-    if tool_name == "apply_patch":
-        command = tool_input.get("command") or ""
-        if not isinstance(command, str) or not command:
-            return ()
-        return apply_patch_targets(command, payload)
-
-    return ()
-
-
-def apply_patch_targets(command: str, payload: dict[str, Any]) -> tuple[EditTarget, ...]:
-    project_dir = project_dir_from_payload(payload)
-    out: list[EditTarget] = []
-    seen: set[Path] = set()
-    current_path: Path | None = None
-    current_added: list[str] | None = None
-
-    def flush_add() -> None:
-        nonlocal current_path, current_added
-        if current_path is None or current_added is None:
-            return
-        if current_path not in seen:
-            seen.add(current_path)
-            out.append(EditTarget(path=current_path, content="\n".join(current_added) + "\n"))
-        current_path = None
-        current_added = None
-
-    for line in command.splitlines():
-        if line.startswith("*** Add File: "):
-            flush_add()
-            raw_path = line.removeprefix("*** Add File: ").strip()
-            current_path = resolve_payload_path(raw_path, payload, project_dir)
-            current_added = []
-            continue
-
-        if line.startswith("*** Update File: ") or line.startswith("*** Delete File: "):
-            flush_add()
-            raw_path = line.split(": ", 1)[1].strip()
-            path = resolve_payload_path(raw_path, payload, project_dir)
-            if path not in seen:
-                seen.add(path)
-                out.append(EditTarget(path=path))
-            continue
-
-        if line.startswith("*** Move to: "):
-            raw_path = line.removeprefix("*** Move to: ").strip()
-            path = resolve_payload_path(raw_path, payload, project_dir)
-            if path not in seen:
-                seen.add(path)
-                out.append(EditTarget(path=path))
-            continue
-
-        if line.startswith("*** ") and current_added is not None:
-            flush_add()
-            continue
-
-        if current_added is not None and line.startswith("+"):
-            current_added.append(line[1:])
-
-    flush_add()
-    return tuple(out)
-
-
-def resolve_payload_path(
-    raw_path: str,
-    payload: dict[str, Any],
-    project_dir: Path | None,
-) -> Path:
-    path = Path(raw_path).expanduser()
-    if path.is_absolute():
-        return path.resolve(strict=False)
-
-    cwd = payload.get("cwd")
-    if isinstance(cwd, str) and cwd:
-        base = Path(cwd).expanduser()
-    elif project_dir is not None:
-        base = project_dir
-    else:
-        base = Path.cwd()
-    return (base / path).resolve(strict=False)
-
-
 def workflow_authoring_file(path: Path, plugin_root: Path) -> Path | None:
     target = path.expanduser().resolve(strict=False)
     authoring_root = (plugin_root / "authoring").resolve(strict=False)
@@ -1041,35 +710,6 @@ def extract_metadata_values(content: str) -> dict[str, str]:
         if value:
             values[key] = value
     return values
-
-
-def state_dir_from_env(state_dir: Path | None) -> Path | None:
-    if state_dir is not None:
-        return state_dir.resolve()
-    explicit = os.environ.get(STATE_DIR_ENV_VAR)
-    if explicit:
-        return Path(explicit).expanduser().resolve()
-    return None
-
-
-def emit(payload: dict[str, Any], *, stdout: TextIO | None = None) -> None:
-    output = stdout or sys.stdout
-    json.dump(payload, output, ensure_ascii=False)
-    output.write("\n")
-
-
-def read_payload() -> dict[str, Any]:
-    try:
-        raw = sys.stdin.read()
-    except OSError:
-        return {}
-    if not raw:
-        return {}
-    try:
-        data = json.loads(raw)
-    except json.JSONDecodeError:
-        return {}
-    return data if isinstance(data, dict) else {}
 
 
 def main(argv: list[str] | None = None) -> int:
