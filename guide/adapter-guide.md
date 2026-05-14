@@ -439,6 +439,8 @@ Claude template substitutions and subprocess variables are context-sensitive.
 
 Do not copy a Claude variable pattern from one context into another without checking that context.
 
+For Claude hooks that need to persist shell environment changes, use `CLAUDE_ENV_FILE` only in hook events that provide it. Write `export` statements to that file so variables are available to later Bash commands in the same Claude Code session. As of the current Claude Code hooks documentation, `CLAUDE_ENV_FILE` is available for `SessionStart`, `Setup`, `CwdChanged`, and `FileChanged` hooks.
+
 Claude command hooks are a documented exception to the general safety rule that command text substitutions are not automatically process environment variables: Claude exports `CLAUDE_PROJECT_DIR`, `CLAUDE_PLUGIN_ROOT`, and `CLAUDE_PLUGIN_DATA` to command hook subprocesses. Keep shared logic portable by still normalizing those values at the adapter boundary.
 
 ## Codex-Specific Inputs

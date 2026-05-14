@@ -90,7 +90,7 @@ For cross-runtime hooks, use this concrete file split:
 - `plugins/<name>/scripts/<plugin>_hook.py` for shared hook behavior as plain functions only. For example, the workflow plugin uses `plugins/workflow/scripts/workflow_hook.py`.
 - `plugins/<name>/scripts/util.py` for host-neutral helpers only.
 
-Do not put an abstract `Hook` class, runtime factory, host detector, or shared hook `main` in the shared workflow module.
+Do not put an abstract `Hook` class, runtime factory, host detector, or shared hook `main` in the shared hook module.
 
 ## Repository Layout
 
