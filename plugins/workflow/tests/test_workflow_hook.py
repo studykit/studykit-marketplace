@@ -15,8 +15,6 @@ _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from authoring_ledger import read_ledger, record_reads  # noqa: E402
-from authoring_resolver import resolve_authoring  # noqa: E402
 from workflow_cache import GitHubIssueCache  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
@@ -31,7 +29,9 @@ from hook_claude import main as claude_main  # noqa: E402
 from hook_claude import parse_claude_event_payload  # noqa: E402
 from hook_claude import session_start as claude_session_start  # noqa: E402
 from hook_claude import subagent_start  # noqa: E402
-from hook_codex import post_read, pre_write  # noqa: E402
+from hook_codex import CodexSessionStartPayload  # noqa: E402
+from hook_codex import CodexStopPayload, CodexUserPromptSubmitPayload  # noqa: E402
+from hook_codex import parse_codex_event_payload  # noqa: E402
 from hook_codex import session_start as codex_session_start  # noqa: E402
 from hook_codex import stop, user_prompt_submit  # noqa: E402
 
@@ -165,7 +165,9 @@ def _run_session_start(
 
     captured = io.StringIO()
     if runtime == "codex":
-        assert codex_session_start(payload, stdout=captured) == 0
+        codex_event = parse_codex_event_payload(payload)
+        assert isinstance(codex_event, CodexSessionStartPayload)
+        assert codex_session_start(codex_event, stdout=captured) == 0
     else:
         event_payload = parse_claude_event_payload(payload)
         assert isinstance(event_payload, ClaudeSessionStartPayload)
@@ -364,24 +366,34 @@ def test_parse_claude_event_payload_builds_event_structures(
     assert isinstance(session_event, ClaudeCommonPayload)
     assert session_event.session_id == "s1"
     assert session_event.cwd == str(tmp_path)
-    assert session_event.event_name == "SessionStart"
+    assert session_event.hook_event_name == "SessionStart"
+    assert session_event.agent_type is None
+    assert not hasattr(session_event, "permission_mode")
+    assert not hasattr(session_event, "effort")
+    assert not hasattr(session_event, "agent_id")
     assert session_event.source == "startup"
     assert session_event.model == "claude-sonnet-4-6"
 
-    target = tmp_path / "workflow" / "task.md"
     tool_event = parse_claude_event_payload(
         {
             "session_id": "s1",
             "cwd": str(tmp_path),
+            "permission_mode": "default",
+            "effort": {"level": "medium"},
             "hook_event_name": "PreToolUse",
             "tool_name": "Write",
             "tool_input": {"file_path": "workflow/task.md", "content": "body"},
+            "tool_use_id": "toolu_123",
         }
     )
     assert isinstance(tool_event, ClaudePreToolUsePayload)
+    assert tool_event.hook_event_name == "PreToolUse"
+    assert tool_event.permission_mode == "default"
+    assert tool_event.effort == {"level": "medium"}
     assert tool_event.tool_name == "Write"
-    assert tool_event.edit_targets[0].path == target.resolve()
-    assert tool_event.edit_targets[0].content == "body"
+    assert tool_event.tool_input == {"file_path": "workflow/task.md", "content": "body"}
+    assert tool_event.tool_use_id == "toolu_123"
+    assert not hasattr(tool_event, "edit_targets")
 
 
 def test_session_start_clear_uses_documented_source_only(
@@ -520,124 +532,6 @@ def _hook_env(
         monkeypatch.delenv("PLUGIN_ROOT", raising=False)
 
 
-def test_post_read_records_authoring_file_by_absolute_path(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write_config(tmp_path)
-    state_dir = tmp_path / "state"
-    authoring_file = (_PLUGIN_ROOT / "authoring" / "metadata-contract.md").resolve()
-    _hook_env(monkeypatch, tmp_path)
-
-    captured = io.StringIO()
-    assert post_read(
-        {
-            "session_id": "s1",
-            "turn_id": "turn-1",
-            "cwd": str(tmp_path),
-            "tool_name": "Read",
-            "tool_input": {"file_path": str(authoring_file)},
-        },
-        stdout=captured,
-        state_dir=state_dir,
-    ) == 0
-
-    assert captured.getvalue() == ""
-    ledger = read_ledger(tmp_path, "s1", state_dir)
-    assert ledger.read_authoring_files == (authoring_file,)
-
-
-def test_pre_write_blocks_local_projection_when_reads_are_missing(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write_config(tmp_path, projection_path="workflow")
-    target = tmp_path / "workflow" / "task.md"
-    _hook_env(monkeypatch, tmp_path)
-
-    captured = io.StringIO()
-    assert pre_write(
-        {
-            "session_id": "s1",
-            "turn_id": "turn-1",
-            "cwd": str(tmp_path),
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": str(target),
-                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
-            },
-        },
-        stdout=captured,
-        state_dir=tmp_path / "state",
-    ) == 0
-
-    payload = json.loads(captured.getvalue())
-    reason = payload["reason"]
-    assert payload["decision"] == "block"
-    assert "workflow authoring guard blocked" in reason
-    assert f"Target: {target}" in reason
-    assert "Artifact type: task" in reason
-    assert str(_PLUGIN_ROOT / "authoring" / "metadata-contract.md") in reason
-    assert str(_PLUGIN_ROOT / "authoring" / "providers" / "github-issue-authoring.md") in reason
-
-
-def test_pre_write_allows_local_projection_after_required_reads(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    _write_config(tmp_path, projection_path="workflow")
-    state_dir = tmp_path / "state"
-    target = tmp_path / "workflow" / "task.md"
-    _hook_env(monkeypatch, tmp_path)
-
-    resolution = resolve_authoring("task", project=tmp_path, require_config=True)
-    record_reads(resolution.files, project=tmp_path, session_id="s1", state_dir=state_dir)
-
-    captured = io.StringIO()
-    assert pre_write(
-        {
-            "session_id": "s1",
-            "turn_id": "turn-1",
-            "cwd": str(tmp_path),
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": str(target),
-                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
-            },
-        },
-        stdout=captured,
-        state_dir=state_dir,
-    ) == 0
-
-    assert captured.getvalue() == ""
-
-
-def test_pre_write_emits_nothing_for_non_workflow_project(
-    tmp_path: Path,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    target = tmp_path / "workflow" / "task.md"
-    _hook_env(monkeypatch, tmp_path)
-
-    captured = io.StringIO()
-    assert pre_write(
-        {
-            "session_id": "s1",
-            "turn_id": "turn-1",
-            "cwd": str(tmp_path),
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": str(target),
-                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
-            },
-        },
-        stdout=captured,
-        state_dir=tmp_path / "state",
-    ) == 0
-
-    assert captured.getvalue() == ""
-
-
 @pytest.mark.parametrize("runtime", ["claude", "codex"])
 def test_session_start_injects_policy_for_configured_project(
     tmp_path: Path,
@@ -756,12 +650,6 @@ def _run_subagent_start(
         "hook_event_name": "SubagentStart",
         "agent_type": "workflow-operator",
         "agent_id": "agent-abc123",
-        "tool_name": "Agent",
-        "tool_input": {
-            "prompt": "Resolve authoring files for #45",
-            "description": "Workflow operator request",
-            "subagent_type": "workflow-operator",
-        },
     }
     if payload_update:
         payload.update(payload_update)
@@ -802,7 +690,6 @@ def test_subagent_start_emits_nothing_for_non_operator_agent(
         monkeypatch,
         payload_update={
             "agent_type": "Explore",
-            "tool_input": {"prompt": "scan", "description": "scan", "subagent_type": "Explore"},
         },
     )
 
@@ -853,22 +740,6 @@ def test_non_empty_hook_stdout_is_json_only(
     claude_subagent = _run_subagent_start(tmp_path, monkeypatch)
 
     _hook_env(monkeypatch, tmp_path)
-    pre_write_output = io.StringIO()
-    assert pre_write(
-        {
-            "session_id": "codex-json-pre-write",
-            "turn_id": "turn-1",
-            "cwd": str(tmp_path),
-            "tool_name": "Write",
-            "tool_input": {
-                "file_path": str(tmp_path / "workflow" / "task.md"),
-                "content": "---\ntype: task\n---\n\n## Description\n\nDo the work.\n",
-            },
-        },
-        stdout=pre_write_output,
-        state_dir=tmp_path / "state",
-    ) == 0
-
     runner = FakeRunner(
         {
             gh_issue_view_args(45): result(
@@ -878,13 +749,18 @@ def test_non_empty_hook_stdout_is_json_only(
         }
     )
     user_prompt_output = io.StringIO()
-    assert user_prompt_submit(
+    user_prompt_event = parse_codex_event_payload(
         {
             "session_id": "codex-json-prompt",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
             "prompt": "Inspect #45.",
         },
+    )
+    assert isinstance(user_prompt_event, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(
+        user_prompt_event,
         stdout=user_prompt_output,
         runner=runner,
     ) == 0
@@ -893,7 +769,6 @@ def test_non_empty_hook_stdout_is_json_only(
         codex_session,
         claude_session,
         claude_subagent,
-        pre_write_output.getvalue(),
         user_prompt_output.getvalue(),
     ]
     for output in outputs:
@@ -1001,16 +876,17 @@ def test_user_prompt_caches_issue_and_injects_project_relative_path(
     )
 
     captured = io.StringIO()
-    assert user_prompt_submit(
+    event_payload = parse_codex_event_payload(
         {
             "session_id": "s1",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
             "prompt": "#45 작업 내용 확인",
         },
-        stdout=captured,
-        runner=runner,
-    ) == 0
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
 
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
@@ -1041,17 +917,22 @@ def test_user_prompt_dedupes_announced_issue_paths_within_session(
             )
         }
     )
-    payload = {
+    raw_payload = {
         "session_id": "s1",
         "turn_id": "turn-1",
         "cwd": str(tmp_path),
+        "hook_event_name": "UserPromptSubmit",
         "prompt": "Please inspect #45.",
     }
 
+    first_event = parse_codex_event_payload(raw_payload)
+    assert isinstance(first_event, CodexUserPromptSubmitPayload)
     first = io.StringIO()
-    assert user_prompt_submit(payload, stdout=first, runner=runner) == 0
+    assert user_prompt_submit(first_event, stdout=first, runner=runner) == 0
+    second_event = parse_codex_event_payload(raw_payload)
+    assert isinstance(second_event, CodexUserPromptSubmitPayload)
     second = io.StringIO()
-    assert user_prompt_submit(payload, stdout=second, runner=runner) == 0
+    assert user_prompt_submit(second_event, stdout=second, runner=runner) == 0
 
     assert first.getvalue()
     assert second.getvalue() == ""
@@ -1082,16 +963,17 @@ def test_user_prompt_injects_explicit_issue_and_pending_issues(
     )
 
     captured = io.StringIO()
-    assert user_prompt_submit(
+    event_payload = parse_codex_event_payload(
         {
             "session_id": "s1",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
             "prompt": "#39 작업 내용 확인",
         },
-        stdout=captured,
-        runner=runner,
-    ) == 0
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
 
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
@@ -1144,16 +1026,17 @@ dependencies:
     )
 
     captured = io.StringIO()
-    assert user_prompt_submit(
+    event_payload = parse_codex_event_payload(
         {
             "session_id": "s1",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
             "prompt": "#39 작업 내용 확인",
         },
-        stdout=captured,
-        runner=FakeRunner({}),
-    ) == 0
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=FakeRunner({})) == 0
 
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
@@ -1180,16 +1063,17 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
     )
 
     captured = io.StringIO()
-    assert stop(
+    stop_event = parse_codex_event_payload(
         {
             "session_id": "s2",
             "turn_id": "turn-1",
             "cwd": str(tmp_path),
+            "hook_event_name": "Stop",
             "last_assistant_message": "The assistant referenced #46 during the turn.",
         },
-        stdout=captured,
-        runner=runner,
-    ) == 0
+    )
+    assert isinstance(stop_event, CodexStopPayload)
+    assert stop(stop_event, stdout=captured, runner=runner) == 0
 
     assert captured.getvalue() == ""
     assert runner.requests == []
@@ -1210,16 +1094,17 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
     assert not issue_file.exists()
 
     prompt_context = io.StringIO()
-    assert user_prompt_submit(
+    follow_event = parse_codex_event_payload(
         {
             "session_id": "s2",
             "turn_id": "turn-2",
             "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
             "prompt": "Continue.",
         },
-        stdout=prompt_context,
-        runner=runner,
-    ) == 0
+    )
+    assert isinstance(follow_event, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(follow_event, stdout=prompt_context, runner=runner) == 0
 
     assert issue_file.is_file()
     assert not pending_file.exists()

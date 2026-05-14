@@ -1,24 +1,24 @@
 # plugins/workflow/hooks/
 
-Workflow hooks dispatch through runtime-specific entry scripts:
+Workflow hooks dispatch through runtime-specific entry scripts. Both scripts
+dispatch from the payload `hook_event_name` and own their runtime-specific
+payload/env extraction. They call common plain functions from
+`../scripts/workflow_hook.py` for shared workflow behavior such as policy
+injection, authoring ledger updates, local projection guards, and issue-cache
+context. Claude owns the SubagentStart entry.
 
-- Claude events run `../scripts/hook_claude.py`; the script dispatches from
-  the payload `hook_event_name`.
-- Codex events run `../scripts/hook_codex.py <subcommand>`.
-
-Both scripts own their runtime-specific dispatch and payload/env extraction.
-They call common plain functions from `../scripts/workflow_hook.py` for shared
-workflow behavior such as policy injection, authoring ledger updates, local
-projection guards, and issue-cache context. Codex also owns the `apply_patch`
-edit-target parser, and Claude owns the SubagentStart entry.
+The Codex manifest registers only `SessionStart`, `UserPromptSubmit`, and
+`Stop`. The Claude-side `PostToolUse` Read ledger and `PreToolUse` write
+guard are intentionally not wired on Codex: Codex has no built-in `Read`
+tool (reads happen through `Bash` or MCP), so the read ledger cannot be
+populated and the matching write guard would block unconditionally.
 
 When either runtime script writes hook output to stdout, it writes JSON only.
 Empty stdout is used for no-op hook runs.
 
-## PostToolUse Read
+## PostToolUse Read (Claude only)
 
-`PostToolUse` on `Read` records the read. Claude dispatches by payload event;
-Codex dispatches to `post-read`.
+`PostToolUse` on `Read` records the read.
 
 Behavior:
 
@@ -27,10 +27,9 @@ Behavior:
 - Emits nothing on success.
 - Emits nothing outside configured workflow projects.
 
-## PreToolUse Write/Edit
+## PreToolUse Write/Edit (Claude only)
 
-`PreToolUse` on file writes checks the write. Claude dispatches by payload
-event; Codex dispatches to `pre-write`.
+`PreToolUse` on file writes checks the write.
 
 Behavior:
 
@@ -42,8 +41,7 @@ Behavior:
 
 ## SessionStart
 
-`SessionStart` injects workflow policy for configured projects. Claude
-dispatches by payload event; Codex dispatches to `session-start`.
+`SessionStart` injects workflow policy for configured projects.
 
 Behavior:
 
@@ -73,8 +71,7 @@ Behavior:
 
 ## UserPromptSubmit
 
-`UserPromptSubmit` caches issue references. Claude dispatches by payload event;
-Codex dispatches to `user-prompt`.
+`UserPromptSubmit` caches issue references.
 
 Behavior:
 
@@ -87,8 +84,7 @@ Behavior:
 
 ## Stop
 
-`Stop` records pending issue references. Claude dispatches by payload event;
-Codex dispatches to `stop`.
+`Stop` records pending issue references.
 
 Behavior:
 

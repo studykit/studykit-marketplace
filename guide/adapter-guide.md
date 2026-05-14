@@ -360,8 +360,8 @@ Rules:
 
 - Read `CLAUDE_PLUGIN_ROOT` for the plugin root.
 - Read `CLAUDE_PROJECT_DIR` for the project directory. Do not resolve the Claude project from payload `cwd`.
-- Represent Claude payloads with dataclasses that mirror documented payload fields. Derived values should not be stored as dataclass fields unless they are part of the hook contract.
-- Keep `raw` on the common payload for diagnostics, but do not make shared workflow logic depend on it.
+- Represent Claude payloads with dataclasses that mirror documented payload fields exactly, including documented optional fields.
+- Do not store adapter-derived values, normalized targets, or raw payload copies on Claude payload dataclasses. Compute derived values in the adapter handler before calling shared workflow logic.
 - Handler functions should receive parsed dataclass payloads, not raw `Mapping` objects.
 - `SessionStart` source handling is Claude-specific; `compact` is skipped and `clear` may reinject policy.
 - Claude operator subagent context is emitted from `SubagentStart`, not from `SessionStart`.

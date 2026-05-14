@@ -1,41 +1,13 @@
 {
-  "description": "Workflow hooks for Codex. SessionStart injects provider-backed workflow authoring policy only for main sessions when .workflow/config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
+  "description": "Workflow hooks for Codex. SessionStart injects provider-backed workflow authoring policy only for main sessions when .workflow/config.yml exists in the active project. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output. Codex has no built-in Read tool and no reliable read-tracking surface, so the Claude-side authoring read ledger and PreToolUse write guard are intentionally not wired here.",
   "hooks": {
-    "PreToolUse": [
-      {
-        "matcher": "Edit|Write|apply_patch",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" pre-write",
-            "timeout": 5,
-            "statusMessage": "Checking workflow authoring ledger",
-            "description": "Block local workflow projection writes until required authoring files were read"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" post-read",
-            "timeout": 5,
-            "statusMessage": "Recording workflow authoring read",
-            "description": "Record reads of workflow authoring files in the session ledger"
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "matcher": "startup|resume|clear",
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" session-start",
+            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
             "timeout": 5,
             "statusMessage": "Loading workflow authoring policy",
             "description": "Inject workflow authoring resolver policy for configured workflow projects in main sessions"
@@ -48,7 +20,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" user-prompt",
+            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
             "timeout": 10,
             "statusMessage": "Caching workflow issue references",
             "description": "Cache mentioned GitHub issue references and inject project-relative issue cache paths as additionalContext"
@@ -61,7 +33,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\" stop",
+            "command": "python3 \"${PLUGIN_ROOT}/scripts/hook_codex.py\"",
             "timeout": 10,
             "statusMessage": "Finalizing workflow issue cache",
             "description": "Record session-mentioned GitHub issues as pending without provider reads or Stop JSON output"

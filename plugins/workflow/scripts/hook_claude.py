@@ -38,8 +38,8 @@ from workflow_hook import (  # noqa: E402
 )
 from util import as_string, emit_json, read_payload_or_stdin, resolve_file_path, scan_text_values  # noqa: E402
 from workflow_operator_context import (  # noqa: E402
+    agent_name_matches_operator,
     build_operator_subagent_context,
-    payload_targets_operator,
 )
 from workflow_session_state import (  # noqa: E402
     record_session_policy_announced,
@@ -47,58 +47,69 @@ from workflow_session_state import (  # noqa: E402
 )
 
 CLAUDE_FILE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
-CLAUDE_SESSION_START_SOURCES = {"startup", "resume", "clear", "compact"}
 
 
 @dataclass(frozen=True)
 class ClaudeCommonPayload:
-    raw: dict[str, Any]
-    event_name: str
     session_id: str
     transcript_path: str
     cwd: str
-    permission_mode: str
+    hook_event_name: str
 
 
 @dataclass(frozen=True)
 class ClaudeSessionStartPayload(ClaudeCommonPayload):
     source: str
-    model: str
-    agent_type: str
+    model: str | None
+    agent_type: str | None
 
 
 @dataclass(frozen=True)
 class ClaudePreToolUsePayload(ClaudeCommonPayload):
+    permission_mode: str | None
+    effort: dict[str, Any] | None
+    agent_id: str | None
+    agent_type: str | None
     tool_name: str
     tool_input: dict[str, Any]
-    edit_targets: tuple[EditTarget, ...]
+    tool_use_id: str | None
 
 
 @dataclass(frozen=True)
 class ClaudePostToolUsePayload(ClaudeCommonPayload):
+    permission_mode: str | None
+    effort: dict[str, Any] | None
+    agent_id: str | None
+    agent_type: str | None
     tool_name: str
     tool_input: dict[str, Any]
     tool_response: Any
-    read_target: Path | None
+    tool_use_id: str | None
+    duration_ms: int | None
 
 
 @dataclass(frozen=True)
 class ClaudeUserPromptSubmitPayload(ClaudeCommonPayload):
-    prompt_text: str
+    permission_mode: str | None
+    agent_id: str | None
+    agent_type: str | None
+    prompt: str
 
 
 @dataclass(frozen=True)
 class ClaudeStopPayload(ClaudeCommonPayload):
+    permission_mode: str | None
+    effort: dict[str, Any] | None
+    agent_id: str | None
+    agent_type: str | None
     stop_hook_active: bool
     last_assistant_message: str
-    scan_text: str
 
 
 @dataclass(frozen=True)
 class ClaudeSubagentStartPayload(ClaudeCommonPayload):
-    agent_id: str
-    agent_type: str
-    targets_operator: bool
+    agent_id: str | None
+    agent_type: str | None
 
 
 ClaudeEventPayload = (
@@ -123,9 +134,10 @@ def _resolve_path(raw_path: str) -> Path:
     return resolve_file_path(raw_path, base_dir=_project_dir())
 
 
-def _edit_targets(payload: dict[str, Any]) -> tuple[EditTarget, ...]:
-    tool_name = payload.get("tool_name")
-    tool_input = payload.get("tool_input") or {}
+def _edit_targets(
+    tool_name: str,
+    tool_input: Mapping[str, Any],
+) -> tuple[EditTarget, ...]:
     if not isinstance(tool_input, dict) or tool_name not in CLAUDE_FILE_EDIT_TOOLS:
         return ()
     file_path = as_string(tool_input.get("file_path"))
@@ -137,54 +149,92 @@ def _edit_targets(payload: dict[str, Any]) -> tuple[EditTarget, ...]:
     return (EditTarget(path=_resolve_path(file_path), content=content),)
 
 
+def _read_target(tool_input: Mapping[str, Any]) -> Path | None:
+    file_path = as_string(tool_input.get("file_path"))
+    return _resolve_path(file_path) if file_path else None
+
+
 def _tool_input(payload: dict[str, Any]) -> dict[str, Any]:
     value = payload.get("tool_input")
     return dict(value) if isinstance(value, Mapping) else {}
 
 
-def _session_start_source(payload: dict[str, Any]) -> str:
-    source = as_string(payload.get("source")).lower()
-    return source if source in CLAUDE_SESSION_START_SOURCES else ""
+def _mapping_or_none(value: Any) -> dict[str, Any] | None:
+    return dict(value) if isinstance(value, Mapping) else None
 
 
-def _common_payload_fields(payload: dict[str, Any], event_name: str) -> dict[str, Any]:
+def _string_or_none(value: Any) -> str | None:
+    text = as_string(value)
+    return text if text else None
+
+
+def _int_or_none(value: Any) -> int | None:
+    if isinstance(value, bool):
+        return None
+    return value if isinstance(value, int) else None
+
+
+def _common_payload_fields(payload: dict[str, Any]) -> dict[str, Any]:
     return {
-        "raw": payload,
-        "event_name": as_string(payload.get("hook_event_name")) or event_name,
         "session_id": as_string(payload.get("session_id")),
         "transcript_path": as_string(payload.get("transcript_path")),
         "cwd": as_string(payload.get("cwd")),
-        "permission_mode": as_string(payload.get("permission_mode")),
+        "hook_event_name": as_string(payload.get("hook_event_name")),
+    }
+
+
+def _permission_payload_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "permission_mode": _string_or_none(payload.get("permission_mode")),
+    }
+
+
+def _effort_payload_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "effort": _mapping_or_none(payload.get("effort")),
+    }
+
+
+def _agent_payload_fields(payload: dict[str, Any]) -> dict[str, Any]:
+    return {
+        "agent_id": _string_or_none(payload.get("agent_id")),
+        "agent_type": _string_or_none(payload.get("agent_type")),
     }
 
 
 def _build_session_start_payload(payload: dict[str, Any]) -> ClaudeSessionStartPayload:
     return ClaudeSessionStartPayload(
-        **_common_payload_fields(payload, "SessionStart"),
-        source=_session_start_source(payload),
-        model=as_string(payload.get("model")),
-        agent_type=as_string(payload.get("agent_type")),
+        **_common_payload_fields(payload),
+        source=as_string(payload.get("source")),
+        model=_string_or_none(payload.get("model")),
+        agent_type=_string_or_none(payload.get("agent_type")),
     )
 
 
 def _build_pre_tool_use_payload(payload: dict[str, Any]) -> ClaudePreToolUsePayload:
     return ClaudePreToolUsePayload(
-        **_common_payload_fields(payload, "PreToolUse"),
+        **_common_payload_fields(payload),
+        **_permission_payload_fields(payload),
+        **_effort_payload_fields(payload),
+        **_agent_payload_fields(payload),
         tool_name=as_string(payload.get("tool_name")),
         tool_input=_tool_input(payload),
-        edit_targets=_edit_targets(payload),
+        tool_use_id=_string_or_none(payload.get("tool_use_id")),
     )
 
 
 def _build_post_tool_use_payload(payload: dict[str, Any]) -> ClaudePostToolUsePayload:
     tool_input = _tool_input(payload)
-    file_path = as_string(tool_input.get("file_path"))
     return ClaudePostToolUsePayload(
-        **_common_payload_fields(payload, "PostToolUse"),
+        **_common_payload_fields(payload),
+        **_permission_payload_fields(payload),
+        **_effort_payload_fields(payload),
+        **_agent_payload_fields(payload),
         tool_name=as_string(payload.get("tool_name")),
         tool_input=tool_input,
         tool_response=payload.get("tool_response"),
-        read_target=_resolve_path(file_path) if file_path else None,
+        tool_use_id=_string_or_none(payload.get("tool_use_id")),
+        duration_ms=_int_or_none(payload.get("duration_ms")),
     )
 
 
@@ -192,34 +242,28 @@ def _build_user_prompt_submit_payload(
     payload: dict[str, Any],
 ) -> ClaudeUserPromptSubmitPayload:
     return ClaudeUserPromptSubmitPayload(
-        **_common_payload_fields(payload, "UserPromptSubmit"),
-        prompt_text=_user_prompt_text(payload),
+        **_common_payload_fields(payload),
+        **_permission_payload_fields(payload),
+        **_agent_payload_fields(payload),
+        prompt=as_string(payload.get("prompt")),
     )
 
 
 def _build_stop_payload(payload: dict[str, Any]) -> ClaudeStopPayload:
     return ClaudeStopPayload(
-        **_common_payload_fields(payload, "Stop"),
+        **_common_payload_fields(payload),
+        **_permission_payload_fields(payload),
+        **_effort_payload_fields(payload),
+        **_agent_payload_fields(payload),
         stop_hook_active=payload.get("stop_hook_active") is True,
         last_assistant_message=as_string(payload.get("last_assistant_message")),
-        scan_text=_stop_scan_text(payload),
     )
-
-
-def _user_prompt_text(payload: dict[str, Any]) -> str:
-    return as_string(payload.get("prompt"))
-
-
-def _stop_scan_text(payload: dict[str, Any]) -> str:
-    return scan_text_values(as_string(payload.get("last_assistant_message")))
 
 
 def _build_subagent_start_payload(payload: dict[str, Any]) -> ClaudeSubagentStartPayload:
     return ClaudeSubagentStartPayload(
-        **_common_payload_fields(payload, "SubagentStart"),
-        agent_id=as_string(payload.get("agent_id")),
-        agent_type=as_string(payload.get("agent_type")),
-        targets_operator=payload_targets_operator(payload),
+        **_common_payload_fields(payload),
+        **_agent_payload_fields(payload),
     )
 
 
@@ -302,7 +346,7 @@ def post_read(
         project_dir=_project_dir(),
         plugin_root=_plugin_root(),
         session_id=event_payload.session_id,
-        read_target=event_payload.read_target,
+        read_target=_read_target(event_payload.tool_input),
         state_dir=state_dir,
         stdout=stdout,
     )
@@ -319,7 +363,7 @@ def pre_write(
     return block_unread_authoring_write(
         project_dir=_project_dir(),
         session_id=event_payload.session_id,
-        edit_targets=event_payload.edit_targets,
+        edit_targets=_edit_targets(event_payload.tool_name, event_payload.tool_input),
         state_dir=state_dir,
         stdout=stdout,
     )
@@ -336,7 +380,7 @@ def user_prompt_submit(
     return inject_prompt_issue_context(
         project_dir=_project_dir(),
         session_id=event_payload.session_id,
-        prompt_text=event_payload.prompt_text,
+        prompt_text=event_payload.prompt,
         stdout=stdout,
         runner=runner,
     )
@@ -353,7 +397,7 @@ def stop(
     return record_stop_issue_references(
         project_dir=_project_dir(),
         session_id=event_payload.session_id,
-        scan_text=event_payload.scan_text,
+        scan_text=scan_text_values(event_payload.last_assistant_message),
         stop_hook_active=event_payload.stop_hook_active,
         stdout=stdout,
         runner=runner,
@@ -367,7 +411,7 @@ def subagent_start(
 ) -> int:
     """Handle a Claude ``SubagentStart`` hook invocation."""
 
-    if not event_payload.targets_operator:
+    if not agent_name_matches_operator(event_payload.agent_type):
         return 0
 
     if not event_payload.session_id:
