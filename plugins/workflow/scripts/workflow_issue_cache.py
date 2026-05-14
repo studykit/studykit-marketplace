@@ -15,7 +15,7 @@ from workflow_config import WorkflowConfig
 from workflow_github import GitHubRepository, normalize_issue_number
 from workflow_providers import CACHE_POLICY_DEFAULT, ProviderDispatcher, default_provider_registry
 from workflow_providers import request_from_config
-from workflow_relationship_renderers import render_github_relationship_summary
+from workflow_relationship_renderers import render_relationship_summary
 
 MAX_ISSUE_REFS = 20
 
@@ -166,6 +166,7 @@ def cache_issue_references(
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
     cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
+    issue_provider_kind = config.issues.kind
     contexts: list[IssueCacheContext] = []
 
     for number in issue_numbers:
@@ -187,7 +188,9 @@ def cache_issue_references(
             response = dispatcher.dispatch(request)
             issue_dir = cache.issue_dir(repo, normalized)
             project_issue_dir = display_project_path(issue_dir, config.root, trailing_slash=True)
-            relationship_summary = cached_relationship_summary(cache, repo, normalized)
+            relationship_summary = cached_relationship_summary(
+                cache, repo, normalized, provider_kind=issue_provider_kind
+            )
             contexts.append(
                 IssueCacheContext(
                     number=normalized,
@@ -235,14 +238,20 @@ def format_issue_cache_context(
     return "\n".join(lines)
 
 
-def cached_relationship_summary(cache: GitHubIssueCache, repo: GitHubRepository, issue: str) -> str:
-    """Read cached relationships and return a compact relationship summary."""
+def cached_relationship_summary(
+    cache: GitHubIssueCache,
+    repo: GitHubRepository,
+    issue: str,
+    *,
+    provider_kind: str | None,
+) -> str:
+    """Read cached relationships and dispatch to the provider-specific renderer."""
 
     try:
         relationships = cache.read_relationships(repo, issue)
     except Exception:
         return ""
-    return render_github_relationship_summary(relationships)
+    return render_relationship_summary(provider_kind, relationships)
 
 
 def shared_issue_dir_base(contexts: Sequence[IssueCacheContext]) -> str | None:

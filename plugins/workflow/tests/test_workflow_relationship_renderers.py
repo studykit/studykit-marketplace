@@ -10,7 +10,20 @@ _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from workflow_relationship_renderers import render_github_relationship_summary  # noqa: E402
+from workflow_relationship_renderers import (  # noqa: E402
+    render_github_relationship_summary,
+    render_relationship_summary,
+)
+
+
+_SAMPLE_GITHUB_RELATIONSHIPS = {
+    "parent": {"number": 28},
+    "children": [{"number": 41}],
+    "dependencies": {
+        "blocked_by": [{"number": 33}],
+        "blocking": [{"number": 45}],
+    },
+}
 
 
 def test_renders_full_normalized_github_projection() -> None:
@@ -118,6 +131,30 @@ def test_handles_connection_nodes_shape() -> None:
     }
 
     assert render_github_relationship_summary(relationships) == "children #41,#42"
+
+
+def test_dispatch_routes_github_kind_to_github_renderer() -> None:
+    expected = render_github_relationship_summary(_SAMPLE_GITHUB_RELATIONSHIPS)
+
+    assert render_relationship_summary("github", _SAMPLE_GITHUB_RELATIONSHIPS) == expected
+    assert expected == "parent #28; children #41; blocked_by #33; blocking #45"
+
+
+def test_dispatch_returns_empty_for_unsupported_provider() -> None:
+    """Unsupported providers must omit the relationship suffix rather than guess."""
+
+    assert render_relationship_summary("jira", _SAMPLE_GITHUB_RELATIONSHIPS) == ""
+    assert render_relationship_summary("confluence", _SAMPLE_GITHUB_RELATIONSHIPS) == ""
+    assert render_relationship_summary("filesystem", _SAMPLE_GITHUB_RELATIONSHIPS) == ""
+
+
+def test_dispatch_returns_empty_for_missing_or_blank_kind() -> None:
+    assert render_relationship_summary(None, _SAMPLE_GITHUB_RELATIONSHIPS) == ""
+    assert render_relationship_summary("", _SAMPLE_GITHUB_RELATIONSHIPS) == ""
+
+
+def test_dispatch_passes_through_empty_relationships() -> None:
+    assert render_relationship_summary("github", {}) == ""
 
 
 def test_unparseable_values_are_skipped() -> None:

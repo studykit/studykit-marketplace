@@ -17,6 +17,22 @@ _GITHUB_BLOCKING_KEY = "blocking"
 _GITHUB_RELATED_KEY = "related"
 
 
+def render_relationship_summary(
+    provider_kind: str | None,
+    relationships: Mapping[str, Any],
+) -> str:
+    """Dispatch relationship summary rendering by issue provider kind.
+
+    Returns an empty string for unsupported or missing provider kinds so the
+    issue cache context path can omit the relationship suffix without guessing
+    at another provider's schema.
+    """
+
+    if provider_kind == "github":
+        return render_github_relationship_summary(relationships)
+    return ""
+
+
 def render_github_relationship_summary(relationships: Mapping[str, Any]) -> str:
     """Render a compact summary from the normalized GitHub `relationships.yml` schema.
 
