@@ -56,7 +56,7 @@ Represent this metadata using provider-native fields when available.
 | `mode` | yes | `comparative` or `single`. |
 | `options` | required for comparative | Alternatives being compared. |
 | `knowledge_page` | optional until published | Link to curated report after publication. |
-| `depends_on` | optional | Work items that must finish first. |
+| `depends_on` | optional | Work items that must finish first. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
 | `parent` | optional | Epic or parent issue coordinating this research. |
 | `related` | optional | Specs, tasks, use cases, reviews, or pages this research informs. |
 | `labels` | optional | Provider labels/tags. |

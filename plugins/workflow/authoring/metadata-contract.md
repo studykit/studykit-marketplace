@@ -51,7 +51,7 @@ Examples:
 - Confluence page properties, labels, page tree, links, comments, and version history.
 - GitHub repository `wiki/` file body, repository path, git history, and optional page metadata blocks.
 
-Every relationship that matters to readers must also appear in the body. Provider metadata is useful for automation; body sections are the portable fallback.
+Body fallback is provider-specific. When a provider stores a relationship natively and the provider binding says not to duplicate it, do not add a body section for that relationship. GitHub issue dependency/blocking relationships are native metadata and must not be repeated as blocked/dependency sections in the issue body.
 
 ## Relationship fields
 
@@ -64,7 +64,7 @@ Workflow relationships include:
 | `related` | Soft relationship worth surfacing | Required as `## Related` when present |
 | `supersedes` | New knowledge artifact replaces an older one | Required as `## Supersedes` when present |
 | `parent` | Work item belongs under an epic or parent work item | Body mention recommended when narrative depends on parent |
-| `depends_on` | Work item is blocked by another work item | Required as `## Dependencies` when present |
+| `depends_on` | Work item is blocked by another work item | Provider-specific. Do not write blocked/dependency body sections for GitHub Issues when native dependency metadata is available. |
 
 Use provider-native short references in body text. Resolve them through `.workflow/config.yml` and provider context.
 

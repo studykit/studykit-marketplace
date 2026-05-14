@@ -31,7 +31,7 @@ Represent this metadata using provider-native fields when available. If a provid
 | `title` | yes | Short human-readable work summary. |
 | `status` | yes | Provider-backed lifecycle status. |
 | `implements` | recommended when UC-driven | Use case or requirement this task delivers. Metadata when possible, `## Implements` in body when present. |
-| `depends_on` | optional | Blocking or ordering dependency. Metadata when possible, `## Dependencies` in body when present. |
+| `depends_on` | optional | Blocking or ordering dependency. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
 | `spec` | recommended when governed by a spec | Knowledge artifact that defines the contract. Represent in body under `## Related` or `## References`. |
 | `parent` | optional | Epic or parent issue that coordinates this task. |
 | `related` | optional | Non-blocking references useful for implementation. |
@@ -137,7 +137,7 @@ Acceptance criteria should be grounded in:
 Optional sections:
 
 - `## Implements` — required when `implements` exists.
-- `## Dependencies` — required when `depends_on` exists.
+- `## Dependencies` — use only when the active provider binding requires a body fallback. Do not include blocked/dependency sections for GitHub Issues.
 - `## Related` or `## References` — supporting knowledge pages, research, specs, or issues.
 - `## Change Plan` — forward-looking scope fence naming files, packages, APIs, or migration steps expected to change.
 - `## Interface Contracts` — contracts this task consumes or provides.

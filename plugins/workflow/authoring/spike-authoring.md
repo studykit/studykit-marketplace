@@ -32,7 +32,7 @@ Represent this metadata using provider-native fields when available. If a provid
 | `type` | yes | Always `spike`. Use issue type, label, or field depending on provider. |
 | `title` | yes | Short description of the question or experiment. |
 | `status` | yes | Provider-backed lifecycle status. |
-| `depends_on` | optional | Work items that must finish first. |
+| `depends_on` | optional | Work items that must finish first. Use provider-native metadata when available. Do not add blocked/dependency body sections for GitHub Issues. |
 | `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. |
 | `related` | optional | Specs, use cases, research, reviews, pages, or issues relevant to the experiment. |
 | `artifact_links` | recommended when PoC exists | Links to branch, gist, repository path, build output, benchmark result, or other throwaway artifact. |

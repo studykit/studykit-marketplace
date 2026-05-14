@@ -179,7 +179,7 @@ Optional:
 - `## Actors` — actor list when not obvious from metadata.
 - `## Validation` — user-visible input constraints, limits, or required formats.
 - `## Error Handling` — what the actor sees when things fail.
-- `## Dependencies` — narrative dependencies on other use cases, specs, or pages.
+- `## Dependencies` — narrative dependencies on other use cases, specs, or pages only when the active provider binding allows a body fallback. Do not include blocked/dependency sections for GitHub workflow issues.
 - `## Related Work` — workflow issues, tasks, specs, or research.
 - `## Supersedes` — prior use case page when replacing one.
 - `## Change Log` — required for material updates. See `./knowledge-body.md`.

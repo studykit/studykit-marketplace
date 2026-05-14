@@ -15,7 +15,7 @@ Do not turn the issue body into a transcript. Keep it current and structured.
 
 ## Required relationship sections
 
-When a relationship exists, represent it in the body even if provider metadata also stores it.
+When a relationship exists, represent it in the body unless the provider-specific binding stores it natively and forbids duplication.
 
 ### `## Target`
 
@@ -40,13 +40,17 @@ Required when a work item implements a use case, requirement, or curated knowled
 
 ### `## Dependencies`
 
-Required when a work item is blocked by or ordered after another work item.
+Default body fallback for providers that do not store blocking or ordering dependencies natively.
+
+Do not add `## Dependencies`, `## Blocked`, `## Blocked By`, `## Blocking`, or equivalent blocked-related sections to GitHub issue bodies for native GitHub dependency relationships. Store those relationships through provider-native dependency metadata instead.
+
+Non-GitHub fallback example:
 
 ```markdown
 ## Dependencies
 
 - PROJ-123
-- #45
+- PROJ-456
 ```
 
 ### `## Related`
@@ -92,7 +96,7 @@ Use when the item is mid-flight and the current state is not obvious from metada
 Suggested slots:
 
 - **Approach.** Current strategy.
-- **Blocked on.** Current blocker.
+- **Waiting for.** External input or sequencing note, only when the provider binding allows it. Do not use this slot to duplicate GitHub native dependency metadata.
 - **Open questions.** Questions awaiting input.
 - **Next.** Next concrete step.
 

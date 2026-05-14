@@ -79,12 +79,14 @@ Use native GitHub relationships when they match workflow semantics.
 
 Do not duplicate provider-native parent/child or dependency relationships in body sections when GitHub stores them natively.
 
+Never write dedicated blocked/dependency sections for GitHub native dependency data. This includes `## Dependencies`, `## Blocked`, `## Blocked By`, `## Blocking`, and blocked-on resume slots. Use GitHub dependency metadata through the provider wrapper and put discussion or rationale in comments when needed.
+
 Required body sections by relationship:
 
 - `target` → `## Target`
 - `implements` → `## Implements`
 - `related` → `## Related`
-- `depends_on` → `## Dependencies` only when GitHub dependency metadata is unavailable or when the blocking reason needs explanation.
+- `depends_on` → GitHub dependency metadata only. Do not add a blocked/dependency body section.
 
 ## Review items
 

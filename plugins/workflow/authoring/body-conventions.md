@@ -11,7 +11,7 @@ Provider-specific rules live under `./providers/`.
 
 These rules apply to the visible body text of every workflow artifact.
 
-The body is the portable human-readable fallback. Provider-native metadata may store the same relationships more precisely, but important relationships must still be visible in the body.
+The body is the portable human-readable fallback. Provider-native metadata may store the same relationships more precisely. Provider-specific bindings decide when a body fallback is required. For GitHub Issues, do not duplicate native dependency/blocking relationships as blocked or dependency sections in the issue body.
 
 ## Section heading form
 
@@ -47,7 +47,7 @@ Common H2 names:
 - `## Unit Test Strategy`
 - `## Target`
 - `## Implements`
-- `## Dependencies`
+- `## Dependencies` (provider-dependent; not for GitHub native dependencies)
 - `## Related`
 - `## Sources`
 - `## Change Log`
@@ -95,13 +95,13 @@ Rules:
 
 ## Relationship sections
 
-When a relationship matters, show it in a body section even if provider metadata also stores it.
+When a relationship matters, show it in a body section unless the provider-specific binding stores it natively and forbids duplication.
 
 Use these section names consistently:
 
 - `## Target` — artifact reviewed or affected by a review item.
 - `## Implements` — use case, requirement, spec, or knowledge artifact implemented by a work item.
-- `## Dependencies` — blocking or ordering relationship.
+- `## Dependencies` — blocking or ordering relationship only when the provider binding requires a body fallback. Do not use it for GitHub Issue native dependencies.
 - `## Related` — useful non-blocking relationship.
 - `## Supersedes` — older knowledge artifact replaced by this one.
 - `## Sources` — external evidence, vendor docs, papers, or decision inputs.
@@ -111,13 +111,13 @@ Use these section names consistently:
 
 Use ordinary Markdown lists unless a type-specific contract gives a stricter shape.
 
-Relationship lists should keep one referenced artifact per bullet:
+Relationship lists should keep one referenced artifact per bullet. This non-GitHub example applies only when the active provider binding allows a dependency body section:
 
 ```markdown
 ## Dependencies
 
 - PROJ-123
-- #45
+- PROJ-456
 ```
 
 Change-log entries should use this shape:
