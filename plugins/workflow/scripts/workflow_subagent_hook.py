@@ -22,7 +22,6 @@ _SCRIPTS_DIR = str(Path(__file__).resolve().parent)
 if _SCRIPTS_DIR not in sys.path:
     sys.path.insert(0, _SCRIPTS_DIR)
 
-from workflow_config import WorkflowConfigError, load_workflow_config  # noqa: E402
 from workflow_hook_context import HookContext  # noqa: E402
 from workflow_operator_context import (  # noqa: E402
     build_operator_subagent_context,
@@ -43,25 +42,18 @@ def subagent_start(
     defensive re-check keeps unrelated payloads silent.
     """
 
-    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    ctx = HookContext.from_payload_or_stdin(payload)
     output = stdout or sys.stdout
 
     if not payload_targets_operator(ctx.payload):
         return 0
 
-    project_dir = ctx.project_dir()
-    if project_dir is None:
-        return 0
-
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
-    if config is None:
-        return 0
-
     parent_session_id = ctx.session_id()
     if not parent_session_id:
+        return 0
+
+    config = ctx.workflow_config()
+    if config is None:
         return 0
 
     context = build_operator_subagent_context(parent_session_id, config.root)

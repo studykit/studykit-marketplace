@@ -39,7 +39,7 @@ from workflow_artifact_metadata import (  # noqa: E402
     infer_artifact_metadata,
 )
 from workflow_command import CommandRunner  # noqa: E402
-from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
+from workflow_config import WorkflowConfig  # noqa: E402
 from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_issue_number  # noqa: E402
 from workflow_github import resolve_github_repository  # noqa: E402
 from workflow_hook_context import EditTarget, HookContext  # noqa: E402
@@ -60,20 +60,12 @@ from workflow_session_state import (  # noqa: E402
 def session_start(payload: dict[str, Any] | None = None, *, stdout: TextIO | None = None) -> int:
     """SessionStart entry point. Always exits 0."""
 
-    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    ctx = HookContext.from_payload_or_stdin(payload)
     output = stdout or sys.stdout
     if ctx.is_agent_session():
         return _emit_codex_operator_session(ctx, output)
 
-    project_dir = ctx.project_dir()
-    if project_dir is None:
-        return 0
-
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
-
+    config = ctx.workflow_config()
     if config is None:
         return 0
 
@@ -113,16 +105,11 @@ def post_read(
     The hook is silent on success and on non-workflow projects.
     """
 
-    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
-    project_dir = ctx.project_dir()
+    ctx = HookContext.from_payload_or_stdin(payload)
     session_id = ctx.session_id()
-    if project_dir is None or not session_id:
+    if not session_id:
         return 0
-
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
+    config = ctx.workflow_config()
     if config is None:
         return 0
 
@@ -160,17 +147,10 @@ def user_prompt_submit(
 ) -> int:
     """Cache issue references from a user prompt and inject concise context."""
 
-    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    ctx = HookContext.from_payload_or_stdin(payload)
     output = stdout or sys.stdout
 
-    project_dir = ctx.project_dir()
-    if project_dir is None:
-        return 0
-
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
+    config = ctx.workflow_config()
     if config is None or config.issues.kind != "github":
         return 0
 
@@ -220,21 +200,14 @@ def stop(
 ) -> int:
     """Record issue references known to the session before stopping."""
 
-    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    ctx = HookContext.from_payload_or_stdin(payload)
     if ctx.payload.get("stop_hook_active") is True:
         return 0
     # Stop hook JSON output is reserved for block decisions. Context injection
     # happens in UserPromptSubmit so Stop can never fail host output validation.
     _ = stdout
 
-    project_dir = ctx.project_dir()
-    if project_dir is None:
-        return 0
-
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
+    config = ctx.workflow_config()
     if config is None or config.issues.kind != "github":
         return 0
 
@@ -269,18 +242,13 @@ def pre_write(
 ) -> int:
     """Block local projection writes until required authoring files were read."""
 
-    ctx = HookContext.from_payload(payload) if payload is not None else HookContext.from_stdin()
+    ctx = HookContext.from_payload_or_stdin(payload)
     output = stdout or sys.stdout
 
-    project_dir = ctx.project_dir()
     session_id = ctx.session_id()
-    if project_dir is None or not session_id:
+    if not session_id:
         return 0
-
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
+    config = ctx.workflow_config()
     if config is None:
         return 0
 
@@ -322,18 +290,10 @@ def _emit_codex_operator_session(ctx: HookContext, output: TextIO) -> int:
         return 0
 
     parent_thread_id, agent_name = ctx.subagent_metadata()
-    if not parent_thread_id:
-        return 0
-    if not agent_name_matches_operator(agent_name):
+    if not parent_thread_id or not agent_name_matches_operator(agent_name):
         return 0
 
-    project_dir = ctx.project_dir()
-    if project_dir is None:
-        return 0
-    try:
-        config = load_workflow_config(project_dir)
-    except WorkflowConfigError:
-        return 0
+    config = ctx.workflow_config()
     if config is None:
         return 0
 

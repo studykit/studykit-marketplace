@@ -22,6 +22,12 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, TextIO
 
+_SCRIPTS_DIR = str(Path(__file__).resolve().parent)
+if _SCRIPTS_DIR not in sys.path:
+    sys.path.insert(0, _SCRIPTS_DIR)
+
+from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
+
 RUNTIME_ENV_VAR = "WORKFLOW_HOOK_RUNTIME"
 STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
 CLAUDE_EDIT_TOOLS = {"Write", "Edit", "MultiEdit"}
@@ -148,6 +154,17 @@ class HookContext(ABC):
         json.dump(payload, output, ensure_ascii=False)
         output.write("\n")
 
+    def workflow_config(self) -> WorkflowConfig | None:
+        """Resolve the active workflow config, silent on missing project or load errors."""
+
+        project_dir = self.project_dir()
+        if project_dir is None:
+            return None
+        try:
+            return load_workflow_config(project_dir)
+        except WorkflowConfigError:
+            return None
+
     def subagent_metadata(self) -> tuple[str, str | None]:
         """Return (parent_thread_id, agent_name) from a subagent transcript.
 
@@ -167,6 +184,19 @@ class HookContext(ABC):
     @classmethod
     def from_payload(cls, payload: Mapping[str, Any]) -> "HookContext":
         return hook_context(payload)
+
+    @classmethod
+    def from_payload_or_stdin(cls, payload: Mapping[str, Any] | None) -> "HookContext":
+        """Construct a context from an explicit payload or stdin if ``payload`` is ``None``.
+
+        The hook entry points accept ``payload=None`` so tests can pass a dict
+        directly and runtime invocations read stdin; this helper folds that
+        ternary into one call site.
+        """
+
+        if payload is None:
+            return cls.from_stdin()
+        return cls.from_payload(payload)
 
     # ----- shared payload helpers -----
 
