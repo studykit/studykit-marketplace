@@ -12,7 +12,7 @@
     "**/.factorypath": true,
     ".pytest_cache": true,
     ".claude/tmp": false,
-    "**/CLAUDE.md": true,
+    "**/CLAUDE.md": false,
     "**/*.lock": true
   },
   "explorerExclude.backup": {}
