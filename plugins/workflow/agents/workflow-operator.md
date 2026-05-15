@@ -179,6 +179,10 @@ For new issues, prefer the pending draft flow: prepare a bodyless draft with
 let the caller fill only the body below existing frontmatter, then create the
 provider issue with `workflow_cache_issue_drafts.py create`. Do not ask the
 caller to create provider cache frontmatter under `.workflow-cache/issues-pending/`.
+In Codex shell runtime, `workflow_cache_issue_drafts.py create` skips the
+authoring-ledger guard because Codex does not populate the authoring read
+ledger; the main assistant still reads the required authoring docs before
+drafting.
 If the caller provides relationship intent for a new issue, stage it with
 `workflow_cache_issue_drafts.py stage-relationships`; do not ask the caller to
 write `relationships-pending.yml`.
