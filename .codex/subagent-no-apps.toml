@@ -1,0 +1,9 @@
+# Project-local config layer for spawned built-in subagent sessions.
+# This file is referenced by .codex/config.toml and intentionally lives outside
+# .codex/agents/ so Codex does not load it as a standalone custom agent.
+
+[features]
+apps = false
+
+[apps._default]
+enabled = false

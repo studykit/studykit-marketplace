@@ -263,11 +263,7 @@ or summarize issue, comment, or knowledge page content for the caller. Concise
 issue relationship metadata is allowed.
 """
 
-# The workflow operator does not need Codex Apps/connectors. Disable them for
-# this subagent role to avoid starting the codex_apps MCP bridge.
+# Disable Codex Apps/connectors for this custom subagent. Do not add
+# mcp_servers.* entries here unless each entry includes its transport.
 [features]
 apps = false
-
-[apps._default]
-enabled = false
-
