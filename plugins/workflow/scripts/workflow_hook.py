@@ -290,7 +290,9 @@ def build_issue_operation_policy(config: WorkflowConfig) -> str:
             "raw `gh` for workflow operations — the operator handles GitHub via "
             "workflow scripts with raw `gh` as its own fallback. If the operator "
             "cannot complete a request, report that limitation instead of "
-            "running `gh` directly."
+            "running `gh` directly. For cached issue body edits, edit `issue.md` "
+            "in the cache projection first, then delegate write-back; use direct "
+            "provider edits only when explicitly requested."
         )
 
     if config.issues.kind == "filesystem":

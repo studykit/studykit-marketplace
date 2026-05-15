@@ -207,6 +207,10 @@ Use guarded workflow commands:
 
 Supported subcommands are `create`, `edit-body`, `comment`, `close`, and
 `reopen`. Follow `workflow_github.py --help` for exact flags when needed.
+For existing cached issue body edits, prefer local projection write-back: use
+`.workflow-cache/issues/<number>/issue.md` as the editable draft, then run
+`workflow_cache_writeback.py`. Use `workflow_github.py edit-body` only when the
+caller explicitly requests a direct provider edit or no cache projection exists.
 If `workflow_github.py` cannot support or complete the requested operation,
 fall back to raw `gh` after the guarded write preflight. After successful issue
 mutations, refresh the affected issue cache with
@@ -214,7 +218,8 @@ mutations, refresh the affected issue cache with
 
 ## Local Cache Write-Back
 
-For existing local issue projection write-back:
+Use this path for existing cached issue body edits unless the caller explicitly
+requests a direct provider edit.
 
 ```bash
 "$WORKFLOW" workflow_cache_writeback.py \

@@ -563,6 +563,9 @@ def test_session_start_injects_policy_for_configured_project(
     assert "should not run raw `gh` for workflow operations" in context
     assert "raw `gh` as its own fallback" in context
     assert "report that limitation instead of running `gh` directly" in context
+    assert "For cached issue body edits, edit `issue.md` in the cache projection first" in context
+    assert "delegate write-back" in context
+    assert "direct provider edits only when explicitly requested" in context
     assert "Configured workflow project:" not in context
     assert "Config file:" not in context
     assert "Workflow plugin root:" not in context
