@@ -40,9 +40,19 @@ ISSUE_PROVIDER_FILES = {
     "jira": "providers/jira-issue-convention.md",
 }
 
+ISSUE_PROVIDER_METADATA_FILES = {
+    "github": "providers/github-issue-metadata.md",
+    "jira": "providers/jira-issue-metadata.md",
+}
+
 KNOWLEDGE_PROVIDER_FILES = {
     "github": "providers/github-knowledge-convention.md",
     "confluence": "providers/confluence-page-convention.md",
+}
+
+KNOWLEDGE_PROVIDER_METADATA_FILES = {
+    "github": "providers/github-knowledge-metadata.md",
+    "confluence": "providers/confluence-page-metadata.md",
 }
 
 ISSUE_PROVIDER_TYPE_PATTERNS = {
@@ -170,6 +180,7 @@ def resolve_authoring(
 
     if normalized_role == "issue" and normalized_provider in ISSUE_PROVIDER_FILES:
         parts.append(ISSUE_PROVIDER_FILES[normalized_provider])
+        parts.append(ISSUE_PROVIDER_METADATA_FILES[normalized_provider])
         parts.append(
             ISSUE_PROVIDER_TYPE_PATTERNS[normalized_provider].format(
                 artifact_type=normalized_type
@@ -177,6 +188,7 @@ def resolve_authoring(
         )
     if normalized_role == "knowledge" and normalized_provider in KNOWLEDGE_PROVIDER_FILES:
         parts.append(KNOWLEDGE_PROVIDER_FILES[normalized_provider])
+        parts.append(KNOWLEDGE_PROVIDER_METADATA_FILES[normalized_provider])
         parts.append(
             KNOWLEDGE_PROVIDER_TYPE_PATTERNS[normalized_provider].format(
                 artifact_type=normalized_type

@@ -2,7 +2,7 @@
 
 Semantic metadata rules shared by workflow artifacts.
 
-This file defines workflow-level fields and identity expectations. Storage details, field mappings, and relationship encoding belong to backend-specific authoring files.
+This file defines provider-neutral fields, identity expectations, and relationship meanings. It does not define storage, field mapping, cache projections, or provider-owned metadata boundaries.
 
 ## Artifact identity
 
@@ -10,26 +10,27 @@ Use the canonical identity supplied by the artifact's storage backend.
 
 | Artifact role | Canonical identity |
 | --- | --- |
-| Issue-backed artifact | Issue reference |
-| Knowledge-backed artifact | Page, document, or file reference |
+| Issue-backed artifact | Backend issue reference |
+| Knowledge-backed artifact | Backend page, document, or file reference |
 | Local projection | Projection of canonical identity, not identity itself |
 
 Do not require a local monotonic integer id. Do not treat local projection paths as canonical identity unless the artifact is truly file-backed.
 
 ## Normalized metadata view
 
-Workflow tooling may expose a normalized view like this:
+Workflow tooling may expose a provider-neutral view like this:
 
 ```yaml
 type: review
 role: issue
-key: "#456"
+identity:
+  ref: <backend-issued-reference>
+  display: <human-readable-reference>
 title: Clarify retry boundary
 status: open
 target:
-  - input: "#123"
+  - ref: <review-target-reference>
     kind: issue
-    display: "#123"
 created_at: 2026-05-13T00:00:00Z
 updated_at: 2026-05-13T00:30:00Z
 ```
@@ -38,20 +39,21 @@ This view is a translation layer for assistants, validators, and reports. It is 
 
 ## Common fields
 
-Common workflow metadata fields include:
+Common workflow metadata fields include, but are not limited to:
 
 | Field | Meaning |
 | --- | --- |
 | `type` | Workflow artifact type, such as `task`, `bug`, `review`, or `spec`. |
 | `role` | Storage role, usually `issue` or `knowledge`. |
+| `identity` | Backend-issued reference and display form. |
 | `title` | Short human-readable artifact title. |
-| `status` | Workflow lifecycle state. |
+| `status` | Semantic workflow lifecycle state. |
 | `priority` | Relative urgency or ordering hint. |
 | `tags` | Classification tags for filtering and routing. |
 | `created_at` | Creation timestamp when available. |
 | `updated_at` | Last meaningful update timestamp when available. |
 
-Type-specific authoring files define which fields are required for each artifact type.
+Type-specific authoring files define required and optional fields for each artifact type.
 
 ## Relationship fields
 
@@ -61,14 +63,16 @@ Workflow relationships include:
 | --- | --- |
 | `target` | Artifact reviewed or affected by a review item. |
 | `implements` | Work item implements a use case, requirement, spec, or knowledge artifact. |
+| `parent` | Work item belongs under an epic or parent work item. |
+| `children` | Work items coordinated by a parent work item. |
+| `depends_on` | Work item waits for another work item. |
+| `blocks` | Work item prevents another work item from progressing. |
 | `related` | Soft relationship worth surfacing. |
 | `supersedes` | New knowledge artifact replaces an older one. |
-| `parent` | Work item belongs under an epic or parent work item. |
-| `depends_on` | Work item is blocked by another work item. |
 | `source_issue` | Knowledge artifact was created or changed because of an issue-backed workflow item. |
 | `knowledge_page` | Issue-backed workflow item has a curated knowledge artifact. |
 
-Body representation for relationships depends on the selected type and backend authoring files.
+Type-specific authoring files define which relationships are allowed or required. Storage and projection shape are outside this file.
 
 ## Status
 
@@ -76,9 +80,9 @@ Status is semantic in common authoring files.
 
 - Issue-backed artifacts use workflow lifecycle states defined by their type-specific authoring file.
 - Knowledge-backed artifacts use stable content states when those states are useful.
-- Backend-specific authoring files define concrete status mappings.
+- Concrete backend mappings are outside this file.
 
-Do not assume every backend has the same status enum.
+Do not assume every backend has the same status enum or stores status in the same place.
 
 ## Logs and history
 

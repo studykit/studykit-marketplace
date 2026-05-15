@@ -6,7 +6,7 @@ Common convention rules for workflow knowledge artifacts stored as Confluence pa
 
 Use these rules for Confluence pages produced or updated by the workflow plugin.
 
-This file defines Confluence-wide page writing rules only. Artifact-specific body structure belongs outside this file.
+This file defines Confluence-wide page writing rules only. Provider metadata rules belong in `./confluence-page-metadata.md`. Artifact-specific body structure belongs outside this file.
 
 ## Identity
 
@@ -15,14 +15,6 @@ Use Confluence page ID, site, and space as the stable page identity.
 Use page title or Smart Link as the readable reference in visible text. Use a full page URL when the text must remain portable outside Confluence or when the target renderer may not support Smart Links.
 
 Do not treat local projection paths as canonical page identity.
-
-## Page metadata
-
-Prefer Confluence page properties or labels for workflow metadata when available.
-
-Use page hierarchy for organization and navigation. Do not rely on hierarchy as the only source of workflow type or status metadata.
-
-Concrete type and status labels belong in the matching Confluence page type authoring file.
 
 ## Body format
 

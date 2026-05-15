@@ -6,7 +6,7 @@ Provider-wide convention rules for workflow artifacts stored as GitHub Issues.
 
 Use these rules for workflow issue artifacts stored in GitHub Issues.
 
-This file defines GitHub-wide issue writing rules only. Artifact-specific body structure, labels, fields, and relationship body sections belong in the matching GitHub issue type authoring file.
+This file defines GitHub-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./github-issue-metadata.md`. Artifact-specific body structure and relationship body sections belong in the matching GitHub issue type authoring file.
 
 ## Identity and references
 
@@ -20,28 +20,12 @@ Resolve `#123` using `.workflow/config.yml` first, then the configured git remot
 
 GitHub Enterprise host, owner, and repo should be inferred from the configured remote when explicit config is absent.
 
-## Metadata mapping
-
-Use labels as the portable default for workflow type metadata.
-
-GitHub Issue Types are not consistently available across repositories and organizations. Use GitHub Issue Types only when setup explicitly enables them for the repository.
-
-Status should use GitHub Issue Fields when available. Use GitHub Projects fields for board, roadmap, and planning views, not as primary artifact identity.
-
-Fallback order for structured metadata:
-
-1. GitHub Issue Field or native metadata.
-2. GitHub Project field when the project is the configured planning surface.
-3. Label.
-4. Body marker only when metadata is unavailable.
-
 ## Relationships
 
 Use native GitHub relationships when they match workflow semantics.
 
 - Parent/child relationships should use GitHub sub-issues when available.
 - Blocking relationships should use GitHub issue dependencies when available.
-- Labels and fields may carry type, status, priority, and routing metadata.
 
 Do not duplicate GitHub-native parent/child or dependency relationships in body sections when GitHub stores them natively.
 

@@ -8,7 +8,7 @@ This is not the separate GitHub Wiki feature. The `wiki/` directory lives in the
 
 Use these rules for workflow knowledge artifacts stored in GitHub repository Markdown files.
 
-This file defines repository Markdown storage, identity, reference, metadata, relationship, change-log, transport, and common mistake rules only. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
+This file defines repository Markdown storage, identity, reference, relationship, change-log, transport, and common mistake rules only. Provider metadata rules belong in `./github-knowledge-metadata.md`. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
 
 ## Storage model
 
@@ -51,19 +51,6 @@ Use normal Markdown links in visible text:
 ```
 
 Use full GitHub URLs when text must be portable outside the repository.
-
-## Metadata
-
-Repository files do not provide provider-native page fields like Confluence.
-
-Use a lightweight Markdown metadata block only when needed for automation. Do not treat local Markdown frontmatter as a separate source of truth from the Git-tracked file; the file content and git history are the source.
-
-Recommended metadata surfaces:
-
-1. Git path and git history.
-2. Optional page metadata block in the Markdown file.
-3. Optional index file under `wiki/<plugin>/` when a plugin needs navigation metadata.
-4. Optional root `wiki/README.md` as a repository-wide plugin index.
 
 ## Relationships
 

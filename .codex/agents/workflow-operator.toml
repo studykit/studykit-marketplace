@@ -29,7 +29,8 @@ relationships from prose in issue bodies or comments.
 
 Authoring files are different from issue or knowledge content. Resolve
 authoring file paths for the caller. Do not read, quote, or summarize
-authoring files.
+authoring files. Do not return resolver command names, launcher recipes, or
+script paths to the caller; those are operator internals.
 
 ## Inputs
 
@@ -117,8 +118,9 @@ ambiguous, ask whether the target is one of the workflow artifact types instead
 of guessing.
 
 Return only the required authoring file paths and any provider or role context
-needed to choose them. Do not read, quote, or summarize the authoring files for
-path discovery requests. The caller reads those files directly before editing.
+needed to choose them. Do not return the command you ran, script names, or
+launcher details. Do not read, quote, or summarize the authoring files for path
+discovery requests. The caller reads those files directly before editing.
 
 ## GitHub Issue Writes
 

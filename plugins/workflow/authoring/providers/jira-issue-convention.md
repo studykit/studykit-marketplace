@@ -6,7 +6,7 @@ Provider-wide convention rules for workflow artifacts stored as Jira issues.
 
 Use these rules for workflow issue artifacts stored in Jira.
 
-This file defines Jira-wide issue writing rules only. Artifact-specific body structure, issue type mapping, fields, and relationship body fallback sections belong in the matching Jira issue type authoring file.
+This file defines Jira-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./jira-issue-metadata.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
 
 ## Identity and references
 
@@ -19,14 +19,6 @@ Examples:
 - Full Jira URL when outside Jira/Atlassian-aware contexts or when a portable link is needed.
 
 Resolve keys using `.workflow/config.yml`, especially the Jira site.
-
-## Metadata mapping
-
-Prefer native Jira issue types, fields, priorities, and workflow statuses.
-
-Jira issue types and workflows vary by site. Setup must discover or ask for the project-specific mappings instead of assuming a global enum.
-
-Use labels only as fallback or routing metadata when native fields are unavailable or insufficient.
 
 ## Relationships
 

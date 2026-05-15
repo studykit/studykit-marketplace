@@ -16,7 +16,7 @@ Key files:
 - `hooks/hooks.json` — Claude hook declarations.
 - `hooks/hooks.codex.json` — Codex hook declarations.
 - `agents/workflow-operator.md` — operator agent instructions.
-- `scripts/` — provider, cache, authoring resolver, and hook scripts.
+- `scripts/` — internal provider, cache, and hook entrypoints.
 - `authoring/` — workflow artifact authoring contracts.
 
 Use `hooks/README.md` for hook-specific behavior. Use
@@ -78,19 +78,11 @@ Workflow authoring contracts apply only to workflow artifact types:
   `nfr`, and `ci`.
 - Dual-role: `usecase` and `research`.
 
-Before editing a workflow artifact, resolve and read the required files from
-`authoring/`. For non-workflow artifacts, such as `AGENTS.md`, `CLAUDE.md`,
-plugin README files, ordinary docs outside configured workflow knowledge, or
-host configuration files, the workflow operator returns `NONE`.
-
-Resolve authoring files:
-
-```bash
-"./plugins/workflow/scripts/workflow" authoring_resolver.py \
-  --type review \
-  --role issue \
-  --json
-```
+Before editing a workflow artifact, ask `workflow-operator` for the required
+authoring paths, then read the returned files from `authoring/`. For
+non-workflow artifacts, such as `AGENTS.md`, `CLAUDE.md`, plugin README files,
+ordinary docs outside configured workflow knowledge, or host configuration
+files, the workflow operator returns `NONE`.
 
 ## Workflow Operator
 
@@ -103,7 +95,7 @@ Use the operator for:
 - GitHub issue writes through workflow commands.
 - Local issue projection write-back.
 - Pending local comment or relationship apply.
-- Authoring resolver operations.
+- Authoring path discovery.
 - Provider mutation verification and cache refresh.
 
 The operator returns operational metadata, paths, relationship metadata, and

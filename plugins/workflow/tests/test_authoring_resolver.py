@@ -37,6 +37,7 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
         "common/issue-authoring.md",
         "common/review-authoring.md",
         "providers/github-issue-convention.md",
+        "providers/github-issue-metadata.md",
         "providers/github-issue-review-authoring.md",
         "providers/github-issue-anti-patterns.md",
     ]
@@ -66,6 +67,7 @@ def test_spec_confluence_knowledge_resolution() -> None:
         "common/knowledge-body.md",
         "common/spec-authoring.md",
         "providers/confluence-page-convention.md",
+        "providers/confluence-page-metadata.md",
         "providers/confluence-page-spec-authoring.md",
     ]
 
@@ -94,9 +96,11 @@ providers:
     assert issue_resolution.provider == "jira"
     assert "common/issue-authoring.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-convention.md" in _rel_paths(issue_resolution.files)
+    assert "providers/jira-issue-metadata.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-task-authoring.md" in _rel_paths(issue_resolution.files)
     assert knowledge_resolution.provider == "github"
     assert "providers/github-knowledge-convention.md" in _rel_paths(knowledge_resolution.files)
+    assert "providers/github-knowledge-metadata.md" in _rel_paths(knowledge_resolution.files)
     assert "providers/github-knowledge-architecture-authoring.md" in _rel_paths(
         knowledge_resolution.files
     )

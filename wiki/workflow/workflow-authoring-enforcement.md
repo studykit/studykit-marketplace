@@ -2,117 +2,104 @@
 
 ## Purpose
 
-Workflow authoring enforcement ensures that agents read the correct plugin-bundled authoring contracts before creating or editing workflow artifacts.
+Workflow authoring enforcement keeps workflow artifact edits grounded in the
+correct plugin-bundled authoring contracts without exposing implementation
+commands to the main assistant.
 
-The rule is:
+The operational rule is:
 
 ```text
-required_authoring_files ⊆ read_authoring_files
+required_authoring_files are read before a workflow artifact write
 ```
+
+## Layer Boundaries
+
+### Main assistant
+
+The main assistant asks `workflow-operator` for required authoring paths, reads
+the returned files directly, drafts content, and asks the operator to perform
+provider/cache writes and verification.
+
+The main assistant should not need workflow resolver script names, launcher
+recipes, hook internals, or cache implementation details.
+
+### Workflow operator
+
+`workflow-operator` resolves required authoring paths and returns only:
+
+- Required authoring file paths.
+- Artifact type, role, and provider context when relevant.
+- Operational provider/cache metadata for requested workflow operations.
+
+The operator may use workflow internals to perform the request, but command
+names and script paths are not part of the caller-facing response.
+
+### Plugin contributors
+
+Plugin contributors may inspect resolver, launcher, hook, cache, and test
+implementation details while editing `plugins/workflow/`. Keep those details in
+source code, tests, or contributor-facing documentation, not in main-agent
+runtime guidance.
 
 ## Authoring Contract Source
 
-Runtime authoring contracts live under [`plugins/workflow/authoring/`](../../plugins/workflow/authoring/).
+Runtime authoring contracts live under `plugins/workflow/authoring/`.
 
-This wiki page describes the enforcement model and links to the contract directory when needed. It should not duplicate the full contract bodies from `authoring/`.
+Common contracts are provider-neutral. Provider contracts define backend
+metadata mapping, relationship projection shape, and provider-specific body
+rules. Type-specific contracts define required body sections and lifecycle
+states.
 
-## Components
+For issue-backed `task` artifacts, a GitHub-backed resolution includes:
 
-### Authoring Resolver
+1. `common/metadata-contract.md`
+2. `common/body-conventions.md`
+3. `common/issue-authoring.md`
+4. `common/task-authoring.md`
+5. `providers/github-issue-convention.md`
+6. `providers/github-issue-metadata.md`
+7. `providers/github-issue-task-authoring.md`
+8. Provider guardrails such as `providers/github-issue-anti-patterns.md`
 
-Script: `plugins/workflow/scripts/authoring_resolver.py`
-
-The resolver decides which authoring files are required for a workflow artifact. It uses artifact type, role, provider, and `.workflow/config.yml` when available.
-
-Every resolution includes:
-
-1. `metadata-contract.md`
-2. `body-conventions.md`
-3. `issue-authoring.md` for issue-backed artifacts, or `knowledge-body.md` for knowledge-backed artifacts
-4. `<type>-authoring.md`
-5. Provider-wide authoring file when available
-6. Provider type-specific authoring file when available
-7. Provider guardrail files, such as anti-pattern files, when available
-
-The resolver returns absolute paths so the agent does not guess relative locations.
-
-### SessionStart Policy
-
-Script: `plugins/workflow/scripts/workflow_hook.py`
-
-SessionStart injects a concise workflow authoring policy only when the active project has `.workflow/config.yml`.
-
-The injected policy includes:
-
-- The resolved config file path.
-- The issue provider and knowledge provider.
-- A reminder to delegate workflow provider, cache, write-back, comment append, and authoring guard operations to `plugins/workflow/agents/workflow-operator.md`.
-- A role boundary that the workflow operator returns provider/cache metadata and paths only; issue and wiki content interpretation stays in the main assistant.
-- No output for spawned agent sessions.
-
-SessionStart does not inject workflow script command recipes into the main assistant context.
-
-### Hook Read Recording And Local Projection Guard
-
-Script: `plugins/workflow/scripts/workflow_hook.py`
-
-Workflow hooks also connect the read ledger and write guard:
-
-- `post-read` records reads of plugin-bundled authoring files by absolute path.
-- `pre-write` checks local projection writes before mutation.
-- Missing reads block the write and list absolute authoring file paths to read.
-- Non-workflow projects receive no workflow hook output.
-
-The write guard is transport-neutral. Future provider wrappers should call the same guard before GitHub, Jira, Confluence, repository `wiki/`, or MCP writes.
-
-### Authoring Read Ledger
-
-Script: `plugins/workflow/scripts/authoring_ledger.py`
-
-The ledger records which absolute authoring file paths were read in the current session. It is session-scoped and project-scoped.
-
-By default, ledger state is stored outside the repository under the operating-system temp directory.
-
-### Authoring Write Guard
-
-Script: `plugins/workflow/scripts/authoring_guard.py`
-
-The guard combines resolver output with the ledger. Provider wrappers and hooks can call it before local projection writes or remote provider writes.
-
-Exit codes:
-
-- `0`: all required authoring files have been read.
-- `3`: one or more required authoring files are missing.
-- `2`: resolver or ledger error.
+Other artifact types and providers use the same layering: common contracts
+first, then role, type, provider convention, provider metadata, provider type
+binding, and provider guardrails when available.
 
 ## Intended Flow
 
-1. SessionStart injects the policy only when `.workflow/config.yml` exists.
-2. Before a write, the caller resolves required authoring files.
-3. The agent reads every required authoring file.
-4. The runtime or wrapper records those reads in the ledger.
-5. The write guard checks the ledger before mutation.
-6. Provider writes proceed only when every required file was read.
+1. SessionStart injects only concise workflow policy when `.workflow/config.yml`
+   exists.
+2. Before a workflow artifact write, the main assistant asks
+   `workflow-operator` for required authoring paths.
+3. If the operator returns `NONE`, the target is not a workflow artifact for
+   authoring-policy purposes.
+4. The main assistant reads every returned authoring file and drafts the
+   content.
+5. The operator performs provider/cache writes, write-back, comments,
+   relationship operations, cache refresh, and verification.
 
 ## Scope
 
-This enforcement applies to:
+This policy applies to:
 
 - Issue-backed artifacts.
 - Knowledge-backed artifacts.
 - Dual artifacts such as `usecase` and `research`.
-- Local projection writes.
+- Local cache projections.
 - Native provider writes.
-- MCP fallback writes.
+- Provider/cache fallback paths handled by `workflow-operator`.
 
 ## Current Limitations
 
-- Local projection write guarding is implemented for configured local projection and filesystem provider paths.
-- Provider write wrappers are not implemented yet.
-- The ledger records that a file was read; it cannot prove semantic use.
+- Authoring-path discovery proves the required files were selected, not that the
+  caller semantically applied every rule.
+- Provider metadata capabilities vary by backend and project configuration.
+- Non-workflow files intentionally return `NONE`; plugin contributor rules live
+  outside this workflow artifact policy.
 
 ## Change Log
 
 - 2026-05-13 — [#28](https://github.com/studykit/studykit-plugins/issues/28) — Published curated authoring enforcement page in repository `wiki/` directory.
 - 2026-05-13 — [#30](https://github.com/studykit/studykit-plugins/issues/30) — Documented SessionStart authoring policy injection.
 - 2026-05-13 — [#31](https://github.com/studykit/studykit-plugins/issues/31) — Documented hook read recording and local projection write guarding.
+- 2026-05-16 — [#65](https://github.com/studykit/studykit-plugins/issues/65) — Reframed authoring enforcement around main, operator, and contributor boundaries.
