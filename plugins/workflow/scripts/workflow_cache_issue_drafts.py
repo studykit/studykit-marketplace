@@ -47,6 +47,8 @@ def prepare_pending_issue_draft(
     title = _required_text(title, "title")
     normalized_state = (state or "open").strip().lower()
     normalized_labels = tuple(label.strip() for label in labels if label.strip())
+    if config.issues.kind == "github" and artifact_type not in normalized_labels:
+        normalized_labels = (artifact_type, *normalized_labels)
 
     if config.issues.kind == "github":
         try:

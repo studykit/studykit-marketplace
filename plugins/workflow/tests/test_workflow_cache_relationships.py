@@ -14,6 +14,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from workflow_cache import GitHubIssueCache  # noqa: E402
 from workflow_cache_relationships import main as cache_relationships_main  # noqa: E402
+from workflow_cache_relationships import stage_relationships_payload  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_github import GitHubRepository  # noqa: E402
 from workflow_providers import ProviderRequest  # noqa: E402
@@ -143,3 +144,56 @@ children:
     assert guard_calls[0].operation == "apply_relationships"
     assert guard_calls[0].payload["from_pending"] is True
     assert not pending_path.exists()
+
+
+def test_cache_relationships_stages_existing_issue_relationship_intent(tmp_path: Path) -> None:
+    write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-14T00:10:00Z")
+
+    payload = stage_relationships_payload(
+        project=tmp_path,
+        issues=["#44"],
+        parent="#28",
+        blocked_by=("#33",),
+        blocking=("#45",),
+    )
+
+    pending_path = cache.relationships_pending_file(repo(), 44)
+    operations = cache.read_pending_issue_relationships(repo(), 44)
+    assert payload["operation"] == "cache_stage_pending_relationships"
+    assert payload["issue"] == "44"
+    assert payload["relationships_file"] == str(pending_path)
+    assert [(item.relationship, item.target_ref) for item in operations] == [
+        ("parent", "#28"),
+        ("blocked_by", "#33"),
+        ("blocking", "#45"),
+    ]
+
+
+def test_cache_relationships_script_stages_existing_issue_relationship_intent(tmp_path: Path) -> None:
+    write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
+    cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-14T00:10:00Z")
+
+    stdout = io.StringIO()
+    code = cache_relationships_main(
+        [
+            "--project",
+            str(tmp_path),
+            "--stage",
+            "--parent",
+            "#28",
+            "--blocked-by",
+            "#33",
+            "--json",
+            "#44",
+        ],
+        stdout=stdout,
+    )
+
+    payload = json.loads(stdout.getvalue())
+    assert code == 0
+    assert payload["operation"] == "cache_stage_pending_relationships"
+    assert payload["issue"] == "44"
+    assert cache.relationships_pending_file(repo(), 44).is_file()

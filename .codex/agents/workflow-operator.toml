@@ -257,6 +257,22 @@ For pending local relationship apply:
   <issue-number-or-ref>...
 ```
 
+For relationship intent on an existing cached issue:
+
+```bash
+"$WORKFLOW" workflow_cache_relationships.py \
+  --stage \
+  [--parent <issue-ref>] \
+  [--child <issue-ref>]... \
+  [--blocked-by <issue-ref>]... \
+  [--blocking <issue-ref>]... \
+  --json \
+  <issue-number-or-ref>
+```
+
+Then apply the staged relationship file with `workflow_cache_relationships.py`
+without `--stage`.
+
 These scripts perform their own provider refresh and cleanup where supported.
 
 ## Response Format

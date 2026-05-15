@@ -51,7 +51,7 @@ def test_prepare_pending_issue_draft_writes_bodyless_provider_frontmatter(tmp_pa
         local_id="draft-1",
         artifact_type="task",
         title="Draft issue",
-        labels=("task", "workflow"),
+        labels=("workflow",),
     )
 
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=_repo())
