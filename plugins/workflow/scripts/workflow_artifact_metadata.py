@@ -55,13 +55,13 @@ def infer_artifact_metadata(target: EditTarget) -> ArtifactMetadata | None:
     values = extract_metadata_values(content)
     raw_type = values.get("type")
     if raw_type is None:
-        return None
-
-    artifact_type = _normalize_token(raw_type)
-    if artifact_type == "use-case":
-        artifact_type = "usecase"
-    if artifact_type not in ALL_TYPES:
-        return None
+        artifact_type = _artifact_type_from_labels(content)
+        if artifact_type is None:
+            return None
+    else:
+        artifact_type = _normalize_artifact_type(raw_type)
+        if artifact_type not in ALL_TYPES:
+            return None
 
     raw_role = values.get("role")
     if artifact_type in DUAL_TYPES and not raw_role:
@@ -83,7 +83,7 @@ def extract_metadata_values(content: str) -> dict[str, str]:
     return _extract_line_metadata_values(_collect_metadata_lines(content))
 
 
-def _extract_frontmatter_metadata_values(content: str) -> dict[str, str] | None:
+def _load_frontmatter_mapping(content: str) -> dict[object, object] | None:
     if not _FRONTMATTER_HANDLER.detect(content):
         return None
     try:
@@ -91,8 +91,40 @@ def _extract_frontmatter_metadata_values(content: str) -> dict[str, str] | None:
         data = _FRONTMATTER_HANDLER.load(frontmatter_text)
     except Exception:
         return {}
-    if not isinstance(data, dict):
-        return {}
+    return data if isinstance(data, dict) else {}
+
+
+def _artifact_type_from_labels(content: str) -> str | None:
+    data = _load_frontmatter_mapping(content)
+    if not data:
+        return None
+    labels = data.get("labels")
+    if not isinstance(labels, list):
+        return None
+
+    candidates: list[str] = []
+    for item in labels:
+        if isinstance(item, dict):
+            raw = item.get("name") or item.get("label")
+        else:
+            raw = item
+        if raw is None:
+            continue
+        artifact_type = _normalize_artifact_type(str(raw))
+        if artifact_type in ALL_TYPES and artifact_type not in candidates:
+            candidates.append(artifact_type)
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def _normalize_artifact_type(value: str) -> str:
+    artifact_type = _normalize_token(value)
+    return "usecase" if artifact_type == "use-case" else artifact_type
+
+
+def _extract_frontmatter_metadata_values(content: str) -> dict[str, str] | None:
+    data = _load_frontmatter_mapping(content)
+    if data is None:
+        return None
 
     values: dict[str, str] = {}
     for raw_key, raw_value in data.items():

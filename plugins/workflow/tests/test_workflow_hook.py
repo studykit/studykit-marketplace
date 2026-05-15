@@ -668,7 +668,7 @@ def test_session_start_injects_policy_for_configured_project(
         [
             "## workflow policy",
             "",
-            "Delegate workflow provider/cache/write-back/comment/authoring-path operations to `workflow-operator`.",
+            "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
             "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
             "Do not run raw provider CLIs directly when the operator can handle the operation.",
         ]
@@ -773,7 +773,7 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
         [
             "## workflow policy",
             "",
-            "Delegate workflow provider/cache/write-back/comment/authoring-path operations to `workflow-operator`.",
+            "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
             "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
             "Do not run raw provider CLIs directly when the operator can handle the operation.",
         ]
@@ -1299,6 +1299,146 @@ def test_stop_does_not_carry_issue_refs_to_next_user_prompt(
     assert not issue_file.exists()
     assert not pending_file.exists()
     assert prompt_context.getvalue() == ""
+
+
+def test_claude_pre_write_guards_github_cache_issue_body_without_local_projection(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+
+    issue_file = tmp_path / ".workflow-cache" / "issues" / "39" / "issue.md"
+    issue_file.parent.mkdir(parents=True)
+    current_issue_text = """---
+schema_version: 1
+title: Cached issue
+state: open
+labels:
+  - task
+  - workflow
+source_updated_at: 2026-05-14T00:00:00Z
+---
+
+Current body.
+"""
+    issue_file.write_text(current_issue_text, encoding="utf-8")
+    next_issue_text = current_issue_text.replace("Current body.", "Updated body.")
+
+    captured = io.StringIO()
+    assert claude_main(
+        payload={
+            "session_id": "cache-issue-guard",
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": str(issue_file),
+                "content": next_issue_text,
+            },
+        },
+        stdout=captured,
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    reason = payload["reason"]
+    assert payload["decision"] == "block"
+    assert "required authoring files have not been read" in reason
+    assert f"Target: {issue_file}" in reason
+    assert "Artifact type: task" in reason
+    assert "Role: issue" in reason
+    assert "Provider: github" in reason
+
+
+def test_claude_pre_write_blocks_creating_github_cache_issue_body(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+
+    issue_file = tmp_path / ".workflow-cache" / "issues-pending" / "draft-1" / "issue.md"
+    issue_text = """---
+title: New issue
+labels:
+  - task
+---
+
+Updated body.
+"""
+
+    captured = io.StringIO()
+    assert claude_main(
+        payload={
+            "session_id": "cache-issue-guard",
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Write",
+            "tool_input": {
+                "file_path": str(issue_file),
+                "content": issue_text,
+            },
+        },
+        stdout=captured,
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    reason = payload["reason"]
+    assert payload["decision"] == "block"
+    assert "projection has not been prepared yet" in reason
+    assert f"Target: {issue_file}" in reason
+    assert "Ask `workflow-operator` to prepare or refresh the cache projection" in reason
+
+
+def test_claude_pre_write_blocks_github_cache_issue_frontmatter_changes(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    monkeypatch.setenv("CLAUDE_PROJECT_DIR", str(tmp_path))
+    monkeypatch.setenv("CLAUDE_PLUGIN_ROOT", str(_PLUGIN_ROOT))
+
+    issue_file = tmp_path / ".workflow-cache" / "issues" / "39" / "issue.md"
+    issue_file.parent.mkdir(parents=True)
+    issue_file.write_text(
+        """---
+schema_version: 1
+title: Cached issue
+state: open
+labels:
+  - task
+  - workflow
+source_updated_at: 2026-05-14T00:00:00Z
+---
+
+Current body.
+""",
+        encoding="utf-8",
+    )
+
+    captured = io.StringIO()
+    assert claude_main(
+        payload={
+            "session_id": "cache-frontmatter-guard",
+            "cwd": str(tmp_path),
+            "hook_event_name": "PreToolUse",
+            "tool_name": "Edit",
+            "tool_input": {
+                "file_path": str(issue_file),
+                "old_string": "title: Cached issue",
+                "new_string": "title: Changed issue",
+            },
+        },
+        stdout=captured,
+    ) == 0
+
+    payload = json.loads(captured.getvalue())
+    reason = payload["reason"]
+    assert payload["decision"] == "block"
+    assert "provider frontmatter is projection-owned" in reason
+    assert "edit only the Markdown body" in reason
 
 
 def test_session_start_emits_nothing_for_invalid_config(

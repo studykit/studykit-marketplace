@@ -148,10 +148,55 @@ def _edit_targets(
     file_path = as_string(tool_input.get("file_path"))
     if not file_path:
         return ()
-    content = tool_input.get("content") if tool_name == "Write" else None
-    if not isinstance(content, str):
-        content = None
-    return (EditTarget(path=_resolve_path(file_path), content=content),)
+    path = _resolve_path(file_path)
+    content = _prospective_write_content(tool_name, path, tool_input)
+    return (EditTarget(path=path, content=content),)
+
+
+def _prospective_write_content(
+    tool_name: str,
+    path: Path,
+    tool_input: Mapping[str, Any],
+) -> str | None:
+    if tool_name == "Write":
+        content = tool_input.get("content")
+        return content if isinstance(content, str) else None
+
+    try:
+        content = path.read_text(encoding="utf-8")
+    except OSError:
+        return None
+
+    if tool_name == "Edit":
+        return _apply_edit_preview(content, tool_input)
+
+    if tool_name == "MultiEdit":
+        edits = tool_input.get("edits")
+        if not isinstance(edits, list):
+            return None
+        for edit in edits:
+            if not isinstance(edit, Mapping):
+                return None
+            content = _apply_edit_preview(content, edit)
+            if content is None:
+                return None
+        return content
+
+    return None
+
+
+def _apply_edit_preview(content: str, edit: Mapping[str, Any]) -> str | None:
+    old_string = edit.get("old_string")
+    new_string = edit.get("new_string")
+    if not isinstance(old_string, str) or not isinstance(new_string, str):
+        return None
+    if old_string == "":
+        return None
+    if edit.get("replace_all") is True:
+        return content.replace(old_string, new_string)
+    if content.count(old_string) != 1:
+        return None
+    return content.replace(old_string, new_string, 1)
 
 
 def _read_target(tool_input: Mapping[str, Any]) -> Path | None:

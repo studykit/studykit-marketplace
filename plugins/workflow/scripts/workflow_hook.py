@@ -28,7 +28,7 @@ if _SCRIPTS_DIR not in sys.path:
 from authoring_guard import evaluate_authoring_guard  # noqa: E402
 from authoring_ledger import LedgerError, record_reads  # noqa: E402
 from authoring_resolver import ResolverError  # noqa: E402
-from workflow_artifact_metadata import infer_artifact_metadata  # noqa: E402
+from workflow_artifact_metadata import ArtifactMetadata, infer_artifact_metadata  # noqa: E402
 from workflow_command import CommandRunner  # noqa: E402
 from workflow_edit_target import EditTarget  # noqa: E402
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config  # noqa: E402
@@ -130,13 +130,10 @@ def block_unread_authoring_write(
         return 0
 
     roots = local_workflow_roots(config)
-    if not roots:
-        return 0
-
     targets = [
         target
         for target in edit_targets
-        if is_markdown_path(target.path) and is_under_any(target.path, roots)
+        if is_markdown_path(target.path) and is_local_workflow_write_target(target.path, config, roots)
     ]
     if not targets:
         return 0
@@ -236,7 +233,7 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
     _ = plugin_root  # plugin_root reserved for future template extensions
     return (
         "## workflow policy\n\n"
-        "Delegate workflow provider/cache/write-back/comment/authoring-path operations "
+        "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations "
         "to `workflow-operator`.\n"
         "For workflow commits, stage changes and write the commit message locally, "
         "then ask `workflow-operator` to run commit only.\n"
@@ -298,7 +295,12 @@ def local_projection_guard_reason(
 ) -> str | None:
     """Return a block reason for a local workflow write, or ``None`` to allow."""
 
+    provider_cache_reason = provider_cache_body_write_reason(target, config)
+    if provider_cache_reason:
+        return provider_cache_reason
+
     metadata = infer_artifact_metadata(target)
+    metadata = enrich_provider_cache_metadata(metadata, target.path, config)
     if metadata is None:
         return (
             "workflow authoring guard blocked a local projection write because "
@@ -348,6 +350,117 @@ def workflow_authoring_file(path: Path, plugin_root: Path) -> Path | None:
     if target.suffix != ".md" or not target.is_file():
         return None
     return target
+
+
+def is_local_workflow_write_target(
+    path: Path,
+    config: WorkflowConfig,
+    roots: tuple[Path, ...] | None = None,
+) -> bool:
+    """Return whether ``path`` is a local workflow artifact body target."""
+
+    if is_under_any(path, roots if roots is not None else local_workflow_roots(config)):
+        return True
+    return is_provider_issue_cache_body(path, config)
+
+
+def enrich_provider_cache_metadata(
+    metadata: ArtifactMetadata | None,
+    path: Path,
+    config: WorkflowConfig,
+) -> ArtifactMetadata | None:
+    """Fill issue role/provider for provider cache body projections."""
+
+    if metadata is None or not is_provider_issue_cache_body(path, config):
+        return metadata
+    return ArtifactMetadata(
+        artifact_type=metadata.artifact_type,
+        role=metadata.role or "issue",
+        provider=metadata.provider or config.issues.kind,
+    )
+
+
+def is_provider_issue_cache_body(path: Path, config: WorkflowConfig) -> bool:
+    """Return whether ``path`` is a provider issue body cache projection."""
+
+    if config.issues.kind not in {"github", "jira"} or path.name != "issue.md":
+        return False
+    try:
+        parts = path.expanduser().resolve(strict=False).relative_to(
+            config.root / ".workflow-cache"
+        ).parts
+    except ValueError:
+        return False
+
+    if config.issues.kind == "github" and len(parts) == 3:
+        return parts[0] in {"issues", "issues-pending"}
+    if config.issues.kind == "github" and len(parts) == 6:
+        return parts[3] in {"issues", "issues-pending"}
+    if config.issues.kind == "jira" and len(parts) == 5:
+        return parts[0] == "jira" and parts[2] == "issues-pending"
+    return False
+
+
+def provider_cache_body_write_reason(target: EditTarget, config: WorkflowConfig) -> str | None:
+    """Block provider cache body writes that create or alter provider metadata."""
+
+    if not is_provider_issue_cache_body(target.path, config):
+        return None
+
+    if not target.path.is_file():
+        return (
+            "workflow authoring guard blocked a provider cache issue body write "
+            "because the projection has not been prepared yet.\n\n"
+            f"Target: {target.path}\n\n"
+            "Ask `workflow-operator` to prepare or refresh the cache projection, "
+            "then edit only the Markdown body below the existing YAML frontmatter."
+        )
+
+    if target.content is None:
+        return None
+
+    try:
+        current_content = target.path.read_text(encoding="utf-8")
+    except OSError as exc:
+        return (
+            "workflow authoring guard blocked a provider cache issue body write "
+            "because the existing projection could not be read.\n\n"
+            f"Target: {target.path}\n"
+            f"Reason: {exc}"
+        )
+
+    current_frontmatter = leading_frontmatter_block(current_content)
+    proposed_frontmatter = leading_frontmatter_block(target.content)
+    if current_frontmatter is None:
+        return (
+            "workflow authoring guard blocked a provider cache issue body write "
+            "because the existing projection is missing provider frontmatter.\n\n"
+            f"Target: {target.path}\n\n"
+            "Ask `workflow-operator` to refresh the cache projection before editing."
+        )
+    if proposed_frontmatter != current_frontmatter:
+        return (
+            "workflow authoring guard blocked a provider cache issue body write "
+            "because provider frontmatter is projection-owned.\n\n"
+            f"Target: {target.path}\n\n"
+            "Keep the existing YAML frontmatter byte-for-byte and edit only the "
+            "Markdown body below it. Ask `workflow-operator` to prepare or refresh "
+            "the projection when provider metadata needs to change."
+        )
+
+    return None
+
+
+def leading_frontmatter_block(content: str) -> str | None:
+    """Return the leading YAML frontmatter block, including delimiters."""
+
+    lines = content.splitlines(keepends=True)
+    if not lines or lines[0].strip() != "---":
+        return None
+    for index, line in enumerate(lines[1:], start=1):
+        if line.strip() in {"---", "..."}:
+            return "".join(lines[: index + 1])
+    return None
 
 
 def local_workflow_roots(config: WorkflowConfig) -> tuple[Path, ...]:

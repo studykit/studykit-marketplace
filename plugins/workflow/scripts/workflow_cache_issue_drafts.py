@@ -1,0 +1,331 @@
+#!/usr/bin/env python3
+# /// script
+# dependencies = ["python-frontmatter", "PyYAML"]
+# ///
+"""Prepare and create provider-backed pending issue drafts."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from collections.abc import Callable
+from pathlib import Path
+from typing import TextIO
+
+from workflow_cache import GitHubIssueCache, SCHEMA_VERSION, _atomic_write_text, _dump_yaml, _format_markdown
+from workflow_command import CommandRunner
+from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config
+from workflow_env import workflow_project_dir_from_env, workflow_session_id_from_env
+from workflow_github import GitHubRepositoryError, resolve_github_repository
+from workflow_jira import JiraDataCenterIssueCache, JiraProviderError, resolve_jira_data_center_site
+from workflow_providers import ProviderDispatcher, ProviderRequest, default_provider_registry
+from workflow_providers import authoring_guard_callback, request_from_config
+
+
+class WorkflowCacheIssueDraftError(RuntimeError):
+    """Raised when pending issue draft operations cannot proceed."""
+
+
+def prepare_pending_issue_draft(
+    *,
+    project: Path,
+    local_id: str,
+    artifact_type: str,
+    title: str,
+    labels: tuple[str, ...] = (),
+    state: str = "open",
+    state_reason: str | None = None,
+    replace: bool = False,
+    runner: CommandRunner | None = None,
+) -> dict[str, object]:
+    """Create a provider-owned pending issue draft with an empty body."""
+
+    config = _load_issue_config(project)
+    local_id = _required_text(local_id, "local id")
+    artifact_type = _required_text(artifact_type, "artifact type")
+    title = _required_text(title, "title")
+    normalized_state = (state or "open").strip().lower()
+    normalized_labels = tuple(label.strip() for label in labels if label.strip())
+
+    if config.issues.kind == "github":
+        try:
+            repo = resolve_github_repository(config.root, runner=runner)
+        except GitHubRepositoryError as exc:
+            raise WorkflowCacheIssueDraftError(str(exc)) from exc
+        cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
+        issue_file = cache.pending_issue_file(repo, local_id)
+        provider_payload: dict[str, object] = {"repository": repo.to_json()}
+    elif config.issues.kind == "jira":
+        try:
+            site = resolve_jira_data_center_site(config.root)
+        except (WorkflowConfigError, JiraProviderError) as exc:
+            raise WorkflowCacheIssueDraftError(str(exc)) from exc
+        cache = JiraDataCenterIssueCache.for_project(config.root)
+        issue_file = cache.pending_issue_file(site, local_id)
+        provider_payload = {"site": site.to_json()}
+    else:
+        raise WorkflowCacheIssueDraftError(
+            f"pending issue drafts currently support GitHub and Jira issue providers, not {config.issues.kind}"
+        )
+
+    if issue_file.exists() and not replace:
+        raise WorkflowCacheIssueDraftError(f"pending issue draft already exists: {issue_file}")
+
+    frontmatter: dict[str, object] = {
+        "schema_version": SCHEMA_VERSION,
+        "type": artifact_type,
+        "role": "issue",
+        "provider": config.issues.kind,
+        "title": title,
+        "labels": list(normalized_labels),
+        "state": normalized_state,
+    }
+    if state_reason:
+        frontmatter["state_reason"] = state_reason.strip()
+
+    issue_file.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_write_text(issue_file, _format_markdown(frontmatter, ""))
+
+    return {
+        "operation": "prepare_pending_issue",
+        "role": "issue",
+        "kind": config.issues.kind,
+        "local_id": local_id,
+        "issue_file": str(issue_file),
+        "artifact_type": artifact_type,
+        "title": title,
+        "labels": list(normalized_labels),
+        "state": normalized_state,
+        "body_empty": True,
+        **provider_payload,
+    }
+
+
+def create_pending_issue(
+    *,
+    project: Path,
+    local_id: str,
+    artifact_type: str,
+    session_id: str,
+    state_dir: Path | None = None,
+    runner: CommandRunner | None = None,
+    guard: Callable[[ProviderRequest], None] | None = None,
+) -> dict[str, object]:
+    """Create a provider issue from an existing pending issue draft."""
+
+    config = _load_issue_config(project)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard or authoring_guard_callback())
+    request = request_from_config(
+        config,
+        role="issue",
+        operation="create",
+        artifact_type=artifact_type,
+        payload={"pending_local_id": _required_text(local_id, "local id")},
+        session_id=session_id,
+        state_dir=state_dir,
+    )
+    response = dispatcher.dispatch(request)
+    return dict(response.payload)
+
+
+def stage_pending_issue_relationships(
+    *,
+    project: Path,
+    local_id: str,
+    parent: str | None = None,
+    children: tuple[str, ...] = (),
+    blocked_by: tuple[str, ...] = (),
+    blocking: tuple[str, ...] = (),
+    replace: bool = False,
+    runner: CommandRunner | None = None,
+) -> dict[str, object]:
+    """Stage provider-native relationships for a pending GitHub issue draft."""
+
+    config = _load_issue_config(project)
+    if config.issues.kind != "github":
+        raise WorkflowCacheIssueDraftError("pending issue relationship staging supports GitHub issue providers only")
+    try:
+        repo = resolve_github_repository(config.root, runner=runner)
+    except GitHubRepositoryError as exc:
+        raise WorkflowCacheIssueDraftError(str(exc)) from exc
+
+    local_id = _required_text(local_id, "local id")
+    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
+    issue_file = cache.pending_issue_file(repo, local_id)
+    if not issue_file.is_file():
+        raise WorkflowCacheIssueDraftError(f"pending issue draft does not exist: {issue_file}")
+
+    relationships_file = cache.pending_issue_relationships_pending_file(repo, local_id)
+    if relationships_file.exists() and not replace:
+        raise WorkflowCacheIssueDraftError(f"pending relationship file already exists: {relationships_file}")
+
+    payload: dict[str, object] = {"schema_version": SCHEMA_VERSION}
+    if parent:
+        payload["parent"] = _required_text(parent, "parent")
+    normalized_children = _normalized_refs(children)
+    normalized_blocked_by = _normalized_refs(blocked_by)
+    normalized_blocking = _normalized_refs(blocking)
+    if normalized_children:
+        payload["children"] = normalized_children
+    dependencies: dict[str, object] = {}
+    if normalized_blocked_by:
+        dependencies["blocked_by"] = normalized_blocked_by
+    if normalized_blocking:
+        dependencies["blocking"] = normalized_blocking
+    if dependencies:
+        payload["dependencies"] = dependencies
+    if len(payload) == 1:
+        raise WorkflowCacheIssueDraftError("at least one relationship value is required")
+
+    relationships_file.parent.mkdir(parents=True, exist_ok=True)
+    _atomic_write_text(relationships_file, _dump_yaml(payload))
+    operations = cache.read_pending_draft_relationships(repo, local_id)
+    return {
+        "operation": "stage_pending_issue_relationships",
+        "role": "issue",
+        "kind": "github",
+        "repository": repo.to_json(),
+        "local_id": local_id,
+        "relationships_file": str(relationships_file),
+        "operations": [operation.to_json() for operation in operations],
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
+    parser.add_argument("--json", action="store_true", help="emit JSON")
+    subparsers = parser.add_subparsers(dest="command", required=True)
+
+    prepare = subparsers.add_parser("prepare", help="prepare a bodyless pending issue draft")
+    prepare.add_argument("--local-id", required=True)
+    prepare.add_argument("--type", required=True, help="workflow artifact type for the draft")
+    prepare.add_argument("--title", required=True)
+    prepare.add_argument("--label", action="append", default=[])
+    prepare.add_argument("--state", default="open")
+    prepare.add_argument("--state-reason")
+    prepare.add_argument("--replace", action="store_true")
+
+    create = subparsers.add_parser("create", help="create a provider issue from a pending draft")
+    create.add_argument("--type", default="task", help="workflow artifact type for authoring guard")
+    create.add_argument("--session", help="workflow session id for authoring guard; defaults to WORKFLOW_SESSION_ID")
+    create.add_argument("--state-dir", type=Path, help="ledger state directory")
+    create.add_argument("local_id")
+
+    relationships = subparsers.add_parser(
+        "stage-relationships",
+        help="stage provider-native relationships for a pending issue draft",
+    )
+    relationships.add_argument("--local-id", required=True)
+    relationships.add_argument("--parent")
+    relationships.add_argument("--child", action="append", default=[])
+    relationships.add_argument("--blocked-by", action="append", default=[])
+    relationships.add_argument("--blocking", action="append", default=[])
+    relationships.add_argument("--replace", action="store_true")
+
+    for child in subparsers.choices.values():
+        child.add_argument("--json", action="store_true", help=argparse.SUPPRESS)
+
+    return parser
+
+
+def main(
+    argv: list[str] | None = None,
+    *,
+    stdout: TextIO | None = None,
+    stderr: TextIO | None = None,
+    runner: CommandRunner | None = None,
+    guard: Callable[[ProviderRequest], None] | None = None,
+) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    output = stdout or sys.stdout
+    errors = stderr or sys.stderr
+
+    try:
+        if args.command == "prepare":
+            payload = prepare_pending_issue_draft(
+                project=args.project,
+                local_id=args.local_id,
+                artifact_type=args.type,
+                title=args.title,
+                labels=tuple(args.label),
+                state=args.state,
+                state_reason=args.state_reason,
+                replace=args.replace,
+                runner=runner,
+            )
+        elif args.command == "create":
+            payload = create_pending_issue(
+                project=args.project,
+                local_id=args.local_id,
+                artifact_type=args.type,
+                session_id=args.session or workflow_session_id_from_env(),
+                state_dir=args.state_dir,
+                runner=runner,
+                guard=guard,
+            )
+        elif args.command == "stage-relationships":
+            payload = stage_pending_issue_relationships(
+                project=args.project,
+                local_id=args.local_id,
+                parent=args.parent,
+                children=tuple(args.child),
+                blocked_by=tuple(args.blocked_by),
+                blocking=tuple(args.blocking),
+                replace=args.replace,
+                runner=runner,
+            )
+        else:
+            raise WorkflowCacheIssueDraftError(f"unsupported command: {args.command}")
+    except Exception as exc:
+        print(f"workflow cache issue draft error: {exc}", file=errors)
+        return 2
+
+    if args.json:
+        print(json.dumps(payload, indent=2, sort_keys=False), file=output)
+    else:
+        _print_plain(payload, output)
+    return 0
+
+
+def _load_issue_config(project: Path) -> WorkflowConfig:
+    try:
+        config = load_workflow_config(project)
+    except WorkflowConfigError as exc:
+        raise WorkflowCacheIssueDraftError(str(exc)) from exc
+    if config is None:
+        raise WorkflowCacheIssueDraftError(".workflow/config.yml was not found")
+    return config
+
+
+def _required_text(value: str, name: str) -> str:
+    text = str(value or "").strip()
+    if not text:
+        raise WorkflowCacheIssueDraftError(f"{name} is required")
+    return text
+
+
+def _normalized_refs(values: tuple[str, ...]) -> list[str]:
+    return [value.strip() for value in values if value.strip()]
+
+
+def _print_plain(payload: dict[str, object], output: TextIO) -> None:
+    operation = payload.get("operation")
+    if operation == "prepare_pending_issue":
+        print(f"prepared pending issue {payload.get('local_id')}: {payload.get('issue_file')}", file=output)
+        return
+    if operation == "stage_pending_issue_relationships":
+        print(
+            f"staged relationships for pending issue {payload.get('local_id')}: "
+            f"{payload.get('relationships_file')}",
+            file=output,
+        )
+        return
+    issue = payload.get("issue")
+    print(f"created issue {issue} verified={payload.get('verified')}", file=output)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

@@ -41,8 +41,6 @@ Common relationship meanings:
 - `depends_on` — blocking or ordering dependency.
 - `related` — useful non-blocking relationship.
 
-Do not invent relationship body sections unless the selected authoring files require them.
-
 ## Comments and history
 
 Use comments, work notes, discussions, or history for:

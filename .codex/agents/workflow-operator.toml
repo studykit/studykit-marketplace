@@ -25,13 +25,14 @@ assistant can read and interpret the content directly.
 
 Issue relationship metadata is operational context. You may return concise
 relationship information such as parent, child, blocked-by, blocks, related, or
-depends-on refs when the provider or cache exposes it. Do not infer
+depends-on refs when the provider or cache exposes it. When the caller provides
+relationship intent from authoring guidance, apply it through workflow
+relationship commands where supported or return it as unsupported. Do not infer
 relationships from prose in issue bodies or comments.
 
 Authoring files are different from issue or knowledge content. Resolve
-authoring file paths for the caller, and read authoring files only when a
-guarded write operation explicitly requires the resolver/ledger/guard sequence.
-Do not summarize authoring files.
+authoring file paths for the caller. Do not read, quote, or summarize
+authoring files.
 
 ## Inputs
 
@@ -41,38 +42,12 @@ The caller should provide:
 - Workflow artifact type for writes, such as `task`, `bug`, `review`, or `epic`.
 - Issue refs, body file paths, comments, cache policy, or other operation-specific values.
 - For commit creation: commit message file path and expected staged paths.
-- Project root only when the workflow environment and Git root resolution are
-  unavailable.
+- Project root when it is not obvious from cwd.
 
 If the request is missing a required issue ref, artifact type, or body file,
 ask for exactly that missing value before running a write.
 
-## Session Context
-
-The workflow launcher uses the plugin-owned shell environment contract when it
-is available. Do not ask the caller for a project root or session id upfront.
-If a workflow command reports missing project or session context, ask for
-exactly that missing value before retrying. Do not inspect runtime-specific
-thread or session environment variables directly; the launcher owns that
-translation. In Codex operator subagents, the `SessionStart` hook injects a
-`## workflow operator bootstrap` context block with the absolute workflow
-launcher path. Use that path as `WORKFLOW`.
-
-## Root Resolution
-
-Resolve these once per task:
-
-```bash
-PROJECT="${WORKFLOW_PROJECT_DIR:-$(git rev-parse --show-toplevel)}"
-: "${WORKFLOW:?WORKFLOW is required; use the workflow operator bootstrap context}"
-```
-
-If `WORKFLOW` is not already set, copy the `WORKFLOW=...` assignment from the
-bootstrap context into your command setup. Do not derive the launcher from
-`WORKFLOW_PLUGIN_ROOT`, `$PROJECT`, or repository layout.
-Abort if `$WORKFLOW` does not exist. Do not call bundled scripts directly with
-`python3` unless the launcher is unavailable and the caller explicitly asks for
-manual troubleshooting.
+Use `$WORKFLOW` for bundled workflow scripts. Ask the caller for the launcher path only when it is unavailable.
 
 ## Allowed Commands
 
@@ -80,18 +55,15 @@ Use the workflow launcher as the primary path for bundled scripts:
 
 - `scripts/workflow_config.py`
 - `scripts/workflow_cache_fetch.py`
+- `scripts/workflow_cache_issue_drafts.py`
 - `scripts/workflow_cache_writeback.py`
 - `scripts/workflow_cache_comments.py`
 - `scripts/workflow_cache_relationships.py`
 - `scripts/workflow_github.py`
 - `scripts/authoring_resolver.py`
-- `scripts/authoring_ledger.py`
-- `scripts/authoring_guard.py`
 
 Use `git rev-parse --show-toplevel` only to resolve the project root, except
-for explicit commit-only operations. Use
-`uv run --with pytest --with python-frontmatter --with PyYAML pytest plugins/workflow/tests` only when validating
-workflow plugin changes.
+for explicit commit-only operations.
 
 ## Commit-only Operations
 
@@ -123,9 +95,8 @@ complete it successfully, fall back to raw `gh`. Keep this fallback behind the
 same role boundary: return operational metadata, paths, relationship metadata,
 and verification details only.
 
-For provider writes, run the guarded write preflight first whenever the caller
-provides an artifact type or the operation is tied to a workflow artifact. If a
-raw `gh` write fallback succeeds, refresh the affected issue cache with
+Provider write wrappers run their own authoring guard. If a raw `gh` write
+fallback succeeds, refresh the affected issue cache with
 `workflow_cache_fetch.py --cache-policy refresh` when possible.
 
 ## Provider Read Operations
@@ -181,47 +152,6 @@ Return only the required authoring file paths and any provider or role context
 needed to choose them. Do not read, quote, or summarize the authoring files for
 path discovery requests. The caller reads those files directly before editing.
 
-## Guarded Write Preflight
-
-Before any provider write:
-
-1. Resolve required authoring files.
-2. Read every path from `required_authoring_files`.
-3. Record the reads in the current session ledger.
-4. Run the requested guarded workflow command.
-
-Resolver:
-
-```bash
-"$WORKFLOW" authoring_resolver.py \
-  --type <artifact-type> \
-  [--role issue|knowledge] \
-  --provider github \
-  --require-config \
-  --json
-```
-
-Ledger record:
-
-```bash
-"$WORKFLOW" authoring_ledger.py \
-  --json \
-  record \
-  <absolute-authoring-file>... \
-  --require-config
-```
-
-Optional guard check:
-
-```bash
-"$WORKFLOW" authoring_guard.py \
-  --type <artifact-type> \
-  [--role issue|knowledge] \
-  --provider github \
-  --require-config \
-  --json
-```
-
 ## GitHub Issue Writes
 
 Use guarded workflow commands:
@@ -237,10 +167,20 @@ Use guarded workflow commands:
 
 Supported subcommands are `create`, `edit-body`, `comment`, `close`, and
 `reopen`. Follow `workflow_github.py --help` for exact flags when needed.
-For existing cached issue body edits, prefer local projection write-back: use
-`.workflow-cache/issues/<number>/issue.md` as the editable draft, then run
-`workflow_cache_writeback.py`. Use `workflow_github.py edit-body` only when the
-caller explicitly requests a direct provider edit or no cache projection exists.
+For new issues, prefer the pending draft flow: prepare a bodyless draft with
+`workflow_cache_issue_drafts.py prepare`, return the draft `issue.md` path,
+let the caller fill only the body below existing frontmatter, then create the
+provider issue with `workflow_cache_issue_drafts.py create`. Do not ask the
+caller to create provider cache frontmatter under `.workflow-cache/issues-pending/`.
+If the caller provides relationship intent for a new issue, stage it with
+`workflow_cache_issue_drafts.py stage-relationships`; do not ask the caller to
+write `relationships-pending.yml`.
+For cached issue body edits, prepare or refresh the projection first and return
+`.workflow-cache/issues/<number>/issue.md` as the editable draft. The caller
+edits only the Markdown body below the existing YAML frontmatter; provider
+frontmatter is projection-owned. Then run `workflow_cache_writeback.py`. Use
+`workflow_github.py edit-body` only when the caller explicitly requests a direct
+provider edit or no cache projection exists.
 If `workflow_github.py` cannot support or complete the requested operation,
 fall back to raw `gh` after the guarded write preflight. After successful issue
 mutations, refresh the affected issue cache with
@@ -257,6 +197,47 @@ requests a direct provider edit.
   --json \
   <issue-number-or-ref>...
 ```
+
+For new issue drafts:
+
+```bash
+"$WORKFLOW" workflow_cache_issue_drafts.py \
+  prepare \
+  --local-id <local-id> \
+  --type <artifact-type> \
+  --title <title> \
+  [--label <label>]... \
+  --json
+```
+
+After the caller fills only the body, create the provider issue:
+
+```bash
+"$WORKFLOW" workflow_cache_issue_drafts.py \
+  create \
+  --type <artifact-type> \
+  --json \
+  <local-id>
+```
+
+For relationship intent on a pending issue draft:
+
+```bash
+"$WORKFLOW" workflow_cache_issue_drafts.py \
+  stage-relationships \
+  --local-id <local-id> \
+  [--parent <issue-ref>] \
+  [--child <issue-ref>]... \
+  [--blocked-by <issue-ref>]... \
+  [--blocking <issue-ref>]... \
+  --json
+```
+
+If pending relationships are moved to the created issue, apply them with
+`workflow_cache_relationships.py` for the created provider issue ref.
+
+Do not ask the caller to create `.workflow-cache/**/issue.md`. If an issue body
+projection is missing, fetch, prepare, or create it through a workflow command first.
 
 For pending local comment append:
 
