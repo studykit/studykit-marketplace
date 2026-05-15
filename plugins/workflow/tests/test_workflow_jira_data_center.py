@@ -23,6 +23,7 @@ from workflow_providers import (  # noqa: E402
     CACHE_POLICY_REFRESH,
     ProviderContext,
     ProviderDispatcher,
+    ProviderFreshnessError,
     ProviderOperationError,
     ProviderRequest,
     default_provider_registry,
@@ -31,7 +32,7 @@ from workflow_config import load_workflow_config  # noqa: E402
 
 
 class FakeRunner:
-    def __init__(self, responses: dict[tuple[str, ...], CommandResult]):
+    def __init__(self, responses: dict[tuple[str, ...], CommandResult | list[CommandResult]]):
         self.responses = responses
         self.requests: list[CommandRequest] = []
 
@@ -40,6 +41,10 @@ class FakeRunner:
         response = self.responses.get(request.args)
         if response is None:
             return CommandResult(request=request, returncode=127, stderr="unexpected command")
+        if isinstance(response, list):
+            if not response:
+                return CommandResult(request=request, returncode=127, stderr="unexpected command")
+            return response.pop(0)
         return response
 
 
@@ -49,6 +54,10 @@ def result(args: tuple[str, ...], stdout: str = "", stderr: str = "", returncode
 
 def curl_args(url: str) -> tuple[str, ...]:
     return ("curl", "--silent", "--show-error", "--fail", "--request", "GET", "--config", "-", url)
+
+
+def curl_write_args() -> tuple[str, ...]:
+    return ("curl", "--silent", "--show-error", "--fail", "--config", "-")
 
 
 def write_jira_config(project: Path, *, deployment: str = "data-center") -> None:
@@ -64,6 +73,7 @@ providers:
     deployment: {deployment}
     api_version: 2
     project: TM
+    issue_type: Task
   knowledge:
     kind: github
 issue_id_format: jira
@@ -197,6 +207,19 @@ def dispatch_get(
     )
 
 
+def dispatch_write(project: Path, runner: FakeRunner, operation: str, **payload: object):
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=lambda request: None)
+    return dispatcher.dispatch(
+        ProviderRequest(
+            role="issue",
+            kind="jira",
+            operation=operation,
+            context=ProviderContext(project=project, artifact_type="task"),
+            payload=payload,
+        )
+    )
+
+
 def jira_site(project: Path):
     config = load_workflow_config(project)
     assert config is not None
@@ -316,3 +339,140 @@ def test_cloud_deployment_is_rejected_for_now(tmp_path: Path) -> None:
 
     with pytest.raises(ProviderOperationError, match="Jira Cloud is out of scope"):
         dispatch_get(tmp_path, runner)
+
+
+def test_data_center_create_uses_pending_draft_and_refreshes_cache(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    site = jira_site(tmp_path)
+    cache = JiraDataCenterIssueCache.for_project(tmp_path)
+    draft = cache.pending_issue_file(site, "local-1")
+    draft.parent.mkdir(parents=True, exist_ok=True)
+    draft.write_text(
+        """---
+title: Pending Jira issue
+labels:
+- workflow
+---
+
+Pending body.
+""",
+        encoding="utf-8",
+    )
+    runner = FakeRunner(
+        {
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "10001", "key": "TM-1234"})),
+            curl_args(issue_url()): result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(tmp_path, runner, "create", pending_local_id="local-1")
+
+    assert response.payload["operation"] == "create_issue"
+    assert response.payload["issue"] == "TM-1234"
+    assert response.payload["pending_finalized"] is True
+    write_request = runner.requests[0]
+    assert write_request.args == curl_write_args()
+    assert 'request = "POST"' in str(write_request.input_text)
+    assert 'url = "https://jira.daumkakao.com/rest/api/2/issue"' in str(write_request.input_text)
+    assert '\\"summary\\":\\"Pending Jira issue\\"' in str(write_request.input_text)
+    assert '\\"issuetype\\":{\\"name\\":\\"Task\\"}' in str(write_request.input_text)
+    assert cache.issue_json_file(site, "TM-1234").is_file()
+    assert not draft.exists()
+    assert cache.created_issue_archive_dir(site, "local-1", "TM-1234").joinpath("issue.md").is_file()
+
+
+def test_data_center_update_from_cache_checks_freshness_and_refreshes(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    site = jira_site(tmp_path)
+    cache = JiraDataCenterIssueCache.for_project(tmp_path)
+    cache.write_issue_bundle(
+        site,
+        jira_issue_payload(body="Cached write-back body."),
+        remote_links=remote_links_payload(),
+        fetched_at="2026-05-15T10:00:00.000+0900",
+    )
+    runner = FakeRunner(
+        {
+            curl_args(issue_url()): [
+                result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload(body="Provider current."))),
+                result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload(body="Cached write-back body."))),
+            ],
+            curl_write_args(): result(curl_write_args(), stdout=""),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(tmp_path, runner, "update", issue="TM-1234", from_cache=True)
+
+    assert response.payload["operation"] == "update_issue_from_cache"
+    write_request = runner.requests[1]
+    assert write_request.args == curl_write_args()
+    assert 'request = "PUT"' in str(write_request.input_text)
+    assert 'url = "https://jira.daumkakao.com/rest/api/2/issue/TM-1234"' in str(write_request.input_text)
+    assert '\\"description\\":\\"Cached write-back body.\\"' in str(write_request.input_text)
+    assert cache.read_issue(site, "TM-1234")["body"] == "Cached write-back body."
+
+
+def test_data_center_pending_comments_are_appended_and_removed(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    site = jira_site(tmp_path)
+    cache = JiraDataCenterIssueCache.for_project(tmp_path)
+    cache.write_issue_bundle(
+        site,
+        jira_issue_payload(),
+        remote_links=remote_links_payload(),
+        fetched_at="2026-05-15T10:00:00.000+0900",
+    )
+    pending = cache.comments_pending_dir(site, "TM-1234") / "001.md"
+    pending.parent.mkdir(parents=True, exist_ok=True)
+    pending.write_text("---\n---\n\nPending comment body.\n", encoding="utf-8")
+    runner = FakeRunner(
+        {
+            curl_args(issue_url()): [
+                result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+                result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            ],
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "30001", "body": "Pending comment body."})),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(tmp_path, runner, "add_comment", issue="TM-1234", pending_comments=True)
+
+    assert response.payload["operation"] == "append_pending_comments"
+    assert response.payload["appended"] == 1
+    assert response.payload["pending_files"] == ["001.md"]
+    assert not pending.exists()
+    write_request = runner.requests[1]
+    assert 'request = "POST"' in str(write_request.input_text)
+    assert 'url = "https://jira.daumkakao.com/rest/api/2/issue/TM-1234/comment"' in str(write_request.input_text)
+    assert '\\"body\\":\\"Pending comment body.\\\\n\\"' in str(write_request.input_text)
+
+
+def test_data_center_stale_cache_blocks_write_before_put(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    site = jira_site(tmp_path)
+    cache = JiraDataCenterIssueCache.for_project(tmp_path)
+    cache.write_issue_bundle(
+        site,
+        jira_issue_payload(body="Cached body."),
+        remote_links=remote_links_payload(),
+        fetched_at="2026-05-15T10:00:00.000+0900",
+    )
+    runner = FakeRunner(
+        {
+            curl_args(issue_url()): result(
+                curl_args(issue_url()),
+                stdout=json.dumps(jira_issue_payload(body="Newer provider body.")),
+            )
+        }
+    )
+    newer = jira_issue_payload(body="Newer provider body.")
+    newer["fields"]["updated"] = "2026-05-15T11:00:00.000+0900"  # type: ignore[index]
+    runner.responses[curl_args(issue_url())] = result(curl_args(issue_url()), stdout=json.dumps(newer))
+
+    with pytest.raises(ProviderFreshnessError, match="Stale workflow cache"):
+        dispatch_write(tmp_path, runner, "update", issue="TM-1234", from_cache=True)
+
+    assert all(request.args != curl_write_args() for request in runner.requests)

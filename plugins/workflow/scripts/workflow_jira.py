@@ -6,6 +6,7 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -16,12 +17,19 @@ from urllib.parse import quote, urlparse
 from workflow_cache import (
     CACHE_ROOT_NAME,
     SCHEMA_VERSION,
+    FreshnessMetadata,
+    PendingIssueComment,
+    PendingIssueDraft,
     WorkflowCacheCorrupt,
     WorkflowCacheError,
     WorkflowCacheMiss,
     _atomic_write_text,
     _dump_yaml,
+    _label_names,
+    _read_frontmatter_markdown,
+    _read_pending_comments,
     _read_yaml_mapping,
+    _remove_empty_parents,
     _require_schema,
     _safe_path_segment,
 )
@@ -44,6 +52,7 @@ class JiraDataCenterSite:
     authority: str
     api_version: str = "2"
     project: str | None = None
+    issue_type: str | None = None
     cache_site: str | None = None
 
     @property
@@ -63,6 +72,8 @@ class JiraDataCenterSite:
         }
         if self.project:
             result["project"] = self.project
+        if self.issue_type:
+            result["issue_type"] = self.issue_type
         return result
 
 
@@ -96,11 +107,13 @@ def jira_data_center_site_from_provider_config(provider: ProviderConfig) -> Jira
 
     api_version = _string_setting(settings, "api_version", "apiVersion", "rest_api_version") or "2"
     project = _string_setting(settings, "project", "project_key", "projectKey")
+    issue_type = _string_setting(settings, "issue_type", "issueType", "issuetype", "issue_type_name")
     return JiraDataCenterSite(
         base_url=base_url,
         authority=authority,
         api_version=api_version.strip().strip("/") or "2",
         project=project.upper() if project else None,
+        issue_type=issue_type,
         cache_site=cache_site,
     )
 
@@ -125,6 +138,11 @@ def jira_data_center_remote_links_path(site: JiraDataCenterSite, issue_key: str)
     return f"/rest/api/{site.api_version}/issue/{escaped_key}/remotelink"
 
 
+def jira_data_center_comments_path(site: JiraDataCenterSite, issue_key: str) -> str:
+    escaped_key = quote(normalize_jira_issue_key(issue_key), safe="")
+    return f"/rest/api/{site.api_version}/issue/{escaped_key}/comment"
+
+
 def jira_get_json(
     site: JiraDataCenterSite,
     path: str,
@@ -141,6 +159,31 @@ def jira_get_json(
     )
     try:
         return json.loads(result.stdout)
+    except json.JSONDecodeError as exc:
+        raise JiraProviderError(f"Jira response was not valid JSON for {url}: {exc}") from exc
+
+
+def jira_send_json(
+    site: JiraDataCenterSite,
+    method: str,
+    path: str,
+    payload: Mapping[str, Any],
+    *,
+    runner: CommandRunner | None = None,
+) -> Any:
+    """Send one Jira REST JSON mutation with curl and parse any JSON response."""
+
+    url = f"{site.base_url}{path}"
+    result = run_command(
+        ("curl", "--silent", "--show-error", "--fail", "--config", "-"),
+        input_text=_curl_json_config(method=method, url=url, payload=payload),
+        runner=runner,
+    )
+    stdout = result.stdout.strip()
+    if not stdout:
+        return {}
+    try:
+        return json.loads(stdout)
     except json.JSONDecodeError as exc:
         raise JiraProviderError(f"Jira response was not valid JSON for {url}: {exc}") from exc
 
@@ -238,8 +281,82 @@ class JiraDataCenterIssueCache:
     def remote_links_json_file(self, site: JiraDataCenterSite, issue_key: str) -> Path:
         return self.issue_dir(site, issue_key) / "remote-links.json"
 
+    def pending_issue_dir(self, site: JiraDataCenterSite, local_id: str) -> Path:
+        return (
+            self.root
+            / "jira"
+            / _safe_path_segment(site.cache_site_segment)
+            / "issues-pending"
+            / _safe_path_segment(local_id)
+        )
+
+    def pending_issue_file(self, site: JiraDataCenterSite, local_id: str) -> Path:
+        return self.pending_issue_dir(site, local_id) / "issue.md"
+
+    def created_issue_archive_dir(self, site: JiraDataCenterSite, local_id: str, issue_key: str) -> Path:
+        key = normalize_jira_issue_key(issue_key)
+        return (
+            self.root
+            / "jira"
+            / _safe_path_segment(site.cache_site_segment)
+            / "issues-created"
+            / f"{_safe_path_segment(key)}-{_safe_path_segment(local_id)}"
+        )
+
+    def comments_pending_dir(self, site: JiraDataCenterSite, issue_key: str) -> Path:
+        return self.issue_dir(site, issue_key) / "comments-pending"
+
     def has_issue_projection(self, site: JiraDataCenterSite, issue_key: str) -> bool:
         return self.issue_json_file(site, issue_key).is_file()
+
+    def read_pending_issue_draft(self, site: JiraDataCenterSite, local_id: str) -> PendingIssueDraft:
+        path = self.pending_issue_file(site, local_id)
+        if not path.is_file():
+            raise WorkflowCacheMiss(f"Jira pending issue draft does not exist: {path}")
+
+        frontmatter, body = _read_frontmatter_markdown(path)
+        if frontmatter.get("schema_version") is not None:
+            _require_schema(frontmatter, path)
+
+        title = str(frontmatter.get("title") or "").strip()
+        if not title:
+            raise WorkflowCacheCorrupt(f"Jira pending issue draft is missing title: {path}")
+        return PendingIssueDraft(
+            local_id=_safe_path_segment(local_id),
+            path=path,
+            title=title,
+            body=body,
+            labels=tuple(_label_names(frontmatter.get("labels"))),
+            state=str(frontmatter.get("state") or "open").strip().lower(),
+            state_reason=_normalize_optional(frontmatter.get("state_reason") or frontmatter.get("stateReason")),
+        )
+
+    def read_pending_issue_comments(self, site: JiraDataCenterSite, issue_key: str) -> list[PendingIssueComment]:
+        key = normalize_jira_issue_key(issue_key)
+        return _read_pending_comments(
+            self.comments_pending_dir(site, key),
+            target_kind="issue",
+            target_id=key,
+        )
+
+    def read_freshness_metadata(
+        self,
+        site: JiraDataCenterSite,
+        issue_key: str,
+        *,
+        target: str = "issue",
+    ) -> FreshnessMetadata:
+        path = self.metadata_file(site, issue_key)
+        if not path.is_file():
+            raise WorkflowCacheMiss(f"Jira freshness cache does not exist: {path}")
+        data = _read_yaml_mapping(path)
+        _require_schema(data, path)
+        return FreshnessMetadata(
+            source_updated_at=_normalize_optional(data.get("source_updated_at")),
+            fetched_at=_normalize_optional(data.get("fetched_at")),
+            path=path,
+            target=target,
+        )
 
     def read_issue(
         self,
@@ -286,6 +403,13 @@ class JiraDataCenterIssueCache:
             raise
         except Exception as exc:
             raise WorkflowCacheCorrupt(f"could not read Jira issue cache {issue_path}: {exc}") from exc
+
+    def read_issue_json(self, site: JiraDataCenterSite, issue_key: str) -> Mapping[str, Any]:
+        key = normalize_jira_issue_key(issue_key)
+        issue_path = self.issue_json_file(site, key)
+        if not issue_path.is_file():
+            raise WorkflowCacheMiss(f"Jira issue cache does not exist: {issue_path}")
+        return _read_json_mapping(issue_path)
 
     def write_issue_bundle(
         self,
@@ -340,6 +464,48 @@ class JiraDataCenterIssueCache:
             "metadata_file": str(metadata_path),
             "issue_json": str(issue_path),
             "remote_links_json": str(remote_links_path),
+        }
+
+    def remove_pending_issue_comments(
+        self,
+        site: JiraDataCenterSite,
+        issue_key: str,
+        comments: list[PendingIssueComment],
+    ) -> list[Path]:
+        key = normalize_jira_issue_key(issue_key)
+        pending_dir = self.comments_pending_dir(site, key)
+        removed: list[Path] = []
+        for comment in comments:
+            if comment.path.parent.resolve(strict=False) != pending_dir.resolve(strict=False):
+                raise WorkflowCacheError(f"pending comment is outside Jira issue pending directory: {comment.path}")
+            if comment.path.exists():
+                comment.path.unlink()
+                removed.append(comment.path)
+        _remove_empty_parents(pending_dir, stop_at=self.issue_dir(site, key))
+        return removed
+
+    def finalize_pending_issue_creation(
+        self,
+        site: JiraDataCenterSite,
+        local_id: str,
+        issue_key: str,
+    ) -> dict[str, str | None]:
+        pending_dir = self.pending_issue_dir(site, local_id)
+        draft_path = pending_dir / "issue.md"
+        archive_dir = self.created_issue_archive_dir(site, local_id, issue_key)
+        archived_issue: Path | None = None
+        if draft_path.exists():
+            archive_dir.mkdir(parents=True, exist_ok=True)
+            archived_issue = archive_dir / "issue.md"
+            os.replace(draft_path, archived_issue)
+
+        issue_dir = self.issue_dir(site, issue_key)
+        issue_dir.mkdir(parents=True, exist_ok=True)
+        moved_comments = _move_path_if_exists(pending_dir / "comments-pending", issue_dir / "comments-pending")
+        _remove_empty_parents(pending_dir, stop_at=self.root / "jira" / _safe_path_segment(site.cache_site_segment))
+        return {
+            "archived_issue": str(archived_issue) if archived_issue is not None else None,
+            "comments_pending": str(moved_comments) if moved_comments is not None else None,
         }
 
 
@@ -674,6 +840,10 @@ def _format_json(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, indent=2) + "\n"
 
 
+def _format_json_compact(value: Any) -> str:
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
 def _normalize_base_url(value: str) -> tuple[str, str, str]:
     raw = value.strip().rstrip("/")
     if not raw:
@@ -708,6 +878,24 @@ def _string_setting(settings: Mapping[str, Any], *names: str) -> str | None:
 
 
 def _curl_config() -> str:
+    lines = _curl_base_config_lines()
+    return "\n".join(lines) + "\n"
+
+
+def _curl_json_config(*, method: str, url: str, payload: Mapping[str, Any]) -> str:
+    lines = _curl_base_config_lines()
+    lines.extend(
+        [
+            'header = "Content-Type: application/json"',
+            f'request = "{_curl_quote(method.upper())}"',
+            f'url = "{_curl_quote(url)}"',
+            f'data-binary = "{_curl_quote(_format_json_compact(payload))}"',
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def _curl_base_config_lines() -> list[str]:
     lines = ['header = "Accept: application/json"']
     personal_token = _first_env("JIRA_PERSONAL_TOKEN", "JIRA_PAT")
     username = _first_env("JIRA_USERNAME", "JIRA_USER")
@@ -716,7 +904,7 @@ def _curl_config() -> str:
         lines.append(f'header = "Authorization: Bearer {_curl_quote(personal_token)}"')
     elif username and password:
         lines.append(f'user = "{_curl_quote(username)}:{_curl_quote(password)}"')
-    return "\n".join(lines) + "\n"
+    return lines
 
 
 def _first_env(*names: str) -> str | None:
@@ -729,6 +917,19 @@ def _first_env(*names: str) -> str | None:
 
 def _curl_quote(value: str) -> str:
     return value.replace("\\", "\\\\").replace('"', '\\"')
+
+
+def _move_path_if_exists(source: Path, destination: Path) -> Path | None:
+    if not source.exists():
+        return None
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        if destination.is_dir():
+            shutil.rmtree(destination)
+        else:
+            destination.unlink()
+    os.replace(source, destination)
+    return destination
 
 
 def _mapping_list(value: Any) -> list[Mapping[str, Any]]:
