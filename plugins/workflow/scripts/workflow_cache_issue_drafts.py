@@ -139,26 +139,44 @@ def stage_pending_issue_relationships(
     children: tuple[str, ...] = (),
     blocked_by: tuple[str, ...] = (),
     blocking: tuple[str, ...] = (),
+    related: tuple[str, ...] = (),
     replace: bool = False,
     runner: CommandRunner | None = None,
 ) -> dict[str, object]:
-    """Stage provider-native relationships for a pending GitHub issue draft."""
+    """Stage provider-native relationships for a pending provider issue draft."""
 
     config = _load_issue_config(project)
-    if config.issues.kind != "github":
-        raise WorkflowCacheIssueDraftError("pending issue relationship staging supports GitHub issue providers only")
-    try:
-        repo = resolve_github_repository(config.root, runner=runner)
-    except GitHubRepositoryError as exc:
-        raise WorkflowCacheIssueDraftError(str(exc)) from exc
-
     local_id = _required_text(local_id, "local id")
-    cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
-    issue_file = cache.pending_issue_file(repo, local_id)
+    if config.issues.kind == "github":
+        if related:
+            raise WorkflowCacheIssueDraftError("related relationship staging is not supported for GitHub issue providers")
+        try:
+            repo = resolve_github_repository(config.root, runner=runner)
+        except GitHubRepositoryError as exc:
+            raise WorkflowCacheIssueDraftError(str(exc)) from exc
+        cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
+        issue_file = cache.pending_issue_file(repo, local_id)
+        relationships_file = cache.pending_issue_relationships_pending_file(repo, local_id)
+        provider_payload: dict[str, object] = {"kind": "github", "repository": repo.to_json()}
+        read_operations = lambda: cache.read_pending_draft_relationships(repo, local_id)
+    elif config.issues.kind == "jira":
+        try:
+            site = resolve_jira_data_center_site(config.root)
+        except (WorkflowConfigError, JiraProviderError) as exc:
+            raise WorkflowCacheIssueDraftError(str(exc)) from exc
+        cache = JiraDataCenterIssueCache.for_project(config.root)
+        issue_file = cache.pending_issue_file(site, local_id)
+        relationships_file = cache.pending_issue_relationships_pending_file(site, local_id)
+        provider_payload = {"kind": "jira", "site": site.to_json()}
+        read_operations = lambda: cache.read_pending_draft_relationships(site, local_id)
+    else:
+        raise WorkflowCacheIssueDraftError(
+            f"pending issue relationship staging supports GitHub and Jira issue providers, not {config.issues.kind}"
+        )
+
     if not issue_file.is_file():
         raise WorkflowCacheIssueDraftError(f"pending issue draft does not exist: {issue_file}")
 
-    relationships_file = cache.pending_issue_relationships_pending_file(repo, local_id)
     if relationships_file.exists() and not replace:
         raise WorkflowCacheIssueDraftError(f"pending relationship file already exists: {relationships_file}")
 
@@ -177,20 +195,22 @@ def stage_pending_issue_relationships(
         dependencies["blocking"] = normalized_blocking
     if dependencies:
         payload["dependencies"] = dependencies
+    normalized_related = _normalized_refs(related)
+    if normalized_related:
+        payload["related"] = normalized_related
     if len(payload) == 1:
         raise WorkflowCacheIssueDraftError("at least one relationship value is required")
 
     relationships_file.parent.mkdir(parents=True, exist_ok=True)
     _atomic_write_text(relationships_file, _dump_yaml(payload))
-    operations = cache.read_pending_draft_relationships(repo, local_id)
+    operations = read_operations()
     return {
         "operation": "stage_pending_issue_relationships",
         "role": "issue",
-        "kind": "github",
-        "repository": repo.to_json(),
         "local_id": local_id,
         "relationships_file": str(relationships_file),
         "operations": [operation.to_json() for operation in operations],
+        **provider_payload,
     }
 
 
@@ -224,6 +244,7 @@ def build_parser() -> argparse.ArgumentParser:
     relationships.add_argument("--child", action="append", default=[])
     relationships.add_argument("--blocked-by", action="append", default=[])
     relationships.add_argument("--blocking", action="append", default=[])
+    relationships.add_argument("--related", action="append", default=[])
     relationships.add_argument("--replace", action="store_true")
 
     for child in subparsers.choices.values():
@@ -276,6 +297,7 @@ def main(
                 children=tuple(args.child),
                 blocked_by=tuple(args.blocked_by),
                 blocking=tuple(args.blocking),
+                related=tuple(args.related),
                 replace=args.replace,
                 runner=runner,
             )

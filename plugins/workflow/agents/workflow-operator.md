@@ -281,6 +281,9 @@ Then apply the staged relationship file with `workflow_cache_relationships.py`
 without `--stage`.
 
 These scripts perform their own provider refresh and cleanup where supported.
+For Jira Data Center, relationship apply only writes surfaces explicitly mapped
+in `.workflow/config.yml`; return the unsupported-operation error instead of
+guessing link types, directions, remote-link targets, or parent fields.
 
 ## Response Format
 

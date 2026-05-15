@@ -42,6 +42,8 @@ Use Jira hierarchy or parent fields for epic and parent relationships when avail
 
 Use remote links for cross-provider references, such as GitHub issues or Confluence pages. If the API requires a stable remote link key, derive it from the resolved workflow reference object.
 
+Relationship writes must use explicit `.workflow/config.yml` mappings. Do not infer Jira link type names, directions, remote-link surfaces, or parent fields from issue body prose.
+
 Body fallback sections for Jira relationships are artifact-specific and belong in the matching Jira issue type authoring file.
 
 ## Comments and logs
@@ -82,7 +84,7 @@ Do not use Smart Commit commands merely to mention an issue.
 
 Preferred native transport:
 
-- REST wrapper for Jira Cloud APIs.
+- REST wrapper for Jira Data Center APIs.
 
 MCP is fallback transport.
 

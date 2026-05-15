@@ -67,6 +67,44 @@ Supported issue provider kinds:
 - `jira`
 - `filesystem`
 
+Jira Data Center relationship writes require explicit mappings under
+`providers.issues.relationship_mappings`. The wrapper does not infer Jira link
+types, directions, remote-link behavior, or parent fields from prose.
+
+Example:
+
+```yaml
+providers:
+  issues:
+    kind: jira
+    site: https://jira.example.com
+    deployment: data-center
+    relationship_mappings:
+      blocked_by:
+        surface: issue_link
+        link_type: Blocks
+        direction: inward
+      blocking:
+        surface: issue_link
+        link_type: Blocks
+        direction: outward
+      related:
+        surface: remote_link
+        relationship_label: relates to
+      parent:
+        surface: field
+        field: parent
+        write_to: source
+        value: key
+```
+
+Supported Jira relationship surfaces:
+
+- `issue_link`: requires `link_type` and `direction` (`inward` or `outward`).
+- `remote_link`: requires an absolute `http` or `https` target reference.
+- `field`: requires `field`, `write_to` (`source` or `target`), and `value`
+  (`key`, `key_object`, or `string`).
+
 ### Knowledge Provider
 
 Required path:
@@ -171,4 +209,5 @@ It validates:
 
 ## Change Log
 
+- 2026-05-15 — [#58](https://github.com/studykit/studykit-plugins/issues/58) — Added explicit Jira Data Center relationship write mappings.
 - 2026-05-13 — [#29](https://github.com/studykit/studykit-plugins/issues/29) — Published the version 1 workflow configuration schema.

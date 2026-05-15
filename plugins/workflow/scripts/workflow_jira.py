@@ -20,6 +20,7 @@ from workflow_cache import (
     FreshnessMetadata,
     PendingIssueComment,
     PendingIssueDraft,
+    PendingIssueRelationshipOperation,
     WorkflowCacheCorrupt,
     WorkflowCacheError,
     WorkflowCacheMiss,
@@ -28,6 +29,7 @@ from workflow_cache import (
     _label_names,
     _read_frontmatter_markdown,
     _read_pending_comments,
+    _read_pending_relationships,
     _read_yaml_mapping,
     _remove_empty_parents,
     _require_schema,
@@ -138,6 +140,26 @@ def jira_data_center_remote_links_path(site: JiraDataCenterSite, issue_key: str)
     return f"/rest/api/{site.api_version}/issue/{escaped_key}/remotelink"
 
 
+def jira_data_center_remote_link_global_id_path(site: JiraDataCenterSite, issue_key: str, global_id: str) -> str:
+    escaped_key = quote(normalize_jira_issue_key(issue_key), safe="")
+    return f"/rest/api/{site.api_version}/issue/{escaped_key}/remotelink?globalId={quote(global_id, safe='')}"
+
+
+def jira_data_center_remote_link_path(site: JiraDataCenterSite, issue_key: str, link_id: str) -> str:
+    escaped_key = quote(normalize_jira_issue_key(issue_key), safe="")
+    escaped_link_id = quote(str(link_id).strip(), safe="")
+    return f"/rest/api/{site.api_version}/issue/{escaped_key}/remotelink/{escaped_link_id}"
+
+
+def jira_data_center_issue_links_path(site: JiraDataCenterSite) -> str:
+    return f"/rest/api/{site.api_version}/issueLink"
+
+
+def jira_data_center_issue_link_path(site: JiraDataCenterSite, link_id: str) -> str:
+    escaped_link_id = quote(str(link_id).strip(), safe="")
+    return f"/rest/api/{site.api_version}/issueLink/{escaped_link_id}"
+
+
 def jira_data_center_comments_path(site: JiraDataCenterSite, issue_key: str) -> str:
     escaped_key = quote(normalize_jira_issue_key(issue_key), safe="")
     return f"/rest/api/{site.api_version}/issue/{escaped_key}/comment"
@@ -177,6 +199,29 @@ def jira_send_json(
     result = run_command(
         ("curl", "--silent", "--show-error", "--fail", "--config", "-"),
         input_text=_curl_json_config(method=method, url=url, payload=payload),
+        runner=runner,
+    )
+    stdout = result.stdout.strip()
+    if not stdout:
+        return {}
+    try:
+        return json.loads(stdout)
+    except json.JSONDecodeError as exc:
+        raise JiraProviderError(f"Jira response was not valid JSON for {url}: {exc}") from exc
+
+
+def jira_delete(
+    site: JiraDataCenterSite,
+    path: str,
+    *,
+    runner: CommandRunner | None = None,
+) -> Any:
+    """Send one Jira REST DELETE mutation and parse any JSON response."""
+
+    url = f"{site.base_url}{path}"
+    result = run_command(
+        ("curl", "--silent", "--show-error", "--fail", "--config", "-"),
+        input_text=_curl_method_config(method="DELETE", url=url),
         runner=runner,
     )
     stdout = result.stdout.strip()
@@ -306,6 +351,12 @@ class JiraDataCenterIssueCache:
     def comments_pending_dir(self, site: JiraDataCenterSite, issue_key: str) -> Path:
         return self.issue_dir(site, issue_key) / "comments-pending"
 
+    def relationships_pending_file(self, site: JiraDataCenterSite, issue_key: str) -> Path:
+        return self.issue_dir(site, issue_key) / "relationships-pending.yml"
+
+    def pending_issue_relationships_pending_file(self, site: JiraDataCenterSite, local_id: str) -> Path:
+        return self.pending_issue_dir(site, local_id) / "relationships-pending.yml"
+
     def has_issue_projection(self, site: JiraDataCenterSite, issue_key: str) -> bool:
         return self.issue_json_file(site, issue_key).is_file()
 
@@ -337,6 +388,34 @@ class JiraDataCenterIssueCache:
             self.comments_pending_dir(site, key),
             target_kind="issue",
             target_id=key,
+        )
+
+    def read_pending_issue_relationships(
+        self,
+        site: JiraDataCenterSite,
+        issue_key: str,
+    ) -> list[PendingIssueRelationshipOperation]:
+        """Read pending relationship operations for an existing Jira issue projection."""
+
+        key = normalize_jira_issue_key(issue_key)
+        return _read_pending_relationships(
+            self.relationships_pending_file(site, key),
+            target_kind="issue",
+            target_id=key,
+        )
+
+    def read_pending_draft_relationships(
+        self,
+        site: JiraDataCenterSite,
+        local_id: str,
+    ) -> list[PendingIssueRelationshipOperation]:
+        """Read pending relationship operations for a pending Jira issue projection."""
+
+        safe_local_id = _safe_path_segment(local_id)
+        return _read_pending_relationships(
+            self.pending_issue_relationships_pending_file(site, safe_local_id),
+            target_kind="pending_issue",
+            target_id=safe_local_id,
         )
 
     def read_freshness_metadata(
@@ -484,6 +563,53 @@ class JiraDataCenterIssueCache:
         _remove_empty_parents(pending_dir, stop_at=self.issue_dir(site, key))
         return removed
 
+    def remove_pending_issue_relationships(
+        self,
+        site: JiraDataCenterSite,
+        issue_key: str,
+        operations: list[PendingIssueRelationshipOperation],
+    ) -> list[Path]:
+        """Remove a successfully consumed Jira pending relationship file."""
+
+        key = normalize_jira_issue_key(issue_key)
+        path = self.relationships_pending_file(site, key)
+        return self._remove_pending_relationship_file(path, operations, stop_at=self.issue_dir(site, key))
+
+    def remove_pending_draft_relationships(
+        self,
+        site: JiraDataCenterSite,
+        local_id: str,
+        operations: list[PendingIssueRelationshipOperation],
+    ) -> list[Path]:
+        """Remove a consumed pending relationship file from a pending Jira issue projection."""
+
+        safe_local_id = _safe_path_segment(local_id)
+        path = self.pending_issue_relationships_pending_file(site, safe_local_id)
+        return self._remove_pending_relationship_file(
+            path,
+            operations,
+            stop_at=self.pending_issue_dir(site, safe_local_id),
+        )
+
+    def _remove_pending_relationship_file(
+        self,
+        path: Path,
+        operations: list[PendingIssueRelationshipOperation],
+        *,
+        stop_at: Path,
+    ) -> list[Path]:
+        expected = path.resolve(strict=False)
+        seen = False
+        for operation in operations:
+            seen = True
+            if operation.path.resolve(strict=False) != expected:
+                raise WorkflowCacheError(f"pending relationship operation is outside Jira pending file: {operation.path}")
+        if not seen or not path.exists():
+            return []
+        path.unlink()
+        _remove_empty_parents(path.parent, stop_at=stop_at)
+        return [path]
+
     def finalize_pending_issue_creation(
         self,
         site: JiraDataCenterSite,
@@ -502,10 +628,15 @@ class JiraDataCenterIssueCache:
         issue_dir = self.issue_dir(site, issue_key)
         issue_dir.mkdir(parents=True, exist_ok=True)
         moved_comments = _move_path_if_exists(pending_dir / "comments-pending", issue_dir / "comments-pending")
+        moved_relationships = _move_path_if_exists(
+            pending_dir / "relationships-pending.yml",
+            issue_dir / "relationships-pending.yml",
+        )
         _remove_empty_parents(pending_dir, stop_at=self.root / "jira" / _safe_path_segment(site.cache_site_segment))
         return {
             "archived_issue": str(archived_issue) if archived_issue is not None else None,
             "comments_pending": str(moved_comments) if moved_comments is not None else None,
+            "relationships_pending": str(moved_relationships) if moved_relationships is not None else None,
         }
 
 
@@ -883,13 +1014,22 @@ def _curl_config() -> str:
 
 
 def _curl_json_config(*, method: str, url: str, payload: Mapping[str, Any]) -> str:
-    lines = _curl_base_config_lines()
+    lines = _curl_method_config(method=method, url=url).rstrip("\n").splitlines()
     lines.extend(
         [
             'header = "Content-Type: application/json"',
+            f'data-binary = "{_curl_quote(_format_json_compact(payload))}"',
+        ]
+    )
+    return "\n".join(lines) + "\n"
+
+
+def _curl_method_config(*, method: str, url: str) -> str:
+    lines = _curl_base_config_lines()
+    lines.extend(
+        [
             f'request = "{_curl_quote(method.upper())}"',
             f'url = "{_curl_quote(url)}"',
-            f'data-binary = "{_curl_quote(_format_json_compact(payload))}"',
         ]
     )
     return "\n".join(lines) + "\n"
