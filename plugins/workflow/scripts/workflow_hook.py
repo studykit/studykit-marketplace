@@ -15,6 +15,7 @@ runtime values, and call the plain functions here with concrete arguments.
 from __future__ import annotations
 
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -39,11 +40,13 @@ from workflow_jira import normalize_jira_issue_key  # noqa: E402
 from workflow_session_state import (  # noqa: E402
     read_session_issues,
     record_session_issues,
-    remove_session_issues,
 )
 from util import emit_json, is_markdown_path, is_under, is_under_any  # noqa: E402
 
 STATE_DIR_ENV_VAR = "WORKFLOW_LEDGER_STATE_DIR"
+COMMIT_PROMPT_PATTERN = re.compile(
+    r"(?i)(?<![A-Za-z])(?:commit|commits|committed|committing)(?![A-Za-z])|커밋"
+)
 
 # =============================================================================
 # Common hook operations
@@ -165,10 +168,15 @@ def inject_prompt_issue_context(
     if config is None or config.issues.kind not in {"github", "jira"}:
         return 0
 
+    context_parts: list[str] = []
+    commit_context = build_prompt_commit_context(config, prompt_text)
+
     repo = None
     if config.issues.kind == "github":
         repo = github_repo_for_config(config, runner=runner)
         if repo is None:
+            if commit_context:
+                emit_user_prompt_context([commit_context], stdout=stdout)
             return 0
 
     prompt_numbers = extract_issue_numbers(
@@ -176,48 +184,27 @@ def inject_prompt_issue_context(
         repo=repo,
         issue_id_format=config.issue_id_format,
     )
-    pending_numbers = _sort_issue_tokens(read_session_issues(config.root, session_id, "pending"))
-    issue_numbers = _ordered_issue_union(
-        pending_numbers,
-        prompt_numbers,
-        issue_id_format=config.issue_id_format,
-    )
+    issue_numbers = _ordered_issue_union(prompt_numbers, issue_id_format=config.issue_id_format)
     if not issue_numbers:
+        if commit_context:
+            emit_user_prompt_context([commit_context], stdout=stdout)
         return 0
-
-    record_session_issues(config.root, session_id, issue_numbers, "mentioned")
 
     already_announced = read_session_issues(config.root, session_id, "announced")
     contexts = cache_issue_references(config, issue_numbers, repo=repo, runner=runner)
     fresh_contexts = [context for context in contexts if context.number not in already_announced]
-    if pending_numbers and contexts:
-        remove_session_issues(
+    if fresh_contexts:
+        record_session_issues(
             config.root,
             session_id,
-            [context.number for context in contexts],
-            "pending",
+            [context.number for context in fresh_contexts],
+            "announced",
         )
-    if not fresh_contexts:
-        return 0
-
-    record_session_issues(
-        config.root,
-        session_id,
-        [context.number for context in fresh_contexts],
-        "announced",
-    )
-    emit_json(
-        {
-            "hookSpecificOutput": {
-                "hookEventName": "UserPromptSubmit",
-                "additionalContext": format_issue_cache_context(
-                    fresh_contexts,
-                    include_details=False,
-                ),
-            }
-        },
-        stdout=stdout,
-    )
+        context_parts.append(format_issue_cache_context(fresh_contexts, include_details=False))
+    if commit_context:
+        context_parts.append(commit_context)
+    if context_parts:
+        emit_user_prompt_context(context_parts, stdout=stdout)
     return 0
 
 
@@ -230,40 +217,11 @@ def record_stop_issue_references(
     stdout: TextIO | None = None,
     runner: CommandRunner | None = None,
 ) -> int:
-    """Record issue refs known to this session as pending."""
+    """Keep Stop silent and avoid carrying issue refs into the next prompt."""
 
-    if stop_hook_active:
-        return 0
-    # Stop hook JSON output is reserved for block decisions. Context injection
-    # happens in UserPromptSubmit so Stop can never fail host output validation.
-    _ = stdout
-
-    config = workflow_config_for_project(project_dir)
-    if config is None or config.issues.kind not in {"github", "jira"}:
-        return 0
-
-    repo = None
-    if config.issues.kind == "github":
-        repo = github_repo_for_config(config, runner=runner)
-        if repo is None:
-            return 0
-
-    issue_numbers = _sort_issue_tokens(read_session_issues(config.root, session_id, "mentioned"))
-    for number in extract_issue_numbers(
-        scan_text,
-        repo=repo,
-        issue_id_format=config.issue_id_format,
-    ):
-        normalized = _normalize_issue_token(number, issue_id_format=config.issue_id_format)
-        if normalized and normalized not in issue_numbers:
-            issue_numbers.append(normalized)
-    if not issue_numbers:
-        return 0
-
-    record_session_issues(config.root, session_id, issue_numbers, "mentioned")
-    already_announced = read_session_issues(config.root, session_id, "announced")
-    pending_numbers = [number for number in issue_numbers if number not in already_announced]
-    record_session_issues(config.root, session_id, pending_numbers, "pending")
+    # Stop hook JSON output is reserved for block decisions. Provider/cache
+    # context injection is prompt-local only.
+    _ = project_dir, session_id, scan_text, stop_hook_active, stdout, runner
     return 0
 
 
@@ -317,6 +275,36 @@ def build_issue_operation_policy(config: WorkflowConfig) -> str:
         f"Workflow issues use the `{config.issues.kind}` provider, not GitHub. "
         "If the operator cannot complete a provider operation, report that "
         "limitation rather than reaching for provider-specific tools directly."
+    )
+
+
+def build_prompt_commit_context(config: WorkflowConfig, prompt_text: str) -> str:
+    """Build terse commit guidance when a user prompt asks about commits."""
+
+    if not config.commit_refs.enabled:
+        return ""
+    if not COMMIT_PROMPT_PATTERN.search(prompt_text):
+        return ""
+    if config.issues.kind == "github":
+        example = "#54"
+    elif config.issues.kind == "jira":
+        example = "PROJ-123"
+    else:
+        return ""
+    return f"Workflow commit: prefix subject with provider issue ref (e.g. {example})."
+
+
+def emit_user_prompt_context(context_parts: list[str], *, stdout: TextIO | None = None) -> None:
+    """Emit a single UserPromptSubmit additionalContext payload."""
+
+    emit_json(
+        {
+            "hookSpecificOutput": {
+                "hookEventName": "UserPromptSubmit",
+                "additionalContext": "\n\n".join(part for part in context_parts if part),
+            }
+        },
+        stdout=stdout,
     )
 
 
@@ -432,12 +420,3 @@ def _normalize_issue_token(issue: str, *, issue_id_format: str) -> str | None:
         return normalize_issue_number(issue)
     except Exception:
         return None
-
-
-def _sort_issue_tokens(values: set[str]) -> list[str]:
-    def key(value: str) -> tuple[int, str, int]:
-        if value.isdigit():
-            return (0, "", int(value))
-        return (1, value, 0)
-
-    return sorted(values, key=key)

@@ -3,9 +3,8 @@
 
 Tracks per-(project, session) ledgers under ``.workflow-cache/hook-state/``:
 
-- announced/mentioned/pending issue lists, used by ``UserPromptSubmit`` and
-  ``Stop`` to dedupe issue cache injection and carry pending refs across
-  turns.
+- announced issue lists, used by ``UserPromptSubmit`` to dedupe issue cache
+  injection.
 - a per-(runtime, session) marker file used by ``SessionStart`` to inject the
   workflow policy at most once per session unless ``source == clear``
   triggers a re-injection.

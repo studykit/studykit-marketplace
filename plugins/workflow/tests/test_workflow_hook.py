@@ -994,6 +994,33 @@ def test_user_prompt_caches_issue_and_injects_project_relative_path(
     ).is_file()
 
 
+def test_user_prompt_injects_github_commit_prefix_hint_without_issue_fetch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner({})
+
+    captured = io.StringIO()
+    event_payload = parse_codex_event_payload(
+        {
+            "session_id": "commit-s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "Please commit the staged workflow changes.",
+        },
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
+
+    payload = json.loads(captured.getvalue())
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert context == "Workflow commit: prefix subject with provider issue ref (e.g. #54)."
+    assert runner.requests == []
+
+
 def test_user_prompt_caches_jira_issue_and_injects_snapshot_path(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1047,6 +1074,33 @@ def test_user_prompt_caches_jira_issue_and_injects_snapshot_path(
     ).is_file()
 
 
+def test_user_prompt_injects_jira_commit_prefix_hint_without_issue_fetch(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_jira_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner({})
+
+    captured = io.StringIO()
+    event_payload = parse_codex_event_payload(
+        {
+            "session_id": "jira-commit-s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "커밋 준비",
+        },
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
+
+    payload = json.loads(captured.getvalue())
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert context == "Workflow commit: prefix subject with provider issue ref (e.g. PROJ-123)."
+    assert runner.requests == []
+
+
 def test_user_prompt_dedupes_announced_issue_paths_within_session(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -1082,7 +1136,7 @@ def test_user_prompt_dedupes_announced_issue_paths_within_session(
     assert second.getvalue() == ""
 
 
-def test_user_prompt_injects_explicit_issue_and_pending_issues(
+def test_user_prompt_ignores_stop_pending_issue_state(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1091,18 +1145,10 @@ def test_user_prompt_injects_explicit_issue_and_pending_issues(
     record_session_issues(tmp_path, "s1", ["33", "45"], "pending")
     runner = FakeRunner(
         {
-            gh_issue_view_args(33): result(
-                gh_issue_view_args(33),
-                stdout=json.dumps(issue_payload(33, title="Pending issue 33")),
-            ),
             gh_issue_view_args(39): result(
                 gh_issue_view_args(39),
                 stdout=json.dumps(issue_payload(39, title="Requested issue")),
             ),
-            gh_issue_view_args(45): result(
-                gh_issue_view_args(45),
-                stdout=json.dumps(issue_payload(45, title="Pending issue 45")),
-            )
         }
     )
 
@@ -1123,21 +1169,15 @@ def test_user_prompt_injects_explicit_issue_and_pending_issues(
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert context == "\n".join(
         [
-            "Workflow issue cache: `.workflow-cache/issues/`",
-            "- #33 → `33/issue.md`",
-            "- #45 → `45/issue.md`",
-            "- #39 → `39/issue.md`",
+            "Workflow issue cache:",
+            "- #39 → `.workflow-cache/issues/39/issue.md`",
         ]
     )
     assert [request.args for request in runner.requests] == [
-        gh_issue_view_args(33),
-        *empty_relationship_read_args(33),
-        gh_issue_view_args(45),
-        *empty_relationship_read_args(45),
         gh_issue_view_args(39),
         *empty_relationship_read_args(39),
     ]
-    assert not (
+    assert (
         tmp_path
         / ".workflow-cache"
         / "hook-state"
@@ -1194,7 +1234,7 @@ dependencies:
     )
 
 
-def test_stop_records_pending_issue_reference_without_provider_read_or_output(
+def test_stop_does_not_carry_issue_refs_to_next_user_prompt(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1230,7 +1270,7 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
         / "hook-state"
         / "workflow-pending-issues-s2.txt"
     )
-    assert pending_file.read_text(encoding="utf-8") == "46\n"
+    assert not pending_file.exists()
     issue_file = (
         tmp_path
         / ".workflow-cache"
@@ -1253,14 +1293,9 @@ def test_stop_records_pending_issue_reference_without_provider_read_or_output(
     assert isinstance(follow_event, CodexUserPromptSubmitPayload)
     assert user_prompt_submit(follow_event, stdout=prompt_context, runner=runner) == 0
 
-    assert issue_file.is_file()
+    assert not issue_file.exists()
     assert not pending_file.exists()
-    payload = json.loads(prompt_context.getvalue())
-    context = payload["hookSpecificOutput"]["additionalContext"]
-    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
-    assert "- #46 → `.workflow-cache/issues/46/issue.md`" in context
-    assert "open" not in context
-    assert "Stop hook cache finalization" not in context
+    assert prompt_context.getvalue() == ""
 
 
 def test_session_start_emits_nothing_for_invalid_config(
