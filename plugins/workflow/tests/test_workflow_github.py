@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 import sys
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
 
 import pytest
 
@@ -16,7 +16,7 @@ if str(_SCRIPTS_DIR) not in sys.path:
 
 from workflow_command import CommandRequest, CommandResult, MissingCommandError  # noqa: E402
 from workflow_command import WorkflowCommandError  # noqa: E402
-from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubGuardError, GitHubParseError  # noqa: E402
+from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubParseError  # noqa: E402
 from workflow_github import GitHubVerificationError  # noqa: E402
 from workflow_github import close_issue, comment_issue, create_issue, edit_issue, edit_issue_body  # noqa: E402
 from workflow_github import issue_body_edit_history, issue_timeline  # noqa: E402
@@ -63,13 +63,6 @@ def gh_issue_view_args(issue: int | str, fields: tuple[str, ...]) -> tuple[str, 
         "--json",
         ",".join(fields),
     )
-
-
-def allow_guard(calls: list[tuple[str, Mapping[str, Any]]]):
-    def guard(operation: str, payload: Mapping[str, Any]) -> None:
-        calls.append((operation, payload))
-
-    return guard
 
 
 def _config_path(project: Path) -> Path:
@@ -215,23 +208,7 @@ def test_body_edit_history_uses_graphql_user_content_edits(tmp_path: Path) -> No
     assert history["body_edit_history"]["userContentEdits"]["nodes"][0]["diff"] == "@@"
 
 
-def test_write_operations_require_guard(tmp_path: Path) -> None:
-    runner = FakeRunner(
-        {
-            git_args(tmp_path, "remote", "get-url", "origin"): result(
-                git_args(tmp_path, "remote", "get-url", "origin"),
-                stdout="git@github.com:studykit/studykit-plugins.git\n",
-            )
-        }
-    )
-
-    with pytest.raises(GitHubGuardError):
-        comment_issue(38, body="done", project=tmp_path, guard=None, runner=runner)  # type: ignore[arg-type]
-
-
-def test_comment_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
+def test_comment_issue_uses_body_file(tmp_path: Path) -> None:
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -242,7 +219,6 @@ def test_comment_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
         if request.args[:3] == ("gh", "issue", "comment"):
             body_file = Path(request.args[request.args.index("--body-file") + 1])
             assert body_file.read_text(encoding="utf-8") == "Implemented wrapper."
-            assert guard_calls
             return CommandResult(request=request, returncode=0)
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
@@ -250,18 +226,13 @@ def test_comment_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
         38,
         body="Implemented wrapper.",
         project=tmp_path,
-        guard=allow_guard(guard_calls),
         runner=runner,
     )
 
     assert result_payload["operation"] == "comment_issue"
-    assert guard_calls[0][0] == "comment_issue"
-    assert guard_calls[0][1]["issue"] == "38"
 
 
 def test_create_issue_verifies_after_write(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -275,7 +246,6 @@ def test_create_issue_verifies_after_write(tmp_path: Path) -> None:
             assert "--title" in request.args
             assert request.args[request.args.index("--title") + 1] == "Draft issue"
             assert request.args.count("--label") == 2
-            assert guard_calls
             return CommandResult(
                 request=request,
                 returncode=0,
@@ -302,18 +272,13 @@ def test_create_issue_verifies_after_write(tmp_path: Path) -> None:
         body="Draft body.",
         labels=("task", "workflow"),
         project=tmp_path,
-        guard=allow_guard(guard_calls),
         runner=runner,
     )
 
     assert result_payload == {"operation": "create_issue", "issue": "51", "verified": True}
-    assert guard_calls[0][0] == "create_issue"
-    assert guard_calls[0][1]["title"] == "Draft issue"
 
 
 def test_edit_issue_body_verifies_after_write(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -324,7 +289,6 @@ def test_edit_issue_body_verifies_after_write(tmp_path: Path) -> None:
         if request.args[:3] == ("gh", "issue", "edit"):
             body_file = Path(request.args[request.args.index("--body-file") + 1])
             assert body_file.read_text(encoding="utf-8") == "Updated body."
-            assert guard_calls
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(38, ("body",)):
             return CommandResult(
@@ -338,18 +302,13 @@ def test_edit_issue_body_verifies_after_write(tmp_path: Path) -> None:
         38,
         body="Updated body.",
         project=tmp_path,
-        guard=allow_guard(guard_calls),
         runner=runner,
     )
 
     assert result_payload == {"operation": "edit_issue_body", "issue": "38", "verified": True}
-    assert guard_calls[0][0] == "edit_issue_body"
-    assert guard_calls[0][1]["issue"] == "38"
 
 
 def test_edit_issue_reconciles_title_body_and_labels(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -363,7 +322,6 @@ def test_edit_issue_reconciles_title_body_and_labels(tmp_path: Path) -> None:
             assert request.args[request.args.index("--title") + 1] == "Updated title"
             assert ("--add-label", "workflow") in zip(request.args, request.args[1:])
             assert ("--remove-label", "old") in zip(request.args, request.args[1:])
-            assert guard_calls
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(38, ("title", "body", "labels")):
             return CommandResult(
@@ -386,18 +344,13 @@ def test_edit_issue_reconciles_title_body_and_labels(tmp_path: Path) -> None:
         labels=("task", "workflow"),
         current_labels=("task", "old"),
         project=tmp_path,
-        guard=allow_guard(guard_calls),
         runner=runner,
     )
 
     assert result_payload == {"operation": "edit_issue", "issue": "38", "verified": True}
-    assert guard_calls[0][0] == "edit_issue"
-    assert guard_calls[0][1]["issue"] == "38"
 
 
 def test_close_issue_verifies_after_write(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -415,7 +368,6 @@ def test_close_issue_verifies_after_write(tmp_path: Path) -> None:
             "--reason",
             "completed",
         ):
-            assert guard_calls
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(38, ("state", "stateReason")):
             return CommandResult(
@@ -428,18 +380,13 @@ def test_close_issue_verifies_after_write(tmp_path: Path) -> None:
     result_payload = close_issue(
         38,
         project=tmp_path,
-        guard=allow_guard(guard_calls),
         runner=runner,
     )
 
     assert result_payload == {"operation": "close_issue", "issue": "38", "verified": True}
-    assert guard_calls[0][0] == "close_issue"
-    assert guard_calls[0][1]["issue"] == "38"
 
 
-def test_reopen_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
+def test_reopen_issue_verifies_after_write(tmp_path: Path) -> None:
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -455,7 +402,6 @@ def test_reopen_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
             "--repo",
             "studykit/studykit-plugins",
         ):
-            assert guard_calls
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(38, ("state", "stateReason")):
             return CommandResult(
@@ -468,18 +414,13 @@ def test_reopen_issue_runs_guard_before_gh_write(tmp_path: Path) -> None:
     result_payload = reopen_issue(
         38,
         project=tmp_path,
-        guard=allow_guard(guard_calls),
         runner=runner,
     )
 
     assert result_payload == {"operation": "reopen_issue", "issue": "38", "verified": True}
-    assert guard_calls[0][0] == "reopen_issue"
-    assert guard_calls[0][1]["issue"] == "38"
 
 
 def test_close_issue_raises_when_verification_fails(tmp_path: Path) -> None:
-    guard_calls: list[tuple[str, Mapping[str, Any]]] = []
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == git_args(tmp_path, "remote", "get-url", "origin"):
             return CommandResult(
@@ -501,11 +442,8 @@ def test_close_issue_raises_when_verification_fails(tmp_path: Path) -> None:
         close_issue(
             38,
             project=tmp_path,
-            guard=allow_guard(guard_calls),
-            runner=runner,
+                runner=runner,
         )
-
-    assert guard_calls[0][0] == "close_issue"
 
 
 def test_missing_gh_tool_is_reported(tmp_path: Path) -> None:

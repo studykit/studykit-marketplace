@@ -18,7 +18,6 @@ from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_config import load_workflow_config  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
 from workflow_jira import JiraDataCenterIssueCache, jira_data_center_site_from_provider_config  # noqa: E402
-from workflow_providers import ProviderRequest  # noqa: E402
 
 
 def repo() -> GitHubRepository:
@@ -155,7 +154,7 @@ def jira_remote_links_url(issue: str = "TM-1234") -> str:
     return f"https://jira.daumkakao.com/rest/api/2/issue/{issue}/remotelink"
 
 
-def test_cache_comments_script_dispatches_guarded_pending_comment_append(tmp_path: Path) -> None:
+def test_cache_comments_script_dispatches_pending_comment_append(tmp_path: Path) -> None:
     write_config(tmp_path)
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-14T00:10:00Z")
@@ -171,11 +170,6 @@ Pending comment body.
 """,
         encoding="utf-8",
     )
-    guard_calls: list[ProviderRequest] = []
-
-    def guard(request: ProviderRequest) -> None:
-        guard_calls.append(request)
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args[:3] == ("gh", "issue", "comment"):
             body_file = Path(request.args[request.args.index("--body-file") + 1])
@@ -188,10 +182,9 @@ Pending comment body.
     stdout = io.StringIO()
 
     code = cache_comments_main(
-        ["--project", str(tmp_path), "--session", "s1", "--type", "task", "--json", "43"],
+        ["--project", str(tmp_path), "--type", "task", "--json", "43"],
         stdout=stdout,
         runner=runner,
-        guard=guard,
     )
 
     payload = json.loads(stdout.getvalue())
@@ -200,8 +193,6 @@ Pending comment body.
     assert payload["issues"][0]["operation"] == "append_pending_comments"
     assert payload["issues"][0]["issue"] == "43"
     assert payload["issues"][0]["appended"] == 1
-    assert guard_calls[0].operation == "add_comment"
-    assert guard_calls[0].payload["from_pending"] is True
     assert not pending_file.exists()
 
 
@@ -248,18 +239,12 @@ def test_cache_comments_script_dispatches_jira_pending_comment_append(tmp_path: 
             return response.pop(0)
         return response
 
-    guard_calls: list[ProviderRequest] = []
-
-    def guard(request: ProviderRequest) -> None:
-        guard_calls.append(request)
-
     stdout = io.StringIO()
 
     code = cache_comments_main(
-        ["--project", str(tmp_path), "--session", "s1", "--type", "task", "--json", "tm-1234"],
+        ["--project", str(tmp_path), "--type", "task", "--json", "tm-1234"],
         stdout=stdout,
         runner=runner,
-        guard=guard,
     )
 
     payload = json.loads(stdout.getvalue())
@@ -270,9 +255,6 @@ def test_cache_comments_script_dispatches_jira_pending_comment_append(tmp_path: 
     assert payload["issues"][0]["operation"] == "append_pending_comments"
     assert payload["issues"][0]["issue"] == "TM-1234"
     assert payload["issues"][0]["appended"] == 1
-    assert guard_calls[0].kind == "jira"
-    assert guard_calls[0].operation == "add_comment"
-    assert guard_calls[0].payload["from_pending"] is True
     assert not pending_file.exists()
     write_request = runner_requests[1]
     assert write_request.args == curl_write_args()

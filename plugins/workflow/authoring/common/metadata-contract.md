@@ -94,6 +94,6 @@ Before creating or editing any workflow artifact:
 
 1. Run the authoring resolver.
 2. Read every authoring file returned by the resolver.
-3. Write only after the current session ledger records those reads.
+3. Draft the change from those contracts, then run the requested provider or cache operation.
 
 Authoring contracts are plugin-bundled Markdown files. Resolver output must use absolute paths.

@@ -4,40 +4,25 @@ Workflow hooks dispatch through runtime-specific entry scripts. Both scripts
 dispatch from the payload `hook_event_name` and own their runtime-specific
 payload/env extraction. They call common plain functions from
 `../scripts/workflow_hook.py` for shared workflow behavior such as policy
-injection, authoring ledger updates, local projection guards, and issue-cache
-context.
+injection, provider cache projection protection, and issue-cache context.
 
 The Codex manifest registers only `SessionStart`, `UserPromptSubmit`, and
-`Stop`. The Claude-side `PostToolUse` Read ledger and `PreToolUse` write
-guard are intentionally not wired on Codex: Codex has no built-in `Read`
-tool (reads happen through `Bash` or MCP), so the read ledger cannot be
-populated and the matching write guard would block unconditionally.
+`Stop`. Claude also registers `PreToolUse` for provider cache projection
+protection. Authoring read tracking is not hook-enforced in either runtime.
 
 When either runtime script writes hook output to stdout, it writes JSON only.
 Empty stdout is used for no-op hook runs.
 
-## PostToolUse Read (Claude only)
-
-`PostToolUse` on `Read` records the read.
-
-Behavior:
-
-- Records reads of plugin-bundled workflow authoring files under `../authoring/`.
-- Records paths by absolute path in the session read ledger.
-- Emits nothing on success.
-- Emits nothing outside configured workflow projects.
-
 ## PreToolUse Write/Edit (Claude only)
 
-`PreToolUse` on file writes checks the write.
+`PreToolUse` on file writes protects provider cache issue body projections.
 
 Behavior:
 
-- Checks local workflow projection writes before mutation.
-- Uses the shared resolver and ledger guard.
-- Blocks the write when required authoring files are missing.
-- The block message lists absolute authoring file paths to read.
-- Emits nothing for non-workflow projects or non-projection writes.
+- Allows normal workflow artifact writes without hidden authoring read checks.
+- Blocks provider cache issue body writes when the projection is missing.
+- Blocks provider cache issue body writes that alter projection-owned YAML frontmatter.
+- Emits nothing for non-workflow projects or safe body-only writes.
 
 ## SessionStart
 
@@ -57,7 +42,7 @@ Behavior:
 - For GitHub issue providers, the policy adds that the main assistant does not run raw `gh` for workflow operations; the operator runs workflow scripts and may fall back to raw `gh` internally. It also tells the main assistant to edit cached `issue.md` projections before delegating write-back for cached issue body edits.
 - For filesystem issue providers, the policy adds that workflow issues are local Markdown artifacts edited directly at the paths the operator returns; provider cache, write-back, and comment-append delegation does not apply.
 - For other providers, the policy tells the main assistant to report any limitation when the operator cannot complete a provider operation, rather than reaching for provider-specific tools directly.
-- Detailed authoring resolver, ledger, guard, `NONE` convention, and script command syntax are not injected here — those live in `../agents/workflow-operator.md` and are discovered when the operator is consulted.
+- Detailed authoring resolver, `NONE` convention, and script command syntax are not injected here — those live in `../agents/workflow-operator.md` and are discovered when the operator is consulted.
 - The hook always exits `0`.
 
 ## UserPromptSubmit

@@ -16,7 +16,7 @@ Key files:
 - `hooks/hooks.json` — Claude hook declarations.
 - `hooks/hooks.codex.json` — Codex hook declarations.
 - `agents/workflow-operator.md` — operator agent instructions.
-- `scripts/` — provider, cache, authoring, ledger, guard, and hook scripts.
+- `scripts/` — provider, cache, authoring resolver, and hook scripts.
 - `authoring/` — workflow artifact authoring contracts.
 
 Use `hooks/README.md` for hook-specific behavior. Use
@@ -92,16 +92,6 @@ Resolve authoring files:
   --json
 ```
 
-Check the session authoring guard:
-
-```bash
-"./plugins/workflow/scripts/workflow" authoring_guard.py \
-  --type review \
-  --role issue \
-  --provider github \
-  --json
-```
-
 ## Workflow Operator
 
 The main assistant delegates workflow provider/cache operations to
@@ -110,10 +100,10 @@ The main assistant delegates workflow provider/cache operations to
 Use the operator for:
 
 - Cache-aware provider reads.
-- Guarded GitHub issue writes.
+- GitHub issue writes through workflow commands.
 - Local issue projection write-back.
 - Pending local comment or relationship apply.
-- Authoring resolver, ledger, and guard operations.
+- Authoring resolver operations.
 - Provider mutation verification and cache refresh.
 
 The operator returns operational metadata, paths, relationship metadata, and
@@ -129,9 +119,8 @@ Session hooks are intentionally concise:
 - `UserPromptSubmit` prepares cache projections for mentioned GitHub issue
   references and injects project-relative cache paths.
 - `Stop` records mentioned issue references as pending for the next prompt.
-- `PostToolUse` on reads records authoring file reads in the session ledger.
-- `PreToolUse` on writes blocks local projection writes until required
-  authoring files were read.
+- `PreToolUse` on writes protects provider cache issue body projections from
+  unsafe frontmatter edits.
 
 Non-workflow projects receive no workflow hook output.
 

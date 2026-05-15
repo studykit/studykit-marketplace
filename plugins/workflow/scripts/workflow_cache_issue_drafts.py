@@ -9,18 +9,16 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Callable
 from pathlib import Path
-from typing import Mapping, TextIO
+from typing import TextIO
 
 from workflow_cache import GitHubIssueCache, SCHEMA_VERSION, _atomic_write_text, _dump_yaml, _format_markdown
 from workflow_command import CommandRunner
 from workflow_config import WorkflowConfig, WorkflowConfigError, load_workflow_config
-from workflow_env import detect_shell_runtime, workflow_project_dir_from_env, workflow_session_id_from_env
+from workflow_env import workflow_project_dir_from_env
 from workflow_github import GitHubRepositoryError, resolve_github_repository
 from workflow_jira import JiraDataCenterIssueCache, JiraProviderError, resolve_jira_data_center_site
-from workflow_providers import ProviderDispatcher, ProviderRequest, default_provider_registry
-from workflow_providers import authoring_guard_callback, request_from_config
+from workflow_providers import ProviderDispatcher, default_provider_registry, request_from_config
 
 
 class WorkflowCacheIssueDraftError(RuntimeError):
@@ -109,23 +107,18 @@ def create_pending_issue(
     project: Path,
     local_id: str,
     artifact_type: str,
-    session_id: str,
-    state_dir: Path | None = None,
     runner: CommandRunner | None = None,
-    guard: Callable[[ProviderRequest], None] | None = None,
 ) -> dict[str, object]:
     """Create a provider issue from an existing pending issue draft."""
 
     config = _load_issue_config(project)
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard or authoring_guard_callback())
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
     request = request_from_config(
         config,
         role="issue",
         operation="create",
         artifact_type=artifact_type,
         payload={"pending_local_id": _required_text(local_id, "local id")},
-        session_id=session_id,
-        state_dir=state_dir,
     )
     response = dispatcher.dispatch(request)
     return dict(response.payload)
@@ -230,9 +223,7 @@ def build_parser() -> argparse.ArgumentParser:
     prepare.add_argument("--replace", action="store_true")
 
     create = subparsers.add_parser("create", help="create a provider issue from a pending draft")
-    create.add_argument("--type", default="task", help="workflow artifact type for provider authoring context")
-    create.add_argument("--session", help="workflow session id; defaults to WORKFLOW_SESSION_ID")
-    create.add_argument("--state-dir", type=Path, help="authoring ledger state directory for guarded runtimes")
+    create.add_argument("--type", default="task", help="workflow artifact type")
     create.add_argument("local_id")
 
     relationships = subparsers.add_parser(
@@ -259,8 +250,6 @@ def main(
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
     runner: CommandRunner | None = None,
-    guard: Callable[[ProviderRequest], None] | None = None,
-    environ: Mapping[str, str] | None = None,
 ) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -285,10 +274,7 @@ def main(
                 project=args.project,
                 local_id=args.local_id,
                 artifact_type=args.type,
-                session_id=args.session or workflow_session_id_from_env(),
-                state_dir=args.state_dir,
                 runner=runner,
-                guard=guard or _default_create_guard(environ=environ),
             )
         elif args.command == "stage-relationships":
             payload = stage_pending_issue_relationships(
@@ -313,18 +299,6 @@ def main(
     else:
         _print_plain(payload, output)
     return 0
-
-
-def _default_create_guard(*, environ: Mapping[str, str] | None = None) -> Callable[[ProviderRequest], None]:
-    """Return the default provider-write guard for the shell runtime."""
-
-    if detect_shell_runtime(environ=environ).name == "codex":
-        return _allow_provider_write_without_authoring_ledger
-    return authoring_guard_callback()
-
-
-def _allow_provider_write_without_authoring_ledger(_request: ProviderRequest) -> None:
-    """Allow Codex shell writes when no authoring-read ledger can be populated."""
 
 
 def _load_issue_config(project: Path) -> WorkflowConfig:

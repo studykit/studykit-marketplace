@@ -11,18 +11,15 @@ import json
 import re
 import sys
 import tempfile
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 from urllib.parse import urlparse
 
-from authoring_guard import evaluate_authoring_guard
-from authoring_ledger import LedgerError
-from authoring_resolver import ResolverError
 from workflow_command import CommandRunner, WorkflowCommandError, run_command
 from workflow_config import WorkflowConfigError, load_workflow_config
-from workflow_env import workflow_project_dir_from_env, workflow_session_id_from_env
+from workflow_env import workflow_project_dir_from_env
 
 
 DEFAULT_ISSUE_FIELDS = (
@@ -70,10 +67,6 @@ class GitHubRepositoryError(ValueError):
     """Raised when a GitHub repository context cannot be resolved."""
 
 
-class GitHubGuardError(PermissionError):
-    """Raised when a write operation lacks or fails an authoring guard."""
-
-
 class GitHubVerificationError(RuntimeError):
     """Raised when a GitHub write cannot be verified after mutation."""
 
@@ -92,22 +85,6 @@ class GitHubRepository:
 
     def to_json(self) -> dict[str, str]:
         return {"host": self.host, "owner": self.owner, "repo": self.name, "slug": self.slug}
-
-
-@dataclass(frozen=True)
-class AuthoringGuardSpec:
-    """Arguments needed to enforce the workflow authoring read guard."""
-
-    artifact_type: str
-    project: Path
-    session_id: str
-    role: str | None = "issue"
-    provider: str | None = "github"
-    state_dir: Path | None = None
-    require_config: bool = True
-
-
-WriteGuard = Callable[[str, Mapping[str, Any]], None]
 
 
 def resolve_github_repository(
@@ -193,22 +170,16 @@ def create_issue(
     title: str,
     body: str,
     project: Path,
-    guard: WriteGuard,
     labels: tuple[str, ...] = (),
     state: str = "open",
     state_reason: str | None = None,
     verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Create an issue after the caller-provided guard allows the write."""
+    """Create an issue."""
 
     repo = resolve_github_repository(project, runner=runner)
     normalized_state = _normalize_issue_state(state)
-    _require_write_guard(
-        guard,
-        "create_issue",
-        {"repository": repo.to_json(), "title": title, "labels": list(labels), "state": normalized_state},
-    )
     with _body_file(body) as body_file:
         args = [
             "issue",
@@ -259,7 +230,6 @@ def edit_issue(
     issue: int | str,
     *,
     project: Path,
-    guard: WriteGuard,
     title: str | None = None,
     body: str | None = None,
     labels: tuple[str, ...] | None = None,
@@ -268,21 +238,10 @@ def edit_issue(
     verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Edit issue title, body, and labels after the caller-provided guard allows the write."""
+    """Edit issue title, body, and labels."""
 
     repo = resolve_github_repository(project, runner=runner)
     issue_number = normalize_issue_number(issue)
-    _require_write_guard(
-        guard,
-        operation,
-        {
-            "repository": repo.to_json(),
-            "issue": issue_number,
-            "title": title,
-            "labels": list(labels) if labels is not None else None,
-        },
-    )
-
     label_edits = _label_edit_args(
         repo,
         issue_number,
@@ -324,17 +283,15 @@ def edit_issue_body(
     *,
     body: str,
     project: Path,
-    guard: WriteGuard,
     verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Replace an issue body after the caller-provided guard allows the write."""
+    """Replace an issue body."""
 
     payload = edit_issue(
         issue,
         body=body,
         project=project,
-        guard=guard,
         operation="edit_issue_body",
         verify=verify,
         runner=runner,
@@ -347,18 +304,12 @@ def comment_issue(
     *,
     body: str,
     project: Path,
-    guard: WriteGuard,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Add an issue comment after the caller-provided guard allows the write."""
+    """Add an issue comment."""
 
     repo = resolve_github_repository(project, runner=runner)
     issue_number = normalize_issue_number(issue)
-    _require_write_guard(
-        guard,
-        "comment_issue",
-        {"repository": repo.to_json(), "issue": issue_number},
-    )
     with _body_file(body) as body_file:
         _gh(
             ["issue", "comment", issue_number, "--repo", repo.slug, "--body-file", str(body_file)],
@@ -374,19 +325,13 @@ def close_issue(
     project: Path,
     reason: str = "completed",
     comment: str | None = None,
-    guard: WriteGuard,
     verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Close an issue after the caller-provided guard allows the write."""
+    """Close an issue."""
 
     repo = resolve_github_repository(project, runner=runner)
     issue_number = normalize_issue_number(issue)
-    _require_write_guard(
-        guard,
-        "close_issue",
-        {"repository": repo.to_json(), "issue": issue_number, "reason": reason},
-    )
     args = ["issue", "close", issue_number, "--repo", repo.slug, "--reason", reason]
     if comment:
         args.extend(["--comment", comment])
@@ -408,19 +353,13 @@ def reopen_issue(
     *,
     project: Path,
     comment: str | None = None,
-    guard: WriteGuard,
     verify: bool = True,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Reopen an issue after the caller-provided guard allows the write."""
+    """Reopen an issue."""
 
     repo = resolve_github_repository(project, runner=runner)
     issue_number = normalize_issue_number(issue)
-    _require_write_guard(
-        guard,
-        "reopen_issue",
-        {"repository": repo.to_json(), "issue": issue_number},
-    )
     args = ["issue", "reopen", issue_number, "--repo", repo.slug]
     if comment:
         args.extend(["--comment", comment])
@@ -442,25 +381,14 @@ def add_sub_issue(
     child_issue: int | str,
     *,
     project: Path,
-    guard: WriteGuard,
     replace_parent: bool = False,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Add a GitHub sub-issue after the caller-provided guard allows the write."""
+    """Add a GitHub sub-issue."""
 
     repo = resolve_github_repository(project, runner=runner)
     parent_number = normalize_issue_number(parent_issue)
     child_number = normalize_issue_number(child_issue)
-    _require_write_guard(
-        guard,
-        "add_sub_issue",
-        {
-            "repository": repo.to_json(),
-            "parent_issue": parent_number,
-            "child_issue": child_number,
-            "replace_parent": replace_parent,
-        },
-    )
     child_id = issue_rest_id(child_number, project=project, runner=runner)
     args = [
         "api",
@@ -485,19 +413,13 @@ def remove_sub_issue(
     child_issue: int | str,
     *,
     project: Path,
-    guard: WriteGuard,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
-    """Remove a GitHub sub-issue after the caller-provided guard allows the write."""
+    """Remove a GitHub sub-issue."""
 
     repo = resolve_github_repository(project, runner=runner)
     parent_number = normalize_issue_number(parent_issue)
     child_number = normalize_issue_number(child_issue)
-    _require_write_guard(
-        guard,
-        "remove_sub_issue",
-        {"repository": repo.to_json(), "parent_issue": parent_number, "child_issue": child_number},
-    )
     child_id = issue_rest_id(child_number, project=project, runner=runner)
     _gh(
         [
@@ -523,7 +445,6 @@ def add_issue_dependency(
     blocking_issue: int | str,
     *,
     project: Path,
-    guard: WriteGuard,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
     """Add a GitHub dependency where ``issue`` is blocked by ``blocking_issue``."""
@@ -531,11 +452,6 @@ def add_issue_dependency(
     repo = resolve_github_repository(project, runner=runner)
     issue_number = normalize_issue_number(issue)
     blocking_number = normalize_issue_number(blocking_issue)
-    _require_write_guard(
-        guard,
-        "add_issue_dependency",
-        {"repository": repo.to_json(), "issue": issue_number, "blocking_issue": blocking_number},
-    )
     blocking_id = issue_rest_id(blocking_number, project=project, runner=runner)
     _gh(
         [
@@ -561,7 +477,6 @@ def remove_issue_dependency(
     blocking_issue: int | str,
     *,
     project: Path,
-    guard: WriteGuard,
     runner: CommandRunner | None = None,
 ) -> dict[str, Any]:
     """Remove a GitHub dependency where ``issue`` is blocked by ``blocking_issue``."""
@@ -569,11 +484,6 @@ def remove_issue_dependency(
     repo = resolve_github_repository(project, runner=runner)
     issue_number = normalize_issue_number(issue)
     blocking_number = normalize_issue_number(blocking_issue)
-    _require_write_guard(
-        guard,
-        "remove_issue_dependency",
-        {"repository": repo.to_json(), "issue": issue_number, "blocking_issue": blocking_number},
-    )
     blocking_id = issue_rest_id(blocking_number, project=project, runner=runner)
     _gh(
         [
@@ -984,36 +894,6 @@ def issue_body_edit_history(
     }
 
 
-def authoring_write_guard(spec: AuthoringGuardSpec) -> WriteGuard:
-    """Build a write guard that enforces the workflow authoring read ledger."""
-
-    def guard(operation: str, payload: Mapping[str, Any]) -> None:
-        try:
-            result = evaluate_authoring_guard(
-                spec.artifact_type,
-                project=spec.project,
-                session_id=spec.session_id,
-                role=spec.role,
-                provider=spec.provider,
-                state_dir=spec.state_dir,
-                require_config=spec.require_config,
-            )
-        except (ResolverError, LedgerError) as exc:
-            raise GitHubGuardError(f"authoring guard failed for {operation}: {exc}") from exc
-
-        if result["ok"]:
-            return
-
-        missing = "\n".join(f"- {path}" for path in result["missing_authoring_files"])
-        issue = payload.get("issue", "unknown")
-        raise GitHubGuardError(
-            "authoring guard blocked GitHub write because required authoring "
-            f"files have not been read.\n\nOperation: {operation}\nIssue: {issue}\n{missing}"
-        )
-
-    return guard
-
-
 def normalize_issue_number(issue: int | str) -> str:
     """Normalize a same-repository issue number."""
 
@@ -1077,16 +957,6 @@ def _repo_from_host_path(host: str, raw_path: str) -> GitHubRepository:
 
 def _strip_dot_git(value: str) -> str:
     return value[:-4] if value.endswith(".git") else value
-
-
-def _require_write_guard(
-    guard: WriteGuard | None,
-    operation: str,
-    payload: Mapping[str, Any],
-) -> None:
-    if guard is None:
-        raise GitHubGuardError(f"{operation} requires an authoring write guard")
-    guard(operation, payload)
 
 
 def _git_remote_url(
@@ -1299,10 +1169,6 @@ def _add_write_parser(
     help_text: str,
 ) -> argparse.ArgumentParser:
     parser = subparsers.add_parser(name, help=help_text)
-    parser.add_argument("--guard-type", required=True, help="workflow artifact type for guard")
-    parser.add_argument("--guard-role", default="issue", help="workflow role for guard")
-    parser.add_argument("--session", help="workflow session id for guard; defaults to WORKFLOW_SESSION_ID")
-    parser.add_argument("--state-dir", type=Path, help="ledger state directory")
     return parser
 
 
@@ -1339,7 +1205,6 @@ def _run_cli(args: argparse.Namespace) -> Any:
     if args.command == "body-edits":
         return issue_body_edit_history(args.issue, project=project)
 
-    guard = _guard_from_cli(args, project)
     if args.command == "create":
         return create_issue(
             title=args.title,
@@ -1348,21 +1213,18 @@ def _run_cli(args: argparse.Namespace) -> Any:
             state=args.state,
             state_reason=args.state_reason,
             project=project,
-            guard=guard,
         )
     if args.command == "edit-body":
         return edit_issue_body(
             args.issue,
             body=args.body_file.read_text(encoding="utf-8"),
             project=project,
-            guard=guard,
         )
     if args.command == "comment":
         return comment_issue(
             args.issue,
             body=args.body_file.read_text(encoding="utf-8"),
             project=project,
-            guard=guard,
         )
     if args.command == "close":
         return close_issue(
@@ -1370,25 +1232,10 @@ def _run_cli(args: argparse.Namespace) -> Any:
             project=project,
             reason=args.reason,
             comment=args.comment,
-            guard=guard,
         )
     if args.command == "reopen":
-        return reopen_issue(args.issue, project=project, comment=args.comment, guard=guard)
+        return reopen_issue(args.issue, project=project, comment=args.comment)
     raise GitHubParseError(f"unsupported command: {args.command}")
-
-
-def _guard_from_cli(args: argparse.Namespace, project: Path) -> WriteGuard:
-    return authoring_write_guard(
-        AuthoringGuardSpec(
-            artifact_type=args.guard_type,
-            project=project,
-            session_id=args.session or workflow_session_id_from_env(),
-            role=args.guard_role,
-            provider="github",
-            state_dir=args.state_dir,
-            require_config=True,
-        )
-    )
 
 
 def _print_plain(payload: Any) -> None:

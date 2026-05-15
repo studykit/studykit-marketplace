@@ -1,5 +1,5 @@
 {
-  "description": "Workflow hooks. SessionStart persists workflow shell environment exports when .workflow/config.yml exists and injects provider-backed workflow authoring policy only for main sessions. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
+  "description": "Workflow hooks. SessionStart persists workflow shell environment exports when .workflow/config.yml exists and injects provider-backed workflow authoring policy only for main sessions. PreToolUse protects provider cache issue body projections from unsafe frontmatter edits. UserPromptSubmit reads mentioned and pending GitHub issue references through cache-aware provider reads and injects project-relative issue cache paths as additionalContext. Stop records session-mentioned issues as pending without provider reads or JSON output.",
   "hooks": {
     "PreToolUse": [
       {
@@ -9,20 +9,7 @@
             "type": "command",
             "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
             "timeout": 5,
-            "description": "Block local workflow projection writes until required authoring files were read"
-          }
-        ]
-      }
-    ],
-    "PostToolUse": [
-      {
-        "matcher": "Read",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "uv run --script \"${CLAUDE_PLUGIN_ROOT}/scripts/hook_claude.py\"",
-            "timeout": 5,
-            "description": "Record reads of workflow authoring files in the session ledger"
+            "description": "Protect provider cache issue body projections from unsafe frontmatter edits"
           }
         ]
       }

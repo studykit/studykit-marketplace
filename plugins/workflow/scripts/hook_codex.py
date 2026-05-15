@@ -8,11 +8,8 @@ This module owns Codex payload and environment handling. Shared workflow policy
 and issue-cache behavior lives in ``workflow_hook.py`` as plain functions.
 
 Codex exposes ``SessionStart``, ``UserPromptSubmit``, and ``Stop`` events for
-this plugin. The PreToolUse authoring-guard pair from Claude is not wired on
-Codex because Codex has no ``Read`` tool: file reads happen through ``Bash``
-or MCP tools whose names vary, so the read ledger cannot be populated, and
-the matching write guard would block unconditionally. See the manifest
-description for the resulting Codex feature surface.
+this plugin. Provider cache projection protection and other write checks stay
+explicit in workflow scripts rather than using hidden authoring read tracking.
 
 Codex has no native ``SubagentStart`` event, so the operator-subagent
 environment file is prepared from the Codex ``SessionStart`` path when

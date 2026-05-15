@@ -167,7 +167,7 @@ def test_stage_pending_issue_relationships_writes_operator_owned_file(tmp_path: 
     ]
 
 
-def test_create_command_skips_authoring_ledger_guard_in_codex_shell(tmp_path: Path) -> None:
+def test_create_command_creates_provider_issue(tmp_path: Path) -> None:
     _write_config(tmp_path)
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=_repo())
     draft_path = cache.pending_issue_file(_repo(), "draft-1")
@@ -189,10 +189,9 @@ Draft body.
     stdout = io.StringIO()
 
     code = issue_drafts_main(
-        ["--project", str(tmp_path), "create", "--session", "codex-parent", "--type", "task", "--json", "draft-1"],
+        ["--project", str(tmp_path), "create", "--type", "task", "--json", "draft-1"],
         stdout=stdout,
-        runner=runner,
-        environ={"CODEX_THREAD_ID": "codex-shell"},
+        runner=runner
     )
 
     payload = json.loads(stdout.getvalue())

@@ -548,7 +548,7 @@ Rules for this repository:
 - Codex hooks receive a JSON object on stdin with `session_id`; use that as the official hook session/thread identifier.
 - Current Codex skill docs do not define `$ARGUMENTS`, `CODEX_SKILL_DIR`, or `CODEX_PLUGIN_ROOT` skill-body placeholders. Do not design shared skill scripts around those names.
 - Studykit shell wrappers launched through the Codex shell tool may read `CODEX_THREAD_ID` at the wrapper boundary for session-scoped state. This is an observed shell-tool convention, not a documented Codex plugin or hook contract. Use it to locate a generated export file, source the normalized `WORKFLOW_*` contract, and then call shared scripts.
-- In Codex subagents, `CODEX_THREAD_ID` identifies the subagent thread, not the parent thread. If guarded workflow state belongs to the parent thread, extract that id from hook transcript metadata and write it into the generated `WORKFLOW_SESSION_ID` export.
+- In Codex subagents, `CODEX_THREAD_ID` identifies the subagent thread, not the parent thread. If parent workflow state belongs to the parent thread, extract that id from hook transcript metadata and write it into the generated `WORKFLOW_SESSION_ID` export.
 - If a Codex hook or lifecycle command needs plugin data paths, pass a concrete value through a wrapper, generated hook config, argv, stdin, or a documented manifest mechanism.
 
 ## Passing Values to Scripts

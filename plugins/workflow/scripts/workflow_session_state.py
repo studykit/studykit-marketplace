@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """File-backed session state for workflow hooks.
 
-Tracks per-(project, session) ledgers under ``.workflow-cache/hook-state/``:
+Tracks per-(project, session) state files under ``.workflow-cache/hook-state/``:
 
 - announced issue lists, used by ``UserPromptSubmit`` to dedupe issue cache
   injection.

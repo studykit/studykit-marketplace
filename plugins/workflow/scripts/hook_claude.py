@@ -5,8 +5,8 @@
 """Claude hook adapter and CLI entry point.
 
 This module owns Claude Code payload and environment handling. Shared workflow
-policy, ledger, guard, and issue-cache behavior lives in ``workflow_hook.py``
-as plain functions.
+policy, provider cache protection, and issue-cache behavior lives in
+``workflow_hook.py`` as plain functions.
 
 The script is the executable entry point for Claude's hook manifest
 (``plugins/workflow/hooks/hooks.json``). Each hook command invokes this script
@@ -32,10 +32,9 @@ if _SCRIPTS_DIR not in sys.path:
 from workflow_command import CommandRunner  # noqa: E402
 from workflow_hook import (  # noqa: E402
     EditTarget,
-    block_unread_authoring_write,
+    block_provider_cache_body_write,
     build_session_start_context,
     inject_prompt_issue_context,
-    record_authoring_read,
     record_stop_issue_references,
     workflow_config_for_project,
 )
@@ -79,19 +78,6 @@ class ClaudePreToolUsePayload(ClaudeCommonPayload):
 
 
 @dataclass(frozen=True)
-class ClaudePostToolUsePayload(ClaudeCommonPayload):
-    permission_mode: str | None
-    effort: dict[str, Any] | None
-    agent_id: str | None
-    agent_type: str | None
-    tool_name: str
-    tool_input: dict[str, Any]
-    tool_response: Any
-    tool_use_id: str | None
-    duration_ms: int | None
-
-
-@dataclass(frozen=True)
 class ClaudeUserPromptSubmitPayload(ClaudeCommonPayload):
     permission_mode: str | None
     agent_id: str | None
@@ -112,7 +98,6 @@ class ClaudeStopPayload(ClaudeCommonPayload):
 ClaudeEventPayload = (
     ClaudeSessionStartPayload
     | ClaudePreToolUsePayload
-    | ClaudePostToolUsePayload
     | ClaudeUserPromptSubmitPayload
     | ClaudeStopPayload
 )
@@ -273,21 +258,6 @@ def _build_pre_tool_use_payload(payload: dict[str, Any]) -> ClaudePreToolUsePayl
     )
 
 
-def _build_post_tool_use_payload(payload: dict[str, Any]) -> ClaudePostToolUsePayload:
-    tool_input = _tool_input(payload)
-    return ClaudePostToolUsePayload(
-        **_common_payload_fields(payload),
-        **_permission_payload_fields(payload),
-        **_effort_payload_fields(payload),
-        **_agent_payload_fields(payload),
-        tool_name=as_string(payload.get("tool_name")),
-        tool_input=tool_input,
-        tool_response=payload.get("tool_response"),
-        tool_use_id=_string_or_none(payload.get("tool_use_id")),
-        duration_ms=_int_or_none(payload.get("duration_ms")),
-    )
-
-
 def _build_user_prompt_submit_payload(
     payload: dict[str, Any],
 ) -> ClaudeUserPromptSubmitPayload:
@@ -319,8 +289,6 @@ def parse_claude_event_payload(
         return _build_session_start_payload(data)
     if event_name == "PreToolUse":
         return _build_pre_tool_use_payload(data)
-    if event_name == "PostToolUse":
-        return _build_post_tool_use_payload(data)
     if event_name == "UserPromptSubmit":
         return _build_user_prompt_submit_payload(data)
     if event_name == "Stop":
@@ -382,37 +350,16 @@ def emit_session_start_policy(
     return 0
 
 
-def post_read(
-    event_payload: ClaudePostToolUsePayload,
-    *,
-    stdout: TextIO | None = None,
-    state_dir: Path | None = None,
-) -> int:
-    """Handle a Claude ``PostToolUse`` Read hook invocation."""
-
-    return record_authoring_read(
-        project_dir=_project_dir(),
-        plugin_root=_plugin_root(),
-        session_id=event_payload.session_id,
-        read_target=_read_target(event_payload.tool_input),
-        state_dir=state_dir,
-        stdout=stdout,
-    )
-
-
 def pre_write(
     event_payload: ClaudePreToolUsePayload,
     *,
     stdout: TextIO | None = None,
-    state_dir: Path | None = None,
 ) -> int:
     """Handle a Claude ``PreToolUse`` write hook invocation."""
 
-    return block_unread_authoring_write(
+    return block_provider_cache_body_write(
         project_dir=_project_dir(),
-        session_id=event_payload.session_id,
         edit_targets=_edit_targets(event_payload.tool_name, event_payload.tool_input),
-        state_dir=state_dir,
         stdout=stdout,
     )
 
@@ -462,8 +409,6 @@ def main(
     event_payload = parse_claude_event_payload(payload)
     if isinstance(event_payload, ClaudeSessionStartPayload):
         return session_start(event_payload, stdout=stdout)
-    if isinstance(event_payload, ClaudePostToolUsePayload):
-        return post_read(event_payload, stdout=stdout)
     if isinstance(event_payload, ClaudePreToolUsePayload):
         return pre_write(event_payload, stdout=stdout)
     if isinstance(event_payload, ClaudeUserPromptSubmitPayload):

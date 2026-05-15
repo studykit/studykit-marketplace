@@ -30,7 +30,6 @@ from workflow_providers import (  # noqa: E402
     ProviderContext,
     ProviderDispatcher,
     ProviderFreshnessError,
-    ProviderGuardError,
     ProviderOperationError,
     ProviderRegistry,
     ProviderRequest,
@@ -280,32 +279,16 @@ def test_explicit_transport_overrides_priority(context: ProviderContext) -> None
     assert events == ["mcp:get"]
 
 
-def test_write_operations_call_guard_before_provider(context: ProviderContext) -> None:
-    events: list[str] = []
-    registry = ProviderRegistry()
-    registry.register(RecordingIssueProvider(transport=TRANSPORT_NATIVE, events=events))
-
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(registry, guard=guard)
-
-    response = dispatcher.dispatch(issue_request("update", context, id="T-1"))
-
-    assert response.payload["updated"] == "T-1"
-    assert events == ["guard:update", "native:update"]
-
-
-def test_write_operations_require_guard(context: ProviderContext) -> None:
+def test_write_operations_dispatch_to_provider(context: ProviderContext) -> None:
     events: list[str] = []
     registry = ProviderRegistry()
     registry.register(RecordingIssueProvider(transport=TRANSPORT_NATIVE, events=events))
     dispatcher = ProviderDispatcher(registry)
 
-    with pytest.raises(ProviderGuardError):
-        dispatcher.dispatch(issue_request("update", context, id="T-1"))
+    response = dispatcher.dispatch(issue_request("update", context, id="T-1"))
 
-    assert events == []
+    assert response.payload["updated"] == "T-1"
+    assert events == ["native:update"]
 
 
 def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_path: Path) -> None:
@@ -334,7 +317,7 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
             events.append("edit")
             body_file = Path(request.args[request.args.index("--body-file") + 1])
             assert body_file.read_text(encoding="utf-8") == "Updated body."
-            assert events == ["guard:update", "freshness", "edit"]
+            assert events == ["freshness", "edit"]
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(39, "body"):
             events.append("verify")
@@ -345,10 +328,7 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
             )
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     response = dispatcher.dispatch(
         ProviderRequest(
@@ -362,7 +342,7 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
 
     assert response.payload["operation"] == "edit_issue_body"
     assert response.payload["verified"] is True
-    assert events == ["guard:update", "freshness", "edit", "verify"]
+    assert events == ["freshness", "edit", "verify"]
 
 
 def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Path) -> None:
@@ -392,10 +372,7 @@ def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Pa
             return CommandResult(request=request, returncode=0)
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     with pytest.raises(ProviderFreshnessError, match="Refresh the provider cache before writing"):
         dispatcher.dispatch(
@@ -408,7 +385,7 @@ def test_github_issue_update_blocks_stale_freshness_before_mutation(tmp_path: Pa
             )
         )
 
-    assert events == ["guard:update", "freshness"]
+    assert events == ["freshness"]
 
 
 def test_github_issue_update_from_cache_projection_checks_freshness_and_refreshes_cache(
@@ -450,7 +427,7 @@ def test_github_issue_update_from_cache_projection_checks_freshness_and_refreshe
             assert request.args[request.args.index("--title") + 1] == "Cached write-back title"
             assert ("--add-label", "workflow") in zip(request.args, request.args[1:])
             assert ("--remove-label", "old") in zip(request.args, request.args[1:])
-            assert events == ["guard:update", "freshness", "edit"]
+            assert events == ["freshness", "edit"]
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(39, "title,body,labels"):
             events.append("verify-edit")
@@ -489,10 +466,7 @@ def test_github_issue_update_from_cache_projection_checks_freshness_and_refreshe
             return CommandResult(request=request, returncode=0, stdout=json.dumps(writeback_issue_payload()))
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     response = dispatcher.dispatch(
         ProviderRequest(
@@ -509,7 +483,7 @@ def test_github_issue_update_from_cache_projection_checks_freshness_and_refreshe
     assert response.payload["verified"] is True
     assert response.payload["cache_refreshed"] is True
     assert GitHubIssueCache.for_project(tmp_path).read_issue(github_repo(), 39)["body"] == "Cached write-back body."
-    assert events == ["guard:update", "freshness", "edit", "verify-edit", "close", "verify-state", "refresh"]
+    assert events == ["freshness", "edit", "verify-edit", "close", "verify-state", "refresh"]
 
 
 def test_github_issue_update_from_cache_blocks_stale_projection_before_mutation(
@@ -549,10 +523,7 @@ def test_github_issue_update_from_cache_blocks_stale_projection_before_mutation(
             return CommandResult(request=request, returncode=0)
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     with pytest.raises(ProviderFreshnessError, match="Refresh the provider cache before writing"):
         dispatcher.dispatch(
@@ -565,7 +536,7 @@ def test_github_issue_update_from_cache_blocks_stale_projection_before_mutation(
             )
         )
 
-    assert events == ["guard:update", "freshness"]
+    assert events == ["freshness"]
 
 
 def test_github_issue_create_from_pending_draft_refreshes_cache_and_finalizes_pending(
@@ -602,7 +573,7 @@ Draft body.
             assert body_file.read_text(encoding="utf-8") == "Draft body.\n"
             assert request.args[request.args.index("--title") + 1] == "Draft issue"
             assert request.args.count("--label") == 2
-            assert events == ["guard:create", "create"]
+            assert events == ["create"]
             return CommandResult(
                 request=request,
                 returncode=0,
@@ -628,10 +599,7 @@ Draft body.
             return CommandResult(request=request, returncode=0, stdout=json.dumps(created_issue_payload()))
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     response = dispatcher.dispatch(
         ProviderRequest(
@@ -651,7 +619,7 @@ Draft body.
     assert cache.read_issue(github_repo(), 51)["body"] == "Draft body.\n"
     assert not draft_path.exists()
     assert Path(response.payload["pending"]["archived_issue"]).is_file()
-    assert events == ["guard:create", "create", "verify", "refresh"]
+    assert events == ["create", "verify", "refresh"]
 
 
 def test_github_issue_add_comment_from_pending_files_dispatches_and_refreshes_cache(
@@ -684,17 +652,14 @@ Pending comment body.
             events.append("comment")
             body_file = Path(request.args[request.args.index("--body-file") + 1])
             assert body_file.read_text(encoding="utf-8") == "Pending comment body.\n"
-            assert events == ["guard:add_comment", "comment"]
+            assert events == ["comment"]
             return CommandResult(request=request, returncode=0)
         if request.args == gh_issue_view_args(39, ",".join(DEFAULT_ISSUE_FIELDS)):
             events.append("refresh")
             return CommandResult(request=request, returncode=0, stdout=json.dumps(commented_issue_payload()))
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     response = dispatcher.dispatch(
         ProviderRequest(
@@ -715,7 +680,7 @@ Pending comment body.
     cached = cache.read_comments(github_repo(), 39)
     assert cached["comments"][0]["id"] == "4440388606"
     assert cached["comments"][0]["body"] == "Pending comment body.\n"
-    assert events == ["guard:add_comment", "comment", "refresh"]
+    assert events == ["comment", "refresh"]
 
 
 def test_github_issue_apply_relationships_from_pending_file_dispatches_refreshes_and_cleans(
@@ -801,10 +766,7 @@ operations:
             return CommandResult(request=request, returncode=0, stdout="[]")
         return CommandResult(request=request, returncode=127, stderr=f"unexpected command: {request.args}")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     response = dispatcher.dispatch(
         ProviderRequest(
@@ -826,7 +788,6 @@ operations:
     assert relationships["parent"]["number"] == 36
     assert relationships["dependencies"]["blocked_by"][0]["number"] == 33
     assert events == [
-        "guard:apply_relationships",
         "freshness",
         "issue-44-id",
         "add-parent",
@@ -865,10 +826,7 @@ operations:
         events.append("mutation" if request.args[:3] == ("gh", "api", "-X") else "read")
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
 
     with pytest.raises(ProviderOperationError, match="unsupported GitHub relationship operation"):
         dispatcher.dispatch(
@@ -885,7 +843,7 @@ operations:
     assert pending_path.exists()
 
 
-def test_read_operations_do_not_require_guard(context: ProviderContext) -> None:
+def test_read_operations_dispatch_to_provider(context: ProviderContext) -> None:
     events: list[str] = []
     registry = ProviderRegistry()
     registry.register(RecordingIssueProvider(transport=TRANSPORT_NATIVE, events=events))
@@ -897,21 +855,18 @@ def test_read_operations_do_not_require_guard(context: ProviderContext) -> None:
     assert events == ["native:get"]
 
 
-def test_knowledge_provider_dispatch_uses_same_registry_and_guard(context: ProviderContext) -> None:
+def test_knowledge_provider_dispatch_uses_same_registry(context: ProviderContext) -> None:
     events: list[str] = []
     registry = ProviderRegistry()
     registry.register(RecordingKnowledgeProvider(transport=TRANSPORT_NATIVE, events=events))
 
-    def guard(request: ProviderRequest) -> None:
-        events.append(f"guard:{request.operation}")
-
-    dispatcher = ProviderDispatcher(registry, guard=guard)
+    dispatcher = ProviderDispatcher(registry)
 
     response = dispatcher.dispatch(knowledge_request("link", context, source="A", target="B"))
 
     assert response.role == "knowledge"
     assert response.payload["linked"] is True
-    assert events == ["guard:link", "native:link"]
+    assert events == ["native:link"]
 
 
 def test_cache_policy_is_preserved_for_future_cache_layer(tmp_path: Path) -> None:

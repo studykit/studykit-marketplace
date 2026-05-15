@@ -53,6 +53,6 @@ Use comments, work notes, discussions, or history for:
 
 Keep the issue body structured and current. Do not turn it into a transcript.
 
-## Write guard
+## Write workflow
 
-Workflow write commands must enforce the authoring resolver/read-ledger guard before writes.
+Resolve and read the required authoring files before drafting issue-backed artifact changes. Provider/cache write commands perform the requested mutation and verification; they do not enforce hidden authoring read state.

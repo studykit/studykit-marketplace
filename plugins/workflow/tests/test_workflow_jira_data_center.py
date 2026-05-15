@@ -252,7 +252,7 @@ def dispatch_get(
 
 
 def dispatch_write(project: Path, runner: FakeRunner, operation: str, **payload: object):
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=lambda request: None)
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
     return dispatcher.dispatch(
         ProviderRequest(
             role="issue",

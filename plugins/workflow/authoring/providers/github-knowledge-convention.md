@@ -88,7 +88,7 @@ Preferred native transport:
 
 MCP is fallback transport.
 
-Provider wrapper commands must enforce the authoring resolver/read-ledger guard before writes, regardless of transport.
+Provider wrapper commands perform the requested write and verification. The caller is responsible for following the authoring resolver/read policy before invoking a write.
 
 ## Common mistakes
 

@@ -3,7 +3,7 @@
 
 The ``pre_write`` hook runs before any Markdown edit and asks: is this file a
 workflow artifact, and if so which type/role/provider? The answer steers the
-authoring guard preflight. This module owns the small parser that pulls those
+workflow artifact handling. This module owns the small parser that pulls those
 three scalars out of the file's YAML frontmatter (or the first non-header
 section when no frontmatter is present).
 

@@ -18,7 +18,6 @@ from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_config import load_workflow_config  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
 from workflow_jira import JiraDataCenterIssueCache, jira_data_center_site_from_provider_config  # noqa: E402
-from workflow_providers import ProviderRequest  # noqa: E402
 
 
 class FakeRunner:
@@ -161,7 +160,7 @@ def jira_remote_links_url(issue: str = "TM-1234") -> str:
     return f"https://jira.daumkakao.com/rest/api/2/issue/{issue}/remotelink"
 
 
-def test_cache_writeback_script_dispatches_guarded_provider_update(tmp_path: Path) -> None:
+def test_cache_writeback_script_dispatches_provider_update(tmp_path: Path) -> None:
     write_config(tmp_path)
     GitHubIssueCache.for_project(tmp_path, configured_repo=repo()).write_issue_bundle(
         repo(),
@@ -198,11 +197,6 @@ def test_cache_writeback_script_dispatches_guarded_provider_update(tmp_path: Pat
             ),
         }
     )
-    guard_calls: list[ProviderRequest] = []
-
-    def guard(request: ProviderRequest) -> None:
-        guard_calls.append(request)
-
     def runner_with_edit(request: CommandRequest) -> CommandResult:
         if request.args[:3] == ("gh", "issue", "edit"):
             body_file = Path(request.args[request.args.index("--body-file") + 1])
@@ -215,10 +209,9 @@ def test_cache_writeback_script_dispatches_guarded_provider_update(tmp_path: Pat
     stdout = io.StringIO()
 
     code = cache_writeback_main(
-        ["--project", str(tmp_path), "--session", "s1", "--type", "task", "--json", "42"],
+        ["--project", str(tmp_path), "--type", "task", "--json", "42"],
         stdout=stdout,
         runner=runner_with_edit,
-        guard=guard,
     )
 
     payload = json.loads(stdout.getvalue())
@@ -227,8 +220,6 @@ def test_cache_writeback_script_dispatches_guarded_provider_update(tmp_path: Pat
     assert payload["issues"][0]["operation"] == "update_issue_from_cache"
     assert payload["issues"][0]["issue"] == "42"
     assert payload["issues"][0]["verified"] is True
-    assert guard_calls[0].operation == "update"
-    assert guard_calls[0].payload["from_cache"] is True
 
 
 def test_cache_writeback_script_dispatches_jira_provider_update(tmp_path: Path) -> None:
@@ -257,18 +248,12 @@ def test_cache_writeback_script_dispatches_jira_provider_update(tmp_path: Path) 
             ),
         }
     )
-    guard_calls: list[ProviderRequest] = []
-
-    def guard(request: ProviderRequest) -> None:
-        guard_calls.append(request)
-
     stdout = io.StringIO()
 
     code = cache_writeback_main(
-        ["--project", str(tmp_path), "--session", "s1", "--type", "task", "--json", "tm-1234"],
+        ["--project", str(tmp_path), "--type", "task", "--json", "tm-1234"],
         stdout=stdout,
         runner=runner,
-        guard=guard,
     )
 
     payload = json.loads(stdout.getvalue())
@@ -279,9 +264,6 @@ def test_cache_writeback_script_dispatches_jira_provider_update(tmp_path: Path) 
     assert payload["issues"][0]["operation"] == "update_issue_from_cache"
     assert payload["issues"][0]["issue"] == "TM-1234"
     assert payload["issues"][0]["verified"] is True
-    assert guard_calls[0].kind == "jira"
-    assert guard_calls[0].operation == "update"
-    assert guard_calls[0].payload["from_cache"] is True
     write_request = runner.requests[1]
     assert write_request.args == curl_write_args()
     assert 'request = "PUT"' in str(write_request.input_text)

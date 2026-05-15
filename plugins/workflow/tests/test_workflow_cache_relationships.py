@@ -17,7 +17,6 @@ from workflow_cache_relationships import main as cache_relationships_main  # noq
 from workflow_cache_relationships import stage_relationships_payload  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_github import GitHubRepository  # noqa: E402
-from workflow_providers import ProviderRequest  # noqa: E402
 
 
 def repo() -> GitHubRepository:
@@ -83,7 +82,7 @@ issue_id_format: github
     )
 
 
-def test_cache_relationships_script_dispatches_guarded_pending_relationship_apply(tmp_path: Path) -> None:
+def test_cache_relationships_script_dispatches_pending_relationship_apply(tmp_path: Path) -> None:
     write_config(tmp_path)
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-14T00:10:00Z")
@@ -96,11 +95,6 @@ children:
 """.lstrip(),
         encoding="utf-8",
     )
-    guard_calls: list[ProviderRequest] = []
-
-    def guard(request: ProviderRequest) -> None:
-        guard_calls.append(request)
-
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == gh_issue_view_args(44, "number,updatedAt"):
             return CommandResult(request=request, returncode=0, stdout=json.dumps({"number": 44, "updatedAt": "2026-05-14T00:00:00Z"}))
@@ -129,10 +123,9 @@ children:
     stdout = io.StringIO()
 
     code = cache_relationships_main(
-        ["--project", str(tmp_path), "--session", "s1", "--type", "task", "--json", "44"],
+        ["--project", str(tmp_path), "--type", "task", "--json", "44"],
         stdout=stdout,
         runner=runner,
-        guard=guard,
     )
 
     payload = json.loads(stdout.getvalue())
@@ -141,8 +134,6 @@ children:
     assert payload["issues"][0]["operation"] == "apply_relationships"
     assert payload["issues"][0]["issue"] == "44"
     assert payload["issues"][0]["applied"] == 1
-    assert guard_calls[0].operation == "apply_relationships"
-    assert guard_calls[0].payload["from_pending"] is True
     assert not pending_path.exists()
 
 

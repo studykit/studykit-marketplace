@@ -9,7 +9,6 @@ from __future__ import annotations
 import argparse
 import json
 import sys
-from collections.abc import Callable
 from pathlib import Path
 from typing import TextIO
 
@@ -24,9 +23,8 @@ from workflow_jira import (
     normalize_jira_issue_key,
     resolve_jira_data_center_site,
 )
-from workflow_providers import ProviderDispatcher, ProviderRequest, default_provider_registry
-from workflow_providers import authoring_guard_callback, request_from_config
-from workflow_env import workflow_project_dir_from_env, workflow_session_id_from_env
+from workflow_providers import ProviderDispatcher, default_provider_registry, request_from_config
+from workflow_env import workflow_project_dir_from_env
 
 
 class WorkflowCacheRelationshipsError(RuntimeError):
@@ -36,9 +34,7 @@ class WorkflowCacheRelationshipsError(RuntimeError):
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--project", type=Path, default=workflow_project_dir_from_env(), help="project path")
-    parser.add_argument("--session", help="workflow session id for authoring guard; defaults to WORKFLOW_SESSION_ID")
-    parser.add_argument("--type", default="task", help="workflow artifact type for authoring guard")
-    parser.add_argument("--state-dir", type=Path, help="ledger state directory")
+    parser.add_argument("--type", default="task", help="workflow artifact type")
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument("--stage", action="store_true", help="stage relationship intent instead of applying pending files")
     parser.add_argument("--parent")
@@ -154,15 +150,12 @@ def apply_pending_relationships_payload(
     project: Path,
     issues: list[str],
     artifact_type: str,
-    session_id: str,
-    state_dir: Path | None = None,
     runner: CommandRunner | None = None,
-    guard: Callable[[ProviderRequest], None] | None = None,
 ) -> dict[str, object]:
     """Apply pending local relationship files to configured provider issues."""
 
     config = _load_issue_config(project)
-    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard or authoring_guard_callback())
+    dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
     if config.issues.kind == "github":
         repo, issue_numbers = _github_relationship_context(config, issues, runner=runner)
         results = []
@@ -173,8 +166,6 @@ def apply_pending_relationships_payload(
                 operation="apply_relationships",
                 artifact_type=artifact_type,
                 payload={"issue": issue, "from_pending": True},
-                session_id=session_id,
-                state_dir=state_dir,
             )
             response = dispatcher.dispatch(request)
             results.append(dict(response.payload))
@@ -200,8 +191,6 @@ def apply_pending_relationships_payload(
             operation="apply_relationships",
             artifact_type=artifact_type,
             payload={"issue": issue_key, "from_pending": True},
-            session_id=session_id,
-            state_dir=state_dir,
         )
         response = dispatcher.dispatch(request)
         results.append(dict(response.payload))
@@ -310,7 +299,6 @@ def main(
     stdout: TextIO | None = None,
     stderr: TextIO | None = None,
     runner: CommandRunner | None = None,
-    guard: Callable[[ProviderRequest], None] | None = None,
 ) -> int:
     parser = build_parser()
     args = parser.parse_args(argv)
@@ -335,10 +323,7 @@ def main(
                 project=args.project,
                 issues=list(args.issues),
                 artifact_type=args.type,
-                session_id=args.session or workflow_session_id_from_env(),
-                state_dir=args.state_dir,
                 runner=runner,
-                guard=guard,
             )
     except Exception as exc:
         print(f"workflow pending relationship error: {exc}", file=errors)

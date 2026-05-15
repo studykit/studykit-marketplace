@@ -7,14 +7,11 @@ wrappers are preferred first, and MCP providers are fallback transports.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-from authoring_guard import evaluate_authoring_guard
-from authoring_ledger import LedgerError
-from authoring_resolver import ResolverError
 from workflow_command import CommandRunner
 from workflow_cache import (
     FreshnessMetadata,
@@ -93,10 +90,6 @@ class ProviderNotFoundError(ProviderError):
     """Raised when no provider transport is registered for a role and kind."""
 
 
-class ProviderGuardError(ProviderError):
-    """Raised when an authoring guard blocks or cannot evaluate a write."""
-
-
 class ProviderFreshnessError(ProviderError):
     """Raised when a provider write is blocked by stale cache metadata."""
 
@@ -113,7 +106,6 @@ class ProviderContext:
     project: Path
     artifact_type: str
     session_id: str | None = None
-    state_dir: Path | None = None
     cache_policy: str = CACHE_POLICY_DEFAULT
 
     def __post_init__(self) -> None:
@@ -131,8 +123,6 @@ class ProviderContext:
         }
         if self.session_id:
             result["session_id"] = self.session_id
-        if self.state_dir is not None:
-            result["state_dir"] = str(self.state_dir)
         return result
 
 
@@ -194,8 +184,6 @@ class ProviderResponse:
             "cache_policy": self.cache_policy,
         }
 
-
-GuardCallback = Callable[[ProviderRequest], None]
 
 
 @dataclass(frozen=True)
@@ -440,7 +428,6 @@ class GitHubIssueNativeProvider(IssueProvider):
             state=state,
             state_reason=state_reason,
             project=request.context.project,
-            guard=_already_guarded,
             runner=self.runner,
         )
         issue_number = normalize_issue_number(created["issue"])
@@ -471,7 +458,6 @@ class GitHubIssueNativeProvider(IssueProvider):
             issue,
             body=str(body),
             project=request.context.project,
-            guard=_already_guarded,
             runner=self.runner,
         )
 
@@ -496,7 +482,6 @@ class GitHubIssueNativeProvider(IssueProvider):
             labels=tuple(_string_list(projection.get("labels"))),
             current_labels=current_labels,
             project=request.context.project,
-            guard=_already_guarded,
             runner=self.runner,
         )
 
@@ -508,14 +493,12 @@ class GitHubIssueNativeProvider(IssueProvider):
                 issue_number,
                 project=request.context.project,
                 reason=_close_reason_from_state_reason(projection.get("stateReason")),
-                guard=_already_guarded,
                 runner=self.runner,
             )
         elif desired_state == "OPEN" and current_state != "OPEN":
             state_result = reopen_issue(
                 issue_number,
                 project=request.context.project,
-                guard=_already_guarded,
                 runner=self.runner,
             )
 
@@ -542,7 +525,6 @@ class GitHubIssueNativeProvider(IssueProvider):
             issue,
             body=str(body),
             project=request.context.project,
-            guard=_already_guarded,
             runner=self.runner,
         )
 
@@ -573,7 +555,6 @@ class GitHubIssueNativeProvider(IssueProvider):
                 issue_number,
                 body=pending.body,
                 project=request.context.project,
-                guard=_already_guarded,
                 runner=self.runner,
             )
             for pending in pending_comments
@@ -756,15 +737,13 @@ class GitHubIssueNativeProvider(IssueProvider):
                     operation.target_issue,
                     issue_number,
                     project=request.context.project,
-                    guard=_already_guarded,
-                    replace_parent=operation.replace_parent,
+                            replace_parent=operation.replace_parent,
                     runner=self.runner,
                 )
             return remove_sub_issue(
                 operation.target_issue,
                 issue_number,
                 project=request.context.project,
-                guard=_already_guarded,
                 runner=self.runner,
             )
 
@@ -774,15 +753,13 @@ class GitHubIssueNativeProvider(IssueProvider):
                     issue_number,
                     operation.target_issue,
                     project=request.context.project,
-                    guard=_already_guarded,
-                    replace_parent=operation.replace_parent,
+                            replace_parent=operation.replace_parent,
                     runner=self.runner,
                 )
             return remove_sub_issue(
                 issue_number,
                 operation.target_issue,
                 project=request.context.project,
-                guard=_already_guarded,
                 runner=self.runner,
             )
 
@@ -792,14 +769,12 @@ class GitHubIssueNativeProvider(IssueProvider):
                     issue_number,
                     operation.target_issue,
                     project=request.context.project,
-                    guard=_already_guarded,
-                    runner=self.runner,
+                            runner=self.runner,
                 )
             return remove_issue_dependency(
                 issue_number,
                 operation.target_issue,
                 project=request.context.project,
-                guard=_already_guarded,
                 runner=self.runner,
             )
 
@@ -809,14 +784,12 @@ class GitHubIssueNativeProvider(IssueProvider):
                     operation.target_issue,
                     issue_number,
                     project=request.context.project,
-                    guard=_already_guarded,
-                    runner=self.runner,
+                            runner=self.runner,
                 )
             return remove_issue_dependency(
                 operation.target_issue,
                 issue_number,
                 project=request.context.project,
-                guard=_already_guarded,
                 runner=self.runner,
             )
 
@@ -863,7 +836,6 @@ class GitHubIssueNativeProvider(IssueProvider):
             project=request.context.project,
             reason=reason,
             comment=str(comment) if comment is not None else None,
-            guard=_already_guarded,
             runner=self.runner,
         )
 
@@ -875,7 +847,6 @@ class GitHubIssueNativeProvider(IssueProvider):
             issue,
             project=request.context.project,
             comment=str(comment) if comment is not None else None,
-            guard=_already_guarded,
             runner=self.runner,
         )
 
@@ -894,19 +865,19 @@ class GitHubIssueNativeProvider(IssueProvider):
                 payload["timeline"] = issue_timeline(
                     issue,
                     project=request.context.project,
-                    runner=self.runner,
+                runner=self.runner,
                 )
             elif normalized == "events":
                 payload["events"] = issue_events(
                     issue,
                     project=request.context.project,
-                    runner=self.runner,
+                runner=self.runner,
                 )
             elif normalized in {"body_edits", "body_edit_history"}:
                 payload["body_edit_history"] = issue_body_edit_history(
                     issue,
                     project=request.context.project,
-                    runner=self.runner,
+                runner=self.runner,
                 )
             else:
                 raise ProviderOperationError(f"unsupported GitHub issue log stream: {item}")
@@ -1055,14 +1026,8 @@ class ProviderRegistry:
 class ProviderDispatcher:
     """Dispatch provider operations through the registered transport layer."""
 
-    def __init__(
-        self,
-        registry: ProviderRegistry,
-        *,
-        guard: GuardCallback | None = None,
-    ):
+    def __init__(self, registry: ProviderRegistry):
         self.registry = registry
-        self.guard = guard
 
     def dispatch(self, request: ProviderRequest) -> ProviderResponse:
         provider = self.registry.resolve(
@@ -1071,14 +1036,7 @@ class ProviderDispatcher:
             transport=request.transport,
         )
         dispatched_request = request.with_transport(provider.transport)
-        if dispatched_request.is_write:
-            self._guard_write(dispatched_request)
         return provider.call(dispatched_request)
-
-    def _guard_write(self, request: ProviderRequest) -> None:
-        if self.guard is None:
-            raise ProviderGuardError("provider write requires an authoring guard")
-        self.guard(request)
 
 
 def default_provider_registry(*, runner: CommandRunner | None = None) -> ProviderRegistry:
@@ -1105,7 +1063,6 @@ def request_from_config(
     artifact_type: str,
     payload: Mapping[str, Any] | None = None,
     session_id: str | None = None,
-    state_dir: Path | None = None,
     transport: str | None = None,
     cache_policy: str = CACHE_POLICY_DEFAULT,
 ) -> ProviderRequest:
@@ -1121,44 +1078,11 @@ def request_from_config(
             project=config.root,
             artifact_type=artifact_type,
             session_id=session_id,
-            state_dir=state_dir,
             cache_policy=cache_policy,
         ),
         payload=payload or {},
         transport=transport,
     )
-
-
-def authoring_guard_callback() -> GuardCallback:
-    """Return a guard callback that enforces the authoring read ledger."""
-
-    def guard(request: ProviderRequest) -> None:
-        session_id = request.context.session_id
-        if not session_id:
-            raise ProviderGuardError("provider write requires a session id for authoring guard")
-        try:
-            result = evaluate_authoring_guard(
-                request.context.artifact_type,
-                project=request.context.project,
-                session_id=session_id,
-                role=request.normalized_role,
-                provider=request.kind,
-                state_dir=request.context.state_dir,
-                require_config=True,
-            )
-        except (ResolverError, LedgerError) as exc:
-            raise ProviderGuardError(f"authoring guard failed: {exc}") from exc
-
-        if result["ok"]:
-            return
-
-        missing = "\n".join(f"- {path}" for path in result["missing_authoring_files"])
-        raise ProviderGuardError(
-            "provider write blocked because required authoring files have not been read.\n"
-            f"{missing}"
-        )
-
-    return guard
 
 
 def _provider_config_for_role(config: WorkflowConfig, role: str) -> ProviderConfig:
@@ -1348,9 +1272,3 @@ def _truthy(value: Any) -> bool:
     if isinstance(value, str):
         return value.strip().lower() in {"1", "true", "yes", "on"}
     return bool(value)
-
-
-def _already_guarded(_operation: str, _payload: Mapping[str, Any]) -> None:
-    """No-op guard used after ``ProviderDispatcher`` has checked a write."""
-
-    return None

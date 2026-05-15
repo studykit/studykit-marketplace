@@ -700,13 +700,10 @@ def test_session_start_injects_policy_for_configured_project(
     assert "treat `NONE`" not in context
     assert "Use the workflow operator only for workflow operations" not in context
     assert "Workflow script command recipes are intentionally not injected here" not in context
-    assert "Provider writes must use guarded workflow wrappers" not in context
     assert "does not auto-trigger workflow skills or agents" not in context
     assert "WORKFLOW_PLUGIN_ROOT=" not in context
     assert "$WORKFLOW_PLUGIN_ROOT/scripts/" not in context
     assert "scripts/authoring_resolver.py" not in context
-    assert "scripts/authoring_ledger.py" not in context
-    assert "scripts/authoring_guard.py" not in context
     assert "scripts/workflow_github.py" not in context
     assert "## workflow provider cache context" not in context
     assert "Do not inspect `.workflow-cache`" not in context
@@ -1396,7 +1393,7 @@ def test_stop_does_not_carry_issue_refs_to_next_user_prompt(
     assert prompt_context.getvalue() == ""
 
 
-def test_claude_pre_write_guards_github_cache_issue_body_without_local_projection(
+def test_claude_pre_write_allows_github_cache_issue_body_update(
     tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1424,7 +1421,7 @@ Current body.
     captured = io.StringIO()
     assert claude_main(
         payload={
-            "session_id": "cache-issue-guard",
+            "session_id": "cache-issue-protection",
             "cwd": str(tmp_path),
             "hook_event_name": "PreToolUse",
             "tool_name": "Write",
@@ -1436,14 +1433,7 @@ Current body.
         stdout=captured,
     ) == 0
 
-    payload = json.loads(captured.getvalue())
-    reason = payload["reason"]
-    assert payload["decision"] == "block"
-    assert "required authoring files have not been read" in reason
-    assert f"Target: {issue_file}" in reason
-    assert "Artifact type: task" in reason
-    assert "Role: issue" in reason
-    assert "Provider: github" in reason
+    assert captured.getvalue() == ""
 
 
 def test_claude_pre_write_blocks_creating_github_cache_issue_body(
@@ -1467,7 +1457,7 @@ Updated body.
     captured = io.StringIO()
     assert claude_main(
         payload={
-            "session_id": "cache-issue-guard",
+            "session_id": "cache-issue-protection",
             "cwd": str(tmp_path),
             "hook_event_name": "PreToolUse",
             "tool_name": "Write",
@@ -1516,7 +1506,7 @@ Current body.
     captured = io.StringIO()
     assert claude_main(
         payload={
-            "session_id": "cache-frontmatter-guard",
+            "session_id": "cache-frontmatter-protection",
             "cwd": str(tmp_path),
             "hook_event_name": "PreToolUse",
             "tool_name": "Edit",
