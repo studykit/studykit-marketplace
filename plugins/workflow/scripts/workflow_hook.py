@@ -235,46 +235,12 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
 
     _ = plugin_root  # plugin_root reserved for future template extensions
     return (
-        "## workflow authoring policy\n\n"
-        f"This project is configured for the workflow plugin (issue provider: `{config.issues.kind}`). "
-        "Delegate workflow operations — provider/cache reads, write-back, comment "
-        "append, authoring path discovery, guarded writes — to the "
-        "`workflow-operator` agent. Pass workflow intent, issue refs, artifact "
-        "type, and operation-specific inputs. The operator returns "
-        "provider/cache metadata, issue relationship metadata, and paths.\n\n"
-        "The operator does not interpret content. Read and summarize issue, "
-        "comment, knowledge, or authoring file content directly from the paths "
-        "it returns.\n\n"
-        f"{build_issue_operation_policy(config)}"
-    )
-
-
-def build_issue_operation_policy(config: WorkflowConfig) -> str:
-    """Build SessionStart operation guidance for the configured issue provider."""
-
-    if config.issues.kind == "github":
-        return (
-            "Workflow issues live in GitHub. The main assistant should not run "
-            "raw `gh` for workflow operations — the operator handles GitHub via "
-            "workflow scripts with raw `gh` as its own fallback. If the operator "
-            "cannot complete a request, report that limitation instead of "
-            "running `gh` directly. For cached issue body edits, edit `issue.md` "
-            "in the cache projection first, then delegate write-back; use direct "
-            "provider edits only when explicitly requested."
-        )
-
-    if config.issues.kind == "filesystem":
-        return (
-            "Workflow issues are filesystem-backed local Markdown artifacts. "
-            "Edit them directly at the paths the operator returns after "
-            "required authoring contracts are read. Provider cache, write-back, "
-            "and comment-append delegation does not apply."
-        )
-
-    return (
-        f"Workflow issues use the `{config.issues.kind}` provider, not GitHub. "
-        "If the operator cannot complete a provider operation, report that "
-        "limitation rather than reaching for provider-specific tools directly."
+        "## workflow policy\n\n"
+        "Delegate workflow provider/cache/write-back/comment/authoring-path operations "
+        "to `workflow-operator`.\n"
+        "For workflow commits, stage changes and write the commit message locally, "
+        "then ask `workflow-operator` to run commit only.\n"
+        "Do not run raw provider CLIs directly when the operator can handle the operation."
     )
 
 

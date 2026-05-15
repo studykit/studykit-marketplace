@@ -664,28 +664,27 @@ def test_session_start_injects_policy_for_configured_project(
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
-    assert "## workflow authoring policy" in context
-    assert "This project is configured for the workflow plugin" in context
-    assert "issue provider: `github`" in context
-    assert "Delegate workflow operations" in context
-    assert "`workflow-operator` agent" in context
-    assert "Pass workflow intent, issue refs, artifact type, and operation-specific inputs" in context
+    assert context == "\n".join(
+        [
+            "## workflow policy",
+            "",
+            "Delegate workflow provider/cache/write-back/comment/authoring-path operations to `workflow-operator`.",
+            "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Do not run raw provider CLIs directly when the operator can handle the operation.",
+        ]
+    )
     assert ", and session id" not in context
     assert "session id" not in context
     assert "script recipes" not in context
     assert "hook" not in context.lower()
     assert "wrapper" not in context
     assert "WORKFLOW_*" not in context
-    assert "provider/cache metadata, issue relationship metadata, and paths" in context
-    assert "The operator does not interpret content" in context
-    assert "Read and summarize issue, comment, knowledge, or authoring file content directly" in context
-    assert "Workflow issues live in GitHub" in context
-    assert "should not run raw `gh` for workflow operations" in context
-    assert "raw `gh` as its own fallback" in context
-    assert "report that limitation instead of running `gh` directly" in context
-    assert "For cached issue body edits, edit `issue.md` in the cache projection first" in context
-    assert "delegate write-back" in context
-    assert "direct provider edits only when explicitly requested" in context
+    assert "provider/cache metadata, issue relationship metadata, and paths" not in context
+    assert "The operator does not interpret content" not in context
+    assert "Read and summarize issue, comment, knowledge, or authoring file content directly" not in context
+    assert "Workflow issues live in GitHub" not in context
+    assert "raw `gh` as its own fallback" not in context
+    assert "For cached issue body edits, edit `issue.md` in the cache projection first" not in context
     assert "Configured workflow project:" not in context
     assert "Config file:" not in context
     assert "Workflow plugin root:" not in context
@@ -770,14 +769,18 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert "issue provider: `filesystem`" in context
-    assert "Workflow issues are filesystem-backed local Markdown artifacts" in context
-    assert "Edit them directly at the paths the operator returns" in context
-    assert "required authoring contracts are read" in context
-    assert "Provider cache, write-back, and comment-append delegation does not apply" in context
-    assert "Delegate workflow operations" in context
-    assert "`workflow-operator` agent" in context
-    assert "The operator does not interpret content" in context
+    assert context == "\n".join(
+        [
+            "## workflow policy",
+            "",
+            "Delegate workflow provider/cache/write-back/comment/authoring-path operations to `workflow-operator`.",
+            "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Do not run raw provider CLIs directly when the operator can handle the operation.",
+        ]
+    )
+    assert "issue provider: `filesystem`" not in context
+    assert "Workflow issues are filesystem-backed local Markdown artifacts" not in context
+    assert "The operator does not interpret content" not in context
     assert "Issue ID format:" not in context
     assert "Local projection:" not in context
     assert "Before workflow artifact edits" not in context
@@ -799,8 +802,8 @@ def test_session_start_discovers_config_from_nested_project_path(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert "## workflow authoring policy" in context
-    assert "issue provider: `github`" in context
+    assert "## workflow policy" in context
+    assert "workflow-operator" in context
 
 
 def test_non_empty_hook_stdout_is_json_only(
