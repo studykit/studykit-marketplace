@@ -1011,22 +1011,96 @@ def test_user_prompt_injects_github_commit_prefix_hint_without_issue_fetch(
     _hook_env(monkeypatch, tmp_path)
     runner = FakeRunner({})
 
+    raw_payload = {
+        "session_id": "commit-s1",
+        "turn_id": "turn-1",
+        "cwd": str(tmp_path),
+        "hook_event_name": "UserPromptSubmit",
+        "prompt": "Please commit the staged workflow changes.",
+    }
     captured = io.StringIO()
-    event_payload = parse_codex_event_payload(
-        {
-            "session_id": "commit-s1",
-            "turn_id": "turn-1",
-            "cwd": str(tmp_path),
-            "hook_event_name": "UserPromptSubmit",
-            "prompt": "Please commit the staged workflow changes.",
-        },
-    )
+    event_payload = parse_codex_event_payload(raw_payload)
     assert isinstance(event_payload, CodexUserPromptSubmitPayload)
     assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
 
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert context == "Workflow commit: prefix subject with provider issue ref (e.g. #54)."
+
+    repeated = io.StringIO()
+    repeated_event = parse_codex_event_payload(raw_payload)
+    assert isinstance(repeated_event, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(repeated_event, stdout=repeated, runner=runner) == 0
+
+    assert repeated.getvalue() == ""
+    assert runner.requests == []
+
+
+def test_user_prompt_emits_nothing_for_codex_subagent_payload_marker(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(45): result(
+                gh_issue_view_args(45),
+                stdout=json.dumps(issue_payload(45)),
+            )
+        }
+    )
+
+    captured = io.StringIO()
+    event_payload = parse_codex_event_payload(
+        {
+            "session_id": "subagent-prompt-s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
+            "parent_session_id": "parent-session",
+            "prompt": "Please inspect #45 and commit.",
+        },
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
+
+    assert captured.getvalue() == ""
+    assert runner.requests == []
+
+
+def test_user_prompt_emits_nothing_for_codex_subagent_transcript(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    transcript_path = tmp_path / "subagent-rollout.jsonl"
+    _write_subagent_transcript(transcript_path)
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(45): result(
+                gh_issue_view_args(45),
+                stdout=json.dumps(issue_payload(45)),
+            )
+        }
+    )
+
+    captured = io.StringIO()
+    event_payload = parse_codex_event_payload(
+        {
+            "session_id": "subagent-prompt-s2",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
+            "transcript_path": str(transcript_path),
+            "prompt": "Please inspect #45 and commit.",
+        },
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
+
+    assert captured.getvalue() == ""
     assert runner.requests == []
 
 

@@ -38,7 +38,9 @@ from workflow_issue_cache import cache_issue_references  # noqa: E402
 from workflow_issue_cache import extract_issue_numbers, format_issue_cache_context  # noqa: E402
 from workflow_jira import normalize_jira_issue_key  # noqa: E402
 from workflow_session_state import (  # noqa: E402
+    commit_prefix_was_announced,
     read_session_issues,
+    record_commit_prefix_announced,
     record_session_issues,
 )
 from util import emit_json, is_markdown_path, is_under, is_under_any  # noqa: E402
@@ -167,12 +169,15 @@ def inject_prompt_issue_context(
 
     context_parts: list[str] = []
     commit_context = build_prompt_commit_context(config, prompt_text)
+    if commit_context and commit_prefix_was_announced(config.root, session_id):
+        commit_context = ""
 
     repo = None
     if config.issues.kind == "github":
         repo = github_repo_for_config(config, runner=runner)
         if repo is None:
             if commit_context:
+                record_commit_prefix_announced(config.root, session_id)
                 emit_user_prompt_context([commit_context], stdout=stdout)
             return 0
 
@@ -184,6 +189,7 @@ def inject_prompt_issue_context(
     issue_numbers = _ordered_issue_union(prompt_numbers, issue_id_format=config.issue_id_format)
     if not issue_numbers:
         if commit_context:
+            record_commit_prefix_announced(config.root, session_id)
             emit_user_prompt_context([commit_context], stdout=stdout)
         return 0
 
@@ -201,6 +207,8 @@ def inject_prompt_issue_context(
     if commit_context:
         context_parts.append(commit_context)
     if context_parts:
+        if commit_context:
+            record_commit_prefix_announced(config.root, session_id)
         emit_user_prompt_context(context_parts, stdout=stdout)
     return 0
 

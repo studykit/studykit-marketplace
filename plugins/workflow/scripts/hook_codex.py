@@ -217,6 +217,13 @@ def _codex_session_start_context(config: Any) -> str:
     )
 
 
+def _event_marks_agent(event_payload: CodexCommonPayload) -> bool:
+    if _payload_marks_agent(event_payload.raw):
+        return True
+    metadata = _read_session_meta(event_payload.transcript_path)
+    return metadata is not None and _session_metadata_indicates_agent(metadata)
+
+
 def _payload_marks_agent(payload: Mapping[str, Any]) -> bool:
     for key in _PAYLOAD_AGENT_BOOL_KEYS:
         if payload.get(key) is True:
@@ -484,6 +491,9 @@ def user_prompt_submit(
     runner: CommandRunner | None = None,
 ) -> int:
     """Handle a Codex ``UserPromptSubmit`` hook invocation."""
+
+    if _event_marks_agent(event_payload):
+        return 0
 
     return inject_prompt_issue_context(
         project_dir=_project_dir(event_payload),

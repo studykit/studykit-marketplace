@@ -70,6 +70,7 @@ Behavior:
 - Reads each detected issue through the workflow provider read path with the default cache policy.
 - Uses existing cache projections on cache hits; fetches provider data and writes the cache on misses.
 - Emits concise `additionalContext` only for issue numbers not already announced in the current session.
+- For Codex subagent sessions, emits nothing. The main session owns workflow prompt context.
 - Reports project-relative issue cache paths, for example `.workflow-cache/issues/45/`.
 - Emits nothing for non-workflow projects, non-GitHub issue providers, missing issue references, or provider read failures.
 
