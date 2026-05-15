@@ -189,9 +189,18 @@ Draft body.
     stdout = io.StringIO()
 
     code = issue_drafts_main(
-        ["--project", str(tmp_path), "create", "--type", "task", "--json", "draft-1"],
+        [
+            "--project",
+            str(tmp_path),
+            "create",
+            "--type",
+            "task",
+            "--confirm-provider-create",
+            "--json",
+            "draft-1",
+        ],
         stdout=stdout,
-        runner=runner
+        runner=runner,
     )
 
     payload = json.loads(stdout.getvalue())
@@ -202,3 +211,38 @@ Draft body.
     assert cache.read_issue(_repo(), 51)["body"] == "Draft body.\n"
     assert not draft_path.exists()
     assert runner.requests[0].args[:3] == ("gh", "issue", "create")
+
+
+def test_create_command_requires_provider_create_confirmation(tmp_path: Path) -> None:
+    _write_config(tmp_path)
+    cache = GitHubIssueCache.for_project(tmp_path, configured_repo=_repo())
+    draft_path = cache.pending_issue_file(_repo(), "draft-1")
+    draft_path.parent.mkdir(parents=True)
+    draft_path.write_text(
+        """---
+title: "Draft issue"
+labels:
+  - task
+state: open
+---
+
+Draft body.
+""",
+        encoding="utf-8",
+    )
+    runner = FakeRunner()
+    stdout = io.StringIO()
+    stderr = io.StringIO()
+
+    code = issue_drafts_main(
+        ["--project", str(tmp_path), "create", "--type", "task", "--json", "draft-1"],
+        stdout=stdout,
+        stderr=stderr,
+        runner=runner,
+    )
+
+    assert code == 2
+    assert stdout.getvalue() == ""
+    assert "--confirm-provider-create" in stderr.getvalue()
+    assert draft_path.exists()
+    assert runner.requests == []

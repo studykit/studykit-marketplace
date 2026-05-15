@@ -171,8 +171,10 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations "
         "to `workflow-operator`.\n"
         "For issue create/update flows, ask `workflow-operator` for required authoring paths, "
-        "read those docs locally, draft title/body/labels locally, then ask `workflow-operator` "
-        "to perform the provider write and refresh/verify cache.\n"
+        "read those docs locally, and draft title/body/labels locally.\n"
+        "For new issues, stop at the pending draft until the user explicitly approves provider issue creation; "
+        "then ask `workflow-operator` to create it and refresh/verify cache.\n"
+        "For existing issue updates, ask `workflow-operator` to perform write-back and refresh/verify cache.\n"
         "Do not run raw provider CLIs directly when the operator can handle the operation."
     )
 

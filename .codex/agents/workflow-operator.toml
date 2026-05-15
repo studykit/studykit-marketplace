@@ -40,8 +40,9 @@ The caller should provide:
 - Issue refs, body file paths, comments, cache policy, or other operation-specific values.
 - Project root when it is not obvious from cwd.
 
-If the request is missing a required issue ref, artifact type, or body file,
-ask for exactly that missing value before running a write.
+If the request is missing a required issue ref, artifact type, body file, or
+explicit user approval for pending issue promotion, ask for exactly that
+missing value before running a write.
 
 Use `$WORKFLOW` for bundled workflow scripts. Ask the caller for the launcher path only when it is unavailable.
 
@@ -133,11 +134,16 @@ Use workflow write commands:
 
 Supported subcommands are `create`, `edit-body`, `comment`, `close`, and
 `reopen`. Follow `workflow_github.py --help` for exact flags when needed.
-For new issues, prefer the pending draft flow: prepare a bodyless draft with
+For new issues, use the pending draft flow: prepare a bodyless draft with
 `workflow_cache_issue_drafts.py prepare`, return the draft `issue.md` path,
-let the caller fill only the body below existing frontmatter, then create the
-provider issue with `workflow_cache_issue_drafts.py create`. Do not ask the
-caller to create provider cache frontmatter under `.workflow-cache/issues-pending/`.
+and let the caller fill only the body below existing frontmatter. Do not create
+the provider issue from a pending draft until the caller explicitly states that
+the user approved provider issue creation. When that approval is present, create
+the provider issue with
+`workflow_cache_issue_drafts.py create --confirm-provider-create`. Treat
+ambiguous requests to write or draft an issue as pending draft preparation only.
+Do not ask the caller to create provider cache frontmatter under
+`.workflow-cache/issues-pending/`.
 If the caller provides relationship intent for a new issue, stage it with
 `workflow_cache_issue_drafts.py stage-relationships`; do not ask the caller to
 write `relationships-pending.yml`.
@@ -176,15 +182,20 @@ For new issue drafts:
   --json
 ```
 
-After the caller fills only the body, create the provider issue:
+After the caller fills only the body and explicitly states that the user
+approved provider issue creation, create the provider issue:
 
 ```bash
 "$WORKFLOW" workflow_cache_issue_drafts.py \
   create \
   --type <artifact-type> \
+  --confirm-provider-create \
   --json \
   <local-id>
 ```
+
+If explicit provider-create approval is absent, stop at the pending draft and
+return the draft path.
 
 For relationship intent on a pending issue draft:
 

@@ -107,9 +107,15 @@ def create_pending_issue(
     project: Path,
     local_id: str,
     artifact_type: str,
+    confirm_provider_create: bool = False,
     runner: CommandRunner | None = None,
 ) -> dict[str, object]:
     """Create a provider issue from an existing pending issue draft."""
+
+    if not confirm_provider_create:
+        raise WorkflowCacheIssueDraftError(
+            "provider issue creation requires --confirm-provider-create after explicit user approval"
+        )
 
     config = _load_issue_config(project)
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
@@ -224,6 +230,11 @@ def build_parser() -> argparse.ArgumentParser:
 
     create = subparsers.add_parser("create", help="create a provider issue from a pending draft")
     create.add_argument("--type", default="task", help="workflow artifact type")
+    create.add_argument(
+        "--confirm-provider-create",
+        action="store_true",
+        help="confirm that the user explicitly approved creating a provider issue from this pending draft",
+    )
     create.add_argument("local_id")
 
     relationships = subparsers.add_parser(
@@ -274,6 +285,7 @@ def main(
                 project=args.project,
                 local_id=args.local_id,
                 artifact_type=args.type,
+                confirm_provider_create=args.confirm_provider_create,
                 runner=runner,
             )
         elif args.command == "stage-relationships":
