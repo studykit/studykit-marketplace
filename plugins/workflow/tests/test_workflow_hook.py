@@ -668,7 +668,6 @@ def test_session_start_injects_policy_for_configured_project(
         "",
         "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
         "For issue create/update flows, ask `workflow-operator` for required authoring paths, read those docs locally, draft title/body/labels locally, then ask `workflow-operator` to perform the provider write and refresh/verify cache.",
-        "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
         "Do not run raw provider CLIs directly when the operator can handle the operation.",
     ]
     if runtime == "codex":
@@ -778,7 +777,6 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
         "",
         "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
         "For issue create/update flows, ask `workflow-operator` for required authoring paths, read those docs locally, draft title/body/labels locally, then ask `workflow-operator` to perform the provider write and refresh/verify cache.",
-        "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
         "Do not run raw provider CLIs directly when the operator can handle the operation.",
     ]
     if runtime == "codex":
@@ -1031,7 +1029,7 @@ def test_user_prompt_injects_github_commit_prefix_hint_without_issue_fetch(
         [
             "## Workflow commit",
             "",
-            "Stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Handle staging, commit message authoring, and commit execution in the main assistant.",
             "Prefix the subject with the related issue ref.",
         ]
     )
@@ -1193,7 +1191,7 @@ def test_user_prompt_injects_jira_commit_prefix_hint_without_issue_fetch(
         [
             "## Workflow commit",
             "",
-            "Stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Handle staging, commit message authoring, and commit execution in the main assistant.",
             "Prefix the subject with the related issue ref.",
         ]
     )

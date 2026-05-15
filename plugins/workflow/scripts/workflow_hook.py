@@ -246,8 +246,6 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
         "For issue create/update flows, ask `workflow-operator` for required authoring paths, "
         "read those docs locally, draft title/body/labels locally, then ask `workflow-operator` "
         "to perform the provider write and refresh/verify cache.\n"
-        "For workflow commits, stage changes and write the commit message locally, "
-        "then ask `workflow-operator` to run commit only.\n"
         "Do not run raw provider CLIs directly when the operator can handle the operation."
     )
 
@@ -265,7 +263,7 @@ def build_prompt_commit_context(config: WorkflowConfig, prompt_text: str) -> str
         [
             "## Workflow commit",
             "",
-            "Stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Handle staging, commit message authoring, and commit execution in the main assistant.",
             "Prefix the subject with the related issue ref.",
         ]
     )
