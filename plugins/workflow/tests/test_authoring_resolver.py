@@ -43,6 +43,19 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
     assert all(path.is_absolute() for path in resolution.files)
 
 
+def test_review_github_issue_authoring_requires_target_section() -> None:
+    resolution = resolve_authoring("review", role="issue", provider="github")
+    github_review_doc = next(
+        path for path in resolution.files if path.name == "github-issue-review-authoring.md"
+    )
+
+    text = github_review_doc.read_text(encoding="utf-8")
+
+    assert "GitHub-specific H2 sections for this type: `## Target`." in text
+    assert "Add required `## Target` for target-specific reviews." in text
+    assert "- `## Target` contains one bullet per target" in text
+
+
 def test_spec_confluence_knowledge_resolution() -> None:
     resolution = resolve_authoring("spec", provider="confluence")
 

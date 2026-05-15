@@ -44,12 +44,60 @@ class FakeRunner:
         self.requests.append(request)
         response = self.responses.get(request.args)
         if response is None:
+            response = default_github_relationship_response(request)
+        if response is None:
             return CommandResult(request=request, returncode=127, stderr="unexpected command")
         return response
 
 
 def result(args: tuple[str, ...], stdout: str = "", stderr: str = "", returncode: int = 0) -> CommandResult:
     return CommandResult(request=CommandRequest(args=args), returncode=returncode, stdout=stdout, stderr=stderr)
+
+
+def default_github_relationship_response(request: CommandRequest) -> CommandResult | None:
+    args = request.args
+    if len(args) < 3 or args[:2] != ("gh", "api"):
+        return None
+
+    path = args[2]
+    prefix = "repos/studykit/studykit-plugins/issues/"
+    if not path.startswith(prefix):
+        return None
+
+    suffix = path.removeprefix(prefix)
+    issue_number = suffix.split("/", 1)[0]
+    try:
+        issue_id = int(issue_number) * 1000
+    except ValueError:
+        return None
+
+    if suffix == issue_number:
+        return CommandResult(
+            request=request,
+            returncode=0,
+            stdout=json.dumps(
+                {
+                    "id": issue_id,
+                    "number": int(issue_number),
+                    "title": f"Issue {issue_number}",
+                    "state": "open",
+                    "state_reason": None,
+                    "updated_at": "2026-05-14T00:00:00Z",
+                }
+            ),
+        )
+
+    if suffix == f"{issue_number}/parent":
+        return CommandResult(request=request, returncode=404, stderr="not found")
+
+    if args[3:] == ("--paginate",) and suffix in {
+        f"{issue_number}/sub_issues",
+        f"{issue_number}/dependencies/blocked_by",
+        f"{issue_number}/dependencies/blocking",
+    }:
+        return CommandResult(request=request, returncode=0, stdout="[]")
+
+    return None
 
 
 def _json_object(output: str) -> dict[str, Any]:
@@ -69,6 +117,21 @@ def gh_issue_view_args(issue: int | str) -> tuple[str, ...]:
         "--json",
         ",".join(DEFAULT_ISSUE_FIELDS),
     )
+
+
+def gh_api_args(*args: str) -> tuple[str, ...]:
+    return ("gh", "api", *args)
+
+
+def empty_relationship_read_args(issue: int | str) -> list[tuple[str, ...]]:
+    base = f"repos/studykit/studykit-plugins/issues/{issue}"
+    return [
+        gh_api_args(base),
+        gh_api_args(f"{base}/parent"),
+        gh_api_args(f"{base}/sub_issues", "--paginate"),
+        gh_api_args(f"{base}/dependencies/blocked_by", "--paginate"),
+        gh_api_args(f"{base}/dependencies/blocking", "--paginate"),
+    ]
 
 
 def issue_payload(number: int, *, title: str = "Implement workflow hook cache context") -> dict[str, Any]:
@@ -958,8 +1021,11 @@ def test_user_prompt_injects_explicit_issue_and_pending_issues(
     )
     assert [request.args for request in runner.requests] == [
         gh_issue_view_args(33),
+        *empty_relationship_read_args(33),
         gh_issue_view_args(45),
+        *empty_relationship_read_args(45),
         gh_issue_view_args(39),
+        *empty_relationship_read_args(39),
     ]
     assert not (
         tmp_path
