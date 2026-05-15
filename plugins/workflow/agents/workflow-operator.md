@@ -1,7 +1,7 @@
 ---
 name: workflow-operator
 description: >
-  Runs workflow plugin scripts for provider/cache operations, guarded writes,
+  Runs workflow plugin scripts for provider/cache operations, provider writes,
   authoring path discovery, verification, and commit-only execution. Not for
   code changes or content summaries.
 model: sonnet
@@ -161,7 +161,7 @@ path discovery requests. The caller reads those files directly before editing.
 
 ## GitHub Issue Writes
 
-Use guarded workflow commands:
+Use workflow write commands:
 
 ```bash
 "$WORKFLOW" workflow_github.py \
@@ -193,8 +193,8 @@ frontmatter is projection-owned. Then run `workflow_cache_writeback.py`. Use
 `workflow_github.py edit-body` only when the caller explicitly requests a direct
 provider edit or no cache projection exists.
 If `workflow_github.py` cannot support or complete the requested operation,
-fall back to raw `gh` after the guarded write preflight. After successful issue
-mutations, refresh the affected issue cache with
+fall back to raw `gh` only after the caller has completed the authoring-doc read
+flow. After successful issue mutations, refresh the affected issue cache with
 `workflow_cache_fetch.py --cache-policy refresh` when possible.
 
 ## Local Cache Write-Back
