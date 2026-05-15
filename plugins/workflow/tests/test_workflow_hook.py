@@ -1025,7 +1025,14 @@ def test_user_prompt_injects_github_commit_prefix_hint_without_issue_fetch(
 
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert context == "Workflow commit: prefix subject with provider issue ref (e.g. #54)."
+    assert context == "\n".join(
+        [
+            "## Workflow commit",
+            "",
+            "Stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Prefix the subject with the related issue ref.",
+        ]
+    )
 
     repeated = io.StringIO()
     repeated_event = parse_codex_event_payload(raw_payload)
@@ -1180,7 +1187,14 @@ def test_user_prompt_injects_jira_commit_prefix_hint_without_issue_fetch(
 
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert context == "Workflow commit: prefix subject with provider issue ref (e.g. PROJ-123)."
+    assert context == "\n".join(
+        [
+            "## Workflow commit",
+            "",
+            "Stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Prefix the subject with the related issue ref.",
+        ]
+    )
     assert runner.requests == []
 
 
@@ -1252,7 +1266,8 @@ def test_user_prompt_ignores_stop_pending_issue_state(
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert context == "\n".join(
         [
-            "Workflow issue cache:",
+            "## Workflow issue cache",
+            "",
             "- #39 → `.workflow-cache/issues/39/issue.md`",
         ]
     )
@@ -1311,7 +1326,7 @@ dependencies:
     payload = json.loads(captured.getvalue())
     context = payload["hookSpecificOutput"]["additionalContext"]
     assert context == (
-        "Workflow issue cache:\n"
+        "## Workflow issue cache\n\n"
         "- #39 → `.workflow-cache/issues/39/issue.md` — "
         "parent #28; children #41; blocked_by #33; blocking #45"
     )

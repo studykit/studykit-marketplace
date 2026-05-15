@@ -350,10 +350,9 @@ def format_issue_cache_context(
 
     _ = include_details
     shared_base = shared_issue_dir_base(contexts)
-    if shared_base is None:
-        lines = ["Workflow issue cache:"]
-    else:
-        lines = [f"Workflow issue cache: `{shared_base}`"]
+    lines = ["## Workflow issue cache", ""]
+    if shared_base is not None:
+        lines.append(f"Base: `{shared_base}`")
     for context in contexts:
         issue_path = issue_file_relative_to_base(context, shared_base)
         relationship_suffix = f" — {context.relationship_summary}" if context.relationship_summary else ""

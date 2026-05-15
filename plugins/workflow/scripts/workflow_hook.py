@@ -256,13 +256,16 @@ def build_prompt_commit_context(config: WorkflowConfig, prompt_text: str) -> str
         return ""
     if not COMMIT_PROMPT_PATTERN.search(prompt_text):
         return ""
-    if config.issues.kind == "github":
-        example = "#54"
-    elif config.issues.kind == "jira":
-        example = "PROJ-123"
-    else:
+    if config.issues.kind not in {"github", "jira"}:
         return ""
-    return f"Workflow commit: prefix subject with provider issue ref (e.g. {example})."
+    return "\n".join(
+        [
+            "## Workflow commit",
+            "",
+            "Stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+            "Prefix the subject with the related issue ref.",
+        ]
+    )
 
 
 def emit_user_prompt_context(context_parts: list[str], *, stdout: TextIO | None = None) -> None:

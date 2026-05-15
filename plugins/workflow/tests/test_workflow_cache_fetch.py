@@ -322,7 +322,9 @@ dependencies:
     assert code == 0
     assert stdout.getvalue() == "\n".join(
         [
-            "Workflow issue cache: `.workflow-cache/issues/`",
+            "## Workflow issue cache",
+            "",
+            "Base: `.workflow-cache/issues/`",
             "- #42 → `42/issue.md` — parent #40; children #44,#45; blocked_by #41; blocking #46",
             "- #43 → `43/issue.md`",
             "",
