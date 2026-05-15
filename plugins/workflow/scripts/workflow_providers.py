@@ -380,8 +380,37 @@ class GitHubIssueNativeProvider(IssueProvider):
             fields = tuple(str(field) for field in raw_fields)
         payload = view_issue(issue, project=request.context.project, fields=fields, runner=self.runner)
         if request.context.cache_policy != CACHE_POLICY_BYPASS:
-            cache.write_issue_bundle(repo, payload)
+            payload_for_cache = self._payload_with_relationship_projection(
+                request,
+                issue=issue,
+                payload=payload,
+            )
+            cache.write_issue_bundle(repo, payload_for_cache)
         return payload
+
+    def _payload_with_relationship_projection(
+        self,
+        request: ProviderRequest,
+        *,
+        issue: Any,
+        payload: Mapping[str, Any],
+    ) -> Mapping[str, Any]:
+        """Add provider-native relationships before writing cache sidecars.
+
+        `gh issue view` does not expose the issue relationship REST resources
+        that back `relationships.yml`. Cache writes therefore need an explicit
+        relationship read even when the caller does not ask to return
+        relationships in the provider response.
+        """
+
+        if _payload_has_relationship_projection(payload):
+            return payload
+        relationships = issue_relationships(
+            issue,
+            project=request.context.project,
+            runner=self.runner,
+        )
+        return {**payload, **relationships}
 
     def create(self, request: ProviderRequest) -> Mapping[str, Any]:
         repo = resolve_github_repository(request.context.project, runner=self.runner)
@@ -1228,6 +1257,26 @@ def _latest_provider_comment_timestamp(value: Any) -> str | None:
     if not values:
         return None
     return max(values)
+
+
+def _payload_has_relationship_projection(payload: Mapping[str, Any]) -> bool:
+    """Return true when a provider payload already carries relationship data."""
+
+    relationship_keys = {
+        "parent",
+        "parentIssue",
+        "parent_issue",
+        "children",
+        "subIssues",
+        "sub_issues",
+        "dependencies",
+        "blocked_by",
+        "blockedBy",
+        "blocking",
+        "blocks",
+        "related",
+    }
+    return any(key in payload for key in relationship_keys)
 
 
 def _optional_string(value: Any) -> str | None:

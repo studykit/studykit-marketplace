@@ -66,6 +66,43 @@ def gh_issue_view_args(issue: int | str) -> tuple[str, ...]:
     )
 
 
+def gh_api_args(path: str, *, paginate: bool = False) -> tuple[str, ...]:
+    args = ("gh", "api", path)
+    if paginate:
+        return (*args, "--paginate")
+    return args
+
+
+def relationship_responses(
+    issue: int | str,
+    *,
+    updated_at: str = "2026-05-14T00:00:00Z",
+) -> dict[tuple[str, ...], CommandResult]:
+    issue_path = f"repos/studykit/studykit-plugins/issues/{issue}"
+    return {
+        gh_api_args(issue_path): result(
+            gh_api_args(issue_path),
+            stdout=json.dumps({"number": int(issue), "updated_at": updated_at}),
+        ),
+        gh_api_args(f"{issue_path}/parent"): result(
+            gh_api_args(f"{issue_path}/parent"),
+            stdout=json.dumps({"number": 40, "title": "Parent", "state": "open"}),
+        ),
+        gh_api_args(f"{issue_path}/sub_issues", paginate=True): result(
+            gh_api_args(f"{issue_path}/sub_issues", paginate=True),
+            stdout=json.dumps([{"number": 43, "title": "Child", "state": "closed"}]),
+        ),
+        gh_api_args(f"{issue_path}/dependencies/blocked_by", paginate=True): result(
+            gh_api_args(f"{issue_path}/dependencies/blocked_by", paginate=True),
+            stdout=json.dumps([{"number": 41, "title": "Blocker", "state": "closed"}]),
+        ),
+        gh_api_args(f"{issue_path}/dependencies/blocking", paginate=True): result(
+            gh_api_args(f"{issue_path}/dependencies/blocking", paginate=True),
+            stdout="[]",
+        ),
+    }
+
+
 def write_config(project: Path) -> None:
     path = project / ".workflow" / "config.yml"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -182,7 +219,12 @@ dependencies:
 def test_cache_fetch_refresh_reads_remote_and_updates_cache(tmp_path: Path) -> None:
     write_config(tmp_path)
     remote = issue_payload(42, body="Fresh body.")
-    runner = FakeRunner({gh_issue_view_args(42): result(gh_issue_view_args(42), stdout=json.dumps(remote))})
+    runner = FakeRunner(
+        {
+            gh_issue_view_args(42): result(gh_issue_view_args(42), stdout=json.dumps(remote)),
+            **relationship_responses(42),
+        }
+    )
     stdout = io.StringIO()
 
     code = cache_fetch_main(
@@ -195,6 +237,18 @@ def test_cache_fetch_refresh_reads_remote_and_updates_cache(tmp_path: Path) -> N
     assert code == 0
     assert payload["cache_policy"] == "refresh"
     assert payload["issues"][0]["cache_hit"] is False
-    assert [request.args for request in runner.requests] == [gh_issue_view_args(42)]
+    assert [request.args for request in runner.requests] == [
+        gh_issue_view_args(42),
+        gh_api_args("repos/studykit/studykit-plugins/issues/42"),
+        gh_api_args("repos/studykit/studykit-plugins/issues/42/parent"),
+        gh_api_args("repos/studykit/studykit-plugins/issues/42/sub_issues", paginate=True),
+        gh_api_args("repos/studykit/studykit-plugins/issues/42/dependencies/blocked_by", paginate=True),
+        gh_api_args("repos/studykit/studykit-plugins/issues/42/dependencies/blocking", paginate=True),
+    ]
     cached = GitHubIssueCache.for_project(tmp_path, configured_repo=repo()).read_issue(repo(), 42)
     assert cached["body"] == "Fresh body."
+    relationships = GitHubIssueCache.for_project(tmp_path, configured_repo=repo()).read_relationships(repo(), 42)
+    assert relationships["parent"]["number"] == 40
+    assert relationships["children"][0]["number"] == 43
+    assert relationships["dependencies"]["blocked_by"][0]["number"] == 41
+    assert payload["issues"][0]["relationships"] == "parent #40; children #43; blocked_by #41"
