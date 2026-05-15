@@ -663,16 +663,19 @@ def test_session_start_injects_policy_for_configured_project(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
+    expected_context = [
+        "## workflow policy",
+        "",
+        "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
+        "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+        "Do not run raw provider CLIs directly when the operator can handle the operation.",
+    ]
+    if runtime == "codex":
+        expected_context.append(
+            "If a `workflow-operator` thread is already open, reuse it for later workflow operations."
+        )
     assert payload["hookSpecificOutput"]["hookEventName"] == "SessionStart"
-    assert context == "\n".join(
-        [
-            "## workflow policy",
-            "",
-            "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
-            "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
-            "Do not run raw provider CLIs directly when the operator can handle the operation.",
-        ]
-    )
+    assert context == "\n".join(expected_context)
     assert ", and session id" not in context
     assert "session id" not in context
     assert "script recipes" not in context
@@ -769,15 +772,18 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
 
     payload = json.loads(out)
     context = payload["hookSpecificOutput"]["additionalContext"]
-    assert context == "\n".join(
-        [
-            "## workflow policy",
-            "",
-            "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
-            "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
-            "Do not run raw provider CLIs directly when the operator can handle the operation.",
-        ]
-    )
+    expected_context = [
+        "## workflow policy",
+        "",
+        "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
+        "For workflow commits, stage changes and write the commit message locally, then ask `workflow-operator` to run commit only.",
+        "Do not run raw provider CLIs directly when the operator can handle the operation.",
+    ]
+    if runtime == "codex":
+        expected_context.append(
+            "If a `workflow-operator` thread is already open, reuse it for later workflow operations."
+        )
+    assert context == "\n".join(expected_context)
     assert "issue provider: `filesystem`" not in context
     assert "Workflow issues are filesystem-backed local Markdown artifacts" not in context
     assert "The operator does not interpret content" not in context

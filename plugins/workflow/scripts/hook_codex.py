@@ -72,6 +72,9 @@ _PAYLOAD_AGENT_STRING_KEYS = (
     "parent_thread_id",
     "parent_conversation_id",
 )
+_CODEX_OPERATOR_REUSE_CONTEXT = (
+    "If a `workflow-operator` thread is already open, reuse it for later workflow operations."
+)
 _PAYLOAD_AGENT_SOURCE_KEYS = (
     "source",
     "session_type",
@@ -201,6 +204,15 @@ def _operator_bootstrap_context(*, launcher: Path) -> str:
             "Use `$WORKFLOW` for bundled workflow scripts. The launcher owns Codex",
             "session translation; do not derive the launcher from project layout",
             "or inspect runtime-specific session files directly.",
+        ]
+    )
+
+
+def _codex_session_start_context(config: Any) -> str:
+    return "\n".join(
+        [
+            build_session_start_context(config, _plugin_root()),
+            _CODEX_OPERATOR_REUSE_CONTEXT,
         ]
     )
 
@@ -456,7 +468,7 @@ def emit_session_start_policy(
         {
             "hookSpecificOutput": {
                 "hookEventName": "SessionStart",
-                "additionalContext": build_session_start_context(config, _plugin_root()),
+                "additionalContext": _codex_session_start_context(config),
             }
         },
         stdout=stdout,
