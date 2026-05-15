@@ -7,3 +7,14 @@ network_access = true
 
 [features]
 hooks = true
+
+# Keep the main session unchanged, but start common subagent roles without
+# Codex Apps/connectors so their startup does not initialize codex_apps.
+[agents.default]
+config_file = "agents/subagent-no-apps.toml"
+
+[agents.worker]
+config_file = "agents/subagent-no-apps.toml"
+
+[agents.explorer]
+config_file = "agents/subagent-no-apps.toml"

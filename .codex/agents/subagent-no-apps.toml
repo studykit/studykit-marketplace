@@ -1,0 +1,9 @@
+# Project-local config layer for subagent sessions.
+# Disables Codex Apps/connectors only for roles that reference this file.
+
+[features]
+apps = false
+
+[apps._default]
+enabled = false
+
