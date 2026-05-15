@@ -129,9 +129,16 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
     assert write.issue_dir == tmp_path / ".workflow-cache" / "issues" / "39"
     issue_text = write.issue_file.read_text(encoding="utf-8")
     assert "title: Add local cache for workflow provider reads" in issue_text
+    assert "source_updated_at:" in issue_text
+    assert "2026-05-13T12:00:00Z" in issue_text
+    assert "fetched_at:" not in issue_text
     assert "provider:" not in issue_text
     assert "# Issue" not in issue_text
     assert issue_text.endswith("Raw issue body.")
+
+    metadata_text = write.metadata_file.read_text(encoding="utf-8")
+    assert "source_updated_at: 2026-05-13T12:00:00Z" in metadata_text
+    assert "fetched_at: 2026-05-13T12:34:56Z" in metadata_text
 
     index_text = write.comments_index.read_text(encoding="utf-8")
     assert "provider_comment_id: 4440388606" in index_text
@@ -147,6 +154,7 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
     assert comment_text.endswith("Raw provider comment body.")
 
     relationships = cache.read_relationships(repo(), 39)
+    assert relationships["fetched_at"] == "2026-05-13T12:34:56Z"
     assert relationships["parent"]["number"] == 28
     assert relationships["children"][0]["number"] == 41
     assert relationships["dependencies"]["blocked_by"][0]["state_reason"] == "completed"
@@ -341,6 +349,20 @@ def test_cache_read_can_skip_raw_markdown_bodies(tmp_path: Path) -> None:
     assert "body" not in cached
     assert "body" not in cached["comments"][0]
     assert cached["comments"][0]["id"] == "4440388606"
+
+
+def test_issue_freshness_metadata_is_read_from_internal_metadata_file(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path)
+    write = cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-13T12:34:56Z")
+
+    metadata = cache.read_freshness_metadata(repo(), 39, target="issue")
+    cached = cache.read_issue(repo(), 39, include_body=False, include_comments=False, include_relationships=False)
+
+    assert metadata.path == write.metadata_file
+    assert metadata.source_updated_at == "2026-05-13T12:00:00Z"
+    assert metadata.fetched_at == "2026-05-13T12:34:56Z"
+    assert cached["cache"]["metadata_file"] == str(write.metadata_file)
+    assert cached["cache"]["fetchedAt"] == "2026-05-13T12:34:56Z"
 
 
 def test_default_cache_policy_uses_cache_hit_without_remote_issue_view(tmp_path: Path) -> None:

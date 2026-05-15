@@ -145,11 +145,16 @@ Configured-repository shape:
 ```text
 .workflow-cache/issues/ISSUE_NUMBER/
   issue.md
+  metadata.yml
   comments/
     index.yml
     YYYY-MM-DDTHHMMSSZ-PROVIDER_COMMENT_ID.md
   relationships.yml
 ```
+
+`issue.md` is the user-facing issue projection. Internal cache fields such as
+`fetched_at` live in `metadata.yml` so freshness and write-back checks can use
+them without leaking cache mechanics into the issue body projection.
 
 External GitHub repositories are namespaced under
 `.workflow-cache/github.com/OWNER/REPO/issues/ISSUE_NUMBER/`.

@@ -47,6 +47,7 @@ class CacheWriteResult:
 
     issue_dir: Path
     issue_file: Path
+    metadata_file: Path
     comments_index: Path
     relationships_file: Path
 
@@ -54,6 +55,7 @@ class CacheWriteResult:
         return {
             "issue_dir": str(self.issue_dir),
             "issue_file": str(self.issue_file),
+            "metadata_file": str(self.metadata_file),
             "comments_index": str(self.comments_index),
             "relationships_file": str(self.relationships_file),
         }
@@ -356,6 +358,9 @@ class GitHubIssueCache:
     def issue_file(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.issue_dir(repo, issue) / "issue.md"
 
+    def issue_metadata_file(self, repo: GitHubRepository, issue: int | str) -> Path:
+        return self.issue_dir(repo, issue) / "metadata.yml"
+
     def comments_dir(self, repo: GitHubRepository, issue: int | str) -> Path:
         return self.issue_dir(repo, issue) / "comments"
 
@@ -380,7 +385,7 @@ class GitHubIssueCache:
     def freshness_file(self, repo: GitHubRepository, issue: int | str, target: str) -> Path:
         normalized = _normalize_freshness_target(target)
         if normalized == "issue":
-            return self.issue_file(repo, issue)
+            return self.issue_metadata_file(repo, issue)
         if normalized == "comments":
             return self.comments_index_file(repo, issue)
         if normalized == "relationships":
@@ -611,10 +616,7 @@ class GitHubIssueCache:
         if not path.is_file():
             raise WorkflowCacheMiss(f"freshness cache does not exist: {path}")
 
-        if normalized == "issue":
-            data, _body = _read_frontmatter_markdown(path)
-        else:
-            data = _read_yaml_mapping(path)
+        data = _read_yaml_mapping(path)
         _require_schema(data, path)
         return FreshnessMetadata(
             source_updated_at=_normalize_optional(data.get("source_updated_at")),
@@ -646,7 +648,7 @@ class GitHubIssueCache:
         try:
             frontmatter, body = _read_frontmatter_markdown(issue_path)
             _require_schema(frontmatter, issue_path)
-            for key in ("title", "state", "state_reason", "labels", "source_updated_at", "fetched_at"):
+            for key in ("title", "state", "state_reason", "labels", "source_updated_at"):
                 if key not in frontmatter:
                     raise WorkflowCacheCorrupt(f"missing issue frontmatter field {key}: {issue_path}")
 
@@ -656,20 +658,33 @@ class GitHubIssueCache:
             if not isinstance(labels, list):
                 raise WorkflowCacheCorrupt(f"issue labels must be a list: {issue_path}")
 
+            metadata: dict[str, Any] = {}
+            try:
+                metadata = self.read_issue_metadata(repo, issue)
+            except WorkflowCacheMiss:
+                metadata = {}
+            fetched_at = _normalize_optional(metadata.get("fetched_at")) or _normalize_optional(
+                frontmatter.get("fetched_at")
+            )
+            source_updated_at = _normalize_optional(frontmatter.get("source_updated_at"))
+            cache_metadata: dict[str, Any] = {
+                "hit": True,
+                "issue_file": str(issue_path),
+                "fetchedAt": fetched_at,
+                "sourceUpdatedAt": _normalize_optional(metadata.get("source_updated_at")) or source_updated_at,
+            }
+            if metadata:
+                cache_metadata["metadata_file"] = str(self.issue_metadata_file(repo, issue))
+
             payload: dict[str, Any] = {
                 "number": int(normalize_issue_number(issue)),
                 "title": str(frontmatter.get("title") or ""),
                 "state": frontmatter.get("state"),
                 "stateReason": frontmatter.get("state_reason"),
                 "labels": [str(label) for label in labels],
-                "updatedAt": frontmatter.get("source_updated_at"),
+                "updatedAt": source_updated_at,
                 "repository": repo.to_json(),
-                "cache": {
-                    "hit": True,
-                    "issue_file": str(issue_path),
-                    "fetchedAt": frontmatter.get("fetched_at"),
-                    "sourceUpdatedAt": frontmatter.get("source_updated_at"),
-                },
+                "cache": cache_metadata,
             }
             if include_body:
                 payload["body"] = body
@@ -682,6 +697,21 @@ class GitHubIssueCache:
             raise
         except Exception as exc:
             raise WorkflowCacheCorrupt(f"could not read issue cache {issue_path}: {exc}") from exc
+
+    def read_issue_metadata(self, repo: GitHubRepository, issue: int | str) -> dict[str, Any]:
+        """Read non-user-facing cache metadata for a cached issue projection."""
+
+        path = self.issue_metadata_file(repo, issue)
+        if not path.is_file():
+            raise WorkflowCacheMiss(f"issue metadata cache does not exist: {path}")
+        try:
+            data = _read_yaml_mapping(path)
+            _require_schema(data, path)
+            return dict(data)
+        except WorkflowCacheError:
+            raise
+        except Exception as exc:
+            raise WorkflowCacheCorrupt(f"could not read issue metadata cache {path}: {exc}") from exc
 
     def read_comments(
         self,
@@ -789,6 +819,7 @@ class GitHubIssueCache:
         comments_dir = self.comments_dir(repo, issue_number)
         issue_dir.mkdir(parents=True, exist_ok=True)
         comments_dir.mkdir(parents=True, exist_ok=True)
+        source_updated_at = _normalize_optional(issue.get("updatedAt") or issue.get("updated_at")) or now
 
         issue_frontmatter = {
             "schema_version": SCHEMA_VERSION,
@@ -796,11 +827,18 @@ class GitHubIssueCache:
             "state": _normalize_state(issue.get("state")),
             "state_reason": _normalize_state_reason(issue.get("stateReason") or issue.get("state_reason")),
             "labels": _label_names(issue.get("labels")),
-            "source_updated_at": _normalize_optional(issue.get("updatedAt") or issue.get("updated_at")) or now,
-            "fetched_at": now,
+            "source_updated_at": source_updated_at,
         }
         issue_path = self.issue_file(repo, issue_number)
         _atomic_write_text(issue_path, _format_markdown(issue_frontmatter, str(issue.get("body") or "")))
+
+        metadata = {
+            "schema_version": SCHEMA_VERSION,
+            "source_updated_at": source_updated_at,
+            "fetched_at": now,
+        }
+        metadata_path = self.issue_metadata_file(repo, issue_number)
+        _atomic_write_text(metadata_path, _dump_yaml(metadata))
 
         comments_index = self._write_comments(repo, issue_number, issue, fetched_at=now)
         relationships_file = self._write_relationships(repo, issue_number, issue, fetched_at=now)
@@ -808,6 +846,7 @@ class GitHubIssueCache:
         return CacheWriteResult(
             issue_dir=issue_dir,
             issue_file=issue_path,
+            metadata_file=metadata_path,
             comments_index=comments_index,
             relationships_file=relationships_file,
         )
