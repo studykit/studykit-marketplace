@@ -27,6 +27,7 @@ if _SCRIPTS_DIR not in sys.path:
 
 from workflow_cache import GitHubIssueCache  # noqa: E402
 from workflow_github import normalize_issue_number  # noqa: E402
+from workflow_jira import normalize_jira_issue_key  # noqa: E402
 
 HOOK_STATE_DIR_NAME = "hook-state"
 
@@ -85,7 +86,7 @@ def read_session_issues(project: Path, session_id: str, kind: str) -> set[str]:
         return set()
     try:
         return {
-            normalize_issue_number(line)
+            _normalize_issue_token(line)
             for line in path.read_text(encoding="utf-8").splitlines()
             if line.strip()
         }
@@ -105,12 +106,12 @@ def record_session_issues(
     existing = read_session_issues(project, session_id, kind)
     for issue in issues:
         try:
-            existing.add(normalize_issue_number(issue))
+            existing.add(_normalize_issue_token(issue))
         except Exception:
             continue
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        ordered = sorted(existing, key=lambda value: int(value))
+        ordered = _sort_issue_tokens(existing)
         path.write_text("\n".join(ordered) + ("\n" if ordered else ""), encoding="utf-8")
     except OSError:
         return
@@ -128,7 +129,7 @@ def remove_session_issues(
     remove: set[str] = set()
     for issue in issues:
         try:
-            remove.add(normalize_issue_number(issue))
+            remove.add(_normalize_issue_token(issue))
         except Exception:
             continue
     remaining = read_session_issues(project, session_id, kind) - remove
@@ -136,7 +137,7 @@ def remove_session_issues(
         if not remaining:
             path.unlink()
             return
-        ordered = sorted(remaining, key=lambda value: int(value))
+        ordered = _sort_issue_tokens(remaining)
         path.write_text("\n".join(ordered) + "\n", encoding="utf-8")
     except OSError:
         return
@@ -147,3 +148,19 @@ def _safe_token(value: str) -> str:
         return ""
     sanitized = _SAFE_TOKEN_RE.sub("_", value).strip("._-")
     return sanitized[:_MAX_SESSION_SLUG_LEN]
+
+
+def _normalize_issue_token(value: str) -> str:
+    try:
+        return normalize_issue_number(value)
+    except Exception:
+        return normalize_jira_issue_key(value)
+
+
+def _sort_issue_tokens(values: set[str]) -> list[str]:
+    def key(value: str) -> tuple[int, str, int]:
+        if value.isdigit():
+            return (0, "", int(value))
+        return (1, value, 0)
+
+    return sorted(values, key=key)

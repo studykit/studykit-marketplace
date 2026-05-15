@@ -36,7 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "issues",
         nargs="+",
-        help="issue numbers or configured-repository GitHub issue references",
+        help="issue IDs or configured provider issue references",
     )
     return parser
 
@@ -51,7 +51,7 @@ def append_pending_comments_payload(
     runner: CommandRunner | None = None,
     guard: Callable[[ProviderRequest], None] | None = None,
 ) -> dict[str, object]:
-    """Append pending local comment files to configured GitHub issues."""
+    """Append pending local comment files to configured provider issues."""
 
     try:
         config = load_workflow_config(project)
@@ -59,13 +59,17 @@ def append_pending_comments_payload(
         raise WorkflowCacheCommentsError(str(exc)) from exc
     if config is None:
         raise WorkflowCacheCommentsError(".workflow/config.yml was not found")
-    if config.issues.kind != "github":
-        raise WorkflowCacheCommentsError("workflow pending comment append supports GitHub issue providers only")
+    if config.issues.kind not in {"github", "jira"}:
+        raise WorkflowCacheCommentsError(
+            f"workflow pending comment append supports GitHub and Jira issue providers, not {config.issues.kind}"
+        )
 
-    try:
-        repo = resolve_github_repository(config.root, runner=runner)
-    except GitHubRepositoryError as exc:
-        raise WorkflowCacheCommentsError(str(exc)) from exc
+    repo = None
+    if config.issues.kind == "github":
+        try:
+            repo = resolve_github_repository(config.root, runner=runner)
+        except GitHubRepositoryError as exc:
+            raise WorkflowCacheCommentsError(str(exc)) from exc
 
     issue_numbers = issue_numbers_from_references(
         issues,
@@ -74,7 +78,7 @@ def append_pending_comments_payload(
         allow_bare_numbers=True,
     )
     if not issue_numbers:
-        raise WorkflowCacheCommentsError("no configured-repository GitHub issue references were found")
+        raise WorkflowCacheCommentsError(f"no configured {config.issues.kind} issue references were found")
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard or authoring_guard_callback())
     results = []
@@ -91,13 +95,15 @@ def append_pending_comments_payload(
         response = dispatcher.dispatch(request)
         results.append(dict(response.payload))
 
-    return {
+    payload: dict[str, object] = {
         "operation": "cache_append_pending_comments",
         "role": "issue",
-        "kind": "github",
-        "repository": repo.to_json(),
+        "kind": config.issues.kind,
         "issues": results,
     }
+    if repo is not None:
+        payload["repository"] = repo.to_json()
+    return payload
 
 
 def main(
@@ -133,7 +139,8 @@ def main(
 
     for item in payload["issues"]:
         if isinstance(item, dict):
-            print(f"#{item.get('issue')} appended={item.get('appended')}", file=output)
+            issue_ref = f"#{item.get('issue')}" if payload.get("kind") == "github" else str(item.get("issue"))
+            print(f"{issue_ref} appended={item.get('appended')}", file=output)
     return 0
 
 

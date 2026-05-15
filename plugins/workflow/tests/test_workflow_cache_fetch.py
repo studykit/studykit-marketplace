@@ -15,8 +15,10 @@ if str(_SCRIPTS_DIR) not in sys.path:
 from workflow_cache import GitHubIssueCache  # noqa: E402
 from workflow_cache_fetch import main as cache_fetch_main  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
+from workflow_config import load_workflow_config  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
 from workflow_issue_cache import issue_numbers_from_references  # noqa: E402
+from workflow_jira import JiraDataCenterIssueCache, jira_data_center_site_from_provider_config  # noqa: E402
 
 
 class FakeRunner:
@@ -121,6 +123,107 @@ issue_id_format: github
     )
 
 
+def write_jira_config(project: Path) -> None:
+    path = project / ".workflow" / "config.yml"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        """
+version: 1
+providers:
+  issues:
+    kind: jira
+    site: https://jira.daumkakao.com
+    deployment: data-center
+    api_version: 2
+    project: TM
+    issue_type: Task
+  knowledge:
+    kind: github
+issue_id_format: jira
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+
+def jira_site(project: Path):
+    config = load_workflow_config(project)
+    assert config is not None
+    return jira_data_center_site_from_provider_config(config.issues)
+
+
+def jira_issue_payload(*, body: str = "Data Center description.") -> dict[str, object]:
+    return {
+        "id": "10001",
+        "key": "TM-1234",
+        "fields": {
+            "summary": "Support Jira Data Center",
+            "description": body,
+            "labels": ["workflow", "jira"],
+            "created": "2026-05-15T09:00:00.000+0900",
+            "updated": "2026-05-15T10:00:00.000+0900",
+            "status": {
+                "name": "In Progress",
+                "statusCategory": {"key": "indeterminate"},
+            },
+            "comment": {"comments": []},
+            "parent": {
+                "id": "9999",
+                "key": "TM-1200",
+                "fields": {"summary": "Parent task", "status": {"name": "Open"}},
+            },
+            "subtasks": [
+                {
+                    "id": "10005",
+                    "key": "TM-1237",
+                    "fields": {"summary": "Subtask", "status": {"name": "To Do"}},
+                }
+            ],
+            "issuelinks": [
+                {
+                    "id": "30001",
+                    "type": {"name": "Blocks", "outward": "blocks", "inward": "is blocked by"},
+                    "outwardIssue": {
+                        "id": "10002",
+                        "key": "TM-1235",
+                        "fields": {"summary": "Follow-up", "status": {"name": "Open"}},
+                    },
+                },
+                {
+                    "id": "30002",
+                    "type": {"name": "Blocks", "outward": "blocks", "inward": "is blocked by"},
+                    "inwardIssue": {
+                        "id": "10003",
+                        "key": "TM-1233",
+                        "fields": {"summary": "Blocking predecessor", "status": {"name": "In Progress"}},
+                    },
+                },
+            ],
+        },
+    }
+
+
+def remote_links_payload() -> list[dict[str, object]]:
+    return [
+        {
+            "id": 1,
+            "relationship": "mentioned in",
+            "object": {"title": "Design note", "url": "https://example.com/design"},
+        }
+    ]
+
+
+def curl_args(url: str) -> tuple[str, ...]:
+    return ("curl", "--silent", "--show-error", "--fail", "--request", "GET", "--config", "-", url)
+
+
+def jira_issue_url(issue: str = "TM-1234") -> str:
+    return f"https://jira.daumkakao.com/rest/api/2/issue/{issue}"
+
+
+def jira_remote_links_url(issue: str = "TM-1234") -> str:
+    return f"https://jira.daumkakao.com/rest/api/2/issue/{issue}/remotelink"
+
+
 def test_issue_numbers_from_references_accepts_agent_shell_inputs() -> None:
     references = [
         "42",
@@ -132,6 +235,17 @@ def test_issue_numbers_from_references_accepts_agent_shell_inputs() -> None:
     ]
 
     assert issue_numbers_from_references(references, repo=repo()) == ["42", "43", "44", "45"]
+
+
+def test_issue_numbers_from_references_accepts_jira_keys() -> None:
+    references = [
+        "tm-1234",
+        "Work on TM-1235 and tm-1234.",
+        "#42",
+        "https://github.com/studykit/studykit-plugins/issues/43",
+    ]
+
+    assert issue_numbers_from_references(references, issue_id_format="jira") == ["TM-1234", "TM-1235"]
 
 
 def test_cache_fetch_uses_cache_hit_without_remote_issue_view(tmp_path: Path) -> None:
@@ -252,3 +366,93 @@ def test_cache_fetch_refresh_reads_remote_and_updates_cache(tmp_path: Path) -> N
     assert relationships["children"][0]["number"] == 43
     assert relationships["dependencies"]["blocked_by"][0]["number"] == 41
     assert payload["issues"][0]["relationships"] == "parent #40; children #43; blocked_by #41"
+
+
+def test_cache_fetch_uses_jira_cache_hit_without_remote_read(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    site = jira_site(tmp_path)
+    cache = JiraDataCenterIssueCache.for_project(tmp_path)
+    cache.write_issue_bundle(
+        site,
+        jira_issue_payload(body="Cached Jira body."),
+        remote_links=remote_links_payload(),
+        fetched_at="2026-05-15T01:00:00Z",
+    )
+    runner = FakeRunner({})
+    stdout = io.StringIO()
+
+    code = cache_fetch_main(
+        ["--project", str(tmp_path), "--json", "tm-1234"],
+        stdout=stdout,
+        runner=runner,
+    )
+
+    payload = json.loads(stdout.getvalue())
+    assert code == 0
+    assert set(payload) == {"operation", "role", "kind", "cache_policy", "issues"}
+    assert payload["kind"] == "jira"
+    assert payload["issues"][0]["issue"] == "TM-1234"
+    assert payload["issues"][0]["issue_dir"] == ".workflow-cache/jira/jira.daumkakao.com/issues/TM-1234/"
+    assert payload["issues"][0]["issue_file"] == "snapshot.md"
+    assert payload["issues"][0]["cache_hit"] is True
+    assert payload["issues"][0]["relationships"] == (
+        "parent TM-1200; children TM-1237; blocked_by TM-1233; "
+        "blocking TM-1235; external_links 1"
+    )
+    assert runner.requests == []
+
+
+def test_cache_fetch_plain_output_uses_jira_snapshot_path(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    site = jira_site(tmp_path)
+    cache = JiraDataCenterIssueCache.for_project(tmp_path)
+    cache.write_issue_bundle(site, jira_issue_payload(), remote_links=[])
+    stdout = io.StringIO()
+
+    code = cache_fetch_main(
+        ["--project", str(tmp_path), "tm-1234"],
+        stdout=stdout,
+        runner=FakeRunner({}),
+    )
+
+    assert code == 0
+    assert "- TM-1234 → `.workflow-cache/jira/jira.daumkakao.com/issues/TM-1234/snapshot.md`" in stdout.getvalue()
+    assert "#TM-1234" not in stdout.getvalue()
+
+
+def test_cache_fetch_refresh_reads_remote_jira_and_updates_cache(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    runner = FakeRunner(
+        {
+            curl_args(jira_issue_url()): result(
+                curl_args(jira_issue_url()),
+                stdout=json.dumps(jira_issue_payload(body="Fresh Jira body.")),
+            ),
+            curl_args(jira_remote_links_url()): result(
+                curl_args(jira_remote_links_url()),
+                stdout=json.dumps(remote_links_payload()),
+            ),
+        }
+    )
+    stdout = io.StringIO()
+
+    code = cache_fetch_main(
+        ["--project", str(tmp_path), "--json", "--cache-policy", "refresh", "TM-1234"],
+        stdout=stdout,
+        runner=runner,
+    )
+
+    payload = json.loads(stdout.getvalue())
+    assert code == 0
+    assert payload["cache_policy"] == "refresh"
+    assert payload["kind"] == "jira"
+    assert "repository" not in payload
+    assert payload["issues"][0]["issue"] == "TM-1234"
+    assert payload["issues"][0]["cache_hit"] is False
+    assert payload["issues"][0]["issue_file"] == "snapshot.md"
+    assert [request.args for request in runner.requests] == [
+        curl_args(jira_issue_url()),
+        curl_args(jira_remote_links_url()),
+    ]
+    cached = JiraDataCenterIssueCache.for_project(tmp_path).read_issue(jira_site(tmp_path), "TM-1234")
+    assert cached["body"] == "Fresh Jira body."

@@ -37,7 +37,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="provider cache policy",
     )
     parser.add_argument("--json", action="store_true", help="emit JSON")
-    parser.add_argument("references", nargs="+", help="issue numbers or GitHub issue references")
+    parser.add_argument("references", nargs="+", help="issue IDs or configured provider issue references")
     return parser
 
 
@@ -48,7 +48,7 @@ def fetch_cache_payload(
     cache_policy: str = CACHE_POLICY_DEFAULT,
     runner: CommandRunner | None = None,
 ) -> dict[str, object]:
-    """Fetch configured GitHub issue references into the workflow cache."""
+    """Fetch configured issue references into the workflow cache."""
 
     try:
         config = load_workflow_config(project)
@@ -56,13 +56,16 @@ def fetch_cache_payload(
         raise WorkflowCacheFetchError(str(exc)) from exc
     if config is None:
         raise WorkflowCacheFetchError(".workflow/config.yml was not found")
-    if config.issues.kind != "github":
-        raise WorkflowCacheFetchError("workflow cache fetch currently supports GitHub issue providers only")
-
-    try:
-        repo = resolve_github_repository(config.root, runner=runner)
-    except GitHubRepositoryError as exc:
-        raise WorkflowCacheFetchError(str(exc)) from exc
+    repo = None
+    if config.issues.kind == "github":
+        try:
+            repo = resolve_github_repository(config.root, runner=runner)
+        except GitHubRepositoryError as exc:
+            raise WorkflowCacheFetchError(str(exc)) from exc
+    elif config.issues.kind != "jira":
+        raise WorkflowCacheFetchError(
+            f"workflow cache fetch currently supports GitHub and Jira issue providers, not {config.issues.kind}"
+        )
 
     issue_numbers = issue_numbers_from_references(
         references,
@@ -71,7 +74,7 @@ def fetch_cache_payload(
         allow_bare_numbers=True,
     )
     if not issue_numbers:
-        raise WorkflowCacheFetchError("no configured-repository GitHub issue references were found")
+        raise WorkflowCacheFetchError(f"no configured {config.issues.kind} issue references were found")
 
     contexts = cache_issue_references(
         config,
@@ -81,7 +84,12 @@ def fetch_cache_payload(
         runner=runner,
         strict=True,
     )
-    return format_issue_cache_json(contexts, repo=repo, cache_policy=cache_policy)
+    return format_issue_cache_json(
+        contexts,
+        repo=repo,
+        provider_kind=config.issues.kind,
+        cache_policy=cache_policy,
+    )
 
 
 def main(
@@ -131,6 +139,8 @@ def format_issue_cache_context_from_payload(payload: dict[str, object]) -> str:
                 state=str(item.get("state") or ""),
                 cache_hit=cache_hit if isinstance(cache_hit, bool) else None,
                 relationship_summary=str(item.get("relationships") or ""),
+                provider_kind=str(payload.get("kind") or "github"),
+                issue_file=str(item.get("issue_file") or "issue.md"),
             )
         )
 

@@ -33,7 +33,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--type", default="task", help="workflow artifact type for authoring guard")
     parser.add_argument("--state-dir", type=Path, help="ledger state directory")
     parser.add_argument("--json", action="store_true", help="emit JSON")
-    parser.add_argument("issues", nargs="+", help="issue numbers or configured-repository GitHub issue references")
+    parser.add_argument("issues", nargs="+", help="issue IDs or configured provider issue references")
     return parser
 
 
@@ -55,13 +55,17 @@ def writeback_cache_payload(
         raise WorkflowCacheWritebackError(str(exc)) from exc
     if config is None:
         raise WorkflowCacheWritebackError(".workflow/config.yml was not found")
-    if config.issues.kind != "github":
-        raise WorkflowCacheWritebackError("workflow cache write-back currently supports GitHub issue providers only")
+    if config.issues.kind not in {"github", "jira"}:
+        raise WorkflowCacheWritebackError(
+            f"workflow cache write-back currently supports GitHub and Jira issue providers, not {config.issues.kind}"
+        )
 
-    try:
-        repo = resolve_github_repository(config.root, runner=runner)
-    except GitHubRepositoryError as exc:
-        raise WorkflowCacheWritebackError(str(exc)) from exc
+    repo = None
+    if config.issues.kind == "github":
+        try:
+            repo = resolve_github_repository(config.root, runner=runner)
+        except GitHubRepositoryError as exc:
+            raise WorkflowCacheWritebackError(str(exc)) from exc
 
     issue_numbers = issue_numbers_from_references(
         issues,
@@ -70,7 +74,7 @@ def writeback_cache_payload(
         allow_bare_numbers=True,
     )
     if not issue_numbers:
-        raise WorkflowCacheWritebackError("no configured-repository GitHub issue references were found")
+        raise WorkflowCacheWritebackError(f"no configured {config.issues.kind} issue references were found")
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner), guard=guard or authoring_guard_callback())
     results = []
@@ -87,13 +91,15 @@ def writeback_cache_payload(
         response = dispatcher.dispatch(request)
         results.append(dict(response.payload))
 
-    return {
+    payload: dict[str, object] = {
         "operation": "cache_writeback",
         "role": "issue",
-        "kind": "github",
-        "repository": repo.to_json(),
+        "kind": config.issues.kind,
         "issues": results,
     }
+    if repo is not None:
+        payload["repository"] = repo.to_json()
+    return payload
 
 
 def main(
@@ -129,7 +135,8 @@ def main(
 
     for item in payload["issues"]:
         if isinstance(item, dict):
-            print(f"#{item.get('issue')} {item.get('operation')} verified={item.get('verified')}", file=output)
+            issue_ref = f"#{item.get('issue')}" if payload.get("kind") == "github" else str(item.get("issue"))
+            print(f"{issue_ref} {item.get('operation')} verified={item.get('verified')}", file=output)
     return 0
 
 

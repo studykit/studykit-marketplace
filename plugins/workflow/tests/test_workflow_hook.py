@@ -199,6 +199,62 @@ commit_refs:
     )
 
 
+def _write_jira_config(project: Path) -> None:
+    config_path = project / ".workflow" / "config.yml"
+    config_path.parent.mkdir(parents=True, exist_ok=True)
+    config_path.write_text(
+        """
+version: 1
+providers:
+  issues:
+    kind: jira
+    site: https://jira.daumkakao.com
+    deployment: data-center
+    api_version: 2
+    project: TM
+    issue_type: Task
+  knowledge:
+    kind: github
+issue_id_format: jira
+local_projection:
+  mode: none
+commit_refs:
+  enabled: true
+  style: provider-native
+""".lstrip(),
+        encoding="utf-8",
+    )
+
+
+def jira_issue_payload(*, title: str = "Support Jira Data Center hooks") -> dict[str, Any]:
+    return {
+        "id": "10001",
+        "key": "TM-1234",
+        "fields": {
+            "summary": title,
+            "description": "Jira hook body.",
+            "labels": ["workflow", "jira"],
+            "created": "2026-05-15T09:00:00.000+0900",
+            "updated": "2026-05-15T10:00:00.000+0900",
+            "status": {"name": "In Progress", "statusCategory": {"key": "indeterminate"}},
+            "comment": {"comments": []},
+            "issuelinks": [],
+        },
+    }
+
+
+def curl_args(url: str) -> tuple[str, ...]:
+    return ("curl", "--silent", "--show-error", "--fail", "--request", "GET", "--config", "-", url)
+
+
+def jira_issue_url(issue: str = "TM-1234") -> str:
+    return f"https://jira.daumkakao.com/rest/api/2/issue/{issue}"
+
+
+def jira_remote_links_url(issue: str = "TM-1234") -> str:
+    return f"https://jira.daumkakao.com/rest/api/2/issue/{issue}/remotelink"
+
+
 def _run_session_start(
     project: Path,
     monkeypatch: pytest.MonkeyPatch,
@@ -570,12 +626,13 @@ def test_session_start_transcript_agent_metadata_is_codex_only(
 def test_extract_issue_numbers_respects_issue_id_format() -> None:
     repo = GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
     text = (
-        "Review #45, GH-46, issue 47, studykit/studykit-plugins#48, "
-        "other/repo#49, and https://github.com/studykit/studykit-plugins/issues/50."
+        "Review #45, issue 47, studykit/studykit-plugins#48, "
+        "other/repo#49, https://github.com/studykit/studykit-plugins/issues/50, "
+        "and Jira keys tm-1234 plus TM-1235."
     )
 
     assert extract_issue_numbers(text, repo=repo, issue_id_format="github") == ["45", "48", "50"]
-    assert extract_issue_numbers(text, issue_id_format="jira") == []
+    assert extract_issue_numbers(text, issue_id_format="jira") == ["TM-1234", "TM-1235"]
 
 
 def _hook_env(
@@ -934,6 +991,59 @@ def test_user_prompt_caches_issue_and_injects_project_relative_path(
         / "issues"
         / "45"
         / "issue.md"
+    ).is_file()
+
+
+def test_user_prompt_caches_jira_issue_and_injects_snapshot_path(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    _write_jira_config(tmp_path)
+    _hook_env(monkeypatch, tmp_path)
+    runner = FakeRunner(
+        {
+            curl_args(jira_issue_url()): result(
+                curl_args(jira_issue_url()),
+                stdout=json.dumps(jira_issue_payload(title="Jira hook cache context")),
+            ),
+            curl_args(jira_remote_links_url()): result(
+                curl_args(jira_remote_links_url()),
+                stdout="[]",
+            ),
+        }
+    )
+
+    captured = io.StringIO()
+    event_payload = parse_codex_event_payload(
+        {
+            "session_id": "jira-s1",
+            "turn_id": "turn-1",
+            "cwd": str(tmp_path),
+            "hook_event_name": "UserPromptSubmit",
+            "prompt": "TM-1234 작업 내용 확인",
+        },
+    )
+    assert isinstance(event_payload, CodexUserPromptSubmitPayload)
+    assert user_prompt_submit(event_payload, stdout=captured, runner=runner) == 0
+
+    payload = json.loads(captured.getvalue())
+    context = payload["hookSpecificOutput"]["additionalContext"]
+    assert payload["hookSpecificOutput"]["hookEventName"] == "UserPromptSubmit"
+    assert "- TM-1234 → `.workflow-cache/jira/jira.daumkakao.com/issues/TM-1234/snapshot.md`" in context
+    assert "#TM-1234" not in context
+    assert "Jira hook cache context" not in context
+    assert [request.args for request in runner.requests] == [
+        curl_args(jira_issue_url()),
+        curl_args(jira_remote_links_url()),
+    ]
+    assert (
+        tmp_path
+        / ".workflow-cache"
+        / "jira"
+        / "jira.daumkakao.com"
+        / "issues"
+        / "TM-1234"
+        / "snapshot.md"
     ).is_file()
 
 

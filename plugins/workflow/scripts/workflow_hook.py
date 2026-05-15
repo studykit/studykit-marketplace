@@ -35,6 +35,7 @@ from workflow_github import GitHubRepository, GitHubRepositoryError, normalize_i
 from workflow_github import resolve_github_repository  # noqa: E402
 from workflow_issue_cache import cache_issue_references  # noqa: E402
 from workflow_issue_cache import extract_issue_numbers, format_issue_cache_context  # noqa: E402
+from workflow_jira import normalize_jira_issue_key  # noqa: E402
 from workflow_session_state import (  # noqa: E402
     read_session_issues,
     record_session_issues,
@@ -161,20 +162,26 @@ def inject_prompt_issue_context(
     """Cache issue refs from a prompt and inject concise context."""
 
     config = workflow_config_for_project(project_dir)
-    if config is None or config.issues.kind != "github":
+    if config is None or config.issues.kind not in {"github", "jira"}:
         return 0
 
-    repo = github_repo_for_config(config, runner=runner)
-    if repo is None:
-        return 0
+    repo = None
+    if config.issues.kind == "github":
+        repo = github_repo_for_config(config, runner=runner)
+        if repo is None:
+            return 0
 
     prompt_numbers = extract_issue_numbers(
         prompt_text,
         repo=repo,
         issue_id_format=config.issue_id_format,
     )
-    pending_numbers = sorted(read_session_issues(config.root, session_id, "pending"), key=int)
-    issue_numbers = _ordered_issue_union(pending_numbers, prompt_numbers)
+    pending_numbers = _sort_issue_tokens(read_session_issues(config.root, session_id, "pending"))
+    issue_numbers = _ordered_issue_union(
+        pending_numbers,
+        prompt_numbers,
+        issue_id_format=config.issue_id_format,
+    )
     if not issue_numbers:
         return 0
 
@@ -232,21 +239,24 @@ def record_stop_issue_references(
     _ = stdout
 
     config = workflow_config_for_project(project_dir)
-    if config is None or config.issues.kind != "github":
+    if config is None or config.issues.kind not in {"github", "jira"}:
         return 0
 
-    repo = github_repo_for_config(config, runner=runner)
-    if repo is None:
-        return 0
+    repo = None
+    if config.issues.kind == "github":
+        repo = github_repo_for_config(config, runner=runner)
+        if repo is None:
+            return 0
 
-    issue_numbers = sorted(read_session_issues(config.root, session_id, "mentioned"), key=int)
+    issue_numbers = _sort_issue_tokens(read_session_issues(config.root, session_id, "mentioned"))
     for number in extract_issue_numbers(
         scan_text,
         repo=repo,
         issue_id_format=config.issue_id_format,
     ):
-        if number not in issue_numbers:
-            issue_numbers.append(number)
+        normalized = _normalize_issue_token(number, issue_id_format=config.issue_id_format)
+        if normalized and normalized not in issue_numbers:
+            issue_numbers.append(normalized)
     if not issue_numbers:
         return 0
 
@@ -400,17 +410,34 @@ def local_workflow_roots(config: WorkflowConfig) -> tuple[Path, ...]:
     return tuple(dict.fromkeys(roots))
 
 
-def _ordered_issue_union(*groups: list[str]) -> list[str]:
+def _ordered_issue_union(*groups: list[str], issue_id_format: str = "github") -> list[str]:
     ordered: list[str] = []
     seen: set[str] = set()
     for group in groups:
         for issue in group:
-            try:
-                normalized = normalize_issue_number(issue)
-            except Exception:
+            normalized = _normalize_issue_token(issue, issue_id_format=issue_id_format)
+            if normalized is None:
                 continue
             if normalized in seen:
                 continue
             seen.add(normalized)
             ordered.append(normalized)
     return ordered
+
+
+def _normalize_issue_token(issue: str, *, issue_id_format: str) -> str | None:
+    try:
+        if issue_id_format == "jira":
+            return normalize_jira_issue_key(issue)
+        return normalize_issue_number(issue)
+    except Exception:
+        return None
+
+
+def _sort_issue_tokens(values: set[str]) -> list[str]:
+    def key(value: str) -> tuple[int, str, int]:
+        if value.isdigit():
+            return (0, "", int(value))
+        return (1, value, 0)
+
+    return sorted(values, key=key)
