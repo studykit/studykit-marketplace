@@ -1,0 +1,41 @@
+#!/usr/bin/env bash
+#
+# commit-msg hook:
+#   1. reject workflow cache projection paths in commit messages
+#
+
+set -euo pipefail
+
+MESSAGE_FILE="${1:-}"
+
+if [ -z "$MESSAGE_FILE" ] || [ ! -f "$MESSAGE_FILE" ]; then
+    exit 0
+fi
+
+MESSAGE_BODY=$(
+    awk '
+        /^# ------------------------ >8 ------------------------/ { exit }
+        /^[[:space:]]*#/ { next }
+        { print }
+    ' "$MESSAGE_FILE"
+)
+
+if echo "$MESSAGE_BODY" | grep -nE '(^|[^A-Za-z0-9_.-])\.workflow-cache(/|$)' >/tmp/workflow-cache-commit-msg-matches.$$; then
+    echo "ERROR: Commit message contains a workflow cache projection path."
+    echo ""
+    echo "Use the provider-native issue reference instead:"
+    echo "  GitHub: #54"
+    echo "  Jira:   PROJ-123"
+    echo ""
+    echo "Do not use paths such as:"
+    echo "  .workflow-cache/issues/54/issue.md"
+    echo ""
+    echo "Matches:"
+    sed 's/^/  /' "/tmp/workflow-cache-commit-msg-matches.$$"
+    rm -f "/tmp/workflow-cache-commit-msg-matches.$$"
+    exit 1
+fi
+
+rm -f "/tmp/workflow-cache-commit-msg-matches.$$"
+
+exit 0
