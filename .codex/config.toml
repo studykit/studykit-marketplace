@@ -11,10 +11,13 @@ hooks = true
 # Keep the main session unchanged, but start common subagent roles without
 # Codex Apps/connectors so their startup does not initialize codex_apps.
 [agents.default]
+description = "General-purpose subagent for delegated tasks."
 config_file = "agents/subagent-no-apps.toml"
 
 [agents.worker]
+description = "Execution subagent for implementation and production work."
 config_file = "agents/subagent-no-apps.toml"
 
 [agents.explorer]
+description = "Read-only codebase exploration subagent for well-scoped questions."
 config_file = "agents/subagent-no-apps.toml"
