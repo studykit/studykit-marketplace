@@ -264,6 +264,13 @@ issue relationship metadata is allowed.
 """
 
 # Disable Codex Apps/connectors for this custom subagent. Do not add
-# mcp_servers.* entries here unless each entry includes its transport.
+# mcp_servers.* entries here unless each entry includes its transport, or the
+# entry is purely a disable toggle (`enabled = false`) for an inherited server.
 [features]
 apps = false
+
+# Skip the inherited openaiDeveloperDocs MCP at subagent startup; this operator
+# does not need OpenAI docs lookups for workflow script execution.
+[mcp_servers.openaiDeveloperDocs]
+url = "https://developers.openai.com/mcp"
+enabled = false

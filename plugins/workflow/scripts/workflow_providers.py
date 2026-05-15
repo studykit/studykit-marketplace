@@ -1091,6 +1091,9 @@ def default_provider_registry(*, runner: CommandRunner | None = None) -> Provide
 
     registry = ProviderRegistry()
     registry.register(GitHubIssueNativeProvider(runner=runner))
+    from workflow_jira_data_center import JiraDataCenterIssueNativeProvider
+
+    registry.register(JiraDataCenterIssueNativeProvider(runner=runner))
     return registry
 
 
