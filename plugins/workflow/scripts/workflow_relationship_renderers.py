@@ -30,6 +30,8 @@ def render_relationship_summary(
 
     if provider_kind == "github":
         return render_github_relationship_summary(relationships)
+    if provider_kind == "jira":
+        return render_jira_relationship_summary(relationships)
     return ""
 
 
@@ -66,6 +68,45 @@ def render_github_relationship_summary(relationships: Mapping[str, Any]) -> str:
     related = _relationship_numbers(relationships.get(_GITHUB_RELATED_KEY))
     if related:
         parts.append(f"related {_format_issue_numbers(related)}")
+
+    return "; ".join(parts)
+
+
+def render_jira_relationship_summary(relationships: Mapping[str, Any]) -> str:
+    """Render a compact summary from the Jira `relationships.workflow` projection."""
+
+    if not isinstance(relationships, Mapping):
+        return ""
+    workflow = relationships.get("workflow")
+    if not isinstance(workflow, Mapping):
+        return ""
+
+    parts: list[str] = []
+
+    parent = _relationship_keys(workflow.get("parent"))
+    if parent:
+        parts.append(f"parent {_format_jira_keys(parent)}")
+
+    children = _relationship_keys(workflow.get("children"))
+    if children:
+        parts.append(f"children {_format_jira_keys(children)}")
+
+    dependencies = workflow.get("dependencies")
+    if isinstance(dependencies, Mapping):
+        blocked_by = _relationship_keys(dependencies.get("blocked_by"))
+        if blocked_by:
+            parts.append(f"blocked_by {_format_jira_keys(blocked_by)}")
+        blocking = _relationship_keys(dependencies.get("blocking"))
+        if blocking:
+            parts.append(f"blocking {_format_jira_keys(blocking)}")
+
+    related = _relationship_keys(workflow.get("related"))
+    if related:
+        parts.append(f"related {_format_jira_keys(related)}")
+
+    external_links = workflow.get("external_links")
+    if isinstance(external_links, list) and external_links:
+        parts.append(f"external_links {len(external_links)}")
 
     return "; ".join(parts)
 
@@ -115,4 +156,47 @@ def _format_issue_numbers(numbers: Sequence[str], *, limit: int = 5) -> str:
     visible = [f"#{number}" for number in numbers[:limit]]
     if len(numbers) > limit:
         visible.append(f"+{len(numbers) - limit}")
+    return ",".join(visible)
+
+
+def _relationship_keys(value: Any) -> list[str]:
+    keys: list[str] = []
+    seen: set[str] = set()
+
+    def add(raw: Any) -> None:
+        if raw is None:
+            return
+        text = str(raw).strip()
+        if not text or text in seen:
+            return
+        seen.add(text)
+        keys.append(text)
+
+    def visit(item: Any) -> None:
+        if item is None:
+            return
+        if isinstance(item, Mapping):
+            for key in ("key", "issue"):
+                if key in item:
+                    add(item.get(key))
+                    return
+            nodes = item.get("nodes")
+            if isinstance(nodes, list):
+                for node in nodes:
+                    visit(node)
+            return
+        if isinstance(item, list | tuple | set):
+            for child in item:
+                visit(child)
+            return
+        add(item)
+
+    visit(value)
+    return keys
+
+
+def _format_jira_keys(keys: Sequence[str], *, limit: int = 5) -> str:
+    visible = list(keys[:limit])
+    if len(keys) > limit:
+        visible.append(f"+{len(keys) - limit}")
     return ",".join(visible)
