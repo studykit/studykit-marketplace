@@ -109,6 +109,48 @@ def jira_issue_payload(*, body: str = "Data Center description.") -> dict[str, o
                             "status": {"name": "Open"},
                         },
                     },
+                },
+                {
+                    "id": "30002",
+                    "type": {"name": "Blocks", "outward": "blocks", "inward": "is blocked by"},
+                    "inwardIssue": {
+                        "id": "10003",
+                        "key": "TM-1233",
+                        "fields": {
+                            "summary": "Blocking predecessor",
+                            "status": {"name": "In Progress"},
+                        },
+                    },
+                },
+                {
+                    "id": "30003",
+                    "type": {"name": "Relates", "outward": "relates to", "inward": "relates to"},
+                    "outwardIssue": {
+                        "id": "10004",
+                        "key": "TM-1236",
+                        "fields": {
+                            "summary": "Related issue",
+                            "status": {"name": "Open"},
+                        },
+                    },
+                }
+            ],
+            "parent": {
+                "id": "9999",
+                "key": "TM-1200",
+                "fields": {
+                    "summary": "Parent task",
+                    "status": {"name": "Open"},
+                },
+            },
+            "subtasks": [
+                {
+                    "id": "10005",
+                    "key": "TM-1237",
+                    "fields": {
+                        "summary": "Subtask",
+                        "status": {"name": "To Do"},
+                    },
                 }
             ],
         },
@@ -184,6 +226,13 @@ def test_data_center_provider_fetches_issue_remote_links_and_writes_llm_snapshot
     assert response.payload["body"] == "Data Center description."
     assert response.payload["jira"]["deployment"] == "data_center"
     assert response.payload["relationships"]["remote_links"][0]["url"] == "https://example.com/design"
+    workflow = response.payload["relationships"]["workflow"]
+    assert workflow["parent"]["key"] == "TM-1200"
+    assert workflow["children"][0]["key"] == "TM-1237"
+    assert workflow["dependencies"]["blocking"][0]["key"] == "TM-1235"
+    assert workflow["dependencies"]["blocked_by"][0]["key"] == "TM-1233"
+    assert workflow["related"][0]["key"] == "TM-1236"
+    assert workflow["external_links"][0]["url"] == "https://example.com/design"
     assert [request.args for request in runner.requests] == [curl_args(issue_url()), curl_args(remote_links_url())]
     assert all(request.input_text == 'header = "Accept: application/json"\n' for request in runner.requests)
 
@@ -198,6 +247,9 @@ def test_data_center_provider_fetches_issue_remote_links_and_writes_llm_snapshot
     assert "Data Center description." in snapshot
     assert "Please keep Data Center first." in snapshot
     assert "https://example.com/design" in snapshot
+    assert "Parent: TM-1200 (Parent task)" in snapshot
+    assert "Blocked by: TM-1233 (Blocking predecessor)" in snapshot
+    assert "Blocking: TM-1235 (Follow-up)" in snapshot
 
 
 def test_default_cache_policy_uses_data_center_cache_hit_without_curl(tmp_path: Path) -> None:

@@ -416,6 +416,32 @@ def render_jira_snapshot(issue: Mapping[str, Any]) -> str:
     else:
         lines.append("No remote links cached.")
 
+    workflow = relationships.get("workflow") if isinstance(relationships.get("workflow"), Mapping) else {}
+    if workflow:
+        lines.extend(["", "## Workflow Relationships", ""])
+        assert isinstance(workflow, Mapping)
+        parent = workflow.get("parent")
+        if isinstance(parent, Mapping):
+            lines.append(f"- Parent: {_relationship_issue_label(parent)}")
+        children = workflow.get("children") if isinstance(workflow.get("children"), list) else []
+        if children:
+            lines.append(f"- Children: {', '.join(_relationship_issue_label(child) for child in children if isinstance(child, Mapping))}")
+        dependencies = workflow.get("dependencies") if isinstance(workflow.get("dependencies"), Mapping) else {}
+        if isinstance(dependencies, Mapping):
+            blocked_by = dependencies.get("blocked_by") if isinstance(dependencies.get("blocked_by"), list) else []
+            blocking = dependencies.get("blocking") if isinstance(dependencies.get("blocking"), list) else []
+            if blocked_by:
+                lines.append(
+                    f"- Blocked by: {', '.join(_relationship_issue_label(item) for item in blocked_by if isinstance(item, Mapping))}"
+                )
+            if blocking:
+                lines.append(
+                    f"- Blocking: {', '.join(_relationship_issue_label(item) for item in blocking if isinstance(item, Mapping))}"
+                )
+        related = workflow.get("related") if isinstance(workflow.get("related"), list) else []
+        if related:
+            lines.append(f"- Related: {', '.join(_relationship_issue_label(item) for item in related if isinstance(item, Mapping))}")
+
     issue_links = relationships.get("issue_links") if isinstance(relationships.get("issue_links"), list) else []
     if issue_links:
         lines.extend(["", "## Issue Links", ""])
@@ -448,6 +474,9 @@ def _provider_relationships(
     subtasks = [_issue_stub(item) for item in _mapping_list(fields.get("subtasks"))]
     if subtasks:
         relationships["subtasks"] = subtasks
+    workflow_relationships = _workflow_relationships(relationships)
+    if workflow_relationships:
+        relationships["workflow"] = workflow_relationships
     return relationships
 
 
@@ -467,6 +496,113 @@ def _normalize_issue_link(link: Mapping[str, Any]) -> dict[str, Any]:
     if isinstance(outward_issue, Mapping):
         entry["outward_issue"] = _issue_stub(outward_issue)
     return {key: value for key, value in entry.items() if value is not None}
+
+
+def _workflow_relationships(provider_relationships: Mapping[str, Any]) -> dict[str, Any]:
+    """Map Jira-native relationship fields into workflow relationship categories.
+
+    Jira link direction is label-based. The REST payload exposes `inwardIssue`
+    or `outwardIssue`; the corresponding `type.inward` or `type.outward` label
+    is the only stable semantic surface for dependency mapping.
+    """
+
+    workflow: dict[str, Any] = {}
+
+    parent = provider_relationships.get("parent")
+    if isinstance(parent, Mapping):
+        workflow["parent"] = _workflow_issue(parent)
+
+    subtasks = provider_relationships.get("subtasks")
+    if isinstance(subtasks, list):
+        children = [_workflow_issue(item) for item in subtasks if isinstance(item, Mapping)]
+        if children:
+            workflow["children"] = children
+
+    dependencies: dict[str, list[dict[str, Any]]] = {"blocked_by": [], "blocking": []}
+    related: list[dict[str, Any]] = []
+    issue_links = provider_relationships.get("issue_links")
+    if isinstance(issue_links, list):
+        for link in issue_links:
+            if not isinstance(link, Mapping):
+                continue
+            target, direction, label = _issue_link_target_and_label(link)
+            if target is None:
+                continue
+            mapped = _workflow_issue(target)
+            mapped["source"] = "issuelinks"
+            mapped["direction"] = direction
+            if link.get("type"):
+                mapped["link_type"] = link.get("type")
+            if label:
+                mapped["label"] = label
+
+            bucket = _dependency_bucket(label)
+            if bucket is None:
+                related.append(mapped)
+            else:
+                dependencies[bucket].append(mapped)
+
+    compact_dependencies = {name: items for name, items in dependencies.items() if items}
+    if compact_dependencies:
+        workflow["dependencies"] = compact_dependencies
+    if related:
+        workflow["related"] = related
+
+    remote_links = provider_relationships.get("remote_links")
+    if isinstance(remote_links, list):
+        external_links = [_workflow_external_link(item) for item in remote_links if isinstance(item, Mapping)]
+        if external_links:
+            workflow["external_links"] = external_links
+
+    return workflow
+
+
+def _issue_link_target_and_label(link: Mapping[str, Any]) -> tuple[Mapping[str, Any] | None, str, str | None]:
+    if isinstance(link.get("outward_issue"), Mapping):
+        return link["outward_issue"], "outward", _normalize_optional(link.get("outward"))
+    if isinstance(link.get("inward_issue"), Mapping):
+        return link["inward_issue"], "inward", _normalize_optional(link.get("inward"))
+    return None, "unknown", None
+
+
+def _dependency_bucket(label: str | None) -> str | None:
+    normalized = _normalize_link_label(label)
+    if normalized in {"blocks", "is blocking", "is depended on by", "is required by"}:
+        return "blocking"
+    if normalized in {"is blocked by", "blocked by", "depends on", "requires", "is dependent on"}:
+        return "blocked_by"
+    return None
+
+
+def _normalize_link_label(label: str | None) -> str:
+    if label is None:
+        return ""
+    return " ".join(str(label).strip().lower().replace("_", " ").replace("-", " ").split())
+
+
+def _workflow_issue(issue: Mapping[str, Any]) -> dict[str, Any]:
+    key = _normalize_optional(issue.get("key"))
+    result: dict[str, Any] = {
+        "provider": "jira",
+        "key": key,
+        "issue": key,
+        "id": _normalize_optional(issue.get("id")),
+        "title": _normalize_optional(issue.get("summary") or issue.get("title")),
+        "state": _normalize_optional(issue.get("status") or issue.get("state")),
+    }
+    return {name: value for name, value in result.items() if value is not None}
+
+
+def _workflow_external_link(link: Mapping[str, Any]) -> dict[str, Any]:
+    result: dict[str, Any] = {
+        "source": "remote_links",
+        "title": _normalize_optional(link.get("title")),
+        "url": _normalize_optional(link.get("url")),
+        "relationship": _normalize_optional(link.get("relationship")),
+        "global_id": _normalize_optional(link.get("global_id")),
+        "id": _normalize_optional(link.get("id")),
+    }
+    return {name: value for name, value in result.items() if value is not None}
 
 
 def _issue_stub(issue: Mapping[str, Any]) -> dict[str, Any]:
@@ -506,6 +642,12 @@ def _format_issue_link(link: Mapping[str, Any]) -> str:
         assert isinstance(issue, Mapping)
         return f"{type_name} inward {issue.get('key')}: {issue.get('summary') or ''}".rstrip()
     return str(type_name)
+
+
+def _relationship_issue_label(issue: Mapping[str, Any]) -> str:
+    key = issue.get("key") or issue.get("issue") or "unknown"
+    title = issue.get("title")
+    return f"{key} ({title})" if title else str(key)
 
 
 def _read_json_mapping(path: Path) -> Mapping[str, Any]:
