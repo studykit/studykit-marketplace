@@ -45,11 +45,7 @@ Claude compatibility is preserved through the existing Claude marketplace files:
 
 ## Compatibility policy
 
-To avoid breaking Claude compatibility:
-
-- Claude manifests and marketplace files are kept intact.
-- Codex support is added in parallel through `.codex-plugin/` manifests and `.agents/plugins/marketplace.json`.
-- Shared plugin logic stays under each plugin root whenever possible.
+For compatibility and versioning rules, see `AGENTS.md`.
 
 ## Available plugins
 
