@@ -666,11 +666,10 @@ def test_session_start_injects_policy_for_configured_project(
     expected_context = [
         "## workflow policy",
         "",
-        "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
-        "For issue create/update flows, ask `workflow-operator` for required authoring paths, read those docs locally, and draft title/body/labels locally.",
-        "For new issues, stop at the pending draft until the user explicitly approves provider issue creation; then ask `workflow-operator` to create it and refresh/verify cache.",
-        "For existing issue updates, ask `workflow-operator` to perform write-back and refresh/verify cache.",
-        "Do not run raw provider CLIs directly when the operator can handle the operation.",
+        "Before editing a workflow issue or knowledge document, ask `workflow-operator` for the required authoring paths, then read those files locally before drafting or editing content.",
+        "For workflow issues, draft or edit title/body/labels locally. After local draft/edit content is complete, tell `workflow-operator`; it will publish and verify provider updates.",
+        "For new workflow issues, stop at the pending draft until the user explicitly approves provider issue creation.",
+        "For GitHub-backed knowledge documents, choose a target Markdown file under `wiki/`, ask `workflow-operator` for authoring paths with the document type and `knowledge` role, then edit the file directly in the working tree.",
     ]
     if runtime == "codex":
         expected_context.append(
@@ -689,6 +688,7 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Read and summarize issue, comment, knowledge, or authoring file content directly" not in context
     assert "Workflow issues live in GitHub" not in context
     assert "raw `gh` as its own fallback" not in context
+    assert "raw provider CLIs" not in context
     assert "For cached issue body edits, edit `issue.md` in the cache projection first" not in context
     assert "Configured workflow project:" not in context
     assert "Config file:" not in context
@@ -697,6 +697,7 @@ def test_session_start_injects_policy_for_configured_project(
     assert "Knowledge provider:" not in context
     assert "Local projection:" not in context
     assert "Commit references:" not in context
+    assert "artifact" not in context.lower()
     assert "Before workflow artifact edits" not in context
     assert "operator should return `NONE`" not in context
     assert "treat `NONE`" not in context
@@ -707,6 +708,8 @@ def test_session_start_injects_policy_for_configured_project(
     assert "$WORKFLOW_PLUGIN_ROOT/scripts/" not in context
     assert "scripts/authoring_resolver.py" not in context
     assert "scripts/workflow_github.py" not in context
+    assert "cache" not in context.lower()
+    assert "write-back" not in context
     assert "## workflow provider cache context" not in context
     assert "Do not inspect `.workflow-cache`" not in context
     assert "UserPromptSubmit may pre-read" not in context
@@ -774,11 +777,9 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
     expected_context = [
         "## workflow policy",
         "",
-        "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations to `workflow-operator`.",
-        "For issue create/update flows, ask `workflow-operator` for required authoring paths, read those docs locally, and draft title/body/labels locally.",
-        "For new issues, stop at the pending draft until the user explicitly approves provider issue creation; then ask `workflow-operator` to create it and refresh/verify cache.",
-        "For existing issue updates, ask `workflow-operator` to perform write-back and refresh/verify cache.",
-        "Do not run raw provider CLIs directly when the operator can handle the operation.",
+        "Before editing a workflow issue or knowledge document, ask `workflow-operator` for the required authoring paths, then read those files locally before drafting or editing content.",
+        "For workflow issues, draft or edit title/body/labels locally. After local draft/edit content is complete, tell `workflow-operator`; it will publish and verify provider updates.",
+        "For new workflow issues, stop at the pending draft until the user explicitly approves provider issue creation.",
     ]
     if runtime == "codex":
         expected_context.append(
@@ -790,11 +791,16 @@ def test_session_start_uses_filesystem_issue_policy_for_local_artifacts(
     assert "The operator does not interpret content" not in context
     assert "Issue ID format:" not in context
     assert "Local projection:" not in context
+    assert "GitHub-backed knowledge documents" not in context
+    assert "artifact" not in context.lower()
     assert "Before workflow artifact edits" not in context
     assert "operator should return `NONE`" not in context
     assert "Use the workflow operator only for workflow operations" not in context
     assert "raw GitHub CLI (`gh`)" not in context
     assert "should not run raw `gh`" not in context
+    assert "raw provider CLIs" not in context
+    assert "cache" not in context.lower()
+    assert "write-back" not in context
 
 
 def test_session_start_discovers_config_from_nested_project_path(

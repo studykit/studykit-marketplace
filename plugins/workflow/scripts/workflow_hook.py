@@ -166,17 +166,25 @@ def build_session_start_context(config: WorkflowConfig, plugin_root: Path) -> st
     """Build the context block injected for configured workflow projects."""
 
     _ = plugin_root  # plugin_root reserved for future template extensions
-    return (
-        "## workflow policy\n\n"
-        "Delegate workflow provider/cache/relationship/write-back/comment/authoring-path operations "
-        "to `workflow-operator`.\n"
-        "For issue create/update flows, ask `workflow-operator` for required authoring paths, "
-        "read those docs locally, and draft title/body/labels locally.\n"
-        "For new issues, stop at the pending draft until the user explicitly approves provider issue creation; "
-        "then ask `workflow-operator` to create it and refresh/verify cache.\n"
-        "For existing issue updates, ask `workflow-operator` to perform write-back and refresh/verify cache.\n"
-        "Do not run raw provider CLIs directly when the operator can handle the operation."
-    )
+    lines = [
+        "## workflow policy",
+        "",
+        "Before editing a workflow issue or knowledge document, ask `workflow-operator` "
+        "for the required authoring paths, then read those files locally before drafting "
+        "or editing content.",
+        "For workflow issues, draft or edit title/body/labels locally. After local "
+        "draft/edit content is complete, tell `workflow-operator`; it will publish "
+        "and verify provider updates.",
+        "For new workflow issues, stop at the pending draft until the user explicitly "
+        "approves provider issue creation.",
+    ]
+    if config.knowledge.kind == "github":
+        lines.append(
+            "For GitHub-backed knowledge documents, choose a target Markdown file under "
+            "`wiki/`, ask `workflow-operator` for authoring paths with the document type "
+            "and `knowledge` role, then edit the file directly in the working tree."
+        )
+    return "\n".join(lines)
 
 
 def build_prompt_commit_context(config: WorkflowConfig, prompt_text: str) -> str:

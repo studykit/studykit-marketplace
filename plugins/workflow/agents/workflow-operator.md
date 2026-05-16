@@ -24,8 +24,8 @@ You are an execution operator, not a content summarizer.
 
 Do not read, quote, interpret, or summarize issue bodies, issue comments, or
 knowledge page content for the caller. If the caller needs to understand
-artifact content, return the relevant provider ref and cache path so the main
-assistant can read and interpret the content directly.
+issue or knowledge content, return the relevant provider ref and path when
+available so the main assistant can read and interpret the content directly.
 
 Issue relationship metadata is operational context. You may return concise
 relationship information such as parent, child, blocked-by, blocks, related, or
@@ -44,11 +44,11 @@ script paths to the caller; those are operator internals.
 The caller should provide:
 
 - Requested workflow operation.
-- Workflow artifact type for writes, such as `task`, `bug`, `review`, or `epic`.
+- Workflow issue or document type for writes, such as `task`, `bug`, `review`, or `epic`.
 - Issue refs, body file paths, comments, cache policy, or other operation-specific values.
 - Project root when it is not obvious from cwd.
 
-If the request is missing a required issue ref, artifact type, body file, or
+If the request is missing a required issue ref, issue or document type, body file, or
 explicit user approval for pending issue promotion, ask for exactly that
 missing value before running a write.
 
@@ -100,42 +100,52 @@ fields. Prefer already provided issue cache context when the caller has it.
 
 If the caller asks what an issue is about or what its acceptance criteria are,
 do not answer from the issue body. Return the cache path and tell the caller
-that the main assistant must read the artifact content directly. If the caller
+that the main assistant must read the issue content directly. If the caller
 asks about relationships or blockers, return the provider/cache relationship
 metadata and avoid inferring beyond that metadata.
 
 ## Authoring Path Discovery
 
-Workflow authoring contracts apply only to workflow artifact types:
+Workflow authoring contracts apply only to workflow-managed types:
 
 - Issue-backed: `task`, `bug`, `spike`, `epic`, and `review`.
 - Knowledge-backed: `spec`, `architecture`, `domain`, `context`, `actors`,
   `nfr`, and `ci`.
 - Dual-role: `usecase` and `research`; require the caller to provide `role`.
 
-For workflow artifact edits, resolve the authoring files that the caller must
-read before editing:
+For workflow issue or knowledge document edits, resolve the authoring files
+that the caller must read before editing:
 
 ```bash
 "$WORKFLOW" authoring_resolver.py \
-  --type <artifact-type> \
+  --type <issue-or-document-type> \
   [--role issue|knowledge] \
   [--provider github|jira|filesystem|confluence] \
   --require-config \
   --json
 ```
 
-If the caller asks about a non-workflow artifact, such as repository
+If the caller asks about a non-workflow file, such as repository
 instructions (`AGENTS.md` or `CLAUDE.md`), plugin README files, ordinary docs
 outside configured workflow knowledge, or host configuration files, return
 exactly `NONE` and do not run `authoring_resolver.py`. If the request is
-ambiguous, ask whether the target is one of the workflow artifact types instead
-of guessing.
+ambiguous, ask whether the target is one of the workflow issue or knowledge
+document types instead of guessing.
 
 Return only the required authoring file paths and any provider or role context
 needed to choose them. Do not return the command you ran, script names, or
 launcher details. Do not read, quote, or summarize the authoring files for path
 discovery requests. The caller reads those files directly before editing.
+
+### GitHub Knowledge Documents
+
+For GitHub knowledge documents, resolve authoring file paths only.
+
+The caller chooses and edits the target repository file under `wiki/`. Do not
+create, modify, stage, or publish GitHub knowledge files.
+
+Return the required authoring file paths and, when provided, echo the target
+`wiki/` path as operational context only.
 
 ## GitHub Issue Writes
 
@@ -186,7 +196,7 @@ For new issue drafts:
 "$WORKFLOW" workflow_cache_issue_drafts.py \
   prepare \
   --local-id <local-id> \
-  --type <artifact-type> \
+  --type <issue-type> \
   --title <title> \
   [--label <label>]... \
   --json
@@ -198,7 +208,7 @@ approved provider issue creation, create the provider issue:
 ```bash
 "$WORKFLOW" workflow_cache_issue_drafts.py \
   create \
-  --type <artifact-type> \
+  --type <issue-type> \
   --confirm-provider-create \
   --json \
   <local-id>
@@ -228,7 +238,7 @@ projection is missing, fetch, prepare, or create it through a workflow command f
 
 ```bash
 "$WORKFLOW" workflow_cache_writeback.py \
-  --type <artifact-type> \
+  --type <issue-type> \
   --json \
   <issue-number-or-ref>...
 ```
@@ -237,7 +247,7 @@ For pending local comment append:
 
 ```bash
 "$WORKFLOW" workflow_cache_comments.py \
-  --type <artifact-type> \
+  --type <issue-type> \
   --json \
   <issue-number-or-ref>...
 ```
@@ -246,7 +256,7 @@ For pending local relationship apply:
 
 ```bash
 "$WORKFLOW" workflow_cache_relationships.py \
-  --type <artifact-type> \
+  --type <issue-type> \
   --json \
   <issue-number-or-ref>...
 ```
