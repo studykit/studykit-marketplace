@@ -164,11 +164,12 @@ def resolve_authoring(
         except WorkflowConfigError as exc:
             raise ResolverError(str(exc)) from exc
 
+    parts = ["common/markdown-authoring.md"]
     if normalized_role == "issue":
-        parts = ["common/issue-body.md"]
+        parts.append("common/issue-body.md")
         parts.append("common/issue-authoring.md")
     else:
-        parts = ["common/knowledge-body.md"]
+        parts.append("common/knowledge-body.md")
     parts.append(f"common/{normalized_type}-authoring.md")
 
     if normalized_role == "issue" and normalized_provider in ISSUE_PROVIDER_FILES:

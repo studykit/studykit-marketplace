@@ -173,9 +173,7 @@ Provider and cache metadata are operational state, not authoring content. Use pr
 
 The visible body remains the durable reading surface for humans and agents.
 
-## Lists and bullets
-
-Use ordinary Markdown lists unless a type-specific contract gives a stricter shape.
+## Relationship Lists And Change Logs
 
 Relationship lists should keep one referenced item per bullet.
 

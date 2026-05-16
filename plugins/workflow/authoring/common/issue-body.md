@@ -21,7 +21,7 @@ A meeting just ended; absent teammates need the outcome.
 
 ## Acceptance Criteria
 
-- The summary can be shared with one selected channel.
+- [ ] The summary can be shared with one selected channel.
 ```
 
 Rules:
@@ -99,9 +99,7 @@ Use when an issue is intentionally abandoned and provider status alone does not 
 - 2026-05-13 10:15 — Superseded by PROJ-456.
 ```
 
-## Lists and bullets
-
-Use ordinary Markdown lists unless a type-specific contract gives a stricter shape.
+## Relationship Lists
 
 Relationship lists should keep one referenced item per bullet.
 
