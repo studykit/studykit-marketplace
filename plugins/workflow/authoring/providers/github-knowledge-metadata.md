@@ -21,7 +21,7 @@ Use optional Markdown metadata only when automation needs it. Do not treat Markd
 
 The repository-relative path is the stable page identity. Git history records who changed what and when. Page `## Change Log` entries record why material changes happened.
 
-Do not create a separate local cache projection for a page that already lives in the repository.
+Do not create a separate local duplicate for a page that already lives in the repository.
 
 ## Relationship metadata
 

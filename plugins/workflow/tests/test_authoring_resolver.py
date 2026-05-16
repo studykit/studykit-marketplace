@@ -42,6 +42,7 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
         "providers/github-issue-anti-patterns.md",
     ]
     assert all(path.is_absolute() for path in resolution.files)
+    assert all("plugins/workflow/operator" not in str(path) for path in resolution.files)
 
 
 def test_review_github_issue_authoring_requires_target_section() -> None:

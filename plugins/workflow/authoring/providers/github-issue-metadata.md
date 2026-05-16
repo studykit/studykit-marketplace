@@ -1,6 +1,6 @@
 # GitHub Issue Metadata
 
-Provider-specific metadata and cache projection rules for workflow issue artifacts stored as GitHub Issues.
+Provider-specific metadata rules for workflow issue artifacts stored as GitHub Issues.
 
 Read with `../common/issue-authoring.md` and `./github-issue-convention.md`.
 
@@ -14,16 +14,8 @@ Read with `../common/issue-authoring.md` and `./github-issue-convention.md`.
 
 GitHub native `state` is provider lifecycle state, not the workflow `status` field. Treat close reasons as provider metadata unless project configuration maps them into workflow status.
 
-## Cache projection
+## Authoring boundary
 
-The GitHub issue metadata cache projection uses these files under the issue cache directory:
+Do not invent body sections to store provider-owned metadata. Ask `workflow-operator` to apply provider/cache metadata changes.
 
-- `issue.md`: Markdown issue body with projection-owned YAML frontmatter.
-- `metadata.yml`: non-user-facing cache freshness metadata.
-- `comments/index.yml` and `comments/*.md`: comment projection.
-
-`issue.md` frontmatter is projection-owned and currently carries `schema_version`, `title`, `state`, `state_reason`, `labels`, and `source_updated_at`. `fetched_at` belongs in `metadata.yml`, not `issue.md`.
-
-Edit only the Markdown body below existing `issue.md` frontmatter for body write-back. Change provider-owned metadata through workflow provider/cache operations.
-
-Issue relationships are outside this metadata document. Read `./github-issue-relationships.md` for relationship projection and pending-write files.
+Issue relationships are outside this metadata document. Read `./github-issue-relationships.md` for relationship authoring boundaries.

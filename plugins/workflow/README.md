@@ -121,39 +121,12 @@ Non-workflow projects receive no workflow hook output.
 GitHub issue reads may be cached under `.workflow-cache/`, which is ignored by
 Git.
 
-Configured-repository shape:
+Treat cache layout and projection schemas as `workflow-operator` internals. The
+operator returns the editable cache path when a cached issue body edit is
+requested and performs provider/cache refresh and write-back operations.
 
-```text
-.workflow-cache/issues/ISSUE_NUMBER/
-  issue.md
-  metadata.yml
-  comments/
-    index.yml
-    YYYY-MM-DDTHHMMSSZ-PROVIDER_COMMENT_ID.md
-  relationships.yml
-```
-
-`issue.md` is the user-facing issue projection. Internal cache fields such as
-`fetched_at` live in `metadata.yml` so freshness and write-back checks can use
-them without leaking cache mechanics into the issue body projection.
-
-External GitHub repositories are namespaced under
-`.workflow-cache/github.com/OWNER/REPO/issues/ISSUE_NUMBER/`.
-
-Cache policies:
-
-- `default` — read existing cache first, otherwise fetch and cache provider
-  data.
-- `refresh` — fetch provider data and overwrite the cache.
-- `bypass` — fetch provider data without reading or writing the cache.
-
-Fetch issue cache explicitly:
-
-```bash
-"./plugins/workflow/scripts/workflow" workflow_cache_fetch.py \
-  --json \
-  42
-```
+Ask `workflow-operator` for explicit fetch, refresh, write-back, comment, or
+relationship operations.
 
 ## Validation
 

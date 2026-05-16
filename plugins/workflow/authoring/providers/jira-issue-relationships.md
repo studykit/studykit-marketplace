@@ -16,49 +16,8 @@ Use Jira-native relationships when configured:
 
 Relationship writes must use explicit `.workflow/config.yml` mappings. Do not infer Jira link type names, directions, remote-link surfaces, or parent fields from issue body prose.
 
-## Cache projection
-
-Jira Data Center cache stores current native issue payloads in `issue.json` and remote links in `remote-links.json`.
-
-The normalized provider payload exposes workflow relationships under `relationships.workflow` inside the cached issue payload:
-
-```yaml
-workflow:
-  parent: <jira-issue-ref-object>
-  children:
-    - <jira-issue-ref-object>
-  dependencies:
-    blocked_by:
-      - <jira-issue-ref-object>
-    blocking:
-      - <jira-issue-ref-object>
-  related:
-    - <jira-issue-ref-object>
-  external_links:
-    - <remote-link-object>
-```
-
-`snapshot.md` may render a human-readable `## Workflow Relationships` summary from that payload. Do not treat the rendered summary as a write-back source.
-
-## Pending intent schema
-
-Jira relationship write intent uses `relationships-pending.yml` under the issue cache directory:
-
-```yaml
-parent: <jira-key>
-children:
-  - <jira-key>
-dependencies:
-  blocked_by:
-    - <jira-key>
-  blocking:
-    - <jira-key>
-related:
-  - <jira-key>
-```
-
-Apply pending relationships through workflow provider operations, then refresh the cached issue payload.
-
 ## Body boundary
 
 Use body fallback sections only when configured native relationship storage is unavailable or intentionally insufficient for readers. Do not duplicate native Jira links or remote links in the body.
+
+Ask `workflow-operator` to apply provider/cache relationship changes. The main assistant should use authoring guidance to draft relationship intent, not operator internals.

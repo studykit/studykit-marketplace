@@ -69,7 +69,12 @@ def test_authoring_docs_do_not_reference_removed_metadata_contract() -> None:
 def test_issue_relationship_contract_is_separate_from_metadata_contract() -> None:
     providers = _PLUGIN_ROOT / "authoring" / "providers"
 
-    for name in ("github-issue-metadata.md", "jira-issue-metadata.md"):
+    for name in (
+        "github-issue-metadata.md",
+        "jira-issue-metadata.md",
+        "github-issue-relationships.md",
+        "jira-issue-relationships.md",
+    ):
         text = (providers / name).read_text(encoding="utf-8")
         assert "Relationship projection" not in text
         assert "relationships.yml" not in text
@@ -83,11 +88,60 @@ def test_issue_relationship_contract_is_separate_from_metadata_contract() -> Non
     )
 
     assert "Issue relationships are not issue metadata fields." in github_relationships
-    assert "`relationships.yml`: current provider relationship projection." in github_relationships
-    assert "`relationships-pending.yml`: pending relationship intent" in github_relationships
+    assert "GitHub sub-issue metadata" in github_relationships
+    assert "GitHub issue dependency metadata" in github_relationships
     assert "Issue relationships are not issue metadata fields." in jira_relationships
-    assert "relationships.workflow" in jira_relationships
-    assert "relationships-pending.yml" in jira_relationships
+    assert "Jira parent/subtask" in jira_relationships
+    assert "configured Jira issue links" in jira_relationships
+
+
+def test_main_facing_authoring_docs_do_not_expose_cache_projection_internals() -> None:
+    forbidden = {
+        "issue.md",
+        "metadata.yml",
+        "relationships.yml",
+        "relationships-pending.yml",
+        "issue.json",
+        "snapshot.md",
+        "schema_version",
+        "fetched_at",
+        "source_updated_at",
+    }
+
+    checked_paths = (
+        list((_PLUGIN_ROOT / "authoring").rglob("*.md"))
+        + [_PLUGIN_ROOT / "README.md"]
+        + list((_REPO_ROOT / "wiki" / "workflow").rglob("*.md"))
+    )
+    for path in checked_paths:
+        text = path.read_text(encoding="utf-8")
+        leaked = sorted(token for token in forbidden if token in text)
+        assert leaked == [], f"{path}: {leaked}"
+
+
+def test_operator_projection_docs_are_internal_to_operator_instructions() -> None:
+    operator_root = _PLUGIN_ROOT / "operator"
+    github_projection = (operator_root / "github-issue-cache-projection.md").read_text(
+        encoding="utf-8"
+    )
+    jira_projection = (operator_root / "jira-issue-cache-projection.md").read_text(
+        encoding="utf-8"
+    )
+    operator_md = (_PLUGIN_ROOT / "agents" / "workflow-operator.md").read_text(
+        encoding="utf-8"
+    )
+    operator_toml = (
+        _REPO_ROOT / ".codex" / "agents" / "workflow-operator.toml"
+    ).read_text(encoding="utf-8")
+
+    assert "relationships.yml" in github_projection
+    assert "relationships-pending.yml" in github_projection
+    assert "issue.json" in jira_projection
+    assert "snapshot.md" in jira_projection
+    for text in (operator_md, operator_toml):
+        assert "plugins/workflow/operator/github-issue-cache-projection.md" in text
+        assert "plugins/workflow/operator/jira-issue-cache-projection.md" in text
+        assert "Do not return these paths, raw projection schemas" in text
 
 
 def test_common_metadata_sections_do_not_list_relationship_fields() -> None:

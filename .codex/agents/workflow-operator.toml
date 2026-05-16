@@ -68,6 +68,18 @@ and verification details only.
 If a raw `gh` write fallback succeeds, refresh the affected issue cache with
 `workflow_cache_fetch.py --cache-policy refresh` when possible.
 
+## Operator Projection Docs
+
+Provider/cache projection docs are operator internals:
+
+- `plugins/workflow/operator/github-issue-cache-projection.md`
+- `plugins/workflow/operator/jira-issue-cache-projection.md`
+
+Use them for provider/cache operations, write-back, relationship apply, and
+cache refresh work. Do not return these paths, raw projection schemas, cache
+sidecar filenames, or pending-write file shapes as authoring-path responses to
+the caller.
+
 ## Provider Read Operations
 
 For explicit provider fetch or cache refresh operations:

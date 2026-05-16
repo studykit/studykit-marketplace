@@ -117,7 +117,7 @@ If feedback must be triaged, prioritized, assigned, or resolved through workflow
 
 Use the canonical page, document, or file identity supplied by the selected knowledge backend. Do not treat local projection paths as canonical identity unless the artifact is truly file-backed.
 
-`type` is the knowledge-backed artifact discriminator. Type-specific authoring files define semantic metadata fields and requiredness. Provider metadata files define how those values map to backend storage or cache projections.
+`type` is the knowledge-backed artifact discriminator. Type-specific authoring files define semantic metadata fields and requiredness. Provider metadata files define how those values map to backend storage.
 
 Store metadata structurally when the selected backend supports it. Use body-visible sections only for content that readers need to see.
 

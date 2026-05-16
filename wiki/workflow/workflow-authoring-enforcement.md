@@ -66,7 +66,7 @@ first, then role, type, provider convention, provider metadata, provider type
 binding, and provider guardrails when available. Metadata fields are defined by
 the role and type authoring files; provider metadata files define backend
 storage mappings. Relationship files define issue relationship storage,
-projection, and pending-write boundaries.
+body-boundary rules, and operator handoff expectations.
 
 ## Intended Flow
 

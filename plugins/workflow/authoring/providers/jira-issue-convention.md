@@ -6,7 +6,7 @@ Provider-wide convention rules for workflow artifacts stored as Jira issues.
 
 Use these rules for workflow issue artifacts stored in Jira.
 
-This file defines Jira-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./jira-issue-metadata.md`. Provider relationship projection and pending-write rules belong in `./jira-issue-relationships.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
+This file defines Jira-wide issue writing rules only. Provider metadata authoring boundaries belong in `./jira-issue-metadata.md`. Provider relationship authoring boundaries belong in `./jira-issue-relationships.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
 
 ## Identity and references
 
@@ -22,7 +22,7 @@ Resolve keys using `.workflow/config.yml`, especially the Jira site.
 
 ## Relationships
 
-Read `./jira-issue-relationships.md` for provider relationship storage, cache projection, and pending-write rules.
+Read `./jira-issue-relationships.md` for provider relationship storage and body-boundary rules.
 
 Body fallback sections for Jira relationships are artifact-specific and belong in the matching Jira issue type authoring file.
 

@@ -32,7 +32,7 @@ Every issue-backed artifact has a workflow type and lifecycle status.
 
 ## Relationships
 
-Issue relationships are not issue metadata fields. Type-specific authoring files define required and optional relationships. Provider relationship files define native storage, cache projection, and pending-write boundaries.
+Issue relationships are not issue metadata fields. Type-specific authoring files define required and optional relationships. Provider relationship files define native storage and body-boundary rules.
 
 Common relationship meanings:
 
