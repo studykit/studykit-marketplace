@@ -11,7 +11,6 @@ The issue artifact is always created first. The curated report is created or upd
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - `./knowledge-body.md`
 - Issue rules: `./issue-authoring.md`
@@ -54,15 +53,22 @@ Represent this metadata structurally when possible.
 | `status` | yes | Workflow lifecycle status. |
 | `mode` | yes | `comparative` or `single`. |
 | `options` | required for comparative | Alternatives being compared. |
-| `knowledge_page` | optional until published | Link to curated report after publication. |
-| `depends_on` | optional | Work items that must finish first. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `parent` | optional | Epic or parent issue coordinating this research. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `related` | optional | Specs, tasks, use cases, reviews, or pages this research informs. |
 | `tags` | optional | Classification tags. |
 
 Use canonical issue identity for the workflow issue. Do not use local integer ids.
 
 Do not use implementation-only fields such as `implements` or `cycle` for research.
+
+## Workflow issue relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `knowledge_page` | optional until published | Link to curated report after publication. |
+| `depends_on` | optional | Work items that must finish first. |
+| `parent` | optional | Epic or parent issue coordinating this research. |
+| `related` | optional | Specs, tasks, use cases, reviews, or pages this research informs. |
 
 ## Curated report metadata
 
@@ -72,11 +78,18 @@ Represent this metadata using structured page metadata or index metadata when av
 | --- | --- | --- |
 | `type` | yes | `research`. |
 | `title` | yes | Same or clearer title than the workflow issue. |
-| `source_issue` | yes | Link back to the workflow issue that owns discussion and status. |
 | `mode` | yes | `comparative` or `single`. |
 | `options` | required for comparative | Alternatives covered by the report. |
-| `related` | optional | Specs, tasks, use cases, reviews, architecture, or domain pages. |
 | `tags` | optional | Classification tags. |
+
+## Curated report relationships
+
+Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `source_issue` | yes | Link back to the workflow issue that owns discussion and status. |
+| `related` | optional | Specs, tasks, use cases, reviews, architecture, or domain pages. |
 
 ## Lifecycle
 

@@ -2,7 +2,7 @@
 
 Provider-specific metadata and cache projection rules for workflow issue artifacts stored as GitHub Issues.
 
-Read with `../common/metadata-contract.md` and `./github-issue-convention.md`.
+Read with `../common/issue-authoring.md` and `./github-issue-convention.md`.
 
 ## Semantic metadata mapping
 
@@ -16,41 +16,14 @@ GitHub native `state` is provider lifecycle state, not the workflow `status` fie
 
 ## Cache projection
 
-The GitHub issue cache projection uses these files under the issue cache directory:
+The GitHub issue metadata cache projection uses these files under the issue cache directory:
 
 - `issue.md`: Markdown issue body with projection-owned YAML frontmatter.
 - `metadata.yml`: non-user-facing cache freshness metadata.
 - `comments/index.yml` and `comments/*.md`: comment projection.
-- `relationships.yml`: provider relationship projection.
-- `relationships-pending.yml`: pending relationship intent before provider write.
 
 `issue.md` frontmatter is projection-owned and currently carries `schema_version`, `title`, `state`, `state_reason`, `labels`, and `source_updated_at`. `fetched_at` belongs in `metadata.yml`, not `issue.md`.
 
 Edit only the Markdown body below existing `issue.md` frontmatter for body write-back. Change provider-owned metadata through workflow provider/cache operations.
 
-## Relationship projection
-
-Use GitHub-native relationships when available:
-
-- Parent and child relationships use GitHub sub-issue metadata.
-- Blocking relationships use GitHub issue dependency metadata.
-
-`relationships.yml` uses a normalized provider projection:
-
-```yaml
-schema_version: 1
-source_updated_at: <provider-updated-at>
-fetched_at: <cache-fetch-time>
-parent: <issue-ref-object>
-children:
-  - <issue-ref-object>
-dependencies:
-  blocked_by:
-    - <issue-ref-object>
-  blocking:
-    - <issue-ref-object>
-related:
-  - <issue-ref-object>
-```
-
-Relationship summary text is rendered from this projection by workflow scripts. Do not expose raw projection YAML as the human relationship summary.
+Issue relationships are outside this metadata document. Read `./github-issue-relationships.md` for relationship projection and pending-write files.

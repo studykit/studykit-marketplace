@@ -8,7 +8,6 @@ Epics are stored in the configured issue backend.
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -44,9 +43,16 @@ Represent this metadata structurally when possible. If a field cannot be stored 
 | `type` | yes | Always `epic`. Use issue type or hierarchy type depending on backend support. |
 | `title` | yes | Short summary of the coordinated goal. |
 | `status` | yes | Workflow lifecycle status. |
+| `tags` | optional | Classification tags. |
+
+## Relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
 | `children` | recommended | Child issues. Use backend hierarchy links when available and always include `## Children`. |
 | `related` | optional | Related specs, use cases, research, reviews, pages, or issues. |
-| `tags` | optional | Classification tags. |
 
 Do not use implementation-only fields such as `implements`, `spec`, `depends_on`, artifact links, or implementation cycle counters on an epic. Children carry implementation anchors and dependencies.
 

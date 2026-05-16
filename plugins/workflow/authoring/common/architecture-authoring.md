@@ -6,7 +6,6 @@ Architecture is curated knowledge. It is stored in the configured knowledge back
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./knowledge-body.md`
 
 ## Storage role
@@ -45,10 +44,17 @@ Represent this metadata structurally when possible.
 | `type` | yes | Always `architecture`. Use structured page metadata or index metadata depending on backend support. |
 | `title` | yes | Usually `Architecture` or project-specific equivalent. |
 | `status` | optional | Use when the backend supports page lifecycle state. |
-| `related` | optional | Specs, epics, tasks, reviews, use cases, or research that materially relate to the page. |
 | `tags` | optional | Classification tags. |
 
 Use canonical page identity. Do not use local projection paths as identity.
+
+## Relationships
+
+Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `related` | optional | Specs, epics, tasks, reviews, use cases, or research that materially relate to the page. |
 
 ## Body shape
 

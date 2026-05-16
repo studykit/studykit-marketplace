@@ -8,7 +8,6 @@ The canonical CI artifact is knowledge-backed and stored in the configured knowl
 
 Common body rules: `./body-conventions.md`.
 Knowledge body rules: `./knowledge-body.md`.
-Shared metadata rules: `./metadata-contract.md`.
 
 ## Purpose
 

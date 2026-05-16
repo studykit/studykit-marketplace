@@ -6,7 +6,6 @@ Actors are curated knowledge. They are stored in the configured knowledge backen
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./knowledge-body.md`
 
 ## Storage role
@@ -37,10 +36,17 @@ Represent this metadata structurally when possible.
 | --- | --- | --- |
 | `type` | yes | Always `actors`. Use structured page metadata or index metadata depending on backend support. |
 | `title` | yes | Usually `Actors` or project-specific equivalent. |
-| `related` | optional | Use cases, context, specs, reviews, or tasks related to actor changes. |
 | `tags` | optional | Classification tags. |
 
 Use canonical page identity. Do not use local projection paths as identity.
+
+## Relationships
+
+Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `related` | optional | Use cases, context, specs, reviews, or tasks related to actor changes. |
 
 ## Body shape
 

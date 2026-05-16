@@ -5,7 +5,6 @@ Body-level rules for workflow artifacts stored in a knowledge backend.
 Knowledge-backed artifacts include `spec`, `architecture`, `domain`, `context`, `actors`, `nfr`, `ci`, and the curated output side of `usecase` and `research`.
 
 Common body rules: `./body-conventions.md`.
-Shared metadata rules: `./metadata-contract.md`.
 
 ## Purpose
 
@@ -115,6 +114,10 @@ Use page comments for page-local review and clarification only.
 If feedback must be triaged, prioritized, assigned, or resolved through workflow, create a `review` item in the issue backend instead of relying on a page comment.
 
 ## Metadata
+
+Use the canonical page, document, or file identity supplied by the selected knowledge backend. Do not treat local projection paths as canonical identity unless the artifact is truly file-backed.
+
+`type` is the knowledge-backed artifact discriminator. Type-specific authoring files define semantic metadata fields and requiredness. Provider metadata files define how those values map to backend storage or cache projections.
 
 Store metadata structurally when the selected backend supports it. Use body-visible sections only for content that readers need to see.
 

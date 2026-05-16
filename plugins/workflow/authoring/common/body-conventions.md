@@ -2,7 +2,6 @@
 
 Cross-cutting body-level rules for workflow artifacts.
 
-Shared metadata rules: `./metadata-contract.md`.
 Knowledge body rules: `./knowledge-body.md`.
 
 ## Scope
@@ -145,5 +144,5 @@ If workflow tooling creates local Markdown files as projections of external arti
 
 ## Cross-references
 
-- `./metadata-contract.md` — shared metadata and identity rules.
+- `./issue-authoring.md` — issue-backed artifact rules.
 - `./knowledge-body.md` — knowledge-backed body rules.

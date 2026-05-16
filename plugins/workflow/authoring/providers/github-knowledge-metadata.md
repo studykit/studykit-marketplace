@@ -2,7 +2,7 @@
 
 Provider-specific metadata rules for workflow knowledge artifacts stored as repository Markdown files.
 
-Read with `../common/metadata-contract.md` and `./github-knowledge-convention.md`.
+Read with `../common/knowledge-body.md` and `./github-knowledge-convention.md`.
 
 ## Semantic metadata mapping
 

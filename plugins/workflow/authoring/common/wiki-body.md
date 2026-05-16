@@ -6,7 +6,6 @@ New authoring contracts should prefer `./knowledge-body.md`. This file keeps the
 
 Common body rules: `./body-conventions.md`.
 Knowledge body rules: `./knowledge-body.md`.
-Shared metadata rules: `./metadata-contract.md`.
 
 ## Knowledge pages are curated
 

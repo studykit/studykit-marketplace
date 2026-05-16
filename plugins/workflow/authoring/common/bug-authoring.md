@@ -6,7 +6,6 @@ Bugs are stored in the configured issue backend. They are not local Markdown fil
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -26,11 +25,18 @@ Represent this metadata structurally when possible. If a field cannot be stored 
 | `title` | yes | Short summary of the broken behavior. |
 | `status` | yes | Workflow lifecycle status. |
 | `severity` | recommended | Workflow priority/severity if available. |
-| `spec` | optional | Spec or knowledge artifact whose expected behavior is violated. |
-| `depends_on` | optional | Blocking or ordering dependency. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `parent` | optional | Epic or parent issue coordinating the fix. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `related` | optional | Non-blocking references useful for diagnosis or implementation. |
 | `tags` | optional | Classification tags. |
+
+## Relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `spec` | optional | Spec or knowledge artifact whose expected behavior is violated. |
+| `depends_on` | optional | Blocking or ordering dependency. |
+| `parent` | optional | Epic or parent issue coordinating the fix. |
+| `related` | optional | Non-blocking references useful for diagnosis or implementation. |
 
 ## Lifecycle
 

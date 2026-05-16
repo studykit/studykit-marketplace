@@ -6,7 +6,7 @@ Provider-wide convention rules for workflow artifacts stored as GitHub Issues.
 
 Use these rules for workflow issue artifacts stored in GitHub Issues.
 
-This file defines GitHub-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./github-issue-metadata.md`. Artifact-specific body structure and relationship body sections belong in the matching GitHub issue type authoring file.
+This file defines GitHub-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./github-issue-metadata.md`. Provider relationship projection and pending-write rules belong in `./github-issue-relationships.md`. Artifact-specific body structure and relationship body sections belong in the matching GitHub issue type authoring file.
 
 ## Identity and references
 
@@ -22,10 +22,7 @@ GitHub Enterprise host, owner, and repo should be inferred from the configured r
 
 ## Relationships
 
-Use native GitHub relationships when they match workflow semantics.
-
-- Parent/child relationships should use GitHub sub-issues when available.
-- Blocking relationships should use GitHub issue dependencies when available.
+Read `./github-issue-relationships.md` for provider relationship storage, cache projection, and pending-write rules.
 
 Do not duplicate GitHub-native parent/child or dependency relationships in body sections when GitHub stores them natively.
 

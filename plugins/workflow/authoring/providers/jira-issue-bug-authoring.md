@@ -6,6 +6,8 @@ Read after:
 
 - `../common/bug-authoring.md`
 - `./jira-issue-convention.md`
+- `./jira-issue-metadata.md`
+- `./jira-issue-relationships.md`
 
 ## Scope
 

@@ -6,6 +6,8 @@ Read after:
 
 - `../common/task-authoring.md`
 - `./github-issue-convention.md`
+- `./github-issue-metadata.md`
+- `./github-issue-relationships.md`
 - `./github-issue-anti-patterns.md`
 
 ## Scope

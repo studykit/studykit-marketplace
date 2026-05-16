@@ -4,7 +4,6 @@ Common semantic rules for issue-backed workflow artifacts.
 
 Read this with the semantic authoring file for the artifact type, plus:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 
 ## Scope
@@ -29,9 +28,11 @@ Do not introduce workflow-local issue IDs. Do not use local projection paths or 
 
 Every issue-backed artifact has a workflow type and lifecycle status.
 
-Type-specific authoring files define semantic states. Backend-specific authoring files define how those states are stored and displayed.
+`type` is the issue-backed artifact discriminator. Type-specific authoring files define the remaining semantic metadata fields, requiredness, and lifecycle states. Backend-specific authoring files define how those values are stored and displayed.
 
 ## Relationships
+
+Issue relationships are not issue metadata fields. Type-specific authoring files define required and optional relationships. Provider relationship files define native storage, cache projection, and pending-write boundaries.
 
 Common relationship meanings:
 

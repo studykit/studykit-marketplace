@@ -6,7 +6,6 @@ Review items are not page comments and not long-form documents. They are the wor
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -37,12 +36,19 @@ Represent this metadata structurally when possible. If a field cannot be stored 
 | `type` | yes | Always `review`. Use issue metadata when available. |
 | `kind` | yes | `finding`, `gap`, or `question`. |
 | `status` | yes | Workflow lifecycle status. |
-| `target` | yes for target-specific reviews | Artifact or artifacts being reviewed. Represent according to the selected authoring files. |
 | `source` | recommended | `self`, agent name, reviewer name, or process that emitted the review. |
 | `priority` | recommended | `high`, `medium`, or `low`, or workflow priority equivalent. |
 | `tags` | optional | Classification tags. |
 
 Use canonical issue identity. Do not use local integer ids.
+
+## Relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `target` | yes for target-specific reviews | Artifact or artifacts being reviewed. |
 
 ## Review target rules
 

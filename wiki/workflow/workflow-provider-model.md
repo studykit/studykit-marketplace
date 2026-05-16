@@ -615,11 +615,12 @@ Output:
     "provider": "github"
   },
   "required_authoring_files": [
-    "/absolute/path/to/plugins/workflow/authoring/common/metadata-contract.md",
     "/absolute/path/to/plugins/workflow/authoring/common/body-conventions.md",
     "/absolute/path/to/plugins/workflow/authoring/common/issue-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/common/review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-convention.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-metadata.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-relationships.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-anti-patterns.md"
   ]
@@ -635,11 +636,12 @@ Example:
 ```json
 {
   "read_authoring_files": [
-    "/absolute/path/to/plugins/workflow/authoring/common/metadata-contract.md",
     "/absolute/path/to/plugins/workflow/authoring/common/body-conventions.md",
     "/absolute/path/to/plugins/workflow/authoring/common/issue-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/common/review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-convention.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-metadata.md",
+    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-relationships.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-anti-patterns.md"
   ]

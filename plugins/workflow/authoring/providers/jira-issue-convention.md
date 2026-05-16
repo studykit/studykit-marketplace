@@ -6,7 +6,7 @@ Provider-wide convention rules for workflow artifacts stored as Jira issues.
 
 Use these rules for workflow issue artifacts stored in Jira.
 
-This file defines Jira-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./jira-issue-metadata.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
+This file defines Jira-wide issue writing rules only. Provider metadata mapping and cache projection rules belong in `./jira-issue-metadata.md`. Provider relationship projection and pending-write rules belong in `./jira-issue-relationships.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
 
 ## Identity and references
 
@@ -22,19 +22,7 @@ Resolve keys using `.workflow/config.yml`, especially the Jira site.
 
 ## Relationships
 
-Use Jira issue links when configured link types match workflow semantics.
-
-Common relationship link types include:
-
-- `blocks` / `is blocked by` for dependencies.
-- `implements` / `is implemented by` for implementation relationships when available.
-- `relates to` for soft related relationships.
-
-Use Jira hierarchy or parent fields for epic and parent relationships when available.
-
-Use remote links for cross-provider references, such as GitHub issues or Confluence pages. If the API requires a stable remote link key, derive it from the resolved workflow reference object.
-
-Relationship writes must use explicit `.workflow/config.yml` mappings. Do not infer Jira link type names, directions, remote-link surfaces, or parent fields from issue body prose.
+Read `./jira-issue-relationships.md` for provider relationship storage, cache projection, and pending-write rules.
 
 Body fallback sections for Jira relationships are artifact-specific and belong in the matching Jira issue type authoring file.
 

@@ -2,7 +2,7 @@
 
 Provider-specific metadata rules for workflow knowledge artifacts stored as Confluence pages.
 
-Read with `../common/metadata-contract.md` and `./confluence-page-convention.md`.
+Read with `../common/knowledge-body.md` and `./confluence-page-convention.md`.
 
 ## Semantic metadata mapping
 

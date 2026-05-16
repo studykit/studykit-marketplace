@@ -8,7 +8,6 @@ Spikes are stored in the configured issue backend. They are not local Markdown f
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -27,11 +26,18 @@ Represent this metadata structurally when possible. If a field cannot be stored 
 | `type` | yes | Always `spike`. Use issue metadata when available. |
 | `title` | yes | Short description of the question or experiment. |
 | `status` | yes | Workflow lifecycle status. |
-| `depends_on` | optional | Work items that must finish first. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `related` | optional | Specs, use cases, research, reviews, pages, or issues relevant to the experiment. |
 | `artifact_links` | recommended when PoC exists | Links to branch, gist, repository path, build output, benchmark result, or other throwaway artifact. |
 | `tags` | optional | Classification tags. |
+
+## Relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `depends_on` | optional | Work items that must finish first. |
+| `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. |
+| `related` | optional | Specs, use cases, research, reviews, pages, or issues relevant to the experiment. |
 
 Do not use implementation-only fields such as `implements` or implementation cycle counters for spikes.
 

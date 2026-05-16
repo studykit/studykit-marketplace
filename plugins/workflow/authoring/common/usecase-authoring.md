@@ -11,7 +11,6 @@ The issue artifact is always created first. The curated knowledge page is create
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - `./knowledge-body.md`
 - Issue rules: `./issue-authoring.md`
@@ -57,13 +56,20 @@ Represent this metadata structurally when possible.
 | `type` | yes | `usecase`, or issue type or equivalent. |
 | `title` | yes | Short user-facing goal. |
 | `status` | yes | Workflow status mapped to backend status. |
-| `knowledge_page` | optional until published | Link to curated page after publication. |
 | `actors` | recommended | Actor names or slugs. Metadata when possible; body otherwise. |
-| `supersedes` | optional | Prior use case this one replaces. Visible body section required when present. |
-| `related` | optional | Related tasks, specs, reviews, research, or pages. |
 | `tags` | optional | Classification tags. |
 
 Use canonical issue identity for the workflow issue. Do not use local integer ids.
+
+## Workflow issue relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `knowledge_page` | optional until published | Link to curated page after publication. |
+| `supersedes` | optional | Prior use case this one replaces. Visible body section required when present. |
+| `related` | optional | Related tasks, specs, reviews, research, or pages. |
 
 ## Curated page metadata
 
@@ -73,9 +79,16 @@ Represent this metadata using structured page metadata or index metadata when av
 | --- | --- | --- |
 | `type` | yes | `usecase`. |
 | `title` | yes | Same or clearer title than the workflow issue. |
-| `source_issue` | yes | Link back to the workflow issue that owns discovery and discussion. |
 | `status` | recommended | Published/stable state when supported by the selected backend. |
 | `actors` | recommended | Actor names or slugs. |
+
+## Curated page relationships
+
+Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `source_issue` | yes | Link back to the workflow issue that owns discovery and discussion. |
 | `supersedes` | optional | Prior curated use case page. |
 | `related` | optional | Related tasks, specs, reviews, research, architecture, or domain pages. |
 

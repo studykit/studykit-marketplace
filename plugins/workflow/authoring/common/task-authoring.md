@@ -6,7 +6,6 @@ Tasks are stored in the configured issue backend. They are not local Markdown fi
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./body-conventions.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -25,12 +24,19 @@ Represent this metadata structurally when possible. If a field cannot be stored 
 | `type` | yes | Always `task`. Use issue metadata when available. |
 | `title` | yes | Short human-readable work summary. |
 | `status` | yes | Workflow lifecycle status. |
-| `implements` | recommended when UC-driven | Use case or requirement this task delivers. Represent according to the selected authoring files. |
-| `depends_on` | optional | Blocking or ordering dependency. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `parent` | optional | Epic or parent issue that coordinates this task. Use structured metadata when available. Body representation depends on the selected authoring files. |
-| `related` | optional | Non-blocking references useful for implementation. |
 | `priority` | optional | Workflow priority or field. |
 | `tags` | optional | Classification tags. |
+
+## Relationships
+
+Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `implements` | recommended when UC-driven | Use case or requirement this task delivers. |
+| `depends_on` | optional | Blocking or ordering dependency. |
+| `parent` | optional | Epic or parent issue that coordinates this task. |
+| `related` | optional | Non-blocking references useful for implementation. |
 
 ## Lifecycle
 

@@ -4,10 +4,10 @@ GitHub Issues can store parent/sub-issue and dependency relationships as provide
 
 Read this with:
 
-- `../common/metadata-contract.md`
 - `../common/body-conventions.md`
 - `../common/issue-authoring.md`
 - `./github-issue-convention.md`
+- `./github-issue-relationships.md`
 
 ## Relationship Body Sections
 

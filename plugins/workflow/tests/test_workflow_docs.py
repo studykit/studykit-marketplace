@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 
 
@@ -49,3 +50,73 @@ def test_authoring_enforcement_wiki_is_main_agent_facing() -> None:
     assert "command\nnames and script paths are not part of the caller-facing response" in wiki
     assert "authoring_resolver.py" not in wiki
     assert "scripts/workflow" not in wiki
+
+
+def test_authoring_docs_do_not_reference_removed_metadata_contract() -> None:
+    assert not (_PLUGIN_ROOT / "authoring" / "common" / "metadata-contract.md").exists()
+
+    checked_roots = [
+        _PLUGIN_ROOT / "authoring",
+        _REPO_ROOT / "wiki" / "workflow",
+    ]
+    for root in checked_roots:
+        for path in root.rglob("*.md"):
+            text = path.read_text(encoding="utf-8")
+            assert "metadata-contract.md" not in text, path
+            assert "Workflow Metadata Contract" not in text, path
+
+
+def test_issue_relationship_contract_is_separate_from_metadata_contract() -> None:
+    providers = _PLUGIN_ROOT / "authoring" / "providers"
+
+    for name in ("github-issue-metadata.md", "jira-issue-metadata.md"):
+        text = (providers / name).read_text(encoding="utf-8")
+        assert "Relationship projection" not in text
+        assert "relationships.yml" not in text
+        assert "relationships-pending.yml" not in text
+
+    github_relationships = (providers / "github-issue-relationships.md").read_text(
+        encoding="utf-8"
+    )
+    jira_relationships = (providers / "jira-issue-relationships.md").read_text(
+        encoding="utf-8"
+    )
+
+    assert "Issue relationships are not issue metadata fields." in github_relationships
+    assert "`relationships.yml`: current provider relationship projection." in github_relationships
+    assert "`relationships-pending.yml`: pending relationship intent" in github_relationships
+    assert "Issue relationships are not issue metadata fields." in jira_relationships
+    assert "relationships.workflow" in jira_relationships
+    assert "relationships-pending.yml" in jira_relationships
+
+
+def test_common_metadata_sections_do_not_list_relationship_fields() -> None:
+    relationship_fields = {
+        "children",
+        "depends_on",
+        "implements",
+        "knowledge_page",
+        "parent",
+        "related",
+        "source_issue",
+        "spec",
+        "supersedes",
+        "target",
+    }
+
+    for path in (_PLUGIN_ROOT / "authoring" / "common").glob("*-authoring.md"):
+        text = path.read_text(encoding="utf-8")
+        for match in re.finditer(
+            r"^## [^\n]*metadata[^\n]*\n(?P<body>.*?)(?=^## |\Z)",
+            text,
+            flags=re.IGNORECASE | re.MULTILINE | re.DOTALL,
+        ):
+            fields = {
+                field_match.group(1)
+                for field_match in re.finditer(
+                    r"^\|\s*`([^`]+)`\s*\|",
+                    match.group("body"),
+                    flags=re.MULTILINE,
+                )
+            }
+            assert fields.isdisjoint(relationship_fields), path

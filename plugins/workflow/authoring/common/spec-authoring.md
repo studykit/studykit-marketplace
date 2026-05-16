@@ -6,7 +6,6 @@ Specs are curated knowledge artifacts. They are stored in the configured knowled
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./knowledge-body.md`
 
 ## Storage role
@@ -24,11 +23,18 @@ Represent this metadata structurally when possible. If a field cannot be stored 
 | `type` | yes | Always `spec`. Use structured page metadata or index metadata depending on backend support. |
 | `title` | yes | Short human-readable spec title. |
 | `status` | yes | `draft`, `active`, `deprecated`, or `superseded`, mapped to backend metadata when possible. |
-| `supersedes` | optional | Prior spec or specs this page replaces. Must also appear in `## Supersedes` when present. |
-| `related` | optional | Work items, research, use cases, architecture, or domain pages related to the spec. |
 | `tags` | optional | Classification tags. |
 
 Use canonical page identity. Do not use local integer ids.
+
+## Relationships
+
+Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `supersedes` | optional | Prior spec or specs this page replaces. Must also appear in `## Supersedes` when present. |
+| `related` | optional | Work items, research, use cases, architecture, or domain pages related to the spec. |
 
 ## Lifecycle
 

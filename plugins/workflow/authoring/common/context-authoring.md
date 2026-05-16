@@ -6,7 +6,6 @@ Context is curated knowledge. It is stored in the configured knowledge backend, 
 
 Companion contracts:
 
-- `./metadata-contract.md`
 - `./knowledge-body.md`
 
 ## Storage role
@@ -37,10 +36,17 @@ Represent this metadata structurally when possible.
 | --- | --- | --- |
 | `type` | yes | Always `context`. Use structured page metadata or index metadata depending on backend support. |
 | `title` | yes | Usually `Context` or project-specific equivalent. |
-| `related` | optional | Use cases, specs, epics, reviews, research, or pages related to framing changes. |
 | `tags` | optional | Classification tags. |
 
 Use canonical page identity. Do not use local projection paths as identity.
+
+## Relationships
+
+Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
+
+| Relationship | Required | Notes |
+| --- | --- | --- |
+| `related` | optional | Use cases, specs, epics, reviews, research, or pages related to framing changes. |
 
 ## Body shape
 
