@@ -4,69 +4,10 @@ A workflow spike is an **issue-backed, time-boxed exploration to unblock a decis
 
 Use `research` for written investigation without throwaway code. Use `task` when the implementation path is known and production work can begin.
 
-Spikes are stored in the configured issue backend. They are not local Markdown files unless a local projection workflow is explicitly configured.
-
 Companion contracts:
 
 - `./issue-body.md`
 - Issue rules: `./issue-authoring.md`
-
-## Storage role
-
-`spike` is stored in the issue backend.
-
-Use canonical issue identity. Do not use local integer ids.
-
-## Required metadata
-
-Represent this metadata structurally when possible. If a field cannot be stored structurally, include the value in the body when the selected authoring files require it.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `spike`. Use issue metadata when available. |
-| `title` | yes | Short description of the question or experiment. |
-| `status` | yes | Workflow lifecycle status. |
-| `artifact_links` | recommended when PoC exists | Links to branch, gist, repository path, build output, benchmark result, or other throwaway artifact. |
-| `tags` | optional | Classification tags. |
-
-## Relationships
-
-Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `depends_on` | optional | Work items that must finish first. |
-| `parent` | optional | Task, bug, research item, or epic that spawned or coordinates the spike. |
-| `related` | optional | Specs, use cases, research, reviews, pages, or issues relevant to the experiment. |
-
-Do not use implementation-only fields such as `implements` or implementation cycle counters for spikes.
-
-## Lifecycle
-
-Recommended semantic lifecycle:
-
-```text
-open → queued → progress → done
-open → discarded
-queued → progress | holding | discarded
-progress → holding | failing | done | discarded
-holding → queued | progress | discarded
-failing → queued | discarded
-done → terminal
-discarded → terminal
-```
-
-Status meaning:
-
-- `open` — Captured but not yet scoped.
-- `queued` — Hypothesis and validation method are clear enough to run.
-- `progress` — Experiment is active.
-- `holding` — Paused for access, input, or sequencing.
-- `failing` — Experiment failed, framing is wrong, or the validation method is blocked.
-- `done` — The spike answered the question or clearly invalidated the hypothesis.
-- `discarded` — No longer needed.
-
-Status mapping depends on the configured issue backend.
 
 ## Spike vs task vs research
 
@@ -114,7 +55,6 @@ Optional sections:
 
 - `## Artifact Links` — branch, gist, repository path, benchmark output, screenshots, or other throwaway evidence.
 - `## Change Plan` — planned experiment files, temporary branches, scripts, or environments.
-- `## Follow-Up` — task, spec, review, or research item that should exist after the spike.
 - `## Resume` — current-state snapshot while mid-flight. See `./issue-body.md`.
 - `## Why Discarded` — reason when discarded. See `./issue-body.md`.
 
@@ -122,9 +62,9 @@ Unknown Title Case H2 headings are tolerated.
 
 ## Artifact handling
 
-Issue-backed spikes should link to artifacts instead of assuming a local artifact directory.
+Issue-backed spikes should link to evidence or output files instead of assuming a local evidence directory.
 
-Acceptable artifact links include:
+Acceptable links include:
 
 - A throwaway branch.
 - A gist or scratch repository.
@@ -137,7 +77,7 @@ PoC code should remain throwaway. If the outcome should become production code, 
 
 ## Done rule
 
-A spike should not be marked `done` until:
+A spike is complete when:
 
 - The hypothesis is answered or invalidated.
 - Evidence is linked or summarized.
@@ -145,7 +85,7 @@ A spike should not be marked `done` until:
 - Follow-up work is captured as a task, spec, research item, or review when needed.
 - Any curated knowledge page that should record the outcome has been updated.
 
-`done` does not mean production code shipped. It means the exploration produced an answer.
+Completion does not mean production code shipped. It means the exploration produced an answer.
 
 ## Follow-up work
 
@@ -156,7 +96,7 @@ Common follow-ups:
 - `research` — perform deeper written investigation.
 - `review` — capture a gap, question, or finding surfaced by the spike.
 
-Link follow-ups visibly in `## Follow-Up` or comments.
+Link follow-ups visibly in the issue body or comments.
 
 ## Comments and discussion
 
@@ -174,14 +114,10 @@ Keep the spike body as the current compact experiment contract.
 
 - Using `spike` for production implementation work.
 - Missing `## Hypothesis` or `## Validation Method`.
-- Marking `done` without evidence.
+- Treating the spike as complete without evidence.
 - Letting throwaway PoC code become production code without a follow-up task.
 - Using spike when a written `research` item would be enough.
-- Using local projection paths or local integer ids as canonical identity.
 
 ## Do not
 
-- Do not use `implements` or implementation cycle fields on spikes.
-- Do not mark a spike `done` just because time expired; record `failing`, `holding`, or `discarded` if the question was not answered.
-- Do not use closing keywords or Smart Commit commands unless the workflow intentionally wants automated side effects.
-- Do not auto-trigger a skill just because a spike is being written; follow the authoring resolver policy.
+- Do not treat a spike as complete just because time expired; record what remains unanswered.

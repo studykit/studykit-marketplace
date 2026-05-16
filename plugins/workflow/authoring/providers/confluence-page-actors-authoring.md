@@ -1,6 +1,6 @@
 # Confluence Page Actors Authoring
 
-Provider-specific binding for workflow `actors` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `actors` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `actors` pages. The final body structure is list
 
 ## Final body structure
 
-Use this final Confluence body structure for `actors` artifacts.
+Use this final Confluence body structure for `actors` pages.
 
 Common required sections are defined by `../common/actors-authoring.md`:
 

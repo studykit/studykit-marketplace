@@ -73,7 +73,7 @@ Component headings are reference targets for tasks, bugs, specs, and reviews.
 Keep component names stable. If a component is renamed:
 
 1. Update the architecture page.
-2. Add a `## Change Log` entry with the causing workflow artifact.
+2. Add a `## Change Log` entry with the causing work item.
 3. Update affected specs/tasks/reviews or create review items for deferred updates.
 
 Do not silently rename component headings.
@@ -86,7 +86,7 @@ A short rationale sentence is acceptable when it helps readers understand the cu
 
 ## Change log
 
-Every material architecture change should include a `## Change Log` entry linking to the causing workflow artifact.
+Every material architecture change should include a `## Change Log` entry linking to the causing work item.
 
 ```markdown
 ## Change Log
@@ -96,7 +96,7 @@ Every material architecture change should include a `## Change Log` entry linkin
 
 Do not duplicate the issue discussion in the page.
 
-## Artifact boundaries
+## Content boundaries
 
 Use these boundaries to place architecture content. Do not encode these as metadata relationships.
 

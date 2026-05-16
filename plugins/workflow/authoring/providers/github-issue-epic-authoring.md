@@ -1,6 +1,6 @@
 # GitHub Issue Epic Authoring
 
-Provider-specific binding for workflow `epic` artifacts stored as GitHub Issues.
+Provider-specific binding for `epic` issues stored as GitHub Issues.
 
 Read after:
 
@@ -15,7 +15,7 @@ Use this binding for GitHub `epic` issues. The final body structure is listed be
 
 ## Final body structure
 
-Use this final GitHub body structure for `epic` artifacts.
+Use this final GitHub body structure for `epic` issues.
 
 Common required sections are defined by `../common/epic-authoring.md`:
 
@@ -34,15 +34,12 @@ GitHub-specific H2 sections for this type: None.
 GitHub-specific rules:
 
 - Use GitHub sub-issues for canonical hierarchy.
-- Do not add `## Children` only to duplicate GitHub sub-issues.
-
-## GitHub labels
-
-Apply the GitHub label `epic` to identify this issue type.
 
 ## GitHub hierarchy
 
 GitHub sub-issues are the provider-native parent/child relationship for all
 GitHub issue types, not only epics.
 
-Use the epic body for coordination narrative, not for a duplicate child index.
+Use the epic body for coordination narrative.
+
+GitHub label is automatically set to `epic`.

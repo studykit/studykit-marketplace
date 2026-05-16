@@ -1,6 +1,6 @@
 # GitHub Knowledge Spec Authoring
 
-Provider-specific binding for workflow `spec` knowledge artifacts stored as repository Markdown files.
+Provider-specific binding for `spec` knowledge pages stored as repository Markdown files.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for GitHub repository Markdown `spec` pages. The final body str
 
 ## Final body structure
 
-Use this final GitHub repository Markdown body structure for `spec` artifacts.
+Use this final GitHub repository Markdown body structure for `spec` pages.
 
 Common required sections are defined by `../common/spec-authoring.md`:
 
@@ -31,22 +31,3 @@ Common optional sections are defined by `../common/spec-authoring.md` and `../co
 - `## Rejected Alternatives`
 - `## Change Log`
 - `## Sources`
-
-GitHub repository Markdown does not add required provider-specific H2 sections for this type.
-
-GitHub repository Markdown rules:
-
-- Use repository-relative Markdown links for pages in the same repository.
-- Use full URLs when text must be portable.
-
-Read `./github-knowledge-convention.md` for GitHub repository storage, identity, reference, and transport rules.
-
-## GitHub repository identity
-
-Use the repository path as canonical page identity. Do not add Markdown frontmatter for workflow metadata.
-
-## GitHub repository section guidance
-
-Use links or full URLs for related work, superseded pages, and sources.
-
-Use repository-relative links when the target is in the same repository. Use full GitHub URLs when the page text must be portable outside the repository.

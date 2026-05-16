@@ -1,6 +1,6 @@
 # Confluence Page Architecture Authoring
 
-Provider-specific binding for workflow `architecture` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `architecture` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `architecture` pages. The final body structure i
 
 ## Final body structure
 
-Use this final Confluence body structure for `architecture` artifacts.
+Use this final Confluence body structure for `architecture` pages.
 
 Common required sections are defined by `../common/architecture-authoring.md`:
 

@@ -1,12 +1,12 @@
 # Jira Issue Provider Convention
 
-Provider-wide convention rules for workflow artifacts stored as Jira issues.
+Provider-wide convention rules for issue-backed items stored as Jira issues.
 
 ## Scope
 
-Use these rules for workflow issue artifacts stored in Jira.
+Use these rules for issue-backed items stored in Jira.
 
-This file defines Jira-wide issue writing rules only. Provider relationship authoring boundaries belong in `./jira-issue-relationships.md`. Jira body anti-patterns belong in `./jira-issue-anti-patterns.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
+This file defines Jira-wide issue writing rules only. Provider relationship authoring boundaries belong in `./jira-issue-relationships.md`. Jira body anti-patterns belong in `./jira-issue-anti-patterns.md`. Type-specific body structure and allowed relationship body fallback sections belong in the matching Jira issue type authoring file.
 
 ## Identity and references
 
@@ -26,7 +26,36 @@ Read `./jira-issue-relationships.md` for provider relationship storage and body-
 
 Read `./jira-issue-anti-patterns.md` for forbidden relationship body sections.
 
-Body fallback sections for Jira relationships are artifact-specific and belong in the matching Jira issue type authoring file.
+Allowed body fallback sections for Jira relationships are type-specific and belong in the matching Jira issue type authoring file.
+
+## Related body section
+
+`## Related` is available to any Jira issue type.
+
+Use `## Related` for human-readable references that are not stored as
+Jira-native issue links, hierarchy fields, or remote links. This includes
+implementation anchors, non-Jira review targets, follow-up work, external
+pages, or other soft references.
+
+Do not use `## Related` for parent, child, blocking, dependency, related-work,
+or remote-link relationships that are stored natively in Jira.
+
+When used:
+
+- Start with one bullet per related reference.
+- Keep descriptions short.
+
+## Dependency body fallback
+
+Use Jira issue links or remote links for dependency relationships whenever possible.
+
+Use `## Dependencies` only when dependency links cannot be stored natively and the issue body needs human-readable dependency context.
+
+When used:
+
+- Start with one bullet per dependency.
+- Use Jira issue keys or full URLs whenever possible.
+- Keep the section limited to blocking or ordering dependencies.
 
 ## Provider update intent
 

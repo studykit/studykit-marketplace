@@ -1,14 +1,14 @@
 # GitHub Knowledge Provider Convention
 
-Provider-wide convention rules for workflow knowledge artifacts stored as Markdown files under a repository `wiki/` directory.
+Provider-wide convention rules for knowledge pages stored as Markdown files under a repository `wiki/` directory.
 
 This is not the separate GitHub Wiki feature. The `wiki/` directory lives in the main repository and participates in normal branch, pull request, review, and CI workflows.
 
 ## Scope
 
-Use these rules for workflow knowledge artifacts stored in GitHub repository Markdown files.
+Use these rules for knowledge pages stored in GitHub repository Markdown files.
 
-This file defines repository Markdown storage, identity, references, visible links, change-log, and common mistake rules only. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
+This file defines repository Markdown storage, identity, references, visible links, change-log, and common mistake rules only. Type-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
 
 ## Storage model
 
@@ -25,6 +25,8 @@ Do not assume a plugin-specific subdirectory or a fixed page naming pattern in t
 ## Identity and references
 
 Identity is repository-scoped path identity.
+
+Use the repository path as canonical page identity.
 
 Store or resolve:
 
@@ -44,7 +46,9 @@ Use full GitHub URLs when text must be portable outside the repository.
 
 ## Visible links
 
-Use visible Markdown links when a knowledge page needs to reference related workflow artifacts or other knowledge pages.
+Use visible Markdown links when a knowledge page needs to reference related work items or other knowledge pages.
+
+Use Markdown links for citations and repository artifacts.
 
 If a link points to a GitHub Issue, manage issue-native relationships on the issue side when possible and keep the knowledge page link as human-readable context.
 
@@ -52,7 +56,7 @@ Use repository-relative links when the target is in the same repository. Use ful
 
 ## Change log
 
-Every material page edit should include a concise `## Change Log` entry that links to the causing workflow artifact.
+Every material page edit should include a concise `## Change Log` entry that links to the causing work item.
 
 Git commit history records who changed what and when. The page `## Change Log` records why the page changed.
 

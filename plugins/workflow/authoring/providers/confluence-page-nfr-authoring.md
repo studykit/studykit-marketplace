@@ -1,6 +1,6 @@
 # Confluence Page NFR Authoring
 
-Provider-specific binding for workflow `nfr` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `nfr` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `nfr` pages. The final body structure is listed 
 
 ## Final body structure
 
-Use this final Confluence body structure for `nfr` artifacts.
+Use this final Confluence body structure for `nfr` pages.
 
 Common required sections are defined by `../common/nfr-authoring.md`:
 

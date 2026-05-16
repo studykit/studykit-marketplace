@@ -44,7 +44,7 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
     assert all("plugins/workflow/operator" not in str(path) for path in resolution.files)
 
 
-def test_review_github_issue_authoring_requires_target_section() -> None:
+def test_review_github_issue_authoring_uses_native_target_relationship() -> None:
     resolution = resolve_authoring("review", role="issue", provider="github")
     github_review_doc = next(
         path for path in resolution.files if path.name == "github-issue-review-authoring.md"
@@ -52,10 +52,10 @@ def test_review_github_issue_authoring_requires_target_section() -> None:
 
     text = github_review_doc.read_text(encoding="utf-8")
 
-    assert "GitHub-specific H2 sections for this type: `## Target`." in text
-    assert "Add `## Target` only when the target is not represented by a provider-native" in text
-    assert "Use a GitHub dependency relationship when the target is a GitHub issue." in text
-    assert "- Start with one bullet per target." in text
+    assert "represent the target with\nthe GitHub dependency relationship" in text
+    assert "GitHub-specific rules:" not in text
+    assert "## Target" not in text
+    assert "## Related" not in text
 
 
 def test_spec_confluence_knowledge_resolution() -> None:

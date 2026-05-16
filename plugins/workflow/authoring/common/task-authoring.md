@@ -18,7 +18,7 @@ target area.
 A task should usually have at least one acceptance source:
 
 - A use case or requirement the task delivers.
-- A spec or knowledge artifact that defines the implementation contract.
+- A spec or knowledge page that defines the implementation contract.
 - An epic or parent issue that coordinates a batch of work.
 
 Anchorless tasks are allowed for small, obvious changes, but they should pass a smell check:
@@ -74,7 +74,7 @@ known regression.
 
 Use `## Change Plan` for the expected implementation scope. Do not hide the
 motivation only in the plan. If the rationale is a long-lived design decision,
-create or update the relevant knowledge artifact instead of embedding the full
+create or update the relevant knowledge page instead of embedding the full
 decision record in the task body.
 
 Acceptance criteria should be grounded in:
@@ -82,7 +82,7 @@ Acceptance criteria should be grounded in:
 - Linked use case flow, validation, and error handling.
 - Linked spec specification.
 - Linked architecture/domain context.
-- Explicit user request when no curated artifact exists yet.
+- Explicit user request when no curated page exists yet.
 
 Optional sections:
 
@@ -97,7 +97,7 @@ Unknown Title Case H2 headings are tolerated.
 
 A task that is ready for implementation should be actionable as a handoff.
 
-Before treating a task as ready, check that the issue body or linked artifacts provide enough evidence for implementation:
+Before treating a task as ready, check that the issue body or linked references provide enough evidence for implementation:
 
 - Reproduction or invocation command when relevant.
 - Code coordinates or expected implementation area.
@@ -109,9 +109,9 @@ If two or more evidence categories are unknown, consider `spike` or `research` i
 
 ## Artifacts
 
-Issue-backed tasks usually do not need a local artifact directory.
+Issue-backed tasks usually do not need a local evidence directory.
 
-Use linked external artifacts only when they have evidentiary or comparative value, such as:
+Use linked external evidence only when they have evidentiary or comparative value, such as:
 
 - Before/after screenshots.
 - Sample inputs and outputs.

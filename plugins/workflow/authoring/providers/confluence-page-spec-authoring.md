@@ -1,6 +1,6 @@
 # Confluence Page Spec Authoring
 
-Provider-specific binding for workflow `spec` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `spec` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `spec` pages. The final body structure is listed
 
 ## Final body structure
 
-Use this final Confluence body structure for `spec` artifacts.
+Use this final Confluence body structure for `spec` pages.
 
 Common required sections are defined by `../common/spec-authoring.md`:
 

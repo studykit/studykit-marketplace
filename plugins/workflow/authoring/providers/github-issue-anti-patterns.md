@@ -11,7 +11,9 @@ Read this with:
 
 ## Relationship Body Sections
 
-Do not create dedicated relationship sections for GitHub-native parent or blocking relationships.
+Do not create dedicated relationship sections for GitHub-native parent or
+blocking relationships, or narrow semantic reference sections that belong in
+`## Related`.
 
 Avoid these sections in GitHub Issue bodies:
 
@@ -21,6 +23,9 @@ Avoid these sections in GitHub Issue bodies:
 - `## Blocked`
 - `## Blocked By`
 - `## Blocking`
+- `## Target`
+- `## Implements`
+- `## Follow-Up`
 
 Also avoid equivalent variants such as:
 
@@ -38,13 +43,19 @@ If rationale, sequencing, or discussion is useful to humans, write it in a GitHu
 
 ## Allowed Body Relationship Sections
 
-These relationship sections may still appear when they carry human-readable artifact context:
+This relationship section may still appear when it carries human-readable context:
 
-- `## Target`
-- `## Implements`
 - `## Related`
 
-Do not use those sections as a disguised parent or blocked-by list.
+Do not use `## Related` as a disguised parent, blocked-by, or sequencing list.
+
+Do not create body sections only to mirror GitHub sub-issues or dependency relationships. In particular:
+
+- Do not add `## Children` only to repeat GitHub sub-issues.
+- Do not add `## Target`; use a GitHub dependency relationship or `## Related`.
+- Do not add `## Implements`; use `## Related`.
+- Do not add `## Follow-Up`; use `## Related`.
+- Do not use `## Related` for blockers, parent issues, dependencies, or sequencing constraints.
 
 ## Work History Body Sections
 

@@ -1,6 +1,6 @@
 # Confluence Page Domain Authoring
 
-Provider-specific binding for workflow `domain` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `domain` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `domain` pages. The final body structure is list
 
 ## Final body structure
 
-Use this final Confluence body structure for `domain` artifacts.
+Use this final Confluence body structure for `domain` pages.
 
 Common required sections are defined by `../common/domain-authoring.md`:
 

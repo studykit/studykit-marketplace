@@ -2,12 +2,12 @@
 
 A workflow research item is a **time-boxed investigation** of a question, technical topic, product question, or comparison of alternatives.
 
-Research is a dual artifact:
+Research has two authoring surfaces:
 
-1. An issue-backed workflow artifact for scope, questions, discussion, status, and review.
+1. An issue-backed item for scope, questions, discussion, status, and review.
 2. A knowledge-backed curated report for final findings, evidence, options, and recommendation-neutral conclusions.
 
-The issue artifact is always created first. The curated report is created or updated when there is stable research output worth publishing.
+The issue item is always created first. The curated report is created or updated when there is stable research output worth publishing.
 
 Companion contracts:
 
@@ -177,7 +177,7 @@ Prefer evidence-oriented language:
 - "Y lacks feature Z in the documented API."
 - "The evidence supports X if revocation latency is the primary criterion."
 
-If a decision is reached, record it in a spec `## Decision Log` or another appropriate knowledge artifact, and cite the research.
+If a decision is reached, record it in a spec `## Decision Log` or another appropriate knowledge page, and cite the research.
 
 ## Publishing rule
 

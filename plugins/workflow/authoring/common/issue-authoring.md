@@ -1,14 +1,14 @@
 # Workflow Issue Authoring
 
-Common semantic rules for issue-backed workflow artifacts.
+Common semantic rules for issue-backed items.
 
-Read this with the semantic authoring file for the artifact type, plus:
+Read this with the semantic authoring file for the item type, plus:
 
 - `./issue-body.md`
 
 ## Scope
 
-Use these rules for issue-backed workflow artifacts:
+Use these rules for issue-backed items:
 
 - `task`
 - `bug`
@@ -26,16 +26,16 @@ Do not introduce workflow-local issue IDs. Do not use local projection paths or 
 
 ## Type and status
 
-Every issue-backed artifact has a workflow type and lifecycle status.
+Every issue-backed item has a workflow type and lifecycle status.
 
-`type` is the issue-backed artifact discriminator. Type-specific authoring files define the remaining semantic metadata fields, requiredness, and lifecycle states. Backend-specific authoring files define how those values are stored and displayed.
+`type` is the issue-backed item discriminator. Type-specific authoring files define the remaining semantic metadata fields, requiredness, and lifecycle states. Backend-specific authoring files define how those values are stored and displayed.
 
 ## Motivation and rationale
 
-Issue-backed artifacts should record why the work exists when the reason is not
+Issue-backed items should record why the work exists when the reason is not
 obvious from the title or acceptance criteria.
 
-Use the artifact body for durable rationale that defines the current work:
+Use the issue body for durable rationale that defines the current work:
 
 - Why the work is needed.
 - What problem, risk, or decision triggered it.
@@ -49,7 +49,7 @@ Use comments for rationale that belongs to the work timeline:
 - Why the final result differs from the original plan.
 
 Do not create metadata fields only to hold rationale. Keep rationale in the body
-or comments using the selected artifact type and provider conventions.
+or comments using the selected item type and provider conventions.
 
 ## Relationships
 
@@ -57,8 +57,8 @@ Issue relationships are not issue metadata fields. Type-specific authoring files
 
 Common relationship meanings:
 
-- `target` — artifact reviewed or affected by a review item.
-- `implements` — use case, requirement, spec, or knowledge artifact implemented by a work item.
+- `target` — item, page, or external reference reviewed or affected by a review item.
+- `implements` — use case, requirement, spec, or knowledge page implemented by a work item.
 - `parent` — epic or parent work item that coordinates this item.
 - `depends_on` — blocking or ordering dependency.
 - `related` — useful non-blocking relationship.
@@ -77,4 +77,4 @@ Keep the issue body structured and current. Do not turn it into a transcript.
 
 ## Write workflow
 
-Resolve and read the required authoring files before drafting issue-backed artifact changes. Provider/cache write commands perform the requested mutation and verification; they do not enforce hidden authoring read state.
+Resolve and read the required authoring files before drafting issue-backed item changes. Provider/cache write commands perform the requested mutation and verification; they do not enforce hidden authoring read state.

@@ -2,12 +2,12 @@
 
 A workflow use case describes **how an actor interacts with the system to achieve a goal in a specific situation**, with a user-visible flow and expected outcome.
 
-Use cases are dual artifacts:
+Use cases have two authoring surfaces:
 
-1. An issue-backed workflow artifact for discovery, questions, discussion, status, and feedback.
+1. An issue-backed item for discovery, questions, discussion, status, and feedback.
 2. A knowledge-backed curated page for the settled use case content.
 
-The issue artifact is always created first. The curated knowledge page is created or updated when there is stable content worth publishing.
+The issue item is always created first. The curated knowledge page is created or updated when there is stable content worth publishing.
 
 Companion contracts:
 

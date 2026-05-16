@@ -1,16 +1,16 @@
 # Workflow CI Authoring
 
-Authoring contract for the `ci` knowledge artifact.
+Authoring contract for the `ci` knowledge page.
 
-The CI artifact is the workspace reference for how agents and humans verify behavior changes: commands, test layers, fixture assumptions, and remote CI expectations.
+The CI page is the workspace reference for how agents and humans verify behavior changes: commands, test layers, fixture assumptions, and remote CI expectations.
 
-The canonical CI artifact is knowledge-backed and stored in the configured knowledge backend. Optional filesystem projection is used only when configured.
+The canonical CI page is knowledge-backed and stored in the configured knowledge backend. Optional filesystem projection is used only when configured.
 
 Knowledge body rules: `./knowledge-body.md`.
 
 ## Purpose
 
-The CI artifact records the executable verification contract for the project.
+The CI page records the executable verification contract for the project.
 
 Architecture explains the testing strategy. CI records the actual commands and environment assumptions that authors should use before marking implementation work done.
 
@@ -102,7 +102,7 @@ Use for known local failure modes and fixes.
 
 ### `## Related Work`
 
-Use for workflow items that changed the CI contract.
+Use for work items that changed the CI contract.
 
 ### `## Change Log`
 
@@ -110,7 +110,7 @@ Required for material updates. See `./knowledge-body.md`.
 
 ## Update rules
 
-Update the CI artifact when a workflow item changes the verification contract.
+Update the CI page when a work item changes the verification contract.
 
 Examples:
 
@@ -120,7 +120,7 @@ Examples:
 - An architecture decision changes test isolation.
 - A review item identifies missing verification guidance.
 
-Every material update should add a `## Change Log` entry linking to the causing workflow artifact.
+Every material update should add a `## Change Log` entry linking to the causing work item.
 
 Example:
 
@@ -130,28 +130,28 @@ Example:
 - 2026-05-13 — #456 — Added browser smoke check for the checkout flow.
 ```
 
-## Artifact boundaries
+## Content boundaries
 
 - Architecture `## Test Strategy` explains why the test layers exist.
 - CI `## How To Run Tests` records how to run them.
 - Task `## Unit Test Strategy` records task-specific verification.
 - Bug `## Unit Test Strategy` records regression coverage for that bug.
 
-Do not duplicate the full CI command table into task or architecture bodies. Link to the CI artifact instead.
+Do not duplicate the full CI command table into task or architecture bodies. Link to the CI page instead.
 
 ## Done criteria
 
-A CI artifact update is done when:
+A CI page update is done when:
 
 - Required sections are present.
 - Commands are verified or explicitly marked as unverified.
 - Remote CI links are current when applicable.
-- The update has a `## Change Log` entry for the causing workflow item.
+- The update has a `## Change Log` entry for the causing work item.
 
 ## Common mistakes
 
 - Recording commands that have not been run and presenting them as verified.
 - Duplicating architecture rationale instead of linking to architecture.
 - Adding task-specific verification details that belong in a task or bug.
-- Relying on a legacy local CI file as canonical identity when the CI artifact is knowledge-backed.
-- Omitting the workflow item that caused a CI contract change.
+- Relying on a legacy local CI file as canonical identity when the CI page is knowledge-backed.
+- Omitting the work item that caused a CI contract change.

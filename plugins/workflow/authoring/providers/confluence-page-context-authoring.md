@@ -1,6 +1,6 @@
 # Confluence Page Context Authoring
 
-Provider-specific binding for workflow `context` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `context` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `context` pages. The final body structure is lis
 
 ## Final body structure
 
-Use this final Confluence body structure for `context` artifacts.
+Use this final Confluence body structure for `context` pages.
 
 Common required sections are defined by `../common/context-authoring.md`:
 

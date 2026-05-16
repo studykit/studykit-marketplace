@@ -1,6 +1,6 @@
 # GitHub Knowledge Architecture Authoring
 
-Provider-specific binding for workflow `architecture` knowledge artifacts stored as repository Markdown files.
+Provider-specific binding for `architecture` knowledge pages stored as repository Markdown files.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for GitHub repository Markdown `architecture` pages. The final 
 
 ## Final body structure
 
-Use this final GitHub repository Markdown body structure for `architecture` artifacts.
+Use this final GitHub repository Markdown body structure for `architecture` pages.
 
 Common required sections are defined by `../common/architecture-authoring.md`:
 
@@ -29,20 +29,4 @@ Common optional sections are defined by `../common/architecture-authoring.md` an
 - `## Related Work`
 - `## Change Log`
 
-GitHub repository Markdown does not add required provider-specific H2 sections for this type.
-
-GitHub repository Markdown rules:
-
-- Diagrams may be Mermaid, ASCII, or linked files in the repository.
-
-Read `./github-knowledge-convention.md` for GitHub repository storage, identity, reference, and transport rules.
-
-## GitHub repository identity
-
-Use the repository path as canonical page identity. Do not add Markdown frontmatter for workflow metadata.
-
-## GitHub repository section guidance
-
-Use links, attachments, or repository files for diagrams and related architecture inputs.
-
-Use repository-relative links when the target is in the same repository. Use full GitHub URLs when the page text must be portable outside the repository.
+Diagrams may be Mermaid, ASCII, or linked files in the repository.

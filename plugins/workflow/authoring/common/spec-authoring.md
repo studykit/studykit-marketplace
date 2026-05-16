@@ -1,8 +1,8 @@
 # Workflow Spec Authoring
 
-A workflow spec is a **knowledge-backed prescriptive implementation contract** for a single artifact: an API shape, schema, protocol, renderer rule, CLI surface, file format, integration contract, or other downstream implementation shape.
+A workflow spec is a **knowledge-backed prescriptive implementation contract** for a single implementation surface: an API shape, schema, protocol, renderer rule, CLI surface, file format, integration contract, or other downstream implementation shape.
 
-Specs are curated knowledge artifacts. They are stored in the configured knowledge backend, not the issue backend.
+Specs are curated knowledge pages. They are stored in the configured knowledge backend, not the issue backend.
 
 Companion contracts:
 
@@ -33,7 +33,7 @@ Required:
 ```markdown
 ## Context
 
-<why this spec exists, what artifact it covers, and what is out of scope>
+<why this spec exists, what implementation surface it covers, and what is out of scope>
 
 ## Specification
 
@@ -68,7 +68,7 @@ Use `## Decision Log` for durable rationale.
 
 Earlier entries are append-only. If a decision changes, append a new entry explaining the correction.
 
-Do not introduce a separate decisions artifact for routine spec-local rationale.
+Do not introduce a separate decisions page for routine spec-local rationale.
 
 ## Related work and research
 
@@ -88,7 +88,7 @@ Research should provide evidence. The spec makes the decision.
 
 ## Change log
 
-Every material update should add a concise `## Change Log` entry linking to the causing workflow artifact.
+Every material update should add a concise `## Change Log` entry linking to the causing work item.
 
 ```markdown
 ## Change Log

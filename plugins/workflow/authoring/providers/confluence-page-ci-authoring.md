@@ -1,6 +1,6 @@
 # Confluence Page CI Authoring
 
-Provider-specific binding for workflow `ci` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `ci` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `ci` pages. The final body structure is listed b
 
 ## Final body structure
 
-Use this final Confluence body structure for `ci` artifacts.
+Use this final Confluence body structure for `ci` pages.
 
 Common required sections are defined by `../common/ci-authoring.md`:
 

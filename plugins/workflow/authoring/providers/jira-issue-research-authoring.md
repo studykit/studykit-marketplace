@@ -1,6 +1,6 @@
 # Jira Issue Research Issue Authoring
 
-Provider-specific binding for workflow `research` artifacts stored as Jira issues.
+Provider-specific binding for `research` issues stored as Jira issues.
 
 Read after:
 
@@ -15,7 +15,7 @@ Use this binding for Jira `research` issues. The final body structure is listed 
 
 ## Final body structure
 
-Use this final Jira body structure for `research` artifacts.
+Use this final Jira body structure for `research` issues.
 
 Common required sections are defined by `../common/research-authoring.md`:
 
@@ -30,29 +30,6 @@ Common optional sections are defined by `../common/research-authoring.md` and `.
 - `## Sources To Check`
 - `## Resume`
 
-Jira-specific H2 sections for this type: `## Dependencies`.
+Issue type is automatically set to `Task`.
 
-Jira-specific rules:
-
-- Use Jira issue links or remote links for related work.
-- Add `## Dependencies` only as dependency body fallback.
-
-## Metadata mapping
-
-Recommended Jira issue type: configured Research or Task type for the workflow issue side.
-
-Use Jira workflow status for the research workflow lifecycle state.
-
-## Jira-specific section guidance
-
-Use Jira issue links or remote links for related work whenever possible.
-
-### `## Dependencies`
-
-Use only as dependency body fallback.
-
-Content:
-
-- Start with one bullet per dependency.
-- Use Jira keys whenever possible.
-- Keep the section limited to blocking or ordering dependencies.
+Summary prefix is automatically set to `[Research] `.

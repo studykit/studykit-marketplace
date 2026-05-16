@@ -1,6 +1,6 @@
 # GitHub Issue Bug Authoring
 
-Provider-specific binding for workflow `bug` artifacts stored as GitHub Issues.
+Provider-specific binding for `bug` issues stored as GitHub Issues.
 
 Read after:
 
@@ -15,7 +15,7 @@ Use this binding for GitHub `bug` issues. The final body structure is listed bel
 
 ## Final body structure
 
-Use this final GitHub body structure for `bug` artifacts.
+Use this final GitHub body structure for `bug` issues.
 
 Common required sections are defined by `../common/bug-authoring.md`:
 
@@ -32,24 +32,4 @@ Common optional sections are defined by `../common/bug-authoring.md` and `../com
 - `## Resume`
 - `## Why Discarded`
 
-GitHub-specific H2 sections for this type: `## Related`.
-
-GitHub-specific rules:
-
-- Add `## Related` only for soft diagnostic context.
-
-## GitHub labels
-
-Apply the GitHub label `bug` to identify this issue type.
-
-## GitHub-specific section guidance
-
-### `## Related`
-
-Use only for soft diagnostic references that help explain or investigate the defect.
-
-Content:
-
-- Start with one bullet per related artifact.
-- Keep descriptions short.
-- Do not include blockers, parent issues, or dependency relationships.
+GitHub label is automatically set to `bug`.

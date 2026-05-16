@@ -1,6 +1,6 @@
 # Confluence Page Research Report Authoring
 
-Provider-specific binding for workflow `research` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `research` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `research` pages. The final body structure is li
 
 ## Final body structure
 
-Use this final Confluence body structure for `research` artifacts.
+Use this final Confluence body structure for `research` pages.
 
 Common required sections are defined by `../common/research-authoring.md`:
 

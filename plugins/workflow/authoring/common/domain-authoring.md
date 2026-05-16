@@ -62,7 +62,7 @@ Domain terms are reference targets for use cases, specs, architecture, and code.
 Do not rename a concept silently. If a rename is needed:
 
 1. Update the domain page.
-2. Add a `## Change Log` entry with the causing workflow artifact.
+2. Add a `## Change Log` entry with the causing work item.
 3. Update affected use cases, specs, architecture, tasks, and reviews, or create review items for deferred updates.
 
 ## Relationship and state notation
@@ -76,7 +76,7 @@ Prefer compact, scannable formats:
 
 Avoid long prose when a table or diagram would make relationships clearer.
 
-## Artifact boundaries
+## Content boundaries
 
 Use these boundaries to place domain content. Do not encode these as metadata relationships.
 
@@ -88,13 +88,13 @@ Use these boundaries to place domain content. Do not encode these as metadata re
 
 ## Drift and feedback
 
-If a concept appears repeatedly in use cases, specs, architecture, or tasks but is missing from domain, create a `review` item with `kind: gap` targeting the domain page and the causing artifact.
+If a concept appears repeatedly in use cases, specs, architecture, or tasks but is missing from domain, create a `review` item with `kind: gap` targeting the domain page and the causing work item.
 
 If architecture uses a domain term differently from this page, create a `review` item with `kind: finding` targeting both pages.
 
 ## Change log
 
-Every material domain change should include a `## Change Log` entry linking to the causing workflow artifact.
+Every material domain change should include a `## Change Log` entry linking to the causing work item.
 
 ```markdown
 ## Change Log

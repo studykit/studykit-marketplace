@@ -467,6 +467,127 @@ def test_data_center_review_create_uses_task_type_and_review_summary_prefix(tmp_
     assert '\\"issuetype\\":{\\"name\\":\\"Task\\"}' in payload_text
 
 
+def test_data_center_spike_create_uses_task_type_and_spike_summary_prefix(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    runner = FakeRunner(
+        {
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "10001", "key": "TM-1234"})),
+            curl_args(issue_url()): result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(
+        tmp_path,
+        runner,
+        "create",
+        artifact_type="spike",
+        title="Probe Jira issue type",
+        body="## Description\n\nProbe the Jira issue type.",
+        issue_type="Bug",
+    )
+
+    assert response.payload["operation"] == "create_issue"
+    write_request = runner.requests[0]
+    assert write_request.args == curl_write_args()
+    payload_text = str(write_request.input_text)
+    assert '\\"summary\\":\\"[Spike] Probe Jira issue type\\"' in payload_text
+    assert '\\"issuetype\\":{\\"name\\":\\"Task\\"}' in payload_text
+
+
+def test_data_center_research_create_uses_task_type_and_research_summary_prefix(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    runner = FakeRunner(
+        {
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "10001", "key": "TM-1234"})),
+            curl_args(issue_url()): result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(
+        tmp_path,
+        runner,
+        "create",
+        artifact_type="research",
+        title="Compare issue types",
+        body="## Description\n\nCompare the Jira issue types.",
+    )
+
+    assert response.payload["operation"] == "create_issue"
+    write_request = runner.requests[0]
+    assert write_request.args == curl_write_args()
+    payload_text = str(write_request.input_text)
+    assert '\\"summary\\":\\"[Research] Compare issue types\\"' in payload_text
+    assert '\\"issuetype\\":{\\"name\\":\\"Task\\"}' in payload_text
+
+
+def test_data_center_usecase_create_uses_story_type(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    runner = FakeRunner(
+        {
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "10001", "key": "TM-1234"})),
+            curl_args(issue_url()): result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(
+        tmp_path,
+        runner,
+        "create",
+        artifact_type="usecase",
+        title="Shape checkout flow",
+        body="## Description\n\nShape the checkout flow.",
+    )
+
+    assert response.payload["operation"] == "create_issue"
+    write_request = runner.requests[0]
+    assert write_request.args == curl_write_args()
+    payload_text = str(write_request.input_text)
+    assert '\\"summary\\":\\"Shape checkout flow\\"' in payload_text
+    assert '\\"issuetype\\":{\\"name\\":\\"Story\\"}' in payload_text
+
+
+@pytest.mark.parametrize(
+    ("artifact_type", "expected_issue_type"),
+    [
+        ("task", "Task"),
+        ("bug", "Bug"),
+        ("epic", "Epic"),
+        ("research", "Task"),
+        ("usecase", "Story"),
+    ],
+)
+def test_data_center_create_uses_artifact_issue_type(
+    tmp_path: Path,
+    artifact_type: str,
+    expected_issue_type: str,
+) -> None:
+    write_jira_config(tmp_path)
+    runner = FakeRunner(
+        {
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "10001", "key": "TM-1234"})),
+            curl_args(issue_url()): result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(
+        tmp_path,
+        runner,
+        "create",
+        artifact_type=artifact_type,
+        title=f"Create {artifact_type}",
+        body="## Description\n\nCreate the issue.",
+        issue_type="Custom",
+    )
+
+    assert response.payload["operation"] == "create_issue"
+    payload_text = str(runner.requests[0].input_text)
+    assert f'\\"issuetype\\":{{\\"name\\":\\"{expected_issue_type}\\"}}' in payload_text
+
+
 def test_data_center_update_from_cache_checks_freshness_and_refreshes(tmp_path: Path) -> None:
     write_jira_config(tmp_path)
     site = jira_site(tmp_path)

@@ -76,7 +76,7 @@ Prefer measurable forms:
 
 If a requirement cannot yet be measured, create a `review` item with `kind: question` or `gap` rather than adding an aspirational NFR.
 
-## Artifact boundaries
+## Content boundaries
 
 NFR records the target.
 
@@ -101,7 +101,7 @@ If verification is not yet known, mark it as an open question and create a revie
 
 ## Change log
 
-Every material NFR change should include a `## Change Log` entry linking to the causing workflow artifact.
+Every material NFR change should include a `## Change Log` entry linking to the causing work item.
 
 ```markdown
 ## Change Log

@@ -1,12 +1,12 @@
 # Confluence Page Convention
 
-Common convention rules for workflow knowledge artifacts stored as Confluence pages.
+Common convention rules for knowledge pages stored as Confluence pages.
 
 ## Scope
 
 Use these rules for Confluence pages produced or updated by the workflow plugin.
 
-This file defines Confluence-wide page writing rules only. Artifact-specific body structure belongs outside this file.
+This file defines Confluence-wide page writing rules only. Type-specific body structure belongs outside this file.
 
 ## Identity
 
@@ -26,7 +26,7 @@ Use Confluence links, Smart Links, or full URLs for references. Prefer Smart Lin
 
 ## Relationships
 
-Represent relationships as visible page content when they are part of the artifact's durable meaning.
+Represent relationships as visible page content when they are part of the page's durable meaning.
 
 Use Confluence page links, Jira Smart Links, GitHub Smart Links, or full URLs for relationship entries.
 
@@ -34,7 +34,7 @@ Use Confluence page hierarchy for parent-child organization and navigation. Do n
 
 ## Change log
 
-Every material page edit should include a concise `## Change Log` entry that links to the causing workflow artifact.
+Every material page edit should include a concise `## Change Log` entry that links to the causing work item.
 
 ```markdown
 ## Change Log
@@ -58,4 +58,4 @@ Confluence updates must be version-aware.
 
 Before updating an existing page, read the current page version. Detect version conflicts and avoid overwriting concurrent edits.
 
-Keep each update focused on the requested artifact change. Do not rewrite unrelated sections just to normalize formatting.
+Keep each update focused on the requested page change. Do not rewrite unrelated sections just to normalize formatting.

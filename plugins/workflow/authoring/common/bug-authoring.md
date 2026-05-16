@@ -33,7 +33,7 @@ Represent relationships structurally when possible. Body representation depends 
 
 | Relationship | Required | Notes |
 | --- | --- | --- |
-| `spec` | optional | Spec or knowledge artifact whose expected behavior is violated. |
+| `spec` | optional | Spec or knowledge page whose expected behavior is violated. |
 | `depends_on` | optional | Blocking or ordering dependency. |
 | `parent` | optional | Epic or parent issue coordinating the fix. |
 | `related` | optional | Non-blocking references useful for diagnosis or implementation. |
@@ -138,13 +138,13 @@ A bug may link to:
 - An architecture/domain/NFR/CI page affected by the fix.
 - A parent epic or task where the bug was discovered.
 
-If the bug reveals that expected behavior is undocumented, create a review item with `kind: gap` targeting the missing knowledge artifact.
+If the bug reveals that expected behavior is undocumented, create a review item with `kind: gap` targeting the missing knowledge page.
 
 ## Artifacts
 
-Issue-backed bugs usually do not need a local artifact directory.
+Issue-backed bugs usually do not need a local evidence directory.
 
-Use linked external artifacts only when evidence has lasting value, such as:
+Use linked external evidence only when evidence has lasting value, such as:
 
 - Screenshots.
 - Crash logs.

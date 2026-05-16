@@ -1,14 +1,14 @@
 # Workflow Issue Body Conventions
 
-Body-level rules for workflow artifacts stored in an issue backend.
+Body-level rules for issue-backed items stored in an issue backend.
 
-Issue-backed artifacts include `task`, `bug`, `spike`, `epic`, `review`, and the workflow issue side of `usecase` and `research`.
+Issue-backed item types include `task`, `bug`, `spike`, `epic`, `review`, and the workflow issue side of `usecase` and `research`.
 
 ## Scope
 
 These rules apply to visible issue body text.
 
-Type-specific authoring files define the required body shape for each artifact type. This file defines issue body formatting, readability, and reusable issue sections.
+Type-specific authoring files define the required body shape for each item type. This file defines issue body formatting, readability, and reusable issue sections.
 
 ## Section heading form
 
@@ -31,7 +31,7 @@ Rules:
 - Do not put an H1 in the body when the issue title is stored separately.
 - Use H3 and deeper headings only inside an H2 section.
 - Unknown H2 headings are tolerated when they are useful and well-formed.
-- Avoid stray content above the first H2 unless the selected artifact template requires a short summary block.
+- Avoid stray content above the first H2 unless the selected type template requires a short summary block.
 
 Common issue H2 names:
 
@@ -39,6 +39,7 @@ Common issue H2 names:
 - `## Acceptance Criteria`
 - `## Unit Test Strategy`
 - `## Open Questions`
+- `## Related`
 - `## Resume`
 - `## Why Discarded`
 
@@ -48,15 +49,15 @@ Use stable, readable references in issue body text.
 
 | Target | Preferred body form |
 | --- | --- |
-| Issue-backed artifact | Issue reference from the selected issue backend |
-| Knowledge-backed artifact | Page, document, or file reference from the selected knowledge backend |
+| Issue-backed item | Issue reference from the selected issue backend |
+| Knowledge page | Page, document, or file reference from the selected knowledge backend |
 | External source | Standard Markdown link |
 
 Rules:
 
 - Prefer the shortest reference that is unambiguous in the configured project.
 - Use full URLs when a short reference would be ambiguous outside its source system.
-- Do not require local Markdown paths for artifacts whose canonical identity is not a local file.
+- Do not require local Markdown paths for targets whose canonical identity is not a local file.
 - Do not introduce workflow-local numeric IDs when canonical identity already exists.
 
 ## Relationship body sections
@@ -65,11 +66,19 @@ Issue relationship body sections are type-specific or provider-specific. Do not 
 
 Provider relationship files define which relationships are provider-native and which may appear as visible body context.
 
+## `## Related`
+
+Use for human-readable references that help interpret the issue but are not
+stored as provider-native relationships.
+
+Provider convention files define when `## Related` is appropriate and when a
+provider-native relationship should be used instead.
+
 ## `## Resume`
 
 Purpose: current-state snapshot for a future session.
 
-Use when an issue-backed artifact is mid-flight and the current state is not obvious from the existing body.
+Use when an issue-backed item is mid-flight and the current state is not obvious from the existing body.
 
 Suggested slots:
 
@@ -94,11 +103,11 @@ Use when an issue is intentionally abandoned and provider status alone does not 
 
 Use ordinary Markdown lists unless a type-specific contract gives a stricter shape.
 
-Relationship lists should keep one referenced artifact per bullet.
+Relationship lists should keep one referenced item per bullet.
 
 ## Comments versus body
 
-Use the issue body for the current structured artifact.
+Use the issue body for the current structured issue content.
 Use comments, work notes, discussions, or history for conversation, progress notes, review conversations, raw investigation notes, and audit facts.
 
 Do not copy long comment threads into the body. Summarize the resulting decision or current state in the relevant body section instead.
@@ -108,8 +117,8 @@ Do not copy long comment threads into the body. Summarize the resulting decision
 If workflow tooling creates local Markdown files as projections of external issues, do not treat projection paths as canonical identity.
 
 - Do not use projection paths in commits, branches, or comments unless the local path itself is the topic.
-- Do not edit projection metadata as authoring state. Use provider fields through the selected provider workflow, and keep canonical artifact references in visible body text.
+- Do not edit projection metadata as authoring state. Use provider fields through the selected provider workflow, and keep canonical references in visible body text.
 
 ## Cross-references
 
-- `./issue-authoring.md` — issue-backed artifact rules.
+- `./issue-authoring.md` — issue-backed item rules.

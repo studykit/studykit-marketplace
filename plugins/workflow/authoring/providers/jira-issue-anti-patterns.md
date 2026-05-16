@@ -11,9 +11,11 @@ Read this with:
 
 ## Relationship Body Sections
 
-Do not create dedicated relationship sections for Jira-native hierarchy, issue links, or remote links.
+Do not create dedicated relationship sections for Jira-native hierarchy, issue
+links, or remote links, or narrow semantic reference sections that belong in
+`## Related`.
 
-Avoid these sections in Jira issue bodies when the relationship is stored natively:
+Avoid these sections in Jira issue bodies:
 
 - `## Parent`
 - `## Children`
@@ -21,6 +23,9 @@ Avoid these sections in Jira issue bodies when the relationship is stored native
 - `## Blocked`
 - `## Blocked By`
 - `## Blocking`
+- `## Target`
+- `## Implements`
+- `## Follow-Up`
 
 Also avoid equivalent variants such as:
 
@@ -41,12 +46,18 @@ If rationale, sequencing, or discussion is useful to humans, write it in a Jira 
 
 These body sections may still appear when the relationship is not stored natively and the section carries human-readable context:
 
-- `## Target`
-- `## Implements`
 - `## Related`
 - `## Dependencies`
 
-Do not use those sections as a disguised parent, child, or blocked-by list.
+Do not use those sections as a disguised parent, child, blocked-by, or sequencing list.
+
+Do not create fallback sections only to mirror Jira issue links, hierarchy, or remote links. In particular:
+
+- Do not add `## Related` only to repeat a Jira issue link or remote link.
+- Do not add `## Implements`; use a provider-native relationship or `## Related`.
+- Do not add `## Target`; use a provider-native relationship or `## Related`.
+- Do not add `## Follow-Up`; use `## Related`.
+- Do not use `## Dependencies` for soft related work, parent links, or implementation links.
 
 ## Work History Body Sections
 

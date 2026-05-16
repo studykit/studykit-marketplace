@@ -1,6 +1,6 @@
 # Confluence Page Use Case Page Authoring
 
-Provider-specific binding for workflow `usecase` knowledge artifacts stored as Confluence pages.
+Provider-specific binding for `usecase` knowledge pages stored as Confluence pages.
 
 Read after:
 
@@ -13,7 +13,7 @@ Use this binding for Confluence `usecase` pages. The final body structure is lis
 
 ## Final body structure
 
-Use this final Confluence body structure for `usecase` artifacts.
+Use this final Confluence body structure for `usecase` pages.
 
 Common required sections are defined by `../common/usecase-authoring.md`:
 

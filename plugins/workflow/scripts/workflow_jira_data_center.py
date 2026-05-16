@@ -50,6 +50,18 @@ from workflow_providers import (
 
 JIRA_REVIEW_ISSUE_TYPE = "Task"
 JIRA_REVIEW_TITLE_PREFIX = "[Review] "
+JIRA_RESEARCH_TITLE_PREFIX = "[Research] "
+JIRA_SPIKE_ISSUE_TYPE = "Task"
+JIRA_SPIKE_TITLE_PREFIX = "[Spike] "
+JIRA_ARTIFACT_ISSUE_TYPES = {
+    "bug": "Bug",
+    "epic": "Epic",
+    "research": "Task",
+    "review": JIRA_REVIEW_ISSUE_TYPE,
+    "task": "Task",
+    "usecase": "Story",
+    "spike": JIRA_SPIKE_ISSUE_TYPE,
+}
 
 
 @dataclass(frozen=True)
@@ -186,12 +198,13 @@ class JiraDataCenterIssueNativeProvider(IssueProvider):
             body = str(_required_payload_value(request, "body"))
             labels = tuple(_string_list(request.payload.get("labels")))
 
-        if _is_review_request(request):
-            title = _jira_review_title(title)
+        title = _jira_issue_title(request, title)
         project_key = _optional_string(request.payload.get("project") or request.payload.get("project_key")) or site.project
-        issue_type = _optional_string(request.payload.get("issue_type") or request.payload.get("issuetype")) or site.issue_type
-        if _is_review_request(request):
-            issue_type = JIRA_REVIEW_ISSUE_TYPE
+        issue_type = (
+            _jira_artifact_issue_type(request)
+            or _optional_string(request.payload.get("issue_type") or request.payload.get("issuetype"))
+            or site.issue_type
+        )
         if not project_key:
             raise ProviderOperationError("Jira issue create requires provider project or payload.project")
         if not issue_type:
@@ -231,7 +244,7 @@ class JiraDataCenterIssueNativeProvider(IssueProvider):
         fields: dict[str, Any] = {}
         if request.payload.get("title") is not None:
             title = str(request.payload["title"])
-            fields["summary"] = _jira_review_title(title) if _is_review_request(request) else title
+            fields["summary"] = _jira_issue_title(request, title)
         if request.payload.get("body") is not None:
             fields["description"] = str(request.payload["body"])
         if request.payload.get("labels") is not None:
@@ -249,7 +262,7 @@ class JiraDataCenterIssueNativeProvider(IssueProvider):
         fields: dict[str, Any] = {}
         if raw_fields.get("summary") is not None:
             title = str(raw_fields.get("summary") or "")
-            fields["summary"] = _jira_review_title(title) if _is_review_request(request) else title
+            fields["summary"] = _jira_issue_title(request, title)
         if raw_fields.get("description") is not None:
             fields["description"] = str(raw_fields.get("description") or "")
         if raw_fields.get("labels") is not None:
@@ -732,12 +745,39 @@ def _is_review_request(request: ProviderRequest) -> bool:
     return request.context.artifact_type.strip().lower() == "review"
 
 
+def _is_research_request(request: ProviderRequest) -> bool:
+    return request.context.artifact_type.strip().lower() == "research"
+
+
+def _is_spike_request(request: ProviderRequest) -> bool:
+    return request.context.artifact_type.strip().lower() == "spike"
+
+
+def _jira_artifact_issue_type(request: ProviderRequest) -> str | None:
+    return JIRA_ARTIFACT_ISSUE_TYPES.get(request.context.artifact_type.strip().lower())
+
+
+def _jira_issue_title(request: ProviderRequest, title: str) -> str:
+    if _is_review_request(request):
+        return _jira_prefixed_title(title, JIRA_REVIEW_TITLE_PREFIX)
+    if _is_research_request(request):
+        return _jira_prefixed_title(title, JIRA_RESEARCH_TITLE_PREFIX)
+    if _is_spike_request(request):
+        return _jira_prefixed_title(title, JIRA_SPIKE_TITLE_PREFIX)
+    return title
+
+
 def _jira_review_title(title: str) -> str:
-    if title.startswith(JIRA_REVIEW_TITLE_PREFIX):
+    return _jira_prefixed_title(title, JIRA_REVIEW_TITLE_PREFIX)
+
+
+def _jira_prefixed_title(title: str, prefix: str) -> str:
+    if title.startswith(prefix):
         return title
-    if title.lower().startswith("[review]"):
-        return f"{JIRA_REVIEW_TITLE_PREFIX}{title[len('[Review]'):].lstrip()}"
-    return f"{JIRA_REVIEW_TITLE_PREFIX}{title}"
+    marker = prefix.strip()
+    if title.lower().startswith(marker.lower()):
+        return f"{prefix}{title[len(marker):].lstrip()}"
+    return f"{prefix}{title}"
 
 
 def _optional_string(value: Any) -> str | None:

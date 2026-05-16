@@ -1,6 +1,6 @@
 # GitHub Issue Relationships
 
-Provider-specific relationship rules for workflow issue artifacts stored as GitHub Issues.
+Provider-specific relationship rules for issue-backed items stored as GitHub Issues.
 
 Read with `../common/issue-authoring.md`, `./github-issue-convention.md`.
 
@@ -12,7 +12,7 @@ Use GitHub-native relationships when available:
 
 - Parent and child relationships use GitHub sub-issue metadata.
 - Blocking relationships use GitHub issue dependency metadata.
-- Soft related references use the artifact-specific body section only when no native relationship is available or when the relationship is intentionally human-readable context.
+- Soft related references use the type-specific body section only when no native relationship is available or when the relationship is intentionally human-readable context.
 
 ## Relationship intents
 
@@ -27,7 +27,7 @@ If the natural wording is "source has child target", invert the source and targe
 
 Use same-repository GitHub issue references such as `#66` for targets.
 
-GitHub provider-native writes do not support a generic `related` relationship. Use an artifact-specific body section only when the relationship is intentionally human-readable context.
+GitHub provider-native writes do not support a generic `related` relationship. Use a type-specific body section only when the relationship is intentionally human-readable context.
 
 ## Body boundary
 

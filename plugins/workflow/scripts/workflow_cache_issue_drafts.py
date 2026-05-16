@@ -33,6 +33,8 @@ class WorkflowCacheIssueDraftError(RuntimeError):
 
 
 JIRA_REVIEW_TITLE_PREFIX = "[Review] "
+JIRA_RESEARCH_TITLE_PREFIX = "[Research] "
+JIRA_SPIKE_TITLE_PREFIX = "[Spike] "
 
 
 def prepare_pending_issue_draft(
@@ -53,8 +55,8 @@ def prepare_pending_issue_draft(
     local_id = _required_text(local_id, "local id")
     artifact_type = _required_text(artifact_type, "artifact type")
     title = _required_text(title, "title")
-    if config.issues.kind == "jira" and _is_review_artifact_type(artifact_type):
-        title = _jira_review_title(title)
+    if config.issues.kind == "jira":
+        title = _jira_issue_title(artifact_type, title)
     normalized_state = (state or "open").strip().lower()
     normalized_labels = tuple(label.strip() for label in labels if label.strip())
     if config.issues.kind == "github" and artifact_type not in normalized_labels:
@@ -369,12 +371,35 @@ def _is_review_artifact_type(value: str) -> bool:
     return value.strip().lower() == "review"
 
 
+def _is_research_artifact_type(value: str) -> bool:
+    return value.strip().lower() == "research"
+
+
+def _is_spike_artifact_type(value: str) -> bool:
+    return value.strip().lower() == "spike"
+
+
+def _jira_issue_title(artifact_type: str, title: str) -> str:
+    if _is_review_artifact_type(artifact_type):
+        return _jira_prefixed_title(title, JIRA_REVIEW_TITLE_PREFIX)
+    if _is_research_artifact_type(artifact_type):
+        return _jira_prefixed_title(title, JIRA_RESEARCH_TITLE_PREFIX)
+    if _is_spike_artifact_type(artifact_type):
+        return _jira_prefixed_title(title, JIRA_SPIKE_TITLE_PREFIX)
+    return title
+
+
 def _jira_review_title(title: str) -> str:
-    if title.startswith(JIRA_REVIEW_TITLE_PREFIX):
+    return _jira_prefixed_title(title, JIRA_REVIEW_TITLE_PREFIX)
+
+
+def _jira_prefixed_title(title: str, prefix: str) -> str:
+    if title.startswith(prefix):
         return title
-    if title.lower().startswith("[review]"):
-        return f"{JIRA_REVIEW_TITLE_PREFIX}{title[len('[Review]'):].lstrip()}"
-    return f"{JIRA_REVIEW_TITLE_PREFIX}{title}"
+    marker = prefix.strip()
+    if title.lower().startswith(marker.lower()):
+        return f"{prefix}{title[len(marker):].lstrip()}"
+    return f"{prefix}{title}"
 
 
 def _normalized_refs(values: tuple[str, ...]) -> list[str]:

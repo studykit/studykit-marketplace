@@ -54,7 +54,7 @@ Represent relationships structurally when possible. Body representation depends 
 | `children` | recommended | Child issues. Use backend hierarchy links when available and always include `## Children`. |
 | `related` | optional | Related specs, use cases, research, reviews, pages, or issues. |
 
-Do not use implementation-only fields such as `implements`, `spec`, `depends_on`, artifact links, or implementation cycle counters on an epic. Children carry implementation anchors and dependencies.
+Do not use implementation-only fields such as `implements`, `spec`, `depends_on`, reference links, or implementation cycle counters on an epic. Children carry implementation anchors and dependencies.
 
 ## Lifecycle
 
@@ -153,11 +153,11 @@ Examples:
 
 Do not duplicate every child acceptance criterion in the epic.
 
-## Relationship to knowledge artifacts
+## Relationship to knowledge pages
 
 Epics coordinate work. They do not define the product, architecture, or implementation contract.
 
-Use knowledge artifacts for durable content:
+Use knowledge pages for durable content:
 
 - User-facing behavior → use case curated page.
 - Implementation contract → spec.
@@ -202,5 +202,5 @@ Keep the epic body as the current compact coordination surface.
 - Do not put implementation details or unit test strategy in the epic.
 - Do not use `implements`, `spec`, `depends_on`, or implementation cycle fields on an epic.
 - Do not discard children automatically when discarding an epic.
-- Do not store durable design decisions only in the epic; update the relevant knowledge artifact.
+- Do not store durable design decisions only in the epic; update the relevant knowledge page.
 - Do not auto-trigger a skill just because an epic is being written; follow the authoring resolver policy.

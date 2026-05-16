@@ -1,6 +1,6 @@
 # Jira Issue Epic Authoring
 
-Provider-specific binding for workflow `epic` artifacts stored as Jira issues.
+Provider-specific binding for `epic` issues stored as Jira issues.
 
 Read after:
 
@@ -15,7 +15,7 @@ Use this binding for Jira `epic` issues. The final body structure is listed belo
 
 ## Final body structure
 
-Use this final Jira body structure for `epic` artifacts.
+Use this final Jira body structure for `epic` issues.
 
 Common required sections are defined by `../common/epic-authoring.md`:
 
@@ -29,21 +29,4 @@ Common optional sections are defined by `../common/epic-authoring.md` and `../co
 - `## Resume`
 - `## Why Discarded`
 
-Jira-specific H2 sections for this type: None.
-
-Jira-specific rules:
-
-- Use Jira hierarchy or parent fields as canonical hierarchy.
-- Do not add body sections that duplicate native Jira hierarchy.
-
-## Metadata mapping
-
-Recommended Jira issue type: Jira Epic or configured hierarchy type.
-
-Use Jira workflow status for the workflow lifecycle state.
-
-## Jira-specific section guidance
-
-Use Jira hierarchy or parent fields as canonical hierarchy.
-
-Do not add body sections that duplicate native Jira hierarchy.
+Issue type is automatically set to `Epic`.

@@ -10,7 +10,7 @@ Companion contracts:
 
 ## Storage role
 
-Actors pages are knowledge-backed artifacts. Do not store actors pages in the issue backend.
+Actors pages are knowledge pages. Do not store actors pages in the issue backend.
 
 ## Purpose
 
@@ -68,7 +68,7 @@ A slug should:
 Do not rename a slug silently. If a rename is needed:
 
 1. Update the actors page.
-2. Add a `## Change Log` entry with the causing workflow artifact.
+2. Add a `## Change Log` entry with the causing work item.
 3. Update affected use cases, tasks, specs, and reviews, or create review items for deferred updates.
 
 ## Authorization guidance
@@ -88,7 +88,7 @@ If a new actor appears during use case discovery, update the roster or create a 
 
 ## Change log
 
-Every material actors change should include a `## Change Log` entry linking to the causing workflow artifact.
+Every material actors change should include a `## Change Log` entry linking to the causing work item.
 
 ```markdown
 ## Change Log

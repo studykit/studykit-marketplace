@@ -1,6 +1,6 @@
 # Jira Issue Spike Authoring
 
-Provider-specific binding for workflow `spike` artifacts stored as Jira issues.
+Provider-specific binding for `spike` issues stored as Jira issues.
 
 Read after:
 
@@ -15,7 +15,7 @@ Use this binding for Jira `spike` issues. The final body structure is listed bel
 
 ## Final body structure
 
-Use this final Jira body structure for `spike` artifacts.
+Use this final Jira body structure for `spike` issues.
 
 Common required sections are defined by `../common/spike-authoring.md`:
 
@@ -28,38 +28,9 @@ Common optional sections are defined by `../common/spike-authoring.md` and `../c
 
 - `## Artifact Links`
 - `## Change Plan`
-- `## Follow-Up`
 - `## Resume`
 - `## Why Discarded`
 
-Jira-specific H2 sections for this type: `## Dependencies`.
+Issue type is automatically set to `Task`.
 
-Jira-specific rules:
-
-- Use Jira issue links for follow-up work when possible.
-- Add `## Dependencies` only as dependency body fallback.
-- Do not add `## Related` only to duplicate native Jira links.
-
-## Metadata mapping
-
-Recommended Jira issue type: Jira Spike if available, otherwise configured Task subtype or label.
-
-Use Jira workflow status for the workflow lifecycle state.
-
-## Jira-specific section guidance
-
-Use Jira issue links for follow-up work when possible.
-
-### `## Dependencies`
-
-Use only as dependency body fallback.
-
-Content:
-
-- Start with one bullet per dependency.
-- Use Jira keys whenever possible.
-- Keep the section limited to blocking or ordering dependencies.
-
-## Body duplication rule
-
-Do not add `## Related` only to duplicate Jira issue links or remote links.
+Summary prefix is automatically set to `[Spike] `.

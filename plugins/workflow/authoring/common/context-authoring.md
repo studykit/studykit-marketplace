@@ -1,6 +1,6 @@
 # Workflow Context Authoring
 
-A context page is a **knowledge-backed framing reference**. It records the original idea, problem framing, scope boundaries, and optional UI/navigation framing that other workflow artifacts assume.
+A context page is a **knowledge-backed framing reference**. It records the original idea, problem framing, scope boundaries, and optional UI/navigation framing that other work items and knowledge pages assume.
 
 Context is curated knowledge. It is stored in the configured knowledge backend, not the issue backend.
 
@@ -10,7 +10,7 @@ Companion contracts:
 
 ## Storage role
 
-Context pages are knowledge-backed artifacts. Do not store context pages in the issue backend.
+Context pages are knowledge pages. Do not store context pages in the issue backend.
 
 ## Purpose
 
@@ -22,7 +22,7 @@ Use context for upstream framing:
 - Coarse success definition.
 - UI screen/navigation narrative when useful.
 
-Every other workflow artifact indirectly assumes the framing captured here.
+Every other work item or knowledge page indirectly assumes the framing captured here.
 
 Do not use context for detailed use case flows, domain glossary, implementation design, or task plans.
 
@@ -84,7 +84,7 @@ Do not embed large mockups inline. Link to design artifacts or generated preview
 
 ## Change log
 
-Every material context change should include a `## Change Log` entry linking to the causing workflow artifact.
+Every material context change should include a `## Change Log` entry linking to the causing work item.
 
 ```markdown
 ## Change Log
@@ -94,7 +94,7 @@ Every material context change should include a `## Change Log` entry linking to 
 
 Do not duplicate issue discussion in the page.
 
-## Artifact boundaries
+## Content boundaries
 
 Use these boundaries to place framing content. Do not encode these as metadata relationships.
 

@@ -1,6 +1,6 @@
 # Jira Issue Relationships
 
-Provider-specific relationship rules for workflow issue artifacts stored as Jira issues.
+Provider-specific relationship rules for issue-backed items stored as Jira issues.
 
 Read with `../common/issue-authoring.md`, `./jira-issue-convention.md`.
 
