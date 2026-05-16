@@ -25,7 +25,7 @@ Common required sections are defined by `../common/spike-authoring.md`:
 - `## Validation Method`
 - `## Acceptance Criteria`
 
-Common optional sections are defined by `../common/spike-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/spike-authoring.md` and `../common/issue-body.md`:
 
 - `## Artifact Links`
 - `## Change Plan`
@@ -39,20 +39,13 @@ GitHub-specific rules:
 
 - Use GitHub issue references or links in `## Follow-Up`.
 - Add `## Related` only for soft references that are not follow-up work.
-- Do not add dependency body sections.
 
-## Metadata mapping
+## GitHub labels
 
-Recommended GitHub type label: `spike`.
-
-Use GitHub Issue Fields for workflow status when available. If fields are unavailable, use a status label such as `workflow/status:<state>`.
+Apply the GitHub label `spike` to identify this issue type.
 
 ## GitHub-specific section guidance
 
 Use GitHub issue references in `## Follow-Up` when the follow-up work is also tracked in GitHub.
 
 Use `## Related` only for soft references that are not follow-up work, parent work, or blocking dependencies.
-
-## Forbidden body sections
-
-Do not add GitHub-native parent or dependency relationships as body sections. In particular, do not add `## Parent`, `## Dependencies`, `## Blocked`, `## Blocked By`, or `## Blocking`.

@@ -11,7 +11,7 @@ The issue artifact is always created first. The curated report is created or upd
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - `./knowledge-body.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -50,7 +50,7 @@ Represent this metadata structurally when possible.
 | --- | --- | --- |
 | `type` | yes | `research`, or issue type or equivalent. |
 | `title` | yes | Short investigation title. |
-| `status` | yes | Workflow lifecycle status. |
+| `status` | yes | Provider status when configured by the selected issue backend. |
 | `mode` | yes | `comparative` or `single`. |
 | `options` | required for comparative | Alternatives being compared. |
 | `tags` | optional | Classification tags. |
@@ -69,54 +69,6 @@ Represent relationships structurally when possible. Body representation depends 
 | `depends_on` | optional | Work items that must finish first. |
 | `parent` | optional | Epic or parent issue coordinating this research. |
 | `related` | optional | Specs, tasks, use cases, reviews, or pages this research informs. |
-
-## Curated report metadata
-
-Represent this metadata using structured page metadata or index metadata when available.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | `research`. |
-| `title` | yes | Same or clearer title than the workflow issue. |
-| `mode` | yes | `comparative` or `single`. |
-| `options` | required for comparative | Alternatives covered by the report. |
-| `tags` | optional | Classification tags. |
-
-## Curated report relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `source_issue` | yes | Link back to the workflow issue that owns discussion and status. |
-| `related` | optional | Specs, tasks, use cases, reviews, architecture, or domain pages. |
-
-## Lifecycle
-
-Recommended workflow issue lifecycle:
-
-```text
-open → queued → progress → done
-open → discarded
-queued → progress | holding | discarded
-progress → holding | failing | done | discarded
-holding → queued | progress | discarded
-failing → queued | discarded
-done → terminal
-discarded → terminal
-```
-
-Status meaning:
-
-- `open` — Captured but not yet ready to run.
-- `queued` — Scoped and ready for investigation.
-- `progress` — Investigation is active.
-- `holding` — Paused for input, access, or sequencing.
-- `failing` — Investigation is blocked by inaccessible sources, bad framing, or contradictory evidence.
-- `done` — Curated report is published or the issue clearly records why no report is needed.
-- `discarded` — No longer needed.
-
-Status mapping depends on the configured issue backend.
 
 ## Workflow issue body
 
@@ -147,7 +99,7 @@ Optional sections:
 
 - `## Scope` — in-scope and out-of-scope boundaries.
 - `## Sources To Check` — initial source list or search plan.
-- `## Resume` — current-state snapshot while in progress. See `./body-conventions.md`.
+- `## Resume` — current-state snapshot while in progress. See `./issue-body.md`.
 
 Use comments for ongoing notes, links discovered midstream, and review discussion. Promote stable findings into the curated report.
 

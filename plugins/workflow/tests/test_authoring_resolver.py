@@ -32,7 +32,7 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
     assert resolution.role == "issue"
     assert resolution.provider == "github"
     assert _rel_paths(resolution.files) == [
-        "common/body-conventions.md",
+        "common/issue-body.md",
         "common/issue-authoring.md",
         "common/review-authoring.md",
         "providers/github-issue-convention.md",
@@ -54,8 +54,9 @@ def test_review_github_issue_authoring_requires_target_section() -> None:
     text = github_review_doc.read_text(encoding="utf-8")
 
     assert "GitHub-specific H2 sections for this type: `## Target`." in text
-    assert "Add required `## Target` for target-specific reviews." in text
-    assert "- `## Target` contains one bullet per target" in text
+    assert "Add `## Target` only when the target is not represented by a provider-native" in text
+    assert "Use a GitHub dependency relationship when the target is a GitHub issue." in text
+    assert "- Start with one bullet per target." in text
 
 
 def test_spec_confluence_knowledge_resolution() -> None:
@@ -63,11 +64,9 @@ def test_spec_confluence_knowledge_resolution() -> None:
 
     assert resolution.role == "knowledge"
     assert _rel_paths(resolution.files) == [
-        "common/body-conventions.md",
         "common/knowledge-body.md",
         "common/spec-authoring.md",
         "providers/confluence-page-convention.md",
-        "providers/confluence-page-metadata.md",
         "providers/confluence-page-spec-authoring.md",
     ]
 
@@ -99,12 +98,14 @@ providers:
     assert "providers/jira-issue-metadata.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-relationships.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-task-authoring.md" in _rel_paths(issue_resolution.files)
+    assert "providers/jira-issue-anti-patterns.md" in _rel_paths(issue_resolution.files)
     assert knowledge_resolution.provider == "github"
-    assert "providers/github-knowledge-convention.md" in _rel_paths(knowledge_resolution.files)
-    assert "providers/github-knowledge-metadata.md" in _rel_paths(knowledge_resolution.files)
-    assert "providers/github-knowledge-architecture-authoring.md" in _rel_paths(
-        knowledge_resolution.files
-    )
+    assert _rel_paths(knowledge_resolution.files) == [
+        "common/knowledge-body.md",
+        "common/architecture-authoring.md",
+        "providers/github-knowledge-convention.md",
+        "providers/github-knowledge-architecture-authoring.md",
+    ]
 
 
 def test_invalid_provider_for_role_is_rejected() -> None:

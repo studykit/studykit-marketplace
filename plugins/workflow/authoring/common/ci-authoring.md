@@ -6,7 +6,6 @@ The CI artifact is the workspace reference for how agents and humans verify beha
 
 The canonical CI artifact is knowledge-backed and stored in the configured knowledge backend. Optional filesystem projection is used only when configured.
 
-Common body rules: `./body-conventions.md`.
 Knowledge body rules: `./knowledge-body.md`.
 
 ## Purpose
@@ -131,7 +130,7 @@ Example:
 - 2026-05-13 — #456 — Added browser smoke check for the checkout flow.
 ```
 
-## Relationship to other artifacts
+## Artifact boundaries
 
 - Architecture `## Test Strategy` explains why the test layers exist.
 - CI `## How To Run Tests` records how to run them.

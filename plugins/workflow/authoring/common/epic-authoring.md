@@ -8,7 +8,7 @@ Epics are stored in the configured issue backend.
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - Issue rules: `./issue-authoring.md`
 
 ## Storage role
@@ -134,8 +134,8 @@ Optional sections:
 
 - `## Acceptance Criteria` — integration outcome not naturally owned by a single child.
 - `## Related Work` — use cases, specs, research, reviews, architecture, domain, or NFR pages.
-- `## Resume` — current-state snapshot while open. See `./body-conventions.md`.
-- `## Why Discarded` — reason when discarded. See `./body-conventions.md`.
+- `## Resume` — current-state snapshot while open. See `./issue-body.md`.
+- `## Why Discarded` — reason when discarded. See `./issue-body.md`.
 
 Unknown Title Case H2 headings are tolerated.
 

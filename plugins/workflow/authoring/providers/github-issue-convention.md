@@ -6,7 +6,9 @@ Provider-wide convention rules for workflow artifacts stored as GitHub Issues.
 
 Use these rules for workflow issue artifacts stored in GitHub Issues.
 
-This file defines GitHub-wide issue writing rules only. Provider metadata authoring boundaries belong in `./github-issue-metadata.md`. Provider relationship authoring boundaries belong in `./github-issue-relationships.md`. Artifact-specific body structure and relationship body sections belong in the matching GitHub issue type authoring file.
+This file defines GitHub-wide issue writing conventions only.
+Provider metadata boundaries belong in `./github-issue-metadata.md`.
+Provider relationship boundaries belong in `./github-issue-relationships.md`.
 
 ## Identity and references
 
@@ -19,14 +21,6 @@ Use GitHub-native references in visible text.
 Resolve `#123` using `.workflow/config.yml` first, then the configured git remote, then `origin`.
 
 GitHub Enterprise host, owner, and repo should be inferred from the configured remote when explicit config is absent.
-
-## Relationships
-
-Read `./github-issue-relationships.md` for provider relationship storage and body-boundary rules.
-
-Do not duplicate GitHub-native parent/child or dependency relationships in body sections when GitHub stores them natively.
-
-Relationship body sections that are not parent or dependency relationships are artifact-specific and belong in the matching GitHub issue type authoring file.
 
 ## Comments and logs
 
@@ -70,14 +64,3 @@ Rules:
 Only generate GitHub closing keywords such as `Fixes #123` when the workflow intentionally wants GitHub to auto-close an issue.
 
 Do not use closing keywords merely to express a relationship.
-
-## Transport
-
-Preferred native transport:
-
-- `gh`
-- `gh api`
-
-MCP is fallback transport.
-
-Provider wrapper commands perform the requested write and verification. The caller is responsible for following the authoring resolver/read policy before invoking a write.

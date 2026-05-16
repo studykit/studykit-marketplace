@@ -24,7 +24,7 @@ Common required sections are defined by `../common/task-authoring.md`:
 - `## Unit Test Strategy`
 - `## Acceptance Criteria`
 
-Common optional sections are defined by `../common/task-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/task-authoring.md` and `../common/issue-body.md`:
 
 - `## Change Plan`
 - `## Interface Contracts`
@@ -37,13 +37,10 @@ GitHub-specific rules:
 
 - Add `## Implements` when the task implements a use case, requirement, spec, or knowledge page.
 - Add `## Related` only for soft, non-blocking references.
-- Do not add `## Parent`, `## Dependencies`, or blocked/dependency sections.
 
-## Metadata mapping
+## GitHub labels
 
-Recommended GitHub type label: `task`.
-
-Use GitHub Issue Fields for workflow status when available. If fields are unavailable, use a status label such as `workflow/status:<state>`.
+Apply the GitHub label `task` to identify this issue type.
 
 ## GitHub-specific section guidance
 
@@ -68,7 +65,3 @@ Content:
 - Start with one bullet per related artifact.
 - Keep descriptions short.
 - Do not include blockers, parent issues, implementation targets, or sequencing constraints.
-
-## Forbidden body sections
-
-Do not add GitHub-native parent or dependency relationships as body sections. In particular, do not add `## Parent`, `## Dependencies`, `## Blocked`, `## Blocked By`, or `## Blocking`.

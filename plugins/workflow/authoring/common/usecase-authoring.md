@@ -11,7 +11,7 @@ The issue artifact is always created first. The curated knowledge page is create
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - `./knowledge-body.md`
 - Issue rules: `./issue-authoring.md`
 
@@ -47,81 +47,6 @@ Do not write:
 
 Internal mechanics belong in `architecture`, `spec`, or implementation tasks.
 
-## Workflow issue metadata
-
-Represent this metadata structurally when possible.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | `usecase`, or issue type or equivalent. |
-| `title` | yes | Short user-facing goal. |
-| `status` | yes | Workflow status mapped to backend status. |
-| `actors` | recommended | Actor names or slugs. Metadata when possible; body otherwise. |
-| `tags` | optional | Classification tags. |
-
-Use canonical issue identity for the workflow issue. Do not use local integer ids.
-
-## Workflow issue relationships
-
-Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `knowledge_page` | optional until published | Link to curated page after publication. |
-| `supersedes` | optional | Prior use case this one replaces. Visible body section required when present. |
-| `related` | optional | Related tasks, specs, reviews, research, or pages. |
-
-## Curated page metadata
-
-Represent this metadata using structured page metadata or index metadata when available.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | `usecase`. |
-| `title` | yes | Same or clearer title than the workflow issue. |
-| `status` | recommended | Published/stable state when supported by the selected backend. |
-| `actors` | recommended | Actor names or slugs. |
-
-## Curated page relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `source_issue` | yes | Link back to the workflow issue that owns discovery and discussion. |
-| `supersedes` | optional | Prior curated use case page. |
-| `related` | optional | Related tasks, specs, reviews, research, architecture, or domain pages. |
-
-## Lifecycle
-
-Recommended workflow issue lifecycle:
-
-```text
-draft → ready | discarded
-ready → implementing | draft | discarded
-implementing → revising | blocked | shipped | discarded
-revising → ready | discarded
-blocked → ready | discarded
-shipped → superseded | discarded
-superseded → terminal
-discarded → terminal
-```
-
-Status meaning:
-
-- `draft` — The use case is being discovered or shaped.
-- `ready` — The curated content is sufficient to drive implementation work.
-- `implementing` — Tasks are actively implementing the use case.
-- `revising` — Implementation surfaced a use case change; curated content needs revision.
-- `blocked` — Progress is blocked by a decision or missing input.
-- `shipped` — Running system reflects the use case.
-- `superseded` — A newer use case replaces this one.
-- `discarded` — No longer applicable.
-
-Status mapping depends on the configured issue backend.
-
-The curated page should reflect stable content. Workflow transitions and discussion live on the issue.
-
 ## Workflow issue body
 
 The workflow issue body should summarize discovery state and link to the curated page when available.
@@ -148,7 +73,9 @@ Recommended sections:
 
 Optional sections:
 
-- `## Resume` — current-state snapshot while shaping. See `./body-conventions.md`.
+- `## Related Work` — related tasks, specs, reviews, research, or pages.
+- `## Supersedes` — prior use case when replacing one.
+- `## Resume` — current-state snapshot while shaping. See `./issue-body.md`.
 
 Use comments for conversation, interview notes, and feedback threads.
 
@@ -179,7 +106,7 @@ Required:
 
 Optional:
 
-- `## Actors` — actor list when not obvious from metadata.
+- `## Actors` — actor list when not obvious from the flow.
 - `## Validation` — user-visible input constraints, limits, or required formats.
 - `## Error Handling` — what the actor sees when things fail.
 - `## Related Work` — workflow issues, tasks, specs, or research.
@@ -206,7 +133,7 @@ Tasks that implement the use case should link to the curated page or workflow is
 
 Prefer the curated page when it exists, because it contains the stable implementation-facing content. Use the workflow issue when the curated page has not been published yet.
 
-## Wiki/knowledge side effects
+## Knowledge side effects
 
 Authoring or revising a use case may require updates to other knowledge pages:
 
@@ -228,8 +155,8 @@ When splitting:
 1. Confirm the split with the user.
 2. Create separate workflow issues for the child use cases.
 3. Publish or update curated pages when each child is stable.
-4. Link parent and child artifacts using backend relationships when available.
-5. Do not use supersession unless an older shipped/published use case is being replaced.
+4. Link parent and child workflow issues according to the selected issue authoring files.
+5. Do not use supersession unless an older published use case is being replaced.
 
 ## Common mistakes
 

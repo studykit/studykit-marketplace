@@ -10,9 +10,7 @@ Companion contracts:
 
 ## Storage role
 
-`actors` is stored in the knowledge backend.
-
-Issue-backed work may cause actor updates, but the actors page itself is a knowledge page.
+Actors pages are knowledge-backed artifacts. Do not store actors pages in the issue backend.
 
 ## Purpose
 
@@ -27,26 +25,6 @@ Actors may be:
 - Platform/system actors.
 
 Actor names or slugs should be reused consistently in use cases, specs, tasks, and reviews.
-
-## Required metadata
-
-Represent this metadata structurally when possible.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `actors`. Use structured page metadata or index metadata depending on backend support. |
-| `title` | yes | Usually `Actors` or project-specific equivalent. |
-| `tags` | optional | Classification tags. |
-
-Use canonical page identity. Do not use local projection paths as identity.
-
-## Relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `related` | optional | Use cases, context, specs, reviews, or tasks related to actor changes. |
 
 ## Body shape
 

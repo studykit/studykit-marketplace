@@ -25,7 +25,7 @@ Common required sections are defined by `../common/bug-authoring.md`:
 - `## Unit Test Strategy`
 - `## Acceptance Criteria`
 
-Common optional sections are defined by `../common/bug-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/bug-authoring.md` and `../common/issue-body.md`:
 
 - `## Environment`
 - `## Change Plan`
@@ -38,13 +38,10 @@ GitHub-specific H2 sections for this type: `## Related`.
 GitHub-specific rules:
 
 - Add `## Related` only for soft diagnostic context.
-- Do not add dependency body sections.
 
-## Metadata mapping
+## GitHub labels
 
-Recommended GitHub type label: `bug`.
-
-Use GitHub Issue Fields for workflow status when available. If fields are unavailable, use a status label such as `workflow/status:<state>`.
+Apply the GitHub label `bug` to identify this issue type.
 
 ## GitHub-specific section guidance
 
@@ -57,7 +54,3 @@ Content:
 - Start with one bullet per related artifact.
 - Keep descriptions short.
 - Do not include blockers, parent issues, or dependency relationships.
-
-## Forbidden body sections
-
-Do not add GitHub-native parent or dependency relationships as body sections. In particular, do not add `## Parent`, `## Dependencies`, `## Blocked`, `## Blocked By`, or `## Blocking`.

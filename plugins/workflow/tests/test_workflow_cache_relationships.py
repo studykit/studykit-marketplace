@@ -12,7 +12,7 @@ _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from workflow_cache import GitHubIssueCache  # noqa: E402
+from workflow_cache import GitHubIssueCache, pending_relationship_operations_from_mapping  # noqa: E402
 from workflow_cache_relationships import main as cache_relationships_main  # noqa: E402
 from workflow_cache_relationships import stage_relationships_payload  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
@@ -86,14 +86,16 @@ def test_cache_relationships_script_dispatches_pending_relationship_apply(tmp_pa
     write_config(tmp_path)
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-14T00:10:00Z")
-    pending_path = cache.relationships_pending_file(repo(), 44)
-    pending_path.write_text(
-        """
-schema_version: 1
-children:
-  - "#45"
-""".lstrip(),
-        encoding="utf-8",
+    pending_path = cache.issue_file(repo(), 44)
+    cache.write_pending_issue_relationships(
+        repo(),
+        44,
+        pending_relationship_operations_from_mapping(
+            {"children": ["#45"]},
+            path=pending_path,
+            target_kind="issue",
+            target_id="44",
+        ),
     )
     def runner(request: CommandRequest) -> CommandResult:
         if request.args == gh_issue_view_args(44, "number,updatedAt"):
@@ -134,7 +136,7 @@ children:
     assert payload["issues"][0]["operation"] == "apply_relationships"
     assert payload["issues"][0]["issue"] == "44"
     assert payload["issues"][0]["applied"] == 1
-    assert not pending_path.exists()
+    assert "pending:" not in pending_path.read_text(encoding="utf-8")
 
 
 def test_cache_relationships_stages_existing_issue_relationship_intent(tmp_path: Path) -> None:
@@ -150,16 +152,18 @@ def test_cache_relationships_stages_existing_issue_relationship_intent(tmp_path:
         blocking=("#45",),
     )
 
-    pending_path = cache.relationships_pending_file(repo(), 44)
+    pending_path = cache.issue_file(repo(), 44)
     operations = cache.read_pending_issue_relationships(repo(), 44)
     assert payload["operation"] == "cache_stage_pending_relationships"
     assert payload["issue"] == "44"
-    assert payload["relationships_file"] == str(pending_path)
+    assert payload["pending_location"] == str(pending_path)
+    assert "relationships_file" not in payload
     assert [(item.relationship, item.target_ref) for item in operations] == [
         ("parent", "#28"),
         ("blocked_by", "#33"),
         ("blocking", "#45"),
     ]
+    assert all(item.path == pending_path for item in operations)
 
 
 def test_cache_relationships_script_stages_existing_issue_relationship_intent(tmp_path: Path) -> None:
@@ -187,4 +191,4 @@ def test_cache_relationships_script_stages_existing_issue_relationship_intent(tm
     assert code == 0
     assert payload["operation"] == "cache_stage_pending_relationships"
     assert payload["issue"] == "44"
-    assert cache.relationships_pending_file(repo(), 44).is_file()
+    assert cache.read_pending_issue_relationships(repo(), 44)[0].path == cache.issue_file(repo(), 44)

@@ -35,27 +35,6 @@ Do not use it for:
 - Task-level implementation plans.
 - Detailed API/schema contracts that belong in specs.
 
-## Required metadata
-
-Represent this metadata structurally when possible.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `architecture`. Use structured page metadata or index metadata depending on backend support. |
-| `title` | yes | Usually `Architecture` or project-specific equivalent. |
-| `status` | optional | Use when the backend supports page lifecycle state. |
-| `tags` | optional | Classification tags. |
-
-Use canonical page identity. Do not use local projection paths as identity.
-
-## Relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `related` | optional | Specs, epics, tasks, reviews, use cases, or research that materially relate to the page. |
-
 ## Body shape
 
 Required:
@@ -117,7 +96,9 @@ Every material architecture change should include a `## Change Log` entry linkin
 
 Do not duplicate the issue discussion in the page.
 
-## Relationship to other knowledge pages
+## Artifact boundaries
+
+Use these boundaries to place architecture content. Do not encode these as metadata relationships.
 
 - Use `domain` for vocabulary, concepts, relationships, and state transitions.
 - Use `context` for problem framing, product scope, and original idea.

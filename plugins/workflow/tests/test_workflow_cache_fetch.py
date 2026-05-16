@@ -293,23 +293,19 @@ def test_cache_fetch_plain_output_uses_shared_prefix_for_multiple_issues(tmp_pat
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     cache.write_issue_bundle(repo(), issue_payload(42, body="Cached body."))
     cache.write_issue_bundle(repo(), issue_payload(43, body="Cached body."))
-    cache.relationships_file(repo(), 42).write_text(
-        """
-schema_version: 1
-source_updated_at: 2026-05-14T00:00:00Z
-fetched_at: 2026-05-14T00:00:00Z
-parent:
-  number: 40
-children:
-  - number: 44
-  - number: 45
-dependencies:
-  blocked_by:
-    - number: 41
-  blocking:
-    - number: 46
-""".lstrip(),
-        encoding="utf-8",
+    cache.write_relationships_projection(
+        repo(),
+        42,
+        {
+            "updatedAt": "2026-05-14T00:00:00Z",
+            "parent": {"number": 40},
+            "children": [{"number": 44}, {"number": 45}],
+            "dependencies": {
+                "blocked_by": [{"number": 41}],
+                "blocking": [{"number": 46}],
+            },
+        },
+        fetched_at="2026-05-14T00:00:00Z",
     )
     stdout = io.StringIO()
 

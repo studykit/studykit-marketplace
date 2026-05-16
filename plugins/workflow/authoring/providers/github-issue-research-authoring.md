@@ -25,7 +25,7 @@ Common required sections are defined by `../common/research-authoring.md`:
 - `## Mode`
 - `## Options`
 
-Common optional sections are defined by `../common/research-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/research-authoring.md` and `../common/issue-body.md`:
 
 - `## Scope`
 - `## Sources To Check`
@@ -37,11 +37,9 @@ GitHub-specific rules:
 
 - Add `## Related` only for soft references not represented by GitHub metadata.
 
-## Metadata mapping
+## GitHub labels
 
-Recommended GitHub type label: `research`.
-
-Use GitHub Issue Fields for workflow status when available. If fields are unavailable, use a status label such as `workflow/status:<state>`.
+Apply the GitHub label `research` to identify this issue type.
 
 ## GitHub-specific section guidance
 

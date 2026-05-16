@@ -19,6 +19,7 @@ from workflow_cache import (  # noqa: E402
     GitHubIssueCache,
     WorkflowFreshnessConflict,
     check_provider_freshness,
+    pending_relationship_operations_from_mapping,
     require_provider_freshness,
 )
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
@@ -75,8 +76,13 @@ def external_repo() -> GitHubRepository:
     return GitHubRepository(host="github.com", owner="other", name="repo")
 
 
-def issue_payload(*, body: str = "Raw issue body.", updated_at: str = "2026-05-13T12:00:00Z") -> dict[str, object]:
-    return {
+def issue_payload(
+    *,
+    body: str = "Raw issue body.",
+    updated_at: str = "2026-05-13T12:00:00Z",
+    project_items: list[dict[str, object]] | None = None,
+) -> dict[str, object]:
+    payload: dict[str, object] = {
         "number": 39,
         "title": "Add local cache for workflow provider reads",
         "state": "OPEN",
@@ -103,6 +109,9 @@ def issue_payload(*, body: str = "Raw issue body.", updated_at: str = "2026-05-1
             "blocking": [{"number": 36, "title": "Write flows", "state": "OPEN", "stateReason": None}],
         },
     }
+    if project_items is not None:
+        payload["projectItems"] = project_items
+    return payload
 
 
 def dispatch_get(tmp_path: Path, runner: FakeRunner, *, cache_policy: str = "default"):
@@ -134,6 +143,10 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
     assert "fetched_at:" not in issue_text
     assert "provider:" not in issue_text
     assert "# Issue" not in issue_text
+    assert "relationships:\n  current:\n    parent: 28" in issue_text
+    assert "children:\n    - 41" in issue_text
+    assert "blocked_by:\n      - 32" in issue_text
+    assert "number:" not in issue_text
     assert issue_text.endswith("Raw issue body.")
 
     metadata_text = write.metadata_file.read_text(encoding="utf-8")
@@ -157,7 +170,57 @@ def test_github_issue_cache_writes_minimal_markdown_comment_index_and_relationsh
     assert relationships["fetched_at"] == "2026-05-13T12:34:56Z"
     assert relationships["parent"]["number"] == 28
     assert relationships["children"][0]["number"] == 41
-    assert relationships["dependencies"]["blocked_by"][0]["state_reason"] == "completed"
+    assert relationships["dependencies"]["blocked_by"][0] == {"number": 32}
+
+
+def test_github_issue_cache_writes_project_membership_status_to_frontmatter(tmp_path: Path) -> None:
+    cache = GitHubIssueCache.for_project(tmp_path)
+
+    project_items = [
+        {
+            "id": "PVTI_project_item",
+            "project": {
+                "owner": {"login": "studykit"},
+                "number": 1,
+                "title": "Workflow",
+                "url": "https://github.com/orgs/studykit/projects/1",
+            },
+            "fieldValues": {
+                "nodes": [
+                    {
+                        "field": {"name": "Status"},
+                        "name": "In progress",
+                    }
+                ]
+            },
+        }
+    ]
+
+    write = cache.write_issue_bundle(
+        repo(),
+        issue_payload(project_items=project_items),
+        fetched_at="2026-05-13T12:34:56Z",
+    )
+
+    issue_text = write.issue_file.read_text(encoding="utf-8")
+    assert "projects:" in issue_text
+    assert "owner: studykit" in issue_text
+    assert "number: 1" in issue_text
+    assert "title: Workflow" in issue_text
+    assert "item_id: PVTI_project_item" in issue_text
+    assert "status: In progress" in issue_text
+
+    cached = cache.read_issue(repo(), 39, include_body=False, include_comments=False, include_relationships=False)
+    assert cached["projects"] == [
+        {
+            "owner": "studykit",
+            "number": 1,
+            "title": "Workflow",
+            "url": "https://github.com/orgs/studykit/projects/1",
+            "item_id": "PVTI_project_item",
+            "status": "In progress",
+        }
+    ]
 
 
 def test_configured_repo_cache_is_shallow_and_external_repo_cache_is_namespaced(tmp_path: Path) -> None:
@@ -255,22 +318,24 @@ Draft comment body.
     assert comments[0].body == "Draft comment body.\n"
 
 
-def test_pending_issue_relationships_parse_operations_and_remove_file(tmp_path: Path) -> None:
+def test_pending_issue_relationships_parse_operations_and_remove_frontmatter(tmp_path: Path) -> None:
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
-    pending_path = cache.relationships_pending_file(repo(), 39)
-    pending_path.parent.mkdir(parents=True)
-    pending_path.write_text(
-        """
-schema_version: 1
-operations:
-  - action: add
-    relationship: parent
-    issue: "#28"
-  - action: remove
-    relationship: blocked_by
-    target: "#32"
-""".lstrip(),
-        encoding="utf-8",
+    cache.write_issue_bundle(repo(), issue_payload())
+    issue_path = cache.issue_file(repo(), 39)
+    cache.write_pending_issue_relationships(
+        repo(),
+        39,
+        pending_relationship_operations_from_mapping(
+            {
+                "operations": [
+                    {"action": "add", "relationship": "parent", "issue": "#28"},
+                    {"action": "remove", "relationship": "blocked_by", "target": "#32"},
+                ]
+            },
+            path=issue_path,
+            target_kind="issue",
+            target_id="39",
+        ),
     )
 
     operations = cache.read_pending_issue_relationships(repo(), 39)
@@ -280,28 +345,40 @@ operations:
     assert [operation.target_ref for operation in operations] == ["#28", "#32"]
     assert operations[0].replace_parent is True
     removed = cache.remove_pending_issue_relationships(repo(), 39, operations)
-    assert removed == [pending_path]
-    assert not pending_path.exists()
+    assert removed == [issue_path]
+    assert "pending:" not in issue_path.read_text(encoding="utf-8")
 
 
-def test_pending_draft_relationships_parse_declarative_shape(tmp_path: Path) -> None:
+def test_pending_draft_relationships_parse_frontmatter_operations(tmp_path: Path) -> None:
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
-    pending_path = cache.pending_issue_relationships_pending_file(repo(), "draft-1")
-    pending_path.parent.mkdir(parents=True)
-    pending_path.write_text(
+    issue_path = cache.pending_issue_file(repo(), "draft-1")
+    issue_path.parent.mkdir(parents=True)
+    issue_path.write_text(
         """
-schema_version: 1
-parent:
-  issue: "#28"
-  replace_parent: false
-children:
-  add:
-    - "#41"
-dependencies:
-  blocked_by:
-    - "#32"
-  blocking:
-    - issue: "#36"
+---
+title: Draft
+relationships:
+  pending:
+    operations:
+    - action: add
+      relationship: parent
+      target_ref: "#28"
+      replace_parent: false
+    - action: add
+      relationship: child
+      target_ref: "#41"
+      replace_parent: false
+    - action: add
+      relationship: blocked_by
+      target_ref: "#32"
+      replace_parent: false
+    - action: add
+      relationship: blocking
+      target_ref: "#36"
+      replace_parent: false
+---
+
+Body
 """.lstrip(),
         encoding="utf-8",
     )
@@ -319,15 +396,29 @@ dependencies:
     assert operations[0].replace_parent is False
 
 
-def test_finalize_pending_issue_creation_archives_draft_and_moves_sidecars(tmp_path: Path) -> None:
+def test_finalize_pending_issue_creation_archives_draft_and_moves_frontmatter_intent(tmp_path: Path) -> None:
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     pending_dir = cache.pending_issue_dir(repo(), "draft-1")
     pending_dir.mkdir(parents=True)
-    (pending_dir / "issue.md").write_text("---\ntitle: Draft\n---\n\nBody\n", encoding="utf-8")
+    (pending_dir / "issue.md").write_text(
+        """---
+title: Draft
+relationships:
+  pending:
+    operations:
+    - action: add
+      relationship: parent
+      target_ref: '28'
+      replace_parent: true
+---
+
+Body
+""",
+        encoding="utf-8",
+    )
     comments_pending = pending_dir / "comments-pending"
     comments_pending.mkdir()
     (comments_pending / "2026-05-14T000000Z-local.md").write_text("Comment\n", encoding="utf-8")
-    (pending_dir / "relationships-pending.yml").write_text("parent: 28\n", encoding="utf-8")
     cache.write_issue_bundle(repo(), {**issue_payload(), "number": 51})
 
     result = cache.finalize_pending_issue_creation(repo(), "draft-1", 51)
@@ -335,7 +426,10 @@ def test_finalize_pending_issue_creation_archives_draft_and_moves_sidecars(tmp_p
     assert not (pending_dir / "issue.md").exists()
     assert Path(result["archived_issue"]).is_file()
     assert (cache.issue_dir(repo(), 51) / "comments-pending" / "2026-05-14T000000Z-local.md").is_file()
-    assert (cache.issue_dir(repo(), 51) / "relationships-pending.yml").is_file()
+    assert "archived_relationships_pending" not in result
+    operations = cache.read_pending_issue_relationships(repo(), 51)
+    assert [(operation.relationship, operation.target_ref) for operation in operations] == [("parent", "28")]
+    assert operations[0].path == cache.issue_file(repo(), 51)
 
 
 def test_cache_read_can_skip_raw_markdown_bodies(tmp_path: Path) -> None:

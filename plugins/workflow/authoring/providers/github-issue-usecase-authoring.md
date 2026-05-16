@@ -25,7 +25,7 @@ Common required sections are defined by `../common/usecase-authoring.md`:
 - `## Current Draft`
 - `## Open Questions`
 
-Common optional sections are defined by `../common/usecase-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/usecase-authoring.md` and `../common/issue-body.md`:
 
 - `## Resume`
 
@@ -35,11 +35,9 @@ GitHub-specific rules:
 
 - Add `## Related` only for soft references not represented by GitHub metadata.
 
-## Metadata mapping
+## GitHub labels
 
-Recommended GitHub type label: `usecase`.
-
-Use GitHub Issue Fields for workflow status when available. If fields are unavailable, use a status label such as `workflow/status:<state>`.
+Apply the GitHub label `usecase` to identify this issue type.
 
 ## GitHub-specific section guidance
 

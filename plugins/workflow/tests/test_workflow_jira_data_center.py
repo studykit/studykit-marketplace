@@ -251,14 +251,21 @@ def dispatch_get(
     )
 
 
-def dispatch_write(project: Path, runner: FakeRunner, operation: str, **payload: object):
+def dispatch_write(
+    project: Path,
+    runner: FakeRunner,
+    operation: str,
+    *,
+    artifact_type: str = "task",
+    **payload: object,
+):
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
     return dispatcher.dispatch(
         ProviderRequest(
             role="issue",
             kind="jira",
             operation=operation,
-            context=ProviderContext(project=project, artifact_type="task"),
+            context=ProviderContext(project=project, artifact_type=artifact_type),
             payload=payload,
         )
     )
@@ -430,6 +437,34 @@ Pending body.
     assert cache.created_issue_archive_dir(site, "local-1", "TM-1234").joinpath("issue.md").is_file()
     assert not relationships_pending.exists()
     assert cache.relationships_pending_file(site, "TM-1234").is_file()
+
+
+def test_data_center_review_create_uses_task_type_and_review_summary_prefix(tmp_path: Path) -> None:
+    write_jira_config(tmp_path)
+    runner = FakeRunner(
+        {
+            curl_write_args(): result(curl_write_args(), stdout=json.dumps({"id": "10001", "key": "TM-1234"})),
+            curl_args(issue_url()): result(curl_args(issue_url()), stdout=json.dumps(jira_issue_payload())),
+            curl_args(remote_links_url()): result(curl_args(remote_links_url()), stdout=json.dumps(remote_links_payload())),
+        }
+    )
+
+    response = dispatch_write(
+        tmp_path,
+        runner,
+        "create",
+        artifact_type="review",
+        title="Clarify target",
+        body="## Description\n\nClarify the target.",
+        issue_type="Bug",
+    )
+
+    assert response.payload["operation"] == "create_issue"
+    write_request = runner.requests[0]
+    assert write_request.args == curl_write_args()
+    payload_text = str(write_request.input_text)
+    assert '\\"summary\\":\\"[Review] Clarify target\\"' in payload_text
+    assert '\\"issuetype\\":{\\"name\\":\\"Task\\"}' in payload_text
 
 
 def test_data_center_update_from_cache_checks_freshness_and_refreshes(tmp_path: Path) -> None:

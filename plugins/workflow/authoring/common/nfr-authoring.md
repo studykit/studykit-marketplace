@@ -30,26 +30,6 @@ NFRs should affect use cases, architecture, specs, tests, or implementation prio
 
 Do not use NFR for functional behavior. Functional behavior belongs in use cases and specs.
 
-## Required metadata
-
-Represent this metadata structurally when possible.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `nfr`. Use structured page metadata or index metadata depending on backend support. |
-| `title` | yes | Usually `Non-Functional Requirements` or project-specific equivalent. |
-| `tags` | optional | Classification tags. |
-
-Use canonical page identity. Do not use local projection paths as identity.
-
-## Relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `related` | optional | Use cases, specs, architecture, tasks, reviews, research, or pages related to NFR changes. |
-
 ## Body shape
 
 Required:
@@ -96,7 +76,7 @@ Prefer measurable forms:
 
 If a requirement cannot yet be measured, create a `review` item with `kind: question` or `gap` rather than adding an aspirational NFR.
 
-## Relationship to architecture and CI
+## Artifact boundaries
 
 NFR records the target.
 

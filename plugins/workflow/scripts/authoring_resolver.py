@@ -2,7 +2,7 @@
 # /// script
 # dependencies = ["PyYAML"]
 # ///
-"""Resolve workflow authoring contracts for provider-backed artifacts.
+"""Resolve workflow authoring contracts for workflow artifacts.
 
 The resolver is intentionally small and deterministic. It returns absolute
 paths to plugin-bundled authoring files so agents do not guess which files to
@@ -55,11 +55,6 @@ KNOWLEDGE_PROVIDER_FILES = {
     "confluence": "providers/confluence-page-convention.md",
 }
 
-KNOWLEDGE_PROVIDER_METADATA_FILES = {
-    "github": "providers/github-knowledge-metadata.md",
-    "confluence": "providers/confluence-page-metadata.md",
-}
-
 ISSUE_PROVIDER_TYPE_PATTERNS = {
     "github": "providers/github-issue-{artifact_type}-authoring.md",
     "jira": "providers/jira-issue-{artifact_type}-authoring.md",
@@ -72,6 +67,7 @@ KNOWLEDGE_PROVIDER_TYPE_PATTERNS = {
 
 PROVIDER_EXTRA_FILES = {
     ("issue", "github"): ("providers/github-issue-anti-patterns.md",),
+    ("issue", "jira"): ("providers/jira-issue-anti-patterns.md",),
 }
 
 
@@ -173,11 +169,11 @@ def resolve_authoring(
         except WorkflowConfigError as exc:
             raise ResolverError(str(exc)) from exc
 
-    parts = ["common/body-conventions.md"]
     if normalized_role == "issue":
+        parts = ["common/issue-body.md"]
         parts.append("common/issue-authoring.md")
     else:
-        parts.append("common/knowledge-body.md")
+        parts = ["common/knowledge-body.md"]
     parts.append(f"common/{normalized_type}-authoring.md")
 
     if normalized_role == "issue" and normalized_provider in ISSUE_PROVIDER_FILES:
@@ -191,7 +187,6 @@ def resolve_authoring(
         )
     if normalized_role == "knowledge" and normalized_provider in KNOWLEDGE_PROVIDER_FILES:
         parts.append(KNOWLEDGE_PROVIDER_FILES[normalized_provider])
-        parts.append(KNOWLEDGE_PROVIDER_METADATA_FILES[normalized_provider])
         parts.append(
             KNOWLEDGE_PROVIDER_TYPE_PATTERNS[normalized_provider].format(
                 artifact_type=normalized_type

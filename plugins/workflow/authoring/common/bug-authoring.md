@@ -6,7 +6,7 @@ Bugs are stored in the configured issue backend. They are not local Markdown fil
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - Issue rules: `./issue-authoring.md`
 
 ## Storage role
@@ -112,8 +112,8 @@ Optional sections:
 - `## Environment` — version, browser, OS, tenant, data shape, feature flags, or deployment context.
 - `## Change Plan` — forward-looking scope fence naming files, packages, APIs, or migration steps expected to change.
 - `## Interface Contracts` — contracts the fix consumes or restores.
-- `## Resume` — current-state snapshot while mid-flight. See `./body-conventions.md`.
-- `## Why Discarded` — reason when discarded. See `./body-conventions.md`.
+- `## Resume` — current-state snapshot while mid-flight. See `./issue-body.md`.
+- `## Why Discarded` — reason when discarded. See `./issue-body.md`.
 
 Unknown Title Case H2 headings are tolerated.
 

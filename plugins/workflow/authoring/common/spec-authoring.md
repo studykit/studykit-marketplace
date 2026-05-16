@@ -14,62 +14,17 @@ Companion contracts:
 
 Issue-backed work may create, review, or apply a spec, but the spec itself is a knowledge page.
 
-## Required metadata
-
-Represent this metadata structurally when possible. If a field cannot be stored structurally, include the value in the page body when readers need it.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `spec`. Use structured page metadata or index metadata depending on backend support. |
-| `title` | yes | Short human-readable spec title. |
-| `status` | yes | `draft`, `active`, `deprecated`, or `superseded`, mapped to backend metadata when possible. |
-| `tags` | optional | Classification tags. |
-
-Use canonical page identity. Do not use local integer ids.
-
-## Relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `supersedes` | optional | Prior spec or specs this page replaces. Must also appear in `## Supersedes` when present. |
-| `related` | optional | Work items, research, use cases, architecture, or domain pages related to the spec. |
-
-## Lifecycle
-
-Recommended semantic lifecycle:
-
-```text
-draft → active | deprecated
-active → deprecated | superseded
-deprecated → superseded
-superseded → terminal
-```
-
-Status meaning:
-
-- `draft` — The spec is being shaped and is not yet an implementation contract.
-- `active` — The spec is the current contract downstream work should follow.
-- `deprecated` — The spec is retired or discouraged but has no active replacement yet.
-- `superseded` — A newer spec replaces this one.
-
-Status mapping depends on the configured knowledge backend.
-
-Do not assume a local cascade will update superseded specs. Workflow tools or validation may assist, but the author must ensure the supersession relationship is visible and correct.
-
 ## Supersession
 
-`supersedes` is an explicit authoring decision.
+Supersession is an explicit authoring decision.
 
 When a new spec replaces an older spec:
 
 1. Add the older spec under `## Supersedes`.
-2. Store structured metadata when the backend supports it.
-3. Update the older spec status to `superseded` when the replacement becomes `active`.
-4. Add `## Change Log` entries to affected pages as needed.
+2. Explain the replacement in the new spec body.
+3. Add `## Change Log` entries to affected pages as needed.
 
-Do not edit an old spec body merely to describe the new contract. The new spec carries the new contract; the old spec records its superseded status and points to the replacement when possible.
+Do not edit an old spec body merely to describe the new contract. The new spec carries the new contract. The old spec may point to the replacement when that update is useful and safe.
 
 ## Body shape
 
@@ -143,9 +98,9 @@ Every material update should add a concise `## Change Log` entry linking to the 
 
 Do not duplicate issue discussion or review threads in the spec.
 
-## Activation rule
+## Readiness rule
 
-A spec should not become `active` until:
+A spec should not be used as an implementation contract until:
 
 - `## Context` is present and clear.
 - `## Specification` is present and prescriptive.
@@ -159,7 +114,7 @@ A spec should not become `active` until:
 - Treating the spec as a discussion thread instead of a curated contract.
 - Packing several unrelated contracts into one spec.
 - Hiding implementation decisions in task issues instead of updating or creating a spec.
-- Marking a spec `active` while blocking open questions remain unresolved.
+- Treating a spec as implementation-ready while blocking open questions remain unresolved.
 - Using local projection paths or local integer ids as canonical identity.
 
 ## Do not
@@ -167,5 +122,4 @@ A spec should not become `active` until:
 - Do not store specs as issue-backed tasks.
 - Do not author specs for routine implementation details such as variable names or formatting choices.
 - Do not make research conclusions directly prescriptive; cite research and record the spec decision separately.
-- Do not use local Markdown frontmatter as the only source of metadata unless the artifact is truly file-backed.
 - Do not auto-trigger a skill just because a spec is being written; follow the authoring resolver policy.

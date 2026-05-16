@@ -18,6 +18,8 @@ Relationship writes must use explicit `.workflow/config.yml` mappings. Do not in
 
 ## Body boundary
 
-Use body fallback sections only when configured native relationship storage is unavailable or intentionally insufficient for readers. Do not duplicate native Jira links or remote links in the body.
+Use body fallback sections only when configured native relationship storage is unavailable or intentionally insufficient for readers.
+
+Do not duplicate Jira-native hierarchy, issue links, or remote links in issue body sections. Read `./jira-issue-anti-patterns.md` for forbidden body sections and fallback boundaries.
 
 Ask `workflow-operator` to apply provider/cache relationship changes. The main assistant should use authoring guidance to draft relationship intent, not operator internals.

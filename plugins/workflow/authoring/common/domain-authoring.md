@@ -29,26 +29,6 @@ Domain terms should be reused consistently in use cases, specs, architecture, ta
 
 Do not use domain for runtime components, framework constructs, or implementation classes unless those names are also domain concepts.
 
-## Required metadata
-
-Represent this metadata structurally when possible.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `domain`. Use structured page metadata or index metadata depending on backend support. |
-| `title` | yes | Usually `Domain` or project-specific equivalent. |
-| `tags` | optional | Classification tags. |
-
-Use canonical page identity. Do not use local projection paths as identity.
-
-## Relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `related` | optional | Use cases, specs, architecture, reviews, research, or tasks related to domain changes. |
-
 ## Body shape
 
 Required:
@@ -96,7 +76,9 @@ Prefer compact, scannable formats:
 
 Avoid long prose when a table or diagram would make relationships clearer.
 
-## Relationship to other knowledge pages
+## Artifact boundaries
+
+Use these boundaries to place domain content. Do not encode these as metadata relationships.
 
 - Use `architecture` for runtime components and integration boundaries.
 - Use `context` for product/problem framing.

@@ -8,7 +8,7 @@ Spikes are stored in the configured issue backend. They are not local Markdown f
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - Issue rules: `./issue-authoring.md`
 
 ## Storage role
@@ -115,8 +115,8 @@ Optional sections:
 - `## Artifact Links` — branch, gist, repository path, benchmark output, screenshots, or other throwaway evidence.
 - `## Change Plan` — planned experiment files, temporary branches, scripts, or environments.
 - `## Follow-Up` — task, spec, review, or research item that should exist after the spike.
-- `## Resume` — current-state snapshot while mid-flight. See `./body-conventions.md`.
-- `## Why Discarded` — reason when discarded. See `./body-conventions.md`.
+- `## Resume` — current-state snapshot while mid-flight. See `./issue-body.md`.
+- `## Why Discarded` — reason when discarded. See `./issue-body.md`.
 
 Unknown Title Case H2 headings are tolerated.
 

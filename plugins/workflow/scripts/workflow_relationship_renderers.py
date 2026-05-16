@@ -36,7 +36,7 @@ def render_relationship_summary(
 
 
 def render_github_relationship_summary(relationships: Mapping[str, Any]) -> str:
-    """Render a compact summary from the normalized GitHub `relationships.yml` schema.
+    """Render a compact summary from the normalized GitHub relationship projection.
 
     Reads only `parent`, `children`, `dependencies.blocked_by`, `dependencies.blocking`,
     and `related`. Pending-authoring aliases (`blocked`, `blocks`, `blockedBy`,

@@ -10,9 +10,7 @@ Companion contracts:
 
 ## Storage role
 
-`context` is stored in the knowledge backend.
-
-Issue-backed work may cause context updates, but the context page itself is a knowledge page.
+Context pages are knowledge-backed artifacts. Do not store context pages in the issue backend.
 
 ## Purpose
 
@@ -27,26 +25,6 @@ Use context for upstream framing:
 Every other workflow artifact indirectly assumes the framing captured here.
 
 Do not use context for detailed use case flows, domain glossary, implementation design, or task plans.
-
-## Required metadata
-
-Represent this metadata structurally when possible.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `context`. Use structured page metadata or index metadata depending on backend support. |
-| `title` | yes | Usually `Context` or project-specific equivalent. |
-| `tags` | optional | Classification tags. |
-
-Use canonical page identity. Do not use local projection paths as identity.
-
-## Relationships
-
-Represent relationships using structured page metadata, index metadata, or visible relationship sections according to the selected provider authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `related` | optional | Use cases, specs, epics, reviews, research, or pages related to framing changes. |
 
 ## Body shape
 
@@ -116,7 +94,9 @@ Every material context change should include a `## Change Log` entry linking to 
 
 Do not duplicate issue discussion in the page.
 
-## Relationship to other knowledge pages
+## Artifact boundaries
+
+Use these boundaries to place framing content. Do not encode these as metadata relationships.
 
 - Use `actors` for actor roster and definitions.
 - Use `domain` for shared vocabulary and concepts.

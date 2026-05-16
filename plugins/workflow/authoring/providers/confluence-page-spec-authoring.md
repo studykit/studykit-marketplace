@@ -34,20 +34,8 @@ Common optional sections are defined by `../common/spec-authoring.md` and `../co
 
 Confluence does not add required provider-specific H2 sections for this type.
 
-Confluence rules:
-
-- Use Confluence page links, Smart Links, or full URLs for related work, superseded pages, and sources.
-
-Read `./confluence-page-convention.md` for storage, identity, reference, metadata, relationship, and transport rules.
-
-## Confluence metadata and identity
-
-Recommended label or page property: `workflow:type/spec`.
-
-Use the Confluence page ID, site, and space as structured identity. Page titles are readable references but may not be stable enough for automation.
+Read `./confluence-page-convention.md` for Confluence storage, identity, reference, and transport rules.
 
 ## Confluence section guidance
-
-Use links or full URLs for related work, superseded pages, and sources.
 
 Use Confluence page links or Smart Links when readers stay in Confluence. Use full URLs when content must remain portable outside Confluence.

@@ -6,7 +6,7 @@ Common convention rules for workflow knowledge artifacts stored as Confluence pa
 
 Use these rules for Confluence pages produced or updated by the workflow plugin.
 
-This file defines Confluence-wide page writing rules only. Provider metadata rules belong in `./confluence-page-metadata.md`. Artifact-specific body structure belongs outside this file.
+This file defines Confluence-wide page writing rules only. Cache projections and provider write paths should use Confluence provider-native field names. Artifact-specific body structure belongs outside this file.
 
 ## Identity
 
@@ -26,11 +26,11 @@ Use Confluence links, Smart Links, or full URLs for references. Prefer Smart Lin
 
 ## Relationships
 
-Represent important relationships visibly when readers need them.
+Represent relationships as visible page content when they are part of the artifact's durable meaning.
 
-Use Confluence links, Jira Smart Links, GitHub Smart Links, or full URLs for relationship entries.
+Use Confluence page links, Jira Smart Links, GitHub Smart Links, or full URLs for relationship entries.
 
-Use page properties, labels, or link metadata for structured relationships when available, but keep visible relationship sections when the relationship is part of the page's durable meaning.
+Use Confluence page hierarchy for parent-child organization and navigation. Do not treat arbitrary workflow relationships as Confluence metadata unless a selected binding defines an explicit provider-backed Content Property contract.
 
 ## Change log
 

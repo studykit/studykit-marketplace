@@ -30,7 +30,6 @@ from workflow_github import (
     comment_issue,
     create_issue,
     edit_issue,
-    edit_issue_body,
     issue_relationships,
     issue_body_edit_history,
     issue_events,
@@ -383,11 +382,11 @@ class GitHubIssueNativeProvider(IssueProvider):
         issue: Any,
         payload: Mapping[str, Any],
     ) -> Mapping[str, Any]:
-        """Add provider-native relationships before writing cache sidecars.
+        """Add provider-native relationships before writing relationship frontmatter.
 
         `gh issue view` does not expose the issue relationship REST resources
-        that back `relationships.yml`. Cache writes therefore need an explicit
-        relationship read even when the caller does not ask to return
+        that back the relationship projection. Cache writes therefore need an
+        explicit relationship read even when the caller does not ask to return
         relationships in the provider response.
         """
 
@@ -432,7 +431,14 @@ class GitHubIssueNativeProvider(IssueProvider):
         )
         issue_number = normalize_issue_number(created["issue"])
         refreshed = view_issue(issue_number, project=request.context.project, runner=self.runner)
-        write_result = cache.write_issue_bundle(repo, refreshed)
+        write_result = cache.write_issue_bundle(
+            repo,
+            self._payload_with_relationship_projection(
+                request,
+                issue=issue_number,
+                payload=refreshed,
+            ),
+        )
 
         pending_result: dict[str, str | None] | None = None
         if pending_local_id:
@@ -452,14 +458,50 @@ class GitHubIssueNativeProvider(IssueProvider):
         if _truthy(request.payload.get("from_cache")) or _truthy(request.payload.get("cache_write_back")):
             return self._update_from_cache(request, issue)
 
-        body = _required_payload_value(request, "body")
+        title = request.payload.get("title")
+        body = request.payload.get("body")
+        labels = request.payload.get("labels")
+        if title is None and body is None and labels is None:
+            raise ProviderOperationError("GitHub issue update requires from_cache or at least one of title, body, labels")
         self._require_write_freshness(request, issue, default_target="issue")
-        return edit_issue_body(
-            issue,
-            body=str(body),
+        issue_number = normalize_issue_number(issue)
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
+        current_labels: tuple[str, ...] | None = None
+        if labels is not None:
+            current = view_issue(
+                issue_number,
+                project=request.context.project,
+                fields=("number", "labels"),
+                runner=self.runner,
+            )
+            current_labels = tuple(_string_list(current.get("labels")))
+        edited = edit_issue(
+            issue_number,
+            title=str(title) if title is not None else None,
+            body=str(body) if body is not None else None,
+            labels=tuple(_string_list(labels)) if labels is not None else None,
+            current_labels=current_labels,
             project=request.context.project,
             runner=self.runner,
         )
+        refreshed = view_issue(issue_number, project=request.context.project, runner=self.runner)
+        write_result = cache.write_issue_bundle(
+            repo,
+            self._payload_with_relationship_projection(
+                request,
+                issue=issue_number,
+                payload=refreshed,
+            ),
+        )
+        return {
+            "operation": "update_issue",
+            "issue": issue_number,
+            "verified": bool(edited.get("verified")),
+            "edit": dict(edited),
+            "cache_refreshed": True,
+            "cache": write_result.to_json(),
+        }
 
     def _update_from_cache(self, request: ProviderRequest, issue: Any) -> Mapping[str, Any]:
         issue_number = normalize_issue_number(issue)
@@ -503,7 +545,14 @@ class GitHubIssueNativeProvider(IssueProvider):
             )
 
         refreshed = view_issue(issue_number, project=request.context.project, runner=self.runner)
-        write_result = cache.write_issue_bundle(repo, refreshed)
+        write_result = cache.write_issue_bundle(
+            repo,
+            self._payload_with_relationship_projection(
+                request,
+                issue=issue_number,
+                payload=refreshed,
+            ),
+        )
         return {
             "operation": "update_issue_from_cache",
             "issue": issue_number,
@@ -639,9 +688,9 @@ class GitHubIssueNativeProvider(IssueProvider):
         if not pending_operations:
             if pending_local_id:
                 raise ProviderOperationError(
-                    f"no pending relationship file found for GitHub pending issue {pending_local_id}"
+                    f"no pending relationship frontmatter found for GitHub pending issue {pending_local_id}"
                 )
-            raise ProviderOperationError(f"no pending relationship file found for GitHub issue #{issue_number}")
+            raise ProviderOperationError(f"no pending relationship frontmatter found for GitHub issue #{issue_number}")
 
         operations = [
             _ResolvedRelationshipOperation(
@@ -652,22 +701,85 @@ class GitHubIssueNativeProvider(IssueProvider):
             )
             for operation in pending_operations
         ]
-        result = self._apply_relationship_operations(
-            request,
+        if not operations:
+            raise ProviderOperationError(f"no GitHub relationship operations found for issue #{issue_number}")
+        self._validate_relationship_operations(operations)
+        freshness_payload = dict(request.payload)
+        freshness_payload.setdefault("freshness_check", True)
+        freshness_payload.setdefault("freshness_target", "relationships")
+        self._require_write_freshness(
+            replace(request, payload=freshness_payload),
             issue_number,
-            operations,
-            pending_operations=pending_operations,
+            default_target="relationships",
         )
-        if pending_local_id:
-            removed = cache.remove_pending_draft_relationships(repo, pending_local_id, pending_operations)
-        else:
-            removed = cache.remove_pending_issue_relationships(repo, issue_number, pending_operations)
+
+        applied: list[Mapping[str, Any]] = []
+        consumed_pending: list[PendingIssueRelationshipOperation] = []
+        consumed_resolved: list[_ResolvedRelationshipOperation] = []
+        try:
+            for resolved, pending in zip(operations, pending_operations):
+                applied.append(self._dispatch_relationship_operation(issue_number, resolved, request=request))
+                consumed_pending.append(pending)
+                consumed_resolved.append(resolved)
+        except Exception as exc:
+            removed = self._remove_consumed_pending_relationships(
+                cache,
+                repo,
+                issue_number,
+                pending_local_id=pending_local_id,
+                consumed_pending=consumed_pending,
+            )
+            refresh_error: str | None = None
+            relationship_location: Path | None = None
+            try:
+                relationship_location = self._refresh_relationship_projection(request, issue_number)
+            except Exception as refresh_exc:  # pragma: no cover - defensive reporting path
+                refresh_error = str(refresh_exc)
+            details = (
+                f"GitHub relationship apply failed after {len(applied)} provider operation(s); "
+                "provider state may have partially changed. Refresh relationships and re-stage before retry."
+            )
+            if refresh_error:
+                details += f" Relationship refresh also failed: {refresh_error}"
+            raise ProviderOperationError(details) from exc
+
+        relationship_location = self._refresh_relationship_projection(request, issue_number)
+        removed = self._remove_consumed_pending_relationships(
+            cache,
+            repo,
+            issue_number,
+            pending_local_id=pending_local_id,
+            consumed_pending=consumed_pending,
+        )
         return {
-            **result,
+            "operation": "apply_relationships",
+            "issue": issue_number,
+            "applied": len(applied),
+            "operations": [operation.to_json() for operation in operations],
+            "provider_results": [dict(item) for item in applied],
+            "pending_operations": [operation.to_json() for operation in pending_operations],
+            "consumed_operations": [operation.to_json() for operation in consumed_resolved],
+            "cache_refreshed": True,
+            "relationship_location": str(relationship_location),
             "pending_source": pending_source,
             "pending_file": pending_operations[0].file_name,
             "removed_pending_files": [str(path) for path in removed],
         }
+
+    def _remove_consumed_pending_relationships(
+        self,
+        cache: GitHubIssueCache,
+        repo: Any,
+        issue_number: str,
+        *,
+        pending_local_id: str | None,
+        consumed_pending: list[PendingIssueRelationshipOperation],
+    ) -> list[Path]:
+        if not consumed_pending:
+            return []
+        if pending_local_id:
+            return cache.remove_pending_draft_relationships(repo, pending_local_id, consumed_pending)
+        return cache.remove_pending_issue_relationships(repo, issue_number, consumed_pending)
 
     def _apply_relationship_operations(
         self,
@@ -693,14 +805,7 @@ class GitHubIssueNativeProvider(IssueProvider):
         for operation in operations:
             applied.append(self._dispatch_relationship_operation(issue_number, operation, request=request))
 
-        repo = resolve_github_repository(request.context.project, runner=self.runner)
-        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
-        relationships = issue_relationships(
-            issue_number,
-            project=request.context.project,
-            runner=self.runner,
-        )
-        relationships_file = cache.write_relationships_projection(repo, issue_number, relationships)
+        relationship_location = self._refresh_relationship_projection(request, issue_number)
         return {
             "operation": "apply_relationships",
             "issue": issue_number,
@@ -709,8 +814,18 @@ class GitHubIssueNativeProvider(IssueProvider):
             "provider_results": [dict(item) for item in applied],
             "pending_operations": [operation.to_json() for operation in pending_operations or []],
             "cache_refreshed": True,
-            "relationships_file": str(relationships_file),
+            "relationship_location": str(relationship_location),
         }
+
+    def _refresh_relationship_projection(self, request: ProviderRequest, issue_number: str) -> Path:
+        repo = resolve_github_repository(request.context.project, runner=self.runner)
+        cache = GitHubIssueCache.for_project(request.context.project, configured_repo=repo)
+        relationships = issue_relationships(
+            issue_number,
+            project=request.context.project,
+            runner=self.runner,
+        )
+        return cache.write_relationships_projection(repo, issue_number, relationships)
 
     def _validate_relationship_operations(self, operations: list[_ResolvedRelationshipOperation]) -> None:
         supported = {"parent", "child", "blocked_by", "blocking"}

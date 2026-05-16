@@ -32,13 +32,13 @@ Confluence rules:
 
 - Keep concept headings stable because Confluence links may target headings.
 
-Read `./confluence-page-convention.md` for storage, identity, reference, metadata, relationship, and transport rules.
+Read `./confluence-page-convention.md` for Confluence storage, identity, reference, and transport rules.
 
-## Confluence metadata and identity
+## Confluence identity and classification
 
-Recommended label or page property: `workflow:type/domain`.
+Use the Confluence page ID, site, and space as provider identity. Page titles are readable references but may not be stable enough for automation.
 
-Use the Confluence page ID, site, and space as structured identity. Page titles are readable references but may not be stable enough for automation.
+If the selected Confluence binding manages page classification, use a Confluence label or Content Property selected by the project for the `domain` type marker.
 
 ## Confluence section guidance
 

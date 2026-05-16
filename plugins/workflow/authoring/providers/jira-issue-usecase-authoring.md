@@ -8,6 +8,7 @@ Read after:
 - `./jira-issue-convention.md`
 - `./jira-issue-metadata.md`
 - `./jira-issue-relationships.md`
+- `./jira-issue-anti-patterns.md`
 
 ## Scope
 
@@ -24,7 +25,7 @@ Common required sections are defined by `../common/usecase-authoring.md`:
 - `## Current Draft`
 - `## Open Questions`
 
-Common optional sections are defined by `../common/usecase-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/usecase-authoring.md` and `../common/issue-body.md`:
 
 - `## Resume`
 

@@ -4,7 +4,7 @@ GitHub Issues can store parent/sub-issue and dependency relationships as provide
 
 Read this with:
 
-- `../common/body-conventions.md`
+- `../common/issue-body.md`
 - `../common/issue-authoring.md`
 - `./github-issue-convention.md`
 - `./github-issue-relationships.md`
@@ -16,6 +16,7 @@ Do not create dedicated relationship sections for GitHub-native parent or blocki
 Avoid these sections in GitHub Issue bodies:
 
 - `## Parent`
+- `## Children`
 - `## Dependencies`
 - `## Blocked`
 - `## Blocked By`

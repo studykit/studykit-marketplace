@@ -71,6 +71,10 @@ def gh_issue_view_args(issue: int | str, fields: str) -> tuple[str, ...]:
     )
 
 
+def gh_api_args(*args: str) -> tuple[str, ...]:
+    return ("gh", "api", *args)
+
+
 def write_config(project: Path) -> None:
     path = project / ".workflow" / "config.yml"
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -194,6 +198,27 @@ def test_cache_writeback_script_dispatches_provider_update(tmp_path: Path) -> No
             gh_issue_view_args(42, ",".join(DEFAULT_ISSUE_FIELDS)): result(
                 gh_issue_view_args(42, ",".join(DEFAULT_ISSUE_FIELDS)),
                 stdout=json.dumps(issue_payload()),
+            ),
+            gh_api_args("repos/studykit/studykit-plugins/issues/42"): result(
+                gh_api_args("repos/studykit/studykit-plugins/issues/42"),
+                stdout=json.dumps({"id": 4200, "number": 42, "updated_at": "2026-05-14T00:00:00Z"}),
+            ),
+            gh_api_args("repos/studykit/studykit-plugins/issues/42/parent"): result(
+                gh_api_args("repos/studykit/studykit-plugins/issues/42/parent"),
+                stderr="not found",
+                returncode=404,
+            ),
+            gh_api_args("repos/studykit/studykit-plugins/issues/42/sub_issues", "--paginate"): result(
+                gh_api_args("repos/studykit/studykit-plugins/issues/42/sub_issues", "--paginate"),
+                stdout="[]",
+            ),
+            gh_api_args("repos/studykit/studykit-plugins/issues/42/dependencies/blocked_by", "--paginate"): result(
+                gh_api_args("repos/studykit/studykit-plugins/issues/42/dependencies/blocked_by", "--paginate"),
+                stdout="[]",
+            ),
+            gh_api_args("repos/studykit/studykit-plugins/issues/42/dependencies/blocking", "--paginate"): result(
+                gh_api_args("repos/studykit/studykit-plugins/issues/42/dependencies/blocking", "--paginate"),
+                stdout="[]",
             ),
         }
     )

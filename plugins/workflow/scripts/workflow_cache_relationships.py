@@ -12,7 +12,13 @@ import sys
 from pathlib import Path
 from typing import TextIO
 
-from workflow_cache import GitHubIssueCache, SCHEMA_VERSION, _atomic_write_text, _dump_yaml
+from workflow_cache import (
+    GitHubIssueCache,
+    SCHEMA_VERSION,
+    _atomic_write_text,
+    _dump_yaml,
+    pending_relationship_operations_from_mapping,
+)
 from workflow_command import CommandRunner
 from workflow_config import WorkflowConfigError, load_workflow_config
 from workflow_github import GitHubRepositoryError, resolve_github_repository
@@ -75,14 +81,19 @@ def stage_relationships_payload(
 
         issue = issue_numbers[0]
         cache = GitHubIssueCache.for_project(config.root, configured_repo=repo)
-        if not cache.relationships_file(repo, issue).is_file():
-            raise WorkflowCacheRelationshipsError(
-                f"issue relationship cache projection is missing for #{issue}; refresh the issue cache first"
+        if not cache.has_issue_projection(repo, issue):
+            dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
+            request = request_from_config(
+                config,
+                role="issue",
+                operation="get",
+                artifact_type="task",
+                payload={"issue": issue},
+                cache_policy="refresh",
             )
-
-        relationships_file = cache.relationships_pending_file(repo, issue)
-        if relationships_file.exists() and not replace:
-            raise WorkflowCacheRelationshipsError(f"pending relationship file already exists: {relationships_file}")
+            dispatcher.dispatch(request)
+        if not replace and cache.read_pending_issue_relationships(repo, issue):
+            raise WorkflowCacheRelationshipsError(f"pending relationship operations already exist for GitHub issue #{issue}")
 
         payload = _relationship_payload(
             parent=parent,
@@ -91,8 +102,19 @@ def stage_relationships_payload(
             blocking=blocking,
             related=(),
         )
-        relationships_file.parent.mkdir(parents=True, exist_ok=True)
-        _atomic_write_text(relationships_file, _dump_yaml(payload))
+        issue_file = cache.issue_file(repo, issue)
+        operations_to_write = pending_relationship_operations_from_mapping(
+            payload,
+            path=issue_file,
+            target_kind="issue",
+            target_id=issue,
+        )
+        pending_location = cache.write_pending_issue_relationships(
+            repo,
+            issue,
+            operations_to_write,
+            replace_existing=replace,
+        )
         operations = cache.read_pending_issue_relationships(repo, issue)
         return {
             "operation": "cache_stage_pending_relationships",
@@ -100,7 +122,8 @@ def stage_relationships_payload(
             "kind": "github",
             "repository": repo.to_json(),
             "issue": issue,
-            "relationships_file": str(relationships_file),
+            "issue_file": str(issue_file),
+            "pending_location": str(pending_location),
             "operations": [operation.to_json() for operation in operations],
         }
 
@@ -140,6 +163,7 @@ def stage_relationships_payload(
         "site": site.to_json(),
         "issue": issue_key,
         "key": issue_key,
+        "pending_location": str(relationships_file),
         "relationships_file": str(relationships_file),
         "operations": [operation.to_json() for operation in operations],
     }
@@ -336,7 +360,7 @@ def main(
     if payload.get("operation") == "cache_stage_pending_relationships":
         issue = payload.get("issue")
         display = f"#{issue}" if payload.get("kind") == "github" else str(issue)
-        print(f"{display} staged: {payload.get('relationships_file')}", file=output)
+        print(f"{display} staged: {payload.get('pending_location')}", file=output)
         return 0
 
     for item in payload.get("issues", []):

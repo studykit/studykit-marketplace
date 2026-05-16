@@ -8,6 +8,7 @@ Read after:
 - `./jira-issue-convention.md`
 - `./jira-issue-metadata.md`
 - `./jira-issue-relationships.md`
+- `./jira-issue-anti-patterns.md`
 
 ## Scope
 
@@ -23,7 +24,7 @@ Common required sections are defined by `../common/task-authoring.md`:
 - `## Unit Test Strategy`
 - `## Acceptance Criteria`
 
-Common optional sections are defined by `../common/task-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/task-authoring.md` and `../common/issue-body.md`:
 
 - `## Change Plan`
 - `## Interface Contracts`

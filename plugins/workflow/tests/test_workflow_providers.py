@@ -14,7 +14,7 @@ _SCRIPTS_DIR = _PLUGIN_ROOT / "scripts"
 if str(_SCRIPTS_DIR) not in sys.path:
     sys.path.insert(0, str(_SCRIPTS_DIR))
 
-from workflow_cache import GitHubIssueCache  # noqa: E402
+from workflow_cache import GitHubIssueCache, pending_relationship_operations_from_mapping  # noqa: E402
 from workflow_command import CommandRequest, CommandResult  # noqa: E402
 from workflow_config import parse_workflow_config  # noqa: E402
 from workflow_github import DEFAULT_ISSUE_FIELDS, GitHubRepository  # noqa: E402
@@ -326,6 +326,26 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
                 returncode=0,
                 stdout=json.dumps({"body": "Updated body."}),
             )
+        if request.args == gh_issue_view_args(39, ",".join(DEFAULT_ISSUE_FIELDS)):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({**cached_issue_payload(), "body": "Updated body."}),
+            )
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/39"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"id": 3900, "number": 39, "title": "Write-back freshness checks"}),
+            )
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/39/parent"):
+            return CommandResult(request=request, returncode=404, stderr="not found")
+        if request.args in {
+            gh_api_args("repos/studykit/studykit-plugins/issues/39/sub_issues", "--paginate"),
+            gh_api_args("repos/studykit/studykit-plugins/issues/39/dependencies/blocked_by", "--paginate"),
+            gh_api_args("repos/studykit/studykit-plugins/issues/39/dependencies/blocking", "--paginate"),
+        }:
+            return CommandResult(request=request, returncode=0, stdout="[]")
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
@@ -340,7 +360,7 @@ def test_github_issue_update_can_request_freshness_check_before_mutation(tmp_pat
         )
     )
 
-    assert response.payload["operation"] == "edit_issue_body"
+    assert response.payload["operation"] == "update_issue"
     assert response.payload["verified"] is True
     assert events == ["freshness", "edit", "verify"]
 
@@ -464,6 +484,20 @@ def test_github_issue_update_from_cache_projection_checks_freshness_and_refreshe
         if request.args == gh_issue_view_args(39, ",".join(DEFAULT_ISSUE_FIELDS)):
             events.append("refresh")
             return CommandResult(request=request, returncode=0, stdout=json.dumps(writeback_issue_payload()))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/39"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"id": 3900, "number": 39, "updated_at": "2026-05-13T12:00:00Z"}),
+            )
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/39/parent"):
+            return CommandResult(request=request, returncode=404, stderr="not found")
+        if request.args in {
+            gh_api_args("repos/studykit/studykit-plugins/issues/39/sub_issues", "--paginate"),
+            gh_api_args("repos/studykit/studykit-plugins/issues/39/dependencies/blocked_by", "--paginate"),
+            gh_api_args("repos/studykit/studykit-plugins/issues/39/dependencies/blocking", "--paginate"),
+        }:
+            return CommandResult(request=request, returncode=0, stdout="[]")
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
@@ -597,6 +631,20 @@ Draft body.
         if request.args == gh_issue_view_args(51, ",".join(DEFAULT_ISSUE_FIELDS)):
             events.append("refresh")
             return CommandResult(request=request, returncode=0, stdout=json.dumps(created_issue_payload()))
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/51"):
+            return CommandResult(
+                request=request,
+                returncode=0,
+                stdout=json.dumps({"id": 5100, "number": 51, "updated_at": "2026-05-14T00:00:00Z"}),
+            )
+        if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/51/parent"):
+            return CommandResult(request=request, returncode=404, stderr="not found")
+        if request.args in {
+            gh_api_args("repos/studykit/studykit-plugins/issues/51/sub_issues", "--paginate"),
+            gh_api_args("repos/studykit/studykit-plugins/issues/51/dependencies/blocked_by", "--paginate"),
+            gh_api_args("repos/studykit/studykit-plugins/issues/51/dependencies/blocking", "--paginate"),
+        }:
+            return CommandResult(request=request, returncode=0, stdout="[]")
         return CommandResult(request=request, returncode=127, stderr="unexpected command")
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
@@ -693,19 +741,22 @@ def test_github_issue_apply_relationships_from_pending_file_dispatches_refreshes
         {**cached_issue_payload(updated_at="2026-05-14T00:00:00Z"), "number": 44},
         fetched_at="2026-05-14T00:00:00Z",
     )
-    pending_path = cache.relationships_pending_file(github_repo(), 44)
-    pending_path.write_text(
-        """
-schema_version: 1
-operations:
-  - action: add
-    relationship: parent
-    issue: "#36"
-  - action: add
-    relationship: blocked_by
-    issue: "#33"
-""".lstrip(),
-        encoding="utf-8",
+    pending_path = cache.issue_file(github_repo(), 44)
+    cache.write_pending_issue_relationships(
+        github_repo(),
+        44,
+        pending_relationship_operations_from_mapping(
+            {
+                "operations": [
+                    {"action": "add", "relationship": "parent", "issue": "#36"},
+                    {"action": "add", "relationship": "blocked_by", "issue": "#33"},
+                    {"action": "add", "relationship": "blocking", "issue": "#45"},
+                ]
+            },
+            path=pending_path,
+            target_kind="issue",
+            target_id="44",
+        ),
     )
     events: list[str] = []
     issue_44_reads = 0
@@ -727,7 +778,12 @@ operations:
             return CommandResult(request=request, returncode=0, stdout=json.dumps({"number": 44, "updatedAt": "2026-05-14T00:00:00Z"}))
         if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44"):
             issue_44_reads += 1
-            events.append("issue-44-id" if issue_44_reads == 1 else "relationships-issue")
+            if issue_44_reads == 1:
+                events.append("issue-44-id")
+            elif issue_44_reads == 2:
+                events.append("review-blocker-id")
+            else:
+                events.append("relationships-issue")
             return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(44, 4400)))
         if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/33"):
             events.append("issue-33-id")
@@ -752,6 +808,15 @@ operations:
         ):
             events.append("add-dependency")
             return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(33, 3300)))
+        if request.args == gh_api_args(
+            "-X",
+            "POST",
+            "repos/studykit/studykit-plugins/issues/45/dependencies/blocked_by",
+            "-F",
+            "issue_id=4400",
+        ):
+            events.append("add-review-blocks-target")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(45, 4500)))
         if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44/parent"):
             events.append("relationships-parent")
             return CommandResult(request=request, returncode=0, stdout=json.dumps(rest_issue(36, 3600)))
@@ -763,7 +828,7 @@ operations:
             return CommandResult(request=request, returncode=0, stdout=json.dumps([rest_issue(33, 3300)]))
         if request.args == gh_api_args("repos/studykit/studykit-plugins/issues/44/dependencies/blocking", "--paginate"):
             events.append("relationships-blocking")
-            return CommandResult(request=request, returncode=0, stdout="[]")
+            return CommandResult(request=request, returncode=0, stdout=json.dumps([rest_issue(45, 4500)]))
         return CommandResult(request=request, returncode=127, stderr=f"unexpected command: {request.args}")
 
     dispatcher = ProviderDispatcher(default_provider_registry(runner=runner))
@@ -773,27 +838,30 @@ operations:
             role="issue",
             kind="github",
             operation="apply_relationships",
-            context=ProviderContext(project=tmp_path, artifact_type="task", session_id="s1"),
+            context=ProviderContext(project=tmp_path, artifact_type="review", session_id="s1"),
             payload={"issue": 44, "from_pending": True},
         )
     )
 
     assert response.payload["operation"] == "apply_relationships"
     assert response.payload["issue"] == "44"
-    assert response.payload["applied"] == 2
+    assert response.payload["applied"] == 3
     assert response.payload["cache_refreshed"] is True
-    assert response.payload["pending_file"] == "relationships-pending.yml"
-    assert not pending_path.exists()
+    assert response.payload["pending_file"] == "issue.md"
+    assert "pending:" not in pending_path.read_text(encoding="utf-8")
     relationships = cache.read_relationships(github_repo(), 44)
     assert relationships["parent"]["number"] == 36
     assert relationships["dependencies"]["blocked_by"][0]["number"] == 33
+    assert relationships["dependencies"]["blocking"][0]["number"] == 45
     assert events == [
         "freshness",
         "issue-44-id",
         "add-parent",
-        "issue-33-id",
-        "add-dependency",
-        "relationships-issue",
+            "issue-33-id",
+            "add-dependency",
+            "review-blocker-id",
+            "add-review-blocks-target",
+            "relationships-issue",
         "relationships-parent",
         "relationships-children",
         "relationships-blocked-by",
@@ -809,16 +877,16 @@ def test_github_issue_apply_relationships_rejects_unsupported_without_mutation(t
         {**cached_issue_payload(updated_at="2026-05-14T00:00:00Z"), "number": 44},
         fetched_at="2026-05-14T00:00:00Z",
     )
-    pending_path = cache.relationships_pending_file(github_repo(), 44)
-    pending_path.write_text(
-        """
-schema_version: 1
-operations:
-  - action: add
-    relationship: related
-    issue: "#33"
-""".lstrip(),
-        encoding="utf-8",
+    pending_path = cache.issue_file(github_repo(), 44)
+    cache.write_pending_issue_relationships(
+        github_repo(),
+        44,
+        pending_relationship_operations_from_mapping(
+            {"operations": [{"action": "add", "relationship": "related", "issue": "#33"}]},
+            path=pending_path,
+            target_kind="issue",
+            target_id="44",
+        ),
     )
     events: list[str] = []
 
@@ -841,6 +909,7 @@ operations:
 
     assert "mutation" not in events
     assert pending_path.exists()
+    assert "pending:" in pending_path.read_text(encoding="utf-8")
 
 
 def test_read_operations_dispatch_to_provider(context: ProviderContext) -> None:

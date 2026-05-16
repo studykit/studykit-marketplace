@@ -21,9 +21,8 @@ Use this final GitHub body structure for `epic` artifacts.
 Common required sections are defined by `../common/epic-authoring.md`:
 
 - `## Description`
-- `## Children`
 
-Common optional sections are defined by `../common/epic-authoring.md` and `../common/body-conventions.md`:
+Common optional sections are defined by `../common/epic-authoring.md` and `../common/issue-body.md`:
 
 - `## Coordination Notes`
 - `## Acceptance Criteria`
@@ -35,20 +34,16 @@ GitHub-specific H2 sections for this type: None.
 
 GitHub-specific rules:
 
-- Use GitHub sub-issues for canonical hierarchy when available.
-- Keep `## Children` as the readable index.
-- Do not add `## Parent` to child issues.
+- Use GitHub sub-issues for canonical hierarchy.
+- Do not add `## Children` only to duplicate GitHub sub-issues.
 
-## Metadata mapping
+## GitHub labels
 
-Recommended GitHub type label: `epic`.
+Apply the GitHub label `epic` to identify this issue type.
 
-Use GitHub Issue Fields for workflow status when available. If fields are unavailable, use a status label such as `workflow/status:<state>`.
+## GitHub hierarchy
 
-## GitHub-specific section guidance
+GitHub sub-issues are the provider-native parent/child relationship for all
+GitHub issue types, not only epics.
 
-Use GitHub sub-issues for canonical child membership when available.
-
-Keep `## Children` as the readable index for humans. Each child entry should use `#123` or `owner/repo#123` and a short label.
-
-Do not add `## Parent` to child issues. Parent membership belongs in GitHub sub-issue metadata.
+Use the epic body for coordination narrative, not for a duplicate child index.

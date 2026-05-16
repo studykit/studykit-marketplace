@@ -74,6 +74,7 @@ def test_issue_relationship_contract_is_separate_from_metadata_contract() -> Non
         "jira-issue-metadata.md",
         "github-issue-relationships.md",
         "jira-issue-relationships.md",
+        "jira-issue-anti-patterns.md",
     ):
         text = (providers / name).read_text(encoding="utf-8")
         assert "Relationship projection" not in text
@@ -93,6 +94,13 @@ def test_issue_relationship_contract_is_separate_from_metadata_contract() -> Non
     assert "Issue relationships are not issue metadata fields." in jira_relationships
     assert "Jira parent/subtask" in jira_relationships
     assert "configured Jira issue links" in jira_relationships
+    assert "Read `./jira-issue-anti-patterns.md`" in jira_relationships
+
+    jira_anti_patterns = (providers / "jira-issue-anti-patterns.md").read_text(
+        encoding="utf-8"
+    )
+    assert "`## Children`" in jira_anti_patterns
+    assert "Jira-native hierarchy" in jira_anti_patterns
 
 
 def test_main_facing_authoring_docs_do_not_expose_cache_projection_internals() -> None:

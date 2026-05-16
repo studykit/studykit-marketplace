@@ -1293,22 +1293,19 @@ def test_user_prompt_injects_compact_relationship_summary(
     repo = GitHubRepository(host="github.com", owner="studykit", name="studykit-plugins")
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo)
     cache.write_issue_bundle(repo, issue_payload(39, title="Requested issue"))
-    cache.relationships_file(repo, 39).write_text(
-        """
-schema_version: 1
-source_updated_at: 2026-05-14T00:00:00Z
-fetched_at: 2026-05-14T00:00:00Z
-parent:
-  number: 28
-children:
-  - number: 41
-dependencies:
-  blocked_by:
-    - number: 33
-  blocking:
-    - number: 45
-""".lstrip(),
-        encoding="utf-8",
+    cache.write_relationships_projection(
+        repo,
+        39,
+        {
+            "updatedAt": "2026-05-14T00:00:00Z",
+            "parent": {"number": 28},
+            "children": [{"number": 41}],
+            "dependencies": {
+                "blocked_by": [{"number": 33}],
+                "blocking": [{"number": 45}],
+            },
+        },
+        fetched_at="2026-05-14T00:00:00Z",
     )
 
     captured = io.StringIO()

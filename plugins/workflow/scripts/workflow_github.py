@@ -30,6 +30,7 @@ DEFAULT_ISSUE_FIELDS = (
     "body",
     "labels",
     "comments",
+    "projectItems",
     "url",
     "createdAt",
     "updatedAt",

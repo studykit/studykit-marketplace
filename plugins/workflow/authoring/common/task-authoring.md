@@ -1,79 +1,25 @@
 # Workflow Task Authoring
 
-A workflow task is an **issue-backed unit of regular implementation work**: new functionality, extension, refactor, or other planned code change.
-
-Tasks are stored in the configured issue backend. They are not local Markdown files unless a local projection workflow is explicitly configured.
+A workflow task records regular implementation work: new functionality,
+extension, refactor, or other planned code change.
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - Issue rules: `./issue-authoring.md`
 
-## Storage role
+## Task title
 
-`task` is stored in the issue backend.
-
-Use canonical issue identity. Do not use local integer ids.
-
-## Required metadata
-
-Represent this metadata structurally when possible. If a field cannot be stored structurally, include the value in the body when the selected authoring files require it.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `task`. Use issue metadata when available. |
-| `title` | yes | Short human-readable work summary. |
-| `status` | yes | Workflow lifecycle status. |
-| `priority` | optional | Workflow priority or field. |
-| `tags` | optional | Classification tags. |
-
-## Relationships
-
-Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `implements` | recommended when UC-driven | Use case or requirement this task delivers. |
-| `depends_on` | optional | Blocking or ordering dependency. |
-| `parent` | optional | Epic or parent issue that coordinates this task. |
-| `related` | optional | Non-blocking references useful for implementation. |
-
-## Lifecycle
-
-Recommended semantic lifecycle:
-
-```text
-open → queued → progress → done
-open → discarded
-queued → progress | holding | discarded
-progress → holding | failing | done | discarded
-holding → queued | progress | discarded
-failing → queued | discarded
-done → terminal
-discarded → terminal
-```
-
-Status mapping depends on the configured issue backend.
-
-Status meaning:
-
-- `open` — Captured but not yet ready for execution.
-- `queued` — Ready to implement.
-- `progress` — Implementation is active.
-- `holding` — Paused for external input or sequencing.
-- `failing` — Attempt failed and needs rework or reframing.
-- `done` — Implementation and verification are complete.
-- `discarded` — No longer needed.
-
-`open` is the default initial status for newly authored tasks unless the user explicitly asks to queue it.
+Use a short human-readable title that names the intended change and the main
+target area.
 
 ## Anchors and scope
 
 A task should usually have at least one acceptance source:
 
-- `implements`: a use case or requirement the task delivers.
-- `spec`: a knowledge artifact that defines the implementation contract.
-- `parent`: an epic or parent issue that coordinates a batch of work.
+- A use case or requirement the task delivers.
+- A spec or knowledge artifact that defines the implementation contract.
+- An epic or parent issue that coordinates a batch of work.
 
 Anchorless tasks are allowed for small, obvious changes, but they should pass a smell check:
 
@@ -83,15 +29,11 @@ Anchorless tasks are allowed for small, obvious changes, but they should pass a 
 
 Do not hide design decisions only in the task body when they should become curated knowledge.
 
-## Parent metadata and shared narrative
+## Shared narrative
 
-Use `parent` for:
-
-- Epic coordination.
-- Decomposition from another issue.
-- Follow-up work from a spike, bug, research item, or task.
-
-Narrative that affects several children belongs in the parent issue comments or body. A child task should use structured parent metadata when available.
+When a task belongs to a larger batch of work, keep shared context in the parent
+issue. The task body should record only the scope, acceptance criteria, and
+implementation notes that are specific to this task.
 
 ## Granularity
 
@@ -102,7 +44,8 @@ Split a task when it spans:
 - Independent test surfaces.
 - Work that can be assigned or sequenced independently.
 
-Use dependencies to order split tasks. Use an epic or parent issue when siblings need shared coordination.
+Record ordering constraints when split tasks must happen in a specific sequence.
+Use an epic or parent issue when siblings need shared coordination.
 
 ## Body shape
 
@@ -119,10 +62,10 @@ Required:
 
 ## Acceptance Criteria
 
-- <observable done condition>
+- <observable completion condition>
 ```
 
-`## Acceptance Criteria` must exist even when the task has metadata links to use cases or specs.
+`## Acceptance Criteria` must exist even when the task has issue links to use cases or specs.
 
 `## Description` must include why the task exists, not only what will change.
 State the motivation explicitly for removals, boundary changes, agent
@@ -145,16 +88,16 @@ Optional sections:
 
 - `## Change Plan` — forward-looking scope fence naming files, packages, APIs, or migration steps expected to change.
 - `## Interface Contracts` — contracts this task consumes or provides.
-- `## Resume` — current-state snapshot while mid-flight. See `./body-conventions.md`.
-- `## Why Discarded` — reason when discarded. See `./body-conventions.md`.
+- `## Resume` — current-state snapshot while mid-flight. See `./issue-body.md`.
+- `## Why Discarded` — reason when discarded. See `./issue-body.md`.
 
 Unknown Title Case H2 headings are tolerated.
 
 ## Evidence-readiness
 
-A queued task should be actionable as a handoff.
+A task that is ready for implementation should be actionable as a handoff.
 
-Before moving to `queued`, check that the issue body or linked artifacts provide enough evidence for implementation:
+Before treating a task as ready, check that the issue body or linked artifacts provide enough evidence for implementation:
 
 - Reproduction or invocation command when relevant.
 - Code coordinates or expected implementation area.
@@ -177,9 +120,9 @@ Use linked external artifacts only when they have evidentiary or comparative val
 
 Production source paths are recorded by git history. Mention planned source changes in `## Change Plan` when they help scope the work.
 
-## Done rule
+## Completion criteria
 
-A task should not be marked `done` until:
+Treat a task as complete only when:
 
 - Acceptance criteria are satisfied.
 - Required tests or verification steps have passed, or the issue explains why they are not applicable.
@@ -205,12 +148,5 @@ Keep the task body as the current compact contract.
 - Missing `## Description`, `## Unit Test Strategy`, or `## Acceptance Criteria`.
 - Creating an anchorless task for work that really needs a use case or spec.
 - Treating comments as the only source of acceptance criteria.
-- Marking `done` without updating affected knowledge pages.
+- Treating a task as complete without updating affected knowledge pages.
 - Embedding long design decisions in the task body instead of creating or updating a spec.
-- Using local projection paths or local integer ids as canonical identity.
-
-## Do not
-
-- Do not create local Markdown task files unless explicitly using a local projection workflow.
-- Do not use closing keywords or Smart Commit commands unless the workflow intentionally wants automated side effects.
-- Do not auto-trigger a skill just because a task is being written; follow the authoring resolver policy.

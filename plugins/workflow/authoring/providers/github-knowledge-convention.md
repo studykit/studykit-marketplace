@@ -8,29 +8,19 @@ This is not the separate GitHub Wiki feature. The `wiki/` directory lives in the
 
 Use these rules for workflow knowledge artifacts stored in GitHub repository Markdown files.
 
-This file defines repository Markdown storage, identity, reference, relationship, change-log, transport, and common mistake rules only. Provider metadata rules belong in `./github-knowledge-metadata.md`. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
+This file defines repository Markdown storage, identity, references, visible links, change-log, transport, and common mistake rules only. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
 
 ## Storage model
 
-The default repository knowledge root is:
+The repository knowledge root is:
 
 ```text
 wiki/
 ```
 
-For plugin-specific knowledge, use a plugin subdirectory by default:
+Place knowledge pages under `wiki/` according to the project's configured knowledge directory structure.
 
-```text
-wiki/<plugin>/
-```
-
-Recommended page shape:
-
-```text
-wiki/<plugin>/<Page-Title>.md
-```
-
-A project may configure a different root later, but v1 should default to `wiki/<plugin>/` for plugin repositories and `wiki/` for single-purpose repositories.
+Do not assume a plugin-specific subdirectory or a fixed page naming pattern in this provider convention.
 
 ## Identity and references
 
@@ -42,21 +32,21 @@ Store or resolve:
 - Owner.
 - Repository.
 - Branch or commit when versioned identity is needed.
-- Repository-relative path, such as `wiki/<plugin>/<page>.md`.
+- Repository-relative path under `wiki/`.
 
 Use normal Markdown links in visible text:
 
 ```markdown
-[Example Page](wiki/<plugin>/<page>.md)
+[Example Page](wiki/path/to/Example.md)
 ```
 
 Use full GitHub URLs when text must be portable outside the repository.
 
-## Relationships
+## Visible links
 
-Use visible Markdown links for knowledge relationships.
+Use visible Markdown links when a knowledge page needs to reference related workflow artifacts or other knowledge pages.
 
-If a relationship points to a GitHub Issue, store the structured relationship on the issue side when possible and keep the knowledge page link as human-readable context.
+If a link points to a GitHub Issue, manage issue-native relationships on the issue side when possible and keep the knowledge page link as human-readable context.
 
 Use repository-relative links when the target is in the same repository. Use full URLs when the target is outside the repository or when the text must remain portable.
 
@@ -71,7 +61,7 @@ Git commit history records who changed what and when. The page `## Change Log` r
 Preferred native transport:
 
 - `git` against the main repository.
-- `gh` only for issue, pull request, or repository metadata operations.
+- `gh` only for issue, pull request, or repository lookup operations.
 
 MCP is fallback transport.
 

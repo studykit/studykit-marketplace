@@ -1,25 +1,26 @@
 # Workflow Review Authoring
 
-A workflow review item is an **issue-backed feedback workflow artifact**. It captures a single finding, gap, or question that must be triaged, tracked, and resolved.
+A workflow review item captures a single finding, gap, or question that needs
+independent workflow tracking.
 
-Review items are not page comments and not long-form documents. They are the workflow mailbox for feedback that needs status, priority, assignment, discussion, and closure.
+Use an existing issue comment when the feedback is local to that issue and can
+be resolved as part of the issue's normal work. Create a review item when the
+feedback needs separate ownership, prioritization, discussion, or completion
+criteria.
 
 Companion contracts:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 - Issue rules: `./issue-authoring.md`
 
-## Storage role
+Do not create a review item for every comment. Use comments for local
+discussion. Use a review item when the feedback must be tracked independently.
 
-`review` is always stored in the issue backend.
+## Review concern
 
-Do not store workflow review items as knowledge-page comments or knowledge-page sections. Page comments may point to a review item, but they do not replace it.
+State the concern type in the title or body.
 
-## Review kinds
-
-`kind` is required metadata.
-
-| Kind | Meaning |
+| Concern | Meaning |
 | --- | --- |
 | `finding` | Something is wrong, inconsistent, risky, or below the expected contract. |
 | `gap` | Something expected is missing or incomplete. |
@@ -27,73 +28,29 @@ Do not store workflow review items as knowledge-page comments or knowledge-page 
 
 Each review item should contain one concern only. Do not pack multiple findings, gaps, or questions into one review item.
 
-## Required metadata
-
-Represent this metadata structurally when possible. If a field cannot be stored structurally, include the value in the body when the selected authoring files require it.
-
-| Field | Required | Notes |
-| --- | --- | --- |
-| `type` | yes | Always `review`. Use issue metadata when available. |
-| `kind` | yes | `finding`, `gap`, or `question`. |
-| `status` | yes | Workflow lifecycle status. |
-| `source` | recommended | `self`, agent name, reviewer name, or process that emitted the review. |
-| `priority` | recommended | `high`, `medium`, or `low`, or workflow priority equivalent. |
-| `tags` | optional | Classification tags. |
-
-Use canonical issue identity. Do not use local integer ids.
-
-## Relationships
-
-Represent relationships structurally when possible. Body representation depends on the selected provider and type authoring files.
-
-| Relationship | Required | Notes |
-| --- | --- | --- |
-| `target` | yes for target-specific reviews | Artifact or artifacts being reviewed. |
-
 ## Review target rules
 
-A review item must identify what it reviewed unless the concern is truly cross-cutting.
+A review item must identify the specific issue, knowledge page, or small set of
+reviewed content that must change or answer the concern. If the concern is truly
+cross-cutting, say so explicitly in `## Description`.
 
-Targets may point to:
+Choose the narrowest useful target:
 
-- Issue artifacts: task, bug, spike, epic, usecase workflow issue, research workflow issue, another review.
-- Knowledge artifacts: spec, architecture, domain, context, actors, nfr, ci, curated usecase page, curated research page.
+- The issue whose body, acceptance criteria, plan, or discussion must change.
+- The knowledge page whose content must change.
+- A small set of reviewed items when the same concern applies to all of them.
 
-Represent targets according to the selected authoring files.
+Do not list every related item. Do not invent placeholder targets.
 
-Do not invent placeholder targets. If the review is cross-cutting, say so explicitly in `## Description`.
+## Resolution criteria
 
-## Lifecycle
+Treat a review as complete only when every target item reflects the resolution.
 
-Recommended semantic lifecycle:
+For knowledge targets, the target page should include a `## Change Log` entry that links back to the review item or to the causing issue that resolved the review.
 
-```text
-open        → discarded | in-progress
-in-progress → discarded | resolved
-resolved    → terminal
-discarded   → terminal
-```
+For issue targets, the target issue should include the relevant body change or an explicit comment explaining why no content change was needed.
 
-Status mapping depends on the configured issue backend.
-
-Status meaning:
-
-- `open` — Feedback is in the inbox and not yet selected for resolution.
-- `in-progress` — Someone is actively resolving it.
-- `resolved` — The target artifact reflects the resolution.
-- `discarded` — The feedback is no longer applicable or intentionally rejected.
-
-`open` is the default initial status.
-
-## Resolution rule
-
-A review should not be marked `resolved` until every target artifact reflects the resolution.
-
-For knowledge targets, the target page should include a `## Change Log` entry that links back to the review item or to the causing workflow artifact that resolved the review.
-
-For issue targets, the target issue should include the relevant body/metadata change or an explicit comment explaining why no content change was needed.
-
-If the fix is deferred, keep the review open or in-progress. Do not mark it resolved merely because a follow-up task was created unless the team explicitly treats that handoff as resolution.
+If the fix is deferred, do not treat the review as complete merely because a follow-up task was created unless the team explicitly treats that handoff as resolution.
 
 ## Body shape
 
@@ -111,7 +68,7 @@ Target-specific reviews must identify the target according to the selected autho
 
 Optional sections:
 
-- `## Resume` — current-state snapshot while the review is being resolved. See `./body-conventions.md`.
+- `## Resume` — current-state snapshot while the review is being resolved. See `./issue-body.md`.
 - `## Suggested Fix` — concise proposed action when useful.
 - `## Evidence` — short links, snippets, or reproduction notes.
 
@@ -119,10 +76,10 @@ Unknown Title Case H2 headings are tolerated, but keep reviews short.
 
 ## Description guidance
 
-For each kind:
+For each concern:
 
 - `finding`: explain what is wrong, where it appears, and why it matters.
-- `gap`: explain what is missing, why it should exist, and what artifact should receive it.
+- `gap`: explain what is missing, why it should exist, and what item should receive it.
 - `question`: state the unresolved question and what answer would allow progress.
 
 ## Comments and discussion
@@ -141,13 +98,11 @@ Keep the issue body as the current compact summary.
 - Missing target identity for a target-specific review.
 - Packing several findings into one review item.
 - Using a page comment instead of a review item for feedback that needs workflow tracking.
-- Marking `resolved` before the target artifact was updated.
+- Treating a review as complete before the target item was updated.
 - Duplicating long discussion in the issue body instead of comments.
-- Using local projection paths or local integer ids as canonical identity.
 
 ## Do not
 
 - Do not store review as a knowledge page.
 - Do not create placeholder targets.
-- Do not use closing keywords or Smart Commit commands unless the workflow intentionally wants automated side effects.
-- Do not auto-trigger a skill just because a review item is being written; follow the authoring resolver policy.
+- Do not use one review item for multiple unrelated concerns.

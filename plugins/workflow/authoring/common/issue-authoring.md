@@ -4,7 +4,7 @@ Common semantic rules for issue-backed workflow artifacts.
 
 Read this with the semantic authoring file for the artifact type, plus:
 
-- `./body-conventions.md`
+- `./issue-body.md`
 
 ## Scope
 

@@ -37,13 +37,11 @@ GitHub repository Markdown rules:
 
 - Link the source issue and implementation work with Markdown links or full GitHub issue URLs.
 
-Read `./github-knowledge-convention.md` for storage, identity, reference, metadata, relationship, and transport rules.
+Read `./github-knowledge-convention.md` for GitHub repository storage, identity, reference, and transport rules.
 
-## GitHub repository metadata and identity
+## GitHub repository identity
 
-Recommended metadata marker: `workflow:type/usecase`.
-
-Use the repository path as canonical page identity. Optional Markdown metadata may help tooling, but the Git-tracked file and git history remain the source of truth.
+Use the repository path as canonical page identity. Do not add Markdown frontmatter for workflow metadata.
 
 ## GitHub repository section guidance
 
