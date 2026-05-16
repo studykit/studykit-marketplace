@@ -119,12 +119,9 @@ def test_main_facing_authoring_docs_do_not_expose_cache_projection_internals() -
         assert leaked == [], f"{path}: {leaked}"
 
 
-def test_projection_schema_docs_are_contributor_docs_not_operator_instructions() -> None:
+def test_projection_schema_is_implementation_owned_not_documented_as_catalog() -> None:
     dev_root = _PLUGIN_ROOT / "dev"
-    github_projection = (dev_root / "github-issue-cache-projection.md").read_text(
-        encoding="utf-8"
-    )
-    jira_projection = (dev_root / "jira-issue-cache-projection.md").read_text(
+    boundary = (dev_root / "cache-projection-boundary.md").read_text(
         encoding="utf-8"
     )
     operator_md = (_PLUGIN_ROOT / "agents" / "workflow-operator.md").read_text(
@@ -134,18 +131,29 @@ def test_projection_schema_docs_are_contributor_docs_not_operator_instructions()
         _REPO_ROOT / ".codex" / "agents" / "workflow-operator.toml"
     ).read_text(encoding="utf-8")
 
-    assert "relationships.yml" in github_projection
-    assert "relationships-pending.yml" in github_projection
-    assert "issue.json" in jira_projection
-    assert "snapshot.md" in jira_projection
-    for projection in (github_projection, jira_projection):
-        assert "Contributor-facing cache projection contract" in projection
-        assert "workflow plugin contributors" in projection
-        assert "workflow-operator" not in projection
+    assert not (dev_root / "github-issue-cache-projection.md").exists()
+    assert not (dev_root / "jira-issue-cache-projection.md").exists()
+    assert "implementation-owned" in boundary
+    assert "not a\nprojection schema" in boundary
+    assert "source of truth for projection shape" in boundary
+    forbidden = {
+        "issue.md",
+        "metadata.yml",
+        "relationships.yml",
+        "relationships-pending.yml",
+        "issue.json",
+        "snapshot.md",
+        "schema_version",
+        "fetched_at",
+        "source_updated_at",
+    }
+    leaked = sorted(token for token in forbidden if token in boundary)
+    assert leaked == []
     for text in (operator_md, operator_toml):
         assert "plugins/workflow/operator/" not in text
         assert "plugins/workflow/dev/github-issue-cache-projection.md" not in text
         assert "plugins/workflow/dev/jira-issue-cache-projection.md" not in text
+        assert "plugins/workflow/dev/cache-projection-boundary.md" not in text
         assert "Do not directly edit provider metadata, projection frontmatter" in text
         assert "Use workflow provider/cache scripts for those\nmutations." in text
         assert "Treat paths returned by workflow scripts as opaque operational paths." in text
