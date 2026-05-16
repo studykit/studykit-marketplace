@@ -32,6 +32,36 @@ Use Jira comments, history, and worklog for discussion and work logs.
 
 Do not create a body `## Log` section. Keep the issue body structured and current.
 
+## Implementation summary comments
+
+When updating an issue after implementation, keep the comment concise.
+
+Recommended shape:
+
+```markdown
+Implemented <short outcome>.
+
+Why:
+- <reason this change was needed>
+
+Summary:
+- <material change>
+- <material change>
+
+Validation: local workflow checks passed.
+
+- <commit-ref>
+```
+
+Rules:
+
+- Include `Why:` when the motivation is not obvious, the change removes
+  behavior or documentation, or the work changes an agent, provider, or
+  authoring boundary.
+- Do not paste unit test output, test file lists, or verbose validation logs into issue comments.
+- Prefer one short commit reference per relevant commit.
+- Keep implementation details high-level; link or reference changed files only when the distinction matters.
+
 ## Branch, commit, and PR conventions
 
 Default branch pattern:

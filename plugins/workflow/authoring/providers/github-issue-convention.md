@@ -43,6 +43,9 @@ Recommended shape:
 ```markdown
 Implemented <short outcome>.
 
+Why:
+- <reason this change was needed>
+
 Summary:
 - <material change>
 - <material change>
@@ -54,6 +57,9 @@ Validation: local workflow checks passed.
 
 Rules:
 
+- Include `Why:` when the motivation is not obvious, the change removes
+  behavior or documentation, or the work changes an agent, provider, or
+  authoring boundary.
 - Do not paste unit test output, test file lists, or verbose validation logs into issue comments.
 - Do not include full commit URLs when GitHub can autolink a short SHA.
 - Prefer one short SHA bullet per relevant commit.

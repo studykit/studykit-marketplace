@@ -30,6 +30,27 @@ Every issue-backed artifact has a workflow type and lifecycle status.
 
 `type` is the issue-backed artifact discriminator. Type-specific authoring files define the remaining semantic metadata fields, requiredness, and lifecycle states. Backend-specific authoring files define how those values are stored and displayed.
 
+## Motivation and rationale
+
+Issue-backed artifacts should record why the work exists when the reason is not
+obvious from the title or acceptance criteria.
+
+Use the artifact body for durable rationale that defines the current work:
+
+- Why the work is needed.
+- What problem, risk, or decision triggered it.
+- Why the selected scope or boundary matters.
+- Why a removal, reversal, or responsibility split should not be undone later.
+
+Use comments for rationale that belongs to the work timeline:
+
+- Why implementation direction changed.
+- Why a task is being closed, discarded, or split.
+- Why the final result differs from the original plan.
+
+Do not create metadata fields only to hold rationale. Keep rationale in the body
+or comments using the selected artifact type and provider conventions.
+
 ## Relationships
 
 Issue relationships are not issue metadata fields. Type-specific authoring files define required and optional relationships. Provider relationship files define native storage and body-boundary rules.

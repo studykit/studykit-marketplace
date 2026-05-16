@@ -124,6 +124,16 @@ Required:
 
 `## Acceptance Criteria` must exist even when the task has metadata links to use cases or specs.
 
+`## Description` must include why the task exists, not only what will change.
+State the motivation explicitly for removals, boundary changes, agent
+responsibility changes, schema or contract changes, and work that prevents a
+known regression.
+
+Use `## Change Plan` for the expected implementation scope. Do not hide the
+motivation only in the plan. If the rationale is a long-lived design decision,
+create or update the relevant knowledge artifact instead of embedding the full
+decision record in the task body.
+
 Acceptance criteria should be grounded in:
 
 - Linked use case flow, validation, and error handling.
@@ -185,6 +195,8 @@ Use comments for:
 - Test output summaries.
 - Review feedback.
 - Blocker resolution.
+- Closing rationale when the final result, scope, or reason is not obvious from
+  the body.
 
 Keep the task body as the current compact contract.
 
