@@ -119,12 +119,12 @@ def test_main_facing_authoring_docs_do_not_expose_cache_projection_internals() -
         assert leaked == [], f"{path}: {leaked}"
 
 
-def test_operator_projection_docs_are_internal_to_operator_instructions() -> None:
-    operator_root = _PLUGIN_ROOT / "operator"
-    github_projection = (operator_root / "github-issue-cache-projection.md").read_text(
+def test_projection_schema_docs_are_contributor_docs_not_operator_instructions() -> None:
+    dev_root = _PLUGIN_ROOT / "dev"
+    github_projection = (dev_root / "github-issue-cache-projection.md").read_text(
         encoding="utf-8"
     )
-    jira_projection = (operator_root / "jira-issue-cache-projection.md").read_text(
+    jira_projection = (dev_root / "jira-issue-cache-projection.md").read_text(
         encoding="utf-8"
     )
     operator_md = (_PLUGIN_ROOT / "agents" / "workflow-operator.md").read_text(
@@ -138,10 +138,17 @@ def test_operator_projection_docs_are_internal_to_operator_instructions() -> Non
     assert "relationships-pending.yml" in github_projection
     assert "issue.json" in jira_projection
     assert "snapshot.md" in jira_projection
+    for projection in (github_projection, jira_projection):
+        assert "Contributor-facing cache projection contract" in projection
+        assert "workflow plugin contributors" in projection
+        assert "workflow-operator" not in projection
     for text in (operator_md, operator_toml):
-        assert "plugins/workflow/operator/github-issue-cache-projection.md" in text
-        assert "plugins/workflow/operator/jira-issue-cache-projection.md" in text
-        assert "Do not return these paths, raw projection schemas" in text
+        assert "plugins/workflow/operator/" not in text
+        assert "plugins/workflow/dev/github-issue-cache-projection.md" not in text
+        assert "plugins/workflow/dev/jira-issue-cache-projection.md" not in text
+        assert "Do not directly edit provider metadata, projection frontmatter" in text
+        assert "Use workflow provider/cache scripts for those\nmutations." in text
+        assert "Treat paths returned by workflow scripts as opaque operational paths." in text
 
 
 def test_common_metadata_sections_do_not_list_relationship_fields() -> None:

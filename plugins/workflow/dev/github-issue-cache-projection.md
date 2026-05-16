@@ -1,8 +1,8 @@
 # GitHub Issue Cache Projection
 
-Operator-facing cache projection contract for workflow GitHub Issue operations.
+Contributor-facing cache projection contract for workflow GitHub Issue operations.
 
-This file is for `workflow-operator` and plugin contributors. Do not return this file as an authoring path for main-agent artifact drafting.
+This file is for workflow plugin contributors who maintain provider/cache scripts. Do not return this file as an authoring path for main-agent artifact drafting or operator script-runner guidance.
 
 ## Cache files
 
