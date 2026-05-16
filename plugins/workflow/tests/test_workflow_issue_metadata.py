@@ -60,25 +60,20 @@ def gh_api_args(*args: str) -> tuple[str, ...]:
     return ("gh", "api", *args)
 
 
-def write_github_config(project: Path, *, metadata: str = "") -> None:
+def write_github_config(project: Path) -> None:
     path = project / ".workflow" / "config.yml"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        (
-            """
+        """
 version: 1
 providers:
   issues:
     kind: github
     repo: studykit/studykit-plugins
-"""
-            + metadata
-            + """
   knowledge:
     kind: github
 issue_id_format: github
-"""
-        ).lstrip(),
+""".lstrip(),
         encoding="utf-8",
     )
 
@@ -116,15 +111,8 @@ def issue_payload(*, title: str = "Cached title", labels: list[str] | None = Non
     }
 
 
-def test_github_metadata_update_writes_title_type_and_tags_through_provider(tmp_path: Path) -> None:
-    write_github_config(
-        tmp_path,
-        metadata="""
-    metadata:
-      type:
-        label_prefix: "type:"
-""",
-    )
+def test_github_metadata_update_writes_title_and_type_through_provider(tmp_path: Path) -> None:
+    write_github_config(tmp_path)
     cache = GitHubIssueCache.for_project(tmp_path, configured_repo=repo())
     cache.write_issue_bundle(repo(), issue_payload(), fetched_at="2026-05-13T12:34:56Z")
 
@@ -140,9 +128,9 @@ def test_github_metadata_update_writes_title_type_and_tags_through_provider(tmp_
         "--title",
         "New title",
         "--add-label",
-        "triaged",
-        "--add-label",
-        "type:bug",
+        "bug",
+        "--remove-label",
+        "task",
     )
     verify_args = gh_issue_view_args(39, ("title", "labels"))
     refresh_args = gh_issue_view_args(39, DEFAULT_ISSUE_FIELDS)
@@ -151,7 +139,7 @@ def test_github_metadata_update_writes_title_type_and_tags_through_provider(tmp_
     children_args = gh_api_args("repos/studykit/studykit-plugins/issues/39/sub_issues", "--paginate")
     blocked_by_args = gh_api_args("repos/studykit/studykit-plugins/issues/39/dependencies/blocked_by", "--paginate")
     blocking_args = gh_api_args("repos/studykit/studykit-plugins/issues/39/dependencies/blocking", "--paginate")
-    refreshed = issue_payload(title="New title", labels=["task", "triaged", "type:bug", "workflow"])
+    refreshed = issue_payload(title="New title", labels=["bug", "workflow"])
     runner = FakeRunner(
         {
             freshness_args: result(freshness_args, stdout=json.dumps({"number": 39, "updatedAt": "2026-05-13T12:00:00Z"})),
@@ -165,7 +153,7 @@ def test_github_metadata_update_writes_title_type_and_tags_through_provider(tmp_
                 stdout=json.dumps(
                     {
                         "title": "New title",
-                        "labels": [{"name": "task"}, {"name": "triaged"}, {"name": "type:bug"}, {"name": "workflow"}],
+                        "labels": [{"name": "bug"}, {"name": "workflow"}],
                     }
                 ),
             ),
@@ -187,13 +175,12 @@ def test_github_metadata_update_writes_title_type_and_tags_through_provider(tmp_
         artifact_type="task",
         title="New title",
         workflow_type="bug",
-        tags=("triaged",),
         runner=runner,
     )
 
     assert payload["operation"] == "update_issue_metadata"
     assert payload["kind"] == "github"
-    assert payload["updated"] == ["title", "type", "tags"]
+    assert payload["updated"] == ["title", "type"]
     assert [request.args for request in runner.requests] == [
         freshness_args,
         current_labels_args,
@@ -208,7 +195,7 @@ def test_github_metadata_update_writes_title_type_and_tags_through_provider(tmp_
     ]
     cached = cache.read_issue(repo(), 39, include_body=False, include_comments=False, include_relationships=False)
     assert cached["title"] == "New title"
-    assert sorted(cached["labels"]) == ["task", "triaged", "type:bug", "workflow"]
+    assert sorted(cached["labels"]) == ["bug", "workflow"]
 
 
 def test_github_metadata_update_rejects_unmapped_status(tmp_path: Path) -> None:

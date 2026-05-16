@@ -40,7 +40,7 @@ Recommended labels:
 
 Rules:
 
-- Do not use a `type:` prefix by default.
+- Do not use a `type:` prefix.
 - Do not require a scope label by default.
 - A repository-specific scope label may be configured later when a project needs extra filtering.
 - GitHub Issue Types may be supported later when setup explicitly enables them, but labels are the portable default.

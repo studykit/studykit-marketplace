@@ -7,7 +7,6 @@ Provider-wide convention rules for workflow artifacts stored as GitHub Issues.
 Use these rules for workflow issue artifacts stored in GitHub Issues.
 
 This file defines GitHub-wide issue writing conventions only.
-Provider metadata boundaries belong in `./github-issue-metadata.md`.
 Provider relationship boundaries belong in `./github-issue-relationships.md`.
 
 ## Identity and references
@@ -21,6 +20,20 @@ Use GitHub-native references in visible text.
 Resolve `#123` using `.workflow/config.yml` first, then the configured git remote, then `origin`.
 
 GitHub Enterprise host, owner, and repo should be inferred from the configured remote when explicit config is absent.
+
+## Provider update intent
+
+When asking `workflow-operator` to update provider-owned GitHub issue fields,
+provide only the values needed for the requested update.
+
+Generic supported update intents:
+
+- Issue reference, plus desired title when changing the GitHub issue title.
+- Issue reference, plus desired workflow type when changing the workflow type label.
+
+Do not ask for generic status, priority, tag, label, or GitHub Project field
+writes from this contract. Those writes require a separate project-specific
+workflow extension that documents and supports the selected field.
 
 ## Comments and logs
 

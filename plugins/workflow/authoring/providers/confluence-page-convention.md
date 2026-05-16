@@ -6,7 +6,7 @@ Common convention rules for workflow knowledge artifacts stored as Confluence pa
 
 Use these rules for Confluence pages produced or updated by the workflow plugin.
 
-This file defines Confluence-wide page writing rules only. Cache projections and provider write paths should use Confluence provider-native field names. Artifact-specific body structure belongs outside this file.
+This file defines Confluence-wide page writing rules only. Artifact-specific body structure belongs outside this file.
 
 ## Identity
 
@@ -14,7 +14,7 @@ Use Confluence page ID, site, and space as the stable page identity.
 
 Use page title or Smart Link as the readable reference in visible text. Use a full page URL when the text must remain portable outside Confluence or when the target renderer may not support Smart Links.
 
-Do not treat local projection paths as canonical page identity.
+Do not use repository-local paths as canonical Confluence page identity.
 
 ## Body format
 

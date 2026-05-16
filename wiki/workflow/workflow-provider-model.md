@@ -329,7 +329,7 @@ Initial recommendation:
 
 Decision:
 
-- GitHub workflow type should use plain artifact-type labels by default, such as `task`.
+- GitHub workflow type should use plain artifact-type labels such as `task`.
 - GitHub scope labels should not be required by default; setup may configure one for repositories that need extra filtering.
 - GitHub Issue Types may be used only when setup explicitly enables them.
 - GitHub canonical workflow status should live in an Issue Field when available.
@@ -558,7 +558,7 @@ It should ask or infer:
 5. Issue ID format.
 6. Commit reference style.
 7. Local projection mode.
-8. Provider metadata conventions.
+8. Provider relationship conventions.
 
 Example configuration:
 
@@ -592,11 +592,11 @@ The configuration file should be stored at the repository root:
 .workflow/config.yml
 ```
 
-## Authoring Resolver and Read Ledger
+## Authoring Resolver
 
 Workflow authoring rules must still apply when users do not explicitly invoke a workflow skill. SessionStart should therefore inject a small policy in configured workflow projects that tells the main assistant to delegate workflow provider, cache, write-back, comment append, and authoring guard operations to the workflow operator agent.
 
-The workflow operator owns the resolver, read ledger, and guarded write sequence. The resolver is the single entry point for deciding which authoring files apply.
+The workflow operator owns authoring path discovery and provider/cache writes. The resolver is the single entry point for deciding which authoring files apply.
 
 Inputs:
 
@@ -615,11 +615,10 @@ Output:
     "provider": "github"
   },
   "required_authoring_files": [
-    "/absolute/path/to/plugins/workflow/authoring/common/body-conventions.md",
+    "/absolute/path/to/plugins/workflow/authoring/common/issue-body.md",
     "/absolute/path/to/plugins/workflow/authoring/common/issue-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/common/review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-convention.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-metadata.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-relationships.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-review-authoring.md",
     "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-anti-patterns.md"
@@ -629,34 +628,7 @@ Output:
 
 Authoring contracts are plugin-bundled Markdown files only. The resolver must return absolute file paths so the assistant can read the exact files without guessing relative locations. Project-local, repository `wiki/`, or Confluence-hosted authoring overrides are out of scope for v1.
 
-The session read ledger records absolute paths of authoring files that were successfully read in the current session.
-
-Example:
-
-```json
-{
-  "read_authoring_files": [
-    "/absolute/path/to/plugins/workflow/authoring/common/body-conventions.md",
-    "/absolute/path/to/plugins/workflow/authoring/common/issue-authoring.md",
-    "/absolute/path/to/plugins/workflow/authoring/common/review-authoring.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-convention.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-metadata.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-relationships.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-review-authoring.md",
-    "/absolute/path/to/plugins/workflow/authoring/providers/github-issue-anti-patterns.md"
-  ]
-}
-```
-
-Write guards should compare the resolver output with the ledger:
-
-```text
-required_authoring_files ⊆ read_authoring_files
-```
-
-If any required authoring file has not been read, the write should be denied or delayed with a message that lists the absolute files to read.
-
-This rule applies to local filesystem projection writes and remote provider writes through native wrappers or MCP fallback tools.
+The main assistant should read the returned files before drafting workflow artifacts. Provider writes, cache refresh, and verification remain operator responsibilities.
 
 ## Skill Invocation Policy
 
@@ -684,16 +656,16 @@ This separates workflow convenience from authoring enforcement:
 9. Wiki or Confluence pages should contain curated content only.
 10. Discussion, questions, and work logs should stay in the issue backend.
 11. `review` is always issue-backed because it represents feedback workflow, not page-local commentary.
-12. `review.target` should use provider metadata when available, but each review item must also include a human-readable `## Target` body section.
+12. Review targets should use provider-native relationships when available; use a human-readable `## Target` body section only when the target is not represented provider-natively.
 13. Remote-native configuration should live in `.workflow/config.yml`, not `.a4/`.
-14. GitHub workflow type should use plain artifact-type labels by default; scope labels are optional and GitHub Issue Types are setup-enabled metadata.
+14. GitHub workflow type should use plain artifact-type labels; scope labels are optional and GitHub Issue Types are setup-enabled metadata.
 15. GitHub canonical status should use Issue Fields when available; Project fields are for planning views.
-16. Provider-native relationships and ordering should not be duplicated in the body; body sections are fallback or explanatory surface when provider metadata is unavailable or insufficient.
+16. Provider-native relationships and ordering should not be duplicated in the body; body sections are fallback or explanatory surface when provider-native storage is unavailable or insufficient.
 17. Knowledge pages should include a concise `## Change Log` linking material edits to their causing workflow artifacts.
 18. Authoring contracts are plugin-bundled Markdown files only for v1.
 19. The authoring resolver must return absolute paths to required authoring files.
-20. A session read ledger should record which required authoring files were actually read before local or remote writes.
-21. Workflow skills are explicit commands and should not auto-trigger; authoring enforcement comes from SessionStart policy, resolver use, and write guards.
+20. The main assistant should read the required authoring files before drafting workflow artifacts.
+21. Workflow skills are explicit commands and should not auto-trigger; authoring policy comes from SessionStart guidance, resolver use, and operator-owned writes.
 22. Provider writes should go through workflow wrapper commands; native transports are primary and MCP is fallback.
 23. Add `workdoc-finder` as a read-only remote provider search agent, separate from `api-researcher`.
 

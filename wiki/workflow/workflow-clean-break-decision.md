@@ -62,7 +62,7 @@ Use for provider-backed workflow:
 15. Skills are explicit commands and should not auto-trigger.
 16. Native transports are primary; MCP is fallback.
 17. `workdoc-finder` is the remote provider search agent.
-18. GitHub workflow type uses plain artifact-type labels by default.
+18. GitHub workflow type uses plain artifact-type labels.
 19. Provider-native relationships and ordering should not be duplicated in body sections.
 20. GitHub knowledge backend uses the main repository `wiki/` directory, not the separate GitHub Wiki feature.
 

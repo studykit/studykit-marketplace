@@ -40,11 +40,6 @@ ISSUE_PROVIDER_FILES = {
     "jira": "providers/jira-issue-convention.md",
 }
 
-ISSUE_PROVIDER_METADATA_FILES = {
-    "github": "providers/github-issue-metadata.md",
-    "jira": "providers/jira-issue-metadata.md",
-}
-
 ISSUE_PROVIDER_RELATIONSHIP_FILES = {
     "github": "providers/github-issue-relationships.md",
     "jira": "providers/jira-issue-relationships.md",
@@ -178,7 +173,6 @@ def resolve_authoring(
 
     if normalized_role == "issue" and normalized_provider in ISSUE_PROVIDER_FILES:
         parts.append(ISSUE_PROVIDER_FILES[normalized_provider])
-        parts.append(ISSUE_PROVIDER_METADATA_FILES[normalized_provider])
         parts.append(ISSUE_PROVIDER_RELATIONSHIP_FILES[normalized_provider])
         parts.append(
             ISSUE_PROVIDER_TYPE_PATTERNS[normalized_provider].format(

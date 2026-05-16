@@ -10,7 +10,7 @@ import argparse
 import json
 import sys
 from pathlib import Path
-from typing import Any, Mapping, TextIO
+from typing import Any, TextIO
 
 from workflow_cache import GitHubIssueCache, WorkflowCacheError
 from workflow_command import CommandRunner
@@ -41,7 +41,6 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--json", action="store_true", help="emit JSON")
     parser.add_argument("--title", help="new semantic title")
     parser.add_argument("--workflow-type", help="new workflow type metadata value")
-    parser.add_argument("--tag", action="append", default=[], help="additive semantic tag or label")
     parser.add_argument("--status", help="semantic status; unsupported unless mapping is configured")
     parser.add_argument("--priority", help="semantic priority; unsupported unless mapping is configured")
     parser.add_argument("issue", help="configured-provider issue reference")
@@ -55,7 +54,6 @@ def update_issue_metadata_payload(
     artifact_type: str,
     title: str | None = None,
     workflow_type: str | None = None,
-    tags: tuple[str, ...] = (),
     status: str | None = None,
     priority: str | None = None,
     runner: CommandRunner | None = None,
@@ -70,7 +68,6 @@ def update_issue_metadata_payload(
             artifact_type=artifact_type,
             title=title,
             workflow_type=workflow_type,
-            tags=tags,
             status=status,
             priority=priority,
             runner=runner,
@@ -82,7 +79,6 @@ def update_issue_metadata_payload(
             artifact_type=artifact_type,
             title=title,
             workflow_type=workflow_type,
-            tags=tags,
             status=status,
             priority=priority,
             runner=runner,
@@ -99,7 +95,6 @@ def _update_github_metadata(
     artifact_type: str,
     title: str | None,
     workflow_type: str | None,
-    tags: tuple[str, ...],
     status: str | None,
     priority: str | None,
     runner: CommandRunner | None,
@@ -131,13 +126,12 @@ def _update_github_metadata(
 
     labels = set(_string_list(cached.get("labels")))
     if workflow_type:
-        labels = _replace_github_type_label(labels, workflow_type, config)
-    labels.update(_clean_values(tags))
+        labels = _replace_github_type_label(labels, workflow_type)
 
     payload: dict[str, Any] = {"issue": issue_number, "freshness_check": True}
     if title is not None:
         payload["title"] = title
-    if workflow_type or tags:
+    if workflow_type:
         payload["labels"] = sorted(labels)
     if len(payload) == 2:
         raise WorkflowIssueMetadataError("metadata update requires at least one supported metadata value")
@@ -157,7 +151,7 @@ def _update_github_metadata(
         "kind": "github",
         "issue": issue_number,
         "repository": repo.to_json(),
-        "updated": _updated_fields(title=title, workflow_type=workflow_type, tags=tags),
+        "updated": _updated_fields(title=title, workflow_type=workflow_type),
         "provider": dict(response.payload),
     }
 
@@ -169,7 +163,6 @@ def _update_jira_metadata(
     artifact_type: str,
     title: str | None,
     workflow_type: str | None,
-    tags: tuple[str, ...],
     status: str | None,
     priority: str | None,
     runner: CommandRunner | None,
@@ -193,14 +186,9 @@ def _update_jira_metadata(
     except WorkflowCacheError as exc:
         raise WorkflowIssueMetadataError(f"refresh the Jira issue cache before metadata update: {exc}") from exc
 
-    labels = set(_string_list(cached.get("labels")))
-    labels.update(_clean_values(tags))
-
     payload: dict[str, Any] = {"issue": issue_key, "freshness_check": True}
     if title is not None:
         payload["title"] = title
-    if tags:
-        payload["labels"] = sorted(labels)
     if len(payload) == 2:
         raise WorkflowIssueMetadataError("metadata update requires at least one supported metadata value")
 
@@ -220,54 +208,31 @@ def _update_jira_metadata(
         "issue": issue_key,
         "key": issue_key,
         "site": site.to_json(),
-        "updated": _updated_fields(title=title, tags=tags),
+        "updated": _updated_fields(title=title),
         "provider": dict(response.payload),
     }
 
 
-def _replace_github_type_label(labels: set[str], workflow_type: str, config: WorkflowConfig) -> set[str]:
+def _replace_github_type_label(labels: set[str], workflow_type: str) -> set[str]:
     desired = workflow_type.strip()
     if not desired:
         raise WorkflowIssueMetadataError("workflow type metadata value is empty")
-    type_config = _github_type_metadata_config(config)
-    label_prefix = ""
-    if isinstance(type_config, dict):
-        label_prefix = str(type_config.get("label_prefix") or type_config.get("labelPrefix") or "")
-    if label_prefix:
-        labels = {label for label in labels if not label.startswith(label_prefix)}
-        labels.add(f"{label_prefix}{desired}")
-        return labels
     labels = {label for label in labels if label not in _GITHUB_TYPE_LABELS}
     labels.add(desired)
     return labels
-
-
-def _github_type_metadata_config(config: WorkflowConfig) -> Mapping[str, Any]:
-    metadata_config = config.issues.settings.get("metadata")
-    if not isinstance(metadata_config, Mapping):
-        return {}
-    type_config = metadata_config.get("type")
-    return type_config if isinstance(type_config, Mapping) else {}
 
 
 def _updated_fields(
     *,
     title: str | None,
     workflow_type: str | None = None,
-    tags: tuple[str, ...] = (),
 ) -> list[str]:
     fields = []
     if title is not None:
         fields.append("title")
     if workflow_type is not None:
         fields.append("type")
-    if tags:
-        fields.append("tags")
     return fields
-
-
-def _clean_values(values: tuple[str, ...]) -> list[str]:
-    return [value.strip() for value in values if value.strip()]
 
 
 def _string_list(value: Any) -> list[str]:
@@ -323,7 +288,6 @@ def main(
             artifact_type=args.artifact_type,
             title=args.title,
             workflow_type=args.workflow_type,
-            tags=tuple(args.tag),
             status=args.status,
             priority=args.priority,
             runner=runner,

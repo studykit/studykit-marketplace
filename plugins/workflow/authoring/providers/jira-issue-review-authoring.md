@@ -6,7 +6,6 @@ Read after:
 
 - `../common/review-authoring.md`
 - `./jira-issue-convention.md`
-- `./jira-issue-metadata.md`
 - `./jira-issue-relationships.md`
 - `./jira-issue-anti-patterns.md`
 

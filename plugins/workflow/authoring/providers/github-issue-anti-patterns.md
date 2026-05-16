@@ -29,10 +29,10 @@ Also avoid equivalent variants such as:
 - `## Waiting On`
 - blocked-on slots inside `## Resume`
 
-Use provider-native metadata instead:
+Use provider-native relationships instead:
 
-- Parent/child relationships → GitHub parent/sub-issue metadata through the provider wrapper.
-- Blocking relationships → GitHub dependency metadata through the provider wrapper.
+- Parent and child relationships -> GitHub parent/sub-issue relationships.
+- Blocking relationships -> GitHub issue dependency relationships.
 
 If rationale, sequencing, or discussion is useful to humans, write it in a GitHub comment or in the parent issue narrative. Do not duplicate the machine relationship in the child issue body.
 

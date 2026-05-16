@@ -8,7 +8,7 @@ This is not the separate GitHub Wiki feature. The `wiki/` directory lives in the
 
 Use these rules for workflow knowledge artifacts stored in GitHub repository Markdown files.
 
-This file defines repository Markdown storage, identity, references, visible links, change-log, transport, and common mistake rules only. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
+This file defines repository Markdown storage, identity, references, visible links, change-log, and common mistake rules only. Artifact-specific body structure and page-level guidance belong in the matching GitHub knowledge type authoring file.
 
 ## Storage model
 
@@ -56,20 +56,9 @@ Every material page edit should include a concise `## Change Log` entry that lin
 
 Git commit history records who changed what and when. The page `## Change Log` records why the page changed.
 
-## Transport
-
-Preferred native transport:
-
-- `git` against the main repository.
-- `gh` only for issue, pull request, or repository lookup operations.
-
-MCP is fallback transport.
-
-Provider wrapper commands perform the requested write and verification. The caller is responsible for following the authoring resolver/read policy before invoking a write.
-
 ## Common mistakes
 
 - Using the separate GitHub Wiki feature as the knowledge source of truth.
 - Duplicating issue discussion in the knowledge page.
 - Relying on repository Markdown auto-linking for `#123`; use full links when portability matters.
-- Creating a separate local projection for a page that already lives in `wiki/`.
+- Creating a duplicate page outside the configured `wiki/` directory.

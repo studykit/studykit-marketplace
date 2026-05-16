@@ -6,7 +6,6 @@ Read after:
 
 - `../common/usecase-authoring.md`
 - `./github-issue-convention.md`
-- `./github-issue-metadata.md`
 - `./github-issue-relationships.md`
 - `./github-issue-anti-patterns.md`
 

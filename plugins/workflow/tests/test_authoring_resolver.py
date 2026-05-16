@@ -36,7 +36,6 @@ def test_review_github_issue_resolution_uses_absolute_authoring_files() -> None:
         "common/issue-authoring.md",
         "common/review-authoring.md",
         "providers/github-issue-convention.md",
-        "providers/github-issue-metadata.md",
         "providers/github-issue-relationships.md",
         "providers/github-issue-review-authoring.md",
         "providers/github-issue-anti-patterns.md",
@@ -95,7 +94,6 @@ providers:
     assert issue_resolution.provider == "jira"
     assert "common/issue-authoring.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-convention.md" in _rel_paths(issue_resolution.files)
-    assert "providers/jira-issue-metadata.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-relationships.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-task-authoring.md" in _rel_paths(issue_resolution.files)
     assert "providers/jira-issue-anti-patterns.md" in _rel_paths(issue_resolution.files)

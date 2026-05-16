@@ -45,28 +45,25 @@ runtime guidance.
 
 Runtime authoring contracts live under `plugins/workflow/authoring/`.
 
-Common contracts are provider-neutral. Provider contracts define backend
-metadata mapping, relationship storage/projection rules, and provider-specific
-body rules. Type-specific contracts define required body sections and lifecycle
-states.
+Common contracts are provider-neutral. Provider contracts define provider
+identity, relationship authoring boundaries, and provider-specific body rules.
+Type-specific contracts define the body content expected for each artifact type.
 
 For issue-backed `task` artifacts, a GitHub-backed resolution includes:
 
-1. `common/body-conventions.md`
+1. `common/issue-body.md`
 2. `common/issue-authoring.md`
 3. `common/task-authoring.md`
 4. `providers/github-issue-convention.md`
-5. `providers/github-issue-metadata.md`
-6. `providers/github-issue-relationships.md`
-7. `providers/github-issue-task-authoring.md`
-8. Provider guardrails such as `providers/github-issue-anti-patterns.md`
+5. `providers/github-issue-relationships.md`
+6. `providers/github-issue-task-authoring.md`
+7. Provider guardrails such as `providers/github-issue-anti-patterns.md`
 
 Other artifact types and providers use the same layering: common contracts
-first, then role, type, provider convention, provider metadata, provider type
-binding, and provider guardrails when available. Metadata fields are defined by
-the role and type authoring files; provider metadata files define backend
-storage mappings. Relationship files define issue relationship storage,
-body-boundary rules, and operator handoff expectations.
+first, then role, type, provider convention, provider relationship boundaries,
+provider type binding, and provider guardrails when available. Relationship
+files define provider-native relationship intent, body-boundary rules, and
+operator handoff expectations.
 
 ## Intended Flow
 

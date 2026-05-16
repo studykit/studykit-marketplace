@@ -6,7 +6,7 @@ Provider-wide convention rules for workflow artifacts stored as Jira issues.
 
 Use these rules for workflow issue artifacts stored in Jira.
 
-This file defines Jira-wide issue writing rules only. Provider metadata authoring boundaries belong in `./jira-issue-metadata.md`. Provider relationship authoring boundaries belong in `./jira-issue-relationships.md`. Jira body anti-patterns belong in `./jira-issue-anti-patterns.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
+This file defines Jira-wide issue writing rules only. Provider relationship authoring boundaries belong in `./jira-issue-relationships.md`. Jira body anti-patterns belong in `./jira-issue-anti-patterns.md`. Artifact-specific body structure and relationship body fallback sections belong in the matching Jira issue type authoring file.
 
 ## Identity and references
 
@@ -27,6 +27,19 @@ Read `./jira-issue-relationships.md` for provider relationship storage and body-
 Read `./jira-issue-anti-patterns.md` for forbidden relationship body sections.
 
 Body fallback sections for Jira relationships are artifact-specific and belong in the matching Jira issue type authoring file.
+
+## Provider update intent
+
+When asking `workflow-operator` to update provider-owned Jira issue fields,
+provide only the values needed for the requested update.
+
+Generic supported update intents:
+
+- Issue key, plus desired summary/title when changing the Jira issue title.
+
+Do not ask for generic issue type, status, priority, label, or transition
+changes from this contract. Those writes require a separate project-specific
+workflow extension that documents and supports the selected field or transition.
 
 ## Comments and logs
 
@@ -91,13 +104,3 @@ A slash branch pattern such as `PROJ-123/some-name` may work, but the default is
 Use Jira Smart Commit commands only when the workflow intentionally wants Jira command side effects.
 
 Do not use Smart Commit commands merely to mention an issue.
-
-## Transport
-
-Preferred native transport:
-
-- REST wrapper for Jira Data Center APIs.
-
-MCP is fallback transport.
-
-Provider wrapper commands perform the requested write and verification. The caller is responsible for following the authoring resolver/read policy before invoking a write.
